@@ -194,9 +194,9 @@ functions = (
 )						
 						
 def benchmark(maskcount, tiles, tilesize, stacks, stackheight, repeats):
-'''
-Measure the time required to execute the six different iteration orders.
-'''
+	'''
+	Measure the time required to execute the six different iteration orders.
+	'''
 	masks = np.ones((maskcount, tiles, tilesize), dtype=dtype_mask)
 	data = np.ones((stacks, tiles, stackheight, tilesize), dtype=dtype_data)
 	result = []

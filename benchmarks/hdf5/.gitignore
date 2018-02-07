@@ -1,0 +1,3 @@
+*.emd
+callgrind.out.*
+venv

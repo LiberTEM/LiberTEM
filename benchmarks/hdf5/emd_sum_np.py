@@ -18,7 +18,7 @@ for emd_filename in emd_filename_list:
         for y in range(128):
             result[x, y] = data[x, y].sum()
 
-    print(emd_filename)
+    print("\n{}".format(emd_filename))
     t2 = time.time()
     delta = t2 - t0
     print("init", t1 - t0)

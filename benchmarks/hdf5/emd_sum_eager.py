@@ -12,7 +12,7 @@ for emd_filename in emd_filename_list:
     result = s.sum()
     t2 = time.time()
     delta = t2 - t0
-    print(emd_filename)
+    print("\n{}".format(emd_filename))
     print("init", t1 - t0)
     print(delta)
     print("{} MB/s (overall)".format(s.data.nbytes / delta / 1024 / 1024))

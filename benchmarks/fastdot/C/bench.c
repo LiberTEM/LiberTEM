@@ -280,7 +280,7 @@ int main(int argc, char **argv)
     float t1 = clock_seconds();
 
     // init results:
-    result_t *results = (double*)malloc(sizeof(result_t) * MAX_NUM_FRAMES);
+    result_t *results = (result_t*)malloc(sizeof(result_t) * MAX_NUM_FRAMES);
     for(int i = 0; i < MAX_NUM_FRAMES; i++) {
         results[i] = 0;
     }

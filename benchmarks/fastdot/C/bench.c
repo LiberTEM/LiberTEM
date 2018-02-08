@@ -4,6 +4,8 @@
  * TODO:
  * - for future optimizations, see also:
  *   https://blog.theincredibleholk.org/blog/2012/12/10/optimizing-dot-product/
+ *   https://software.intel.com/en-us/articles/use-intriniscs/
+ *   http://ok-cleek.com/blogs/?p=20540
  * - analyze generated assembler code to understand applied optimizations
  *   for different compiler flags
  */
@@ -269,8 +271,9 @@ void bench7(pixel_t *buf, pixel_t *maskbuf, int masks, int framesize, int frames
     float t1 = clock_seconds();\
     bench ## N(buf, maskbuf, masks, framesize, frames, tilesize_k * 1024, repeats, stackheight, results);\
     float delta = clock_seconds() - t1;\
-    printf("%d,%lu,%d,%d,%d,%d,%d,%d,%.8f,%d\n",\
-            count, BUF_SIZE, framesize, stackheight, tilesize_k*1024, masks, N, 0, delta, 0);\
+    float throughput = (masks * repeats * BUF_SIZE) / delta / 1024 / 1024;\
+    printf("%d,%lu,%d,%d,%d,%d,%d,%d,%.8f,%d,%.8f\n",\
+            count, BUF_SIZE, framesize, stackheight, tilesize_k*1024, masks, N, 0, delta, 0, throughput);\
     fflush(stdout);\
     count += 1;\
 };
@@ -280,7 +283,7 @@ int main(int argc, char **argv)
     float t1 = clock_seconds();
 
     // init results:
-    result_t *results = (double*)malloc(sizeof(result_t) * MAX_NUM_FRAMES);
+    result_t *results = (result_t*)malloc(sizeof(result_t) * MAX_NUM_FRAMES);
     for(int i = 0; i < MAX_NUM_FRAMES; i++) {
         results[i] = 0;
     }

@@ -201,7 +201,7 @@ def benchmark(maskcount, tiles, tilesize, stacks, stackheight, repeats):
 	data = np.ones((stacks, tiles, stackheight, tilesize), dtype=dtype_data)
 	result = []
 	# "dry run" to get the data into the cache
-	iter1(data, masks, repeats)
+	iter1(data, masks, 2)
 	# Apply the different functions on the data
 	for (i, it, it_blind) in functions:
 		hotstart = time.clock()

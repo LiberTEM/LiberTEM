@@ -1,0 +1,27 @@
+See also http://hyperspy.org/hyperspy-doc/current/user_guide/metadata_structure.html All this information can be encoded in NeXus
+
+Abstract STEM
+	Illumination
+	Scan unit
+	Sample (optional)
+	Drift correction (optional)
+	
+General STEM (Abstract STEM)
+	STEM detectors (BF, ADF, HAADF, sectors)
+
+Pixelated STEM (Abstract STEM)
+	Pixelated STEM detector
+	Virtual detectors
+	
+EELS (Abstract STEM)
+	EELS detector + settings
+	Elemental info on sample -- elements and oxidation states
+	Detailed probe energy info
+	
+EDX (Abstract STEM)
+	EDX detector and settings
+	Detailed info about the sample (composition, crystal structures, orientation)
+	
+Real STEM data set: join Abstract STEM with all applicable sub-classes
+	
+	

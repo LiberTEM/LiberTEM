@@ -1,0 +1,62 @@
+Minimum information for a quantitative pixelated STEM file
+
+suitable NeXus application definition: Extension/instantiation of NXscan http://download.nexusformat.org/doc/html/classes/applications/NXscan.html
+
+NXinstrument http://download.nexusformat.org/doc/html/classes/base_classes/NXinstrument.html
+	Illumination --> Should probably get an STEM-specific base class. NXsource doesn't quite fit
+		Beam current 
+		Beam energy
+		Convergence angle
+		Spot size
+		Optionally/advanced
+			Illuminating wave front -- deal with that later?
+			Probe image?
+
+	Scanning --> Might need a new base class? EMs can both shift the beam and translate the sample, while synchrotrons and neutron sources usually only move the sample afaik
+		Option 1: parallelogram scan or rectangular scan
+			corner 1 (x, y) (start)
+			corner 2 (x, y) (end of first line)
+			corner 3 (x, y) (only distance if rectangular, otherwise overdetermined)
+			pixels per line
+			pixels per column
+			
+		Option 2: non-rectangular scan
+			pos_x (list)
+			pos_y (list)
+			
+		Scan rate or start/stop times
+			
+	Detector --> NXDetector http://download.nexusformat.org/doc/html/classes/base_classes/NXdetector.html
+		x-pixels
+		y-pixels
+		physical size (x, y)
+		bit depth / number format
+		make & model (not strictly necessary, but recommended)
+		gain curve -- link numerical detector readout to electron dose
+		
+	Virtual detectors
+		Each with mask and reduced data set. Users can add more
+		BF
+		ADF
+		HAADF
+		Sectors?
+	
+	Projection
+		camera length --> links pixel position to scattering angle (NXtransformations? http://download.nexusformat.org/doc/html/classes/base_classes/NXtransformations.html)
+	
+Sample (not strictly necessary, but data would be pretty meaningless without that info) NXsample http://download.nexusformat.org/doc/html/classes/base_classes/NXsample.html
+	ID
+	thickness (not strictly necessary, but recommended)
+	Composition (optional, but very helpful)
+	Crystal unit cell/structure/space group (optional, but very helpful)
+	Sample surface expressed as crystal plane (optional, but very helpful)
+	Orientation relative to beam (optional, but very helpful)
+	
+
+Drift corrections (optional, but often necessary) --> New base class?
+	Several entries possible
+		correction_x (list) -- or better pos_x?
+		correction_y (list) -- or better pos_y?
+	
+
+	

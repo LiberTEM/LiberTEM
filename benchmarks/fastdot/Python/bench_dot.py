@@ -17,6 +17,7 @@ import csv
 bufsize = 256*1024*1024
 dtype_data = np.uint32
 dtype_mask = np.int32
+dtype_result = np.int64
 
 # Maximum number of masks, used to determine number of repeats for smaller mask sets
 # in order to keep the number of mathematical operations constant.
@@ -26,8 +27,7 @@ def iter_tdot(data, masks, repeats):
 	stacks = len(data)
 	maskcount = len(masks)
 	stackheight = len(data[0])
-	# Pre-allocate memory for result to not do that over and over again
-	result = np.zeros((stackheight, maskcount))
+	# can't preallocate here as tensordot doesn't have an out-parameter
 	for repeat in range(repeats):
 		for stack in range(stacks):
 			result = np.tensordot(data[stack], masks, (1, 1))
@@ -37,17 +37,19 @@ def iter_dot(data, masks, repeats):
 	maskcount = len(masks)
 	stackheight = len(data[0])
 	# Pre-allocate memory for result to not do that over and over again
-	result = np.zeros((stackheight, maskcount))
+	result = np.empty((stackheight, maskcount), dtype=dtype_result)
 	for repeat in range(repeats):
 		for stack in range(stacks):
-			result = np.dot(data[stack], masks.T)
+			np.dot(data[stack], masks.T, out=result)
 			
 def iter_naive(data, masks, repeats):
 	stacks = len(data)
 	maskcount = len(masks)
 	stackheight = len(data[0])
 	# Pre-allocate memory for result to not do that over and over again
-	result = np.zeros((stackheight, maskcount))
+	# TODO: without using the `out` parameter, I guess np.dot currently creates 
+	# an intermediate variable for its result and then assigns to the result slice.
+	result = np.empty((stackheight, maskcount), dtype=dtype_result)
 	for repeat in range(repeats):
 		for stack in range(stacks):
 			for frame in range(stackheight):
@@ -59,7 +61,9 @@ def iter_level2(data, masks, repeats):
 	maskcount = len(masks)
 	stackheight = len(data[0])
 	# Pre-allocate memory for result to not do that over and over again
-	result = np.zeros((stackheight, maskcount))
+	# TODO: without using the `out` parameter, I guess np.dot currently creates 
+	# an intermediate variable for its result and then assigns to the result slice.
+	result = np.empty((stackheight, maskcount), dtype=dtype_result)
 	for repeat in range(repeats):
 		for stack in range(stacks):
 			for mask in range(maskcount):
@@ -90,31 +94,35 @@ def benchmark(maskcount, framesize, stacks, stackheight, repeats):
 		result.append((i, 0, hot))
 	return result
 
-# global counter as line index in CSV file
-count = 1
+def main():
+	# global counter as line index in CSV file
+	count = 1
 
-writer = csv.writer(sys.stdout)
+	writer = csv.writer(sys.stdout)
 
-# Headers for CSV file
-writer.writerow(("count", "bufsize", "framesize", "stackheight", "tilesize", "maskcount", "i", "blind", "hot", "hot-blind"))
-sys.stdout.flush()
+	# Headers for CSV file
+	writer.writerow(("count", "bufsize", "framesize", "stackheight", "tilesize", "maskcount", "i", "blind", "hot", "hot-blind"))
+	sys.stdout.flush()
 
-# The benchmark expects all sizes, counts etc to be powers of 2
+	# The benchmark expects all sizes, counts etc to be powers of 2
 
-# Realistic range of frame sizes in px. Maximum corresponds to Gatan K2
-for framesize in (256**2, 512**2, 1024**2, 2048**2, 4096**2):
-	# number of frames
-	frames = bufsize // framesize // dtype_data(1).itemsize
-	# How many frames to bundle
-	for stackheight in (4, 8, 16, 32, 64, 128):
-		if stackheight > frames:
-			break
-		stacks = frames // stackheight
-		# 8 kPixel to 1 Mpixel
-		for maskcount in (1, 2, 4, 8, 16):
-			repeats = maxmask // maskcount
-			results = benchmark(maskcount, framesize, stacks, stackheight, repeats)
-			for (i, blind, hot) in results:
-				writer.writerow((count, bufsize, framesize, stackheight, framesize, maskcount, i, blind, hot, hot-blind))
-				count += 1
-			sys.stdout.flush()
+	# Realistic range of frame sizes in px. Maximum corresponds to Gatan K2
+	for framesize in (256**2, 512**2, 1024**2, 2048**2, 4096**2):
+		# number of frames
+		frames = bufsize // framesize // dtype_data(1).itemsize
+		# How many frames to bundle
+		for stackheight in (4, 8, 16, 32, 64, 128):
+			if stackheight > frames:
+				break
+			stacks = frames // stackheight
+			# 8 kPixel to 1 Mpixel
+			for maskcount in (1, 2, 4, 8, 16):
+				repeats = maxmask // maskcount
+				results = benchmark(maskcount, framesize, stacks, stackheight, repeats)
+				for (i, blind, hot) in results:
+					writer.writerow((count, bufsize, framesize, stackheight, framesize, maskcount, i, blind, hot, hot-blind))
+					count += 1
+				sys.stdout.flush()
+
+if __name__ == "__main__":
+	main()

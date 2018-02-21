@@ -15,9 +15,9 @@ import csv
 
 # buffer size in byte
 bufsize = 256*1024*1024
-dtype_data = np.uint32
-dtype_mask = np.int32
-dtype_result = np.int64
+dtype_data = np.float64
+dtype_mask = np.float64
+dtype_result = np.float64
 
 # Maximum number of masks, used to determine number of repeats for smaller mask sets
 # in order to keep the number of mathematical operations constant.

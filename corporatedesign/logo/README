@@ -1,0 +1,7 @@
+The logo is designed with Inkscape and uses layers with the "Screen" 
+blend mode to create the interference effect of the rings. 
+Unfortunately that only works in Inkscape, not in other SVG viewers. 
+Export in another vector format didn't work at the time of writing. 
+Attempts to flatten the image automatically or manually gave 
+unsatisfactory results as well. For that reason one has to use the 
+PNG version for most purposes.

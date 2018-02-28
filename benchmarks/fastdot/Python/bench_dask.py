@@ -38,6 +38,7 @@ def iter_tdot(data, masks, repeats):
     for repeat in range(repeats):
         result = da.tensordot(data, masks, (1, 1))
         result.compute(num_workers=WORKERS)
+    return result
 
 def iter_dot(data, masks, repeats):
     frames = len(data)
@@ -45,6 +46,7 @@ def iter_dot(data, masks, repeats):
     for repeat in range(repeats):
         result = da.dot(data, masks.T)
         result.compute(num_workers=WORKERS)
+    return result
                                             
 # Convenience data structure to iterate over the functions
 functions = (

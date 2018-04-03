@@ -1,0 +1,9 @@
+{
+    "namespace": "com.github.libertem.fastdot",
+    "type": "record",
+    "name": "Frame",
+    "fields": [
+        {"name": "frame_data", "type": {"type": "array", "items": "double"}},
+        {"name": "index", "type": "int"}
+    ]
+}

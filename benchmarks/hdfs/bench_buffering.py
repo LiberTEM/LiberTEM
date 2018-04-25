@@ -86,12 +86,25 @@ def read_new_style(fn):
                 break
 
 
+def read_new_style_realloc(fn):
+    fs = get_fs()
+    with fs.open(fn) as fd:
+        while True:
+            buf = ctypes.create_string_buffer(READ_SIZE)
+            bytes_read = fd.read_into(length=READ_SIZE, out=buf)
+            if bytes_read == 0:
+                break
+
+
 def read_tests(fn):
     with timer("old style"):
         read_old_style(fn)
 
     with timer("new style"):
         read_new_style(fn)
+
+    with timer("new style w/ realloc"):
+        read_new_style_realloc(fn)
 
 
 if __name__ == "__main__":

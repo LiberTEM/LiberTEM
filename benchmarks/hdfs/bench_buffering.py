@@ -5,10 +5,10 @@ from contextlib import contextmanager
 
 
 READ_SIZE = 1024 * 1024
-DATASET_SIZE = 2 * 1024 * 1024 * 1024
+DATASET_SIZE = 8 * 1024 * 1024 * 1024
 
 
-def get_fs():
+def get_fs(config=None):
     import hdfs3
 
     class MyHDFile(hdfs3.HDFile):
@@ -43,7 +43,15 @@ def get_fs():
             return MyHDFile(self, path, mode, replication=replication, buff=buff,
                             block_size=block_size)
 
-    return MyHDFileSystem('localhost', port=9000)
+    defaultconfig = {
+        'input.localread.default.buffersize': str(1 * 1024 * 1024),
+        'input.read.default.verify': '1'
+    }
+
+    if config is not None:
+        defaultconfig.update(config)
+
+    return MyHDFileSystem('localhost', port=9000, pars=defaultconfig)
 
 
 def maybe_create(fn):
@@ -67,8 +75,7 @@ def timer(name):
     print("--- stopping timer %s, delta=%0.5f ---" % (name, (t2 - t1)))
 
 
-def read_old_style(fn):
-    fs = get_fs()
+def read_old_style(fs, fn):
     with fs.open(fn) as fd:
         while True:
             data = fd.read(length=READ_SIZE)
@@ -76,8 +83,7 @@ def read_old_style(fn):
                 break
 
 
-def read_new_style(fn):
-    fs = get_fs()
+def read_new_style(fs, fn):
     with fs.open(fn) as fd:
         buf = ctypes.create_string_buffer(READ_SIZE)
         while True:
@@ -86,8 +92,7 @@ def read_new_style(fn):
                 break
 
 
-def read_new_style_realloc(fn):
-    fs = get_fs()
+def read_new_style_realloc(fs, fn):
     with fs.open(fn) as fd:
         while True:
             buf = ctypes.create_string_buffer(READ_SIZE)
@@ -97,17 +102,43 @@ def read_new_style_realloc(fn):
 
 
 def read_tests(fn):
-    with timer("old style"):
-        read_old_style(fn)
+    c1 = {
+        'input.localread.default.buffersize': str(1 * 1024 * 1024),
+        'input.read.default.verify': '1'
+    }
+    c2 = {
+        'input.localread.default.buffersize': str(1 * 1024 * 1024),
+        'input.read.default.verify': '0'
+    }
+    c3 = {
+        'input.localread.default.buffersize': '1',
+        'input.read.default.verify': '0'
+    }
 
+    for conf in [c1, c2, c3]:
+        print("config: %s" % conf)
+        fs = get_fs(conf)
+        with timer("old style"):
+            read_old_style(fs, fn)
+
+        with timer("new style"):
+            read_new_style(fs, fn)
+
+        with timer("new style w/ realloc"):
+            read_new_style_realloc(fs, fn)
+
+
+def test_crc_or_copy_overhead(fn):
+    fs = get_fs({
+        'input.localread.default.buffersize': str(1 * 1024 * 1024),
+        'input.read.default.verify': '1'
+    })
     with timer("new style"):
-        read_new_style(fn)
-
-    with timer("new style w/ realloc"):
-        read_new_style_realloc(fn)
+        read_new_style(fs, fn)
 
 
 if __name__ == "__main__":
     fn = "hdfs3buffering"
     maybe_create(fn)
     read_tests(fn)
+    # test_crc_or_copy_overhead(fn)

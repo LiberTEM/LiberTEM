@@ -1,3 +1,5 @@
 *.swp
 *.pyc
 __pycache__
+.tox
+docs/build/

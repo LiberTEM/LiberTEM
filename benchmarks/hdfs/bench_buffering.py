@@ -57,7 +57,7 @@ def get_fs(config=None):
     if config is not None:
         defaultconfig.update(config)
 
-    return MyHDFileSystem('localhost', port=9000, pars=defaultconfig)
+    return MyHDFileSystem('localhost', port=8020, pars=defaultconfig)
 
 
 def maybe_create(fn):

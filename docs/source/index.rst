@@ -11,6 +11,7 @@ Welcome to LiberTEM's documentation!
    :caption: Contents:
 
    architecture
+   why_python
 
 
 Indices and tables

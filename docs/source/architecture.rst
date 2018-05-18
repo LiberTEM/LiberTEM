@@ -11,15 +11,17 @@ summation, i.e. virtual detector, center of mass, ...
 For our task, data locality is one of the most important factors for achieving
 good performance and scalabilty. With a traditional distributed storage
 solution (like lustre or NFS), the network will quickly become the bottleneck.
-Our new proposal builds on the Hadoop filesytem (HDFS), which utilizes the
+Our new proposal builds on the `Hadoop filesytem (HDFS)`_, which utilizes the
 local storage of each compute node. For this, the full dataset needs to be
 partitioned and the partitions distributed to the HDFS cluster.
+
+.. _Hadoop filesytem (HDFS): https://hadoop.apache.org/docs/r3.1.0/
 
 When taking care to avoid needless copying and buffering, and using the short
 circuit read facilities of HDFS, we can achieve native throughput on each node.
 With NVMe SSDs, this means we can process multiple gigabytes per second per node.
 
-For distributing the workload, we plan to use `dask.distributed`. The `Future` API
+For distributing the workload, we plan to use `dask.distributed <http://distributed.readthedocs.io/en/latest/>`_. The `Future` API
 allows us to control our computation in a flexible way, with little overhead.
 With dask Futures, we can assure that computation on a partition of the dataset
 is scheduled on the node(s) that hold the partition on their local storage.

@@ -19,7 +19,7 @@ and does matrix multiplication on the data.
 
 Most of the time is spent reading the file (block on the left: `sys_read`) or
 actually performing the matrix multiplication (center block: anything containing `dgemm`).
-The Python parts are mostly in the small (= little time) but high (= deep call stacks)
+The Python parts are mostly in the narrow (= little time) but high (= deep call stacks)
 pillar on the right. The dask scheduler is also visible in the profile, but takes up
 less than 2% of the total samples.
 

@@ -3,3 +3,5 @@
 __pycache__
 .tox
 docs/build/
+.ipynb_checkpoints/
+*.egg-info

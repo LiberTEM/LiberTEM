@@ -14,6 +14,9 @@ See for example this profile, visualized as a flamegraph:
 
 .. image:: ./images/read_from_hdfs_profile.png
 
+The workload is similar to what LiberTEM will later do: it reads files from HDFS
+and does matrix multiplication on the data.
+
 Most of the time is spent reading the file (block on the left: `sys_read`) or
 actually performing the matrix multiplication (center block: anything containing `dgemm`).
 The Python parts are mostly in the small (= little time) but high (= deep call stacks)

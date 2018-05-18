@@ -167,6 +167,9 @@ class DataTile(object):
         self.data = data
         self.tile_slice = tile_slice
 
+    def __repr__(self):
+        return "<DataTile %r>" % self.tile_slice
+
 
 class Partition(object):
     def __init__(self, dataset, dtype, partition_slice):
@@ -195,13 +198,14 @@ class BinaryHDFSPartition(Partition):
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         assert (self.slice.shape[0] * self.slice.shape[1]) % self.tileshape[0] == 0,\
             "please chose a tileshape that evenly divides the partition"
+        # num_stacks is only computed for comparison to subslices
         num_stacks = (self.slice.shape[0] * self.slice.shape[1]) // self.tileshape[0]
+        # NOTE: computation is done on (stackheight, framesize) tiles, but logically, they
+        # are equivalent to tiles of shape (1, stackheight, frameheight, framewidth)
         subslices = list(self.slice.subslices(shape=(1, self.tileshape[0],
                                                      self.slice.shape[2],
                                                      self.slice.shape[3])))
         assert num_stacks == len(subslices)
-        # NOTE: computation is done on (stackheight, framesize) tiles, but logically, they
-        # are equivalent to tiles of shape (1, stackheight, frameheight, framewidth)
         with self.dataset.get_fs().open(self.path, 'rb') as f:
             for tile_slice in subslices:
                 f.read(length=data.nbytes, out_buffer=data)

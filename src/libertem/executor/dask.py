@@ -12,7 +12,7 @@ class DaskJobExecutor(JobExecutor):
         else:
             if client:
                 raise ValueError("pass either client or scheduler_uri, not both")
-            self.client = dd.Client(self.scheduler_uri, processes=False)
+            self.client = dd.Client(scheduler_uri, processes=False)
 
     @classmethod
     def make_local(cls, cluster_kwargs=None, client_kwargs=None):

@@ -1,3 +1,7 @@
+import multiprocessing
+import numpy as np
+
+
 class Slice(object):
     def __init__(self, origin, shape):
         """
@@ -82,3 +86,28 @@ class Slice(object):
             for v in range(nv)
             for u in range(nu)
         )
+
+    @classmethod
+    def partition_shape(cls, datashape, framesize, dtype, target_size, min_num_partitions=None):
+        """
+        Calculate partition shape for the given ``target_size``
+
+        Returns
+        -------
+        (int, int, int, int)
+            the shape calculated from the given parameters
+        """
+        min_num_partitions = min_num_partitions or 2 * multiprocessing.cpu_count()
+        # FIXME: allow for partitions samller than one scan row
+        # FIXME: allow specifying the "aspect ratio" for a partition?
+        num_frames = datashape[0] * datashape[1]
+        bytes_per_frame = framesize * np.typeDict[str(dtype)]().itemsize
+        frames_per_partition = target_size // bytes_per_frame
+        num_partitions = num_frames // frames_per_partition
+        num_partitions = max(min_num_partitions, num_partitions)
+
+        # number of partitions should evenly divide number of scan rows:
+        assert datashape[1] % num_partitions == 0,\
+            "%d %% %d != 0" % (datashape[1], num_partitions)
+
+        return (datashape[0] // num_partitions, datashape[1], datashape[2], datashape[3])

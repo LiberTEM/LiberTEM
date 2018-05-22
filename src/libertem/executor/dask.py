@@ -3,14 +3,31 @@ from .base import JobExecutor
 
 
 class DaskJobExecutor(JobExecutor):
-    def __init__(self, scheduler_uri):
-        self.scheduler_uri = scheduler_uri
-        self.client = dd.Client(self.scheduler_uri, processes=False)
+    def __init__(self, scheduler_uri=None, client=None, is_local=False):
+        self.is_local = is_local
+        if client is not None:
+            if scheduler_uri:
+                raise ValueError("pass either client or scheduler_uri, not both")
+            self.client = client
+        else:
+            if client:
+                raise ValueError("pass either client or scheduler_uri, not both")
+            self.client = dd.Client(self.scheduler_uri, processes=False)
+
+    @classmethod
+    def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+        cluster = dd.LocalCluster(**(cluster_kwargs or {}))
+        client = dd.Client(cluster, **(client_kwargs or {}))
+        return cls(client=client, is_local=True)
 
     def run_job(self, job):
-        futures = [
-            self.client.submit(task, workers=task.get_locations())
-            for task in job.get_tasks()
-        ]
+        futures = []
+        for task in job.get_tasks():
+            submit_kwargs = {}
+            if not self.is_local:
+                submit_kwargs['workers'] = task.get_locations()
+            futures.append(
+                self.client.submit(task, **submit_kwargs)
+            )
         for future, result in dd.as_completed(futures, with_results=True):
             yield result

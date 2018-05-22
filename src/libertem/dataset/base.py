@@ -2,6 +2,10 @@ class DataSet(object):
     def get_partitions(self):
         raise NotImplementedError()
 
+    @property
+    def dtype(self):
+        raise NotImplementedError()
+
 
 class Partition(object):
     def __init__(self, dataset, dtype, partition_slice):

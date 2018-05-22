@@ -38,6 +38,10 @@ class BinaryHDFSDataSet(DataSet):
             self._index = json.load(f)
         assert self._index['mode'] == 'rect', 'unsupported mode: %s' % self._index['mode']
 
+    @property
+    def dtype(self):
+        return self._index['dtype']
+
     def get_partitions(self):
         for partition in self._index['partitions']:
             yield BinaryHDFSPartition(

@@ -9,6 +9,7 @@ setup(
     install_requires=[
         "numpy",
         "distributed",
+        "click",
     ],
     extras_require={
         'hdfs': 'hfds3',
@@ -21,6 +22,11 @@ setup(
         "libertem.executor",
         "libertem.job",
     ],
+    entry_points={
+        'console_scripts': [
+            'libertem-ingest=libertem.ingest.cli:main',
+        ]
+    },
     classifiers=[
     ],
 )

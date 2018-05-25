@@ -7,5 +7,5 @@ docs/build/
 *.egg-info
 htmlcov
 coverage.xml
-.coverage.*
+.coverage*
 .pytest_cache

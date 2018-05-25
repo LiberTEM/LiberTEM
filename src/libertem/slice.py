@@ -128,3 +128,6 @@ class Slice(object):
             "%d %% %d != 0" % (datashape[1], num_partitions)
 
         return (datashape[0] // num_partitions, datashape[1], datashape[2], datashape[3])
+
+    def __eq__(self, other):
+        return self.shape == other.shape and self.origin == other.origin

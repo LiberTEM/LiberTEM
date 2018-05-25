@@ -5,3 +5,7 @@ __pycache__
 docs/build/
 .ipynb_checkpoints/
 *.egg-info
+htmlcov
+coverage.xml
+.coverage.*
+.pytest_cache

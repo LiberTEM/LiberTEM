@@ -1,3 +1,6 @@
-# documentation:
-sphinx
-sphinx-autobuild
+h5py
+numpy
+distributed
+
+pytest
+pytest-cov

@@ -5,6 +5,8 @@ import numpy as np
 class Slice(object):
     def __init__(self, origin, shape):
         """
+        A slice into a 4D dataset, defined by origin and shape
+
         Parameters
         ----------
         origin : (int, int) or (int, int, int, int)
@@ -36,24 +38,39 @@ class Slice(object):
                      shape=self.shape)
 
     def get(self, arr=None):
+        """
+        Get a standard python tuple-of-slice object which can be used
+        to slice any 4D ndarray
+
+        Parameters
+        ----------
+        arr : sliceable or None
+            if given, returns arr[slice]
+
+        Returns
+        -------
+        (slice, slice, slice, slice)
+            returns standard python slices computed from
+            our origin+shape model or arr indexed with this slicing
+            if arr is given
+        """
         o, s = self.origin, self.shape
-        if arr:
-            return arr[
-                o[0]:(o[0] + s[0]),
-                o[1]:(o[1] + s[1]),
-                o[2]:(o[2] + s[2]),
-                o[3]:(o[3] + s[3]),
-            ]
+        slice_ = (
+            slice(o[0], (o[0] + s[0])),
+            slice(o[1], (o[1] + s[1])),
+            slice(o[2], (o[2] + s[2])),
+            slice(o[3], (o[3] + s[3])),
+        )
+        if arr is not None:
+            return arr[slice_]
         else:
-            return (
-                slice(o[0], (o[0] + s[0])),
-                slice(o[1], (o[1] + s[1])),
-                slice(o[2], (o[2] + s[2])),
-                slice(o[3], (o[3] + s[3])),
-            )
+            return slice_
 
     def subslices(self, shape):
         """
+        Generator for all subslices of this slice with dimensions
+        specified by ``shape``.
+
         Parameters
         ----------
         shape : (int, int, int, int)

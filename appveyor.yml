@@ -21,4 +21,4 @@ test_script:
   - "%PYTHON%/Scripts/tox"
 
 on_success:
-  - "%PYTHON%/Scripts/codecov"
+  - "%PYTHON%/Scripts/codecov -f coverage.xml"

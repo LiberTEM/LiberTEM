@@ -1,0 +1,24 @@
+build: false
+environment:
+  matrix:
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.5"
+      PYTHON_ARCH: "64"
+      TOXENV: "py36"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.5"
+      PYTHON_ARCH: "64"
+      TOXENV: "flake8"
+
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+
+install:
+  - "%PYTHON%/Scripts/pip.exe install tox codecov"
+
+test_script:
+  - "%PYTHON%/Scripts/tox"
+
+on_success:
+  - "%PYTHON%/Scripts/codecov"

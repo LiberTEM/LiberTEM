@@ -4,8 +4,10 @@ matrix:
   include:
     - python: 3.6
       env: TOXENV=py36
-    - env: TOXENV=flake8
-    - env: TOXENV=docs-deploy
+    - python: 3.6
+      env: TOXENV=flake8
+    - python: 3.6
+      env: TOXENV=docs-deploy
 install:
   - pip install tox
 script:

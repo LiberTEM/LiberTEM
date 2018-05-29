@@ -1,9 +1,11 @@
 language: python
+cache: pip
 matrix:
   include:
     - python: 3.6
       env: TOXENV=py36
     - env: TOXENV=flake8
+    - env: TOXENV=docs-deploy
 install:
   - pip install tox
 script:

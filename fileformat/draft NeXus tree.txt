@@ -1,0 +1,96 @@
+root:NXroot
+  entry:NXentry
+    @default = "preview"
+    # thumbnail image (for file icon use) is a NeXus issue
+    # https://github.com/nexusformat/definitions/issues/381
+    # TODO: preview image of the data
+    preview:NXdata
+      # TODO: (needs structure of plottable data)
+      # points to a subset of the data to make the quick plot
+      # Virtual detector
+      @axes = ['scan_x', 'scan_y']
+      @signal = 'data'
+      # TODO this would be vector scan. How to represent axes for raster scan?
+      scan_x -> /entry/instrument/scan/x
+      scan_y -> /entry/instrument/scan/y
+      data -> /entry/instrument/brightfield/data
+    data:NXdata
+      @axes = ['scan_x', 'scan_y']
+      @signal = 'data'
+      # TODO this would be vector scan. How to represent axes for raster scan?
+      scan_x -> /entry/instrument/scan/x
+      scan_y -> /entry/instrument/scan/y
+      data -> /entry/instrument/detector/data
+    instrument:NXinstrument
+      source:NXsource
+        type = ["Thermionic", "Schottky Field Emission", "Cold Field Emission"] # Pulsed sources TBD
+        probe = "electron"
+        voltage = 300
+          @units = 'kV'
+        # The rest of NXsource is self-explanatory, add later
+      probe:NXbeam
+        distance = 0 # By the definition of the probe is at the sample position
+        
+        convergence_angle = NX_FLOAT
+          @units = 'mrad'
+        spot_size = NX_FLOAT
+          @units = 'nm' # To be agreed in the community
+        spot_size_indicator = NX_INT # To be worked out, instrument-specific
+        defocus = NX_FLOAT
+          @units = 'nm'
+        flux = NX_FLOAT
+          @units = 'pA'
+      detector:NXdetector
+        beam_center_x = 0
+          @units = 'm'
+        beam_center_y = 0
+          @units = 'm'
+        # Add camera_length to NXdetector class definition    
+        camera_length = 0.7
+          @units = 'm'
+        data = float32(256x256x128x128) # Does this mean the dataset itself in the HDF5 file will be 3D? How will this affect chunking? (Dieter) Good question, this is what we have to discuss now!
+        layout = 'area'
+        x_pixel_size = 0.00015
+          @units = 'm'
+        y_pixel_size = 0.00015
+          @units = 'm'
+      # TODO Item
+      brightfield:NXdata
+        # matching detector layout
+        mask = NX_FLOAT[][]
+        # matching scan layout
+        data = NX_FLOAT[][]
+      # Update class definition NXPositioner: Include scan generators for e-beam    
+      # for time series data: NXlog
+      # http://download.nexusformat.org/doc/html/classes/base_classes/NXlog.html#nxlog
+      # Alternatively NXtransformation? How to express scanning with that?
+      scan:NXpositioner
+        scan_type = ["raster", "vector"]
+        
+        # For raster
+        start_x = NX_FLOAT
+        start_y = NX_FLOAT
+        step_x = NX_FLOAT
+        step_y = NX_FLOAT
+        rotation = NX_FLOAT
+        
+        dwell_time = NX_FLOAT
+        
+        # For vector
+        x = NX_FLOAT[]
+        y = NX_FLOAT[]
+        
+        # Drift correction
+        drift_x = NX_FLOAT[] 
+        drift_y = NX_FLOAT[] 
+        
+      # Or NXtransformation as well?  
+      stage:NXpositioner
+        x = NX_FLOAT[]
+        y = NX_FLOAT[]
+        z = NX_FLOAT[]
+        tilt_alpha = NX_FLOAT[]
+        tilt_beta = NX_FLOAT[]
+        rotation = NX_FLOAT[]
+        drift_x = NX_FLOAT[] 
+        drift_y = NX_FLOAT[]

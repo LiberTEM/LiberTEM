@@ -30,5 +30,5 @@ But what about (multicore) scaling?
 -----------------------------------
 
 ``numpy`` releases the GIL, so multiple threads can work at the same time. Even if
-this were not the case, we could  still use the multiprocessing workers of ``dask.distributed``
+this were not the case, we can still use the multiprocessing workers of ``dask.distributed``
 and scale to multiple cores.

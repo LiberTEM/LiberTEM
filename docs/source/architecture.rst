@@ -56,7 +56,7 @@ websockets from the computation Core for each part of the computation that has
 finished.
 
 The Core is tasked with orchestrating the execution of Jobs, which are
-computations on a whole DataSet or on a region of interet. It subdivides Jobs
+computations on a whole DataSet or on a region of interest. It subdivides Jobs
 into smaller Tasks and distributes them on the cluster, or executes them
 locally. Our implementation will use dask, so the Core will contain a dask
 client, which speaks to the dask scheduler, which itself will speak to dask

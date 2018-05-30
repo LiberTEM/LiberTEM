@@ -3,19 +3,28 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to LiberTEM's documentation!
-====================================
+LiberTEM - Open Pixelated STEM platform
+=======================================
+
+.. include:: ../../README.rst
+..   see also: https://muffinresearch.co.uk/selectively-including-parts-readme-rst-in-your-docs/
+..   later, maybe :start-after: inclusion-marker-do-not-remove
+
+
+Documentation
+=============
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   
 
    architecture
    why_python
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

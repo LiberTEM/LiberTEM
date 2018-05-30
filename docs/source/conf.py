@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'LiberTEM'
-copyright = '2018, Alexander Clausen, Dieter Weber'
-author = 'Alexander Clausen, Dieter Weber'
+copyright = '2018, LiberTEM Authors'
+author = 'LiberTEM Authors'
 
 # The short X.Y version
 version = ''

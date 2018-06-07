@@ -14,7 +14,8 @@ from libertem.job.masks import ApplyMasksJob
 
 @pytest.fixture
 def hdf5():
-    _, tmpfn = tempfile.mkstemp(suffix=".h5")
+    f, tmpfn = tempfile.mkstemp(suffix=".h5")
+    os.close(f)
     with h5py.File(tmpfn, "w") as f:
         yield f
     os.unlink(tmpfn)

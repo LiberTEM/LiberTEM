@@ -57,7 +57,7 @@ def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
 
 def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     """
-    Make a circular mask as a double array.
+    Make a ring mask as a double array.
 
     Parameters
     ----------
@@ -66,9 +66,9 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     imageSizeX, imageSizeY : int
         Size of the image to be masked.
     radius : float
-        Outer radius of the mask.
+        Outer radius of the ring.
     radius_inner : float
-        Inner radius of the mask.
+        Inner radius of the ring.
 
     Returns
     -------
@@ -81,11 +81,11 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     return np.ones((imageSizeY, imageSizeX)) * bool_mask
 
 
-def gradient_x(imageSizeX, imageSizeY):
+def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(
-        np.ogrid[slice(0, imageSizeX)].astype(np.float32), imageSizeY
+        np.ogrid[slice(0, imageSizeX)].astype(dtype), imageSizeY
     ).reshape(imageSizeY, imageSizeX)
 
 
-def gradient_y(imageSizeX, imageSizeY):
-    return gradient_x(imageSizeY, imageSizeX).transpose()
+def gradient_y(imageSizeX, imageSizeY, dtype=np.float32):
+    return gradient_x(imageSizeY, imageSizeX, dtype).transpose()

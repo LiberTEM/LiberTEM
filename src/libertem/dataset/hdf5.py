@@ -1,21 +1,20 @@
-import operator
-import functools
 import contextlib
 
 import numpy as np
 import h5py
 
-from .base import DataSet, Partition
+from .base import DataSet, Partition, DataTile
 from ..slice import Slice
-from ..tiling import DataTile
 
 
 class H5DataSet(DataSet):
-    def __init__(self, path, ds_path, stackheight=8, target_size=512*1024*1024):
+    def __init__(self, path, ds_path, tileshape,
+                 target_size=512*1024*1024, min_num_partitions=None):
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size
-        self.stackheight = stackheight
+        self.tileshape = tileshape
+        self.min_num_partitions = min_num_partitions
 
     @contextlib.contextmanager
     def get_h5ds(self):
@@ -27,6 +26,11 @@ class H5DataSet(DataSet):
         with self.get_h5ds() as h5ds:
             return h5ds.dtype
 
+    @property
+    def shape(self):
+        with self.get_h5ds() as h5ds:
+            return h5ds.shape
+
     def get_partitions(self):
         with self.get_h5ds() as h5ds:
             ds_slice = Slice(origin=(0, 0, 0, 0), shape=h5ds.shape)
@@ -34,17 +38,21 @@ class H5DataSet(DataSet):
                 datashape=h5ds.shape,
                 framesize=h5ds[0][0].size,
                 dtype=h5ds.dtype,
-                target_size=self.target_size
+                target_size=self.target_size,
+                min_num_partitions=self.min_num_partitions,
             )
-            framesize = functools.reduce(operator.mul, tuple(h5ds.shape[-2:]))
             dtype = h5ds.dtype
             for pslice in ds_slice.subslices(partition_shape):
+                # TODO: where should the tileshape be set? let the user choose for now
                 yield H5Partition(
-                    tileshape=(self.stackheight, framesize),
+                    tileshape=self.tileshape,
                     dataset=self,
                     dtype=dtype,
                     partition_slice=pslice,
                 )
+
+    def __repr__(self):
+        return "<H5DataSet of %s shape=%s>" % (self.dtype, self.shape)
 
 
 class H5Partition(Partition):
@@ -54,25 +62,20 @@ class H5Partition(Partition):
 
     def get_tiles(self):
         data = np.ndarray(self.tileshape, dtype=self.dtype)
-        data_subslice_view = data.reshape(
-            (1, self.tileshape[0],
-             self.slice.shape[2],
-             self.slice.shape[3])
-        )
         with self.dataset.get_h5ds() as dataset:
-            assert (self.slice.shape[0] * self.slice.shape[1]) % self.tileshape[0] == 0,\
-                "please chose a tileshape that evenly divides the partition"
-            # num_stacks is only computed for comparison to subslices
-            num_stacks = (self.slice.shape[0] * self.slice.shape[1]) // self.tileshape[0]
-            # NOTE: computation is done on (stackheight, framesize) tiles, but logically, they
-            # are equivalent to tiles of shape (1, stackheight, frameheight, framewidth)
-            subslices = list(self.slice.subslices(shape=(1, self.tileshape[0],
-                                                         self.slice.shape[2],
-                                                         self.slice.shape[3])))
-            assert num_stacks == len(subslices)
+            subslices = list(self.slice.subslices(shape=self.tileshape))
             for tile_slice in subslices:
-                dataset.read_direct(data_subslice_view, source_sel=tile_slice.get())
-                yield DataTile(data=data, tile_slice=tile_slice)
+                if tile_slice.shape != self.tileshape:
+                    # at the border, can't reuse buffer
+                    # hmm. aren't there only like 3 different shapes at the border?
+                    # FIXME: use buffer pool to reuse buffers of same shape
+                    border_data = np.ndarray(tile_slice.shape, dtype=self.dtype)
+                    dataset.read_direct(border_data, source_sel=tile_slice.get())
+                    yield DataTile(data=border_data, tile_slice=tile_slice)
+                else:
+                    # reuse buffer
+                    dataset.read_direct(data, source_sel=tile_slice.get())
+                    yield DataTile(data=data, tile_slice=tile_slice)
 
     def get_locations(self):
         return "127.0.1.1"  # FIXME

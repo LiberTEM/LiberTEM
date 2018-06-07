@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from libertem.slice import Slice
 
 
@@ -16,13 +15,89 @@ def test_subslices_simple():
     ]
 
 
-def test_subslices_must_divide_evenly():
+def test_subslices_non_even_division_1():
     top_slice = Slice(
         origin=(0, 0, 0, 0),
-        shape=(10, 10, 10, 10),
+        shape=(5, 1, 1, 1),
     )
-    with pytest.raises(AssertionError):
-        top_slice.subslices(shape=(3, 3, 10, 10))
+    assert list(top_slice.subslices(shape=(2, 1, 1, 1))) == [
+        Slice(origin=(0, 0, 0, 0), shape=(2, 1, 1, 1)),
+        Slice(origin=(2, 0, 0, 0), shape=(2, 1, 1, 1)),
+        Slice(origin=(4, 0, 0, 0), shape=(1, 1, 1, 1)),
+    ]
+
+
+def test_subslices_non_even_division_2():
+    top_slice = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(3, 1, 1, 1),
+    )
+    assert list(top_slice.subslices(shape=(2, 1, 1, 1))) == [
+        Slice(origin=(0, 0, 0, 0), shape=(2, 1, 1, 1)),
+        Slice(origin=(2, 0, 0, 0), shape=(1, 1, 1, 1)),
+    ]
+
+
+def test_subslices_non_even_division_3():
+    top_slice = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(3, 3, 1, 1),
+    )
+    assert list(top_slice.subslices(shape=(2, 2, 1, 1))) == [
+        Slice(origin=(0, 0, 0, 0), shape=(2, 2, 1, 1)),
+        Slice(origin=(0, 2, 0, 0), shape=(2, 1, 1, 1)),
+        Slice(origin=(2, 0, 0, 0), shape=(1, 2, 1, 1)),
+        Slice(origin=(2, 2, 0, 0), shape=(1, 1, 1, 1)),
+    ]
+
+
+def test_subslices_non_even_division_4():
+    top_slice = Slice(
+        origin=(1, 0, 0, 0),
+        shape=(1, 10, 3838, 3710),
+    )
+    list(top_slice.subslices(shape=(1, 2, 128, 128)))
+
+
+def test_subslices_non_even_division_with_origin_1():
+    top_slice = Slice(
+        origin=(0, 3, 0, 0),
+        shape=(3, 3, 1, 1),
+    )
+    assert list(top_slice.subslices(shape=(2, 2, 1, 1))) == [
+        Slice(origin=(0, 3, 0, 0), shape=(2, 2, 1, 1)),
+        Slice(origin=(0, 5, 0, 0), shape=(2, 1, 1, 1)),
+        Slice(origin=(2, 3, 0, 0), shape=(1, 2, 1, 1)),
+        Slice(origin=(2, 5, 0, 0), shape=(1, 1, 1, 1)),
+    ]
+
+
+def test_subslices_non_even_division_with_origin_2():
+    top_slice = Slice(
+        origin=(0, 3, 0, 0),
+        shape=(3, 3, 3, 3),
+    )
+    assert list(top_slice.subslices(shape=(2, 2, 2, 2))) == [
+        Slice(origin=(0, 3, 0, 0), shape=(2, 2, 2, 2)),
+        Slice(origin=(0, 3, 0, 2), shape=(2, 2, 2, 1)),
+        Slice(origin=(0, 3, 2, 0), shape=(2, 2, 1, 2)),
+        Slice(origin=(0, 3, 2, 2), shape=(2, 2, 1, 1)),
+
+        Slice(origin=(0, 5, 0, 0), shape=(2, 1, 2, 2)),
+        Slice(origin=(0, 5, 0, 2), shape=(2, 1, 2, 1)),
+        Slice(origin=(0, 5, 2, 0), shape=(2, 1, 1, 2)),
+        Slice(origin=(0, 5, 2, 2), shape=(2, 1, 1, 1)),
+
+        Slice(origin=(2, 3, 0, 0), shape=(1, 2, 2, 2)),
+        Slice(origin=(2, 3, 0, 2), shape=(1, 2, 2, 1)),
+        Slice(origin=(2, 3, 2, 0), shape=(1, 2, 1, 2)),
+        Slice(origin=(2, 3, 2, 2), shape=(1, 2, 1, 1)),
+
+        Slice(origin=(2, 5, 0, 0), shape=(1, 1, 2, 2)),
+        Slice(origin=(2, 5, 0, 2), shape=(1, 1, 2, 1)),
+        Slice(origin=(2, 5, 2, 0), shape=(1, 1, 1, 2)),
+        Slice(origin=(2, 5, 2, 2), shape=(1, 1, 1, 1)),
+    ]
 
 
 def test_broadcast_slice():

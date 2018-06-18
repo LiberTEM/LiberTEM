@@ -32,7 +32,7 @@
  * Which are then aggregated to actions like this:
  *
  * {
- *  type: AGG_ACTION_TYPE,
+ *  type: AGG_ACTION_TYPE,      // defined in the head message
  *  payload: {
  *   head: {type: SOME_ACTION_TYPE, payload: {...}},
  *   parts: [{type: OTHER_ACTION_TYPE, payload: {...}}, ...],
@@ -55,12 +55,15 @@ function aggregateActions(store) {
     };
 
     return next => action => {
+        console.log(`in aggregateActions: action=`, action);
         if(!action.meta || !action.meta.aggregate) {
+            console.log(`not aggregate, calling next`);
             return next(action);
         }
         var agg = action.meta.aggregate;
         if(ctx.expectedParts > 0) {
             // part
+            console.log(`part of aggregate message`);
             if(agg.head !== false) {
                 throw new Error(`unexpected state, was expecting a part (head=false), got head=${agg.head}`);
             }
@@ -80,12 +83,14 @@ function aggregateActions(store) {
             }
         } else {
             // head
+            console.log(`head of aggregate message`);
             if(agg.head !== true) {
                 throw new Error(`unexpected state, was expecting a head (head=true), got head=${agg.head}`);
             }
             ctx.head = action;
             ctx.expectedParts = agg.numParts;
         }
+
         // swallow the action:
         return store.getState();
     };

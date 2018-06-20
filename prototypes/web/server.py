@@ -22,10 +22,12 @@ class Message(object):
     """
 
     @classmethod
-    def initial_state(cls):
-        # TODO: what is part of the initial state?
+    def initial_state(cls, jobs, datasets):
+        # TODO: what else is part of the initial state?
         return {
             "messageType": "INITIAL_STATE",
+            "datasets": datasets,
+            "jobs": jobs,
         }
 
     @classmethod
@@ -62,9 +64,15 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         self.registry = event_registry
         self.data = data
 
+    def check_origin(self, origin):
+        return True  # TODO XXX FIXME !!!
+
     def open(self):
         self.registry.add_handler(self)
-        self.write_message(Message.initial_state())
+        self.write_message(Message.initial_state(
+            jobs=self.data.serialize_jobs(),
+            datasets=self.data.serialize_datasets(),
+        ))
 
     def on_close(self):
         self.registry.remove_handler(self)
@@ -90,7 +98,21 @@ class EventRegistry(object):
                 handler.write_message(message, *args, **kwargs)
 
 
-class JobDetailHandler(tornado.web.RequestHandler):
+class CORSMixin(object):
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")  # XXX FIXME TODO!!!
+        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'PUT, POST, GET, OPTIONS')
+
+    def options(self, *args):
+        """
+        for CORS pre-flight requests, no body returned
+        """
+        self.set_status(204)
+        self.finish()
+
+
+class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
     def initialize(self, data, event_registry):
         self.data = data
         self.event_registry = event_registry
@@ -120,6 +142,7 @@ class JobDetailHandler(tornado.web.RequestHandler):
 
     async def result_images(self, full_result, save_kwargs=None):
         colormap = cm.gist_earth
+        # colormap = cm.viridis
         save_kwargs = save_kwargs or {}
 
         def _encode_image(result):
@@ -209,7 +232,7 @@ class JobDetailHandler(tornado.web.RequestHandler):
             self.event_registry.broadcast_event(raw_bytes, binary=True)
 
 
-class DataSetDetailHandler(tornado.web.RequestHandler):
+class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     def initialize(self, data, event_registry):
         self.data = data
         self.event_registry = event_registry
@@ -240,10 +263,13 @@ class SharedData(object):
     def __init__(self):
         self.datasets = {}
         self.jobs = {}
+        self.job_to_id = {}
+        self.dataset_to_id = {}
 
     def register_dataset(self, uuid, dataset):
         assert uuid not in self.datasets
         self.datasets[uuid] = dataset
+        self.dataset_to_id[dataset] = uuid
         return self
 
     def get_dataset(self, uuid):
@@ -252,10 +278,33 @@ class SharedData(object):
     def register_job(self, uuid, job):
         assert uuid not in self.jobs
         self.jobs[uuid] = job
+        self.job_to_id[job] = uuid
         return self
 
     def get_job(self, uuid):
         return self.jobs[uuid]
+
+    def serialize_jobs(self):
+        return [
+            {
+                "job": job_id,
+                "dataset": self.dataset_to_id[job.dataset],
+            }
+            for job_id, job in self.jobs.items()
+        ]
+
+    def serialize_datasets(self):
+        return [
+            {
+                # TODO: fill values
+                "dataset": dataset_id,
+                "name": "",
+                "path": "",
+                "tileshape": [],
+                "type": "",
+            }
+            for dataset_id, dataset in self.datasets.items()
+        ]
 
 
 class IndexHandler(tornado.web.RequestHandler):

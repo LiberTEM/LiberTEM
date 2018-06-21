@@ -1,19 +1,19 @@
 import * as React from "react";
+import { Image } from 'semantic-ui-react';
+import { DeepReadonly } from "utility-types";
 import { Job } from "./types";
 
 interface JobProps {
-    job: Job,
+    job: DeepReadonly<Job>,
 }
 
 const JobComponent: React.SFC<JobProps> = ({ job }) => {
-    // tslint:disable-next-line
-    console.log(job);
     return (
-        <ul>
+        <div>
             {job.results.map((res, idx) => {
-                return <li key={idx}><img src={res.imageURL}/></li>
+                return <Image src={res.imageURL} key={idx} />
             })}
-        </ul>
+        </div>
     );
 }
 

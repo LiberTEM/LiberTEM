@@ -1,7 +1,7 @@
 import * as React from 'react';
 import 'semantic-ui-css/semantic.min.css';
 import { Button, Container, Grid, Header, Icon, Label } from 'semantic-ui-react';
-import Jobs from './job/Jobs';
+import JobList from './job/JobList';
 
 
 class App extends React.Component {
@@ -28,7 +28,7 @@ class App extends React.Component {
                     </Grid.Row>
                     <Grid.Row>
                         <Grid.Column stretched={true}>
-                            <Jobs/>
+                            <JobList/>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

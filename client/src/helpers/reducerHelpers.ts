@@ -1,6 +1,6 @@
-export interface ById<P> {
+export interface ById<R> {
     ids: string[],
-    byId: { [s: string]: P },
+    byId: { [s: string]: R },
 };
 
 /*
@@ -20,20 +20,33 @@ export function readOnlyWithGeneric<P>(foo: Foo<P>, key: string) {
 }
 */
 
-export function updateById<P, S extends ById<P>>(state: S, id: string, partialData: Partial<P>): S {
-    const newObj = Object.assign({}, state.byId[id], partialData);
+export function updateById<R, S extends ById<R>>(state: S, id: string, partialRecord: Partial<R>): S {
+    const newObj = Object.assign({}, state.byId[id], partialRecord);
     const newById = Object.assign({}, state.byId, { [id]: newObj });
     return Object.assign({}, state, { byId: newById });
 }
 
-export function insertById<P extends object, S extends ById<P>>(state: S, id: string, data: P): S {
-    const newById = Object.assign({}, state.byId, { [id]: data });
+export function insertById<R extends object, S extends ById<R>>(state: S, id: string, record: R): S {
+    const newById = Object.assign({}, state.byId, { [id]: record });
     const newIds = [...state.ids, id];
     return Object.assign({}, state, { byId: newById, ids: newIds });
 }
 
-export function getById<P extends object, S extends ById<P>>(items: P[], key: (k: P) => string) {
+export function constructById<R extends object, S extends ById<R>>(items: R[], key: (k: R) => string) {
     return items.reduce((acc, item) => Object.assign(acc, {
         [key(item)]: item,
     }), {});
+}
+
+export type Predicate<R> = (item: R) => boolean;
+
+export function filterWithPred<R, S extends ById<R>>(state: S, pred: Predicate<R>): S {
+    const ids = state.ids.filter(id => pred(state.byId[id]));
+    const byId = ids.reduce((acc, id) => Object.assign(acc, {
+        [id]: state.byId[id],
+    }), {});
+    return Object.assign({}, state, {
+        byId,
+        ids,
+    });
 }

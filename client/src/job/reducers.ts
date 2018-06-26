@@ -1,17 +1,17 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { ById, getById, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, constructById, insertById, updateById } from "../helpers/reducerHelpers";
 import { Job, JobResultType } from "./types";
 
 export type JobReducerState = ById<Job>;
 
-const initialJobState : JobReducerState = {
+const initialJobState: JobReducerState = {
     byId: {},
     ids: [],
 };
 
 export function jobReducer(state = initialJobState, action: AllActions) {
-    switch(action.type) {
+    switch (action.type) {
         case channelActions.ActionTypes.INITIAL_STATE: {
             const jobs = action.payload.jobs.map(job => ({
                 dataset: job.dataset,
@@ -22,7 +22,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 status: "SUCCESS",
             }))
             return {
-                byId: getById(jobs, job => job.id),
+                byId: constructById(jobs, job => job.id),
                 ids: jobs.map(job => job.id)
             };
         }

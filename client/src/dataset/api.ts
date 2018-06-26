@@ -1,5 +1,3 @@
-import * as uuid from 'uuid/v4';
-
 export interface OpenDatasetRequest {
     name: string,
     type: string,
@@ -12,12 +10,11 @@ export interface OpenDatasetResponse {
     dataset: string,  // TODO: uuid type?
 }
 
-export function openDataset(dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
-    const datasetId = uuid();
+export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
     const payload = {
         dataset,
     };
-    return fetch(`http://localhost:9000/datasets/${datasetId}/`, {
+    return fetch(`http://localhost:9000/datasets/${id}/`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",

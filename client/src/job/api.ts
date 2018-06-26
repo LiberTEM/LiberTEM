@@ -1,5 +1,3 @@
-import * as uuid from 'uuid/v4';
-
 export interface MaskDefRing {
     shape: "ring",
     cx: number,
@@ -15,10 +13,17 @@ export interface MaskDefDisk {
     r: number,
 }
 
+// tslint:disable-next-line:no-empty-interface
+export interface CenterOfMassParams { }
+
 export type CreateMaskJobRequest = MaskDefRing | MaskDefDisk
 
-export function startJob(datasetId: string, masks: CreateMaskJobRequest[]) {
-    const jobId = uuid();
+export interface StartJobResponse {
+    status: "ok",
+    job: string,
+}
+
+export function startJob(jobId: string, datasetId: string, masks: CreateMaskJobRequest[]): Promise<StartJobResponse> {
     const payload = {
         job: {
             dataset: datasetId,

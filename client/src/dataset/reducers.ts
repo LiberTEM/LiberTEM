@@ -1,18 +1,18 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { ById, getById } from "../helpers/reducerHelpers";
+import { ById, constructById } from "../helpers/reducerHelpers";
 import * as datasetActions from './actions';
 import { Dataset } from "./types";
 
 export type DatasetState = ById<Dataset>;
 
-const initialDatasetState : DatasetState = {
+const initialDatasetState: DatasetState = {
     byId: {},
     ids: [],
 };
 
 export function datasetReducer(state = initialDatasetState, action: AllActions) {
-    switch(action.type) {
+    switch (action.type) {
         case channelActions.ActionTypes.INITIAL_STATE: {
             const datasets = action.payload.datasets.map(ds => ({
                 id: ds.dataset,
@@ -22,7 +22,7 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
                 type: ds.type,
             }))
             return {
-                byId: getById(datasets, ds => ds.id),
+                byId: constructById(datasets, ds => ds.id),
                 ids: datasets.map(ds => ds.id),
             }
         }

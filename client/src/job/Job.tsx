@@ -1,10 +1,15 @@
 import * as React from "react";
+import { connect } from "react-redux";
 import { Image } from 'semantic-ui-react';
-import { DeepReadonly } from "utility-types";
+import { RootReducer } from "../store";
 import { Job } from "./types";
 
 interface JobProps {
-    job: DeepReadonly<Job>,
+    job: Job,
+}
+
+interface ExternalJobProps {
+    job: string,
 }
 
 const JobComponent: React.SFC<JobProps> = ({ job }) => {
@@ -15,6 +20,12 @@ const JobComponent: React.SFC<JobProps> = ({ job }) => {
             })}
         </div>
     );
-}
+};
 
-export default JobComponent;
+const mapStateToProps = (state: RootReducer, ownProps: ExternalJobProps) => {
+    return {
+        job: state.job.byId[ownProps.job],
+    };
+};
+
+export default connect(mapStateToProps)(JobComponent);

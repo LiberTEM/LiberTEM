@@ -13,7 +13,6 @@ interface AnalysisProps {
     analysis: Analysis,
 }
 
-// TODO: get rid of the `any` here
 function defaultDebounce<T extends (...args: any[]) => any>(fn: T, delay: number = 50) {
     return _.debounce(fn, delay, { maxWait: delay });
 }
@@ -50,10 +49,3 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, parameters, handle
 }
 
 export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(RingMaskAnalysis);
-
-
-/**
- * Ring parameters are either controlled by the current analysis, or if the user is interacting
- * with the widget, with a temporary state (TODO: stored where?) that, on drop, will be emitted
- * as an action and become the new analysis parameters.
- */

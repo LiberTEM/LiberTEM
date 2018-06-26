@@ -124,6 +124,16 @@ class ResultTile(object):
             tile_slice[1],
         )
 
+    @property
+    def reshaped_data(self):
+        # (frames, masks) -> (masks, _, frames)
+        shape = self.data.shape
+        return self.data.reshape(shape[0], 1, shape[1]).transpose()
+
+    @property
+    def dtype(self):
+        return self.data.dtype
+
     def copy_to_result(self, result):
         """
         Reshapes the result from the flattened version to a shape
@@ -133,8 +143,5 @@ class ResultTile(object):
         # let's assert it for now:
         assert self.tile_slice.shape[0] == 1
 
-        # (frames, masks) -> (masks, _, frames)
-        shape = self.data.shape
-        reshaped_data = self.data.reshape(shape[0], 1, shape[1]).transpose()
-        result[self._get_dest_slice()] += reshaped_data
+        result[self._get_dest_slice()] += self.reshaped_data
         return result

@@ -4,7 +4,7 @@ from io import BytesIO
 from libertem.dataset.hdfs import BinaryHDFSDataSet
 from libertem.executor.dask import DaskJobExecutor
 from libertem.job.masks import ApplyMasksJob
-from libertem.masks import ring
+from libertem.masks import ring, circular
 import numpy as np
 import tornado.web
 import tornado.websocket
@@ -129,15 +129,35 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 )
             return _inner
 
+        def _make_disk(cx, cy, r):
+            def _inner():
+                return circular(
+                    centerX=cx, centerY=cy,
+                    imageSizeX=frame_size[1],
+                    imageSizeY=frame_size[0],
+                    radius=r,
+                )
+            return _inner
+
+        fn_by_shape = {
+            "disk": _make_disk,
+            "ring": _make_ring,
+        }
+
         factories = []
         for params in mask_params:
             kwargs = copy.deepcopy(params)
             shape = kwargs.pop('shape')
-            assert shape == 'ring'
-            for p in ['cx', 'cy', 'ri', 'ro']:
-                assert p in kwargs
-            assert len(kwargs.keys()) == 4
-            factories.append(_make_ring(**kwargs))
+            assert shape in fn_by_shape
+            if shape == "ring":
+                assert len(kwargs.keys()) == 4
+                for p in ['cx', 'cy', 'ri', 'ro']:
+                    assert p in kwargs
+            elif shape == "disk":
+                assert len(kwargs.keys()) == 3
+                for p in ['cx', 'cy', 'r']:
+                    assert p in kwargs
+            factories.append(fn_by_shape[shape](**kwargs))
         return factories
 
     async def result_images(self, full_result, save_kwargs=None):
@@ -183,7 +203,10 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             futures.append(
                 executor.client.submit(task, **submit_kwargs)
             )
-        self.write({"status": "ok"})
+        self.write({
+            "status": "ok",
+            "job": uuid,
+        })
         self.finish()
         self.event_registry.broadcast_event(Message.start_job(
             job_id=uuid,
@@ -252,6 +275,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.data.register_dataset(
             uuid=uuid,
             dataset=ds,
+            params=params,
         )
         self.write({
             "status": "ok",
@@ -266,14 +290,17 @@ class SharedData(object):
         self.job_to_id = {}
         self.dataset_to_id = {}
 
-    def register_dataset(self, uuid, dataset):
+    def register_dataset(self, uuid, dataset, params):
         assert uuid not in self.datasets
-        self.datasets[uuid] = dataset
+        self.datasets[uuid] = {
+            "dataset": dataset,
+            "params": params,
+        }
         self.dataset_to_id[dataset] = uuid
         return self
 
     def get_dataset(self, uuid):
-        return self.datasets[uuid]
+        return self.datasets[uuid]["dataset"]
 
     def register_job(self, uuid, job):
         assert uuid not in self.jobs
@@ -296,12 +323,11 @@ class SharedData(object):
     def serialize_datasets(self):
         return [
             {
-                # TODO: fill values
                 "dataset": dataset_id,
-                "name": "",
-                "path": "",
-                "tileshape": [],
-                "type": "",
+                "name": dataset["params"]["name"],
+                "path": dataset["params"]["path"],
+                "tileshape": dataset["params"]["tileshape"],
+                "type": dataset["params"]["type"],
             }
             for dataset_id, dataset in self.datasets.items()
         ]

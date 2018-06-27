@@ -3,7 +3,7 @@ import { connect, Dispatch } from "react-redux";
 import { Grid, Header, Segment } from "semantic-ui-react";
 import { defaultDebounce } from "../../helpers";
 import JobComponent from "../../job/Job";
-import { Dataset, MaskDefRing } from "../../messages";
+import { DatasetState, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
 import { Analysis } from "../types";
@@ -12,7 +12,7 @@ import Toolbar from "./Toolbar";
 interface AnalysisProps {
     parameters: MaskDefRing,
     analysis: Analysis,
-    dataset: Dataset,
+    dataset: DatasetState,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {

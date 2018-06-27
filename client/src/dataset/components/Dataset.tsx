@@ -6,11 +6,11 @@ import AnalysisList from "../../analysis/components/AnalysisList";
 import AnalysisSelect from "../../analysis/components/AnalysisSelect";
 import { Analysis, AnalysisTypes } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
-import { Dataset } from "../../messages";
+import { DatasetState } from "../../messages";
 import { RootReducer } from "../../store";
 
 interface DatasetProps {
-    dataset: Dataset
+    dataset: DatasetState
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: DatasetProps) => {

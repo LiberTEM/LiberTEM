@@ -30,6 +30,9 @@ export interface OpenDatasetResponse {
 
 export type MsgPartDataset = Dataset
 
+// type alias if we want to add client-side state to datasets
+export type DatasetState = Dataset
+
 /*
  * Job
  */

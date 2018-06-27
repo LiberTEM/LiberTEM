@@ -4,11 +4,11 @@ import { Button, Icon, Label } from "semantic-ui-react";
 import * as uuid from "uuid/v4";
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
-import { DatasetState } from "../reducers";
+import { DatasetsState } from "../types";
 import Dataset from "./Dataset";
 
 interface DatasetListProps {
-    datasets: DatasetState
+    datasets: DatasetsState
 }
 
 const mapStateToProps = (state: RootReducer) => {

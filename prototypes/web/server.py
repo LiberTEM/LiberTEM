@@ -21,36 +21,47 @@ class Message(object):
     possible messages - the translation of our python datatypes to json types
     """
 
-    @classmethod
-    def initial_state(cls, jobs, datasets):
-        # TODO: what else is part of the initial state?
+    def __init__(self, data):
+        self.data = data
+
+    def initial_state(self, jobs, datasets):
         return {
+            "status": "ok",
             "messageType": "INITIAL_STATE",
             "datasets": datasets,
             "jobs": jobs,
         }
 
-    @classmethod
-    def start_job(cls, job_id):
-        # TODO: job parameters?
+    def create_dataset(self, dataset):
         return {
-            "messageType": "START_JOB",
-            "job": job_id,
+            "status": "ok",
+            "messageType": "CREATE_DATASET",
+            "dataset": dataset,
+            "details": self.data.serialize_dataset(dataset),
         }
 
-    @classmethod
-    def finish_job(cls, job_id, num_images):
+    def start_job(self, job_id):
         return {
+            "status": "ok",
+            "messageType": "START_JOB",
+            "job": job_id,
+            "details": self.data.serialize_job(job_id),
+        }
+
+    def finish_job(self, job_id, num_images):
+        return {
+            "status": "ok",
             "messageType": "FINISH_JOB",
             "job": job_id,
+            "details": self.data.serialize_job(job_id),
             "followup": {
                 "numMessages": num_images,
             },
         }
 
-    @classmethod
-    def task_result(cls, job_id, num_images):
+    def task_result(self, job_id, num_images):
         return {
+            "status": "ok",
             "messageType": "TASK_RESULT",
             "job": job_id,
             "followup": {
@@ -69,7 +80,7 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         self.registry.add_handler(self)
-        self.write_message(Message.initial_state(
+        self.write_message(Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),
         ))
@@ -203,12 +214,11 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             futures.append(
                 executor.client.submit(task, **submit_kwargs)
             )
-        self.write({
-            "status": "ok",
-            "job": uuid,
-        })
+        self.write(Message(self.data).start_job(
+            job_id=uuid
+        ))
         self.finish()
-        self.event_registry.broadcast_event(Message.start_job(
+        self.event_registry.broadcast_event(Message(self.data).start_job(
             job_id=uuid,
         ))
 
@@ -235,7 +245,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             # NOTE: make sure the following broadcast_event messages are sent atomically!
             # (that is: keep the code below synchronous, and only send the messages
             # once the images have finished encoding, and then send all at once)
-            self.event_registry.broadcast_event(Message.task_result(
+            self.event_registry.broadcast_event(Message(self.data).task_result(
                 job_id=uuid,
                 num_images=len(images),
             ))
@@ -246,7 +256,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             full_result,
             save_kwargs={'format': 'png'},
         )
-        self.event_registry.broadcast_event(Message.finish_job(
+        self.event_registry.broadcast_event(Message(self.data).finish_job(
             job_id=uuid,
             num_images=len(images),
         ))
@@ -265,7 +275,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'] == "HDFS"
+        assert params['type'] in ["HDFS", "HDF5"]
         ds = BinaryHDFSDataSet(
             index_path=params['path'],  # TODO: validate! kerberosify! etc.
             host='localhost',
@@ -277,10 +287,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset=ds,
             params=params,
         )
-        self.write({
-            "status": "ok",
-            "dataset": uuid,
-        })
+        self.write(Message(self.data).create_dataset(dataset=uuid))
+        self.event_registry.broadcast_event(Message(self.data).create_dataset(dataset=uuid))
 
 
 class SharedData(object):
@@ -311,25 +319,34 @@ class SharedData(object):
     def get_job(self, uuid):
         return self.jobs[uuid]
 
+    def serialize_job(self, job_id):
+        job = self.jobs[job_id]
+        return {
+            "id": job_id,
+            "dataset": self.dataset_to_id[job.dataset],
+        }
+
     def serialize_jobs(self):
         return [
-            {
-                "job": job_id,
-                "dataset": self.dataset_to_id[job.dataset],
-            }
-            for job_id, job in self.jobs.items()
+            self.serialize_job(job_id)
+            for job_id in self.jobs.keys()
         ]
+
+    def serialize_dataset(self, dataset_id):
+        dataset = self.datasets[dataset_id]
+        return {
+            "id": dataset_id,
+            "name": dataset["params"]["name"],
+            "path": dataset["params"]["path"],
+            "tileshape": dataset["params"]["tileshape"],
+            "type": dataset["params"]["type"],
+            "shape": dataset["dataset"].shape,
+        }
 
     def serialize_datasets(self):
         return [
-            {
-                "dataset": dataset_id,
-                "name": dataset["params"]["name"],
-                "path": dataset["params"]["path"],
-                "tileshape": dataset["params"]["tileshape"],
-                "type": dataset["params"]["type"],
-            }
-            for dataset_id, dataset in self.datasets.items()
+            self.serialize_dataset(dataset_id)
+            for dataset_id in self.datasets.keys()
         ]
 
 

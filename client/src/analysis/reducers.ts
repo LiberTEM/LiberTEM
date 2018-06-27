@@ -1,5 +1,5 @@
 import { AllActions } from "../actions";
-import { ById, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as analysisActions from "./actions";
 import { Analysis } from "./types";
 
@@ -26,6 +26,9 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         }
         case analysisActions.ActionTypes.RUNNING: {
             return updateById(state, action.payload.id, { currentJob: action.payload.job })
+        }
+        case analysisActions.ActionTypes.REMOVE: {
+            return filterWithPred(state, (r: Analysis) => r.id !== action.payload.id);
         }
     }
     return state;

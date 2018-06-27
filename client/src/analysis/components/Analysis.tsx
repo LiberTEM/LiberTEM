@@ -1,5 +1,7 @@
 import * as React from "react";
+import { connect } from "react-redux";
 import { assertNotReached } from '../../helpers';
+import { RootReducer } from "../../store";
 import { Analysis, AnalysisTypes } from "../types";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
 import RingMaskAnalysis from "./RingMaskAnalysis";
@@ -8,17 +10,25 @@ interface AnalysisProps {
     analysis: Analysis,
 }
 
-const AnalysisComponent: React.SFC<AnalysisProps> = ({ analysis }) => {
+const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {
+    return {
+        dataset: state.dataset.byId[ownProps.analysis.dataset],
+    }
+}
+
+type MergedProps = AnalysisProps & ReturnType<typeof mapStateToProps>;
+
+const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
     switch (analysis.details.type) {
         case AnalysisTypes.APPLY_DISK_MASK: {
-            return <DiskMaskAnalysis analysis={analysis} parameters={analysis.details.parameters} />;
+            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
         };
         case AnalysisTypes.APPLY_RING_MASK: {
-            return <RingMaskAnalysis analysis={analysis} parameters={analysis.details.parameters} />;
+            return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
         }
     }
 
     return assertNotReached("unknown analysis type");
 }
 
-export default AnalysisComponent;
+export default connect(mapStateToProps)(AnalysisComponent);

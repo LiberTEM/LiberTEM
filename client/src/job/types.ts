@@ -1,8 +1,9 @@
+
 export interface JobResultType {
     imageURL: string,
 }
 
-export interface Job {
+export interface JobState {
     id: string,
     dataset: string,
     running: "RUNNING" | "DONE",

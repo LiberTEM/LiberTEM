@@ -1,21 +1,8 @@
-export interface OpenDatasetRequest {
-    name: string,
-    type: string,
-    path: string,
-    tileshape: number[],
-}
-
-export interface OpenDatasetResponse {
-    status: "ok",
-    dataset: string,  // TODO: uuid type?
-}
+import { OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
 export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
-    const payload = {
-        dataset,
-    };
     return fetch(`http://localhost:9000/datasets/${id}/`, {
-        body: JSON.stringify(payload),
+        body: JSON.stringify(dataset),
         credentials: "same-origin",
         method: "PUT",
     }).then(r => r.json());

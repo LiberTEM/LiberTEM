@@ -1,9 +1,9 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
 import { ById, constructById, insertById, updateById } from "../helpers/reducerHelpers";
-import { Job, JobResultType } from "./types";
+import { JobResultType, JobState } from "./types";
 
-export type JobReducerState = ById<Job>;
+export type JobReducerState = ById<JobState>;
 
 const initialJobState: JobReducerState = {
     byId: {},
@@ -15,7 +15,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
         case channelActions.ActionTypes.INITIAL_STATE: {
             const jobs = action.payload.jobs.map(job => ({
                 dataset: job.dataset,
-                id: job.job,
+                id: job.id,
                 results: ([] as JobResultType[]),
                 // TODO: real status here
                 running: "DONE",

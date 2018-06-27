@@ -98,8 +98,6 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     }
 
     public stopDrag = (e: React.MouseEvent<SVGElement>): void => {
-        // tslint:disable-next-line:no-console
-        console.log("stopDrag", e.currentTarget, e.target, e.type, e.nativeEvent);
         const { parentOnDrop } = this.props;
         const { dragging, drag } = this.state;
         if (!dragging) {

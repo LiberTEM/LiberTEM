@@ -20,7 +20,7 @@ function getAnalysisDetails(analysisType: AnalysisTypes): AnalysisDetails {
                     shape: "disk",
                     cx: 64,
                     cy: 64,
-                    r: 0,
+                    r: 15,
                 }
             };
         }

@@ -1,4 +1,5 @@
 import { ActionCreatorsMapObject } from "redux";
+import { FollowupPart, MsgPartDataset, MsgPartJob } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T
@@ -17,23 +18,6 @@ export enum MessageTypes {
     OPEN = "OPEN",
     CLOSE = "CLOSE",
     ERROR = "ERROR",
-}
-
-export interface FollowupPart {
-    numMessages: number,
-}
-
-export interface MsgPartJob {
-    job: string,
-    dataset: string,
-}
-
-export interface MsgPartDataset {
-    dataset: string,
-    name: string,
-    path: string,
-    tileshape: number[],
-    type: string,
 }
 
 // tslint:disable:object-literal-sort-keys

@@ -53,7 +53,7 @@ const DatasetList: React.SFC<MergedProps> = ({ createDataset, datasets }) => {
         <>
             <Button as='div' labelPosition='right' onClick={loadDatasets}>
                 <Button icon={true}>
-                    <Icon name='add' />
+                    <Icon name='folder open outline' />
                 </Button>
                 <Label as='a' basic={true}>
                     Load Dataset

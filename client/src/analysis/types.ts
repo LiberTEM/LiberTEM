@@ -1,4 +1,4 @@
-import { CenterOfMassParams, MaskDefDisk, MaskDefRing } from "../job/api";
+import { CenterOfMassParams, MaskDefDisk, MaskDefRing } from "../messages";
 
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",

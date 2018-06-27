@@ -1,5 +1,5 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
-import { Dataset } from './types';
+import { Dataset, DatasetCreateParams } from '../messages';
 
 export enum ActionTypes {
     CREATE = 'DATASET_CREATE',
@@ -7,10 +7,8 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    // tslint:disable object-literal-sort-keys
-    create: (dataset: Dataset) => createAction(ActionTypes.CREATE, { dataset }),
+    create: (dataset: DatasetCreateParams) => createAction(ActionTypes.CREATE, { dataset }),
     created: (dataset: Dataset) => createAction(ActionTypes.CREATED, { dataset }),
-    // tslint:enable
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

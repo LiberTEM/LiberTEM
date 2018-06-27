@@ -51,15 +51,15 @@ const keepXSmallerThan = (otherX: number) => (p: Point2D) => {
     }
 }
 
-const riConstraint = (outerPos: number, cx: number) => (p: Point2D) => {
+const riConstraint = (outerPos: number, cy: number) => (p: Point2D) => {
     return keepXLargerThan(outerPos)(
-        keepOnCY(cx)(p)
+        keepOnCY(cy)(p)
     );
 }
 
-const roConstraints = (innerPos: number, cx: number) => (p: Point2D) => {
+const roConstraints = (innerPos: number, cy: number) => (p: Point2D) => {
     return keepXSmallerThan(innerPos)(
-        keepOnCY(cx)(p)
+        keepOnCY(cy)(p)
     );
 }
 
@@ -83,10 +83,10 @@ const Ring: React.SFC<RingProps> = ({ imageWidth, imageHeight, cx, cy, ri, ro, i
                     constraint={inRectConstraint(imageWidth, imageHeight)} />
                 <DraggableHandle x={riHandle.x} y={riHandle.y}
                     onDragMove={cbToRadius(cx, cy, onRIChange)}
-                    constraint={riConstraint(roHandle.x, cx)} />
+                    constraint={riConstraint(roHandle.x, cy)} />
                 <DraggableHandle x={roHandle.x} y={roHandle.y}
                     onDragMove={cbToRadius(cx, cy, onROChange)}
-                    constraint={roConstraints(riHandle.x, cx)} />
+                    constraint={roConstraints(riHandle.x, cy)} />
             </HandleParent>
         </svg>
     );

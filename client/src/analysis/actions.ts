@@ -8,6 +8,7 @@ export enum ActionTypes {
     UPDATE_PARAMETERS = 'ANALYSIS_UPDATE_PARAMETERS',
     RUN = 'ANALYSIS_RUN',
     RUNNING = 'ANALYSIS_RUNNING',
+    REMOVE = 'ANALYSIS_REMOVE',
 }
 
 export const Actions = {
@@ -15,7 +16,8 @@ export const Actions = {
     created: (analysis: Analysis) => createAction(ActionTypes.CREATED, { analysis }),
     updateParameters: (id: string, parameters: AnalysisParameters) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, parameters }),
     run: (id: string) => createAction(ActionTypes.RUN, { id }),
-    running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job })
+    running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
+    remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

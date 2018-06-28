@@ -1,9 +1,11 @@
+import datetime
 import copy
 import os
 from io import BytesIO
 from libertem.dataset.hdfs import BinaryHDFSDataSet
 from libertem.executor.dask import DaskJobExecutor
 from libertem.job.masks import ApplyMasksJob
+from libertem.job.sum import SumFramesJob
 from libertem.masks import ring, circular
 import numpy as np
 import tornado.web
@@ -14,6 +16,25 @@ from dask import distributed as dd
 from distributed.asyncio import AioClient
 from PIL import Image
 from matplotlib import cm
+
+
+def _encode_image(result, colormap, save_kwargs):
+    # TODO: only normalize across the area where we already have values
+    # can be accomplished by calculating min/max over are that was
+    # affected by the result tiles. for now, ignoring 0 works fine
+    max_ = np.max(result)
+    min_ = np.min(result[result > 0])
+
+    normalized = result - min_
+    if max_ > 0:
+        normalized = normalized / max_
+    # see also: https://stackoverflow.com/a/10967471/540644
+    im = Image.fromarray(colormap(normalized, bytes=True))
+    buf = BytesIO()
+    im = im.convert(mode="RGB")
+    im.save(buf, **save_kwargs)
+    buf.seek(0)
+    return buf
 
 
 class Message(object):
@@ -176,26 +197,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         # colormap = cm.viridis
         save_kwargs = save_kwargs or {}
 
-        def _encode_image(result):
-            # TODO: only normalize across the area where we already have values
-            # can be accomplished by calculating min/max over are that was
-            # affected by the result tiles. for now, ignoring 0 works fine
-            max_ = np.max(result)
-            min_ = np.min(result[result > 0])
-
-            normalized = result - min_
-            if max_ > 0:
-                normalized = normalized / max_
-            # see also: https://stackoverflow.com/a/10967471/540644
-            im = Image.fromarray(colormap(normalized, bytes=True))
-            buf = BytesIO()
-            im = im.convert(mode="RGB")
-            im.save(buf, **save_kwargs)
-            buf.seek(0)
-            return buf
-
         # TODO: do encoding work in a thread pool
-        return [_encode_image(full_result[idx]) for idx in range(full_result.shape[0])]
+        return [_encode_image(full_result[idx], colormap, save_kwargs)
+                for idx in range(full_result.shape[0])]
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
@@ -291,6 +295,49 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(Message(self.data).create_dataset(dataset=uuid))
 
 
+class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get_preview_image(self, dataset_uuid):
+        ds = self.data.get_dataset(dataset_uuid)
+        job = SumFramesJob(dataset=ds)
+
+        dask_client = await AioClient("tcp://localhost:8786")
+        executor = DaskJobExecutor(client=dask_client, is_local=True)
+
+        futures = []
+        for task in job.get_tasks():
+            submit_kwargs = {}
+            futures.append(
+                executor.client.submit(task, **submit_kwargs)
+            )
+
+        full_result = np.zeros(shape=ds.shape[2:])
+        async for future, result in dd.as_completed(futures, with_results=True):
+            for tile in result:
+                tile.copy_to_result(full_result)
+        image = _encode_image(
+            full_result,
+            colormap=cm.gist_earth,
+            save_kwargs={'format': 'png'},
+        )
+        return image.read()
+
+    def set_max_expires(self):
+        cache_time = 86400 * 365 * 10
+        self.set_header("Expires", datetime.datetime.utcnow() +
+                        datetime.timedelta(seconds=cache_time))
+        self.set_header("Cache-Control", "max-age=" + str(cache_time))
+
+    async def get(self, uuid):
+        self.set_header('Content-Type', 'image/png')
+        self.set_max_expires()
+        image = await self.get_preview_image(uuid)
+        self.write(image)
+
+
 class SharedData(object):
     def __init__(self):
         self.datasets = {}
@@ -371,6 +418,10 @@ def make_app():
     return tornado.web.Application([
         (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
         (r"/datasets/([^/]+)/", DataSetDetailHandler, {
+            "data": data,
+            "event_registry": event_registry
+        }),
+        (r"/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
             "data": data,
             "event_registry": event_registry
         }),

@@ -1,17 +1,18 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
 import { Grid, Header, Segment } from "semantic-ui-react";
+import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
 import JobComponent from "../../job/Job";
 import { DatasetState, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
-import { Analysis } from "../types";
+import { AnalysisState } from "../types";
 import Toolbar from "./Toolbar";
 
 interface AnalysisProps {
     parameters: MaskDefRing,
-    analysis: Analysis,
+    analysis: AnalysisState,
     dataset: DatasetState,
 }
 
@@ -36,9 +37,10 @@ type MergedProps = AnalysisProps & ReturnType<typeof mapDispatchToProps>
 
 const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameters, handleCenterChange, handleRIChange, handleROChange }) => {
     const { currentJob } = analysis;
-    const { shape } = dataset;
+    const { shape } = dataset.params;
     const imageWidth = shape[3];
     const imageHeight = shape[2];
+    const previewURL = getPreviewURL(dataset);
 
     return (
         <>
@@ -48,7 +50,9 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
                     <Grid.Row>
                         <Grid.Column>
                             <Ring cx={parameters.cx} cy={parameters.cy} ri={parameters.ri} ro={parameters.ro}
-                                imageWidth={imageWidth} imageHeight={imageHeight} onCenterChange={handleCenterChange} onRIChange={handleRIChange} onROChange={handleROChange} />
+                                imageWidth={imageWidth} imageHeight={imageHeight} image={previewURL}
+                                onCenterChange={handleCenterChange} onRIChange={handleRIChange} onROChange={handleROChange}
+                            />
                         </Grid.Column>
                         <Grid.Column>
                             {currentJob !== "" ? <JobComponent job={currentJob} /> : null}

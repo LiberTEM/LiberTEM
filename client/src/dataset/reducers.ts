@@ -17,10 +17,7 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
             const datasets: DatasetState[] = action.payload.datasets.map(ds => ({
                 id: ds.id,
                 name: ds.name,
-                path: ds.path,
-                tileshape: ds.tileshape,
-                type: ds.type,
-                shape: ds.shape,
+                params: ds.params,
             }));
             return {
                 byId: constructById(datasets, ds => ds.id),

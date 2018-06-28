@@ -2,25 +2,31 @@ import { call, put, select, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
 import { startJob } from '../job/api';
+import { DatasetState } from '../messages';
 import { RootReducer } from '../store';
 import * as analysisActions from './actions';
-import { Analysis, AnalysisDetails, AnalysisTypes } from './types';
+import { AnalysisDetails, AnalysisState, AnalysisTypes } from './types';
 
 
 // TODO: flip this around - create classes for each analysis type
 // classes should provide:
 //  + methods for default parameters
 //  + creation of a job from current parameters
-function getAnalysisDetails(analysisType: AnalysisTypes): AnalysisDetails {
+function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState): AnalysisDetails {
+    const shape = dataset.params.shape;
+    const width = shape[3];
+    const height = shape[2];
+    const minLength = Math.min(width, height);
+
     switch (analysisType) {
         case AnalysisTypes.APPLY_DISK_MASK: {
             return {
                 type: analysisType,
                 parameters: {
                     shape: "disk",
-                    cx: 64,
-                    cy: 64,
-                    r: 15,
+                    cx: width / 2,
+                    cy: height / 2,
+                    r: minLength / 2,
                 }
             };
         }
@@ -29,10 +35,10 @@ function getAnalysisDetails(analysisType: AnalysisTypes): AnalysisDetails {
                 type: analysisType,
                 parameters: {
                     shape: "ring",
-                    cx: 64,
-                    cy: 64,
-                    ri: 15,
-                    ro: 50,
+                    cx: width / 2,
+                    cy: height / 2,
+                    ri: minLength / 4,
+                    ro: minLength / 2,
                 }
             }
         }
@@ -47,21 +53,15 @@ function getAnalysisDetails(analysisType: AnalysisTypes): AnalysisDetails {
 }
 
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
-    // TODO: extract sensor information from dataset and use it for default parameter creation
-    /*
-
     function selectDataset(state: RootReducer, dataset: string) {
         return state.dataset.byId[dataset];
     }
 
-    const dataset = yield select(selectDataset, action.payload.dataset)
-    const sensorWidth = 128;
-    const sensorHeight = 128;
-    */
-    const analysis = {
+    const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
+    const analysis: AnalysisState = {
         id: uuid(),
         dataset: action.payload.dataset,
-        details: getAnalysisDetails(action.payload.analysisType),
+        details: getAnalysisDetails(action.payload.analysisType, datasetState),
         currentJob: "",
     }
     yield put(analysisActions.Actions.created(analysis))
@@ -72,7 +72,7 @@ function selectAnalysis(state: RootReducer, id: string) {
 }
 
 export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.run>) {
-    const analysis: Analysis = yield select(selectAnalysis, action.payload.id)
+    const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
     const masks = [
         analysis.details.parameters
     ];

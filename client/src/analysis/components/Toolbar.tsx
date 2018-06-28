@@ -3,10 +3,10 @@ import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { Button, Icon, Segment } from "semantic-ui-react";
 import * as analysisActions from "../actions";
-import { Analysis } from "../types";
+import { AnalysisState } from "../types";
 
 interface ToolbarProps {
-    analysis: Analysis,
+    analysis: AnalysisState,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: ToolbarProps) => {

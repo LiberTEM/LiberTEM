@@ -1,6 +1,7 @@
 import * as React from "react";
 import DraggableHandle from "./DraggableHandle";
 import HandleParent from "./HandleParent";
+import { defaultMaskStyles } from "./styles";
 
 export interface DiskProps {
     imageWidth: number,
@@ -43,7 +44,7 @@ const Disk: React.SFC<DiskProps> = ({ imageWidth, imageHeight, cx, cy, r, image,
     return (
         <svg width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`} style={{ border: "1px solid black" }}>
             {image ? <image xlinkHref={image} width={imageWidth} height={imageHeight} /> : null}
-            <circle cx={cx} cy={cy} r={r} style={{ fill: "black" }} />
+            <circle cx={cx} cy={cy} r={r} style={{ ...defaultMaskStyles }} />
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy}
                     onDragMove={onCenterChange}

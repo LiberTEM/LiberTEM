@@ -6,16 +6,30 @@ export interface FollowupPart {
 /*
  * Dataset
  */
+
+export interface DatasetParamsHDFS {
+    type: "HDFS",
+    path: string,
+    tileshape: number[],
+}
+
+export interface DatasetParamsHDF5 {
+    type: "HDF5",
+    path: string,
+    dsPath: string,
+    tileshape: number[],
+}
+
 export interface DatasetCreateParams {
     id: string,
     name: string,
-    path: string,
-    tileshape: number[],
-    type: string,
+    params: DatasetParamsHDF5 | DatasetParamsHDFS
 }
 
 export type Dataset = DatasetCreateParams & {
-    shape: number[],
+    params: {
+        shape: number[],
+    }
 }
 
 export interface OpenDatasetRequest {

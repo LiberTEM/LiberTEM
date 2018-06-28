@@ -28,25 +28,42 @@ const DatasetList: React.SFC<MergedProps> = ({ createDataset, datasets }) => {
         createDataset({
             id: uuid(),
             name: "test dataset",
-            path: "/test/index.json",
-            tileshape: [1, 8, 128, 128],
-            type: "HDFS",
+            params: {
+                type: "HDFS",
+                path: "/test/index.json",
+                tileshape: [1, 8, 128, 128],
+            }
         })
 
         createDataset({
             id: uuid(),
             name: "e field mapping acquisition 8",
-            path: "/e-field-acquisition_8_0tilt_0V/index.json",
-            tileshape: [1, 8, 128, 128],
-            type: "HDFS",
+            params: {
+                type: "HDFS",
+                path: "/e-field-acquisition_8_0tilt_0V/index.json",
+                tileshape: [1, 8, 128, 128],
+            },
         })
 
         createDataset({
             id: uuid(),
             name: "e field mapping acquisition 10",
-            path: "/e-field-acquisition_10_0tilt_40V/index.json",
-            tileshape: [1, 8, 128, 128],
-            type: "HDFS",
+            params: {
+                type: "HDFS",
+                path: "/e-field-acquisition_10_0tilt_40V/index.json",
+                tileshape: [1, 8, 128, 128],
+            }
+        })
+
+        createDataset({
+            id: uuid(),
+            name: "local HDF5 test dataset",
+            params: {
+                type: "HDF5",
+                path: "/home/clausen/Data/EMPAD/scan_11_x256_y256.emd",
+                dsPath: "experimental/science_data/data",
+                tileshape: [1, 8, 128, 128],
+            }
         })
     }
     return (

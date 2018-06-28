@@ -1,6 +1,7 @@
 import * as React from "react";
 import DraggableHandle from "./DraggableHandle";
 import HandleParent from "./HandleParent";
+import { defaultMaskStyles } from "./styles";
 
 export interface RingProps {
     imageWidth: number,
@@ -72,11 +73,19 @@ const Ring: React.SFC<RingProps> = ({ imageWidth, imageHeight, cx, cy, ri, ro, i
         x: cx - ro,
         y: cy,
     }
+
+    // see also: https://stackoverflow.com/a/37883328/540644
+    const pathSpec = `M ${cx},${cy}
+    m 0, -${ro}
+    a ${ro}, ${ro}, 0, 1, 0, 1, 0
+    Z
+    m 0 ${ro - ri}
+    a ${ri}, ${ri}, 0, 1, 1, -1, 0
+    Z`;
     return (
         <svg width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`} style={{ border: "1px solid black" }}>
             {image ? <image xlinkHref={image} width={imageWidth} height={imageHeight} /> : null}
-            <circle cx={cx} cy={cy} r={ro} style={{ fill: "black" }} />
-            <circle cx={cx} cy={cy} r={ri} style={{ fill: "white" }} />
+            <path d={pathSpec} fillRule="evenodd" style={{ ...defaultMaskStyles }} />
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy}
                     onDragMove={onCenterChange}

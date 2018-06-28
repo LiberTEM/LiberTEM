@@ -1,4 +1,4 @@
-import { OpenDatasetRequest, OpenDatasetResponse } from "../messages";
+import { DatasetState, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
 export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
     return fetch(`http://localhost:9000/datasets/${id}/`, {
@@ -6,4 +6,8 @@ export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<Op
         credentials: "same-origin",
         method: "PUT",
     }).then(r => r.json());
+}
+
+export function getPreviewURL(dataset: DatasetState) {
+    return `http://localhost:9000/datasets/${dataset.id}/preview/`
 }

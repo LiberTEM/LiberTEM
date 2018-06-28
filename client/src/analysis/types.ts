@@ -31,6 +31,8 @@ export interface Analysis {
     details: AnalysisDetails,
 }
 
+export type AnalysisState = Analysis;
+
 export const AnalysisMetadata: { [s: string]: { [s: string]: string } } = {
     [AnalysisTypes.APPLY_RING_MASK]: {
         long: "Apply a ring mask with center cx, cy; inner radius ri, outer radius ro",

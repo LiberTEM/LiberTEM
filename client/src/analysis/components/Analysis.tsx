@@ -2,12 +2,12 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { assertNotReached } from '../../helpers';
 import { RootReducer } from "../../store";
-import { Analysis, AnalysisTypes } from "../types";
+import { AnalysisState, AnalysisTypes } from "../types";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
 import RingMaskAnalysis from "./RingMaskAnalysis";
 
 interface AnalysisProps {
-    analysis: Analysis,
+    analysis: AnalysisState,
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {

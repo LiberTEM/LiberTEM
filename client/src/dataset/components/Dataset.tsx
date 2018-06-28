@@ -4,7 +4,7 @@ import { Header } from 'semantic-ui-react';
 import * as analysisActions from '../../analysis/actions';
 import AnalysisList from "../../analysis/components/AnalysisList";
 import AnalysisSelect from "../../analysis/components/AnalysisSelect";
-import { Analysis, AnalysisTypes } from "../../analysis/types";
+import { AnalysisState, AnalysisTypes } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
 import { DatasetState } from "../../messages";
 import { RootReducer } from "../../store";
@@ -23,7 +23,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: DatasetProps) => {
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
-    const p = (analysis: Analysis) => analysis.dataset === ownProps.dataset.id;
+    const p = (analysis: AnalysisState) => analysis.dataset === ownProps.dataset.id;
     return {
         analyses: filterWithPred(state.analyses, p),
     }

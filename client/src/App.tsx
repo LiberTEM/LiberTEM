@@ -6,7 +6,7 @@ import DatasetList from './dataset/components/DatasetList';
 class App extends React.Component {
     public render() {
         return (
-            <Container style={{ marginTop: "5em" }}>
+            <Container style={{ marginTop: "5em", marginBottom: "5em", }}>
                 <Header as='h1'>LiberTEM</Header>
                 <DatasetList />
             </Container>

@@ -2,6 +2,14 @@ class DataSet(object):
     def get_partitions(self):
         raise NotImplementedError()
 
+    def get_raw_data(self, slice_):
+        for partition in self.get_partitions():
+            if slice_.intersection_with(partition.slice).is_null():
+                continue
+            for tile in partition.get_tiles():
+                if tile.tile_slice.intersection_with(slice_):
+                    yield tile
+
     @property
     def dtype(self):
         raise NotImplementedError()

@@ -34,6 +34,41 @@ class Slice(object):
     def __eq__(self, other):
         return self.shape == other.shape and self.origin == other.origin
 
+    def intersection_with(self, other):
+        new_origin = (
+            max(self.origin[0], other.origin[0]),
+            max(self.origin[1], other.origin[1]),
+            max(self.origin[2], other.origin[2]),
+            max(self.origin[3], other.origin[3]),
+        )
+        new_shape = (
+            min(
+                (self.origin[0] + self.shape[0]) - new_origin[0],
+                (other.origin[0] + other.shape[0]) - new_origin[0],
+            ),
+            min(
+                (self.origin[1] + self.shape[1]) - new_origin[1],
+                (other.origin[1] + other.shape[1]) - new_origin[1],
+            ),
+            min(
+                (self.origin[2] + self.shape[2]) - new_origin[2],
+                (other.origin[2] + other.shape[2]) - new_origin[2],
+            ),
+            min(
+                (self.origin[3] + self.shape[3]) - new_origin[3],
+                (other.origin[3] + other.shape[3]) - new_origin[3],
+            ),
+        )
+        new_shape = [max(0, s) for s in new_shape]
+        result = Slice(
+            origin=new_origin,
+            shape=new_shape,
+        )
+        return result
+
+    def is_null(self):
+        return any(s == 0 for s in self.shape)
+
     def shift(self, other):
         """
         make a new ``Slice`` with origin relative to ``other.origin``

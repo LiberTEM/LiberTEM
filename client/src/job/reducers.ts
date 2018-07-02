@@ -1,4 +1,5 @@
 import { AllActions } from "../actions";
+import * as analysisActions from '../analysis/actions';
 import * as channelActions from '../channel/actions';
 import { ById, constructById, insertById, updateById } from "../helpers/reducerHelpers";
 import { JobResultType, JobState } from "./types";
@@ -25,6 +26,24 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 byId: constructById(jobs, job => job.id),
                 ids: jobs.map(job => job.id)
             };
+        }
+        case analysisActions.ActionTypes.RUNNING: {
+            // in case there is no job record yet for the job id, 
+            const currentJob = state.byId[action.payload.job];
+            if (currentJob === undefined) {
+                return insertById(
+                    state,
+                    action.payload.job,
+                    {
+                        id: action.payload.job,
+                        results: ([] as JobResultType[]),
+                        running: "CREATING",
+                        status: "CREATING",
+                    }
+                )
+            } else {
+                return state;
+            }
         }
         case channelActions.ActionTypes.START_JOB: {
             return insertById(

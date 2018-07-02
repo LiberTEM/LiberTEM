@@ -125,7 +125,6 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
     async def open(self):
         self.registry.add_handler(self)
         self.data.verify_datasets()
-        await tornado.gen.sleep(1)
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),

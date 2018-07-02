@@ -72,16 +72,20 @@ function selectAnalysis(state: RootReducer, id: string) {
 }
 
 export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.run>) {
-    const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-    const masks = [
-        analysis.details.parameters
-    ];
-    const jobId = uuid();
-    const job = yield call(startJob, jobId, analysis.dataset, masks);
-    return yield put(analysisActions.Actions.running(
-        action.payload.id,
-        job.job,
-    ))
+    try {
+        const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+        const masks = [
+            analysis.details.parameters
+        ];
+        const jobId = uuid();
+        const job = yield call(startJob, jobId, analysis.dataset, masks);
+        return yield put(analysisActions.Actions.running(
+            action.payload.id,
+            job.job,
+        ))
+    } catch (e) {
+        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`));
+    }
 }
 
 export function* analysisRootSaga() {

@@ -9,6 +9,7 @@ export enum ActionTypes {
     RUN = 'ANALYSIS_RUN',
     RUNNING = 'ANALYSIS_RUNNING',
     REMOVE = 'ANALYSIS_REMOVE',
+    ERROR = 'ANALYSIS_ERROR',
 }
 
 export const Actions = {
@@ -18,6 +19,7 @@ export const Actions = {
     run: (id: string) => createAction(ActionTypes.RUN, { id }),
     running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
+    error: (msg: string) => createAction(ActionTypes.ERROR, { msg }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

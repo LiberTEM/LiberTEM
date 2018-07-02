@@ -6,7 +6,7 @@ export interface JobResultType {
 export interface JobState {
     id: string,
     dataset: string,
-    running: "RUNNING" | "DONE",
-    status: "IN_PROGRESS" | "CANCELLED" | "SUCCESS",
+    running: "CREATING" | "RUNNING" | "DONE",
+    status: "CREATING" | "IN_PROGRESS" | "CANCELLED" | "SUCCESS",
     results: JobResultType[],
 }

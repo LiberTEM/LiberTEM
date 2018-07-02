@@ -46,11 +46,19 @@ export interface OpenDatasetRequest {
     dataset: DatasetCreateParams
 }
 
-export interface OpenDatasetResponse {
+export interface OpenDatasetResponseOk {
     status: "ok",
     dataset: string,  // TODO: uuid type?
     details: Dataset,
 }
+
+export interface OpenDatasetResponseError {
+    status: "error",
+    dataset: string,
+    msg: string,
+}
+
+export type OpenDatasetResponse = OpenDatasetResponseOk | OpenDatasetResponseError
 
 export type MsgPartDataset = Dataset
 

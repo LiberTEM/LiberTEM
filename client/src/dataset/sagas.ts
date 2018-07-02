@@ -5,8 +5,16 @@ import { openDataset } from './api';
 
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {
-    const resp: OpenDatasetResponse = yield call(openDataset, action.payload.dataset.id, { dataset: action.payload.dataset });
-    yield put(datasetActions.Actions.created(resp.details));
+    try {
+        const resp: OpenDatasetResponse = yield call(openDataset, action.payload.dataset.id, { dataset: action.payload.dataset });
+        if (resp.status === "ok") {
+            yield put(datasetActions.Actions.created(resp.details));
+        } else if (resp.status === "error") {
+            yield put(datasetActions.Actions.error(resp.dataset, resp.msg));
+        }
+    } catch (e) {
+        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`));
+    }
 }
 
 export function* datasetRootSaga() {

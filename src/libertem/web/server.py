@@ -397,7 +397,6 @@ class SharedData(object):
         print(dataset)
         return {
             "id": dataset_id,
-            "name": dataset["params"]["name"],
             "params": {
                 **dataset["params"]["params"],
                 "shape": dataset["dataset"].shape,

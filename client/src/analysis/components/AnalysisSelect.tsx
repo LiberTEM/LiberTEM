@@ -1,9 +1,10 @@
 import * as React from "react";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
+import { getEnumValues } from "../../helpers";
 import { AnalysisMetadata, AnalysisTypes } from "../types";
 
 
-const analysisTypeKeys = Object.keys(AnalysisTypes).filter(k => typeof AnalysisTypes[k as any] === "string");
+const analysisTypeKeys = getEnumValues(AnalysisTypes);
 const analysisTypeOptions = analysisTypeKeys.map(t => ({
     text: AnalysisMetadata[AnalysisTypes[t as any]].short,
     value: AnalysisTypes[t as any],

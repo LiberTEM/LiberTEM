@@ -16,7 +16,6 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
             // FIXME: without type annotation, missing attributes in reducer state are not detected
             const datasets: DatasetState[] = action.payload.datasets.map(ds => ({
                 id: ds.id,
-                name: ds.name,
                 params: ds.params,
             }));
             return {

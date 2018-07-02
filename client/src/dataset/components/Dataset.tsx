@@ -34,7 +34,7 @@ type MergedProps = DatasetProps & ReturnType<typeof mapStateToProps> & ReturnTyp
 const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses, handleAddAnalysis }) => {
     return (
         <>
-            <Header as="h2" dividing={true}>{dataset.name}</Header>
+            <Header as="h2" dividing={true}>{dataset.params.name}</Header>
             <AnalysisSelect onClick={handleAddAnalysis} label='Add analysis' />
             <AnalysisList analyses={analyses} />
         </>

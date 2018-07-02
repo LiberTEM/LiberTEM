@@ -7,23 +7,33 @@ export interface FollowupPart {
  * Dataset
  */
 
-export interface DatasetParamsHDFS {
-    type: "HDFS",
-    path: string,
-    tileshape: number[],
+export enum DatasetTypes {
+    HDF5 = "HDF5",
+    HDFS = "HDFS",
 }
 
-export interface DatasetParamsHDF5 {
-    type: "HDF5",
+export interface DatasetParamsCommon {
+    name: string,
+}
+
+export type DatasetParamsHDFS = {
+    type: DatasetTypes.HDFS,
+    path: string,
+    tileshape: number[],
+} & DatasetParamsCommon;
+
+export type DatasetParamsHDF5 = {
+    type: DatasetTypes.HDF5,
     path: string,
     dsPath: string,
     tileshape: number[],
-}
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS
 
 export interface DatasetCreateParams {
     id: string,
-    name: string,
-    params: DatasetParamsHDF5 | DatasetParamsHDFS
+    params: DatasetFormParams,
 }
 
 export type Dataset = DatasetCreateParams & {

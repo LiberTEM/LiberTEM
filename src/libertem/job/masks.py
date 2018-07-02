@@ -126,6 +126,10 @@ class ResultTile(object):
 
     @property
     def reshaped_data(self):
+        """
+        Reshapes the result from the flattened version to a shape
+        that fits the result array (masks, y, x)
+        """
         # (frames, masks) -> (masks, _, frames)
         shape = self.data.shape
         return self.data.reshape(shape[0], 1, shape[1]).transpose()
@@ -135,10 +139,6 @@ class ResultTile(object):
         return self.data.dtype
 
     def copy_to_result(self, result):
-        """
-        Reshapes the result from the flattened version to a shape
-        that fits the result array (masks, y, x)
-        """
         # FIXME: assumes tile size is less than or equal one row of frames. is this true?
         # let's assert it for now:
         assert self.tile_slice.shape[0] == 1

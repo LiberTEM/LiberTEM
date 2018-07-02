@@ -12,10 +12,12 @@ setup(
         "distributed",
         "click",
         "tornado",
+        "matplotlib",
+        "pillow",
+        "h5py",
     ],
     extras_require={
         'hdfs': 'hfds3',
-        'hdf5': 'h5py',
     },
     package_dir={"": "src"},
     packages=[

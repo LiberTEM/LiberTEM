@@ -9,3 +9,4 @@ htmlcov
 coverage.xml
 .coverage*
 .pytest_cache
+node_modules

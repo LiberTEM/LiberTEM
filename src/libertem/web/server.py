@@ -245,7 +245,6 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             futures.append(
                 executor.client.submit(task, **submit_kwargs)
             )
-        raise Exception("wat")
         self.write(Message(self.data).start_job(
             job_id=uuid
         ))

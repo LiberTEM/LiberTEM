@@ -129,3 +129,62 @@ def test_get_slice_2():
         [85, 86],
         [89, 90],
     ]]]))
+
+
+def test_slice_intersect_0():
+    s1 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(2, 2, 2, 2),
+    )
+    s2 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(1, 1, 1, 1),
+    )
+    assert s1.intersection_with(s2) == s2
+
+
+def test_slice_intersect_1():
+    s1 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(2, 2, 2, 2),
+    )
+    s2 = Slice(
+        origin=(3, 3, 3, 3),
+        shape=(1, 1, 1, 1),
+    )
+    res = s1.intersection_with(s2)
+    assert res == Slice(
+        origin=(3, 3, 3, 3),
+        shape=(0, 0, 0, 0),
+    )
+    assert res.is_null()
+
+
+def test_slice_intersect_2():
+    s1 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=(2, 2, 2, 2),
+    )
+    s2 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(1, 1, 1, 1),
+    )
+    res = s1.intersection_with(s2)
+    assert res == Slice(
+        origin=(1, 1, 1, 1),
+        shape=(0, 0, 0, 0),
+    )
+    assert res.is_null()
+
+
+def test_slice_intersect_3():
+    s1 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=(2, 2, 2, 2),
+    )
+    s2 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(4, 4, 4, 4),
+    )
+    res = s1.intersection_with(s2)
+    assert res == s1

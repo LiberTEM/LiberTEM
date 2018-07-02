@@ -1,3 +1,7 @@
+class DataSetException(Exception):
+    pass
+
+
 class DataSet(object):
     def get_partitions(self):
         raise NotImplementedError()
@@ -16,6 +20,9 @@ class DataSet(object):
 
     @property
     def shape(self):
+        raise NotImplementedError()
+
+    def check_valid(self):
         raise NotImplementedError()
 
 

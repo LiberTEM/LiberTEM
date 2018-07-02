@@ -1,5 +1,6 @@
 import datetime
 import logging
+import asyncio
 import signal
 import copy
 from io import BytesIO
@@ -9,12 +10,14 @@ from matplotlib import cm
 from dask import distributed as dd
 from distributed.asyncio import AioClient
 import tornado.web
+import tornado.gen
 import tornado.websocket
 import tornado.ioloop
 import tornado.escape
 from PIL import Image
 
 from libertem.executor.dask import DaskJobExecutor
+from libertem.dataset.base import DataSetException
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.sum import SumFramesJob
 from libertem import masks, dataset
@@ -73,6 +76,14 @@ class Message(object):
             "details": self.data.serialize_dataset(dataset),
         }
 
+    def create_dataset_error(self, dataset, msg):
+        return {
+            "status": "error",
+            "messageType": "CREATE_DATASET_ERROR",
+            "dataset": dataset,
+            "msg": msg,
+        }
+
     def start_job(self, job_id):
         return {
             "status": "ok",
@@ -111,8 +122,10 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True  # TODO XXX FIXME !!!
 
-    def open(self):
+    async def open(self):
         self.registry.add_handler(self)
+        self.data.verify_datasets()
+        await tornado.gen.sleep(1)
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),
@@ -233,6 +246,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             futures.append(
                 executor.client.submit(task, **submit_kwargs)
             )
+        raise Exception("wat")
         self.write(Message(self.data).start_job(
             job_id=uuid
         ))
@@ -314,7 +328,14 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "ds_path": params["dsPath"],
                 "tileshape": params["tileshape"],
             }
-        ds = dataset.load(filetype=params["type"], **dataset_params)
+        try:
+            ds = dataset.load(filetype=params["type"], **dataset_params)
+            ds.check_valid()
+        except DataSetException as e:
+            msg = Message(self.data).create_dataset_error(uuid, str(e))
+            log_message(msg)
+            self.write(msg)
+            return
         self.data.register_dataset(
             uuid=uuid,
             dataset=ds,
@@ -391,6 +412,19 @@ class SharedData(object):
 
     def get_dataset(self, uuid):
         return self.datasets[uuid]["dataset"]
+
+    def verify_datasets(self):
+        for uuid, params in self.datasets.items():
+            dataset = params["dataset"]
+            try:
+                dataset.check_valid()
+            except DataSetException:
+                self.remove_dataset(uuid)
+
+    def remove_dataset(self, uuid):
+        ds = self.datasets[uuid]["dataset"]
+        del self.datasets[uuid]
+        del self.dataset_to_id[ds]
 
     def register_job(self, uuid, job):
         assert uuid not in self.jobs
@@ -475,13 +509,18 @@ def do_stop():
     tornado.ioloop.IOLoop.instance().stop()
 
 
-def run(port):
+def main(port):
     logging.basicConfig(level=logging.INFO)
     app = make_app()
     app.listen(port)
+
+
+def run(port):
+    main(port)
     signal.signal(signal.SIGINT, sig_exit)
-    tornado.ioloop.IOLoop.current().start()
+    loop = asyncio.get_event_loop()
+    loop.run_forever()
 
 
 if __name__ == "__main__":
-    run(9000)
+    main(9000)

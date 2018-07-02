@@ -3,7 +3,7 @@ import contextlib
 import numpy as np
 import h5py
 
-from .base import DataSet, Partition, DataTile
+from .base import DataSet, Partition, DataTile, DataSetException
 from ..slice import Slice
 
 
@@ -30,6 +30,14 @@ class H5DataSet(DataSet):
     def shape(self):
         with self.get_h5ds() as h5ds:
             return h5ds.shape
+
+    def check_valid(self):
+        try:
+            with self.get_h5ds() as h5ds:
+                h5ds.shape
+            return True
+        except (IOError, OSError, KeyError, ValueError) as e:
+            raise DataSetException("invalid dataset: %s" % e)
 
     def get_partitions(self):
         with self.get_h5ds() as h5ds:

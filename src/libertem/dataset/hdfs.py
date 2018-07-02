@@ -7,7 +7,7 @@ import functools
 import numpy as np
 import hdfs3
 
-from .base import DataSet, Partition, DataTile
+from .base import DataSet, Partition, DataTile, DataSetException
 from ..slice import Slice
 
 
@@ -18,6 +18,7 @@ class BinaryHDFSDataSet(DataSet):
         self.host = host
         self.port = port
         self._fs = self.get_fs()
+        self.check_valid()
         self._load()
         self.tileshape = tileshape
         self.framesize = functools.reduce(operator.mul, tuple(self._index['shape'][-2:]))
@@ -46,6 +47,18 @@ class BinaryHDFSDataSet(DataSet):
     @property
     def shape(self):
         return self._index['shape']
+
+    def check_valid(self):
+        # TODO: maybe later relax the validity requirements to reduce load
+        try:
+            self._load()
+            for partition in self._index['partitions']:
+                path = os.path.join(self.dirname, partition['filename'])
+                with self.get_fs().open(path, "r"):
+                    pass
+            return True
+        except (IOError, OSError) as e:
+            raise DataSetException("invalid dataset: %s" % e)
 
     def get_partitions(self):
         for partition in self._index['partitions']:

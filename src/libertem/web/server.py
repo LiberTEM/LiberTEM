@@ -1,4 +1,6 @@
 import datetime
+import logging
+import signal
 import copy
 from io import BytesIO
 
@@ -16,6 +18,16 @@ from libertem.executor.dask import DaskJobExecutor
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.sum import SumFramesJob
 from libertem import masks, dataset
+
+
+log = logging.getLogger(__name__)
+
+
+def log_message(message):
+    if "job" in message:
+        log.info("message: %s (job=%s)" % (message["messageType"], message["job"]))
+    else:
+        log.info("message: %s" % message["messageType"])
 
 
 def _encode_image(result, colormap, save_kwargs):
@@ -101,10 +113,12 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         self.registry.add_handler(self)
-        self.write_message(Message(self.data).initial_state(
+        msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),
-        ))
+        )
+        log_message(msg)
+        self.write_message(msg)
 
     def on_close(self):
         self.registry.remove_handler(self)
@@ -223,9 +237,11 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             job_id=uuid
         ))
         self.finish()
-        self.event_registry.broadcast_event(Message(self.data).start_job(
+        msg = Message(self.data).start_job(
             job_id=uuid,
-        ))
+        )
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
 
         full_result = np.zeros(shape=(len(mask_factories),) + tuple(ds.shape[:2]))
         async for future, result in dd.as_completed(futures, with_results=True):
@@ -250,10 +266,12 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             # NOTE: make sure the following broadcast_event messages are sent atomically!
             # (that is: keep the code below synchronous, and only send the messages
             # once the images have finished encoding, and then send all at once)
-            self.event_registry.broadcast_event(Message(self.data).task_result(
+            msg = Message(self.data).task_result(
                 job_id=uuid,
                 num_images=len(images),
-            ))
+            )
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
@@ -261,10 +279,12 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             full_result,
             save_kwargs={'format': 'png'},
         )
-        self.event_registry.broadcast_event(Message(self.data).finish_job(
+        msg = Message(self.data).finish_job(
             job_id=uuid,
             num_images=len(images),
-        ))
+        )
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
         for image in images:
             raw_bytes = image.read()
             self.event_registry.broadcast_event(raw_bytes, binary=True)
@@ -301,7 +321,9 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             params=request_data['dataset'],
         )
         self.write(Message(self.data).create_dataset(dataset=uuid))
-        self.event_registry.broadcast_event(Message(self.data).create_dataset(dataset=uuid))
+        msg = Message(self.data).create_dataset(dataset=uuid)
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
 
 
 class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
@@ -394,7 +416,6 @@ class SharedData(object):
 
     def serialize_dataset(self, dataset_id):
         dataset = self.datasets[dataset_id]
-        print(dataset)
         return {
             "id": dataset_id,
             "params": {
@@ -446,9 +467,19 @@ def make_app():
     ], **settings)
 
 
+def sig_exit(signum, frame):
+    tornado.ioloop.IOLoop.instance().add_callback_from_signal(do_stop)
+
+
+def do_stop():
+    tornado.ioloop.IOLoop.instance().stop()
+
+
 def run(port):
+    logging.basicConfig(level=logging.INFO)
     app = make_app()
     app.listen(port)
+    signal.signal(signal.SIGINT, sig_exit)
     tornado.ioloop.IOLoop.current().start()
 
 

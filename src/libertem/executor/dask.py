@@ -16,6 +16,11 @@ class DaskJobExecutor(JobExecutor):
 
     @classmethod
     def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+        """
+        interesting cluster_kwargs:
+            threads_per_worker
+            n_workers
+        """
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
         return cls(client=client, is_local=True)

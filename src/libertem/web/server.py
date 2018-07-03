@@ -120,17 +120,12 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         self.data = data
 
     def check_origin(self, origin):
-        return True  # TODO XXX FIXME !!!
+        # FIXME: implement this when we want to support CORS later
+        return super().check_origin(origin)
 
     async def open(self):
         self.registry.add_handler(self)
         self.data.verify_datasets()
-        msg = Message(self.data).initial_state(
-            jobs=self.data.serialize_jobs(),
-            datasets=self.data.serialize_datasets(),
-        )
-        log_message(msg)
-        self.write_message(msg)
 
     def on_close(self):
         self.registry.remove_handler(self)
@@ -157,17 +152,19 @@ class EventRegistry(object):
 
 
 class CORSMixin(object):
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")  # XXX FIXME TODO!!!
-        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'PUT, POST, GET, OPTIONS')
-
-    def options(self, *args):
-        """
-        for CORS pre-flight requests, no body returned
-        """
-        self.set_status(204)
-        self.finish()
+    pass
+    # FIXME: implement these when we want to support CORS later
+#    def set_default_headers(self):
+#        self.set_header("Access-Control-Allow-Origin", "*")  # XXX FIXME TODO!!!
+#        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+#        self.set_header('Access-Control-Allow-Methods', 'PUT, POST, GET, OPTIONS')
+#
+#    def options(self, *args):
+#        """
+#        for CORS pre-flight requests, no body returned
+#        """
+#        self.set_status(204)
+#        self.finish()
 
 
 class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -235,9 +232,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
         self.data.register_job(uuid=uuid, job=job)
 
-        # TODO: config param
-        dask_client = await AioClient("tcp://localhost:8786")
-        executor = DaskJobExecutor(client=dask_client, is_local=True)
+        executor = self.data.get_executor()
 
         futures = []
         for task in job.get_tasks():
@@ -354,12 +349,7 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         ds = self.data.get_dataset(dataset_uuid)
         job = SumFramesJob(dataset=ds)
 
-        # TODO: config param
-        # TODO: share dask client with JobDetailHandler
-        dask_client = await AioClient("tcp://localhost:8786")
-
-        # TODO: is_local -> config param?
-        executor = DaskJobExecutor(client=dask_client, is_local=True)
+        executor = self.data.get_executor()
 
         futures = []
         for task in job.get_tasks():
@@ -398,6 +388,21 @@ class SharedData(object):
         self.jobs = {}
         self.job_to_id = {}
         self.dataset_to_id = {}
+        self.executor = None
+        self.cluster_params = {}
+
+    def get_executor(self):
+        if self.executor is None:
+            # TODO: exception type, conversion into 400 response
+            raise RuntimeError("wrong state: executor is None")
+        return self.executor
+
+    def get_cluster_params(self):
+        return self.cluster_params
+
+    def set_executor(self, executor, params):
+        self.executor = executor
+        self.cluster_params = params
 
     def register_dataset(self, uuid, dataset, params):
         assert uuid not in self.datasets
@@ -463,6 +468,55 @@ class SharedData(object):
         ]
 
 
+class ConnectHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get(self):
+        log.info("ConnectHandler.get")
+        try:
+            self.data.get_executor()
+            params = self.data.get_cluster_params()
+            # TODO: extract into Message class
+            self.write({
+                "status": "ok",
+                "connection": params["connection"],
+            })
+        except RuntimeError:  # TODO: exception class is too generic
+            # TODO: extract into Message class
+            self.write({
+                "status": "disconnected",
+                "connection": {},
+            })
+
+    async def put(self):
+        # TODO: extract json request data stuff into mixin?
+        request_data = tornado.escape.json_decode(self.request.body)
+        connection = request_data['connection']
+        if connection["type"].lower() == "tcp":
+            dask_client = await AioClient(address=connection['address'])
+            executor = DaskJobExecutor(client=dask_client, is_local=connection['isLocal'])
+        elif connection["type"].lower() == "local":
+            cluster_kwargs = {
+                "threads_per_worker": 1,
+            }
+            if "numWorkers" in connection:
+                cluster_kwargs.update({"n_workers": connection["numWorkers"]})
+            executor = DaskJobExecutor.make_local(cluster_kwargs=cluster_kwargs)
+        self.data.set_executor(executor, request_data)
+        msg = Message(self.data).initial_state(
+            jobs=self.data.serialize_jobs(),
+            datasets=self.data.serialize_datasets(),
+        )
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        self.write({
+            "status": "ok",
+            "connection": connection,
+        })
+
+
 class IndexHandler(tornado.web.RequestHandler):
     def initialize(self, data, event_registry):
         self.data = data
@@ -483,19 +537,23 @@ def make_app():
     }
     return tornado.web.Application([
         # (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
-        (r"/datasets/([^/]+)/", DataSetDetailHandler, {
+        (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
             "data": data,
             "event_registry": event_registry
         }),
-        (r"/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
+        (r"/api/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
             "data": data,
             "event_registry": event_registry
         }),
-        (r"/jobs/([^/]+)/", JobDetailHandler, {
+        (r"/api/jobs/([^/]+)/", JobDetailHandler, {
             "data": data,
             "event_registry": event_registry
         }),
-        (r"/events/", ResultEventHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/events/", ResultEventHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/config/connection/", ConnectHandler, {
+            "data": data,
+            "event_registry": event_registry,
+        }),
     ], **settings)
 
 

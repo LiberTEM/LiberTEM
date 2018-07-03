@@ -38,8 +38,7 @@ function createWebSocketChannel(/* addr */): SocketChannel {
             emit(fromMessages.Messages.error(err.toString()));
         }
 
-        // FIXME: hardcoded server location
-        const ws = new WebSocket("ws://localhost:9000/events/");
+        const ws = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/events/`);
         ws.addEventListener("message", onMessage);
         ws.addEventListener("open", onOpen);
         ws.addEventListener("close", onClose);

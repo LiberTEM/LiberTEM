@@ -2,6 +2,12 @@
   "name": "libertem-client",
   "version": "0.1.0",
   "private": true,
+  "proxy": {
+    "/api": {
+      "target": "http://localhost:9000/",
+      "ws": true
+    }
+  },
   "dependencies": {
     "@types/lodash": "^4.14.110",
     "@types/prop-types": "^15.5.3",

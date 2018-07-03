@@ -7,7 +7,7 @@ export function startJob(jobId: string, datasetId: string, masks: CreateMaskJobR
             masks,
         }
     }
-    return fetch(`http://localhost:9000/jobs/${jobId}/`, {
+    return fetch(`/api/jobs/${jobId}/`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",

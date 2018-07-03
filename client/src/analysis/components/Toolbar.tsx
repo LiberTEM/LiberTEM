@@ -1,7 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import { Button, Icon, Segment } from "semantic-ui-react";
+import { Button, Icon, IconProps, Segment } from "semantic-ui-react";
+import { RootReducer } from "../../store";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 
@@ -16,14 +17,16 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: ToolbarProps) => {
     }
 }
 
-type MergedProps = ToolbarProps & ReturnType<typeof mapDispatchToProps>;
+type MergedProps = ToolbarProps & ReturnType<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
-const Toolbar: React.SFC<MergedProps> = ({ analysis, handleApply, handleRemove }) => {
+const Toolbar: React.SFC<MergedProps> = ({ job, handleApply, handleRemove }) => {
+    const running = job && (job.status === "IN_PROGRESS" || job.status === "CREATING");
+    const applyIconProps: IconProps = running ? { name: 'cog', loading: true } : { name: 'check' }
     return (
         <Segment attached="bottom">
             <Button.Group>
                 <Button primary={true} onClick={handleApply} icon={true}>
-                    <Icon name='check' />
+                    <Icon {...applyIconProps} />
                     Apply
                 </Button>
                 <Button onClick={handleRemove} icon={true}>
@@ -35,4 +38,10 @@ const Toolbar: React.SFC<MergedProps> = ({ analysis, handleApply, handleRemove }
     );
 }
 
-export default connect(null, mapDispatchToProps)(Toolbar);
+const mapStateToProps = (state: RootReducer, ownProps: ToolbarProps) => {
+    return {
+        job: state.job.byId[ownProps.analysis.currentJob],
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Toolbar);

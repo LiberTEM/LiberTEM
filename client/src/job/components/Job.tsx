@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ReactElement } from "react";
 import { connect } from "react-redux";
 import { Image } from 'semantic-ui-react';
 import { Omit } from "../../helpers/types";
@@ -29,7 +30,7 @@ const PlaceholderImage: React.SFC<PlaceholderProps> = ({ children, width, height
                     if (!React.isValidElement(child)) {
                         return child;
                     }
-                    return React.cloneElement(child as any, {
+                    return React.cloneElement(child as ReactElement<any>, {
                         style: {
                             position: "absolute",
                             left: 0,
@@ -46,7 +47,7 @@ const PlaceholderImage: React.SFC<PlaceholderProps> = ({ children, width, height
 const JobComponent: React.SFC<JobProps> = ({ job, width, height }) => {
     let msg;
     let img = null;
-    if (!job || job.results.length < 1) {
+    if (!job) {
         msg = <p>&nbsp;</p>;
     } else {
         img = (job.results.map((res, idx) => {

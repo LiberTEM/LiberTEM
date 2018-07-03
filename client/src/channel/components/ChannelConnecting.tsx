@@ -7,7 +7,7 @@ interface ChannelConnectingProps {
 
 const ChannelConnecting: React.SFC<ChannelConnectingProps> = ({ msg }) => (
     <Message icon={true}>
-        <Icon name='circle notched' loading={true} />
+        <Icon name='cog' loading={true} />
         <Message.Content>
             <Message.Header>Connecting to LiberTEM</Message.Header>
             {msg}

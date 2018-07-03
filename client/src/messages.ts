@@ -1,6 +1,54 @@
 
+/* 
+ * Common
+ */
+
 export interface FollowupPart {
     numMessages: number,
+}
+
+/*
+ * Connection
+ */
+
+export enum ClusterTypes {
+    LOCAL = "LOCAL",
+    TCP = "TCP",
+}
+
+export const ClusterTypeMetadata: { [s: string]: { [s: string]: string } } = {
+    [ClusterTypes.LOCAL]: {
+        label: "Create local cluster",
+    },
+    [ClusterTypes.TCP]: {
+        label: "Connect to cluster",
+        helpText: "can be either local or remote, connection via TCP",
+    }
+}
+
+export interface ConnectRequestLocalCluster {
+    type: ClusterTypes.LOCAL,
+    numWorkers?: number,
+}
+
+export interface ConnectRequestTCP {
+    type: ClusterTypes.TCP,
+    isLocal: boolean,
+    address: string,
+}
+
+export type ConnectRequestParams = ConnectRequestLocalCluster | ConnectRequestTCP
+
+export interface ConnectRequest {
+    connection: ConnectRequestParams
+}
+
+export type ConnectResponse = {
+    status: "ok",
+    connection: ConnectRequest,
+} | {
+    status: "disconnected",
+    connection: {},
 }
 
 /*

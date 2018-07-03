@@ -42,7 +42,7 @@ const Disk: React.SFC<DiskProps> = ({ imageWidth, imageHeight, cx, cy, r, image,
         y: cy,
     }
     return (
-        <svg width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`} style={{ border: "1px solid black" }}>
+        <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
             {image ? <image xlinkHref={image} width={imageWidth} height={imageHeight} /> : null}
             <circle cx={cx} cy={cy} r={r} style={{ ...defaultMaskStyles }} />
             <HandleParent width={imageWidth} height={imageHeight}>

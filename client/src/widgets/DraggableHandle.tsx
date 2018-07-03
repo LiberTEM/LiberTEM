@@ -6,7 +6,7 @@ export type HandleProps = {
 } & React.SVGProps<SVGCircleElement>;
 
 const Handle: React.SFC<HandleProps> = ({ x, y, ...args }) => {
-    return <circle cx={x} cy={y} r={5} style={{ fill: "transparent", stroke: "red", strokeWidth: 2 }} {...args} />
+    return <circle cx={x} cy={y} r={3} style={{ fill: "transparent", stroke: "red", strokeWidth: 1 }} {...args} />
 }
 
 export interface DraggableHandleProps {
@@ -18,11 +18,26 @@ export interface DraggableHandleProps {
     constraint?: (p: Point2D) => Point2D,
 }
 
-function relativeCoords(e: React.MouseEvent, parent: Element) {
+function getScalingFactor(elem: SVGElement): number {
+    const svg = elem.ownerSVGElement;
+    if (svg === null) {
+        throw new Error("no owner SVG element?");
+    }
+    const inWidthAttr = svg.getAttribute("width");
+    if (inWidthAttr === null) {
+        throw new Error("no width on SVG element?");
+    }
+    const inWidth = +inWidthAttr;
+    const svgMeasurements = svg.getBoundingClientRect();
+    return svgMeasurements.width / inWidth;
+}
+
+function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
+    const f = getScalingFactor(parent);
     const parentPos = parent.getBoundingClientRect();
     const res = {
-        x: e.pageX - (parentPos.left + window.scrollX),
-        y: e.pageY - (parentPos.top + window.scrollY),
+        x: (e.pageX - (parentPos.left + window.scrollX)) / f,
+        y: (e.pageY - (parentPos.top + window.scrollY)) / f,
     }
     return res;
 }
@@ -31,7 +46,7 @@ function relativeCoords(e: React.MouseEvent, parent: Element) {
  * stateful draggable handle, to be used as part of <svg/>
  */
 export class DraggableHandle extends React.Component<DraggableHandleProps> {
-    public posRef: Element | null;
+    public posRef: SVGElement | null;
 
     public state = {
         dragging: false,

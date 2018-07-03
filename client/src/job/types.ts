@@ -9,4 +9,6 @@ export interface JobState {
     running: "CREATING" | "RUNNING" | "DONE",
     status: "CREATING" | "IN_PROGRESS" | "CANCELLED" | "SUCCESS",
     results: JobResultType[],
+    startTimestamp: number,
+    endTimestamp: number,
 }

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getPathArc } from "../helpers/svg";
 import DraggableHandle from "./DraggableHandle";
 import HandleParent from "./HandleParent";
 import { defaultMaskStyles } from "./styles";
@@ -75,27 +76,25 @@ const Ring: React.SFC<RingProps> = ({ imageWidth, imageHeight, cx, cy, ri, ro, i
     }
 
     // see also: https://stackoverflow.com/a/37883328/540644
-    const pathSpec = `M ${cx},${cy}
-    m 0, -${ro}
-    a ${ro}, ${ro}, 0, 1, 0, 1, 0
-    Z
-    m 0 ${ro - ri}
-    a ${ri}, ${ri}, 0, 1, 1, -1, 0
-    Z`;
+    const pathSpecs = [
+        getPathArc({ x: cx, y: cy }, 90, 90, ro),
+        getPathArc({ x: cx, y: cy }, 90, 90, ri)
+    ]
+    const pathSpec = pathSpecs.join(' ');
     return (
-        <svg width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`} style={{ border: "1px solid black" }}>
+        <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
             {image ? <image xlinkHref={image} width={imageWidth} height={imageHeight} /> : null}
             <path d={pathSpec} fillRule="evenodd" style={{ ...defaultMaskStyles }} />
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy}
                     onDragMove={onCenterChange}
                     constraint={inRectConstraint(imageWidth, imageHeight)} />
-                <DraggableHandle x={riHandle.x} y={riHandle.y}
-                    onDragMove={cbToRadius(cx, cy, onRIChange)}
-                    constraint={riConstraint(roHandle.x, cy)} />
                 <DraggableHandle x={roHandle.x} y={roHandle.y}
                     onDragMove={cbToRadius(cx, cy, onROChange)}
                     constraint={roConstraints(riHandle.x, cy)} />
+                <DraggableHandle x={riHandle.x} y={riHandle.y}
+                    onDragMove={cbToRadius(cx, cy, onRIChange)}
+                    constraint={riConstraint(roHandle.x, cy)} />
             </HandleParent>
         </svg>
     );

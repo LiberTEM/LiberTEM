@@ -16,13 +16,13 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[]) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets }),
-    startJob: (job: string) => createAction(ActionTypes.START_JOB, { job }),
-    finishJob: (job: string, results: JobResultType[]) => createAction(ActionTypes.FINISH_JOB, { job, results }),
-    taskResult: (job: string, results: PartialResultType[]) => createAction(ActionTypes.TASK_RESULT, { job, results }),
-    open: () => createAction(ActionTypes.OPEN),
-    close: () => createAction(ActionTypes.CLOSE),
-    error: (msg: string) => createAction(ActionTypes.ERROR, { msg }),
+    initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[], timestamp: number) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets, timestamp }),
+    startJob: (job: string, timestamp: number) => createAction(ActionTypes.START_JOB, { job, timestamp }),
+    finishJob: (job: string, results: JobResultType[], timestamp: number) => createAction(ActionTypes.FINISH_JOB, { job, results, timestamp }),
+    taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),
+    open: (timestamp: number) => createAction(ActionTypes.OPEN, { timestamp }),
+    close: (timestamp: number) => createAction(ActionTypes.CLOSE, { timestamp }),
+    error: (msg: string, timestamp: number) => createAction(ActionTypes.ERROR, { msg, timestamp }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

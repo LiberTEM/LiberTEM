@@ -54,6 +54,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                     results: ([] as JobResultType[]),
                     running: "RUNNING",
                     status: "IN_PROGRESS",
+                    startTimestamp: action.payload.timestamp,
                 }
             )
         }
@@ -74,6 +75,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                     results: action.payload.results,
                     running: "DONE",
                     status: "SUCCESS",
+                    endTimestamp: action.payload.timestamp,
                 }
             );
         }

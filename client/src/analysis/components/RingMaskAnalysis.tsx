@@ -3,7 +3,7 @@ import { connect, Dispatch } from "react-redux";
 import { Grid, Header, Segment } from "semantic-ui-react";
 import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
-import JobComponent from "../../job/Job";
+import JobComponent from "../../job/components/Job";
 import { DatasetState, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
@@ -42,9 +42,12 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
     const imageHeight = shape[2];
     const previewURL = getPreviewURL(dataset);
 
+    const resultWidth = shape[1];
+    const resultHeight = shape[0];
+
     return (
         <>
-            <Header attached="top">Ring analysis</Header>
+            <Header as="h3" attached="top">Ring analysis</Header>
             <Segment attached={true}>
                 <Grid columns={2}>
                     <Grid.Row>
@@ -55,7 +58,7 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
                             />
                         </Grid.Column>
                         <Grid.Column>
-                            {currentJob !== "" ? <JobComponent job={currentJob} /> : null}
+                            <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

@@ -3,7 +3,7 @@ import { connect, Dispatch } from "react-redux";
 import { Grid, Header, Segment } from "semantic-ui-react";
 import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
-import JobComponent from "../../job/Job";
+import JobComponent from "../../job/components/Job";
 import { DatasetState, MaskDefDisk } from "../../messages";
 import Disk from "../../widgets/Disk";
 import * as analysisActions from "../actions";
@@ -36,6 +36,9 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
     const imageWidth = shape[3];
     const imageHeight = shape[2];
 
+    const resultWidth = shape[1];
+    const resultHeight = shape[0];
+
     return (
         <>
             <Header as='h3' attached="top">Disk analysis</Header>
@@ -48,8 +51,7 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
                                 imageWidth={imageWidth} imageHeight={imageHeight} onCenterChange={handleCenterChange} onRChange={handleRChange} />
                         </Grid.Column>
                         <Grid.Column>
-
-                            {currentJob !== "" ? <JobComponent job={currentJob} /> : null}
+                            <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

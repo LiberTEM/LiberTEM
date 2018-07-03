@@ -1,10 +1,8 @@
 import { FormikProps, withFormik } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
+import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
-
-type Diff<T extends string | number | symbol, U extends string | number | symbol> = ({ [P in T]: P } & { [P in U]: never } & { [x: string]: never })[T];
-type Omit<T, K extends keyof T> = Pick<T, Diff<keyof T, K>>;
 
 type RawDatasetParamsHDF5 = Omit<DatasetParamsHDF5, "type" | "tileshape"> & { tileshape: string };
 

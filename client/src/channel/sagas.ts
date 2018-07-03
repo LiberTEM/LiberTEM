@@ -1,6 +1,6 @@
 import { Channel, delay, END, eventChannel } from "redux-saga";
 import { call, fork, put, take } from "redux-saga/effects";
-import * as fromActions from "./actions";
+import * as channelActions from "./actions";
 import * as fromMessages from './messages';
 
 type SocketChannel = Channel<fromMessages.Messages>;
@@ -64,14 +64,14 @@ export function* webSocketSaga() {
     while (true) {
         const socketChannel = yield call(createWebSocketChannel);
         yield fork(actionsFromChannel, socketChannel);
-        const action: fromActions.Actions = yield take([
-            fromActions.ActionTypes.OPEN,
-            fromActions.ActionTypes.CLOSE,
+        const action: channelActions.Actions = yield take([
+            channelActions.ActionTypes.OPEN,
+            channelActions.ActionTypes.CLOSE,
         ]);
-        if (action.type === fromActions.ActionTypes.OPEN) {
+        if (action.type === channelActions.ActionTypes.OPEN) {
             yield take([
-                fromActions.ActionTypes.CLOSE,
-                fromActions.ActionTypes.ERROR,
+                channelActions.ActionTypes.CLOSE,
+                channelActions.ActionTypes.ERROR,
             ]);
         }
         yield delay(1000);
@@ -85,33 +85,34 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
     try {
         while (true) {
             const msg = yield take(socketChannel);
+            const timestamp = Date.now();
             switch (msg.messageType) {
                 case fromMessages.MessageTypes.OPEN: {
-                    yield put(fromActions.Actions.open());
+                    yield put(channelActions.Actions.open(timestamp));
                     break;
                 }
                 case fromMessages.MessageTypes.CLOSE: {
-                    yield put(fromActions.Actions.close());
+                    yield put(channelActions.Actions.close(timestamp));
                     break;
                 }
                 case fromMessages.MessageTypes.ERROR: {
-                    yield put(fromActions.Actions.error(msg.msg));
+                    yield put(channelActions.Actions.error(msg.msg, timestamp));
                     break;
                 }
                 case fromMessages.MessageTypes.INITIAL_STATE: {
-                    yield put(fromActions.Actions.initialState(msg.jobs, msg.datasets));
+                    yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, timestamp));
                     break;
                 }
                 case fromMessages.MessageTypes.START_JOB: {
-                    yield put(fromActions.Actions.startJob(msg.job))
+                    yield put(channelActions.Actions.startJob(msg.job, timestamp))
                     break;
                 }
                 case fromMessages.MessageTypes.FINISH_JOB: {
-                    yield call(handleFinishJob, msg, socketChannel);
+                    yield call(handleFinishJob, msg, socketChannel, timestamp);
                     break;
                 }
                 case fromMessages.MessageTypes.TASK_RESULT: {
-                    yield call(handleTaskResult, msg, socketChannel)
+                    yield call(handleTaskResult, msg, socketChannel, timestamp)
                     break;
                 }
             }
@@ -130,14 +131,14 @@ export function* handleBinaryParts(numParts: number, socketChannel: SocketChanne
     return parts;
 }
 
-export function* handleTaskResult(msg: ReturnType<typeof fromMessages.Messages.taskResult>, socketChannel: SocketChannel) {
-    const parts : fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({imageURL: part.objectURL}));
-    yield put(fromActions.Actions.taskResult(msg.job, images));
+export function* handleTaskResult(msg: ReturnType<typeof fromMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
+    const parts: fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    yield put(channelActions.Actions.taskResult(msg.job, images, timestamp));
 }
 
-export function* handleFinishJob(msg: ReturnType<typeof fromMessages.Messages.finishJob>, socketChannel: SocketChannel) {
-    const parts : fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({imageURL: part.objectURL}));
-    yield put(fromActions.Actions.finishJob(msg.job, images));
+export function* handleFinishJob(msg: ReturnType<typeof fromMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
+    const parts: fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    yield put(channelActions.Actions.finishJob(msg.job, images, timestamp));
 }

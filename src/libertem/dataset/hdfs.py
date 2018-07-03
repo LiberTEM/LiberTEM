@@ -54,7 +54,7 @@ class BinaryHDFSDataSet(DataSet):
             self._load()
             for partition in self._index['partitions']:
                 path = os.path.join(self.dirname, partition['filename'])
-                with self.get_fs().open(path, "r"):
+                with self.get_fs().open(path, "rb"):
                     pass
             return True
         except (IOError, OSError) as e:

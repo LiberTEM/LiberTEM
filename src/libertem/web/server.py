@@ -401,6 +401,8 @@ class SharedData(object):
         return self.cluster_params
 
     def set_executor(self, executor, params):
+        if self.executor is not None:
+            self.executor.close()
         self.executor = executor
         self.cluster_params = params
 

@@ -14,6 +14,10 @@ class DaskJobExecutor(JobExecutor):
                 raise ValueError("pass either client or scheduler_uri, not both")
             self.client = dd.Client(scheduler_uri, processes=False)
 
+    def close(self):
+        # FIXME: need to cleanup anything else? cluster?
+        self.client.close()
+
     @classmethod
     def make_local(cls, cluster_kwargs=None, client_kwargs=None):
         """

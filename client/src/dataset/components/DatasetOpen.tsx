@@ -28,20 +28,21 @@ interface ExtraProps {
 type MergedProps = ExtraProps & ReturnType<typeof mapDispatchToProps>;
 
 const DatasetOpen: React.SFC<MergedProps> = ({ type, createDataset, onCancel }) => {
-    let form;
+    const renderForm = (form: React.ReactNode) => {
+        return (
+            <Segment>
+                {form}
+            </Segment>
+        );
+    }
     switch (type) {
         case DatasetTypes.HDF5: {
-            form = <HDF5ParamsForm onSubmit={createDataset} onCancel={onCancel} />;
+            return renderForm(<HDF5ParamsForm onSubmit={createDataset} onCancel={onCancel} />);
         }
         case DatasetTypes.HDFS: {
-            form = <HDFSParamsForm onSubmit={createDataset} onCancel={onCancel} />
+            return renderForm(<HDFSParamsForm onSubmit={createDataset} onCancel={onCancel} />);
         }
     }
-    return (
-        <Segment>
-            {form}
-        </Segment>
-    );
 }
 
 export default connect<{}, {}, ExtraProps>(null, mapDispatchToProps)(DatasetOpen)

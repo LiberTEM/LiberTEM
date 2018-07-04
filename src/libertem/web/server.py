@@ -3,6 +3,7 @@ import logging
 import asyncio
 import signal
 import copy
+from functools import partial
 from io import BytesIO
 
 import numpy as np
@@ -50,6 +51,10 @@ def _encode_image(result, colormap, save_kwargs):
     im.save(buf, **save_kwargs)
     buf.seek(0)
     return buf
+
+
+async def run_blocking(fn, *args, **kwargs):
+    return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
 
 class Message(object):
@@ -126,6 +131,13 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
     async def open(self):
         self.registry.add_handler(self)
         self.data.verify_datasets()
+        if self.data.have_executor():
+            msg = Message(self.data).initial_state(
+                jobs=self.data.serialize_jobs(),
+                datasets=self.data.serialize_datasets(),
+            )
+            log_message(msg)
+            self.registry.broadcast_event(msg)
 
     def on_close(self):
         self.registry.remove_handler(self)
@@ -220,9 +232,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         # colormap = cm.viridis
         save_kwargs = save_kwargs or {}
 
-        # TODO: do encoding work in a thread pool
-        return [_encode_image(full_result[idx], colormap, save_kwargs)
-                for idx in range(full_result.shape[0])]
+        futures = [
+            run_blocking(_encode_image, full_result[idx], colormap, save_kwargs)
+            for idx in range(full_result.shape[0])
+        ]
+
+        results = await asyncio.gather(*futures)
+        return results
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
@@ -351,22 +367,30 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
 
         executor = self.data.get_executor()
 
+        log.info("creating preview for dataset %s" % dataset_uuid)
+
         futures = []
         for task in job.get_tasks():
             submit_kwargs = {}
             futures.append(
                 executor.client.submit(task, **submit_kwargs)
             )
+        log.info("preview futures created")
 
         full_result = np.zeros(shape=ds.shape[2:])
+        log.info("...")
         async for future, result in dd.as_completed(futures, with_results=True):
+            log.info("preview got a partial result")
             for tile in result:
                 tile.copy_to_result(full_result)
-        image = _encode_image(
+        log.info("preview done, encoding image")
+        image = await run_blocking(
+            _encode_image,
             full_result,
             colormap=cm.gist_earth,
             save_kwargs={'format': 'png'},
         )
+        log.info("image encoded, sending response")
         return image.read()
 
     def set_max_expires(self):
@@ -396,6 +420,9 @@ class SharedData(object):
             # TODO: exception type, conversion into 400 response
             raise RuntimeError("wrong state: executor is None")
         return self.executor
+
+    def have_executor(self):
+        return self.executor is not None
 
     def get_cluster_params(self):
         return self.cluster_params
@@ -500,12 +527,20 @@ class ConnectHandler(tornado.web.RequestHandler):
             dask_client = await AioClient(address=connection['address'])
             executor = DaskJobExecutor(client=dask_client, is_local=connection['isLocal'])
         elif connection["type"].lower() == "local":
+            # NOTE: we can't use DaskJobExecutor.make_local as it doesn't use AioClient
+            # which then conflicts with LocalCluster(asynchronous=True)
+            # error message: "RuntimeError: Non-thread-safe operation invoked on an event loop
+            # other than the current one"
+            # related: debugging via env var PYTHONASYNCIODEBUG=1
             cluster_kwargs = {
                 "threads_per_worker": 1,
+                "asynchronous": True,
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
-            executor = DaskJobExecutor.make_local(cluster_kwargs=cluster_kwargs)
+            cluster = dd.LocalCluster(**cluster_kwargs)
+            dask_client = await AioClient(address=cluster)
+            executor = DaskJobExecutor(client=dask_client, is_local=True)
         self.data.set_executor(executor, request_data)
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
@@ -568,7 +603,10 @@ def do_stop():
 
 
 def main(port):
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+    )
     app = make_app()
     app.listen(port)
 

@@ -81,6 +81,7 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     return np.ones((imageSizeY, imageSizeX)) * bool_mask
 
 
+# TODO: dtype parameter? consistency with ring/circular above
 def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(
         np.ogrid[slice(0, imageSizeX)].astype(dtype), imageSizeY

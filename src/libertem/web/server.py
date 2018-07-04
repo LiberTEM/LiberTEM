@@ -2,7 +2,6 @@ import datetime
 import logging
 import asyncio
 import signal
-import copy
 from functools import partial
 from io import BytesIO
 
@@ -184,48 +183,49 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
-    def make_mask_factories(self, mask_params, frame_size):
-        def _make_ring(cx, cy, ri, ro):
-            def _inner():
+    def make_mask_factories(self, analysis, dtype, frame_size):
+        def _make_ring(cx, cy, ri, ro, shape):
+            def _ring_inner():
                 return masks.ring(
                     centerX=cx, centerY=cy,
                     imageSizeX=frame_size[1],
                     imageSizeY=frame_size[0],
                     radius=ro,
                     radius_inner=ri
-                )
-            return _inner
+                ).astype(dtype)
+            return [_ring_inner]
 
-        def _make_disk(cx, cy, r):
-            def _inner():
+        def _make_disk(cx, cy, r, shape):
+            def _disk_inner():
                 return masks.circular(
                     centerX=cx, centerY=cy,
                     imageSizeX=frame_size[1],
                     imageSizeY=frame_size[0],
                     radius=r,
-                )
-            return _inner
+                ).astype(dtype)
+            return [_disk_inner]
 
-        fn_by_shape = {
-            "disk": _make_disk,
-            "ring": _make_ring,
+        def _make_com():
+            return [
+                lambda: np.ones(frame_size).astype(dtype),
+                lambda: masks.gradient_x(
+                    imageSizeX=frame_size[1],
+                    imageSizeY=frame_size[1],
+                    dtype=dtype,
+                ),
+                lambda: masks.gradient_y(
+                    imageSizeX=frame_size[1],
+                    imageSizeY=frame_size[1],
+                    dtype=dtype,
+                ),
+            ]
+
+        fn_by_type = {
+            "APPLY_DISK_MASK": _make_disk,
+            "APPLY_RING_MASK": _make_ring,
+            "CENTER_OF_MASS": _make_com,
         }
-
-        factories = []
-        for params in mask_params:
-            kwargs = copy.deepcopy(params)
-            shape = kwargs.pop('shape')
-            assert shape in fn_by_shape
-            if shape == "ring":
-                assert len(kwargs.keys()) == 4
-                for p in ['cx', 'cy', 'ri', 'ro']:
-                    assert p in kwargs
-            elif shape == "disk":
-                assert len(kwargs.keys()) == 3
-                for p in ['cx', 'cy', 'r']:
-                    assert p in kwargs
-            factories.append(fn_by_shape[shape](**kwargs))
-        return factories
+        return fn_by_type[analysis['type']](**analysis['parameters'])
 
     async def result_images(self, full_result, save_kwargs=None):
         colormap = cm.gist_earth
@@ -240,11 +240,29 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         results = await asyncio.gather(*futures)
         return results
 
+    async def visualize_com(self, full_result, analysis, save_kwargs=None):
+        img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
+        ref_center_x = img_sum.shape[1] / 2
+        ref_center_y = img_sum.shape[0] / 2
+        x_centers = np.divide(img_x, img_sum)
+        y_centers = np.divide(img_y, img_sum)
+        centers = np.dstack((x_centers, y_centers))
+        log.debug("centers.shape: %r", centers.shape)
+        raise NotImplementedError()
+        return await self.result_images(None, save_kwargs)  # FIXME
+
+    async def visualize(self, full_result, analysis, save_kwargs=None):
+        if analysis['type'] in {'APPLY_DISK_MASK', 'APPLY_RING_MASK'}:
+            return await self.result_images(full_result, save_kwargs)
+        elif analysis['type'] in {'CENTER_OF_MASS'}:
+            return await self.visualize_com(full_result, analysis, save_kwargs)
+
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['job']
         ds = self.data.get_dataset(params['dataset'])
-        mask_factories = self.make_mask_factories(params['masks'], frame_size=ds.shape[2:])
+        analysis = params['analysis']
+        mask_factories = self.make_mask_factories(analysis, ds.dtype, frame_size=ds.shape[2:])
         job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
         self.data.register_job(uuid=uuid, job=job)
 
@@ -281,9 +299,10 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
             for tile in result:
                 tile.copy_to_result(full_result)
-            images = await self.result_images(
+            images = await self.visualize(
                 full_result,
-                save_kwargs={'format': 'jpeg', 'quality': 65},
+                analysis,
+                save_kwargs={'format': 'png'},
             )
 
             # NOTE: make sure the following broadcast_event messages are sent atomically!
@@ -298,8 +317,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
-        images = await self.result_images(
+        images = await self.visualize(
             full_result,
+            analysis,
             save_kwargs={'format': 'png'},
         )
         msg = Message(self.data).finish_job(
@@ -378,9 +398,7 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         log.info("preview futures created")
 
         full_result = np.zeros(shape=ds.shape[2:])
-        log.info("...")
         async for future, result in dd.as_completed(futures, with_results=True):
-            log.info("preview got a partial result")
             for tile in result:
                 tile.copy_to_result(full_result)
         log.info("preview done, encoding image")
@@ -599,12 +617,13 @@ def sig_exit(signum, frame):
 
 
 def do_stop():
+    log.warning("Exiting...")
     tornado.ioloop.IOLoop.instance().stop()
 
 
 def main(port):
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     app = make_app()

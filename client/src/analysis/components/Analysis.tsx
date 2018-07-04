@@ -1,8 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { assertNotReached } from '../../helpers';
+import { AnalysisTypes } from "../../messages";
 import { RootReducer } from "../../store";
-import { AnalysisState, AnalysisTypes } from "../types";
+import { AnalysisState } from "../types";
+import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
 import RingMaskAnalysis from "./RingMaskAnalysis";
 
@@ -25,6 +27,9 @@ const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
         };
         case AnalysisTypes.APPLY_RING_MASK: {
             return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
+        }
+        case AnalysisTypes.CENTER_OF_MASS: {
+            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
         }
     }
 

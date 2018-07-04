@@ -56,6 +56,7 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
                                 imageWidth={imageWidth} imageHeight={imageHeight} image={previewURL}
                                 onCenterChange={handleCenterChange} onRIChange={handleRIChange} onROChange={handleROChange}
                             />
+                            <p>Ring: center=({parameters.cx},{parameters.cy}), ri={parameters.ri}, ro={parameters.ro}</p>
                         </Grid.Column>
                         <Grid.Column>
                             <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />

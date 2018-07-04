@@ -1,10 +1,10 @@
-import { CreateMaskJobRequest, StartJobRequest, StartJobResponse } from "../messages";
+import { AnalysisDetails, StartJobRequest, StartJobResponse } from "../messages";
 
-export function startJob(jobId: string, datasetId: string, masks: CreateMaskJobRequest[]): Promise<StartJobResponse> {
+export function startJob(jobId: string, datasetId: string, analysis: AnalysisDetails): Promise<StartJobResponse> {
     const payload: StartJobRequest = {
         job: {
             dataset: datasetId,
-            masks,
+            analysis,
         }
     }
     return fetch(`/api/jobs/${jobId}/`, {

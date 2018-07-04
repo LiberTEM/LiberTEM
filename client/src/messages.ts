@@ -137,14 +137,37 @@ export interface MaskDefDisk {
 }
 
 // tslint:disable-next-line:no-empty-interface
-export interface CenterOfMassParams { }
+export interface CenterOfMassParams {
+}
 
-export type CreateMaskJobRequest = MaskDefRing | MaskDefDisk
+export enum AnalysisTypes {
+    APPLY_RING_MASK = "APPLY_RING_MASK",
+    APPLY_DISK_MASK = "APPLY_DISK_MASK",
+    CENTER_OF_MASS = "CENTER_OF_MASS",
+}
+
+export interface RingMaskDetails {
+    type: AnalysisTypes.APPLY_RING_MASK,
+    parameters: MaskDefRing,
+}
+
+export interface DiskMaskDetails {
+    type: AnalysisTypes.APPLY_DISK_MASK,
+    parameters: MaskDefDisk,
+}
+
+export interface CenterOfMassDetails {
+    type: AnalysisTypes.CENTER_OF_MASS,
+    parameters: CenterOfMassParams,
+}
+
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails;
 
 export interface StartJobRequest {
     job: {
         dataset: string,
-        masks: CreateMaskJobRequest[],
+        analysis: AnalysisDetails,
     }
 }
 

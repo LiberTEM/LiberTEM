@@ -1,5 +1,6 @@
 import { ActionsUnion, createAction } from "../helpers/actionHelpers";
-import { AnalysisParameters, AnalysisState, AnalysisTypes } from "./types";
+import { AnalysisParameters, AnalysisTypes } from "../messages";
+import { AnalysisState } from "./types";
 
 
 export enum ActionTypes {

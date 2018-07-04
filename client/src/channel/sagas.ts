@@ -23,8 +23,6 @@ function createWebSocketChannel(/* addr */): SocketChannel {
             }
         }
 
-        // our protocol is started by the INITIAL_STATE message from the server, so we don't
-        // strictly need this handler, but it can be useful as feedback for the user
         function onOpen() {
             emit(fromMessages.Messages.open());
         }

@@ -2,10 +2,10 @@ import { call, put, select, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
 import { startJob } from '../job/api';
-import { DatasetState } from '../messages';
+import { AnalysisDetails, AnalysisTypes, DatasetState } from '../messages';
 import { RootReducer } from '../store';
 import * as analysisActions from './actions';
-import { AnalysisDetails, AnalysisState, AnalysisTypes } from './types';
+import { AnalysisState } from './types';
 
 
 // TODO: flip this around - create classes for each analysis type
@@ -74,11 +74,8 @@ function selectAnalysis(state: RootReducer, id: string) {
 export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.run>) {
     try {
         const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-        const masks = [
-            analysis.details.parameters
-        ];
         const jobId = uuid();
-        const job = yield call(startJob, jobId, analysis.dataset, masks);
+        const job = yield call(startJob, jobId, analysis.dataset, analysis.details);
         return yield put(analysisActions.Actions.running(
             action.payload.id,
             job.job,

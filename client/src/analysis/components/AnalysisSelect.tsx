@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
 import { getEnumValues } from "../../helpers";
-import { AnalysisMetadata, AnalysisTypes } from "../types";
+import { AnalysisTypes } from "../../messages";
+import { AnalysisMetadata } from "../types";
 
 
 const analysisTypeKeys = getEnumValues(AnalysisTypes);

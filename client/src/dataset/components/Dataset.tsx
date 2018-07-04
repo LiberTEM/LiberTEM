@@ -4,9 +4,9 @@ import { Header } from 'semantic-ui-react';
 import * as analysisActions from '../../analysis/actions';
 import AnalysisList from "../../analysis/components/AnalysisList";
 import AnalysisSelect from "../../analysis/components/AnalysisSelect";
-import { AnalysisState, AnalysisTypes } from "../../analysis/types";
+import { AnalysisState } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
-import { DatasetState } from "../../messages";
+import { AnalysisTypes, DatasetState } from "../../messages";
 import { RootReducer } from "../../store";
 
 interface DatasetProps {

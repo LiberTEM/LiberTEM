@@ -10,3 +10,9 @@ export function connectToCluster(params: ConnectRequestParams): Promise<ConnectR
         method: "PUT",
     }).then(r => r.json());
 }
+
+export function checkClusterConnection(): Promise<ConnectResponse> {
+    return fetch(`/api/config/connection/`, {
+        method: 'GET',
+    }).then(r => r.json());
+}

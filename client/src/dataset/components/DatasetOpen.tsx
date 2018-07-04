@@ -1,5 +1,6 @@
 import * as React from "react";
 import { connect, Dispatch } from 'react-redux';
+import { Segment } from "semantic-ui-react";
 import * as uuid from "uuid/v4";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import * as datasetActions from "../actions";
@@ -27,14 +28,20 @@ interface ExtraProps {
 type MergedProps = ExtraProps & ReturnType<typeof mapDispatchToProps>;
 
 const DatasetOpen: React.SFC<MergedProps> = ({ type, createDataset, onCancel }) => {
+    let form;
     switch (type) {
         case DatasetTypes.HDF5: {
-            return <HDF5ParamsForm onSubmit={createDataset} onCancel={onCancel} />;
+            form = <HDF5ParamsForm onSubmit={createDataset} onCancel={onCancel} />;
         }
         case DatasetTypes.HDFS: {
-            return <HDFSParamsForm onSubmit={createDataset} onCancel={onCancel} />
+            form = <HDFSParamsForm onSubmit={createDataset} onCancel={onCancel} />
         }
     }
+    return (
+        <Segment>
+            {form}
+        </Segment>
+    );
 }
 
 export default connect<{}, {}, ExtraProps>(null, mapDispatchToProps)(DatasetOpen)

@@ -1,17 +1,19 @@
 
 import * as React from "react";
-import { Dropdown, DropdownProps } from "semantic-ui-react";
+import { connect } from "react-redux";
+import { Dropdown, DropdownProps, Segment } from "semantic-ui-react";
+import * as clusterActions from "../../cluster/actions";
 import { getEnumValues } from "../../helpers";
 import { ClusterTypeMetadata, ClusterTypes, ConnectRequestParams } from "../../messages";
-import { connectToCluster } from "../api";
 import LocalConnectionForm from "./LocalConnectionForm";
 import TCPConnectionForm from "./TCPConnectionForm";
 
-interface ClusterConnectionProps {
-    onSubmit: (e: any) => void,
-}
 
-type MergedProps = ClusterConnectionProps;
+const mapDispatchToProps = {
+    connectToCluster: clusterActions.Actions.connect,
+};
+
+type MergedProps = DispatchProps<typeof mapDispatchToProps>;
 
 const clusterTypeKeys = getEnumValues(ClusterTypes);
 const clusterTypeOptions = clusterTypeKeys.map(t => ({
@@ -40,9 +42,7 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
     }
 
     public handleSubmit = (params: ConnectRequestParams) => {
-        // tslint:disable-next-line:no-console
-        console.log(params);
-        connectToCluster(params);
+        this.props.connectToCluster(params);
     }
 
     public renderForm() {
@@ -60,18 +60,20 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
     public render() {
         return (
             <>
-                <p>
+                <div>
                     <Dropdown
                         inline={true}
                         options={clusterTypeOptions}
                         value={this.state.clusterType}
                         onChange={this.handleChange}
                     />
-                </p>
-                {this.renderForm()}
+                </div>
+                <Segment>
+                    {this.renderForm()}
+                </Segment>
             </>
         )
     }
 }
 
-export default ClusterConnectionForm;
+export default connect(null, mapDispatchToProps)(ClusterConnectionForm);

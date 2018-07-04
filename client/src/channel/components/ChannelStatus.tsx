@@ -1,33 +1,43 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import ClusterConnectionForm from "../../cluster/components/ClusterConnectionForm";
 import { RootReducer } from "../../store";
 import ChannelConnecting from "./ChannelConnecting";
-import ClusterConnectionForm from "./ClusterConnectionForm";
 
 const mapStateToProps = (state: RootReducer) => {
     return {
         channelStatus: state.channelStatus,
+        clusterConnection: state.clusterConnection,
     }
 }
+
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
 const messages = {
     waiting: "Waiting...",
     connecting: "Connecting...",
-    connected: "Connected, waiting for initial state...",
 }
 
-const ChannelStatus: React.SFC<MergedProps> = ({ children, channelStatus }) => {
+const clusterMessages = {
+    connected: "Connected, waiting for initial state...",
+    unknown: "Connected, fetching cluster status...",
+}
+
+const ChannelStatus: React.SFC<MergedProps> = ({ children, channelStatus, clusterConnection }) => {
     switch (channelStatus.status) {
         case "waiting":
         case "connecting": {
             return <ChannelConnecting msg={messages[channelStatus.status]} />;
         }
         case "connected": {
-            // tslint:disable:no-console
-            // tslint:disable:jsx-no-lambda
-            return <ClusterConnectionForm onSubmit={(e) => console.log(e)} />
+            if (clusterConnection.status === "disconnected") {
+                return <ClusterConnectionForm />
+            } else if (clusterConnection.status === "connected") {
+                return <ChannelConnecting msg={clusterMessages.connected} />;
+            } else if (clusterConnection.status === "unknown") {
+                return <ChannelConnecting msg={clusterMessages.unknown} />;
+            }
         }
     }
     return <>{children}</>;

@@ -10,7 +10,6 @@ export enum ActionTypes {
     START_JOB = 'CHANNEL_START_JOB',
     FINISH_JOB = 'CHANNEL_FINISH_JOB',
     TASK_RESULT = 'CHANNEL_TASK_RESULT',
-    CLUSTER_NOT_CONNECTED = 'CLUSTER_NOT_CONNECTED',
     OPEN = "CHANNEL_OPEN",
     CLOSE = "CHANNEL_CLOSE",
     ERROR = "CHANNEL_ERROR",
@@ -22,7 +21,6 @@ export const Actions = {
     finishJob: (job: string, results: JobResultType[], timestamp: number) => createAction(ActionTypes.FINISH_JOB, { job, results, timestamp }),
     taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),
     open: (timestamp: number) => createAction(ActionTypes.OPEN, { timestamp }),
-    clusterNotConnected: () => createAction(ActionTypes.CLUSTER_NOT_CONNECTED),
     close: (timestamp: number) => createAction(ActionTypes.CLOSE, { timestamp }),
     error: (msg: string, timestamp: number) => createAction(ActionTypes.ERROR, { msg, timestamp }),
 }

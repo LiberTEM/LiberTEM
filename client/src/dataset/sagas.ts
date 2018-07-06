@@ -10,10 +10,12 @@ export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Acti
         if (resp.status === "ok") {
             yield put(datasetActions.Actions.created(resp.details));
         } else if (resp.status === "error") {
-            yield put(datasetActions.Actions.error(resp.dataset, resp.msg));
+            const timestamp = Date.now();
+            yield put(datasetActions.Actions.error(resp.dataset, resp.msg, timestamp));
         }
     } catch (e) {
-        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`));
+        const timestamp = Date.now();
+        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`, timestamp));
     }
 }
 

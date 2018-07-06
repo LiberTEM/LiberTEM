@@ -1,4 +1,4 @@
-import { AnalysisDetails, StartJobRequest, StartJobResponse } from "../messages";
+import { AnalysisDetails, CancelJobResponse, StartJobRequest, StartJobResponse } from "../messages";
 
 export function startJob(jobId: string, datasetId: string, analysis: AnalysisDetails): Promise<StartJobResponse> {
     const payload: StartJobRequest = {
@@ -11,5 +11,12 @@ export function startJob(jobId: string, datasetId: string, analysis: AnalysisDet
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",
+    }).then(r => r.json());
+}
+
+export function cancelJob(jobId: string): Promise<CancelJobResponse> {
+    return fetch(`/api/jobs/${jobId}/`, {
+        method: "DELETE",
+        credentials: "same-origin",
     }).then(r => r.json());
 }

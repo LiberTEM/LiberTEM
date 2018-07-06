@@ -1,7 +1,8 @@
-import { call, put, select, takeEvery } from 'redux-saga/effects';
+import { call, put, select, take, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
-import { startJob } from '../job/api';
+import { cancelJob, startJob } from '../job/api';
+import { JobState } from '../job/types';
 import { AnalysisDetails, AnalysisTypes, DatasetState } from '../messages';
 import { RootReducer } from '../store';
 import * as analysisActions from './actions';
@@ -52,10 +53,11 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState):
     return assertNotReached("unhandeled analysis type");
 }
 
+function selectDataset(state: RootReducer, dataset: string) {
+    return state.dataset.byId[dataset];
+}
+
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
-    function selectDataset(state: RootReducer, dataset: string) {
-        return state.dataset.byId[dataset];
-    }
 
     const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
     const analysis: AnalysisState = {
@@ -71,9 +73,26 @@ function selectAnalysis(state: RootReducer, id: string) {
     return state.analyses.byId[id];
 }
 
+function selectJob(state: RootReducer, id: string) {
+    return state.job.byId[id];
+}
+
+export function* cancelOldJob(analysis: AnalysisState) {
+    if (analysis.currentJob === "") {
+        return;
+    }
+    const job: JobState = yield select(selectJob, analysis.currentJob);
+    if (job.running !== "DONE") {
+        yield call(cancelJob, analysis.currentJob);
+    }
+}
+
 export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.run>) {
     try {
         const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+
+        yield call(cancelOldJob, analysis);
+
         const jobId = uuid();
         const job = yield call(startJob, jobId, analysis.dataset, analysis.details);
         return yield put(analysisActions.Actions.running(
@@ -81,11 +100,21 @@ export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actio
             job.job,
         ))
     } catch (e) {
-        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`));
+        const timestamp = Date.now();
+        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp));
+    }
+}
+
+export function* cancelJobOnRemove() {
+    while (true) {
+        const action: ReturnType<typeof analysisActions.Actions.remove> = yield take(analysisActions.ActionTypes.REMOVE);
+        const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+        yield call(cancelJob, analysis.currentJob);
     }
 }
 
 export function* analysisRootSaga() {
     yield takeEvery(analysisActions.ActionTypes.CREATE, createAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.RUN, runAnalysisSaga);
+    yield takeEvery(analysisActions.ActionTypes.REMOVE, cancelJobOnRemove);
 }

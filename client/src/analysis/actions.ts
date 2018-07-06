@@ -20,7 +20,7 @@ export const Actions = {
     run: (id: string) => createAction(ActionTypes.RUN, { id }),
     running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
-    error: (msg: string) => createAction(ActionTypes.ERROR, { msg }),
+    error: (msg: string, timestamp: number) => createAction(ActionTypes.ERROR, { msg, timestamp }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

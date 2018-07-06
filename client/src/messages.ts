@@ -176,3 +176,8 @@ export interface StartJobResponse {
     job: string,
     details: MsgPartJob,
 }
+
+export interface CancelJobResponse {
+    status: "ok",
+    job: string,
+}

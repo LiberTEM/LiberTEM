@@ -51,7 +51,7 @@ const JobComponent: React.SFC<JobProps> = ({ job, width, height }) => {
         msg = <p>&nbsp;</p>;
     } else {
         img = (job.results.map((res, idx) => {
-            return <Image style={{ width: "100%", height: "auto" }} src={res.imageURL} key={idx} width={width} height={height} />
+            return <Image style={{ width: "100%", height: "auto", imageRendering: "pixelated" }} src={res.imageURL} key={idx} width={width} height={height} />
         }))
         if (job.startTimestamp && job.endTimestamp) {
             const dt = (job.endTimestamp - job.startTimestamp) / 1000;

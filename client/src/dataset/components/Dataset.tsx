@@ -37,6 +37,7 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses, handleAdd
             <Header as="h2" dividing={true}>{dataset.params.name}</Header>
             <AnalysisSelect onClick={handleAddAnalysis} label='Add analysis' />
             <AnalysisList analyses={analyses} />
+            {analyses.ids.length > 0 ? <AnalysisSelect onClick={handleAddAnalysis} label='Add analysis' /> : null}
         </>
     );
 }

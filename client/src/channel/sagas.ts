@@ -33,7 +33,7 @@ function createWebSocketChannel(/* addr */): SocketChannel {
         }
 
         function onError(err: Event) {
-            emit(fromMessages.Messages.error(err.toString()));
+            emit(fromMessages.Messages.error("Error in weboscket connection"));
         }
 
         const ws = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/events/`);

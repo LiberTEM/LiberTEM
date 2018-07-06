@@ -244,8 +244,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def visualize_com(self, full_result, analysis, save_kwargs=None):
         img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
-        ref_center_x = img_sum.shape[1] / 2
-        ref_center_y = img_sum.shape[0] / 2
+        # TODO: reference centers, substract from {x,y}_centers?
+        img_sum.shape[1] / 2
+        img_sum.shape[0] / 2
         x_centers = np.divide(img_x, img_sum)
         y_centers = np.divide(img_y, img_sum)
         centers = np.dstack((x_centers, y_centers))

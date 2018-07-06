@@ -1,3 +1,4 @@
+import sys
 import datetime
 import logging
 import asyncio
@@ -37,6 +38,7 @@ def _encode_image(result, colormap, save_kwargs):
     # TODO: only normalize across the area where we already have values
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
+    result = result.astype(np.float32)
     max_ = np.max(result)
     min_ = np.min(result[result > 0])
 
@@ -332,6 +334,11 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             raw_bytes = image.read()
             self.event_registry.broadcast_event(raw_bytes, binary=True)
 
+    async def delete(self):
+        # TODO: implement this. maybe by setting a flag, or by having all the futures in a list
+        # in shared data and calling cancel on them
+        raise NotImplementedError()
+
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     def initialize(self, data, event_registry):
@@ -612,13 +619,11 @@ def make_app():
     ], **settings)
 
 
-def sig_exit(signum, frame):
-    tornado.ioloop.IOLoop.instance().add_callback_from_signal(do_stop)
-
-
 def do_stop():
     log.warning("Exiting...")
+    data.get_executor().close()
     tornado.ioloop.IOLoop.instance().stop()
+    sys.exit(0)
 
 
 def main(port):
@@ -632,8 +637,8 @@ def main(port):
 
 def run(port):
     main(port)
-    signal.signal(signal.SIGINT, sig_exit)
     loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGINT, do_stop)
     loop.run_forever()
 
 

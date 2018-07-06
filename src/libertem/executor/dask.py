@@ -15,7 +15,14 @@ class DaskJobExecutor(JobExecutor):
             self.client = dd.Client(scheduler_uri, processes=False)
 
     def close(self):
-        # FIXME: need to cleanup anything else? cluster?
+        import tornado.gen
+        # FIXME: need to cleanup anything else?
+        # FIXME: this may not work with non-local cluster, check!
+        try:
+            self.client.cluster.close(timeout=3)
+        except tornado.gen.TimeoutError:
+            pass
+        # FIXME: may not work if client is AioClient?
         self.client.close()
 
     @classmethod

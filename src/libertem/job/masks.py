@@ -64,7 +64,7 @@ class MaskContainer(object):
 
         Returns
         -------
-        a list of masks sa they were created by the factories
+        a list of masks as they were created by the factories
         """
         return [f().astype(self.dtype)
                 for f in self.mask_factories]

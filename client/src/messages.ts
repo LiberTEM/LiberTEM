@@ -84,7 +84,13 @@ export interface DatasetCreateParams {
     params: DatasetFormParams,
 }
 
+export enum DatasetStatus {
+    OPEN = "OPEN",
+    OPENING = "OPENING",
+}
+
 export type Dataset = DatasetCreateParams & {
+    status: DatasetStatus,
     params: {
         shape: number[],
     }

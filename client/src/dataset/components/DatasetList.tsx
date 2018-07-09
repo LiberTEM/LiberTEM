@@ -57,48 +57,4 @@ class DatasetList extends React.Component<MergedProps, DatasetListState> {
     }
 }
 
-/*const loadDatasets = () => {
-    createDataset({
-        id: uuid(),
-        params: {
-            name: "test dataset",
-            type: DatasetTypes.HDFS,
-            path: "/test/index.json",
-            tileshape: [1, 8, 128, 128],
-        }
-    })
-
-    createDataset({
-        id: uuid(),
-        params: {
-            name: "e field mapping acquisition 8",
-            type: DatasetTypes.HDFS,
-            path: "/e-field-acquisition_8_0tilt_0V/index.json",
-            tileshape: [1, 8, 128, 128],
-        },
-    })
-
-    createDataset({
-        id: uuid(),
-        params: {
-            name: "e field mapping acquisition 10",
-            type: DatasetTypes.HDFS,
-            path: "/e-field-acquisition_10_0tilt_40V/index.json",
-            tileshape: [1, 8, 128, 128],
-        }
-    })
-
-    createDataset({
-        id: uuid(),
-        params: {
-            name: "local HDF5 test dataset",
-            type: DatasetTypes.HDF5,
-            path: "/home/clausen/Data/EMPAD/scan_11_x256_y256.emd",
-            dsPath: "experimental/science_data/data",
-            tileshape: [1, 8, 128, 128],
-        }
-    })
-}*/
-
-
 export default connect(mapStateToProps)(DatasetList);

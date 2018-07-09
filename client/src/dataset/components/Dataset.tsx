@@ -1,12 +1,12 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { Header } from 'semantic-ui-react';
+import { Header, Icon, Message } from 'semantic-ui-react';
 import * as analysisActions from '../../analysis/actions';
 import AnalysisList from "../../analysis/components/AnalysisList";
 import AnalysisSelect from "../../analysis/components/AnalysisSelect";
 import { AnalysisState } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
-import { AnalysisTypes, DatasetState } from "../../messages";
+import { AnalysisTypes, DatasetState, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 
 interface DatasetProps {
@@ -32,6 +32,19 @@ const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
 type MergedProps = DatasetProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses, handleAddAnalysis }) => {
+    if (dataset.status === DatasetStatus.OPENING) {
+        return (
+            <>
+                <Header as="h2" dividing={true}>{dataset.params.name}</Header>
+                <Message icon={true}>
+                    <Icon name='cog' loading={true} />
+                    <Message.Content>
+                        <Message.Header>Opening dataset {dataset.params.name}</Message.Header>
+                    </Message.Content>
+                </Message>
+            </>
+        );
+    }
     return (
         <>
             <Header as="h2" dividing={true}>{dataset.params.name}</Header>

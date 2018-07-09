@@ -354,12 +354,12 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
-    def put(self, uuid):
+    async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5"]
+        assert params['type'].lower() in ["hdfs", "hdf5", "raw"]
         if params["type"].lower() == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
@@ -372,6 +372,15 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "path": params["path"],
                 "ds_path": params["dsPath"],
                 "tileshape": params["tileshape"],
+            }
+        elif params["type"].lower() == "raw":
+            dataset_params = {
+                "path": params["path"],
+                "dtype": params["dtype"],
+                "detector_size_raw": params["detectorSizeRaw"],
+                "crop_detector_to": params["cropDetectorTo"],
+                "tileshape": params["tileshape"],
+                "scan_size": params["scanSize"],
             }
         try:
             ds = dataset.load(filetype=params["type"], **dataset_params)

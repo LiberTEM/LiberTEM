@@ -4,9 +4,9 @@ import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
 
-type RawDatasetParamsHDF5 = Omit<DatasetParamsHDF5, "type" | "tileshape"> & { tileshape: string };
+type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "type" | "tileshape"> & { tileshape: string };
 
-type FormValues = RawDatasetParamsHDF5
+type FormValues = DatasetParamsHDF5ForForm
 
 interface FormProps {
     onSubmit: (params: DatasetParamsHDF5) => void,

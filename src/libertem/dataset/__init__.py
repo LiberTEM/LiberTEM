@@ -3,6 +3,7 @@ import importlib
 filetypes = {
     "hdfs": "libertem.dataset.hdfs.BinaryHDFSDataSet",
     "hdf5": "libertem.dataset.hdf5.H5DataSet",
+    "raw": "libertem.dataset.raw.RawFileDataSet",
 }
 
 

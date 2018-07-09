@@ -58,6 +58,7 @@ export type ConnectResponse = {
 export enum DatasetTypes {
     HDF5 = "HDF5",
     HDFS = "HDFS",
+    RAW = "RAW",
 }
 
 export interface DatasetParamsCommon {
@@ -77,7 +78,17 @@ export type DatasetParamsHDF5 = {
     tileshape: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS
+export type DatasetParamsRaw = {
+    type: DatasetTypes.RAW,
+    path: string,
+    dtype: string,
+    detectorSizeRaw: number[],
+    cropDetectorTo: number[],
+    scanSize: number[],
+    tileshape: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw
 
 export interface DatasetCreateParams {
     id: string,

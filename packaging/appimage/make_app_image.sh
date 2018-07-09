@@ -14,7 +14,10 @@ bash ../../$MC_NAME -b -p ./conda || exit 1
 PATH="${HERE}"/conda/bin:$PATH
 # conda config --add channels conda-forge
 conda create -n libertem python=3.6 -y || exit 1
-pip install "$BASE_DIR" || exit 1
+# FIXME: install specific version (for example from pypi, or continuous build, ...)
+pip install "$BASE_DIR"/dist/*.whl || exit 1
+
+rm -rf ./conda/pkgs/
 
 cd .. || exit 1
 
@@ -42,4 +45,12 @@ Categories=Science;
 StartupNotify=true
 EOF
 
-echo "done, now run $ appimagetool-x86_64.AppImage LiberTEM.AppImage"
+echo "AppDir created, creating AppImage..."
+
+cd .. || exit 1
+
+wget -c -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+chmod a+x appimagetool-x86_64.AppImage
+./appimagetool-x86_64.AppImage LiberTEM.AppImage
+
+echo "done"

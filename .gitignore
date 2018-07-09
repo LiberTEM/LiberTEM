@@ -13,3 +13,4 @@ node_modules
 src/libertem/web/client/
 build
 dist
+*.AppImage

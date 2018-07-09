@@ -1,3 +1,4 @@
+import os
 import sys
 import datetime
 import logging
@@ -603,7 +604,7 @@ class IndexHandler(tornado.web.RequestHandler):
         self.event_registry = event_registry
 
     def get(self):
-        self.render("templates/index.html")
+        self.render("client/index.html")
 
 
 # shared state:
@@ -613,10 +614,10 @@ data = SharedData()
 
 def make_app():
     settings = {
-        # "static_path": os.path.join(os.path.dirname(__file__), "static"),
+        "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
     return tornado.web.Application([
-        # (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
+        (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
             "data": data,
             "event_registry": event_registry
@@ -639,26 +640,29 @@ def make_app():
 
 def do_stop():
     log.warning("Exiting...")
-    data.get_executor().close()
-    tornado.ioloop.IOLoop.instance().stop()
-    sys.exit(0)
+    try:
+        data.get_executor().close()
+        tornado.ioloop.IOLoop.instance().stop()
+    finally:
+        sys.exit(0)
 
 
-def main(port):
+def main(host, port):
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
+    log.info("listening on %s:%s" % (host, port))
     app = make_app()
-    app.listen(port)
+    app.listen(address=host, port=port)
 
 
-def run(port):
-    main(port)
+def run(host, port):
+    main(host, port)
     loop = asyncio.get_event_loop()
     loop.add_signal_handler(signal.SIGINT, do_stop)
     loop.run_forever()
 
 
 if __name__ == "__main__":
-    main(9000)
+    main("0.0.0.0", 9000)

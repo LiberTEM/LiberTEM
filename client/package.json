@@ -8,6 +8,7 @@
       "ws": true
     }
   },
+  "homepage": "/static/",
   "dependencies": {
     "@types/lodash": "^4.14.110",
     "@types/prop-types": "^15.5.3",

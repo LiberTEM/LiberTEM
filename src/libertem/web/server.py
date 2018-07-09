@@ -638,6 +638,10 @@ def make_app():
     ], **settings)
 
 
+def sig_exit(signum, frame):
+    tornado.ioloop.IOLoop.instance().add_callback_from_signal(do_stop)
+
+
 def do_stop():
     log.warning("Exiting...")
     try:
@@ -660,7 +664,7 @@ def main(host, port):
 def run(host, port):
     main(host, port)
     loop = asyncio.get_event_loop()
-    loop.add_signal_handler(signal.SIGINT, do_stop)
+    signal.signal(signal.SIGINT, sig_exit)
     loop.run_forever()
 
 

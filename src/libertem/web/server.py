@@ -207,6 +207,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 ).astype(dtype)
             return [_disk_inner]
 
+        def _make_point(cx, cy, shape):
+            def _point_inner():
+                a = np.zeros(frame_size)
+                a[int(cy), int(cx)] = 1
+                return a.astype(dtype)
+            return [_point_inner]
+
         def _make_com():
             return [
                 lambda: np.ones(frame_size).astype(dtype),
@@ -225,6 +232,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         fn_by_type = {
             "APPLY_DISK_MASK": _make_disk,
             "APPLY_RING_MASK": _make_ring,
+            "APPLY_POINT_SELECTOR": _make_point,
             "CENTER_OF_MASS": _make_com,
         }
         return fn_by_type[analysis['type']](**analysis['parameters'])
@@ -255,7 +263,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         return await self.result_images(None, save_kwargs)  # FIXME
 
     async def visualize(self, full_result, analysis, save_kwargs=None):
-        if analysis['type'] in {'APPLY_DISK_MASK', 'APPLY_RING_MASK'}:
+        if analysis['type'] in {'APPLY_DISK_MASK', 'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
             return await self.result_images(full_result, save_kwargs)
         elif analysis['type'] in {'CENTER_OF_MASS'}:
             return await self.visualize_com(full_result, analysis, save_kwargs)

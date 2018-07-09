@@ -22,4 +22,8 @@ export const AnalysisMetadata: { [s: string]: { [s: string]: string } } = {
         "long": "Compute the center of mass of all diffraction images",
         "short": "Center of mass",
     },
+    [AnalysisTypes.APPLY_POINT_SELECTOR]: {
+        "long": "Create an image from a single pixel selected in the detector",
+        "short": "Point selection",
+    },
 }

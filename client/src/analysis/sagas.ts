@@ -49,6 +49,16 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState):
                 parameters: {},
             };
         }
+        case AnalysisTypes.APPLY_POINT_SELECTOR: {
+            return {
+                type: analysisType,
+                parameters: {
+                    shape: "point",
+                    cx: width / 2,
+                    cy: width / 2,
+                }
+            }
+        }
     }
     return assertNotReached("unhandeled analysis type");
 }

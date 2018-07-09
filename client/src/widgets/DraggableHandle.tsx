@@ -3,15 +3,29 @@ import * as React from "react";
 export type HandleProps = {
     x: number,
     y: number,
+    withCross?: boolean,
 } & React.SVGProps<SVGCircleElement>;
 
-const Handle: React.SFC<HandleProps> = ({ x, y, ...args }) => {
-    return <circle cx={x} cy={y} r={3} style={{ fill: "transparent", stroke: "red", strokeWidth: 1 }} {...args} />
+const Handle: React.SFC<HandleProps> = ({ x, y, withCross, ...args }) => {
+    const r = 3;
+    const style: React.CSSProperties = { stroke: "red", strokeWidth: 1, fill: "transparent" };
+    const crossSpec = `
+        M${x - r / 2} ${y} L ${x + r / 2} ${y}
+        M${x} ${y - r / 2} L ${x} ${y + r / 2}
+    `;
+    const cross = withCross ? <path d={crossSpec} style={style} /> : null;
+    return (
+        <g {...args}>
+            <circle cx={x} cy={y} r={r} style={style} />
+            {cross}
+        </g>
+    )
 }
 
 export interface DraggableHandleProps {
     x: number,
     y: number,
+    withCross?: boolean,
     onDragMove?: (x: number, y: number) => void,
     parentOnDragStart?: (h: DraggableHandle) => void,
     parentOnDrop?: (x: number, y: number) => void,
@@ -140,7 +154,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
                     ref={e => this.posRef = e}
                     x={0} y={0} width={0} height={0}
                 />
-                <Handle x={x} y={y}
+                <Handle x={x} y={y} withCross={this.props.withCross}
                     onMouseUp={this.stopDrag}
                     onMouseMove={this.move}
                     onMouseDown={this.startDrag}

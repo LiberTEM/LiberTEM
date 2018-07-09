@@ -6,6 +6,7 @@ import { RootReducer } from "../../store";
 import { AnalysisState } from "../types";
 import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
+import PointSelectionAnalysis from "./PointSelectionAnalysis";
 import RingMaskAnalysis from "./RingMaskAnalysis";
 
 interface AnalysisProps {
@@ -30,6 +31,9 @@ const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
         }
         case AnalysisTypes.CENTER_OF_MASS: {
             return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
+        }
+        case AnalysisTypes.APPLY_POINT_SELECTOR: {
+            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />
         }
     }
 

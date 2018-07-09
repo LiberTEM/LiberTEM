@@ -136,6 +136,12 @@ export interface MaskDefDisk {
     r: number,
 }
 
+export interface PointDef {
+    shape: "point",
+    cx: number,
+    cy: number,
+}
+
 // tslint:disable-next-line:no-empty-interface
 export interface CenterOfMassParams {
 }
@@ -143,6 +149,7 @@ export interface CenterOfMassParams {
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
+    APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
 }
 
@@ -156,13 +163,18 @@ export interface DiskMaskDetails {
     parameters: MaskDefDisk,
 }
 
+export interface PointDefDetails {
+    type: AnalysisTypes.APPLY_POINT_SELECTOR,
+    parameters: PointDef,
+}
+
 export interface CenterOfMassDetails {
     type: AnalysisTypes.CENTER_OF_MASS,
     parameters: CenterOfMassParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails;
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails;
 
 export interface StartJobRequest {
     job: {

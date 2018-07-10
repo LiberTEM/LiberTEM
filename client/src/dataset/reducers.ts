@@ -1,6 +1,6 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { constructById, insertById, updateById } from "../helpers/reducerHelpers";
+import { constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import { DatasetState, DatasetStatus } from "../messages";
 import * as datasetActions from './actions';
 import { DatasetsState } from "./types";
@@ -31,6 +31,9 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
         case datasetActions.ActionTypes.CREATED: {
             const ds = { ...action.payload.dataset, status: DatasetStatus.OPEN };
             return updateById(state, action.payload.dataset.id, ds);
+        }
+        case datasetActions.ActionTypes.ERROR: {
+            return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);
         }
     }
     return state;

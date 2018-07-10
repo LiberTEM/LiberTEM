@@ -5,7 +5,16 @@ import * as clusterActions from './actions';
 import { checkClusterConnection, connectToCluster } from "./api";
 
 function* connectSaga(action: ReturnType<typeof clusterActions.Actions.connect>) {
-    yield call(connectToCluster, action.payload.params);
+    const conn: ConnectResponse = yield call(connectToCluster, action.payload.params);
+    yield call(putClusterStatus, conn);
+}
+
+function* putClusterStatus(conn: ConnectResponse) {
+    if (conn.status === "ok") {
+        yield put(clusterActions.Actions.connected(conn.connection.connection));
+    } else {
+        yield put(clusterActions.Actions.notConnected());
+    }
 }
 
 /**
@@ -15,11 +24,7 @@ function* trackClusterConnection() {
     while (true) {
         yield take(channelActions.ActionTypes.OPEN)
         const conn: ConnectResponse = yield call(checkClusterConnection);
-        if (conn.status === "ok") {
-            yield put(clusterActions.Actions.connected(conn.connection.connection));
-        } else {
-            yield put(clusterActions.Actions.notConnected());
-        }
+        yield call(putClusterStatus, conn);
     }
 }
 

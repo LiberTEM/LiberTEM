@@ -3,8 +3,8 @@ import contextlib
 import numpy as np
 import h5py
 
+from libertem.common.slice import Slice
 from .base import DataSet, Partition, DataTile, DataSetException
-from ..slice import Slice
 
 
 class H5DataSet(DataSet):

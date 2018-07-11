@@ -1,8 +1,8 @@
 import functools
 import numpy as np
 
+from libertem.io.dataset.base import DataTile
 from .base import Job, Task
-from ..dataset.base import DataTile
 
 
 def _make_mask_slicer(computed_masks):

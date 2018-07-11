@@ -19,10 +19,11 @@ import tornado.escape
 from PIL import Image
 
 from libertem.executor.dask import DaskJobExecutor
-from libertem.dataset.base import DataSetException
+from libertem.io.dataset.base import DataSetException
+from libertem.io import dataset
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.sum import SumFramesJob
-from libertem import masks, dataset
+from libertem import masks
 
 
 log = logging.getLogger(__name__)

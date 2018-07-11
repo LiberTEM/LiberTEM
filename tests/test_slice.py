@@ -1,5 +1,5 @@
 import numpy as np
-from libertem.slice import Slice
+from libertem.common.slice import Slice
 
 
 def test_subslices_simple():

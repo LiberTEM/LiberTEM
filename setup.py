@@ -5,11 +5,11 @@ from setuptools import setup
 import setuptools.command.build_py
 
 
-class BuildPyCommand(setuptools.command.build_py.build_py):
+class CustomBuildCommand(setuptools.command.build_py.build_py):
     def run(self):
         self.run_command('build_client')
         self.run_command('copy_client')
-        super(BuildPyCommand, self).run()
+        super().run()
 
 
 class BuildClientCommand(distutils.cmd.Command):
@@ -75,8 +75,10 @@ class CopyClientCommand(distutils.cmd.Command):
 setup(
     name="libertem",
     version="0.0",
+    url="https://libertem.github.io/LiberTEM/",
     author_email="a.clausen@fz-juelich.de",
     author="Alexander Clausen",
+    license='GPL v3',
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=[
@@ -94,23 +96,30 @@ setup(
     package_dir={"": "src"},
     packages=[
         "libertem",
-        "libertem.dataset",
+        "libertem.common",
+        "libertem.io",
+        "libertem.io.dataset",
         "libertem.executor",
         "libertem.job",
         "libertem.web",
     ],
     entry_points={
         'console_scripts': [
-            'libertem-ingest=libertem.ingest.cli:main',
+            'libertem-ingest=libertem.io.ingest.cli:main',
             'libertem-server=libertem.web.cli:main',
         ]
     },
     cmdclass={
-        'build_py': BuildPyCommand,
+        'build_py': CustomBuildCommand,
         'build_client': BuildClientCommand,
         'copy_client': CopyClientCommand,
     },
     classifiers=[
         'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
     ],
 )

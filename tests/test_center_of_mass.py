@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 from scipy.ndimage import measurements
 
-from libertem.dataset.hdf5 import H5DataSet
+from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.executor.inline import InlineJobExecutor
 from libertem.masks import gradient_x, gradient_y
 from libertem.job.masks import ApplyMasksJob

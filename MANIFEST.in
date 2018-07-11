@@ -1,1 +1,4 @@
 graft src
+include LICENSE
+graft client
+prune client/node_modules/

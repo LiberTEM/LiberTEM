@@ -7,8 +7,8 @@ import functools
 import numpy as np
 import hdfs3
 
+from libertem.common.slice import Slice
 from .base import DataSet, Partition, DataTile, DataSetException
-from ..slice import Slice
 
 
 class BinaryHDFSDataSet(DataSet):

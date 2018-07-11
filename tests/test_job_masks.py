@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from libertem.slice import Slice
+from libertem.common.slice import Slice
 from libertem.job.masks import MaskContainer, ResultTile
-from libertem.dataset.base import DataTile
+from libertem.io.dataset.base import DataTile
 from libertem.masks import gradient_x
 
 

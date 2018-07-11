@@ -4,8 +4,8 @@ import glob
 
 import numpy as np
 
+from libertem.common.slice import Slice
 from .base import DataSet, Partition, DataTile, DataSetException
-from ..slice import Slice
 
 
 class MIBFile(object):

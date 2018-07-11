@@ -1,10 +1,10 @@
 import importlib
 
 filetypes = {
-    "hdfs": "libertem.dataset.hdfs.BinaryHDFSDataSet",
-    "hdf5": "libertem.dataset.hdf5.H5DataSet",
-    "raw": "libertem.dataset.raw.RawFileDataSet",
-    "mib": "libertem.dataset.mib.MIBDataSet",
+    "hdfs": "libertem.io.dataset.hdfs.BinaryHDFSDataSet",
+    "hdf5": "libertem.io.dataset.hdf5.H5DataSet",
+    "raw": "libertem.io.dataset.raw.RawFileDataSet",
+    "mib": "libertem.io.dataset.mib.MIBDataSet",
 }
 
 

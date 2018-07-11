@@ -2,14 +2,6 @@ import os
 import distutils
 import subprocess
 from setuptools import setup
-import setuptools.command.build_py
-
-
-class CustomBuildCommand(setuptools.command.build_py.build_py):
-    def run(self):
-        self.run_command('build_client')
-        self.run_command('copy_client')
-        super().run()
 
 
 class BuildClientCommand(distutils.cmd.Command):
@@ -32,6 +24,7 @@ class BuildClientCommand(distutils.cmd.Command):
         for command in [['npm', 'install'],
                         ['npm', 'run-script', 'build']]:
             subprocess.check_call(command, cwd=cwd_client)
+        self.run_command('copy_client')
 
 
 class CopyClientCommand(distutils.cmd.Command):
@@ -110,7 +103,6 @@ setup(
         ]
     },
     cmdclass={
-        'build_py': CustomBuildCommand,
         'build_client': BuildClientCommand,
         'copy_client': CopyClientCommand,
     },

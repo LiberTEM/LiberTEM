@@ -4,6 +4,7 @@ import datetime
 import logging
 import asyncio
 import signal
+import psutil
 from functools import partial
 from io import BytesIO
 
@@ -18,6 +19,7 @@ import tornado.ioloop
 import tornado.escape
 from PIL import Image
 
+import libertem
 from libertem.executor.dask import DaskJobExecutor
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
@@ -78,6 +80,13 @@ class Message(object):
             "messageType": "INITIAL_STATE",
             "datasets": datasets,
             "jobs": jobs,
+        }
+
+    def config(self, config):
+        return {
+            "status": "ok",
+            "messageType": "CONFIG",
+            "config": config,
         }
 
     def create_dataset(self, dataset):
@@ -471,6 +480,18 @@ class SharedData(object):
         self.executor = None
         self.cluster_params = {}
 
+    def get_local_cores(self, default=2):
+        cores = psutil.cpu_count(logical=False)
+        if cores is None:
+            cores = default
+        return cores
+
+    def get_config(self):
+        return {
+            "version": libertem.__version__,
+            "localCores": self.get_local_cores(),
+        }
+
     def get_executor(self):
         if self.executor is None:
             # TODO: exception type, conversion into 400 response
@@ -551,6 +572,18 @@ class SharedData(object):
             self.serialize_dataset(dataset_id)
             for dataset_id in self.datasets.keys()
         ]
+
+
+class ConfigHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get(self):
+        log.info("ConfigHandler.get")
+        msg = Message(self.data).config(config=self.data.get_config())
+        log_message(msg)
+        self.write(msg)
 
 
 class ConnectHandler(tornado.web.RequestHandler):
@@ -643,6 +676,10 @@ def make_app():
             "event_registry": event_registry
         }),
         (r"/api/events/", ResultEventHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/config/", ConfigHandler, {
+            "data": data,
+            "event_registry": event_registry
+        }),
         (r"/api/config/connection/", ConnectHandler, {
             "data": data,
             "event_registry": event_registry,

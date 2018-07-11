@@ -188,3 +188,48 @@ def test_slice_intersect_3():
     )
     res = s1.intersection_with(s2)
     assert res == s1
+
+
+def test_subslice_from_offset_length_1():
+    s1 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=(2, 2, 2, 2),
+    )
+    sub1 = s1.subslice_from_offset(offset=0, length=2)
+    assert sub1.origin == (1, 1, 1, 1)
+    assert sub1.shape == (1, 2, 2, 2)
+
+    sub2 = s1.subslice_from_offset(offset=0, length=4)
+    assert sub2.origin == (1, 1, 1, 1)
+    assert sub2.shape == (2, 2, 2, 2)
+
+
+def test_subslice_from_offset_length_2():
+    s1 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(2, 2, 2, 2),
+    )
+
+    sub1 = s1.subslice_from_offset(offset=0, length=2)
+    assert sub1.origin == (0, 0, 0, 0)
+    assert sub1.shape == (1, 2, 2, 2)
+
+    sub2 = s1.subslice_from_offset(offset=0, length=4)
+    assert sub2.origin == (0, 0, 0, 0)
+    assert sub2.shape == (2, 2, 2, 2)
+
+
+def test_subslice_from_offset_length_3():
+    s1 = Slice(
+        origin=(0, 0, 0, 0),
+        shape=(4, 4, 2, 2),
+    )
+
+    # can also create subslice that is smaller than one row:
+    sub3 = s1.subslice_from_offset(offset=0, length=1)
+    assert sub3.origin == (0, 0, 0, 0)
+    assert sub3.shape == (1, 1, 2, 2)
+
+    sub3 = s1.subslice_from_offset(offset=1, length=1)
+    assert sub3.origin == (0, 1, 0, 0)
+    assert sub3.shape == (1, 1, 2, 2)

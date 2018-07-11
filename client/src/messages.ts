@@ -59,6 +59,7 @@ export enum DatasetTypes {
     HDF5 = "HDF5",
     HDFS = "HDFS",
     RAW = "RAW",
+    MIB = "MIB",
 }
 
 export interface DatasetParamsCommon {
@@ -88,7 +89,14 @@ export type DatasetParamsRaw = {
     tileshape: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw
+export type DatasetParamsMIB = {
+    type: DatasetTypes.MIB,
+    filesPattern: string,
+    scanSize: number[],
+    tileshape: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB
 
 export interface DatasetCreateParams {
     id: string,

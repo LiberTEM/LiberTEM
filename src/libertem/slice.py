@@ -177,6 +177,31 @@ class Slice(object):
             for u in range(nu)
         )
 
+    def subslice_from_offset(self, offset, length):
+        """
+        in scan dimensions
+        """
+        o = self.origin
+        s = self.shape
+
+        if length < s[1]:
+            offset_rows = offset // s[1]
+            return Slice(
+                origin=(o[0] + offset_rows, o[1] + offset % s[1]) + o[2:],
+                shape=(1, length) + s[2:],
+            )
+        else:
+            assert (length % s[1] == 0),\
+                "length %r not divisible by %r" % (length, s[1])
+            assert (offset % s[1] == 0),\
+                "offset %r not divisible by %r" % (offset, s[1])
+            rows = length // s[1]
+            offset_rows = offset // s[1]
+            return Slice(
+                origin=(o[0] + offset_rows,) + o[1:],
+                shape=(rows,) + s[1:],
+            )
+
     @classmethod
     def partition_shape(cls, datashape, framesize, dtype, target_size, min_num_partitions=None):
         """

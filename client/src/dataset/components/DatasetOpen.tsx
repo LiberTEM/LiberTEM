@@ -6,6 +6,7 @@ import { DatasetFormParams, DatasetTypes } from '../../messages';
 import * as datasetActions from "../actions";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import HDFSParamsForm from './HDFSParamsForm';
+import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: ExtraProps) => {
@@ -45,6 +46,9 @@ const DatasetOpen: React.SFC<MergedProps> = ({ type, createDataset, onCancel }) 
         }
         case DatasetTypes.RAW: {
             return renderForm(<RawFileParamsForm onSubmit={createDataset} onCancel={onCancel} />);
+        }
+        case DatasetTypes.MIB: {
+            return renderForm(<MIBParamsForm onSubmit={createDataset} onCancel={onCancel} />);
         }
     }
 }

@@ -209,7 +209,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                     imageSizeY=frame_size[0],
                     radius=ro,
                     radius_inner=ri
-                ).astype(dtype)
+                )
             return [_ring_inner]
 
         def _make_disk(cx, cy, r, shape):
@@ -219,7 +219,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                     imageSizeX=frame_size[1],
                     imageSizeY=frame_size[0],
                     radius=r,
-                ).astype(dtype)
+                )
             return [_disk_inner]
 
         def _make_point(cx, cy, shape):
@@ -229,19 +229,25 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 return a.astype(dtype)
             return [_point_inner]
 
-        def _make_com():
+        def _make_com(cx, cy, r, shape):
+            disk_mask = masks.circular(
+                centerX=cx, centerY=cy,
+                imageSizeX=frame_size[1],
+                imageSizeY=frame_size[0],
+                radius=r,
+            )
             return [
-                lambda: np.ones(frame_size).astype(dtype),
+                lambda: disk_mask,
                 lambda: masks.gradient_x(
                     imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[1],
+                    imageSizeY=frame_size[0],
                     dtype=dtype,
-                ),
+                ) * (np.ones(frame_size) * disk_mask),
                 lambda: masks.gradient_y(
                     imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[1],
+                    imageSizeY=frame_size[0],
                     dtype=dtype,
-                ),
+                ) * (np.ones(frame_size) * disk_mask),
             ]
 
         fn_by_type = {
@@ -275,13 +281,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         centers = np.dstack((x_centers, y_centers))
         log.debug("centers.shape: %r", centers.shape)
         raise NotImplementedError()
-        return await self.result_images(None, save_kwargs)  # FIXME
 
     async def visualize(self, full_result, analysis, save_kwargs=None):
         if analysis['type'] in {'APPLY_DISK_MASK', 'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
             return await self.result_images(full_result, save_kwargs)
         elif analysis['type'] in {'CENTER_OF_MASS'}:
-            return await self.visualize_com(full_result, analysis, save_kwargs)
+            return await self.result_images(full_result, save_kwargs)
+            # return await self.visualize_com(full_result, analysis, save_kwargs)
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)

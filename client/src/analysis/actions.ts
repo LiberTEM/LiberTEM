@@ -16,7 +16,7 @@ export enum ActionTypes {
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
     created: (analysis: AnalysisState) => createAction(ActionTypes.CREATED, { analysis }),
-    updateParameters: (id: string, parameters: AnalysisParameters) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, parameters }),
+    updateParameters: (id: string, parameters: Partial<AnalysisParameters>) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, parameters }),
     run: (id: string) => createAction(ActionTypes.RUN, { id }),
     running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),

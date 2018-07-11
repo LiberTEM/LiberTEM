@@ -177,8 +177,12 @@ export interface PointDef {
     cy: number,
 }
 
-// tslint:disable-next-line:no-empty-interface
+// TODO: shape doesn't really make sense here, needs to be restructured
 export interface CenterOfMassParams {
+    shape: "com",
+    cx: number,
+    cy: number,
+    r: number,
 }
 
 export enum AnalysisTypes {

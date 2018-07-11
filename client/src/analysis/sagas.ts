@@ -46,7 +46,12 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState):
         case AnalysisTypes.CENTER_OF_MASS: {
             return {
                 type: analysisType,
-                parameters: {},
+                parameters: {
+                    shape: "com",
+                    cx: width / 2,
+                    cy: height / 2,
+                    r: minLength / 2,
+                },
             };
         }
         case AnalysisTypes.APPLY_POINT_SELECTOR: {

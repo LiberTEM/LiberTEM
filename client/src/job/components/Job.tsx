@@ -46,12 +46,18 @@ const PlaceholderImage: React.SFC<PlaceholderProps> = ({ children, width, height
 
 const JobComponent: React.SFC<JobProps> = ({ job, width, height }) => {
     let msg;
-    let img = null;
+    let imgs = [
+        <PlaceholderImage width={width} height={height} key={-1} />
+    ];
     if (!job) {
         msg = <p>&nbsp;</p>;
     } else {
-        img = (job.results.map((res, idx) => {
-            return <Image style={{ width: "100%", height: "auto", imageRendering: "pixelated" }} src={res.imageURL} key={idx} width={width} height={height} />
+        imgs = (job.results.map((res, idx) => {
+            return (
+                <PlaceholderImage width={width} height={height} key={idx}>
+                    <Image style={{ width: "100%", height: "auto", imageRendering: "pixelated" }} src={res.imageURL} width={width} height={height} />
+                </PlaceholderImage>
+            );
         }))
         if (job.startTimestamp && job.endTimestamp) {
             const dt = (job.endTimestamp - job.startTimestamp) / 1000;
@@ -62,9 +68,7 @@ const JobComponent: React.SFC<JobProps> = ({ job, width, height }) => {
     }
     return (
         <div>
-            <PlaceholderImage width={width} height={height}>
-                {img}
-            </PlaceholderImage>
+            {imgs}
             {msg}
         </div>
     );

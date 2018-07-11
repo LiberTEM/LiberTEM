@@ -52,7 +52,7 @@ def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
         Array with the shape (imageSizeX, imageSizeY) with the mask.
     """
     bool_mask = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius)
-    return np.ones((imageSizeY, imageSizeX)) * bool_mask
+    return bool_mask
 
 
 def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
@@ -78,7 +78,7 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     outer = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius)
     inner = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
     bool_mask = outer & ~inner
-    return np.ones((imageSizeY, imageSizeX)) * bool_mask
+    return bool_mask
 
 
 # TODO: dtype parameter? consistency with ring/circular above

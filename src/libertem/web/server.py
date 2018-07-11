@@ -41,7 +41,11 @@ def _encode_image(result, colormap, save_kwargs):
     # affected by the result tiles. for now, ignoring 0 works fine
     result = result.astype(np.float32)
     max_ = np.max(result)
-    min_ = np.min(result[result > 0])
+    result_gt_zero = result[result > 0]
+    if len(result_gt_zero) == 0:
+        min_ = 0
+    else:
+        min_ = np.min(result_gt_zero)
 
     normalized = result - min_
     if max_ > 0:
@@ -427,7 +431,7 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         async for future, result in dd.as_completed(futures, with_results=True):
             for tile in result:
                 tile.copy_to_result(full_result)
-        log.info("preview done, encoding image")
+        log.info("preview done, encoding image (dtype=%s)", full_result.dtype)
         image = await run_blocking(
             _encode_image,
             full_result,

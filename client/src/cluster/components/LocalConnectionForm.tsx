@@ -1,6 +1,7 @@
 import { FormikProps, withFormik } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
+import { ConfigState } from "../../config/reducers";
 import { Omit } from "../../helpers/types";
 import { ClusterTypes, ConnectRequestLocalCluster } from "../../messages";
 
@@ -8,6 +9,7 @@ type FormValues = Omit<ConnectRequestLocalCluster, "type">;
 
 interface FormProps {
     onSubmit: (params: ConnectRequestLocalCluster) => void,
+    config: ConfigState,
 }
 
 type MergedProps = FormikProps<FormValues> & FormProps;
@@ -38,8 +40,8 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
 }
 
 export default withFormik<FormProps, FormValues>({
-    mapPropsToValues: () => ({
-        numWorkers: 4,  // TODO: sensible default based on number of cores and hyperthreading
+    mapPropsToValues: (ownProps: FormProps) => ({
+        numWorkers: ownProps.config.localCores,
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit } = formikBag.props;

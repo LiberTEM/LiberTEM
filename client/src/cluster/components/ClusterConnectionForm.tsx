@@ -5,6 +5,7 @@ import { Dropdown, DropdownProps, Segment } from "semantic-ui-react";
 import * as clusterActions from "../../cluster/actions";
 import { getEnumValues } from "../../helpers";
 import { ClusterTypeMetadata, ClusterTypes, ConnectRequestParams } from "../../messages";
+import { RootReducer } from "../../store";
 import LocalConnectionForm from "./LocalConnectionForm";
 import TCPConnectionForm from "./TCPConnectionForm";
 
@@ -13,7 +14,13 @@ const mapDispatchToProps = {
     connectToCluster: clusterActions.Actions.connect,
 };
 
-type MergedProps = DispatchProps<typeof mapDispatchToProps>;
+const mapStateToProps = (state: RootReducer) => {
+    return {
+        config: state.config,
+    }
+}
+
+type MergedProps = DispatchProps<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
 const clusterTypeKeys = getEnumValues(ClusterTypes);
 const clusterTypeOptions = clusterTypeKeys.map(t => ({
@@ -47,9 +54,11 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
 
     public renderForm() {
         const { clusterType } = this.state;
+        const { config } = this.props;
+
         switch (clusterType) {
             case ClusterTypes.LOCAL: {
-                return <LocalConnectionForm onSubmit={this.handleSubmit} />
+                return <LocalConnectionForm config={config} onSubmit={this.handleSubmit} />
             }
             case ClusterTypes.TCP: {
                 return <TCPConnectionForm onSubmit={this.handleSubmit} />
@@ -76,4 +85,4 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
     }
 }
 
-export default connect(null, mapDispatchToProps)(ClusterConnectionForm);
+export default connect(mapStateToProps, mapDispatchToProps)(ClusterConnectionForm);

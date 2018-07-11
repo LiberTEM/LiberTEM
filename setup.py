@@ -103,6 +103,7 @@ setup(
         "matplotlib",
         "pillow",
         "h5py",
+        "psutil",
     ],
     extras_require={
         'hdfs': 'hfds3',

@@ -7,6 +7,16 @@ export interface FollowupPart {
     numMessages: number,
 }
 
+export interface MsgPartConfig {
+    version: string,
+    localCores: number,
+}
+
+export interface GetConfigResponse {
+    status: "ok",
+    config: MsgPartConfig,
+}
+
 /*
  * Connection
  */

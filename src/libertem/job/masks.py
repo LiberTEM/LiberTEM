@@ -98,7 +98,10 @@ class ApplyMasksTask(Task):
         parts = []
         for data_tile in self.partition.get_tiles():
             # print("dotting\n%r\nwith\n%r\n\n" % (data_tile.flat_data, self.masks[data_tile]))
-            result = data_tile.flat_data.dot(self.masks[data_tile])
+            data = data_tile.flat_data
+            if data.dtype.kind == 'u':
+                data = data.astype("float32")
+            result = data.dot(self.masks[data_tile])
             parts.append(
                 ResultTile(
                     data=result,

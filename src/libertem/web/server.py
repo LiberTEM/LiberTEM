@@ -278,7 +278,8 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['job']
         ds = self.data.get_dataset(params['dataset'])
         analysis = params['analysis']
-        mask_factories = self.make_mask_factories(analysis, ds.dtype, frame_size=ds.shape[2:])
+        dtype = np.dtype(ds.dtype).kind == 'f' and ds.dtype or "float32"
+        mask_factories = self.make_mask_factories(analysis, dtype, frame_size=ds.shape[2:])
         job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
         self.data.register_job(uuid=uuid, job=job)
 
@@ -348,7 +349,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             raw_bytes = image.read()
             self.event_registry.broadcast_event(raw_bytes, binary=True)
 
-    async def delete(self):
+    async def delete(self, uuid):
         # TODO: implement this. maybe by setting a flag, or by having all the futures in a list
         # in shared data and calling cancel on them
         raise NotImplementedError()

@@ -14,6 +14,9 @@ class SumFramesTask(Task):
         """
         parts = []
         for data_tile in self.partition.get_tiles():
+            data = data_tile.data
+            if data.dtype.kind == 'u':
+                data = data.astype("float32")
             result = data_tile.data.sum(axis=(0, 1))
             parts.append(
                 SumResultTile(

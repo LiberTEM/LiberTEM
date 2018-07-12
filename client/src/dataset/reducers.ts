@@ -29,7 +29,8 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
             return insertById(state, action.payload.dataset.id, ds);
         }
         case datasetActions.ActionTypes.CREATED: {
-            return updateById(state, action.payload.dataset.id, { status: DatasetStatus.OPEN });
+            const ds = { ...action.payload.dataset, status: DatasetStatus.OPEN };
+            return updateById(state, action.payload.dataset.id, ds);
         }
         case datasetActions.ActionTypes.ERROR: {
             return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);

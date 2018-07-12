@@ -29,11 +29,13 @@ const ResultList: React.SFC<MergedProps> = ({ job, width, height }) => {
     if (!job) {
         msg = <p>&nbsp;</p>;
     } else {
-        imgs = (job.results.map((res, idx) => {
-            return (
-                <Result job={job} width={width} height={height} idx={idx} key={idx} />
-            );
-        }))
+        if (job.results.length > 0) {
+            imgs = (job.results.map((res, idx) => {
+                return (
+                    <Result job={job} width={width} height={height} idx={idx} key={idx} />
+                );
+            }))
+        }
         if (job.startTimestamp && job.endTimestamp) {
             const dt = (job.endTimestamp - job.startTimestamp) / 1000;
             msg = <p>Analysis done in {dt} seconds</p>;

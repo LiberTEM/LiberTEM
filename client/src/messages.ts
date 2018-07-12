@@ -153,7 +153,7 @@ export type MsgPartDataset = Dataset
 
 // type alias to add client-side state to datasets
 export type DatasetState = Dataset & {
-    previewJob?: string,
+    // previewJob?: string,
 }
 
 /*

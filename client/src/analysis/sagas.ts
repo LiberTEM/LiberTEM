@@ -73,14 +73,20 @@ function selectDataset(state: RootReducer, dataset: string) {
 }
 
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
-    const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
-    const analysis: AnalysisState = {
-        id: uuid(),
-        dataset: action.payload.dataset,
-        details: getAnalysisDetails(action.payload.analysisType, datasetState),
-        currentJob: "",
+    try {
+        const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
+        const analysis: AnalysisState = {
+            id: uuid(),
+            dataset: action.payload.dataset,
+            details: getAnalysisDetails(action.payload.analysisType, datasetState),
+            currentJob: "",
+        }
+        yield put(analysisActions.Actions.created(analysis))
+    } catch (e) {
+        const timestamp = Date.now();
+        const id = uuid();
+        yield put(analysisActions.Actions.error(`Error creating analysis: ${e.toString()}`, timestamp, id));
     }
-    yield put(analysisActions.Actions.created(analysis))
 }
 
 function selectAnalysis(state: RootReducer, id: string) {

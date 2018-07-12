@@ -538,8 +538,19 @@ class SharedData(object):
 
     def remove_dataset(self, uuid):
         ds = self.datasets[uuid]["dataset"]
+        jobs_to_remove = [
+            job
+            for job in self.jobs.values()
+            if self.dataset_to_id[job.dataset] == uuid
+        ]
+        job_ids = {self.job_to_id[job]
+                   for job in jobs_to_remove}
         del self.datasets[uuid]
         del self.dataset_to_id[ds]
+        for job_id in job_ids:
+            del self.jobs[job_id]
+        for job in jobs_to_remove:
+            del self.job_to_id[job]
 
     def register_job(self, uuid, job):
         assert uuid not in self.jobs

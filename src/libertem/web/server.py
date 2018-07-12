@@ -105,6 +105,13 @@ class Message(object):
             "msg": msg,
         }
 
+    def delete_dataset(self, dataset):
+        return {
+            "status": "ok",
+            "messageType": "DELETE_DATASET",
+            "dataset": dataset,
+        }
+
     def start_job(self, job_id):
         return {
             "status": "ok",
@@ -376,6 +383,18 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
+    async def delete(self, uuid):
+        try:
+            self.data.get_dataset(uuid)
+        except KeyError:
+            self.set_status(404, "dataset with uuid %s not found" % uuid)
+            return
+        self.data.remove_dataset(uuid)
+        msg = Message(self.data).delete_dataset(uuid)
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        self.write(msg)
+
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
@@ -423,9 +442,9 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset=ds,
             params=request_data['dataset'],
         )
-        self.write(Message(self.data).create_dataset(dataset=uuid))
         msg = Message(self.data).create_dataset(dataset=uuid)
         log_message(msg)
+        self.write(msg)
         self.event_registry.broadcast_event(msg)
 
 
@@ -471,6 +490,9 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         self.set_header("Cache-Control", "max-age=" + str(cache_time))
 
     async def get(self, uuid):
+        """
+        make a preview and return it as HTTP response
+        """
         self.set_header('Content-Type', 'image/png')
         self.set_max_expires()
         image = await self.get_preview_image(uuid)

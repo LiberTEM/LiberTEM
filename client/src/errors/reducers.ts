@@ -2,32 +2,38 @@ import { AllActions } from "../actions";
 import * as analysisActions from '../analysis/actions';
 import * as channelActions from '../channel/actions';
 import * as datasetActions from '../dataset/actions';
+import { ById, filterWithPred, insertById } from "../helpers/reducerHelpers";
+import * as errorActions from './actions';
 
-interface Error {
+export interface ErrorMessage {
+    id: string,
     msg: string,
     timestamp: number,
 }
 
-export interface ErrorState {
-    errorList: Error[],
-}
+export type ErrorState = ById<ErrorMessage>;
 
 const initialErrorState: ErrorState = {
-    errorList: [],
+    byId: {},
+    ids: [],
 };
-
-const insertError = (state: ErrorState, msg: string, timestamp: number): ErrorState => {
-    return {
-        errorList: [...state.errorList, { msg, timestamp }],
-    };
-}
 
 export function errorReducer(state = initialErrorState, action: AllActions): ErrorState {
     switch (action.type) {
         case datasetActions.ActionTypes.ERROR:
         case channelActions.ActionTypes.ERROR:
         case analysisActions.ActionTypes.ERROR: {
-            return insertError(state, action.payload.msg, action.payload.timestamp);
+            return insertById(state, action.payload.id, {
+                id: action.payload.id,
+                msg: action.payload.msg,
+                timestamp: action.payload.timestamp,
+            });
+        }
+        case channelActions.ActionTypes.OPEN: {
+            return initialErrorState;
+        }
+        case errorActions.ActionTypes.DISMISS: {
+            return filterWithPred(state, (r: ErrorMessage) => r.id !== action.payload.id);
         }
     }
     return state;

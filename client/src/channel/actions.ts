@@ -22,7 +22,7 @@ export const Actions = {
     taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),
     open: (timestamp: number) => createAction(ActionTypes.OPEN, { timestamp }),
     close: (timestamp: number) => createAction(ActionTypes.CLOSE, { timestamp }),
-    error: (msg: string, timestamp: number) => createAction(ActionTypes.ERROR, { msg, timestamp }),
+    error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

@@ -1,9 +1,10 @@
 import { Channel, delay, END, eventChannel } from "redux-saga";
 import { call, fork, put, take } from "redux-saga/effects";
+import * as uuid from 'uuid/v4';
 import * as channelActions from "./actions";
-import * as fromMessages from './messages';
+import * as channelMessages from './messages';
 
-type SocketChannel = Channel<fromMessages.Messages>;
+type SocketChannel = Channel<channelMessages.Messages>;
 
 
 /**
@@ -16,24 +17,24 @@ function createWebSocketChannel(/* addr */): SocketChannel {
         function onMessage(msg: MessageEvent) {
             if (msg.data instanceof Blob) {
                 // TODO: cleanup createObjectURL results somewhere
-                emit(fromMessages.Messages.binary(URL.createObjectURL(msg.data)));
+                emit(channelMessages.Messages.binary(URL.createObjectURL(msg.data)));
             } else {
-                const parsed = JSON.parse(msg.data) as fromMessages.Messages;
+                const parsed = JSON.parse(msg.data) as channelMessages.Messages;
                 emit(parsed);
             }
         }
 
         function onOpen() {
-            emit(fromMessages.Messages.open());
+            emit(channelMessages.Messages.open());
         }
 
         function onClose() {
-            emit(fromMessages.Messages.close());
+            emit(channelMessages.Messages.close());
             emit(END);
         }
 
         function onError(err: Event) {
-            emit(fromMessages.Messages.error("Error in weboscket connection"));
+            emit(channelMessages.Messages.error("Error in weboscket connection"));
         }
 
         const ws = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/events/`);
@@ -84,32 +85,33 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
             const msg = yield take(socketChannel);
             const timestamp = Date.now();
             switch (msg.messageType) {
-                case fromMessages.MessageTypes.OPEN: {
+                case channelMessages.MessageTypes.OPEN: {
                     yield put(channelActions.Actions.open(timestamp));
                     break;
                 }
-                case fromMessages.MessageTypes.CLOSE: {
+                case channelMessages.MessageTypes.CLOSE: {
                     yield put(channelActions.Actions.close(timestamp));
                     break;
                 }
-                case fromMessages.MessageTypes.ERROR: {
-                    yield put(channelActions.Actions.error(msg.msg, timestamp));
+                case channelMessages.MessageTypes.ERROR: {
+                    const id = uuid();
+                    yield put(channelActions.Actions.error(msg.msg, timestamp, id));
                     break;
                 }
-                case fromMessages.MessageTypes.INITIAL_STATE: {
+                case channelMessages.MessageTypes.INITIAL_STATE: {
                     yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, timestamp));
                     break;
                 }
-                case fromMessages.MessageTypes.START_JOB: {
+                case channelMessages.MessageTypes.START_JOB: {
                     yield put(channelActions.Actions.startJob(msg.job, timestamp))
                     break;
                 }
-                case fromMessages.MessageTypes.FINISH_JOB: {
+                case channelMessages.MessageTypes.FINISH_JOB: {
                     yield call(handleFinishJob, msg, socketChannel, timestamp);
                     break;
                 }
-                case fromMessages.MessageTypes.TASK_RESULT: {
-                    yield call(handleTaskResult, msg, socketChannel, timestamp)
+                case channelMessages.MessageTypes.TASK_RESULT: {
+                    yield call(handleTaskResult, msg, socketChannel, timestamp);
                     break;
                 }
             }
@@ -120,7 +122,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
 }
 
 export function* handleBinaryParts(numParts: number, socketChannel: SocketChannel) {
-    const parts: fromMessages.BinaryMessage[] = [];
+    const parts: channelMessages.BinaryMessage[] = [];
     while (parts.length < numParts) {
         const binMsg = yield take(socketChannel)
         parts.push(binMsg);
@@ -128,14 +130,14 @@ export function* handleBinaryParts(numParts: number, socketChannel: SocketChanne
     return parts;
 }
 
-export function* handleTaskResult(msg: ReturnType<typeof fromMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
-    const parts: fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+export function* handleTaskResult(msg: ReturnType<typeof channelMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
+    const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
     const images = parts.map(part => ({ imageURL: part.objectURL }));
     yield put(channelActions.Actions.taskResult(msg.job, images, timestamp));
 }
 
-export function* handleFinishJob(msg: ReturnType<typeof fromMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
-    const parts: fromMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+export function* handleFinishJob(msg: ReturnType<typeof channelMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
+    const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
     const images = parts.map(part => ({ imageURL: part.objectURL }));
     yield put(channelActions.Actions.finishJob(msg.job, images, timestamp));
 }

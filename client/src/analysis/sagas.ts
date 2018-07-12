@@ -73,7 +73,6 @@ function selectDataset(state: RootReducer, dataset: string) {
 }
 
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
-
     const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
     const analysis: AnalysisState = {
         id: uuid(),
@@ -116,7 +115,8 @@ export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actio
         ))
     } catch (e) {
         const timestamp = Date.now();
-        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp));
+        const id = uuid();
+        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
     }
 }
 

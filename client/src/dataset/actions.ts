@@ -10,7 +10,7 @@ export enum ActionTypes {
 export const Actions = {
     create: (dataset: DatasetCreateParams) => createAction(ActionTypes.CREATE, { dataset }),
     created: (dataset: DatasetState) => createAction(ActionTypes.CREATED, { dataset }),
-    error: (dataset: string, msg: string, timestamp: number) => createAction(ActionTypes.ERROR, { dataset, msg, timestamp })
+    error: (dataset: string, msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { dataset, msg, timestamp, id }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

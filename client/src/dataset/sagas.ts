@@ -1,4 +1,5 @@
 import { call, put, takeEvery } from 'redux-saga/effects';
+import * as uuid from 'uuid/v4';
 import { OpenDatasetResponse } from '../messages';
 import * as datasetActions from "./actions";
 import { openDataset } from './api';
@@ -11,11 +12,13 @@ export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Acti
             yield put(datasetActions.Actions.created(resp.details));
         } else if (resp.status === "error") {
             const timestamp = Date.now();
-            yield put(datasetActions.Actions.error(resp.dataset, resp.msg, timestamp));
+            const id = uuid();
+            yield put(datasetActions.Actions.error(resp.dataset, resp.msg, timestamp, id));
         }
     } catch (e) {
         const timestamp = Date.now();
-        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`, timestamp));
+        const id = uuid();
+        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`, timestamp, id));
     }
 }
 

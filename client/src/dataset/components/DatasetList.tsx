@@ -49,9 +49,9 @@ class DatasetList extends React.Component<MergedProps, DatasetListState> {
 
         return (
             <>
-                <DatasetTypeSelect onClick={this.openDatasetForm} label='Load Dataset' />
-                {datasetFormOpen && datasetType !== undefined && <DatasetOpen type={datasetType} onCancel={this.closeForm} onSubmit={this.closeForm} />}
                 {datasets.ids.map(dsId => <Dataset dataset={datasets.byId[dsId]} key={dsId} />)}
+                <DatasetTypeSelect onClick={this.openDatasetForm} label='Add Dataset' />
+                {datasetFormOpen && datasetType !== undefined && <DatasetOpen type={datasetType} onCancel={this.closeForm} onSubmit={this.closeForm} />}
             </>
         );
     }

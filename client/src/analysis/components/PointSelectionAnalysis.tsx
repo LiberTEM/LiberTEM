@@ -1,9 +1,9 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { Grid, Header, Segment } from "semantic-ui-react";
+import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
-import JobComponent from "../../job/components/Job";
+import ResultList from "../../job/components/ResultList";
 import { DatasetState, PointDef } from "../../messages";
 import Point from "../../widgets/Point";
 import * as analysisActions from "../actions";
@@ -38,7 +38,10 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
 
     return (
         <>
-            <Header as='h3' attached="top">Point analysis</Header>
+            <Header as='h3' attached="top">
+                <Icon name="cog" />
+                <Header.Content>Point analysis</Header.Content>
+            </Header>
             <Segment attached={true}>
                 <Grid columns={2}>
                     <Grid.Row>
@@ -49,7 +52,7 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
                             <p>Point: center=({parameters.cx},{parameters.cy})</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />
+                            <ResultList job={currentJob} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

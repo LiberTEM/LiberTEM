@@ -1,6 +1,7 @@
 import { Channel, delay, END, eventChannel } from "redux-saga";
 import { call, fork, put, take } from "redux-saga/effects";
 import * as uuid from 'uuid/v4';
+import * as datasetActions from '../dataset/actions';
 import * as channelActions from "./actions";
 import * as channelMessages from './messages';
 
@@ -112,6 +113,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                 }
                 case channelMessages.MessageTypes.TASK_RESULT: {
                     yield call(handleTaskResult, msg, socketChannel, timestamp);
+                    break;
+                }
+                case channelMessages.MessageTypes.DELETE_DATASET: {
+                    yield put(datasetActions.Actions.deleted(msg.dataset));
                     break;
                 }
             }

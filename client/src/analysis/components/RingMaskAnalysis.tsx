@@ -1,9 +1,9 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { Grid, Header, Segment } from "semantic-ui-react";
+import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
-import JobComponent from "../../job/components/Job";
+import ResultList from "../../job/components/ResultList";
 import { DatasetState, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
@@ -47,7 +47,10 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
 
     return (
         <>
-            <Header as="h3" attached="top">Ring analysis</Header>
+            <Header as='h3' attached="top">
+                <Icon name="cog" />
+                <Header.Content>Ring analysis</Header.Content>
+            </Header>
             <Segment attached={true}>
                 <Grid columns={2}>
                     <Grid.Row>
@@ -59,7 +62,7 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
                             <p>Ring: center=({parameters.cx},{parameters.cy}), ri={parameters.ri}, ro={parameters.ro}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />
+                            <ResultList job={currentJob} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

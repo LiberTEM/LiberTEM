@@ -1,9 +1,9 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { Grid, Header, Segment } from "semantic-ui-react";
+import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import { getPreviewURL } from "../../dataset/api";
 import { defaultDebounce } from "../../helpers";
-import JobComponent from "../../job/components/Job";
+import ResultList from "../../job/components/ResultList";
 import { DatasetState, MaskDefDisk } from "../../messages";
 import Disk from "../../widgets/Disk";
 import * as analysisActions from "../actions";
@@ -41,7 +41,10 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
 
     return (
         <>
-            <Header as='h3' attached="top">Disk analysis</Header>
+            <Header as='h3' attached="top">
+                <Icon name="cog" />
+                <Header.Content>Disk analysis</Header.Content>
+            </Header>
             <Segment attached={true}>
                 <Grid columns={2}>
                     <Grid.Row>
@@ -52,7 +55,7 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
                             <p>Disk: center=({parameters.cx},{parameters.cy}), r={parameters.r}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <JobComponent job={currentJob} width={resultWidth} height={resultHeight} />
+                            <ResultList job={currentJob} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

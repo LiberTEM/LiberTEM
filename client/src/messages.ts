@@ -116,6 +116,7 @@ export interface DatasetCreateParams {
 export enum DatasetStatus {
     OPEN = "OPEN",
     OPENING = "OPENING",
+    DELETING = "DELETING",
 }
 
 export type Dataset = DatasetCreateParams & {
@@ -143,10 +144,17 @@ export interface OpenDatasetResponseError {
 
 export type OpenDatasetResponse = OpenDatasetResponseOk | OpenDatasetResponseError
 
+export interface DeleteDatasetResponse {
+    status: "ok",
+    dataset: string,
+}
+
 export type MsgPartDataset = Dataset
 
-// type alias if we want to add client-side state to datasets
-export type DatasetState = Dataset
+// type alias to add client-side state to datasets
+export type DatasetState = Dataset & {
+    previewJob?: string,
+}
 
 /*
  * Job
@@ -190,6 +198,7 @@ export enum AnalysisTypes {
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
+    SUM_FRAMES = "SUM_FRAMES",
 }
 
 export interface RingMaskDetails {
@@ -212,8 +221,13 @@ export interface CenterOfMassDetails {
     parameters: CenterOfMassParams,
 }
 
+export interface SumFramesDetails {
+    type: AnalysisTypes.SUM_FRAMES,
+    parameters: {},
+}
+
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails;
 
 export interface StartJobRequest {
     job: {

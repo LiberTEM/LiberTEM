@@ -29,10 +29,15 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
             return insertById(state, action.payload.dataset.id, ds);
         }
         case datasetActions.ActionTypes.CREATED: {
-            const ds = { ...action.payload.dataset, status: DatasetStatus.OPEN };
-            return updateById(state, action.payload.dataset.id, ds);
+            return updateById(state, action.payload.dataset.id, { status: DatasetStatus.OPEN });
         }
         case datasetActions.ActionTypes.ERROR: {
+            return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);
+        }
+        case datasetActions.ActionTypes.DELETE: {
+            return updateById(state, action.payload.dataset, { status: DatasetStatus.DELETING });
+        }
+        case datasetActions.ActionTypes.DELETED: {
             return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);
         }
     }

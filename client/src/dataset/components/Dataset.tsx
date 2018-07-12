@@ -1,25 +1,17 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
-import { Header, Icon, Message } from 'semantic-ui-react';
-import * as analysisActions from '../../analysis/actions';
+import { connect } from "react-redux";
+import { Header, Icon, Message, Popup, Segment } from 'semantic-ui-react';
 import AnalysisList from "../../analysis/components/AnalysisList";
-import AnalysisSelect from "../../analysis/components/AnalysisSelect";
 import { AnalysisState } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
-import { AnalysisTypes, DatasetState, DatasetStatus } from "../../messages";
+import { DatasetState, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
+import AddAnalysis from "./AddAnalysis";
+import DatasetParams from "./DatasetParams";
+import DatasetToolbar from "./DatasetToolbar";
 
 interface DatasetProps {
     dataset: DatasetState
-}
-
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: DatasetProps) => {
-    return {
-        createAnalysis: analysisActions.Actions.create,
-        handleAddAnalysis: (type: AnalysisTypes) => {
-            dispatch(analysisActions.Actions.create(ownProps.dataset.id, type));
-        },
-    }
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
@@ -29,32 +21,65 @@ const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
     }
 }
 
-type MergedProps = DatasetProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+type MergedProps = DatasetProps & ReturnType<typeof mapStateToProps>;
 
-const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses, handleAddAnalysis }) => {
-    if (dataset.status === DatasetStatus.OPENING) {
+const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
+    const msg = {
+        [DatasetStatus.OPENING]: `Opening dataset ${dataset.params.name}`,
+        [DatasetStatus.DELETING]: `Closing dataset ${dataset.params.name}`,
+    }
+    if (dataset.status === DatasetStatus.OPENING || dataset.status === DatasetStatus.DELETING) {
         return (
             <>
                 <Header as="h2" dividing={true}>{dataset.params.name}</Header>
                 <Message icon={true}>
                     <Icon name='cog' loading={true} />
                     <Message.Content>
-                        <Message.Header>Opening dataset {dataset.params.name}</Message.Header>
+                        <Message.Header>{msg[dataset.status]}</Message.Header>
                     </Message.Content>
                 </Message>
             </>
         );
     }
+
     return (
-        <>
-            <Header as="h2" dividing={true}>{dataset.params.name}</Header>
-            <AnalysisSelect onClick={handleAddAnalysis} label='Add analysis' />
-            <AnalysisList analyses={analyses} />
-            {analyses.ids.length > 0 ? <AnalysisSelect onClick={handleAddAnalysis} label='Add analysis' /> : null}
-        </>
+        <Segment.Group style={{ marginTop: "3em", marginBottom: "3em" }}>
+            <Segment.Group horizontal={true}>
+                <Segment>
+                    <Header as="h2">
+                        <Icon name="database" />
+                        <Popup trigger={
+                            <Header.Content>
+                                {dataset.params.name}
+                            </Header.Content>
+                        }>
+                            <Popup.Header>{dataset.params.type} Dataset</Popup.Header>
+                            <Popup.Content>
+                                <DatasetParams dataset={dataset} />
+                            </Popup.Content>
+                        </Popup>
+                    </Header>
+                </Segment>
+                <Segment style={{ flexShrink: 1, flexGrow: 0 }}>
+                    <DatasetToolbar dataset={dataset} />
+                </Segment>
+            </Segment.Group>
+            {
+                analyses.ids.length > 0 ? (
+                    <>
+                        <Segment>
+                            <AnalysisList analyses={analyses} />
+                        </Segment>
+                    </>
+                ) : null
+            }
+            <Segment textAlign="center">
+                <AddAnalysis dataset={dataset} />
+            </Segment>
+        </Segment.Group>
     );
 }
 
-const DatasetContainer = connect(mapStateToProps, mapDispatchToProps)(DatasetComponent);
+const DatasetContainer = connect(mapStateToProps)(DatasetComponent);
 
 export default DatasetContainer;

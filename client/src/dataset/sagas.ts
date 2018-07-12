@@ -2,7 +2,7 @@ import { call, put, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { OpenDatasetResponse } from '../messages';
 import * as datasetActions from "./actions";
-import { openDataset } from './api';
+import { deleteDataset, openDataset } from './api';
 
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {
@@ -22,6 +22,17 @@ export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     }
 }
 
+export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Actions.delete>) {
+    try {
+        yield call(deleteDataset, action.payload.dataset);
+    } catch (e) {
+        const timestamp = Date.now();
+        const id = uuid();
+        yield put(datasetActions.Actions.error(action.payload.dataset, `Error closing dataset: ${e.toString()}`, timestamp, id));
+    }
+}
+
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
+    yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
 }

@@ -18,9 +18,9 @@ export enum MessageTypes {
     OPEN = "OPEN",
     CLOSE = "CLOSE",
     ERROR = "ERROR",
+    DELETE_DATASET = "DELETE_DATASET"
 }
 
-// tslint:disable:object-literal-sort-keys
 export const Messages = {
     initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[]) => createMessage(MessageTypes.INITIAL_STATE, { jobs, datasets }),
     startJob: (job: string) => createMessage(MessageTypes.START_JOB, { job }),
@@ -30,8 +30,8 @@ export const Messages = {
     open: () => createMessage(MessageTypes.OPEN, {}),
     close: () => createMessage(MessageTypes.CLOSE, {}),
     error: (msg: string) => createMessage(MessageTypes.ERROR, { msg }),
+    deleteDataset: (dataset: string) => createMessage(MessageTypes.DELETE_DATASET, { dataset }),
 }
-// tslint:enable
 
 export type MessagesUnion<A extends ActionCreatorsMapObject> = ReturnType<A[keyof A]>
 export type Messages = MessagesUnion<typeof Messages>;

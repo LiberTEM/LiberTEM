@@ -5,9 +5,10 @@ import { AnalysisTypes } from "../../messages";
 import { AnalysisMetadata } from "../types";
 
 
+const getMetadata = (t: any) => AnalysisMetadata[AnalysisTypes[t as any]];
 const analysisTypeKeys = getEnumValues(AnalysisTypes);
-const analysisTypeOptions = analysisTypeKeys.map(t => ({
-    text: AnalysisMetadata[AnalysisTypes[t as any]].short,
+const analysisTypeOptions = analysisTypeKeys.filter(t => getMetadata(t).showInUI).map(t => ({
+    text: getMetadata(t).short,
     value: AnalysisTypes[t as any],
 }));
 

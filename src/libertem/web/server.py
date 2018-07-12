@@ -62,6 +62,20 @@ def _encode_image(result, colormap, save_kwargs):
     return buf
 
 
+async def result_images(full_result, save_kwargs=None):
+    colormap = cm.gist_earth
+    # colormap = cm.viridis
+    save_kwargs = save_kwargs or {}
+
+    futures = [
+        run_blocking(_encode_image, full_result[idx], colormap, save_kwargs)
+        for idx in range(full_result.shape[0])
+    ]
+
+    results = await asyncio.gather(*futures)
+    return results
+
+
 async def run_blocking(fn, *args, **kwargs):
     return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
@@ -142,6 +156,67 @@ class Message(object):
         }
 
 
+class RunJobMixin(object):
+    async def run_job(self, uuid, ds, job, full_result):
+        self.data.register_job(uuid=uuid, job=job)
+        executor = self.data.get_executor()
+
+        futures = []
+        for task in job.get_tasks():
+            submit_kwargs = {}
+            futures.append(
+                executor.client.submit(task, **submit_kwargs)
+            )
+        self.write(Message(self.data).start_job(
+            job_id=uuid
+        ))
+        self.finish()
+        msg = Message(self.data).start_job(
+            job_id=uuid,
+        )
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+
+        async for future, result in dd.as_completed(futures, with_results=True):
+            # TODO:
+            # + only send PNG of area that has changed (bounding box of all result tiles!)
+            # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
+            # + if min/max changes, send whole channel (all results up to this point re-normalized)
+            # + maybe saturate up to some point (20% over current max => keep current max) and send
+            #   whole result image once finished
+            # + maybe use visualization framework in-browser (example: GR)
+
+            # TODO: update task_result message:
+            # + send bbox for blitting
+
+            for tile in result:
+                tile.copy_to_result(full_result)
+            images = yield full_result
+
+            # NOTE: make sure the following broadcast_event messages are sent atomically!
+            # (that is: keep the code below synchronous, and only send the messages
+            # once the images have finished encoding, and then send all at once)
+            msg = Message(self.data).task_result(
+                job_id=uuid,
+                num_images=len(images),
+            )
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            for image in images:
+                raw_bytes = image.read()
+                self.event_registry.broadcast_event(raw_bytes, binary=True)
+        images = yield full_result
+        msg = Message(self.data).finish_job(
+            job_id=uuid,
+            num_images=len(images),
+        )
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        for image in images:
+            raw_bytes = image.read()
+            self.event_registry.broadcast_event(raw_bytes, binary=True)
+
+
 class ResultEventHandler(tornado.websocket.WebSocketHandler):
     def initialize(self, data, event_registry):
         self.registry = event_registry
@@ -202,7 +277,7 @@ class CORSMixin(object):
 #        self.finish()
 
 
-class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
+class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
     def initialize(self, data, event_registry):
         self.data = data
         self.event_registry = event_registry
@@ -265,112 +340,83 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         }
         return fn_by_type[analysis['type']](**analysis['parameters'])
 
-    async def result_images(self, full_result, save_kwargs=None):
-        colormap = cm.gist_earth
-        # colormap = cm.viridis
-        save_kwargs = save_kwargs or {}
-
-        futures = [
-            run_blocking(_encode_image, full_result[idx], colormap, save_kwargs)
-            for idx in range(full_result.shape[0])
-        ]
-
-        results = await asyncio.gather(*futures)
-        return results
-
-    async def visualize_com(self, full_result, analysis, save_kwargs=None):
-        img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
-        # TODO: reference centers, substract from {x,y}_centers?
-        img_sum.shape[1] / 2
-        img_sum.shape[0] / 2
-        x_centers = np.divide(img_x, img_sum)
-        y_centers = np.divide(img_y, img_sum)
-        centers = np.dstack((x_centers, y_centers))
-        log.debug("centers.shape: %r", centers.shape)
-        raise NotImplementedError()
-
-    async def visualize(self, full_result, analysis, save_kwargs=None):
-        if analysis['type'] in {'APPLY_DISK_MASK', 'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
-            return await self.result_images(full_result, save_kwargs)
-        elif analysis['type'] in {'CENTER_OF_MASS'}:
-            return await self.result_images(full_result, save_kwargs)
-            # return await self.visualize_com(full_result, analysis, save_kwargs)
-
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['job']
         ds = self.data.get_dataset(params['dataset'])
         analysis = params['analysis']
+        if analysis['type'] == "SUM_FRAMES":
+            return await self.start_sum_frames_job(
+                uuid=uuid,
+                params=params,
+                analysis=analysis,
+                ds=ds,
+            )
+        else:
+            return await self.start_mask_job(
+                uuid=uuid,
+                params=params,
+                analysis=analysis,
+                ds=ds,
+            )
+
+    async def start_sum_frames_job(self, uuid, params, analysis, ds):
+        job = SumFramesJob(dataset=ds)
+        full_result = np.zeros(shape=tuple(ds.shape[:2]))
+        job_runner = self.run_job(
+            full_result=full_result,
+            uuid=uuid, ds=ds, job=job,
+        )
+        try:
+            await job_runner.asend(None)
+            while True:
+                images = await self.visualize(
+                    full_result,
+                    analysis,
+                    save_kwargs={'format': 'png'},
+                )
+                await job_runner.asend(images)
+        except StopAsyncIteration:
+            pass
+
+    async def start_mask_job(self, uuid, params, analysis, ds):
         dtype = np.dtype(ds.dtype).kind == 'f' and ds.dtype or "float32"
         mask_factories = self.make_mask_factories(analysis, dtype, frame_size=ds.shape[2:])
         job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
-        self.data.register_job(uuid=uuid, job=job)
-
-        executor = self.data.get_executor()
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-        self.write(Message(self.data).start_job(
-            job_id=uuid
-        ))
-        self.finish()
-        msg = Message(self.data).start_job(
-            job_id=uuid,
-        )
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-
         full_result = np.zeros(shape=(len(mask_factories),) + tuple(ds.shape[:2]))
-        async for future, result in dd.as_completed(futures, with_results=True):
-            # TODO:
-            # + only send PNG of area that has changed (bounding box of all result tiles!)
-            # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
-            # + if min/max changes, send whole channel (all results up to this point re-normalized)
-            # + maybe saturate up to some point (20% over current max => keep current max) and send
-            #   whole result image once finished
-            # + maybe use visualization framework in-browser (example: GR)
-
-            # TODO: update task_result message:
-            # + send bbox for blitting
-
-            for tile in result:
-                tile.copy_to_result(full_result)
-            images = await self.visualize(
-                full_result,
-                analysis,
-                save_kwargs={'format': 'png'},
-            )
-
-            # NOTE: make sure the following broadcast_event messages are sent atomically!
-            # (that is: keep the code below synchronous, and only send the messages
-            # once the images have finished encoding, and then send all at once)
-            msg = Message(self.data).task_result(
-                job_id=uuid,
-                num_images=len(images),
-            )
-            log_message(msg)
-            self.event_registry.broadcast_event(msg)
-            for image in images:
-                raw_bytes = image.read()
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
-        images = await self.visualize(
-            full_result,
-            analysis,
-            save_kwargs={'format': 'png'},
+        job_runner = self.run_job(
+            full_result=full_result,
+            uuid=uuid, ds=ds, job=job,
         )
-        msg = Message(self.data).finish_job(
-            job_id=uuid,
-            num_images=len(images),
-        )
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-        for image in images:
-            raw_bytes = image.read()
-            self.event_registry.broadcast_event(raw_bytes, binary=True)
+        try:
+            await job_runner.asend(None)
+            while True:
+                images = await self.visualize(
+                    full_result,
+                    analysis,
+                    save_kwargs={'format': 'png'},
+                )
+                await job_runner.asend(images)
+        except StopAsyncIteration:
+            pass
+
+    async def visualize_com(self, full_result, analysis, save_kwargs=None):
+        img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
+        ref_x = analysis["parameters"]["cx"]
+        ref_y = analysis["parameters"]["cy"]
+        x_centers = np.divide(img_x, img_sum) - ref_x
+        y_centers = np.divide(img_y, img_sum) - ref_y
+        centers = np.stack((x_centers, y_centers), axis=0)
+        log.debug("full_result.shape: %r", full_result.shape)
+        log.debug("centers.shape: %r", centers.shape)
+        return await result_images(centers, save_kwargs)
+
+    async def visualize(self, full_result, analysis, save_kwargs=None):
+        if analysis['type'] in {'SUM_FRAMES', 'APPLY_DISK_MASK',
+                                'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
+            return await result_images(full_result, save_kwargs)
+        elif analysis['type'] in {'CENTER_OF_MASS'}:
+            return await self.visualize_com(full_result, analysis, save_kwargs)
 
     async def delete(self, uuid):
         # TODO: implement this. maybe by setting a flag, or by having all the futures in a list

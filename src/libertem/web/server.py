@@ -76,6 +76,12 @@ async def result_images(full_result, save_kwargs=None):
     return results
 
 
+def divergence(arr):
+    num_dims = len(arr)
+    return np.ufunc.reduce(np.add, [np.gradient(arr[i], axis=i)
+                                    for i in range(num_dims)])
+
+
 async def run_blocking(fn, *args, **kwargs):
     return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
@@ -406,9 +412,8 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         ref_y = analysis["parameters"]["cy"]
         x_centers = np.divide(img_x, img_sum) - ref_x
         y_centers = np.divide(img_y, img_sum) - ref_y
-        centers = np.stack((x_centers, y_centers), axis=0)
-        log.debug("full_result.shape: %r", full_result.shape)
-        log.debug("centers.shape: %r", centers.shape)
+        d = divergence([x_centers, y_centers])
+        centers = np.stack((x_centers, y_centers, d), axis=0)
         return await result_images(centers, save_kwargs)
 
     async def visualize(self, full_result, analysis, save_kwargs=None):

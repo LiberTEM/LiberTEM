@@ -5,7 +5,7 @@ import logging
 import asyncio
 import signal
 import psutil
-from functools import partial
+from functools import partial, reduce
 from io import BytesIO
 
 import numpy as np
@@ -25,6 +25,8 @@ from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.sum import SumFramesJob
+from libertem.job.raw import PickFrameJob
+from libertem.common.slice import Slice
 from libertem import masks
 
 
@@ -77,12 +79,14 @@ async def result_images(full_result, save_kwargs=None):
 
 
 def divergence(arr):
-    num_dims = len(arr)
-    return np.ufunc.reduce(np.add, [np.gradient(arr[i], axis=i)
-                                    for i in range(num_dims)])
+    return reduce(np.add, [np.gradient(arr[i], axis=i)
+                           for i in range(len(arr))])
 
 
 async def run_blocking(fn, *args, **kwargs):
+    """
+    run blocking function fn with args, kwargs in a thread and return a corresponding future
+    """
     return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
 
@@ -550,6 +554,64 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(image)
 
 
+class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def pick_frame(self, dataset_uuid, x, y):
+        ds = self.data.get_dataset(dataset_uuid)
+        x = int(x)
+        y = int(y)
+        slice_ = Slice(
+            origin=(y, x, 0, 0),
+            shape=(1, 1, ds.shape[2], ds.shape[3])
+        )
+        job = PickFrameJob(dataset=ds, slice_=slice_)
+
+        executor = self.data.get_executor()
+
+        log.info("picking %d/%d from %s", x, y, dataset_uuid)
+
+        futures = []
+        for task in job.get_tasks():
+            submit_kwargs = {}
+            futures.append(
+                executor.client.submit(task, **submit_kwargs)
+            )
+
+        full_result = np.zeros(shape=ds.shape[2:])
+        async for future, result in dd.as_completed(futures, with_results=True):
+            for tile in result:
+                tile.copy_to_result(full_result)
+        log.info("picking done, encoding image (dtype=%s)", full_result.dtype)
+        image = await run_blocking(
+            _encode_image,
+            full_result,
+            colormap=cm.gist_earth,
+            save_kwargs={'format': 'png'},
+        )
+        log.info("image encoded, sending response")
+        return image.read()
+
+    def set_max_expires(self):
+        cache_time = 86400 * 365 * 10
+        self.set_header("Expires", datetime.datetime.utcnow() +
+                        datetime.timedelta(seconds=cache_time))
+        self.set_header("Cache-Control", "max-age=" + str(cache_time))
+
+    async def get(self, uuid, x, y):
+        """
+        pick a raw frame and return it as HTTP response
+        """
+        x = int(x)
+        y = int(y)
+        self.set_header('Content-Type', 'image/png')
+        self.set_max_expires()
+        image = await self.pick_frame(uuid, x, y)
+        self.write(image)
+
+
 class SharedData(object):
     def __init__(self):
         self.datasets = {}
@@ -758,6 +820,10 @@ def make_app():
             "event_registry": event_registry
         }),
         (r"/api/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
+            "data": data,
+            "event_registry": event_registry
+        }),
+        (r"/api/datasets/([^/]+)/pick/([0-9]+)/([0-9]+)/", DataSetPickHandler, {
             "data": data,
             "event_registry": event_registry
         }),

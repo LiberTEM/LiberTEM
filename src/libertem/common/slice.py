@@ -73,9 +73,11 @@ class Slice(object):
         """
         make a new ``Slice`` with origin relative to ``other.origin``
         and the same shape as this ``Slice``
+
+        useful for translating to the local coordinate system of ``other``
         """
         assert len(other.origin) == len(self.origin)
-        return Slice(origin=tuple(their_coord - our_coord
+        return Slice(origin=tuple(our_coord - their_coord
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 

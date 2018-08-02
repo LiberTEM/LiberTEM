@@ -233,3 +233,34 @@ def test_subslice_from_offset_length_3():
     sub3 = s1.subslice_from_offset(offset=1, length=1)
     assert sub3.origin == (0, 1, 0, 0)
     assert sub3.shape == (1, 1, 2, 2)
+
+
+def test_shift_1():
+    s1 = Slice(
+        origin=(1, 1, 0, 0),
+        shape=(1, 1, 2, 2),
+    )
+
+    s2 = Slice(
+        origin=(1, 1, 0, 0),
+        shape=(1, 1, 4, 4)
+    )
+
+    shifted = s1.shift(s2)
+
+    assert shifted.origin == (0, 0, 0, 0)
+
+
+def test_shift_2():
+    s1 = Slice(
+        origin=(2, 2, 0, 0),
+        shape=(1, 1, 2, 2),
+    )
+
+    s2 = Slice(
+        origin=(1, 1, 0, 0),
+        shape=(1, 1, 4, 4)
+    )
+
+    shifted = s1.shift(s2)
+    assert shifted.origin == (1, 1, 0, 0)

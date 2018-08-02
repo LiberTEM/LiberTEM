@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect, Dispatch } from 'react-redux';
-import { Segment } from "semantic-ui-react";
+import { Header, Segment } from "semantic-ui-react";
 import * as uuid from "uuid/v4";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import * as datasetActions from "../actions";
@@ -33,6 +33,7 @@ const DatasetOpen: React.SFC<MergedProps> = ({ type, createDataset, onCancel }) 
     const renderForm = (form: React.ReactNode) => {
         return (
             <Segment>
+                <Header as="h2">Open: {type}</Header>
                 {form}
             </Segment>
         );

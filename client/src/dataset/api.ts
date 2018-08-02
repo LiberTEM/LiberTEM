@@ -9,7 +9,11 @@ export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<Op
 }
 
 export function getPreviewURL(dataset: DatasetState) {
-    return `/api/datasets/${dataset.id}/preview/`
+    return `/api/datasets/${dataset.id}/preview/`;
+}
+
+export function getPickFrameURL(dataset: DatasetState, x: number, y: number) {
+    return `/api/datasets/${dataset.id}/pick/${x}/${y}/`;
 }
 
 export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {

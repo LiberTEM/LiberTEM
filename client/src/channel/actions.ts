@@ -17,7 +17,7 @@ export enum ActionTypes {
 
 export const Actions = {
     initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[], timestamp: number) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets, timestamp }),
-    startJob: (job: string, timestamp: number) => createAction(ActionTypes.START_JOB, { job, timestamp }),
+    startJob: (job: string, dataset: string, timestamp: number) => createAction(ActionTypes.START_JOB, { job, timestamp, dataset }),
     finishJob: (job: string, results: JobResultType[], timestamp: number) => createAction(ActionTypes.FINISH_JOB, { job, results, timestamp }),
     taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),
     open: (timestamp: number) => createAction(ActionTypes.OPEN, { timestamp }),

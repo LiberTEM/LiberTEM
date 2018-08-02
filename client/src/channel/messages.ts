@@ -23,7 +23,7 @@ export enum MessageTypes {
 
 export const Messages = {
     initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[]) => createMessage(MessageTypes.INITIAL_STATE, { jobs, datasets }),
-    startJob: (job: string) => createMessage(MessageTypes.START_JOB, { job }),
+    startJob: (job: string, dataset: string) => createMessage(MessageTypes.START_JOB, { job, dataset }),
     finishJob: (job: string, followup: FollowupPart) => createMessage(MessageTypes.FINISH_JOB, { job, followup }),
     taskResult: (job: string, followup: FollowupPart) => createMessage(MessageTypes.TASK_RESULT, { job, followup }),
     binary: (objectURL: string) => createMessage(MessageTypes.BINARY, { objectURL }),

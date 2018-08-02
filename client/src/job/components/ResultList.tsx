@@ -14,25 +14,29 @@ interface ExternalResultProps {
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultProps) => {
+    const job = ownProps.job ? state.job.byId[ownProps.job] : undefined;
+    const ds = (job !== undefined) ? state.dataset.byId[job.dataset] : undefined;
+
     return {
-        job: ownProps.job ? state.job.byId[ownProps.job] : undefined,
+        job,
+        dataset: ds,
     };
 };
 
 type MergedProps = ResultProps & ReturnType<typeof mapStateToProps>;
 
-const ResultList: React.SFC<MergedProps> = ({ job, width, height }) => {
+const ResultList: React.SFC<MergedProps> = ({ job, dataset, width, height }) => {
     let msg;
     let imgs = [
         <PlaceholderImage width={width} height={height} key={-1} />
     ];
-    if (!job) {
+    if (!job || !dataset) {
         msg = <p>&nbsp;</p>;
     } else {
         if (job.results.length > 0) {
             imgs = (job.results.map((res, idx) => {
                 return (
-                    <Result job={job} width={width} height={height} idx={idx} key={idx} />
+                    <Result job={job} dataset={dataset} width={width} height={height} idx={idx} key={idx} />
                 );
             }))
         }

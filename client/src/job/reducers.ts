@@ -51,6 +51,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 action.payload.job,
                 {
                     id: action.payload.job,
+                    dataset: action.payload.dataset,
                     results: ([] as JobResultType[]),
                     running: "RUNNING",
                     status: "IN_PROGRESS",

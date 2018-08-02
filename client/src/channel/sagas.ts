@@ -104,7 +104,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     break;
                 }
                 case channelMessages.MessageTypes.START_JOB: {
-                    yield put(channelActions.Actions.startJob(msg.job, timestamp))
+                    yield put(channelActions.Actions.startJob(msg.job, msg.details.dataset, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.FINISH_JOB: {

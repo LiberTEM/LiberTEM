@@ -21,6 +21,7 @@ Documentation
 
    architecture
    why_python
+   contributing
 
 
 Indices and tables

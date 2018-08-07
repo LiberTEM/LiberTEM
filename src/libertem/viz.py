@@ -1,19 +1,13 @@
-# -*- coding: utf-8 -*-
-# Copyright 2018 by Forschungszentrum Juelich GmbH
-
-import numpy as np
+import abc
+import colorsys
+import logging
 
 from matplotlib import colors
-
-import colorsys
-
-import abc
-
-import logging
+import numpy as np
 
 
 __all__ = ['Colormap2D', 'ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',
-           'ColormapClassic', 'interpolate_color']
+           'ColormapClassic', 'interpolate_color', 'cmaps', 'CMAP_CIRCULAR_DEFAULT']
 _log = logging.getLogger(__name__)
 
 
@@ -263,7 +257,7 @@ class ColormapHLS(colors.ListedColormap, Colormap2D):
     def __init__(self):
         self._log.debug('Calling __init__')
         h = np.linspace(0, 1, 256)
-        l = 0.5 * np.ones_like(h)
+        l = 0.5 * np.ones_like(h)  # noqa: E741
         s = np.ones_like(h)
         r, g, b = np.vectorize(colorsys.hls_to_rgb)(h, l, s)
         colors = [(r[i], g[i], b[i]) for i in range(len(r))]

@@ -209,6 +209,23 @@ class Slice(object):
         """
         Calculate partition shape for the given ``target_size``
 
+        Parameters
+        ----------
+        datashape : 4-tuple
+            size of the whole dataset
+
+        framesize : int
+            number of pixels per frame
+
+        dtype : numpy.dtype or str
+            data type of the dataset
+
+        target_size : int
+            target size in bytes - how large should each partition be?
+
+        min_num_partitions : int
+            minimum number of partitions desired, defaults to twice the number of CPU cores
+
         Returns
         -------
         (int, int, int, int)

@@ -4,6 +4,7 @@ import { Header, Segment } from "semantic-ui-react";
 import * as uuid from "uuid/v4";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import * as datasetActions from "../actions";
+import BLOParamsForm from "./BLOParamsForm";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import HDFSParamsForm from './HDFSParamsForm';
 import MIBParamsForm from "./MIBParamsForm";
@@ -50,6 +51,9 @@ const DatasetOpen: React.SFC<MergedProps> = ({ type, createDataset, onCancel }) 
         }
         case DatasetTypes.MIB: {
             return renderForm(<MIBParamsForm onSubmit={createDataset} onCancel={onCancel} />);
+        }
+        case DatasetTypes.BLO: {
+            return renderForm(<BLOParamsForm onSubmit={createDataset} onCancel={onCancel} />);
         }
     }
 }

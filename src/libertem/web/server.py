@@ -455,7 +455,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib"]
+        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo"]
         if params["type"].lower() == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
@@ -483,6 +483,11 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "files_pattern": params["filesPattern"],
                 "tileshape": params["tileshape"],
                 "scan_size": params["scanSize"],
+            }
+        elif params["type"].lower() == "blo":
+            dataset_params = {
+                "path": params["path"],
+                "tileshape": params["tileshape"],
             }
         try:
             ds = dataset.load(filetype=params["type"], **dataset_params)

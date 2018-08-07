@@ -70,6 +70,7 @@ export enum DatasetTypes {
     HDFS = "HDFS",
     RAW = "RAW",
     MIB = "MIB",
+    BLO = "BLO",
 }
 
 export interface DatasetParamsCommon {
@@ -106,7 +107,13 @@ export type DatasetParamsMIB = {
     tileshape: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB
+export type DatasetParamsBLO = {
+    type: DatasetTypes.BLO,
+    path: string,
+    tileshape: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO
 
 export interface DatasetCreateParams {
     id: string,

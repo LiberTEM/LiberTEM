@@ -82,7 +82,7 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
             id: uuid(),
             dataset: action.payload.dataset,
             details: getAnalysisDetails(action.payload.analysisType, datasetState),
-            preview: { mode: "AVERAGE", pick: { x: width / 2, y: height / 2 } },
+            preview: { mode: "AVERAGE", pick: { x: Math.round(width / 2), y: Math.round(height / 2) } },
             currentJob: "",
         }
         yield put(analysisActions.Actions.created(analysis))

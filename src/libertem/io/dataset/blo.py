@@ -3,7 +3,7 @@ import contextlib
 import numpy as np
 
 from libertem.common.slice import Slice
-from .base import DataSet, Partition, DataTile
+from .base import DataSet, Partition, DataTile, DataSetException
 
 
 # stolen from hyperspy
@@ -42,7 +42,6 @@ class BloDataSet(DataSet):
         self._path = path
         self._header = None
         self._endianess = endianess
-        self._read_header()
 
     @property
     def dtype(self):
@@ -50,7 +49,7 @@ class BloDataSet(DataSet):
 
     @property
     def shape(self):
-        h = self._header
+        h = self.header
         NY = int(h['NY'])
         NX = int(h['NX'])
         DP_SZ = int(h['DP_SZ'])
@@ -60,9 +59,18 @@ class BloDataSet(DataSet):
         with open(self._path, 'rb') as f:
             self._header = np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
 
+    @property
+    def header(self):
+        if self._header is None:
+            self._read_header()
+        return self._header
+
     def check_valid(self):
-        # raise DataSetException("not implemented")
-        pass
+        try:
+            self._read_header()
+            return True
+        except (IOError, OSError) as e:
+            raise DataSetException("invalid dataset: %s" % e)
 
     def get_partitions(self):
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
@@ -83,7 +91,7 @@ class BloDataSet(DataSet):
     @contextlib.contextmanager
     def get_data(self):
         with open(self._path, 'rb') as f:
-            data = np.memmap(f, mode='r', offset=int(self._header['Data_offset_2']),
+            data = np.memmap(f, mode='r', offset=int(self.header['Data_offset_2']),
                              dtype=self._endianess + 'u1')
             NX, NY, DP_SZ, _ = self.shape
             data = data.reshape((NY, NX, DP_SZ * DP_SZ + 6))

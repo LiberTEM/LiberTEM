@@ -30,6 +30,17 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.REMOVE: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
+        case analysisActions.ActionTypes.SET_PREVIEW: {
+            return updateById(state, action.payload.id, {
+                preview: action.payload.preview,
+            })
+        }
+        case analysisActions.ActionTypes.SET_PREVIEW_MODE: {
+            const newPreview = Object.assign({}, state.byId[action.payload.id].preview, {
+                mode: action.payload.mode,
+            });
+            return updateById(state, action.payload.id, { preview: newPreview });
+        }
     }
     return state;
 }

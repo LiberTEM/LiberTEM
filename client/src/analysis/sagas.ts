@@ -75,10 +75,14 @@ function selectDataset(state: RootReducer, dataset: string) {
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
     try {
         const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
+        const shape = datasetState.params.shape;
+        const width = shape[1];
+        const height = shape[0];
         const analysis: AnalysisState = {
             id: uuid(),
             dataset: action.payload.dataset,
             details: getAnalysisDetails(action.payload.analysisType, datasetState),
+            preview: { mode: "AVERAGE", pick: { x: width / 2, y: height / 2 } },
             currentJob: "",
         }
         yield put(analysisActions.Actions.created(analysis))
@@ -130,7 +134,9 @@ export function* cancelJobOnRemove() {
     while (true) {
         const action: ReturnType<typeof analysisActions.Actions.remove> = yield take(analysisActions.ActionTypes.REMOVE);
         const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-        yield call(cancelJob, analysis.currentJob);
+        if (analysis && analysis.currentJob) {
+            yield call(cancelJob, analysis.currentJob);
+        }
     }
 }
 

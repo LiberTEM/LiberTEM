@@ -1,9 +1,20 @@
 import { AnalysisDetails, AnalysisTypes } from "../messages";
 
+export type PreviewMode = "AVERAGE" | "PICK";
+
+export interface FramePreview {
+    mode: PreviewMode,
+    pick: {
+        x: number,
+        y: number,
+    }
+}
+
 export interface Analysis {
     id: string,
     dataset: string,
     currentJob: string | "",
+    preview: FramePreview,
     details: AnalysisDetails,
 }
 

@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FLiberTEM%2FLiberTEM.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FLiberTEM%2FLiberTEM?ref=badge_shield)
+
 |gitter|_ |travis|_ |appveyor|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
@@ -29,3 +31,7 @@ Interesting issues regarding design decisions, `among others <https://github.com
 - `File Format <https://github.com/LiberTEM/LiberTEM/issues/5>`_
 - `Existing off-line data analyses packages <https://github.com/LiberTEM/LiberTEM/issues/8>`_
 - `Architecture for high throughput <https://github.com/LiberTEM/LiberTEM/issues/10>`_
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FLiberTEM%2FLiberTEM.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FLiberTEM%2FLiberTEM?ref=badge_large)

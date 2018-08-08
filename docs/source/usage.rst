@@ -32,7 +32,7 @@ There are a few command line options available::
     
 As there is currently no authentication yet, it is discouraged to listen on a different host than
 `127.0.0.1` / `localhost`. As a workaround, if you want to access LiberTEM from a different computer,
-you can use ssh port forwarding:
+you can use ssh port forwarding (example command for conda):
 
 .. code-block:: shell
 

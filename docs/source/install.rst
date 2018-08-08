@@ -15,7 +15,9 @@ or conda environments.
 Using virtualenv
 ################
 
-You can use virtualenv if you have a system wide Python 3.6 installation.
+You can use virtualenv if you have a system wide Python 3.6 installation. For Mac OS X, using conda
+is recommended.
+
 To create a new virtualenv for LiberTEM, you can use the following command:
 
 .. code-block:: shell

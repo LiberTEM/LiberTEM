@@ -23,6 +23,7 @@ Documentation
    usage
    architecture
    contributing
+   debugging
    why_python
 
 

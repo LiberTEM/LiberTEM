@@ -86,7 +86,7 @@ This should download the dependencies and install LiberTEM in the environment. P
 continue by reading the :doc:`Usage documentation <usage>`. 
 
 Installing from PyPi
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 TODO: write once we have our package published in pypi
 

@@ -5,8 +5,7 @@ import logging
 import asyncio
 import signal
 import psutil
-from functools import partial, reduce
-from io import BytesIO
+from functools import partial
 
 import numpy as np
 from matplotlib import cm
@@ -17,17 +16,19 @@ import tornado.gen
 import tornado.websocket
 import tornado.ioloop
 import tornado.escape
-from PIL import Image
 
 import libertem
 from libertem.executor.dask import DaskJobExecutor
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
-from libertem.job.masks import ApplyMasksJob
 from libertem.job.sum import SumFramesJob
 from libertem.job.raw import PickFrameJob
 from libertem.common.slice import Slice
-from libertem import masks
+from libertem.viz import visualize_simple, encode_image
+from libertem.analysis import (
+    DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
+    COMAnalysis, SumAnalysis
+)
 
 
 log = logging.getLogger(__name__)
@@ -40,47 +41,14 @@ def log_message(message):
         log.info("message: %s" % message["messageType"])
 
 
-def _encode_image(result, colormap, save_kwargs):
-    # TODO: only normalize across the area where we already have values
-    # can be accomplished by calculating min/max over are that was
-    # affected by the result tiles. for now, ignoring 0 works fine
-    result = result.astype(np.float32)
-    max_ = np.max(result)
-    result_gt_zero = result[result > 0]
-    if len(result_gt_zero) == 0:
-        min_ = 0
-    else:
-        min_ = np.min(result_gt_zero)
-
-    normalized = result - min_
-    if max_ > 0:
-        normalized = normalized / max_
-    # see also: https://stackoverflow.com/a/10967471/540644
-    im = Image.fromarray(colormap(normalized, bytes=True))
-    buf = BytesIO()
-    im = im.convert(mode="RGB")
-    im.save(buf, **save_kwargs)
-    buf.seek(0)
-    return buf
-
-
-async def result_images(full_result, save_kwargs=None):
-    colormap = cm.gist_earth
-    # colormap = cm.viridis
-    save_kwargs = save_kwargs or {}
-
+async def result_images(results, save_kwargs=None):
     futures = [
-        run_blocking(_encode_image, full_result[idx], colormap, save_kwargs)
-        for idx in range(full_result.shape[0])
+        run_blocking(result.get_image, save_kwargs)
+        for result in results
     ]
 
-    results = await asyncio.gather(*futures)
-    return results
-
-
-def divergence(arr):
-    return reduce(np.add, [np.gradient(arr[i], axis=i)
-                           for i in range(len(arr))])
+    images = await asyncio.gather(*futures)
+    return images
 
 
 async def run_blocking(fn, *args, **kwargs):
@@ -144,7 +112,7 @@ class Message(object):
             "details": self.data.serialize_job(job_id),
         }
 
-    def finish_job(self, job_id, num_images):
+    def finish_job(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
             "messageType": "FINISH_JOB",
@@ -152,16 +120,18 @@ class Message(object):
             "details": self.data.serialize_job(job_id),
             "followup": {
                 "numMessages": num_images,
+                "descriptions": image_descriptions,
             },
         }
 
-    def task_result(self, job_id, num_images):
+    def task_result(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
             "messageType": "TASK_RESULT",
             "job": job_id,
             "followup": {
                 "numMessages": num_images,
+                "descriptions": image_descriptions,
             },
         }
 
@@ -201,24 +171,34 @@ class RunJobMixin(object):
 
             for tile in result:
                 tile.copy_to_result(full_result)
-            images = yield full_result
+            results = yield full_result
+            images = await result_images(results)
 
             # NOTE: make sure the following broadcast_event messages are sent atomically!
             # (that is: keep the code below synchronous, and only send the messages
             # once the images have finished encoding, and then send all at once)
             msg = Message(self.data).task_result(
                 job_id=uuid,
-                num_images=len(images),
+                num_images=len(results),
+                image_descriptions=[
+                    {"title": result.title, "desc": result.desc}
+                    for result in results
+                ],
             )
             log_message(msg)
             self.event_registry.broadcast_event(msg)
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
-        images = yield full_result
+        results = yield full_result
+        images = await result_images(results)
         msg = Message(self.data).finish_job(
             job_id=uuid,
-            num_images=len(images),
+            num_images=len(results),
+            image_descriptions=[
+                {"title": result.title, "desc": result.desc}
+                for result in results
+            ],
         )
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -292,87 +272,26 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
-    def make_mask_factories(self, analysis, dtype, frame_size):
-        def _make_ring(cx, cy, ri, ro, shape):
-            def _ring_inner():
-                return masks.ring(
-                    centerX=cx, centerY=cy,
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    radius=ro,
-                    radius_inner=ri
-                )
-            return [_ring_inner]
-
-        def _make_disk(cx, cy, r, shape):
-            def _disk_inner():
-                return masks.circular(
-                    centerX=cx, centerY=cy,
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    radius=r,
-                )
-            return [_disk_inner]
-
-        def _make_point(cx, cy, shape):
-            def _point_inner():
-                a = np.zeros(frame_size)
-                a[int(cy), int(cx)] = 1
-                return a.astype(dtype)
-            return [_point_inner]
-
-        def _make_com(cx, cy, r, shape):
-            disk_mask = masks.circular(
-                centerX=cx, centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
-                radius=r,
-            )
-            return [
-                lambda: disk_mask,
-                lambda: masks.gradient_x(
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    dtype=dtype,
-                ) * (np.ones(frame_size) * disk_mask),
-                lambda: masks.gradient_y(
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    dtype=dtype,
-                ) * (np.ones(frame_size) * disk_mask),
-            ]
-
-        fn_by_type = {
-            "APPLY_DISK_MASK": _make_disk,
-            "APPLY_RING_MASK": _make_ring,
-            "APPLY_POINT_SELECTOR": _make_point,
-            "CENTER_OF_MASS": _make_com,
+    def get_analysis_by_type(self, type_):
+        analysis_by_type = {
+            "APPLY_DISK_MASK": DiskMaskAnalysis,
+            "APPLY_RING_MASK": RingMaskAnalysis,
+            "APPLY_POINT_SELECTOR": PointMaskAnalysis,
+            "CENTER_OF_MASS": COMAnalysis,
+            "SUM_FRAMES": SumAnalysis,
         }
-        return fn_by_type[analysis['type']](**analysis['parameters'])
+        return analysis_by_type[type_]
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['job']
         ds = self.data.get_dataset(params['dataset'])
-        analysis = params['analysis']
-        if analysis['type'] == "SUM_FRAMES":
-            return await self.start_sum_frames_job(
-                uuid=uuid,
-                params=params,
-                analysis=analysis,
-                ds=ds,
-            )
-        else:
-            return await self.start_mask_job(
-                uuid=uuid,
-                params=params,
-                analysis=analysis,
-                ds=ds,
-            )
-
-    async def start_sum_frames_job(self, uuid, params, analysis, ds):
-        job = SumFramesJob(dataset=ds)
-        full_result = np.zeros(shape=tuple(ds.shape[:2]))
+        analysis = self.get_analysis_by_type(params['analysis']['type'])(
+            dataset=ds,
+            parameters=params['analysis']['parameters']
+        )
+        full_result = np.zeros(shape=analysis.get_result_shape())
+        job = analysis.get_job()
         job_runner = self.run_job(
             full_result=full_result,
             uuid=uuid, ds=ds, job=job,
@@ -380,52 +299,13 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         try:
             await job_runner.asend(None)
             while True:
-                images = await self.visualize(
-                    full_result,
-                    analysis,
-                    save_kwargs={'format': 'png'},
+                results = await run_blocking(
+                    analysis.get_results,
+                    job_results=full_result,
                 )
-                await job_runner.asend(images)
+                await job_runner.asend(results)
         except StopAsyncIteration:
             pass
-
-    async def start_mask_job(self, uuid, params, analysis, ds):
-        dtype = np.dtype(ds.dtype).kind == 'f' and ds.dtype or "float32"
-        mask_factories = self.make_mask_factories(analysis, dtype, frame_size=ds.shape[2:])
-        job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
-        full_result = np.zeros(shape=(len(mask_factories),) + tuple(ds.shape[:2]))
-        job_runner = self.run_job(
-            full_result=full_result,
-            uuid=uuid, ds=ds, job=job,
-        )
-        try:
-            await job_runner.asend(None)
-            while True:
-                images = await self.visualize(
-                    full_result,
-                    analysis,
-                    save_kwargs={'format': 'png'},
-                )
-                await job_runner.asend(images)
-        except StopAsyncIteration:
-            pass
-
-    async def visualize_com(self, full_result, analysis, save_kwargs=None):
-        img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
-        ref_x = analysis["parameters"]["cx"]
-        ref_y = analysis["parameters"]["cy"]
-        x_centers = np.divide(img_x, img_sum) - ref_x
-        y_centers = np.divide(img_y, img_sum) - ref_y
-        d = divergence([x_centers, y_centers])
-        centers = np.stack((x_centers, y_centers, d), axis=0)
-        return await result_images(centers, save_kwargs)
-
-    async def visualize(self, full_result, analysis, save_kwargs=None):
-        if analysis['type'] in {'SUM_FRAMES', 'APPLY_DISK_MASK',
-                                'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
-            return await result_images(full_result, save_kwargs)
-        elif analysis['type'] in {'CENTER_OF_MASS'}:
-            return await self.visualize_com(full_result, analysis, save_kwargs)
 
     async def delete(self, uuid):
         # TODO: implement this. maybe by setting a flag, or by having all the futures in a list
@@ -534,11 +414,14 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
             for tile in result:
                 tile.copy_to_result(full_result)
         log.info("preview done, encoding image (dtype=%s)", full_result.dtype)
-        image = await run_blocking(
-            _encode_image,
+        visualized = await run_blocking(
+            visualize_simple,
             full_result,
             colormap=cm.gist_earth,
-            save_kwargs={'format': 'png'},
+        )
+        image = await run_blocking(
+            encode_image,
+            visualized
         )
         log.info("image encoded, sending response")
         return image.read()
@@ -590,11 +473,14 @@ class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
             for tile in result:
                 tile.copy_to_result(full_result)
         log.info("picking done, encoding image (dtype=%s)", full_result.dtype)
-        image = await run_blocking(
-            _encode_image,
+        visualized = await run_blocking(
+            visualize_simple,
             full_result,
             colormap=cm.gist_earth,
-            save_kwargs={'format': 'png'},
+        )
+        image = await run_blocking(
+            encode_image,
+            visualized
         )
         log.info("image encoded, sending response")
         return image.read()

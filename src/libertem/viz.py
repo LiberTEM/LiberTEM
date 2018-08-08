@@ -1,13 +1,16 @@
 import abc
 import colorsys
 import logging
+from io import BytesIO
 
-from matplotlib import colors
+from matplotlib import colors, cm
 import numpy as np
+from PIL import Image
 
 
 __all__ = ['Colormap2D', 'ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',
-           'ColormapClassic', 'interpolate_color', 'cmaps', 'CMAP_CIRCULAR_DEFAULT']
+           'ColormapClassic', 'interpolate_color', 'cmaps', 'CMAP_CIRCULAR_DEFAULT',
+           'visualize_simple', 'encode_image']
 _log = logging.getLogger(__name__)
 
 
@@ -330,6 +333,66 @@ def interpolate_color(fraction, start, end):
     r2 = start[..., 1] + (end[..., 1] - start[..., 1]) * fraction
     r3 = start[..., 2] + (end[..., 2] - start[..., 2]) * fraction
     return r1, r2, r3
+
+
+def _normalize(result):
+    # TODO: only normalize across the area where we already have values
+    # can be accomplished by calculating min/max over are that was
+    # affected by the result tiles. for now, ignoring 0 works fine
+    result = result.astype(np.float32)
+    max_ = np.max(result)
+    result_gt_zero = result[result > 0]
+    if len(result_gt_zero) == 0:
+        min_ = 0
+    else:
+        min_ = np.min(result_gt_zero)
+
+    normalized = result - min_
+    if max_ > 0:
+        normalized = normalized / max_
+    return normalized
+
+
+def encode_image(result, save_kwargs=None):
+    if save_kwargs is None:
+        save_kwargs = {'format': 'png'}
+    # see also: https://stackoverflow.com/a/10967471/540644
+    im = Image.fromarray(result)
+    buf = BytesIO()
+    im = im.convert(mode="RGB")
+    im.save(buf, **save_kwargs)
+    buf.seek(0)
+    return buf
+
+
+def visualize_simple(result, colormap=None):
+    """
+    Normalize and visualize ``result`` with ``colormap`` and save it to an image
+    with parameters ``save_kwargs``.
+
+    Parameters
+    ----------
+    result : numpy.ndarray
+        2d array of intensity values
+
+    colormap : matplotlib colormap or None
+        colormap used for visualizing intensity values, defaults to ColormapCubehelix()
+
+    save_kwargs : dict or None
+        dict of kwargs passed to Pillow when saving the image, can be used to set
+        the file format, quality, ...
+
+    Returns
+    -------
+
+    BytesIO
+        a buffer containing the result image (as PNG/JPG/... depending on save_kwargs)
+    """
+    if colormap is None:
+        colormap = cm.gist_earth
+    normalized = _normalize(result)
+    colored = colormap(normalized, bytes=True)
+    return colored
 
 
 cmaps = {'cubehelix_standard': ColormapCubehelix(),

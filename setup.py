@@ -117,6 +117,7 @@ setup(
         "libertem.executor",
         "libertem.job",
         "libertem.web",
+        "libertem.analysis",
     ],
     entry_points={
         'console_scripts': [

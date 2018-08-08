@@ -19,9 +19,11 @@ Documentation
    :caption: Contents:
    
 
+   install
+   usage
    architecture
-   why_python
    contributing
+   why_python
 
 
 Indices and tables

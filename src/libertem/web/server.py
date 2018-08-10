@@ -1,5 +1,6 @@
 import os
 import sys
+import stat
 import datetime
 import logging
 import asyncio
@@ -133,6 +134,28 @@ class Message(object):
                 "numMessages": num_images,
                 "descriptions": image_descriptions,
             },
+        }
+
+    def directory_listing(self, path, files, dirs):
+        def _details(item):
+            return {
+                "name":  item["name"],
+                "size":  item["stat"].st_size,
+                "mtime": item["stat"].st_mtime,
+            }
+
+        return {
+            "status": "ok",
+            "path": path,
+            "separator": os.sep,
+            "files": [
+                _details(f)
+                for f in files
+            ],
+            "dirs": [
+                _details(d)
+                for d in dirs
+            ],
         }
 
 
@@ -695,6 +718,37 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("client/index.html")
 
 
+class LocalFSBrowseHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    def get(self):
+        path = self.request.arguments['path']
+        assert len(path) == 1
+        path = path[0].decode("utf8")
+        assert path.startswith("/")
+        assert os.path.isdir(path)
+        names = os.listdir(path)
+        dirs = []
+        files = []
+        for name in names:
+            full_path = os.path.join(path, name)
+            try:
+                s = os.stat(full_path)
+            except FileNotFoundError:
+                # this can happen either because of a TOCTOU-like race condition
+                # or for example for things like broken softlinks
+                continue
+            res = {"name": name, "stat": s}
+            if stat.S_ISDIR(s.st_mode):
+                dirs.append(res)
+            else:
+                files.append(res)
+        msg = Message(self.data).directory_listing(path, files=files, dirs=dirs)
+        self.write(msg)
+
+
 # shared state:
 event_registry = EventRegistry()
 data = SharedData()
@@ -715,6 +769,10 @@ def make_app():
             "event_registry": event_registry
         }),
         (r"/api/datasets/([^/]+)/pick/([0-9]+)/([0-9]+)/", DataSetPickHandler, {
+            "data": data,
+            "event_registry": event_registry
+        }),
+        (r"/api/browse/localfs/", LocalFSBrowseHandler, {
             "data": data,
             "event_registry": event_registry
         }),

@@ -5,6 +5,7 @@
 
 export interface FollowupPart {
     numMessages: number,
+    descriptions: Array<{ title: string, desc: string }>,
 }
 
 export interface MsgPartConfig {

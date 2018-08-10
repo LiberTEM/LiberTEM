@@ -1,6 +1,7 @@
 
 export interface JobResultType {
     imageURL: string,
+    description: { title: string, desc: string },
 }
 
 export interface JobState {

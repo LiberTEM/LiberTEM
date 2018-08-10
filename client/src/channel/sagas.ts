@@ -137,12 +137,12 @@ export function* handleBinaryParts(numParts: number, socketChannel: SocketChanne
 
 export function* handleTaskResult(msg: ReturnType<typeof channelMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
     const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.taskResult(msg.job, images, timestamp));
 }
 
 export function* handleFinishJob(msg: ReturnType<typeof channelMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
     const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.finishJob(msg.job, images, timestamp));
 }

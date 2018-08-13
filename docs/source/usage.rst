@@ -10,6 +10,7 @@ LiberTEM is based on a client-server architecture. To use LiberTEM, you need to
 have the server running on the machine where your data is available.
 
 After :doc:`installing LiberTEM <install>`, activate the virtualenv or conda environment.
+
 You can then start the LiberTEM server by running:
 
 .. code-block:: shell

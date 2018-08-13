@@ -51,11 +51,16 @@ you can create a conda environment for LiberTEM.
 This section assumes that you have `installed conda <https://conda.io/docs/user-guide/install/index.html#regular-installation>`_
 and that your installation is working.
 
-You can create a new conda environment and activate it with the following commands:
+You can create a new conda environment to install LiberTEM with the following command:
 
 .. code-block:: shell
 
     $ conda create -n libertem python=3.6
+
+To install or later run LiberTEM, activate the environment with the following command:
+
+.. code-block:: shell  
+
     $ source activate libertem
 
 Afterwards, your shell prompt should be prefixed with `(libertem)` to indicate that the environment is active:
@@ -64,6 +69,8 @@ Afterwards, your shell prompt should be prefixed with `(libertem)` to indicate t
 
     (libertem) $ 
 
+Now the environment is ready to install LiberTEM.
+    
 For more information about conda, see their `documentation about 
 creating and managing environments <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_.
 
@@ -77,8 +84,7 @@ from a git clone:
 
     $ git clone https://github.com/LiberTEM/LiberTEM.git
 
-In the newly created directory, with the python environment (conda or
-virtualenv) activated, you can then start the LiberTEM installation:
+Activate the python environment (conda or virtualenv) and change to the newly created directory with the clone of the LiberTEM repository. Now you can start the LiberTEM installation:
 
 .. code-block:: shell
     
@@ -95,8 +101,20 @@ TODO: write once we have our package published in pypi
 Windows
 -------
 
-TODO: adapt conda documentation from above
+The recommended method to install LiberTEM on Windows is based on Anaconda 64 bit with Python version 3.6 <https://www.anaconda.com/download/>. This installs a Python distribution. 
 
+For `installing from a git clone`_ you require a suitable git client, for example <https://desktop.github.com/>, <https://tortoisegit.org/>, or https://gitforwindows.org/. Clone the repository https://github.com/LiberTEM/LiberTEM.git in a folder of your choice.
+
+From here on the installation and running of LiberTEM on Windows with the Anaconda Prompt is very similar to `Using conda`_ on Linux or Mac OS X.
+
+Differences:
+
+* The command to activate a conda environment on Windows is
+
+.. code-block:: shell  
+
+    $ activate libertem
+    
 
 Troubleshooting
 ---------------

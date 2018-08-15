@@ -734,13 +734,12 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path']
         assert len(path) == 1
         path = path[0].decode("utf8")
-        assert path.startswith("/")
         assert os.path.isdir(path)
         path = os.path.abspath(path)
         names = os.listdir(path)
         dirs = []
         files = []
-        names = [".", ".."] + names
+        names = [".."] + names
         for name in names:
             full_path = os.path.join(path, name)
             try:

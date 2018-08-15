@@ -39,6 +39,7 @@
     "semantic-ui-react": "^0.81.1",
     "typescript": "^2.9.2",
     "utility-types": "^2.0.0",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "url-parse": "1.4.3"
   }
 }

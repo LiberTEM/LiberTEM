@@ -1,6 +1,7 @@
 import os
 import sys
 import stat
+import time
 import datetime
 import logging
 import asyncio
@@ -180,6 +181,7 @@ class RunJobMixin(object):
         log_message(msg)
         self.event_registry.broadcast_event(msg)
 
+        t = time.time()
         async for future, result in dd.as_completed(futures, with_results=True):
             # TODO:
             # + only send PNG of area that has changed (bounding box of all result tiles!)
@@ -194,6 +196,9 @@ class RunJobMixin(object):
 
             for tile in result:
                 tile.copy_to_result(full_result)
+            if time.time() - t < 0.3:
+                continue
+            t = time.time()
             results = yield full_result
             images = await result_images(results)
 

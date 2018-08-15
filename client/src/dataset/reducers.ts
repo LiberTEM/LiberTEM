@@ -3,14 +3,14 @@ import * as channelActions from '../channel/actions';
 import { constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import { DatasetState, DatasetStatus } from "../messages";
 import * as datasetActions from './actions';
-import { DatasetsState } from "./types";
+import { DatasetsState, OpenDatasetState } from "./types";
 
 const initialDatasetState: DatasetsState = {
     byId: {},
     ids: [],
 };
 
-export function datasetReducer(state = initialDatasetState, action: AllActions) {
+export function datasetReducer(state = initialDatasetState, action: AllActions): DatasetsState {
     switch (action.type) {
         case channelActions.ActionTypes.INITIAL_STATE: {
             // FIXME: without type annotation, missing attributes in reducer state are not detected
@@ -40,6 +40,36 @@ export function datasetReducer(state = initialDatasetState, action: AllActions) 
         }
         case datasetActions.ActionTypes.DELETED: {
             return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);
+        }
+    }
+    return state;
+}
+
+const initialOpenDatasetState: OpenDatasetState = {
+    formVisible: false,
+    formPath: undefined,
+}
+
+export function openDatasetReducer(state = initialOpenDatasetState, action: AllActions): OpenDatasetState {
+    switch (action.type) {
+        case datasetActions.ActionTypes.OPEN: {
+            return {
+                ...state,
+                formVisible: true,
+                formPath: action.payload.path,
+            };
+        }
+        case datasetActions.ActionTypes.CANCEL_OPEN: {
+            return {
+                ...state,
+                formVisible: false,
+            }
+        }
+        case datasetActions.ActionTypes.CREATE: {
+            return {
+                ...state,
+                formVisible: false,
+            }
         }
     }
     return state;

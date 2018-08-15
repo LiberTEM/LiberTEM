@@ -69,7 +69,7 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState):
 }
 
 function selectDataset(state: RootReducer, dataset: string) {
-    return state.dataset.byId[dataset];
+    return state.datasets.byId[dataset];
 }
 
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
@@ -98,7 +98,7 @@ function selectAnalysis(state: RootReducer, id: string) {
 }
 
 function selectJob(state: RootReducer, id: string) {
-    return state.job.byId[id];
+    return state.jobs.byId[id];
 }
 
 export function* cancelOldJob(analysis: AnalysisState) {

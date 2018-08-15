@@ -1,8 +1,9 @@
 import { all, call } from 'redux-saga/effects';
 import { analysisRootSaga } from './analysis/sagas';
+import { directoryListingSaga } from './browser/sagas';
 import { webSocketSaga } from './channel/sagas';
 import { clusterConnectionSaga } from './cluster/sagas';
-import { getConfigOnReconnect, getConfigSaga } from './config/sagas';
+import { getConfigOnReconnect, getConfigSaga, updateLocalConfigSaga } from './config/sagas';
 import { datasetRootSaga } from './dataset/sagas';
 
 export function* rootSaga() {
@@ -13,5 +14,7 @@ export function* rootSaga() {
         analysisRootSaga(),
         datasetRootSaga(),
         clusterConnectionSaga(),
+        directoryListingSaga(),
+        updateLocalConfigSaga(),
     ]);
 }

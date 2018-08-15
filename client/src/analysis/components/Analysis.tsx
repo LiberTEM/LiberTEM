@@ -15,7 +15,7 @@ interface AnalysisProps {
 
 const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {
     return {
-        dataset: state.dataset.byId[ownProps.analysis.dataset],
+        dataset: state.datasets.byId[ownProps.analysis.dataset],
     }
 }
 

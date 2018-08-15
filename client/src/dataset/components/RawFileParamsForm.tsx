@@ -3,11 +3,13 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
+import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     "type"
     | "tileshape"
+    | "path"
     | "scanSize"
     | "detectorSizeRaw"
     | "cropDetectorTo"> & {
@@ -19,12 +21,7 @@ type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
 
 type FormValues = DatasetParamsRawForForm
 
-interface FormProps {
-    onSubmit: (params: DatasetParamsRaw) => void
-    onCancel: () => void,
-}
-
-type MergedProps = FormikProps<FormValues> & FormProps;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsRaw>;
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -46,11 +43,6 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
-            </Form.Field>
-            <Form.Field>
-                <label htmlFor="path">Path:</label>
-                <input type="text" name="path" value={values.path}
-                    onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="tileshape">Tileshape:</label>
@@ -88,7 +80,7 @@ function parseNumList(nums: string) {
     return nums.split(",").map(part => +part);
 }
 
-export default withFormik<FormProps, FormValues>({
+export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
     mapPropsToValues: () => ({
         name: "",
         tileshape: "1, 8, 128, 128",
@@ -96,14 +88,13 @@ export default withFormik<FormProps, FormValues>({
         cropDetectorTo: "128, 128",
         scanSize: "256, 256",
         dtype: "float32",
-        path: "",
     }),
     handleSubmit: (values, formikBag) => {
-        const { onSubmit } = formikBag.props;
+        const { onSubmit, path } = formikBag.props;
         onSubmit({
+            path,
             type: DatasetTypes.RAW,
             name: values.name,
-            path: values.path,
             dtype: values.dtype,
             tileshape: parseNumList(values.tileshape),
             scanSize: parseNumList(values.scanSize),

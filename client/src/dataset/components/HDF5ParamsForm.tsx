@@ -3,17 +3,13 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
+import { OpenFormProps } from "../types";
 
-type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "type" | "tileshape"> & { tileshape: string };
+type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string };
 
 type FormValues = DatasetParamsHDF5ForForm
 
-interface FormProps {
-    onSubmit: (params: DatasetParamsHDF5) => void,
-    onCancel: () => void,
-}
-
-type MergedProps = FormikProps<FormValues> & FormProps;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsHDF5>;
 
 const HDF5ParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -37,11 +33,6 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="path">Path:</label>
-                <input type="text" name="path" value={values.path}
-                    onChange={handleChange} onBlur={handleBlur} />
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="dsPath">HDF5 Dataset Path:</label>
                 <input type="text" name="dsPath" value={values.dsPath}
                     onChange={handleChange} onBlur={handleBlur} />
@@ -57,19 +48,18 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<FormProps, FormValues>({
+export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
     mapPropsToValues: () => ({
         name: "",
         tileshape: "1, 8, 128, 128",
-        path: "",
         dsPath: "",
     }),
     handleSubmit: (values, formikBag) => {
-        const { onSubmit } = formikBag.props;
+        const { onSubmit, path } = formikBag.props;
         onSubmit({
+            path,
             type: DatasetTypes.HDF5,
             name: values.name,
-            path: values.path,
             dsPath: values.dsPath,
             tileshape: values.tileshape.split(",").map(part => +part),
         });

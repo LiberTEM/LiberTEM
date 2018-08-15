@@ -40,7 +40,7 @@ const Toolbar: React.SFC<MergedProps> = ({ job, handleApply, handleRemove }) => 
 
 const mapStateToProps = (state: RootReducer, ownProps: ToolbarProps) => {
     return {
-        job: state.job.byId[ownProps.analysis.currentJob],
+        job: state.jobs.byId[ownProps.analysis.currentJob],
     }
 }
 

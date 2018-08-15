@@ -11,6 +11,8 @@ export interface FollowupPart {
 export interface MsgPartConfig {
     version: string,
     localCores: number,
+    cwd: string,
+    separator: string,
 }
 
 export interface GetConfigResponse {
@@ -103,7 +105,7 @@ export type DatasetParamsRaw = {
 
 export type DatasetParamsMIB = {
     type: DatasetTypes.MIB,
-    filesPattern: string,
+    path: string,
     scanSize: number[],
     tileshape: number[],
 } & DatasetParamsCommon
@@ -253,4 +255,22 @@ export interface StartJobResponse {
 export interface CancelJobResponse {
     status: "ok",
     job: string,
+}
+
+
+/*
+ * fs browser 
+ */
+
+export interface DirectoryListingDetails {
+    name: string,
+    size: number,
+    mtime: number,
+}
+
+export interface DirectoryListingResponse {
+    status: "ok",
+    path: string,
+    files: DirectoryListingDetails[],
+    dirs: DirectoryListingDetails[],
 }

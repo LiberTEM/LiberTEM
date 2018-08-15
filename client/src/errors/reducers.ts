@@ -1,5 +1,6 @@
 import { AllActions } from "../actions";
 import * as analysisActions from '../analysis/actions';
+import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
 import * as datasetActions from '../dataset/actions';
 import { ById, filterWithPred, insertById } from "../helpers/reducerHelpers";
@@ -20,6 +21,7 @@ const initialErrorState: ErrorState = {
 
 export function errorReducer(state = initialErrorState, action: AllActions): ErrorState {
     switch (action.type) {
+        case browserActions.ActionTypes.ERROR:
         case datasetActions.ActionTypes.ERROR:
         case channelActions.ActionTypes.ERROR:
         case analysisActions.ActionTypes.ERROR: {

@@ -1,6 +1,10 @@
-import { call, put, takeEvery } from 'redux-saga/effects';
+import { call, put, select, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
+import * as browserActions from '../browser/actions';
+import { joinPaths } from '../config/helpers';
+import { ConfigState } from '../config/reducers';
 import { OpenDatasetResponse } from '../messages';
+import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, openDataset } from './api';
 
@@ -32,7 +36,15 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     }
 }
 
+export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
+    // TODO: ask the server what it thinks about this file
+    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    const fullPath = joinPaths(config, action.payload.path, action.payload.name);
+    yield put(datasetActions.Actions.open(fullPath));
+}
+
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
     yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT, openDatasetSaga);
 }

@@ -1,4 +1,5 @@
 import * as analysisActions from './analysis/actions';
+import * as browserActions from './browser/actions';
 import * as channelActions from './channel/actions';
 import * as clusterActions from './cluster/actions';
 import * as configActions from './config/actions';
@@ -11,3 +12,4 @@ export type AllActions = channelActions.Actions
     | clusterActions.Actions
     | configActions.Actions
     | errorActions.Actions
+    | browserActions.Actions

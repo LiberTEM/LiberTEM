@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Dropdown, DropdownItemProps } from "semantic-ui-react";
+import { Dropdown, DropdownProps } from "semantic-ui-react";
 import { getEnumValues } from "../../helpers";
 import { DatasetTypes } from "../../messages";
 
@@ -12,22 +12,20 @@ const datasetTypeOptions = datasetTypeKeys.map(t => ({
 }));
 
 interface DatasetTypeSelectProps {
-    onClick: (datasetType: DatasetTypes) => void,
-    label: string,
+    onClick: (e: React.SyntheticEvent, data: DropdownProps) => void,
+    currentType: DatasetTypes,
 }
 
-const selectData = (fn: (v: DatasetTypes) => void) => (e: React.MouseEvent, data: DropdownItemProps) => {
-    return fn(data.value as DatasetTypes);
-}
-
-const DatasetTypeSelect: React.SFC<DatasetTypeSelectProps> = ({ onClick, label }) => {
+const DatasetTypeSelect: React.SFC<DatasetTypeSelectProps> = ({ currentType, onClick }) => {
     return (
-        <Dropdown text={label} icon='add' floating={true} labeled={true} button={true} className='icon'>
-            <Dropdown.Menu>
-                <Dropdown.Header content='dataset types' />
-                {datasetTypeOptions.map(option => <Dropdown.Item key={option.value} onClick={selectData(onClick)} {...option} />)}
-            </Dropdown.Menu>
-        </Dropdown>
+        <>
+            <Dropdown
+                inline={true}
+                options={datasetTypeOptions}
+                value={currentType}
+                onChange={onClick}
+            />
+        </>
     );
 }
 

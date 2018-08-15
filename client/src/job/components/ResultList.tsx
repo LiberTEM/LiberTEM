@@ -16,8 +16,8 @@ interface ExternalResultProps {
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultProps) => {
-    const job = ownProps.job ? state.job.byId[ownProps.job] : undefined;
-    const ds = (job !== undefined) ? state.dataset.byId[job.dataset] : undefined;
+    const job = ownProps.job ? state.jobs.byId[ownProps.job] : undefined;
+    const ds = (job !== undefined) ? state.datasets.byId[job.dataset] : undefined;
     const analysis = state.analyses.byId[ownProps.analysis];
 
     return {

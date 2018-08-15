@@ -147,8 +147,8 @@ class Message(object):
 
         return {
             "status": "ok",
+            "messageType": "DIRECTORY_LISTING",
             "path": path,
-            "separator": os.sep,
             "files": [
                 _details(f)
                 for f in files
@@ -388,7 +388,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             }
         elif params["type"].lower() == "mib":
             dataset_params = {
-                "files_pattern": params["filesPattern"],
+                "path": params["path"],
                 "tileshape": params["tileshape"],
                 "scan_size": params["scanSize"],
             }
@@ -550,6 +550,8 @@ class SharedData(object):
         return {
             "version": libertem.__version__,
             "localCores": self.get_local_cores(),
+            "cwd": os.getcwd(),
+            "separator": os.sep,
         }
 
     def get_executor(self):
@@ -734,9 +736,11 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         path = path[0].decode("utf8")
         assert path.startswith("/")
         assert os.path.isdir(path)
+        path = os.path.abspath(path)
         names = os.listdir(path)
         dirs = []
         files = []
+        names = [".", ".."] + names
         for name in names:
             full_path = os.path.join(path, name)
             try:

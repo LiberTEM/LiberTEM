@@ -1,3 +1,4 @@
+import re
 import io
 import os
 import glob
@@ -94,13 +95,23 @@ class MIBFile(object):
 
 
 class MIBDataSet(DataSet):
-    def __init__(self, files_pattern, tileshape, scan_size):
-        self._files_pattern = files_pattern
+    def __init__(self, path, tileshape, scan_size):
+        self._path = path
         self._tileshape = tileshape
         self._scan_size = tuple(scan_size)
 
     def _files(self):
-        for path in glob.glob(self._files_pattern):
+        path, ext = os.path.splitext(self._path)
+        if ext == '.mib':
+            pattern = "%s*.mib" % (
+                re.sub(r'[0-9]+$', '', path)
+            )
+        elif ext == '.hdr':
+            pattern = "%s*.mib" % path
+        else:
+            raise DataSetException("unknown extension")
+
+        for path in glob.glob(pattern):
             yield MIBFile(path)
 
     def _files_sorted(self):

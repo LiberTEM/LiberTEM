@@ -437,7 +437,7 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
             )
         log.info("preview futures created")
 
-        full_result = np.zeros(shape=ds.shape[2:])
+        full_result = np.zeros(shape=ds.shape[2:], dtype="float32")
         async for future, result in dd.as_completed(futures, with_results=True):
             for tile in result:
                 tile.copy_to_result(full_result)
@@ -496,7 +496,7 @@ class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
                 executor.client.submit(task, **submit_kwargs)
             )
 
-        full_result = np.zeros(shape=ds.shape[2:])
+        full_result = np.zeros(shape=ds.shape[2:], dtype=ds.dtype)
         async for future, result in dd.as_completed(futures, with_results=True):
             for tile in result:
                 tile.copy_to_result(full_result)

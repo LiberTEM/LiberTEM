@@ -1,3 +1,5 @@
+import numpy as np
+
 from .base import Job, Task
 
 
@@ -12,41 +14,32 @@ class SumFramesTask(Task):
         """
         sum frames
         """
-        parts = []
+        part = np.zeros(self.partition.dataset.shape[2:], dtype="float32")
         for data_tile in self.partition.get_tiles():
             data = data_tile.data
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
             result = data_tile.data.sum(axis=(0, 1))
-            parts.append(
-                SumResultTile(
-                    data=result,
-                    tile_slice=data_tile.tile_slice,
-                )
+            tile_slice = data_tile.tile_slice.get()
+            part[
+                tile_slice[2],
+                tile_slice[3],
+            ] = result
+        return [
+            SumResultTile(
+                data=part,
             )
-        return parts
+        ]
 
 
 class SumResultTile(object):
-    def __init__(self, data, tile_slice):
+    def __init__(self, data):
         self.data = data
-        self.tile_slice = tile_slice
 
     @property
     def dtype(self):
         return self.data.dtype
 
-    def _get_dest_slice(self):
-        tile_slice = self.tile_slice.get()
-        return (
-            tile_slice[2],
-            tile_slice[3],
-        )
-
     def copy_to_result(self, result):
-        # FIXME: assumes tile size is less than or equal one row of frames. is this true?
-        # let's assert it for now:
-        assert self.tile_slice.shape[0] == 1
-
-        result[self._get_dest_slice()] += self.data
+        result += self.data
         return result

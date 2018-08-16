@@ -3,12 +3,15 @@ import * as React from "react";
 export type HandleProps = {
     x: number,
     y: number,
+    scale: number,
     withCross?: boolean,
 } & React.SVGProps<SVGCircleElement>;
 
-const Handle: React.SFC<HandleProps> = ({ x, y, withCross, ...args }) => {
+const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, ...args }) => {
     const r = 3;
-    const style: React.CSSProperties = { stroke: "red", strokeWidth: 1, fill: "transparent" };
+    // scaleMatrix is needed to set the origin of the scale
+    const scaleMatrix = `matrix(${scale}, 0, 0, ${scale}, ${x - scale * x}, ${y - scale * y})`;
+    const style: React.CSSProperties = { transform: scaleMatrix, stroke: "red", strokeWidth: 1, fill: "transparent" };
     const crossSpec = `
         M${x - r / 2} ${y} L ${x + r / 2} ${y}
         M${x} ${y - r / 2} L ${x} ${y + r / 2}
@@ -26,6 +29,7 @@ export interface DraggableHandleProps {
     x: number,
     y: number,
     withCross?: boolean,
+    imageWidth?: number,
     onDragMove?: (x: number, y: number) => void,
     parentOnDragStart?: (h: DraggableHandle) => void,
     parentOnDrop?: (x: number, y: number) => void,
@@ -140,12 +144,9 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         }
     }
 
-    public renderDragging() {
-        const { x, y } = this.state.drag;
-        return this.renderCommon(x, y);
-    }
-
     public renderCommon(x: number, y: number) {
+        const { imageWidth } = this.props;
+        const scale = imageWidth === undefined ? 1 : imageWidth / 128;
         // empty zero-size <rect> as relative position reference
         return (
             <g>
@@ -154,7 +155,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
                     ref={e => this.posRef = e}
                     x={0} y={0} width={0} height={0}
                 />
-                <Handle x={x} y={y} withCross={this.props.withCross}
+                <Handle scale={scale} x={x} y={y} withCross={this.props.withCross}
                     onMouseUp={this.stopDrag}
                     onMouseMove={this.move}
                     onMouseDown={this.startDrag}
@@ -163,8 +164,14 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         );
     }
 
+    public renderDragging() {
+        const { x, y } = this.state.drag;
+        return this.renderCommon(x, y);
+    }
+
     public render() {
         const { x, y } = this.props;
+        // either render from state (when dragging) or from props
         if (this.state.dragging) {
             return this.renderDragging();
         } else {

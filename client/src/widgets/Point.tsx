@@ -20,6 +20,7 @@ const Point: React.SFC<PointProps> = ({ imageWidth, imageHeight, cx, cy, image, 
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy} withCross={true}
                     onDragMove={onCenterChange}
+                    imageWidth={imageWidth}
                     constraint={inRectConstraint(imageWidth, imageHeight)} />
             </HandleParent>
         </svg>

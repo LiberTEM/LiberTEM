@@ -37,15 +37,18 @@ const Ring: React.SFC<RingProps> = ({ imageWidth, imageHeight, cx, cy, ri, ro, i
     return (
         <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
             {image}
-            <path d={pathSpec} fillRule="evenodd" style={{ ...defaultMaskStyles }} />
+            <path d={pathSpec} fillRule="evenodd" style={{ ...defaultMaskStyles(imageWidth) }} />
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy}
+                    imageWidth={imageWidth}
                     onDragMove={onCenterChange}
                     constraint={inRectConstraint(imageWidth, imageHeight)} />
                 <DraggableHandle x={roHandle.x} y={roHandle.y}
+                    imageWidth={imageWidth}
                     onDragMove={cbToRadius(cx, cy, onROChange)}
                     constraint={roConstraints(riHandle.x, cy)} />
                 <DraggableHandle x={riHandle.x} y={riHandle.y}
+                    imageWidth={imageWidth}
                     onDragMove={cbToRadius(cx, cy, onRIChange)}
                     constraint={riConstraint(roHandle.x, cy)} />
             </HandleParent>

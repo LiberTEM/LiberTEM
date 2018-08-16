@@ -46,6 +46,7 @@ class Result extends React.Component<MergedProps> {
                 {analysis.preview.mode === "PICK" ?
                     <HandleParent width={width} height={height}>
                         <DraggableHandle x={x} y={y} withCross={true}
+                            imageWidth={width}
                             onDragMove={this.onCenterChange}
                             constraint={inRectConstraint(width, height)} />
                     </HandleParent> : null}

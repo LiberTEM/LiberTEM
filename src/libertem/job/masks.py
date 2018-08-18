@@ -1,7 +1,8 @@
 import functools
+
 import numpy as np
 
-from libertem.io.dataset.base import DataTile
+from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task
 
 
@@ -47,11 +48,15 @@ class MaskContainer(object):
         return len(self.mask_factories)
 
     def __getitem__(self, key):
-        if not isinstance(key, (DataTile, ResultTile)):
+        if isinstance(key, Partition):
+            slice_ = key.slice
+        elif isinstance(key, (DataTile, ResultTile)):
+            slice_ = key.tile_slice
+        else:
             raise TypeError(
                 "MaskContainer[k] can only be called with DataTile/ResultTile instances"
             )
-        return self.get_masks_for_slice(key.tile_slice)
+        return self.get_masks_for_slice(slice_)
 
     @property
     def shape(self):
@@ -101,7 +106,8 @@ class ApplyMasksTask(Task):
             data = data_tile.flat_data
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
-            result = data.dot(self.masks[data_tile])
+            masks = self.masks[data_tile]
+            result = data.dot(masks)
             parts.append(
                 ResultTile(
                     data=result,
@@ -130,21 +136,27 @@ class ResultTile(object):
     @property
     def reshaped_data(self):
         """
-        Reshapes the result from the flattened version to a shape
+        Reshapes the result from the flattened and interleaved version to a shape
         that fits the result array (masks, y, x)
         """
-        # (frames, masks) -> (masks, _, frames)
-        shape = self.data.shape
-        return self.data.reshape(shape[0], 1, shape[1]).transpose()
+
+        num_masks = self.data.shape[1]
+
+        deinterleaved = np.stack(
+            [self.data.ravel()[idx::num_masks]
+             for idx in range(num_masks)],
+            axis=0,
+        )
+        return deinterleaved.reshape(
+            num_masks,
+            self.tile_slice.shape[0],
+            self.tile_slice.shape[1],
+        )
 
     @property
     def dtype(self):
         return self.data.dtype
 
     def copy_to_result(self, result):
-        # FIXME: assumes tile size is less than or equal one row of frames. is this true?
-        # let's assert it for now:
-        assert self.tile_slice.shape[0] == 1
-
         result[self._get_dest_slice()] += self.reshaped_data
         return result

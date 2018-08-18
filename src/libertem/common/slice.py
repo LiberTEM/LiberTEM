@@ -231,7 +231,7 @@ class Slice(object):
         (int, int, int, int)
             the shape calculated from the given parameters
         """
-        min_num_partitions = min_num_partitions or 2 * multiprocessing.cpu_count()
+        min_num_partitions = min_num_partitions or multiprocessing.cpu_count()
         # FIXME: allow for partitions smaller than one scan row
         # FIXME: allow specifying the "aspect ratio" for a partition?
         num_frames = datashape[0] * datashape[1]

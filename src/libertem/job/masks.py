@@ -1,5 +1,9 @@
 import functools
 
+try:
+    import torch
+except ImportError:
+    torch = None
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
@@ -23,15 +27,17 @@ def _make_mask_slicer(computed_masks):
 
 
 class ApplyMasksJob(Job):
-    def __init__(self, mask_factories, *args, **kwargs):
+    def __init__(self, mask_factories, use_torch=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.masks = MaskContainer(mask_factories, dtype=self.dataset.dtype)
+        self.use_torch = use_torch
 
     def get_tasks(self):
         for partition in self.dataset.get_partitions():
             yield ApplyMasksTask(
                 partition=partition,
                 masks=self.masks,
+                use_torch=self.use_torch,
             )
 
 
@@ -87,7 +93,7 @@ class MaskContainer(object):
 
 
 class ApplyMasksTask(Task):
-    def __init__(self, masks, *args, **kwargs):
+    def __init__(self, masks, use_torch, *args, **kwargs):
         """
         Parameters
         ----------
@@ -97,6 +103,7 @@ class ApplyMasksTask(Task):
             the masks to apply to the partition
         """
         self.masks = masks
+        self.use_torch = use_torch
         super().__init__(*args, **kwargs)
 
     def __call__(self):
@@ -107,7 +114,13 @@ class ApplyMasksTask(Task):
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
             masks = self.masks[data_tile]
-            result = data.dot(masks)
+            if self.use_torch and torch is not None:
+                result = torch.mm(
+                    torch.from_numpy(data),
+                    torch.from_numpy(masks),
+                ).numpy()
+            else:
+                result = data.dot(masks)
             parts.append(
                 ResultTile(
                     data=result,

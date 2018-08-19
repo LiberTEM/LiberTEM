@@ -107,6 +107,7 @@ setup(
     ],
     extras_require={
         'hdfs': 'hfds3',
+        'torch': 'torch',
     },
     package_dir={"": "src"},
     packages=[

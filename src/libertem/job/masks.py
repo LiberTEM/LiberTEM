@@ -29,7 +29,10 @@ def _make_mask_slicer(computed_masks):
 class ApplyMasksJob(Job):
     def __init__(self, mask_factories, use_torch=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.masks = MaskContainer(mask_factories, dtype=self.dataset.dtype)
+        mask_dtype = np.dtype(self.dataset.dtype)
+        if mask_dtype.kind == 'u':
+            mask_dtype = np.dtype("float32")
+        self.masks = MaskContainer(mask_factories, dtype=mask_dtype)
         self.use_torch = use_torch
 
     def get_tasks(self):

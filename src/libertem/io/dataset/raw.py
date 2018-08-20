@@ -33,7 +33,7 @@ class RawFileDataSet(DataSet):
         try:
             self.open_file()
             return True  # TODO: try to read from file? anything else?
-        except (IOError, OSError) as e:
+        except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_partitions(self):

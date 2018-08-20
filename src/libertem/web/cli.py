@@ -1,4 +1,5 @@
 import click
+from libertem.cli_tweaks import console_tweaks
 from .server import run
 
 
@@ -8,4 +9,5 @@ from .server import run
 @click.option('--host', help='host on which the server should listen on',
               default="localhost", type=str)
 def main(host, port):
+    console_tweaks()
     run(host, port)

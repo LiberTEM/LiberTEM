@@ -9,6 +9,7 @@ import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import HDFSParamsForm from './HDFSParamsForm';
+import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
 
@@ -84,6 +85,9 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
             }
             case DatasetTypes.BLO: {
                 return renderForm(<BLOParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+            }
+            case DatasetTypes.K2IS: {
+                return renderForm(<K2ISParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
             }
         }
     }

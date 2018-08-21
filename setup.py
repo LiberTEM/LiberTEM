@@ -104,6 +104,7 @@ setup(
         "pillow",
         "h5py",
         "psutil",
+        "numba",
     ],
     extras_require={
         'hdfs': 'hfds3',

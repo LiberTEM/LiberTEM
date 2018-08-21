@@ -1,4 +1,7 @@
 import logging
+
+import numpy as np
+
 from .base import Job, Task
 
 
@@ -22,34 +25,36 @@ class PickFrameTask(Task):
         super().__init__(*args, **kwargs)
         self._slice = slice_
 
-    def __call__(self):
-        parts = []
-        for data_tile in self.partition.get_tiles():
-            intersection = data_tile.tile_slice.intersection_with(self._slice)
-            if intersection.is_null():
-                continue
-            parts.append(PickFrameResultTile(data_tile=data_tile, intersection=intersection))
-        return parts
-
-
-class PickFrameResultTile(object):
-    def __init__(self, data_tile, intersection):
-        self.data_tile = data_tile
-        self.intersection = intersection
-
-    @property
-    def dtype(self):
-        return self.data_tile.dtype
-
-    def _get_dest_slice(self):
-        tile_slice = self.intersection.get()
+    def _get_dest_slice(self, intersection):
+        tile_slice = intersection.get()
         return (
+            Ellipsis,
             tile_slice[2],
             tile_slice[3],
         )
 
+    def __call__(self):
+        result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
+        for data_tile in self.partition.get_tiles():
+            intersection = data_tile.tile_slice.intersection_with(self._slice)
+            if intersection.is_null():
+                continue
+            shifted = intersection.shift(data_tile.tile_slice)
+            result[
+                self._get_dest_slice(intersection)
+            ] = data_tile.data[shifted.get()]
+        return [PickFrameResultTile(data=result)]
+
+
+class PickFrameResultTile(object):
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def dtype(self):
+        return self.data.dtype
+
     def copy_to_result(self, result):
-        dest_slice = self._get_dest_slice()
-        shifted = self.intersection.shift(self.data_tile.tile_slice)
-        result[dest_slice] = self.data_tile.data[shifted.get()]
+        out = result.reshape(self.data.shape)
+        out += self.data
         return result

@@ -6,6 +6,7 @@ filetypes = {
     "raw": "libertem.io.dataset.raw.RawFileDataSet",
     "mib": "libertem.io.dataset.mib.MIBDataSet",
     "blo": "libertem.io.dataset.blo.BloDataSet",
+    "k2is": "libertem.io.dataset.k2is.K2ISDataSet",
 }
 
 

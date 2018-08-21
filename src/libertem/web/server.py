@@ -403,8 +403,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "scan_size": params["scanSize"],
             }
         try:
-            ds = dataset.load(filetype=params["type"], **dataset_params)
-            ds.check_valid()
+            ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)
+            await run_blocking(ds.check_valid)
         except DataSetException as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
             log_message(msg)

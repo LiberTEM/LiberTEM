@@ -97,7 +97,7 @@ benchmarked yet. The main goal was to explore how to write code that is vectoriz
 Exploring the compiled result
 -----------------------------
 
-Have a look at <https://godbolt.org/>. Copy and paste the code, select language and compiler,
+Have a look at <https://godbolt.org/>. Select language and compiler, copy and paste the code, 
 and see what machine code is generated.
 
 Conclusion

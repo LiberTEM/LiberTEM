@@ -19,6 +19,9 @@ class PickFrameJob(Job):
                 continue
             yield PickFrameTask(partition=partition, slice_=self._slice)
 
+    def get_result_shape(self):
+        return self._slice.shape
+
 
 class PickFrameTask(Task):
     def __init__(self, slice_, *args, **kwargs):

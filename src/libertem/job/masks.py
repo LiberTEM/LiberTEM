@@ -43,6 +43,9 @@ class ApplyMasksJob(Job):
                 use_torch=self.use_torch,
             )
 
+    def get_result_shape(self):
+        return (len(self.masks),) + self.dataset.shape[:2]
+
 
 class MaskContainer(object):
     def __init__(self, mask_factories, dtype):

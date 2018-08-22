@@ -8,6 +8,9 @@ class SumFramesJob(Job):
         for partition in self.dataset.get_partitions():
             yield SumFramesTask(partition=partition)
 
+    def get_result_shape(self):
+        return self.dataset.shape[2:],
+
 
 class SumFramesTask(Task):
     def __call__(self):

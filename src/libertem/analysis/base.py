@@ -28,6 +28,3 @@ class BaseAnalysis(object):
 
     def get_job(self):
         raise NotImplementedError()
-
-    def get_result_shape(self):
-        raise NotImplementedError()

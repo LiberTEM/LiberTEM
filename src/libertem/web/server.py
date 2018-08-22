@@ -318,8 +318,8 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             dataset=ds,
             parameters=params['analysis']['parameters']
         )
-        full_result = np.zeros(shape=analysis.get_result_shape())
         job = analysis.get_job()
+        full_result = job.get_result_buffer()
         job_runner = self.run_job(
             full_result=full_result,
             uuid=uuid, ds=ds, job=job,

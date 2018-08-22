@@ -18,8 +18,5 @@ class MasksAnalysis(BaseAnalysis):
         job = ApplyMasksJob(dataset=self.dataset, mask_factories=mask_factories)
         return job
 
-    def get_result_shape(self):
-        return (len(self.get_mask_factories()),) + tuple(self.dataset.shape[:2])
-
     def get_mask_factories(self):
         raise NotImplementedError()

@@ -13,6 +13,3 @@ class SumAnalysis(BaseAnalysis):
             AnalysisResult(raw_data=data, visualized=visualize_simple(data),
                    title="intensity", desc="sum of all frames"),
         ]
-
-    def get_result_shape(self, dataset):
-        return tuple(dataset.shape[:2])

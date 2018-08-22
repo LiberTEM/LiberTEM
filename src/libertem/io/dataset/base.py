@@ -60,7 +60,8 @@ class DataTile(object):
         """
         self.data = data
         self.tile_slice = tile_slice
-        assert data.shape == tile_slice.shape
+        assert data.shape == tile_slice.shape,\
+            "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
 
     @property
     def flat_data(self):

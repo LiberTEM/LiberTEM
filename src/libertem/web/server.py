@@ -318,8 +318,8 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             dataset=ds,
             parameters=params['analysis']['parameters']
         )
-        full_result = np.zeros(shape=analysis.get_result_shape())
         job = analysis.get_job()
+        full_result = job.get_result_buffer()
         job_runner = self.run_job(
             full_result=full_result,
             uuid=uuid, ds=ds, job=job,
@@ -363,7 +363,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo"]
+        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is"]
         if params["type"].lower() == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
@@ -397,9 +397,14 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "path": params["path"],
                 "tileshape": params["tileshape"],
             }
+        elif params["type"].lower() == "k2is":
+            dataset_params = {
+                "path": params["path"],
+                "scan_size": params["scanSize"],
+            }
         try:
-            ds = dataset.load(filetype=params["type"], **dataset_params)
-            ds.check_valid()
+            ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)
+            await run_blocking(ds.check_valid)
         except DataSetException as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
             log_message(msg)

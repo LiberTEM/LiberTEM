@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Job(object):
     """
     A computation on a DataSet. Inherit from this class and implement ``get_tasks``
@@ -15,6 +18,20 @@ class Job(object):
             ...
         """
         raise NotImplementedError()
+
+    def get_result_shape(self):
+        raise NotImplementedError()
+
+    def get_result_dtype(self):
+        dtype = np.dtype(self.dataset.dtype)
+        if dtype.kind == 'u':
+            dtype = np.dtype("float32")
+        return dtype
+
+    def get_result_buffer(self):
+        shape = self.get_result_shape()
+        dtype = self.get_result_dtype()
+        return np.zeros(shape, dtype=dtype)
 
 
 class Task(object):

@@ -5,7 +5,7 @@ from .base import DataSet, Partition, DataTile, DataSetException
 
 
 class RawFileDataSet(DataSet):
-    def __init__(self, path, scan_size, tileshape, dtype, detector_size_raw, crop_detector_to):
+    def __init__(self, path, scan_size, dtype, detector_size_raw, crop_detector_to, tileshape=None):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._dtype = dtype
@@ -13,6 +13,10 @@ class RawFileDataSet(DataSet):
         self._detector_size_raw = tuple(detector_size_raw)  # example: (130, 128)
         self._detector_size = tuple(crop_detector_to)                # example: (128, 128)
         self._min_num_partitions = None  # FIXME
+        if tileshape is None:
+            # raw files are memory mapped -> works well with large tiles
+            # (actual tiles are then as large as the partitions)
+            tileshape = self._scan_size + self._detector_size
         self._tileshape = tuple(tileshape)
 
     def open_file(self):

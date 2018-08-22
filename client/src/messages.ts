@@ -74,6 +74,7 @@ export enum DatasetTypes {
     RAW = "RAW",
     MIB = "MIB",
     BLO = "BLO",
+    K2IS = "K2IS",
 }
 
 export interface DatasetParamsCommon {
@@ -116,7 +117,13 @@ export type DatasetParamsBLO = {
     tileshape: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO
+export type DatasetParamsK2IS = {
+    type: DatasetTypes.K2IS,
+    path: string,
+    scanSize: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS
 
 export interface DatasetCreateParams {
     id: string,

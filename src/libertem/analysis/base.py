@@ -14,6 +14,9 @@ class AnalysisResult(object):
     def __str__(self):
         return self.title
 
+    def __repr__(self):
+        return "<AnalysisResult: %s>" % self.title
+
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 

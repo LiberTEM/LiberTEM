@@ -4,15 +4,10 @@ class DataSetException(Exception):
 
 class DataSet(object):
     def get_partitions(self):
+        """
+        Return a generator over all `Partition`s in this `DataSet`
+        """
         raise NotImplementedError()
-
-    def get_raw_data(self, slice_):
-        for partition in self.get_partitions():
-            if slice_.intersection_with(partition.slice).is_null():
-                continue
-            for tile in partition.get_tiles():
-                if tile.tile_slice.intersection_with(slice_):
-                    yield tile
 
     @property
     def dtype(self):
@@ -37,6 +32,21 @@ class Partition(object):
         return self.slice.shape
 
     def get_tiles(self):
+        """
+        Return a generator over all `DataTile`s contained in this Partition. Note that the DataSet
+        may reuse the internal buffer of a tile, so you should directly process the tile.
+
+        right:
+        >>> tile_iter = p.get_tiles()
+        >>> for tile in tile_iter:
+        >>>     do_stuff_with(tile)
+
+        wrong:
+        >>> tile_iter = p.get_tiles()
+        >>> some_tiles = [next(tile_iter), next(tile_iter), next(tile_iter)]
+        >>> do_stuff_with(some_tiles)
+        # the internal buffer of all three tiles may contain the same data at this point
+        """
         raise NotImplementedError()
 
     def get_locations(self):

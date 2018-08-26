@@ -43,6 +43,7 @@ cat > ./libertem.desktop <<EOF
 Type=Application
 Terminal=true
 Name=LiberTEM
+Comment=Open software platform for pixelated scanning transmission electron microscopy (STEM)
 Icon=libertem
 Exec=LiberTEM %u
 Categories=Science;

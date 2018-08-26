@@ -19,9 +19,13 @@ pip install "$BASE_DIR"/dist/*.whl || exit 1
 
 rm -rf ./conda/pkgs/
 
+mkdir -p ./share/icons/hicolor/
+
+cp -r "${BASE_DIR}/corporatedesign/logo/icons/"* ./share/icons/hicolor/
+
 cd .. || exit 1
 
-cp "${BASE_DIR}/corporatedesign/logo/LiberTEM logo icon-512.png" ./libertem-icon-512.png
+cp "${BASE_DIR}/corporatedesign/logo/icons/512x512/apps/libertem.png" .
 
 cat > ./AppRun <<EOF
 #!/bin/sh
@@ -39,7 +43,7 @@ cat > ./LiberTEM.desktop <<EOF
 Type=Application
 Terminal=true
 Name=LiberTEM
-Icon=libertem-icon-512
+Icon=libertem
 Exec=LiberTEM %u
 Categories=Science;
 StartupNotify=true

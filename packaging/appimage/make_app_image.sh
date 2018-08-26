@@ -19,11 +19,11 @@ conda create -n libertem python=3.6 -y || exit 1
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )
 
 
-mkdir -p ./share/metainfo/
-mkdir -p ./share/icons/hicolor/
+mkdir -p ./usr/share/metainfo/
+mkdir -p ./usr/share/icons/hicolor/
 
-cp "${BASE_DIR}/packaging/libertem.appdata.xml" ./share/metainfo/
-cp -r "${BASE_DIR}/corporatedesign/logo/icons/"* ./share/icons/hicolor/
+cp "${BASE_DIR}/packaging/libertem.appdata.xml" ./usr/share/metainfo/
+cp -r "${BASE_DIR}/corporatedesign/logo/icons/"* ./usr/share/icons/hicolor/
 
 cp "${BASE_DIR}/corporatedesign/logo/icons/512x512/apps/libertem.png" .
 

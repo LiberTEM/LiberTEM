@@ -18,7 +18,9 @@ conda create -n libertem python=3.6 -y || exit 1
 # Build wheel
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )
 
+pip install "$BASE_DIR"/dist/*.whl || exit 1
 
+mkdir -p ./usr/share/applications/
 mkdir -p ./usr/share/metainfo/
 mkdir -p ./usr/share/icons/hicolor/
 
@@ -47,6 +49,8 @@ Categories=Science;
 StartupNotify=true
 EOF
 
+cp ./libertem.desktop ./usr/share/applications/
+
 echo "AppDir created, creating AppImage..."
 
 cd .. || exit 1
@@ -54,6 +58,6 @@ cd .. || exit 1
 wget -c -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
 chmod a+x appimagetool-x86_64.AppImage
 export VERSION=$(git rev-parse --short HEAD) # linuxdeployqt uses this for naming the file
-./appimagetool-x86_64.AppImage AppDir -g
+./appimagetool-x86_64.AppImage AppDir -g --no-appstream
 
 echo "done"

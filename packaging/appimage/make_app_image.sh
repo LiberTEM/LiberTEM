@@ -36,7 +36,7 @@ EOF
 
 chmod a+x ./AppRun
 
-cat > ./LiberTEM.desktop <<EOF
+cat > ./libertem.desktop <<EOF
 [Desktop Entry]
 Type=Application
 Terminal=true

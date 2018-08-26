@@ -6,6 +6,14 @@ Installation
 Linux and Mac OS X
 ------------------
 
+AppImage
+~~~~~~~~
+
+On Linux, the easiest method is to use the provided AppImage. Just download the AppImage file from `our 
+releases page on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_, mark it executable and run
+the AppImage. See also the `official documentation <https://docs.appimage.org/user-guide/run-appimages.html>`_.
+Continue by reading the :doc:`usage documentation <usage>`.
+
 Creating an isolated Python environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -91,7 +99,7 @@ Activate the python environment (conda or virtualenv) and change to the newly cr
     (libertem) $ pip install -e .
 
 This should download the dependencies and install LiberTEM in the environment. Please
-continue by reading the :doc:`Usage documentation <usage>`. 
+continue by reading the :doc:`usage documentation <usage>`.
 
 Installing from PyPi
 ~~~~~~~~~~~~~~~~~~~~
@@ -101,9 +109,9 @@ TODO: write once we have our package published in pypi
 Windows
 -------
 
-The recommended method to install LiberTEM on Windows is based on Anaconda 64 bit with Python version 3.6 <https://www.anaconda.com/download/>. This installs a Python distribution. 
+The recommended method to install LiberTEM on Windows is based on `Anaconda 64 bit with Python version 3.6 <https://www.anaconda.com/download/>`_. This installs a Python distribution.
 
-For `installing from a git clone`_ you require a suitable git client, for example <https://desktop.github.com/>, <https://tortoisegit.org/>, or https://gitforwindows.org/. Clone the repository https://github.com/LiberTEM/LiberTEM.git in a folder of your choice.
+For `installing from a git clone`_ you require a suitable git client, for example `GitHub Desktop <https://desktop.github.com/>`_, `TortoiseGit <https://tortoisegit.org/>`_, or `git for windows <https://gitforwindows.org/>`_. Clone the repository https://github.com/LiberTEM/LiberTEM.git in a folder of your choice.
 
 From here on the installation and running of LiberTEM on Windows with the Anaconda Prompt is very similar to `Using conda`_ on Linux or Mac OS X.
 

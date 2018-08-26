@@ -4,6 +4,9 @@ cache: pip
 script:
   - tox
 
+install:
+  - pip install tox
+
 jobs:
   include:
     - stage: test

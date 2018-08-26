@@ -1,9 +1,6 @@
 language: python
 cache: pip
 
-before_script:
-  - sudo apt-get install appstream
-
 script:
   - tox
 

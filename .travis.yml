@@ -34,7 +34,7 @@ jobs:
         - bash <(curl -s https://codecov.io/bash) -f coverage.xml
         - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
         - find .
-        - bash upload.sh packaging/appimage/LiberTEM*.AppImage*
+        - bash -c "upload.sh packaging/appimage/LiberTEM*.AppImage*"
 
 branches:
   except:

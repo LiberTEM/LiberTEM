@@ -34,8 +34,6 @@ EOF
 
 chmod a+x ./AppRun
 
-rm ../$MC_NAME
-
 cat > ./LiberTEM.desktop <<EOF
 [Desktop Entry]
 Type=Application

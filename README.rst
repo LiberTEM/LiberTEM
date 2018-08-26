@@ -10,7 +10,7 @@
 .. _appveyor: https://ci.appveyor.com/project/sk1p/libertem
 
 
-LiberTEM is an open source platform for pixelated STEM.
+LiberTEM is an open source platform for pixelated scanning transmission electron microscopy (STEM).
 
 LiberTEM is in the early stages, so if you like to influence the direction this
 project is taking, or if you want to contribute, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_,

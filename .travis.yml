@@ -1,22 +1,17 @@
-language: python
-cache: pip
-matrix:
-  include:
-    - python: 3.6
-      env: TOXENV=py36
-    - python: 3.6
-      env: TOXENV=flake8
-    - python: 3.6
-      env: TOXENV=docs-deploy
-    - python: 3.7
-      env: TOXENV=py37
-      dist: xenial
-      sudo: true
-install:
-  - pip install tox
+language: cpp
+compiler: gcc
+sudo: require
+dist: trusty
+
 script:
-  - tox
+  - bash -ex packaging/appimage/make_app_image.sh
+  - ls -lh
+
 after_success:
-  - pwd
-  - ls -la
-  - bash <(curl -s https://codecov.io/bash) -f coverage.xml
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh LiberTEM*.AppImage*
+  
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/

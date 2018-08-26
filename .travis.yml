@@ -33,7 +33,7 @@ jobs:
       after_success:
         - bash <(curl -s https://codecov.io/bash) -f coverage.xml
         - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-        - bash upload.sh LiberTEM*.AppImage*
+        - bash upload.sh packaging/appimage/LiberTEM*.AppImage*
 
 branches:
   except:

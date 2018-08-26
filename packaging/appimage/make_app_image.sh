@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 BASE_DIR=$(dirname "$(readlink -f "${0}")")/../../
 mkdir -p AppDir
 
@@ -15,17 +16,14 @@ conda create -n libertem python=3.6 -y || exit 1
 # FIXME: install specific version (for example from pypi, or continuous build, ...)n s
 
 # Build wheel
-( cd "$BASE_DIR" ; python setup.py bdist_wheel )
+( cd "$BASE_DIR" && python setup.py bdist_wheel )
 
+
+mkdir -p ./share/metainfo/
 mkdir -p ./share/icons/hicolor/
 
+cp "${BASE_DIR}/packaging/libertem.appdata.xml" ./share/metainfo/
 cp -r "${BASE_DIR}/corporatedesign/logo/icons/"* ./share/icons/hicolor/
-
-mkdir -p ./share/icons/hicolor/
-
-cp -r "${BASE_DIR}/corporatedesign/logo/icons/"* ./share/icons/hicolor/
-
-cd .. || exit 1
 
 cp "${BASE_DIR}/corporatedesign/logo/icons/512x512/apps/libertem.png" .
 

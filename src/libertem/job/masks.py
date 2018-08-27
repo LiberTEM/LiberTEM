@@ -144,19 +144,32 @@ class ResultTile(object):
     def __repr__(self):
         return "<ResultTile for slice=%r>" % self.tile_slice
 
-    def _get_dest_slice(self):
+    def _get_dest_slice_3d(self, result_shape):
+        tile_slice = self.tile_slice
+        sy0 = tile_slice.origin[0]
+        sx0 = tile_slice.origin[1]
+
+        start_idx = sy0 * result_shape[2] + sx0
+        num_frames = tile_slice.shape[0] * tile_slice.shape[1]
+
+        return (
+            Ellipsis,
+            slice(start_idx, start_idx + num_frames),
+        )
+
+    def _get_dest_slice_4d(self):
         tile_slice = self.tile_slice.get()
+
         return (
             Ellipsis,
             tile_slice[0],
             tile_slice[1],
         )
 
-    @property
-    def reshaped_data(self):
+    def reshaped_data(self, flat_frames=True):
         """
         Reshapes the result from the flattened and interleaved version to a shape
-        that fits the result array (masks, y, x)
+        that fits the result array (masks, y, x) or (masks, num_frames)
         """
 
         num_masks = self.data.shape[1]
@@ -166,16 +179,28 @@ class ResultTile(object):
              for idx in range(num_masks)],
             axis=0,
         )
-        return deinterleaved.reshape(
-            num_masks,
-            self.tile_slice.shape[0],
-            self.tile_slice.shape[1],
-        )
+        if flat_frames:
+            return deinterleaved.reshape(
+                num_masks,
+                self.tile_slice.shape[0] * self.tile_slice.shape[1],
+            )
+        else:
+            return deinterleaved.reshape(
+                num_masks,
+                self.tile_slice.shape[0],
+                self.tile_slice.shape[1],
+            )
 
     @property
     def dtype(self):
         return self.data.dtype
 
     def copy_to_result(self, result):
-        result[self._get_dest_slice()] += self.reshaped_data
+        # is this tile contiguous on (num_masks, num_frames)?
+        if self.tile_slice.shape[0] == 1 or self.tile_slice.shape[1] == result.shape[2]:
+            s = result.shape
+            result_flat = result.reshape((s[0], s[1] * s[2]))
+            result_flat[self._get_dest_slice_3d(s)] += self.reshaped_data()
+        else:
+            result[self._get_dest_slice_4d()] += self.reshaped_data(flat_frames=False)
         return result

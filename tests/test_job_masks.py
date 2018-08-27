@@ -87,12 +87,12 @@ def test_copy_to_result():
     res_tile.copy_to_result(result)
     print(result)
 
-    dest_slice = res_tile._get_dest_slice()
+    dest_slice = res_tile._get_dest_slice_3d(result.shape)
     assert dest_slice[0] == Ellipsis
-    assert dest_slice[1] == slice(2, 3, None)
-    assert dest_slice[2] == slice(2, 6, None)
-
-    assert len(dest_slice) == 3
+    # actually let's not test the implementation details here:
+    # assert dest_slice[1] == slice(2, 3, None)
+    # assert dest_slice[2] == slice(2, 6, None)
+    # assert len(dest_slice) == 3
 
     # let's see if we can select the right slice:
     assert result[..., 2:3, 2:6].shape == (3, 1, 4)

@@ -2,6 +2,7 @@
 import os
 import re
 import glob
+import mmap
 import logging
 import itertools
 
@@ -16,6 +17,7 @@ log = logging.getLogger(__name__)
 
 HEADER_SIZE = 40
 BLOCK_SIZE = 0x5758
+DATA_SIZE = BLOCK_SIZE - HEADER_SIZE
 BLOCK_SHAPE = (930, 16)
 BLOCKS_PER_SECTOR_PER_FRAME = 32
 FIRST_FRAME_SCAN_SIZE = 400
@@ -36,14 +38,15 @@ def decode_uint12_le(inp, out):
         out[o] = a
         out[o + 1] = b
         o += 2
-    return out
 
 
 class K2FileSet:
-    def __init__(self, paths):
+    def __init__(self, paths, start_offsets=None):
         self.paths = paths
-        self.sectors = [Sector(fname, idx)
-                        for (idx, fname) in enumerate(paths)]
+        if start_offsets is None:
+            start_offsets = NUM_SECTORS * [0]
+        self.sectors = [Sector(fname, idx, initial_offset=start_offset)
+                        for ((idx, fname), start_offset) in zip(enumerate(paths), start_offsets)]
 
     def sync_sectors(self):
         for b in self.first_blocks():
@@ -146,6 +149,71 @@ class Sector:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
+    def read_stacked(self, scan_size, stackheight=16, dtype="float32"):
+        """
+        Reads `stackheight` blocks into a single buffer.
+        The blocks are read from consecutive frames, always
+        from the same coordinates inside the sector of the frame.
+
+        yields DataTiles of the shape (1, stackheight, 930, 16)
+        """
+        assert stackheight <= scan_size[1]
+        tileshape = (
+            1, stackheight
+        ) + BLOCK_SHAPE
+        num_frames = scan_size[0] * scan_size[1]
+        raw_data = mmap.mmap(
+            fileno=self.f.fileno(),
+            length=0,   # whole file
+            access=mmap.ACCESS_READ,
+        )
+
+        tile_buf = np.zeros(tileshape, dtype=dtype)
+        assert DATA_SIZE % 3 == 0
+        for outer_frame in range(0, num_frames, stackheight):
+            for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
+                offset = (
+                    self.first_block_offset +
+                    outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME +
+                    blockidx * BLOCK_SIZE
+                )
+                # end of the sector, calculate rest of stack:
+                if outer_frame + stackheight > num_frames:
+                    current_stackheight = num_frames - outer_frame
+                    current_tileshape = (
+                        1, current_stackheight
+                    ) + BLOCK_SHAPE
+                    tile_buf = np.zeros(current_tileshape, dtype=dtype)
+                else:
+                    current_stackheight = stackheight
+                    current_tileshape = tileshape
+                    tile_buf = np.zeros(current_tileshape, dtype=dtype)
+                for frame in range(current_stackheight):
+                    block_offset = (
+                        offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                    )
+                    input_start = block_offset + HEADER_SIZE
+                    input_end = block_offset + HEADER_SIZE + DATA_SIZE
+                    decode_uint12_le(
+                        inp=raw_data[input_start:input_end],
+                        out=tile_buf[0, frame].ravel()
+                    )
+                start_x = (self.idx + 1) * 256 - (16 * (blockidx % 16 + 1))
+                start_y = 930 * (blockidx // 16)
+                tile_slice = Slice(
+                    origin=(
+                        outer_frame // scan_size[1],
+                        outer_frame % scan_size[1],
+                        start_y,
+                        start_x,
+                    ),
+                    shape=current_tileshape,
+                )
+                yield DataTile(
+                    data=tile_buf,
+                    tile_slice=tile_slice
+                )
+
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset
 
@@ -220,7 +288,8 @@ class DataBlock:
 
     def readinto(self, out):
         out = out.reshape(930 * 16)
-        return decode_uint12_le(inp=self.pixel_data_raw, out=out).reshape(930, 16)
+        decode_uint12_le(inp=self.pixel_data_raw, out=out)
+        return out.reshape(930, 16)
 
     @property
     def pixel_data(self):
@@ -230,15 +299,14 @@ class DataBlock:
         self.readinto(arr)
         return arr.reshape(930, 16)
 
-    def copy_to_frame(self, frame, key=lambda self: self.pixel_data):
+    def copy_to_frame(self, frame):
         sector_width = 256
         x_offset = self.sector.idx * sector_width
         h = self.header
-        # FIXME: instead, use self.readinto(frame[...])
-        frame[
+        self.readinto(frame[
             h['pixel_y_start']:h['pixel_y_end'] + 1,
             h['pixel_x_start'] + x_offset:h['pixel_x_end'] + 1 + x_offset,
-        ] = key(self)
+        ])
 
     def __repr__(self):
         h = self.header
@@ -254,6 +322,7 @@ class K2ISDataSet(DataSet):
     def __init__(self, path, scan_size):
         self._path = path
         self._scan_size = tuple(scan_size)
+        self._start_offsets = None
 
     @property
     def dtype(self):
@@ -290,10 +359,20 @@ class K2ISDataSet(DataSet):
             ))
         return list(sorted(files))
 
+    def _cache_first_block_offsets(self, fs):
+        self._start_offsets = [
+            s.first_block_offset
+            for s in fs.sectors
+        ]
+
     def get_partitions(self):
-        fs = K2FileSet(self._files())
-        try:
+        if self._start_offsets is None:
+            fs = K2FileSet(self._files())
             fs.sync()
+            self._cache_first_block_offsets(fs)
+        else:
+            fs = K2FileSet(self._files(), start_offsets=self._start_offsets)
+        try:
             for s in fs.sectors:
                 yield K2ISPartition(
                     dataset=self,
@@ -316,11 +395,12 @@ class K2ISDataSet(DataSet):
 class K2ISPartition(Partition):
     # NOTE: for now, we just create one partition for each sector
     # FIXME: create subpartitions inside of the binary files
-    def __init__(self, path, index, offset, scan_size, *args, **kwargs):
+    def __init__(self, path, index, offset, scan_size, strategy='READ_STACKED', *args, **kwargs):
         self._path = path
         self._index = index
         self._offset = offset
         self._scan_size = scan_size
+        self._strategy = strategy
         super().__init__(*args, **kwargs)
 
     def _get_sector(self):
@@ -330,7 +410,26 @@ class K2ISPartition(Partition):
             initial_offset=self._offset
         )
 
-    def get_tiles(self):
+    def get_tiles(self, strat=None):
+        if strat is None:
+            strat = self._strategy
+        if strat == 'BLOCK_BY_BLOCK':
+            yield from self._get_tiles_tile_per_datablock()
+        elif strat == 'READ_STACKED':
+            yield from self._read_stacked()
+        else:
+            raise DataSetException("unknown strategy")
+
+    def _read_stacked(self):
+        s = self._get_sector()
+
+        try:
+            # TODO: stackheight parameter?
+            yield from s.read_stacked(scan_size=self._scan_size)
+        finally:
+            s.close()
+
+    def _get_tiles_tile_per_datablock(self):
         """
         yield one tile per underlying data block
         """
@@ -342,7 +441,7 @@ class K2ISPartition(Partition):
             blocks_to_read = (
                 BLOCKS_PER_SECTOR_PER_FRAME * scan[0] * scan[1]
             )
-            buf = np.zeros((1, 1) + BLOCK_SHAPE, dtype="uint16")
+            buf = np.zeros((1, 1) + BLOCK_SHAPE, dtype="float32")
             for block_idx, block in enumerate(itertools.islice(all_blocks, blocks_to_read)):
                 frame_idx = block_idx // BLOCKS_PER_SECTOR_PER_FRAME
                 scan_pos_y = frame_idx // scan[1]
@@ -356,7 +455,6 @@ class K2ISPartition(Partition):
                             sector_offset + h['pixel_x_start']),
                     shape=(1, 1) + BLOCK_SHAPE,
                 )
-                log.debug("tile_slice=%r", tile_slice)
                 block.readinto(buf)
                 yield DataTile(
                     data=buf,

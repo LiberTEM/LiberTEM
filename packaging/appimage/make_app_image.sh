@@ -19,7 +19,9 @@ conda create -n libertem python=3.6 -y || exit 1
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )
 
 pip install "$BASE_DIR"/dist/*.whl || exit 1
+pip install torch
 
+rm -r ./usr/pkgs/
 mkdir -p ./usr/share/applications/
 mkdir -p ./usr/share/metainfo/
 mkdir -p ./usr/share/icons/hicolor/
@@ -31,6 +33,9 @@ cp "${BASE_DIR}/corporatedesign/logo/icons/512x512/apps/libertem.png" .
 
 cat > ./AppRun <<\EOF
 #!/bin/sh
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
 HERE=$(dirname "$(readlink -f "${0}")")
 export PATH="${HERE}"/usr/bin:$PATH
 python "$HERE/usr/bin/libertem-server" "$@"

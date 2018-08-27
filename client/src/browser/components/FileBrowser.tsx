@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
 import { FixedSizeList as List } from 'react-window';
-import { Button } from "semantic-ui-react";
+import { Button, Header, Segment } from "semantic-ui-react";
 import { DirectoryListingDetails } from "../../messages";
 import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
@@ -19,7 +19,6 @@ const mapStateToProps = (state: RootReducer) => {
 
 const mapDispatchToProps = (dispatch: Dispatch) => {
     return {
-        list: (path: string) => dispatch(browserActions.Actions.list(path)),
         cancel: () => dispatch(browserActions.Actions.cancel()),
     };
 }
@@ -49,6 +48,7 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
+
 const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
@@ -58,13 +58,41 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
         return entries[index](style)
     };
     return (
-        <>
-            <p>{path}</p>
-            <List ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
-                {entryFn}
-            </List>
-            <Button onClick={cancel}>Cancel</Button>
-        </>
+        <Segment.Group>
+            <Segment.Group horizontal={true}>
+                <Segment>
+                    <Header as="h2">Open dataset</Header>
+                </Segment>
+                {
+                    /* 
+                type DropdownOptions = Array<{
+                    text: string,
+                    value: string,
+                }>;
+                const recentFiles: DropdownOptions = [
+                ];
+                <Segment style={{ flexShrink: 1, flexGrow: 0 }}>
+                    <Dropdown text="Recent" icon="ellipsis vertical" floating={true} labeled={true} button={true} className='icon'>
+                        <Dropdown.Menu>
+                            <Dropdown.Header content="recent datasets" />
+                            {recentFiles.map(option => <Dropdown.Item key={option.value} />)}
+                        </Dropdown.Menu>
+                    </Dropdown>
+                </Segment>
+                    */
+                }
+
+            </Segment.Group>
+            <Segment>
+                <p>Path: {path}</p>
+                <List ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
+                    {entryFn}
+                </List>
+            </Segment>
+            <Segment>
+                <Button onClick={cancel}>Cancel</Button>
+            </Segment>
+        </Segment.Group>
     );
 }
 

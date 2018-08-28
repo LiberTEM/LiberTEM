@@ -149,7 +149,7 @@ class Sector:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
-    def read_stacked(self, scan_size, stackheight=16, dtype="float32"):
+    def read_stacked(self, scan_size, stackheight=16, dtype="float32", crop_to=None):
         """
         Reads `stackheight` blocks into a single buffer.
         The blocks are read from consecutive frames, always
@@ -188,16 +188,6 @@ class Sector:
                     current_stackheight = stackheight
                     current_tileshape = tileshape
                     tile_buf = np.zeros(current_tileshape, dtype=dtype)
-                for frame in range(current_stackheight):
-                    block_offset = (
-                        offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
-                    )
-                    input_start = block_offset + HEADER_SIZE
-                    input_end = block_offset + HEADER_SIZE + DATA_SIZE
-                    decode_uint12_le(
-                        inp=raw_data[input_start:input_end],
-                        out=tile_buf[0, frame].ravel()
-                    )
                 start_x = (self.idx + 1) * 256 - (16 * (blockidx % 16 + 1))
                 start_y = 930 * (blockidx // 16)
                 tile_slice = Slice(
@@ -209,6 +199,20 @@ class Sector:
                     ),
                     shape=current_tileshape,
                 )
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
+                for frame in range(current_stackheight):
+                    block_offset = (
+                        offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                    )
+                    input_start = block_offset + HEADER_SIZE
+                    input_end = block_offset + HEADER_SIZE + DATA_SIZE
+                    decode_uint12_le(
+                        inp=raw_data[input_start:input_end],
+                        out=tile_buf[0, frame].ravel()
+                    )
                 yield DataTile(
                     data=tile_buf,
                     tile_slice=tile_slice
@@ -410,22 +414,22 @@ class K2ISPartition(Partition):
             initial_offset=self._offset
         )
 
-    def get_tiles(self, strat=None):
+    def get_tiles(self, crop_to=None, strat=None):
         if strat is None:
             strat = self._strategy
         if strat == 'BLOCK_BY_BLOCK':
             yield from self._get_tiles_tile_per_datablock()
         elif strat == 'READ_STACKED':
-            yield from self._read_stacked()
+            yield from self._read_stacked(crop_to=crop_to)
         else:
             raise DataSetException("unknown strategy")
 
-    def _read_stacked(self):
+    def _read_stacked(self, crop_to=None):
         s = self._get_sector()
 
         try:
             # TODO: stackheight parameter?
-            yield from s.read_stacked(scan_size=self._scan_size)
+            yield from s.read_stacked(scan_size=self._scan_size, crop_to=crop_to)
         finally:
             s.close()
 

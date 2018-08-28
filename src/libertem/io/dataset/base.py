@@ -31,7 +31,7 @@ class Partition(object):
     def shape(self):
         return self.slice.shape
 
-    def get_tiles(self):
+    def get_tiles(self, crop_to=None):
         """
         Return a generator over all `DataTile`s contained in this Partition. Note that the DataSet
         may reuse the internal buffer of a tile, so you should directly process the tile.
@@ -46,6 +46,13 @@ class Partition(object):
         >>> some_tiles = [next(tile_iter), next(tile_iter), next(tile_iter)]
         >>> do_stuff_with(some_tiles)
         # the internal buffer of all three tiles may contain the same data at this point
+
+
+        Parameters
+        ----------
+
+        crop_to : Slice or None
+            crop to this slice. datasets may impose additional limits to the shape of the slice
         """
         raise NotImplementedError()
 

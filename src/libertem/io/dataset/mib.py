@@ -192,17 +192,23 @@ class MIBPartition(Partition):
         super().__init__(*args, **kwargs)
         assert all(s > 0 for s in self.shape), "invalid shape (%r)" % (self.shape,)
 
-    def get_tiles(self):
+    def get_tiles(self, crop_to=None):
+        if crop_to is not None:
+            if crop_to.shape[2:] != self.dataset.shape[2:]:
+                raise DataSetException("MIBDataSet only supports whole-frame crops for now")
         stackheight = self.tileshape[1]
 
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         num_tiles = self.partfile.fields['num_images'] // stackheight
 
         for t in range(num_tiles):
-            self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data)
-
             tile_slice = self.slice.subslice_from_offset(offset=t * stackheight,
                                                          length=stackheight)
+            if crop_to is not None:
+                intersection = tile_slice.intersection_with(crop_to)
+                if intersection.is_null():
+                    continue
+            self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data)
             yield DataTile(data=data, tile_slice=tile_slice)
 
     def get_locations(self):

@@ -38,10 +38,8 @@ class PickFrameTask(Task):
 
     def __call__(self):
         result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
-        for data_tile in self.partition.get_tiles():
+        for data_tile in self.partition.get_tiles(crop_to=self._slice):
             intersection = data_tile.tile_slice.intersection_with(self._slice)
-            if intersection.is_null():
-                continue
             shifted = intersection.shift(data_tile.tile_slice)
             result[
                 self._get_dest_slice(intersection)

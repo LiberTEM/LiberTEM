@@ -84,11 +84,18 @@ class BinaryHDFSPartition(Partition):
         self.tileshape = tileshape
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self):
+    def get_tiles(self, crop_to=None):
+        if crop_to is not None:
+            if crop_to.shape[2:] != self.dataset.shape[2:]:
+                raise DataSetException("BinaryHDFSDataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         subslices = list(self.slice.subslices(shape=self.tileshape))
         with self.dataset.get_fs().open(self.path, 'rb') as f:
             for tile_slice in subslices:
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
                 f.read(length=data.nbytes, out_buffer=data)
                 yield DataTile(data=data, tile_slice=tile_slice)
 

@@ -505,7 +505,7 @@ class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
         async for future, result in dd.as_completed(futures, with_results=True):
             for tile in result:
                 tile.copy_to_result(full_result)
-        log.info("picking done, encoding image (dtype=%s)", full_result.dtype)
+        log.info("picking %d/%d done, encoding image (dtype=%s)", x, y, full_result.dtype)
         visualized = await run_blocking(
             visualize_simple,
             full_result,
@@ -515,7 +515,7 @@ class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
             encode_image,
             visualized
         )
-        log.info("image encoded, sending response")
+        log.info("image %d/%d encoded, sending response", x, y)
         return image.read()
 
     def set_max_expires(self):

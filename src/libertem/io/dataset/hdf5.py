@@ -68,11 +68,18 @@ class H5Partition(Partition):
         self.tileshape = tileshape
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self):
+    def get_tiles(self, crop_to=None):
+        if crop_to is not None:
+            if crop_to.shape[2:] != self.dataset.shape[2:]:
+                raise DataSetException("H5DataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         with self.dataset.get_h5ds() as dataset:
             subslices = list(self.slice.subslices(shape=self.tileshape))
             for tile_slice in subslices:
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
                 if tile_slice.shape != self.tileshape:
                     # at the border, can't reuse buffer
                     # hmm. aren't there only like 3 different shapes at the border?

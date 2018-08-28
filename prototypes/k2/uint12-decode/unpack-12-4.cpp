@@ -1,8 +1,6 @@
 #include <inttypes.h>
 #include <string.h>
-
-#define CHUNK_T uint32_t
-#define INPUT_T uint32_t
+#include "harness.h"
 
 constexpr int gcd(int a, int b)
 {
@@ -123,6 +121,8 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
     // TODO handle unaligned rest of input here
 }
 
+/*
 int main(){
     return gcd(12, 32);
 }
+*/

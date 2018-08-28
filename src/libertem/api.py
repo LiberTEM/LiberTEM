@@ -37,7 +37,9 @@ class Context:
             a subclass of DataSet
         """
         # delegate to libertem.io.dataset.load:
-        return load(filetype, *args, **kwargs)
+        ds = load(filetype, *args, **kwargs)
+        ds.check_valid()
+        return ds
 
     def create_mask_job(self, factories, dataset):
         """

@@ -42,25 +42,32 @@ blocks so that the compiler can recognize and vectorize the pattern.
 
 The conversion gets more complicated with the endian-ness of input data and CPU interpretation. Since x86
 CPUs are little-endian, i.e. have the lowest order byte at the lowest address in a data word, the bit significance
-in a 32 bit uint is 7 6 5 4 3 2 1 0 | 15 14 13 12 11 10 9 8 | 23 22 21 20 19 18 17 16 | 31 30 29 28 27 26 25 24, while
-the input pattern follows 11 10 9 8 7 6 5 4 | 3 2 1 0 - 11 10 9 8 | 7 6 5 4 3 2 1 0 and so on. 
+in a 32 bit uint is 7 6 5 4 3 2 1 0 | 15 14 13 12 11 10 9 8 | 23 22 21 20 19 18 17 16 | 31 30 29 28 27 26 25 24.
+The input data of the K2 is little endian as well, following 
+a7 a6 a5 a4 a3 a2 a1 a0 | b3 b2 b1 b0 a11 a10 a9 a8 | b11 b10 b9 b8 b7 b6 b5 b4 and so on. 
 If we want good performance and use SIMD instructions, the idea is to read the input data aligned as 
-uint32 or uint64. Unfortunately, that means the various bits of the input stream have to 
+uint32 or uint64. On a LITTLE-ENDIAN machine, the 12 bit portions can be packed and unpacked with relatively simple 
+masking and shifting operations. On a big endian machine, the various bits of the input stream have to 
 be fished out in smaller units using AND with a mask, shifted, and finally ORd their appropriate 
 place in the uint16 output word. That is very much possible with SIMD instructions, but 
 hard to understand for a human. 
 
-The Python code pack-12.py and various C/C++ versions contain code that calculate the appropriate indices,
-shifts and masks to map every bit of an input block to their appropriate place in the output sequence. 
-pack-12.py, unpack-12-7.cpp and unpack-12-4.cpp contain code that can cover the general case,
-i.e. arbitrary combinations of input bit length and working registers. This code is indeed 
+The Jupyter notebook encode_decode.ipynb contains code to calculate the appropriate indices,
+shifts and masks to map every bit of an input block to their appropriate place in the output sequence
+for all bit lengths and all permutations of big and little endian. For verification and as a sample,
+a hand-written example to encode and decode a block of 12 bit little-endian uints on a little-endian
+machine is included in the notebook.
+
+unpack-12-7.cpp and unpack-12-4.cpp contain code that can cover the general case for processing
+big endian data on a little endian machine, i.e. arbitrary combinations of input bit length and 
+working registers for this endian-ness. This code is indeed 
 vectorized by gcc. However, this is likely not optimal yet. In many cases several single-bit 
 operations can be ORd together when they have same indices and shifts, and only differ by 
-their mask bit. The Python code builds an optimized list of operations with combined masks for that purpose.
-In the compiled version of unpack-12-7.cpp and unpack-12-4.cpp, there was no indication that the
+their mask bit. In the compiled version of unpack-12-7.cpp and unpack-12-4.cpp, there was no indication that the
 optimizer recognized that several operations can be grouped -- but that's not known for sure. 
-For that reason versions with hand-written code that uses the optimized sequence for 12 bit 
-calculated with the Python version were written. It remains to be tested which version is 
+
+For that reason versions with hand-written code that uses the optimized sequence for 12 bit big-endian
+on little-endian calculated with the Python version were written. It remains to be tested which version is 
 actually faster, in the end.
 
 General considerations for optimizer-friendly code

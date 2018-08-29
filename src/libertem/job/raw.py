@@ -29,17 +29,14 @@ class PickFrameTask(Task):
         self._slice = slice_
 
     def _get_dest_slice(self, intersection):
-        tile_slice = intersection.get()
-        return (
-            Ellipsis,
-            tile_slice[2],
-            tile_slice[3],
-        )
+        # shift intersection to be relative to the selected slice:
+        return intersection.shift(self._slice).get()
 
     def __call__(self):
         result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
         for data_tile in self.partition.get_tiles(crop_to=self._slice):
             intersection = data_tile.tile_slice.intersection_with(self._slice)
+            # shift to data_tile relative coordinates:
             shifted = intersection.shift(data_tile.tile_slice)
             result[
                 self._get_dest_slice(intersection)

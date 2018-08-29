@@ -1,6 +1,8 @@
 #include <inttypes.h>
 #include <string.h>
-#include "harness.h"
+
+#define CHUNK_T uint32_t
+#define INPUT_T uint32_t
 
 constexpr int gcd(int a, int b)
 {
@@ -88,13 +90,12 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
     
     for (int block = 0; block < blocks; block++) {
         CHUNK_T chunk;
+        CHUNK_T chunk2;
         CHUNK_T tmp;
         CHUNK_T out_tmp = 0;
         int source_index;
         int target_index;
         INPUT_T loopbuffer[middle_loop * inputstride];
-        /* Process words from the input buffer in one loop.
-           Didn't look so good, no idea why. */
         for (int middle = 0; middle < middle_loop; middle++) {
             const int offset = block*blocksize + middle*work_bytes;
             /* input, output 0, 0 */
@@ -102,58 +103,58 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
             target_index = middle*inputstride + 0;
             chunk = *( CHUNK_T*)(inp + source_index);
             loopbuffer[target_index] = decode_op(chunk, -4, 0xff0) | decode_op(chunk, 12, 0xf);
-        
+        }
+        for (int middle = 0; middle < middle_loop; middle++) {
+            const int offset = block*blocksize + middle*work_bytes;
             /* input, output 0, 1 */
             source_index = offset + 0*work_bytes;
             target_index = middle*inputstride + 1;
             loopbuffer[target_index] = decode_op(chunk, 0, 0xf00) | decode_op(chunk, 16, 0xff);
-        
+        }
+        for (int middle = 0; middle < middle_loop; middle++) {
+            const int offset = block*blocksize + middle*work_bytes;
             /* input, output 0, 2 */
             source_index = offset + 0*work_bytes;
             target_index = middle*inputstride + 2;
             chunk = *( CHUNK_T*)(inp + source_index);
-            loopbuffer[target_index] = decode_op(chunk, 20, 0xff0);
+            chunk2 = *( CHUNK_T*)(inp + source_index + 1*work_bytes);
+            loopbuffer[target_index] = decode_op(chunk, 20, 0xff0) | decode_op(chunk2, 4, 0xf);
         }
         for (int middle = 0; middle < middle_loop; middle++) {
             const int offset = block*blocksize + middle*work_bytes;
-            /* input, output 1, 2 */
-            source_index = offset + 1*work_bytes;
-            target_index = middle*inputstride + 2;
-            chunk = *( CHUNK_T*)(inp + source_index);
-            loopbuffer[target_index] |= decode_op(chunk, 4, 0xf);
-        
             /* input, output 1, 3 */
             source_index = offset + 1*work_bytes;
             target_index = middle*inputstride + 3;
             chunk = *( CHUNK_T*)(inp + source_index);
             loopbuffer[target_index] = decode_op(chunk, -8, 0xf00) | decode_op(chunk, 8, 0xff);
-        
+        }  
+        for (int middle = 0; middle < middle_loop; middle++) {
+            const int offset = block*blocksize + middle*work_bytes;
             /* input, output 1, 4 */
             source_index = offset + 1*work_bytes;
             target_index = middle*inputstride + 4;
             chunk = *( CHUNK_T*)(inp + source_index);
             loopbuffer[target_index] = decode_op(chunk, 12, 0xff0) | decode_op(chunk, 28, 0xf);
-        
+        }
+        for (int middle = 0; middle < middle_loop; middle++) {
+            const int offset = block*blocksize + middle*work_bytes;
             /* input, output 1, 5 */
             source_index = offset + 1*work_bytes;
             target_index = middle*inputstride + 5;
             chunk = *( CHUNK_T*)(inp + source_index);
-            loopbuffer[target_index] = decode_op(chunk, 16, 0xf00);
+            chunk2 = *( CHUNK_T*)(inp + source_index + 2*work_bytes);
+            loopbuffer[target_index] = decode_op(chunk, 16, 0xf00) | decode_op(chunk2, 0, 0xff);
         }
         for (int middle = 0; middle < middle_loop; middle++) {
             const int offset = block*blocksize + middle*work_bytes;
-            /* input, output 2, 5 */
-            source_index = offset + 2*work_bytes;
-            target_index = middle*inputstride + 5;
-            chunk = *( CHUNK_T*)(inp + source_index);
-            loopbuffer[target_index] |= decode_op(chunk, 0, 0xff);
-        
             /* input, output 2, 6 */
             source_index = offset + 2*work_bytes;
             target_index = middle*inputstride + 6;
             chunk = *( CHUNK_T*)(inp + source_index);
             loopbuffer[target_index] = decode_op(chunk, 4, 0xff0) | decode_op(chunk, 20, 0xf);
-        
+        }
+        for (int middle = 0; middle < middle_loop; middle++) {
+            const int offset = block*blocksize + middle*work_bytes;
             /* input, output 2, 7 */
             source_index = offset + 2*work_bytes;
             target_index = middle*inputstride + 7;            
@@ -169,8 +170,6 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
     // TODO handle unaligned rest of input here
 }
 
-/*
 int main(){
     return gcd(12, 32);
 }
-*/

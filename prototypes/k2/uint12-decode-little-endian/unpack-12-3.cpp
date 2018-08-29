@@ -1,6 +1,8 @@
 #include <inttypes.h>
 #include <string.h>
-#include "harness.h"
+
+#define CHUNK_T uint32_t
+#define INPUT_T uint32_t
 
 constexpr int gcd(int a, int b)
 {
@@ -92,28 +94,58 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
         CHUNK_T out_tmp = 0;
         int source_index;
         int target_index;
-        INPUT_T loopbuffer_out[middle_loop * inputstride];
-        CHUNK_T loopbuffer_in[middle_loop * workstride];
-        for (int i = 0; i < middle_loop * workstride; i++) {
-            loopbuffer_in[i] = *( CHUNK_T*)(inp + block*blocksize + i);
-        }
-        for (int i = 0; i < middle_loop * inputstride; i++) {
-            loopbuffer_out[i] = 0;
-        }
+        INPUT_T loopbuffer[middle_loop * inputstride];
+        /* Process an entire block in one go. The code of the inner loop is long.
+           Cache-friendlyness? */
         for (int middle = 0; middle < middle_loop; middle++) {
-            /* general version that shifts each bit separately.
-               TODO check if operations are grouped; check efficiency.
-               This might actually be faster than grouping... 
-               It is definitely prettier! */
-            for (int bit = 0; bit < total_bits; bit++) {
-                const op_code op = op_little(bits, worksize, bytesize, bit);
-                const int target_index = middle*inputstride + op.input_index;
-                const int source_index = middle*workstride + op.output_index;
-                loopbuffer_out[target_index] |= decode_op(loopbuffer_in[source_index], op.net_shift, op.mask);
-            }
+            const int offset = block*blocksize + middle*work_bytes;
+            /* input, output 0, 0 */
+            source_index = offset + 0*work_bytes;
+            target_index = middle*inputstride + 0;
+            chunk = *( CHUNK_T*)(inp + source_index);
+            loopbuffer[target_index] = decode_op(chunk, -4, 0xff0) | decode_op(chunk, 12, 0xf);
+
+            /* input, output 0, 1 */
+            target_index = middle*inputstride + 1;
+            loopbuffer[target_index] = decode_op(chunk, 0, 0xf00) | decode_op(chunk, 16, 0xff);
+
+            
+            /* input, output 0, 2 */
+            target_index = middle*inputstride + 2;
+            out_tmp = decode_op(chunk, 20, 0xff0);
+
+            /* input, output 1, 2 */
+            source_index = offset + 1*work_bytes;
+            chunk = *( CHUNK_T*)(inp + source_index);
+            loopbuffer[target_index] = out_tmp | decode_op(chunk, 4, 0xf);
+            
+            /* input, output 1, 3 */
+            target_index = middle*inputstride + 3;
+            loopbuffer[target_index] = decode_op(chunk, -8, 0xf00) | decode_op(chunk, 8, 0xff);
+            
+            /* input, output 1, 4 */
+            target_index = middle*inputstride + 4;
+            loopbuffer[target_index] = decode_op(chunk, 12, 0xff0) | decode_op(chunk, 28, 0xf);
+            
+            /* input, output 1, 5 */
+            target_index = middle*inputstride + 5;
+            out_tmp = decode_op(chunk, 16, 0xf00);
+
+            /* input, output 2, 5 */
+            source_index = offset + 2*work_bytes;
+            chunk = *( CHUNK_T*)(inp + source_index);
+            loopbuffer[target_index] = out_tmp | decode_op(chunk, 0, 0xff);
+            
+            /* input, output 2, 6 */
+            target_index = middle*inputstride + 6;
+            loopbuffer[target_index] = decode_op(chunk, 4, 0xff0) | decode_op(chunk, 20, 0xf);
+            
+            /* input, output 2, 7 */
+            target_index = middle*inputstride + 7;
+            loopbuffer[target_index] = decode_op(chunk, 8, 0xf00) | decode_op(chunk, 24, 0xff);
         }
         for (int i = 0; i < middle_loop * inputstride; i++){
-            out[block*middle_loop * inputstride + i] = loopbuffer_out[i];
+            out[block*middle_loop * inputstride + i] = loopbuffer[i];
         }
     }
     
@@ -121,8 +153,8 @@ void decode_uint12(const int size, char* __restrict__ inp, INPUT_T* __restrict__
     // TODO handle unaligned rest of input here
 }
 
-/*
 int main(){
+    /* Test if gcd is evaluated at compile time.
+       This should become the number 4 in the assembly. */
     return gcd(12, 32);
 }
-*/

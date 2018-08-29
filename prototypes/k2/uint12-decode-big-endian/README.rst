@@ -42,7 +42,7 @@ blocks so that the compiler can recognize and vectorize the pattern.
 
 The conversion gets more complicated with the endian-ness of input data and CPU interpretation. Since x86
 CPUs are little-endian, i.e. have the lowest order byte at the lowest address in a data word, the bit significance
-in a 32 bit uint is 7 6 5 4 3 2 0 | 15 14 13 12 11 10 9 8 | 23 22 21 20 19 18 17 16 | 31 30 29 28 27 26 25 24, while
+in a 32 bit uint is 7 6 5 4 3 2 1 0 | 15 14 13 12 11 10 9 8 | 23 22 21 20 19 18 17 16 | 31 30 29 28 27 26 25 24, while
 the input pattern follows 11 10 9 8 7 6 5 4 | 3 2 1 0 - 11 10 9 8 | 7 6 5 4 3 2 1 0 and so on. 
 If we want good performance and use SIMD instructions, the idea is to read the input data aligned as 
 uint32 or uint64. Unfortunately, that means the various bits of the input stream have to 

@@ -238,6 +238,7 @@ class Sector:
                         data=tile_buf,
                         tile_slice=tile_slice
                     )
+        raw_data.close()
 
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset

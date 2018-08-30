@@ -18,6 +18,7 @@ const AnalysisItem: React.SFC<AnalysisItemProps> = ({ analysis, dataset, title, 
     const { shape } = dataset.params;
     const resultWidth = shape[1];
     const resultHeight = shape[0];
+    const pickCoords = analysis.preview.mode === "AVERAGE" ? null : `Pick: x=${analysis.preview.pick.x}, y=${analysis.preview.pick.y}`;
 
     return (
         <>
@@ -31,7 +32,7 @@ const AnalysisItem: React.SFC<AnalysisItemProps> = ({ analysis, dataset, title, 
                         <Grid.Column>
                             {children}
                             <PreviewModeSelector analysis={analysis} />
-                            <p>{subtitle}</p>
+                            <p>{subtitle} {pickCoords}</p>
                         </Grid.Column>
                         <Grid.Column>
                             <ResultList analysis={analysis.id} job={currentJob} width={resultWidth} height={resultHeight} />

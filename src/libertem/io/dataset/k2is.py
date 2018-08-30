@@ -345,11 +345,10 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
-    def __init__(self, path, scan_size, partitions_per_file=3):
+    def __init__(self, path, scan_size):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._start_offsets = None
-        self._partitions_per_file = partitions_per_file
 
     @property
     def dtype(self):
@@ -405,11 +404,18 @@ class K2ISDataSet(DataSet):
             fs = K2FileSet(self._files(), start_offsets=self._start_offsets)
         return fs
 
+    def _get_partitions_per_file(self):
+        sector0_fname = self._files()[0]
+        stat = os.stat(sector0_fname)
+        size = stat.st_size
+        # let's try to aim for 512MB per partition
+        return size // (512*1024*1024)
+
     def get_partitions(self):
         fs = self._get_fileset()
         rows, cols = self._scan_size
         num_frames = rows * cols
-        approx_f_per_part = num_frames // self._partitions_per_file
+        approx_f_per_part = num_frames // self._get_partitions_per_file()
         f_per_part = (approx_f_per_part // cols) * cols
         try:
             for s in fs.sectors:

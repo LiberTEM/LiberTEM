@@ -137,10 +137,20 @@ class Sector:
     def read(self, size):
         return self.f.read(size)
 
-    def get_slice(self, scan_size):
+    def get_slice(self, scan_size, start, stop):
+        # we are working on full rows here:
+        assert start % scan_size[1] == 0
+        assert (stop - start) % scan_size[1] == 0
         return Slice(
-            origin=(0, 0, 0, SECTOR_SIZE[1] * self.idx),
-            shape=scan_size + SECTOR_SIZE
+            origin=(
+                start // scan_size[1],
+                0,
+                0, SECTOR_SIZE[1] * self.idx
+            ),
+            shape=(
+                (stop - start) // scan_size[1],
+                scan_size[1],
+            ) + SECTOR_SIZE
         )
 
     def get_blocks(self):
@@ -149,74 +159,85 @@ class Sector:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
-    def read_stacked(self, scan_size, stackheight=16, dtype="float32", crop_to=None):
+    def read_stacked(self, scan_width, total_frames, num_frames, start_at_frame=0,
+                     stackheight=16,
+                     dtype="float32", crop_to=None):
         """
         Reads `stackheight` blocks into a single buffer.
         The blocks are read from consecutive frames, always
         from the same coordinates inside the sector of the frame.
 
         yields DataTiles of the shape (1, stackheight, 930, 16)
+        (different tiles at the borders may be yielded if the stackheight doesn't divide
+        the scan_width)
         """
-        assert stackheight <= scan_size[1]
+        assert stackheight <= scan_width
+        assert start_at_frame % scan_width == 0
+        assert num_frames % scan_width == 0, "read_stacked should be called for whole scan rows"
         tileshape = (
             1, stackheight
         ) + BLOCK_SHAPE
-        num_frames = scan_size[0] * scan_size[1]
         raw_data = mmap.mmap(
             fileno=self.f.fileno(),
             length=0,   # whole file
             access=mmap.ACCESS_READ,
         )
 
-        tile_buf = np.zeros(tileshape, dtype=dtype)
+        tile_buf_full = np.zeros(tileshape, dtype=dtype)
         assert DATA_SIZE % 3 == 0
-        for outer_frame in range(0, num_frames, stackheight):
-            for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
-                offset = (
-                    self.first_block_offset +
-                    outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME +
-                    blockidx * BLOCK_SIZE
-                )
-                # end of the sector, calculate rest of stack:
-                if outer_frame + stackheight > num_frames:
-                    current_stackheight = num_frames - outer_frame
-                    current_tileshape = (
-                        1, current_stackheight
-                    ) + BLOCK_SHAPE
-                    tile_buf = np.zeros(current_tileshape, dtype=dtype)
-                else:
-                    current_stackheight = stackheight
-                    current_tileshape = tileshape
-                    tile_buf = np.zeros(current_tileshape, dtype=dtype)
-                start_x = (self.idx + 1) * 256 - (16 * (blockidx % 16 + 1))
-                start_y = 930 * (blockidx // 16)
-                tile_slice = Slice(
-                    origin=(
-                        outer_frame // scan_size[1],
-                        outer_frame % scan_size[1],
-                        start_y,
-                        start_x,
-                    ),
-                    shape=current_tileshape,
-                )
-                if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                for frame in range(current_stackheight):
-                    block_offset = (
-                        offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+        log.debug("starting read_stacked with start_at_frame=%d, num_frames=%d, stackheight=%d",
+                  start_at_frame, num_frames, stackheight)
+        for row in range(start_at_frame // scan_width, (start_at_frame + num_frames) // scan_width):
+            for outer_frame in range(row * scan_width, (row + 1) * scan_width, stackheight):
+
+                # log.debug("outer_frame=%d", outer_frame)
+                for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
+                    offset = (
+                        self.first_block_offset +
+                        outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME +
+                        blockidx * BLOCK_SIZE
                     )
-                    input_start = block_offset + HEADER_SIZE
-                    input_end = block_offset + HEADER_SIZE + DATA_SIZE
-                    decode_uint12_le(
-                        inp=raw_data[input_start:input_end],
-                        out=tile_buf[0, frame].ravel()
+                    # end of the row, calculate rest of stack:
+                    if outer_frame % scan_width > (outer_frame + stackheight) % scan_width:
+                        end_frame = (row + 1) * scan_width  # last frame of the row
+                        current_stackheight = end_frame - outer_frame
+                        current_tileshape = (
+                            1, current_stackheight
+                        ) + BLOCK_SHAPE
+                        tile_buf = np.zeros(current_tileshape, dtype=dtype)
+                    else:
+                        current_stackheight = stackheight
+                        current_tileshape = tileshape
+                        tile_buf = tile_buf_full
+                    start_x = (self.idx + 1) * 256 - (16 * (blockidx % 16 + 1))
+                    start_y = 930 * (blockidx // 16)
+                    tile_slice = Slice(
+                        origin=(
+                            outer_frame // scan_width,
+                            outer_frame % scan_width,
+                            start_y,
+                            start_x,
+                        ),
+                        shape=current_tileshape,
                     )
-                yield DataTile(
-                    data=tile_buf,
-                    tile_slice=tile_slice
-                )
+                    if crop_to is not None:
+                        intersection = tile_slice.intersection_with(crop_to)
+                        if intersection.is_null():
+                            continue
+                    for frame in range(current_stackheight):
+                        block_offset = (
+                            offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                        )
+                        input_start = block_offset + HEADER_SIZE
+                        input_end = block_offset + HEADER_SIZE + DATA_SIZE
+                        decode_uint12_le(
+                            inp=raw_data[input_start:input_end],
+                            out=tile_buf[0, frame].ravel()
+                        )
+                    yield DataTile(
+                        data=tile_buf,
+                        tile_slice=tile_slice
+                    )
 
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset
@@ -323,10 +344,11 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
-    def __init__(self, path, scan_size):
+    def __init__(self, path, scan_size, partitions_per_file=3):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._start_offsets = None
+        self._partitions_per_file = partitions_per_file
 
     @property
     def dtype(self):
@@ -337,7 +359,11 @@ class K2ISDataSet(DataSet):
         return self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
 
     def check_valid(self):
-        # TODO
+        try:
+            fs = self._get_fileset()
+            fs.sync()
+        except Exception as e:
+            raise DataSetException("failed to load dataset: %s" % e)
         return True
 
     def _pattern(self):
@@ -369,24 +395,42 @@ class K2ISDataSet(DataSet):
             for s in fs.sectors
         ]
 
-    def get_partitions(self):
+    def _get_fileset(self):
         if self._start_offsets is None:
             fs = K2FileSet(self._files())
             fs.sync()
             self._cache_first_block_offsets(fs)
         else:
             fs = K2FileSet(self._files(), start_offsets=self._start_offsets)
+        return fs
+
+    def get_partitions(self):
+        fs = self._get_fileset()
+        rows, cols = self._scan_size
+        num_frames = rows * cols
+        approx_f_per_part = num_frames // self._partitions_per_file
+        f_per_part = (approx_f_per_part // cols) * cols
         try:
             for s in fs.sectors:
-                yield K2ISPartition(
-                    dataset=self,
-                    dtype=self.dtype,
-                    partition_slice=s.get_slice(self._scan_size),
-                    path=s.fname,
-                    index=s.idx,
-                    offset=s.first_block_offset,
-                    scan_size=self._scan_size,
-                )
+                c0 = itertools.count(start=0, step=f_per_part)
+                c1 = itertools.count(start=f_per_part, step=f_per_part)
+                for (start, stop) in zip(c0, c1):
+                    if start >= num_frames:
+                        break
+                    stop = min(stop, num_frames)
+                    yield K2ISPartition(
+                        dataset=self,
+                        dtype=self.dtype,
+                        partition_slice=s.get_slice(
+                            scan_size=self._scan_size, start=start, stop=stop
+                        ),
+                        path=s.fname,
+                        index=s.idx,
+                        offset=s.first_block_offset,
+                        scan_size=self._scan_size,
+                        start_frame=start,
+                        num_frames=stop - start,
+                    )
         finally:
             fs.close()
 
@@ -397,14 +441,15 @@ class K2ISDataSet(DataSet):
 
 
 class K2ISPartition(Partition):
-    # NOTE: for now, we just create one partition for each sector
-    # FIXME: create subpartitions inside of the binary files
-    def __init__(self, path, index, offset, scan_size, strategy='READ_STACKED', *args, **kwargs):
+    def __init__(self, path, index, offset, scan_size, start_frame, num_frames,
+                 strategy='READ_STACKED', *args, **kwargs):
         self._path = path
         self._index = index
         self._offset = offset
         self._scan_size = scan_size
         self._strategy = strategy
+        self._start_frame = start_frame
+        self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
     def _get_sector(self):
@@ -429,7 +474,13 @@ class K2ISPartition(Partition):
 
         try:
             # TODO: stackheight parameter?
-            yield from s.read_stacked(scan_size=self._scan_size, crop_to=crop_to)
+            scan_size = self._scan_size
+            yield from s.read_stacked(
+                scan_width=scan_size[1],
+                total_frames=scan_size[0] * scan_size[1],
+                num_frames=self._num_frames, start_at_frame=self._start_frame,
+                crop_to=crop_to
+            )
         finally:
             s.close()
 
@@ -469,3 +520,8 @@ class K2ISPartition(Partition):
 
     def get_locations(self):
         return "127.0.1.1"  # FIXME
+
+    def __repr__(self):
+        return "<K2ISPartition: sector %d, start_frame=%d, num_frames=%d>" % (
+            self._get_sector().idx, self._start_frame, self._num_frames,
+        )

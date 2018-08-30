@@ -1,4 +1,5 @@
 import functools
+import logging
 
 try:
     import torch
@@ -7,7 +8,26 @@ except ImportError:
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
+from libertem.common.slice import Slice
 from .base import Job, Task
+
+
+log = logging.getLogger(__name__)
+
+
+def _get_bbox(image):
+    # stolen from https://codereview.stackexchange.com/a/132933
+    # Mask of non-black pixels (assuming image has a single channel).
+    mask = image > 0
+
+    # Coordinates of non-black pixels.
+    coords = np.argwhere(mask)
+
+    # Bounding box of non-black pixels.
+    y0, x0 = coords.min(axis=0)
+    y1, x1 = coords.max(axis=0) + 1   # slices are exclusive at the top
+
+    return x0, y0, x1, y1
 
 
 def _make_mask_slicer(computed_masks):
@@ -86,6 +106,21 @@ class MaskContainer(object):
         return [f().astype(self.dtype)
                 for f in self.mask_factories]
 
+    @property
+    def bbox(self):
+        boxes = []
+        for mask in self.computed_masks:
+            box = _get_bbox(mask)
+            boxes.append(box)
+        # from list of 4-tuples to 4-tuple of lists:
+        transposed = tuple(zip(*boxes))
+        return (
+            min(transposed[0]),
+            max(transposed[1]),
+            min(transposed[2]),
+            max(transposed[3]),
+        )
+
     def get_masks_for_slice(self, slice_):
         if self._get_masks_for_slice is None:
             self._get_masks_for_slice = _make_mask_slicer(self.computed_masks)
@@ -114,7 +149,16 @@ class ApplyMasksTask(Task):
 
     def __call__(self):
         parts = []
-        for data_tile in self.partition.get_tiles():
+        bbox = self.masks.bbox
+        ds_shape = self.partition.dataset.shape
+        crop_to = Slice(
+            origin=(0, 0, bbox[1], bbox[0]),
+            shape=ds_shape[:2] + (bbox[3] - bbox[1], bbox[2] - bbox[0]),
+        )
+        # only crop if the subset is significantly smaller:
+        if sum(crop_to.shape[2:]) > 0.3 * sum(ds_shape[2:]):
+            crop_to = None
+        for data_tile in self.partition.get_tiles(crop_to=crop_to):
             # print("dotting\n%r\nwith\n%r\n\n" % (data_tile.flat_data, self.masks[data_tile]))
             data = data_tile.flat_data
             if data.dtype.kind == 'u':

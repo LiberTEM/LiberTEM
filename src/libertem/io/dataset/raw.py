@@ -68,9 +68,6 @@ class RawFilePartition(Partition):
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None):
-        if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
-                raise DataSetException("RawFileDataSet only supports whole-frame crops for now")
         f = self.dataset.open_file()
         subslices = list(self.slice.subslices(shape=self.tileshape))
         for tile_slice in subslices:
@@ -78,10 +75,12 @@ class RawFilePartition(Partition):
                 intersection = tile_slice.intersection_with(crop_to)
                 if intersection.is_null():
                     continue
+            else:
+                intersection = tile_slice
             # NOTE: no need to re-use buffer, as there is none (mmap!)
             yield DataTile(
-                data=f[tile_slice.get()],
-                tile_slice=tile_slice
+                data=f[intersection.get()],
+                tile_slice=intersection,
             )
 
     def get_locations(self):

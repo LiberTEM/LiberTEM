@@ -106,6 +106,19 @@ Installing from PyPi
 
 TODO: write once we have our package published in pypi
 
+Updating
+~~~~~~~~
+
+If you have installed from a git clone, you can easily update it to the current status. Open a command line in the base directory of the LiberTEM clone and update the source code with this command:
+
+.. code-block:: shell
+
+    $ git pull
+    
+The installation with ``pip install -e`` has installed LiberTEM in `"editable" mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_. That means the changes pulled from git are active immediately. Only if the requirements for installed third-party packages have changed, you can re-run ``pip install -e .`` in order to install any missing packages.
+
+After updating the installation, you can run the updated version by restarting the libertem-server and afterwards reloading all browser windows that are running the LiberTEM GUI.
+
 Windows
 -------
 

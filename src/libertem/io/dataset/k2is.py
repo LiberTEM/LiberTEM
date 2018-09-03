@@ -345,10 +345,11 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
-    def __init__(self, path, scan_size):
+    def __init__(self, path, scan_size, skip_frames=0):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._start_offsets = None
+        self._skip_frames = skip_frames
 
     @property
     def dtype(self):
@@ -394,6 +395,9 @@ class K2ISDataSet(DataSet):
             s.first_block_offset
             for s in fs.sectors
         ]
+        # FIXME
+        self._start_offsets = [o + BLOCK_SIZE*self._skip_frames*32
+                               for o in self._start_offsets]
 
     def _get_fileset(self):
         if self._start_offsets is None:

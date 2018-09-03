@@ -401,6 +401,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset_params = {
                 "path": params["path"],
                 "scan_size": params["scanSize"],
+                "skip_frames": params["skipFrames"],
             }
         try:
             ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)

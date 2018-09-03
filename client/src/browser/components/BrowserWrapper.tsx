@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Button } from "semantic-ui-react";
+import { Button, Icon } from "semantic-ui-react";
 import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
 import FileBrowser from "./FileBrowser";
@@ -19,7 +19,12 @@ type MergedProps = ReturnType<typeof mapStateToProps> & DispatchProps<typeof map
 
 const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open }) => {
     if (!isOpen) {
-        return <Button onClick={open}>Browse</Button>;
+        return (
+            <Button icon={true} labelPosition="left" onClick={open}>
+                <Icon name='add' />
+                Browse
+            </Button>
+        );
     }
     return (
         // tslint:disable:jsx-no-lambda

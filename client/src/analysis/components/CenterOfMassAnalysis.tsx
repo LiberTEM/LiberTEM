@@ -38,7 +38,7 @@ const CenterOfMassAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, da
 
     return (
         <AnalysisItem analysis={analysis} dataset={dataset} title="COM analysis" subtitle={
-            <>Disk: center=({parameters.cx.toFixed(2)},{parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>
+            <>Disk: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>
         }>
             <Disk cx={parameters.cx} cy={parameters.cy} r={parameters.r}
                 image={image}

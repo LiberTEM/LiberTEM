@@ -34,7 +34,7 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
 
     return (
         <AnalysisItem analysis={analysis} dataset={dataset} title="Point analysis" subtitle={
-            <>Point: center=({parameters.cx.toFixed(2)},{parameters.cy.toFixed(2)})</>
+            <>Point: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)})</>
         }>
             <Point cx={parameters.cx} cy={parameters.cy}
                 image={image}

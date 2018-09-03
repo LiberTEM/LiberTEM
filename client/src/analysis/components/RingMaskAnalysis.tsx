@@ -42,7 +42,7 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
 
     return (
         <AnalysisItem analysis={analysis} dataset={dataset} title="Ring analysis" subtitle={
-            <>Ring: center=({parameters.cx.toFixed(2)},{parameters.cy.toFixed(2)}), ri={parameters.ri.toFixed(2)}, ro={parameters.ro.toFixed(2)}</>
+            <>Ring: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), ri={parameters.ri.toFixed(2)}, ro={parameters.ro.toFixed(2)}</>
         }>
             <Ring cx={parameters.cx} cy={parameters.cy} ri={parameters.ri} ro={parameters.ro}
                 imageWidth={imageWidth} imageHeight={imageHeight} image={image}

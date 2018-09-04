@@ -13,7 +13,8 @@ export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
         return getDefaultLocalConfig(config);
     }
     const localSettingsParsed = JSON.parse(localSettings);
-    const mergedConfig: ConfigState = Object.assign({}, config, localSettingsParsed);
+    const defaultConfig = getDefaultLocalConfig(config);
+    const mergedConfig: ConfigState = Object.assign(defaultConfig, localSettingsParsed);
     return mergedConfig;
 }
 

@@ -25,16 +25,16 @@ export function* getConfigOnReconnect() {
  */
 export function* getConfigSaga() {
     yield put(configActions.Actions.fetch());
-    const config: GetConfigResponse = yield call(getConfig);
+    const configResponse: GetConfigResponse = yield call(getConfig);
     try {
-        const mergedConfig = mergeLocalStorage(config.config);
+        const mergedConfig = mergeLocalStorage(configResponse.config);
         yield put(configActions.Actions.fetched(mergedConfig));
     } catch (e) {
         try {
             clearLocalStorage();
             // tslint:disable-next-line:no-empty
         } catch (e) { }
-        yield put(configActions.Actions.fetched(getDefaultLocalConfig(config.config)));
+        yield put(configActions.Actions.fetched(getDefaultLocalConfig(configResponse.config)));
     }
 }
 

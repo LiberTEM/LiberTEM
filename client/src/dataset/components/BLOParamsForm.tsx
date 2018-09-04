@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsBLO, DatasetTypes } from "../../messages";
-import { getInitial } from "../helpers";
+import { getInitial, parseNumList } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -52,10 +52,6 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
             <Button type="button" onClick={onCancel}>Cancel</Button>
         </Form>
     )
-}
-
-function parseNumList(nums: string) {
-    return nums.split(",").map(part => +part);
 }
 
 export default withFormik<OpenFormProps<DatasetParamsBLO>, FormValues>({

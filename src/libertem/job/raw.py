@@ -9,9 +9,10 @@ log = logging.getLogger(__name__)
 
 
 class PickFrameJob(Job):
-    def __init__(self, slice_, *args, **kwargs):
+    def __init__(self, slice_, squeeze=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._slice = slice_
+        self._squeeze = squeeze
 
     def get_tasks(self):
         for partition in self.dataset.get_partitions():
@@ -20,6 +21,8 @@ class PickFrameJob(Job):
             yield PickFrameTask(partition=partition, slice_=self._slice)
 
     def get_result_shape(self):
+        if self._squeeze:
+            return self._slice.shape[2:]
         return self._slice.shape
 
 

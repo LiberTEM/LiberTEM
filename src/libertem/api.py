@@ -2,6 +2,8 @@ import psutil
 
 from libertem.io.dataset import load
 from libertem.job.masks import ApplyMasksJob
+from libertem.job.raw import PickFrameJob
+from libertem.common.slice import Slice
 from libertem.executor.dask import DaskJobExecutor
 from libertem.viz import visualize_simple
 
@@ -63,6 +65,34 @@ class Context:
         return ApplyMasksJob(
             dataset=dataset,
             mask_factories=factories,
+        )
+
+    def create_pick_job(self, dataset, y, x):
+        """
+        Pick a full frame at scan coordinates (y, x)
+
+        Parameters
+        ----------
+        dataset : DataSet
+            the dataset to work on
+        y : int
+            the y coordinate of the frame
+        x : int
+            the x coordinate of the frame
+
+        Returns
+        -------
+        ndarray
+            the frame as numpy array
+        """
+        shape = dataset.shape
+        return PickFrameJob(
+            dataset=dataset,
+            slice_=Slice(
+                origin=(y, x, 0, 0),
+                shape=(1, 1) + shape[2:],
+            ),
+            squeeze=True,
         )
 
     def run(self, job, out=None):

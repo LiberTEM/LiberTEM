@@ -39,6 +39,31 @@ class H5DataSet(DataSet):
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
+    def _get_datasets(self):
+        datasets = []
+
+        def _make_list(name, obj):
+            if hasattr(obj, 'size') and hasattr(obj, 'shape'):
+                datasets.append((name, obj.size, obj.shape, obj.dtype))
+
+        with h5py.File(self.path, 'r') as f:
+            f.visititems(_make_list)
+            for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0]):
+                yield {"name": name, "value": [
+                    {"name": "Size", "value": str(size)},
+                    {"name": "Shape", "value": str(shape)},
+                    {"name": "Datatype", "value": str(dtype)},
+                ]}
+
+    def get_diagnostics(self):
+        with self.get_h5ds() as ds:
+            return [
+                {"name": "dtype", "value": str(ds.dtype)},
+                {"name": "chunks", "value": str(ds.chunks)},
+                {"name": "compression", "value": str(ds.compression)},
+                {"name": "datasets", "value": list(self._get_datasets())},
+            ]
+
     def get_partitions(self):
         with self.get_h5ds() as h5ds:
             ds_slice = Slice(origin=(0, 0, 0, 0), shape=h5ds.shape)

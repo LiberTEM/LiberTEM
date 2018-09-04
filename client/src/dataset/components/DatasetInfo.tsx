@@ -1,15 +1,55 @@
 import * as React from "react";
-import { DatasetState } from "../../messages";
+import { Table } from "semantic-ui-react";
+import { DatasetState, DiagElem } from "../../messages";
 import DatasetParams from "./DatasetParams";
 
 interface DatasetInfoProps {
     dataset: DatasetState,
 }
 
+const renderValue = (elem: DiagElem) => {
+    if (elem.value instanceof Array) {
+        return <DiagElems diagnostics={elem.value} />
+    } else {
+        return elem.value;
+    }
+}
+
+const DiagElem: React.SFC<{ elem: DiagElem }> = ({ elem }) => {
+    return (
+        <Table.Row>
+            <Table.Cell>{elem.name}</Table.Cell>
+            <Table.Cell>{renderValue(elem)}</Table.Cell>
+        </Table.Row>
+    )
+}
+
+const DiagElems: React.SFC<{ diagnostics: DiagElem[] }> = ({ diagnostics }) => {
+    if (diagnostics.length === 0) {
+        return null;
+    }
+    return (
+        <Table>
+            <Table.Header>
+                <Table.Row>
+                    <Table.HeaderCell>Name</Table.HeaderCell>
+                    <Table.HeaderCell>Value</Table.HeaderCell>
+                </Table.Row>
+            </Table.Header>
+            <Table.Body>
+                {diagnostics.map((elem, idx) => (
+                    <DiagElem elem={elem} key={idx} />
+                ))}
+            </Table.Body>
+        </Table>
+    );
+}
+
 const DatasetInfo: React.SFC<DatasetInfoProps> = ({ dataset }) => {
     return (
         <>
             <DatasetParams dataset={dataset} />
+            <DiagElems diagnostics={dataset.diagnostics} />
         </>
     );
 }

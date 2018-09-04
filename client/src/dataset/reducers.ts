@@ -18,6 +18,7 @@ export function datasetReducer(state = initialDatasetState, action: AllActions):
                 id: ds.id,
                 status: DatasetStatus.OPEN,
                 params: ds.params,
+                diagnostics: ds.diagnostics,
             }));
             return {
                 byId: constructById(datasets, ds => ds.id),

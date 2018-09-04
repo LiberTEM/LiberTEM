@@ -20,6 +20,14 @@ class DataSet(object):
     def check_valid(self):
         raise NotImplementedError()
 
+    def get_diagnostics(self):
+        """
+        Get relevant diagnostics for this dataset, as a list of
+        dicts with keys name, value, where value may be string or
+        a list of dicts itself
+        """
+        return []
+
 
 class Partition(object):
     def __init__(self, dataset, dtype, partition_slice):

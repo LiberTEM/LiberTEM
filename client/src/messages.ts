@@ -137,11 +137,17 @@ export enum DatasetStatus {
     DELETING = "DELETING",
 }
 
+export interface DiagElem {
+    name: string,
+    value: string | DiagElem[],
+}
+
 export type Dataset = DatasetCreateParams & {
     status: DatasetStatus,
     params: {
         shape: number[],
     }
+    diagnostics: DiagElem[],
 }
 
 export interface OpenDatasetRequest {
@@ -170,9 +176,7 @@ export interface DeleteDatasetResponse {
 export type MsgPartDataset = Dataset
 
 // type alias to add client-side state to datasets
-export type DatasetState = Dataset & {
-    // previewJob?: string,
-}
+export type DatasetState = Dataset & {}
 
 /*
  * Job

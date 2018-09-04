@@ -7,7 +7,7 @@ import { filterWithPred } from "../../helpers/reducerHelpers";
 import { DatasetState, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 import AddAnalysis from "./AddAnalysis";
-import DatasetParams from "./DatasetParams";
+import DatasetInfo from "./DatasetInfo";
 import DatasetToolbar from "./DatasetToolbar";
 
 interface DatasetProps {
@@ -57,7 +57,7 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
                         }>
                             <Popup.Header>{dataset.params.type} Dataset {dataset.params.name}</Popup.Header>
                             <Popup.Content>
-                                <DatasetParams dataset={dataset} />
+                                <DatasetInfo dataset={dataset} />
                             </Popup.Content>
                         </Modal>
                     </Header>

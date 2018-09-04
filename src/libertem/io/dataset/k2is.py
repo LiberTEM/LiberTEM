@@ -50,7 +50,7 @@ class K2FileSet:
 
     def sync_sectors(self):
         for b in self.first_blocks():
-            assert b.is_valid
+            assert b.is_valid, "first block is not valid!"
         # sync up all sectors to start with the same `block_count`
         block_with_max_idx = sorted(self.first_blocks(), key=lambda b: b.header['block_count'])[-1]
         start_blocks = [
@@ -367,6 +367,29 @@ class K2ISDataSet(DataSet):
             raise DataSetException("failed to load dataset: %s" % e)
         return True
 
+    def get_diagnostics(self):
+        p = next(self.get_partitions())
+        sector = p._get_sector()
+        est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
+        first_block = next(sector.get_blocks())
+        fs_nosync = self._get_fileset(with_sync=False)
+        sector_nosync = fs_nosync.sectors[0]
+        first_block_nosync = next(sector_nosync.get_blocks())
+
+        return [
+            {"name": "first block offsets for all sectors",
+             "value": ", ".join([str(s) for s in self._start_offsets])},
+
+            {"name": "est. number of frames (from first sector)",
+             "value": str(est_num_frames)},
+
+            {"name": "first frame id after sync, including skip_frames (from first sector)",
+             "value": str(first_block.header['frame_id'])},
+
+            {"name": "first frame id before sync (from first sector)",
+             "value": str(first_block_nosync.header['frame_id'])},
+        ]
+
     def _pattern(self):
         path, ext = os.path.splitext(self._path)
         if ext == ".gtg":
@@ -399,7 +422,9 @@ class K2ISDataSet(DataSet):
         self._start_offsets = [o + BLOCK_SIZE*self._skip_frames*32
                                for o in self._start_offsets]
 
-    def _get_fileset(self):
+    def _get_fileset(self, with_sync=True):
+        if not with_sync:
+            return K2FileSet(self._files())
         if self._start_offsets is None:
             fs = K2FileSet(self._files())
             fs.sync()

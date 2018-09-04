@@ -80,6 +80,7 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
         const height = shape[0];
         const analysis: AnalysisState = {
             id: uuid(),
+            status: "idle",
             dataset: action.payload.dataset,
             details: getAnalysisDetails(action.payload.analysisType, datasetState),
             preview: { mode: "AVERAGE", pick: { x: Math.round(width / 2), y: Math.round(height / 2) } },

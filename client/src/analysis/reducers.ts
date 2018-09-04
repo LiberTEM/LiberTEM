@@ -1,4 +1,5 @@
 import { AllActions } from "../actions";
+import * as channelActions from '../channel/actions';
 import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as analysisActions from "./actions";
 import { AnalysisState } from "./types";
@@ -23,6 +24,27 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             return updateById(state, action.payload.id, {
                 details: newDetails,
             });
+        }
+        case analysisActions.ActionTypes.RUN: {
+            return updateById(state, action.payload.id, { status: "busy" });
+        }
+        case channelActions.ActionTypes.FINISH_JOB: {
+            const idleIfJobMatch = ((part: AnalysisState) => {
+                if (action.payload.job === part.currentJob) {
+                    return Object.assign({}, part, { status: "idle" });
+                } else {
+                    return part;
+                }
+            })
+            const byId = state.ids.reduce((acc, id) => {
+                return Object.assign({}, acc, {
+                    [id]: idleIfJobMatch(state.byId[id]),
+                });
+            }, {});
+            return {
+                byId,
+                ids: state.ids,
+            }
         }
         case analysisActions.ActionTypes.RUNNING: {
             return updateById(state, action.payload.id, { currentJob: action.payload.job })

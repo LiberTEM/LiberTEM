@@ -18,7 +18,9 @@ export interface Analysis {
     details: AnalysisDetails,
 }
 
-export type AnalysisState = Analysis;
+export type AnalysisState = Analysis & {
+    status: "busy" | "idle"
+};
 
 interface AnalysisMetadataItem {
     long: string,

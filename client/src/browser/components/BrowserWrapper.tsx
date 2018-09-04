@@ -27,8 +27,6 @@ const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open }) => {
         );
     }
     return (
-        // tslint:disable:jsx-no-lambda
-        // tslint:disable:no-console
         <FileBrowser />
     );
 }

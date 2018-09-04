@@ -19,8 +19,8 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: ToolbarProps) => {
 
 type MergedProps = ToolbarProps & ReturnType<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
-const Toolbar: React.SFC<MergedProps> = ({ job, handleApply, handleRemove }) => {
-    const running = job && (job.status === "IN_PROGRESS" || job.status === "CREATING");
+const Toolbar: React.SFC<MergedProps> = ({ analysis, handleApply, handleRemove }) => {
+    const running = analysis.status === "busy";
     const applyIconProps: IconProps = running ? { name: 'cog', loading: true } : { name: 'check' }
     return (
         <Segment attached="bottom">

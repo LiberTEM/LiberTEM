@@ -1,5 +1,5 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
-import { DatasetCreateParams, DatasetState } from '../messages';
+import { DatasetCreateParams, DatasetFormParams, DatasetState } from '../messages';
 
 export enum ActionTypes {
     OPEN = 'DATASET_OPEN',
@@ -12,7 +12,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    open: (path: string) => createAction(ActionTypes.OPEN, { path }),
+    open: (path: string, initialParams?: DatasetFormParams) => createAction(ActionTypes.OPEN, { path, initialParams }),
     cancelOpen: () => createAction(ActionTypes.CANCEL_OPEN),
     create: (dataset: DatasetCreateParams) => createAction(ActionTypes.CREATE, { dataset }),
     created: (dataset: DatasetState) => createAction(ActionTypes.CREATED, { dataset }),

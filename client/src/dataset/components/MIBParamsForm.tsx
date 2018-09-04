@@ -3,6 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsMIB, DatasetTypes } from "../../messages";
+import { getInitial } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -13,12 +14,14 @@ type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
     | "scanSize"
     > & {
     tileshape: string,
-    scanSize: string
+    scanSize: string,
 };
 
 type FormValues = DatasetParamsMIBForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB>;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB> & {
+    initial: DatasetParamsMIB,
+};
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -62,10 +65,10 @@ function parseNumList(nums: string) {
 }
 
 export default withFormik<OpenFormProps<DatasetParamsMIB>, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        tileshape: "1, 8, 256, 256",
-        scanSize: "256, 256",
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        tileshape: getInitial("tileshape", "1, 8, 256, 256", initial),
+        scanSize: getInitial("scanSize", "256, 256", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

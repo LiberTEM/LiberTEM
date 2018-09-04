@@ -3,9 +3,10 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
+import { getInitial } from "../helpers";
 import { OpenFormProps } from "../types";
 
-type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string };
+type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string, };
 
 type FormValues = DatasetParamsHDF5ForForm
 
@@ -49,10 +50,10 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        tileshape: "1, 8, 128, 128",
-        dsPath: "",
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
+        dsPath: getInitial("dsPath", "", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

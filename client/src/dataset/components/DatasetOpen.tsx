@@ -29,6 +29,7 @@ const mapStateToProps = (state: RootReducer) => {
     return {
         formVisible: state.openDataset.formVisible,
         formPath: state.openDataset.formPath,
+        formInitial: state.openDataset.formInitialParams,
     };
 }
 
@@ -41,6 +42,16 @@ interface DatasetOpenState {
 
 
 class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
+    public static getDerivedStateFromProps(props: MergedProps, state: DatasetOpenState) {
+        if (props.formInitial !== undefined) {
+            return {
+                datasetType: props.formInitial.type
+            };
+        } else {
+            return {};
+        }
+    }
+
     public state = {
         datasetType: DatasetTypes.RAW,
     }
@@ -53,7 +64,7 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
     }
 
     public render() {
-        const { formPath, createDataset, onCancel } = this.props;
+        const { formPath, formInitial, createDataset, onCancel } = this.props;
         const { datasetType } = this.state;
 
         const renderForm = (form: React.ReactNode) => {
@@ -70,24 +81,31 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
             console.error("formPath is undefined");
             return null;
         }
+
         switch (datasetType) {
             case DatasetTypes.HDF5: {
-                return renderForm(<HDF5ParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<HDF5ParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
             case DatasetTypes.HDFS: {
-                return renderForm(<HDFSParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<HDFSParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
             case DatasetTypes.RAW: {
-                return renderForm(<RawFileParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<RawFileParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
             case DatasetTypes.MIB: {
-                return renderForm(<MIBParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<MIBParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
             case DatasetTypes.BLO: {
-                return renderForm(<BLOParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<BLOParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
             case DatasetTypes.K2IS: {
-                return renderForm(<K2ISParamsForm path={formPath} onSubmit={createDataset} onCancel={onCancel} />);
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<K2ISParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
         }
     }

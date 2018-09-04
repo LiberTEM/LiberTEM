@@ -1,15 +1,21 @@
 import { AllActions } from "../actions";
 import * as browserActions from '../browser/actions';
-import { MsgPartConfig } from "../messages";
+import * as datasetActions from '../dataset/actions';
+import { DatasetFormParams, MsgPartConfig } from "../messages";
 import * as configActions from './actions';
 
-export type ConfigState = MsgPartConfig;
+export type ConfigState = MsgPartConfig & {
+    lastOpened: {
+        [path: string]: DatasetFormParams
+    }
+};
 
-const initialConfigState = {
+const initialConfigState: ConfigState = {
     version: "",
     localCores: 0,
     cwd: "/",
     separator: "/",
+    lastOpened: {},
 }
 
 export function configReducer(state = initialConfigState, action: AllActions) {
@@ -20,6 +26,12 @@ export function configReducer(state = initialConfigState, action: AllActions) {
         case browserActions.ActionTypes.DIRECTORY_LISTING: {
             return Object.assign({}, state, {
                 cwd: action.payload.path,
+            });
+        }
+        case datasetActions.ActionTypes.CREATE: {
+            const newLastOpened = Object.assign({}, state.lastOpened, { [action.payload.dataset.params.path]: action.payload.dataset.params });
+            return Object.assign({}, state, {
+                lastOpened: newLastOpened,
             });
         }
     }

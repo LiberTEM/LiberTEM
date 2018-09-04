@@ -1,3 +1,4 @@
+import { MsgPartConfig } from "../messages";
 import { ConfigState } from "./reducers";
 
 const CONFIG_KEY = "LiberTEM.config";
@@ -6,18 +7,18 @@ export function joinPaths(config: ConfigState, ...parts: string[]) {
     return parts.join(config.separator);
 }
 
-export function mergeLocalStorage(config: ConfigState): ConfigState {
-    let localSettings = window.localStorage.getItem(CONFIG_KEY);
+export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
+    const localSettings = window.localStorage.getItem(CONFIG_KEY);
     if (localSettings === null) {
-        return config;
+        return getDefaultLocalConfig(config);
     }
-    localSettings = JSON.parse(localSettings);
-    const mergedConfig = Object.assign({}, config, localSettings);
+    const localSettingsParsed = JSON.parse(localSettings);
+    const mergedConfig: ConfigState = Object.assign({}, config, localSettingsParsed);
     return mergedConfig;
 }
 
 export function setLocalStorage(config: ConfigState): void {
-    const localSettings = ["cwd"].reduce((acc, item: keyof ConfigState) => {
+    const localSettings = ["cwd", "lastOpened"].reduce((acc, item: keyof ConfigState) => {
         acc[item] = config[item];
         return acc;
     }, {} as ConfigState);
@@ -26,4 +27,10 @@ export function setLocalStorage(config: ConfigState): void {
 
 export function clearLocalStorage(): void {
     window.localStorage.removeItem(CONFIG_KEY);
+}
+
+export function getDefaultLocalConfig(config: MsgPartConfig): ConfigState {
+    return Object.assign({}, config, {
+        lastOpened: {},
+    });
 }

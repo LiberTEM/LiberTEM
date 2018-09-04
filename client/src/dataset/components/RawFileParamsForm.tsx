@@ -3,6 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
+import { getInitial, parseNumList } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -21,7 +22,9 @@ type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
 
 type FormValues = DatasetParamsRawForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsRaw>;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsRaw> & {
+    initial: DatasetParamsRaw,
+};
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -76,18 +79,14 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-function parseNumList(nums: string) {
-    return nums.split(",").map(part => +part);
-}
-
 export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        tileshape: "1, 8, 128, 128",
-        detectorSizeRaw: "130, 128",
-        cropDetectorTo: "128, 128",
-        scanSize: "256, 256",
-        dtype: "float32",
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
+        detectorSizeRaw: getInitial("detectorSizeRaw", "130, 128", initial),
+        cropDetectorTo: getInitial("cropDetectorTo", "128, 128", initial),
+        scanSize: getInitial("scanSize", "256, 256", initial),
+        dtype: getInitial("dtype", "float32", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

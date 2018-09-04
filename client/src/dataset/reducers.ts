@@ -49,6 +49,7 @@ export function datasetReducer(state = initialDatasetState, action: AllActions):
 const initialOpenDatasetState: OpenDatasetState = {
     formVisible: false,
     formPath: undefined,
+    formInitialParams: undefined,
 }
 
 export function openDatasetReducer(state = initialOpenDatasetState, action: AllActions): OpenDatasetState {
@@ -58,6 +59,7 @@ export function openDatasetReducer(state = initialOpenDatasetState, action: AllA
                 ...state,
                 formVisible: true,
                 formPath: action.payload.path,
+                formInitialParams: action.payload.initialParams,
             };
         }
         case datasetActions.ActionTypes.CANCEL_OPEN: {

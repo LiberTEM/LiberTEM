@@ -3,6 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
+import { getInitial, parseNumList } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -12,7 +13,7 @@ type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
     | "scanSize"
     | "type"> & {
     scanSize: string,
-    skipFrames: number,
+    skipFrames: string,
 };
 
 type FormValues = DatasetParamsK2ISForForm
@@ -58,16 +59,11 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-function parseNumList(nums: string) {
-    return nums.split(",").map(part => +part);
-}
-
 export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        scanSize: "32, 32",
-        skipFrames: 0,
-        dtype: "float32",
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        scanSize: getInitial("scanSize", "32, 32", initial),
+        skipFrames: getInitial("skipFrames", "0", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

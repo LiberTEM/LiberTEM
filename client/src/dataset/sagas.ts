@@ -40,7 +40,7 @@ export function* openDatasetSaga(action: ReturnType<typeof browserActions.Action
     // TODO: ask the server what it thinks about this file
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
-    yield put(datasetActions.Actions.open(fullPath));
+    yield put(datasetActions.Actions.open(fullPath, config.lastOpened[fullPath]));
 }
 
 export function* datasetRootSaga() {

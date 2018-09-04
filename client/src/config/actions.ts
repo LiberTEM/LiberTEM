@@ -1,5 +1,5 @@
 import { ActionsUnion, createAction } from "../helpers/actionHelpers";
-import { MsgPartConfig } from "../messages";
+import { ConfigState } from "./reducers";
 
 export enum ActionTypes {
     FETCHED = "CONFIG_FETCHED",
@@ -8,7 +8,7 @@ export enum ActionTypes {
 
 export const Actions = {
     fetch: () => createAction(ActionTypes.FETCH),
-    fetched: (config: MsgPartConfig) => createAction(ActionTypes.FETCHED, { config }),
+    fetched: (config: ConfigState) => createAction(ActionTypes.FETCHED, { config }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

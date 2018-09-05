@@ -1,6 +1,5 @@
 import click
-from libertem.cli_tweaks import console_tweaks
-from .server import run
+import os
 
 
 @click.command()
@@ -12,5 +11,11 @@ from .server import run
 # @click.option('--host', help='host on which the server should listen on',
 #               default="localhost", type=str)
 def main(port, host="localhost"):
+    os.environ.setdefault('OMP_NUM_THREADS', '1')
+    os.environ.setdefault('MKL_NUM_THREADS', '1')
+    os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
+
+    from libertem.cli_tweaks import console_tweaks
+    from .server import run
     console_tweaks()
     run(host, port)

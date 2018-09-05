@@ -101,6 +101,11 @@ Activate the python environment (conda or virtualenv) and change to the newly cr
 This should download the dependencies and install LiberTEM in the environment. Please
 continue by reading the :doc:`usage documentation <usage>`.
 
+PyTorch
+~~~~~~~
+
+LiberTEM can use `PyTorch <https://pytorch.org/>`_ for processing if it is available. Otherwise it uses numpy as a fallback. We've experienced up to 2x speed-ups with PyTorch compared to a default numpy installation. For that reason we recommend `installing PyTorch <https://pytorch.org/>`_. We currently use PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
+
 Installing from PyPi
 ~~~~~~~~~~~~~~~~~~~~
 

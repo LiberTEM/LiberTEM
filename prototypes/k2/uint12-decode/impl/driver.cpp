@@ -1,8 +1,11 @@
 #include <cstring>
 #include <cinttypes>
 #include <cstdlib>
+#include <cstdio>
 
-extern "C" void decode_uint12_impl(uint8_t *inp, uint16_t *out, int size_in, int size_out);
+extern "C" void decode_uint12_impl_uint16(uint8_t *inp, uint16_t *out, int size_in, int size_out);
+extern "C" void decode_uint12_impl_uint16_naive(uint8_t *inp, uint16_t *out, int size_in, int size_out);
+extern "C" void decode_uint12_impl_float_naive(uint8_t *inp, float *out, int size_in, int size_out);
 
 int main() {
     const int size_in = 0x5758 - 40;
@@ -19,8 +22,10 @@ int main() {
     uint16_t *output = (uint16_t*)malloc(size_out);
 
     for(int i = 0; i < 100000; i++) {
-        decode_uint12_impl(input, output, size_in, size_out);
+        decode_uint12_impl_uint16_naive(input, output, size_in, size_out);
     }
+
+    printf("%ld\n", 100000l * size_in);
 
     free(input);
     free(output);

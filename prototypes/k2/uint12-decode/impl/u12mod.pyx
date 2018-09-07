@@ -2,7 +2,11 @@ from cython cimport view
 import numpy as np
 from libc.stdint cimport uint64_t, uint32_t, uint16_t, uint8_t
 
-cdef extern void decode_uint12_impl(const uint8_t *inp, uint16_t *out, int size_in, int size_out);
+cdef extern void decode_uint12_impl_uint16(const uint8_t *inp, uint16_t *out, int size_in, int size_out);
+cdef extern void decode_uint12_impl_float(const uint8_t *inp, float *out, int size_in, int size_out);
+
+cdef extern void decode_uint12_impl_uint16_naive(const uint8_t *inp, uint16_t *out, int size_in, int size_out);
+cdef extern void decode_uint12_impl_float_naive(const uint8_t *inp, float *out, int size_in, int size_out);
 
 cdef decoded_start_index(block, middle_decoded_words):
     return block*middle_decoded_words
@@ -24,14 +28,43 @@ cdef decode_triple(a, b, c):
     l = ((b >> 4) & 0xf) | ((c << 4) & 0xff0)
     return (k, l)
 
-cpdef decode_uint12_cpp(const uint8_t[::view.contiguous] inp,
-                        uint16_t[::view.contiguous] out):
-    decode_uint12_impl(
+cpdef decode_uint12_cpp_uint16(const uint8_t[::view.contiguous] inp,
+                               uint16_t[::view.contiguous] out):
+    decode_uint12_impl_uint16(
         inp=&inp[0],
         out=&out[0],
         size_in=len(inp),
         size_out=out.nbytes,
     )
+
+cpdef decode_uint12_cpp_float(const uint8_t[::view.contiguous] inp,
+                              float[::view.contiguous] out):
+    decode_uint12_impl_float(
+        inp=&inp[0],
+        out=&out[0],
+        size_in=len(inp),
+        size_out=out.nbytes,
+    )
+
+cpdef decode_uint12_cpp_uint16_naive(const uint8_t[::view.contiguous] inp,
+                                     uint16_t[::view.contiguous] out):
+    decode_uint12_impl_uint16_naive(
+        inp=&inp[0],
+        out=&out[0],
+        size_in=len(inp),
+        size_out=out.nbytes,
+    )
+
+cpdef decode_uint12_cpp_float_naive(const uint8_t[::view.contiguous] inp,
+                                    float[::view.contiguous] out):
+    decode_uint12_impl_float_naive(
+        inp=&inp[0],
+        out=&out[0],
+        size_in=len(inp),
+        size_out=out.nbytes,
+    )
+
+
 
 cpdef decode_uint12(const uint8_t[::view.contiguous] inp,
                     uint16_t[::view.contiguous] out):

@@ -18,7 +18,7 @@ def main():
 
     out2 = np.zeros(930*16, dtype="uint16")
 
-    u12mod.decode_uint12_cpp(inp=input_data[40:], out=out2)
+    u12mod.decode_uint12_cpp_uint16_naive(inp=input_data[40:], out=out2)
 
     print("out2=", out2)
 

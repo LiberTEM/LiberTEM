@@ -1,7 +1,9 @@
 CXX=clang++
 CC=clang
-CXXFLAGS=-g -Wall -O3 -march=native -fPIC
-CFLAGS=-g -Wall -O3 -march=native -fPIC
+# ARCH=skylake-avx512  # for moellenstedt
+ARCH=native
+CXXFLAGS=-g -Wall -O3 -march=$(ARCH) -mtune=$(ARCH) -fPIC
+CFLAGS=-g -Wall -O3 -march=$(ARCH) -mtune=$(ARCH) -fPIC
 PERF_STAT_FLAGS=-e task-clock,cycles,instructions,cache-references,cache-misses,stalled-cycles-frontend,stalled-cycles-backend,branches,branch-misses,page-faults,context-switches
 
 all: u12decode.o u12mod.cpython-36m-x86_64-linux-gnu.so driver

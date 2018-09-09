@@ -52,7 +52,7 @@ The user interface
 ------------------
 
 After starting the server, you can open the GUI in your browser. By default it will be at http://localhost:9000 .
-At the beginning, the GUI shows a promt to create a local cluster or connect to a running one. The number of workers is preset with a number 
+At the beginning, the GUI shows a prompt to create a local cluster or connect to a running one. The number of workers is preset with a number 
 that will likely give optimal performance on the given machine.
 
 ..  figure:: ./images/use/create.png 
@@ -69,7 +69,7 @@ You can move up one directory with the ".." entry on top of the list. The file b
 
 After selecting a file, you set the type in the drop-down menu at the top of the dialogue above the file name. After that you set the appropriate parameters that depend on the file type. Clicking on "Load Dataset" will open the file with the selected parameters. The interface and internal logic to find good presets based on file type and available metadata, validate the inputs and display helpful error messages is still work in progress. Contributions are highly appreciated! TODO documentation of all supported file types and their parameters.
 
-* K2IS: The file to open is the ``.gtg`` file.
+* K2IS: You can open any of the files that belong to a K2IS data set and LiberTEM will find the remaining ones, provided they follow the default naming scheme.
 
 ..  figure:: ./images/use/type.png
 
@@ -81,7 +81,7 @@ The GUI shows two windows: On the left it shows the current mask. Directly after
 
 You can adjust the virtual detector by dragging the handles in the GUI. Below it shows the parameters in numerical form. This is useful to extract positions, for example for scripting.
 
-..  figure:: ./images/use/adjust.png.png
+..  figure:: ./images/use/adjust.png
 
 After clicking "Apply", LiberTEM performs the calculation and shows the result in scan coordinates on the right. 
 

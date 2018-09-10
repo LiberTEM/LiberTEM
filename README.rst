@@ -17,10 +17,14 @@ project is taking, or if you want to contribute, please join our `gitter chat <h
 our `development mailing list <https://groups.google.com/forum/#!forum/libertem-dev>`_,
 and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_. 
 
-As a first application, we are targeting anything that can be implemented by applying masks to each detector frame,
+As a first application, we are targeting anything that can be implemented by multiplying masks to each detector frame,
 for example the numerous virtual detector methods (virtual bright field, virtual HAADF, ...) or center of mass.
+LiberTEM currently consists of a GUI for analysing/exploring datasets and a Python API for more advanced usage.
+Please see `the documentation <https://libertem.github.io/LiberTEM/#documentation>`_ for installation instructions and more details.
+
 There are example jupyter notebooks available in the `examples directory <https://github.com/LiberTEM/LiberTEM/blob/master/examples>`_.
-If you are having trouble running the examples, please let us know, either by filing an issue
+
+If you are having trouble running LiberTEM or the examples, please let us know, either by filing an issue
 or by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 
 Please also join the discussion on `our issue tracker <https://github.com/liberTEM/LiberTEM/issues/>`_.

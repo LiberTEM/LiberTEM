@@ -98,4 +98,14 @@ In "Pick" mode, a selector appears in the result frame on the right. You can dra
 Some analyses, such as the Center of Mass (COM) analysis, can render the result in different ways. You can select the channel in the "Image" drop-down menu below the right window.
 
 ..  figure:: ./images/use/image.png
-    
+
+The Python API
+--------------
+
+This is a concise API for using LiberTEM from Python code. It is suitable both
+for interactive scripting, for example from jupyter notebooks, and for usage
+from within a Python application.
+
+.. automodule:: libertem.api
+   :members:
+   :special-members: __init__

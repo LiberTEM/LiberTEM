@@ -13,6 +13,7 @@ import libertem.job.masks
 import libertem.job.sum
 import libertem.web.server
 import libertem.web.cli
+import libertem.api
 
 
 def test_stuff():

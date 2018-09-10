@@ -88,9 +88,9 @@ class Slice(object):
 
         Parameters
         ----------
-        arr : sliceable or None
-            if given, returns arr[slice]
-        signal_only : bool (default False)
+        arr
+            something implementing the slice interface. if given, returns arr[slice]
+        signal_only : bool
             get a 2D slice for frames/masks
 
         Returns
@@ -211,7 +211,7 @@ class Slice(object):
 
         Parameters
         ----------
-        datashape : 4-tuple
+        datashape : (int, int, int, int)
             size of the whole dataset
 
         framesize : int

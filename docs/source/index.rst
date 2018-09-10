@@ -25,7 +25,7 @@ Documentation
    contributing
    debugging
    why_python
-
+   reference
 
 Indices and tables
 ------------------

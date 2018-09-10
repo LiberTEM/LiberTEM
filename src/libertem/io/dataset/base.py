@@ -5,7 +5,7 @@ class DataSetException(Exception):
 class DataSet(object):
     def get_partitions(self):
         """
-        Return a generator over all `Partition`s in this `DataSet`
+        Return a generator over all Partitions in this DataSet
         """
         raise NotImplementedError()
 
@@ -24,7 +24,7 @@ class DataSet(object):
         """
         Get relevant diagnostics for this dataset, as a list of
         dicts with keys name, value, where value may be string or
-        a list of dicts itself
+        a list of dicts itself. Subclasses should override this method.
         """
         return []
 
@@ -41,20 +41,13 @@ class Partition(object):
 
     def get_tiles(self, crop_to=None):
         """
-        Return a generator over all `DataTile`s contained in this Partition. Note that the DataSet
-        may reuse the internal buffer of a tile, so you should directly process the tile.
+        Return a generator over all DataTiles contained in this Partition.
 
-        right:
-        >>> tile_iter = p.get_tiles()
-        >>> for tile in tile_iter:
-        >>>     do_stuff_with(tile)
-
-        wrong:
-        >>> tile_iter = p.get_tiles()
-        >>> some_tiles = [next(tile_iter), next(tile_iter), next(tile_iter)]
-        >>> do_stuff_with(some_tiles)
-        # the internal buffer of all three tiles may contain the same data at this point
-
+        Note
+        ----
+        The DataSet may reuse the internal buffer of a tile, so you should
+        directly process the tile and not accumulate a number of tiles and then work
+        on them.
 
         Parameters
         ----------

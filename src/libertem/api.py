@@ -1,14 +1,23 @@
 import psutil
 
-from libertem.io.dataset import load
+import numpy as np
+from libertem.io.dataset import load, filetypes
+from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
+from libertem.job.base import Job
 from libertem.common.slice import Slice
 from libertem.executor.dask import DaskJobExecutor
 from libertem.viz import visualize_simple
 
 
 class Context:
+    """
+    Context is the main entry point of the LiberTEM API. It contains
+    methods for loading datasets, creating jobs on them and running
+    them.
+    """
+
     def __init__(self):
         """
         Create a new context. In the background, this creates a suitable
@@ -16,7 +25,7 @@ class Context:
         """
         self.executor = self._create_local_executor()
 
-    def load(self, filetype, *args, **kwargs):
+    def load(self, filetype: str, *args, **kwargs) -> DataSet:
         """
         Load a `DataSet`. As it doesn't load the whole data into RAM at once,
         you can load and process datasets that are bigger than your available RAM.
@@ -25,23 +34,29 @@ class Context:
         Parameters
         ----------
         filetype : str
-            see libertem.io.dataset.filetypes for supported types, example: 'hdf5'
+            one of: %(types)s
+        args
+            passed on to the DataSet implementation
+        kwargs
+            passed on to the DataSet implementation
 
+        Returns
+        -------
+        DataSet
+            the loaded dataset
 
         Note
         ----
 
         Additional parameters are passed to the concrete DataSet implementation
-
-        Returns
-        -------
-        DataSet
-            a subclass of DataSet
         """
         # delegate to libertem.io.dataset.load:
         ds = load(filetype, *args, **kwargs)
         ds.check_valid()
         return ds
+
+    load.__doc__ = load.__doc__ % {'types': ", ".join(filetypes.keys())}
+
 
     def create_mask_job(self, factories, dataset):
         """
@@ -50,13 +65,16 @@ class Context:
 
         Parameters
         ----------
-        factories : list of mask factory functions
-            functions that take no arguments and create masks
-        dataset : DataSet
+        factories
+            list of functions that take no arguments and create masks
+        dataset
             dataset to work on
 
         Examples
         --------
+        >>> from libertem.api import Context
+        >>> ctx = Context()
+        >>> ds = ctx.load("...")
         >>> job = ctx.create_mask_job(
         ... factories=[lambda: np.ones(dataset.shape[2:])],
         ... dataset=dataset)
@@ -67,22 +85,22 @@ class Context:
             mask_factories=factories,
         )
 
-    def create_pick_job(self, dataset, y, x):
+    def create_pick_job(self, dataset, y: int, x: int) -> np.ndarray:
         """
         Pick a full frame at scan coordinates (y, x)
 
         Parameters
         ----------
-        dataset : DataSet
+        dataset
             the dataset to work on
-        y : int
+        y
             the y coordinate of the frame
-        x : int
+        x
             the x coordinate of the frame
 
         Returns
         -------
-        ndarray
+        :py:class:`numpy.ndarray`
             the frame as numpy array
         """
         shape = dataset.shape
@@ -95,15 +113,15 @@ class Context:
             squeeze=True,
         )
 
-    def run(self, job, out=None):
+    def run(self, job: Job, out: np.ndarray=None):
         """
         Run the given `Job` and return the result data.
 
         Parameters
         ----------
-        job : Job
+        job
             the job to run
-        out : ndarray
+        out : :py:class:`numpy.ndarray`
             ndarray to store the result, if None it is created for you
         """
         if out is None:

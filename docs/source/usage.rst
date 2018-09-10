@@ -106,6 +106,9 @@ This is a concise API for using LiberTEM from Python code. It is suitable both
 for interactive scripting, for example from jupyter notebooks, and for usage
 from within a Python application.
 
+For a complete example on how to use the Python API, please see the
+jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
+
 .. automodule:: libertem.api
    :members:
    :special-members: __init__

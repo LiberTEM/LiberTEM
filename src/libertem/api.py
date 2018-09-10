@@ -57,7 +57,6 @@ class Context:
 
     load.__doc__ = load.__doc__ % {'types': ", ".join(filetypes.keys())}
 
-
     def create_mask_job(self, factories, dataset):
         """
         Create a mask application job. Each factory function should, when called,

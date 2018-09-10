@@ -644,7 +644,7 @@ class SharedData(object):
                 **dataset["params"]["params"],
                 "shape": dataset["dataset"].shape,
             },
-            "diagnostics": dataset["dataset"].get_diagnostics(),
+            "diagnostics": dataset["dataset"].diagnostics,
         }
 
     def serialize_datasets(self):

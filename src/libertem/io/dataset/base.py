@@ -20,6 +20,21 @@ class DataSet(object):
     def check_valid(self):
         raise NotImplementedError()
 
+    @property
+    def diagnostics(self):
+        """
+        Diagnistics common for all DataSet implementations
+        """
+        p = next(self.get_partitions())
+
+        return self.get_diagnostics() + [
+            {"name": "Partition shape",
+             "value": str(p.shape)},
+
+            {"name": "Number of partitions",
+             "value": str(len(list(self.get_partitions())))}
+        ]
+
     def get_diagnostics(self):
         """
         Get relevant diagnostics for this dataset, as a list of

@@ -17,6 +17,10 @@ It is designed for high throughput and scalability on PCs, single server nodes, 
 local storage on high-performance SSDs. That way it achieves very high collective IO performance on a compact and cost-efficient system built from stock components.
 With cached file system reads it can reach a throughput of up to 14 GB/s per processing node with a quad-core CPU.
 
+LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms
+that allow installation of Python 3 and the required packages will likely work as well. The GUI is running
+in a web browser.
+
 LiberTEM currently opens most file formats used for pixelated STEM:
 
 - Raw binary files, for example for the Thermo Fisher EMPAD detector

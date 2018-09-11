@@ -8,7 +8,6 @@ from libertem.job.raw import PickFrameJob
 from libertem.job.base import Job
 from libertem.common.slice import Slice
 from libertem.executor.dask import DaskJobExecutor
-from libertem.viz import visualize_simple
 
 
 class Context:
@@ -133,13 +132,6 @@ class Context:
             for tile in tiles:
                 tile.copy_to_result(out)
         return out
-
-    def apply_colormap(self, result_frames):
-        """
-        Normalize and apply a colormap to result_frames and return resulting RGB data
-        """
-        return [visualize_simple(result_frame)
-                for result_frame in result_frames]
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

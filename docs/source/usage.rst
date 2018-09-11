@@ -102,13 +102,48 @@ Some analyses, such as the Center of Mass (COM) analysis, can render the result 
 The Python API
 --------------
 
-This is a concise API for using LiberTEM from Python code. It is suitable both
+The Python API is a concise API for using LiberTEM from Python code. It is suitable both
 for interactive scripting, for example from jupyter notebooks, and for usage
 from within a Python application.
 
-For a complete example on how to use the Python API, please see the
+This is a basic example to load the API, create a local cluster, load a file and run a job. For a complete example on how to use the Python API, please see the
 jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
-.. automodule:: libertem.api
-   :members:
-   :special-members: __init__
+For a full API reference, please see :doc:`Reference <reference>`.
+
+.. code-block:: python
+
+    import os
+    # Disable threading, we already use multiprocessing 
+    # to saturate the CPUs
+    # The variables have to be set before any numerics 
+    # libraries are loaded
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
+    import numpy as np
+
+    from libertem import api
+
+    ctx = api.Context()
+
+    ds = ctx.load(
+        'hdf5',
+        path='/path/to/file.emd',
+        ds_path='experimental/science_data/data',
+        tileshape=(1,8,128,128)
+    )
+
+    (scan_y, scan_x, detector_y, detector_x) = ds.shape
+    mask_shape = (detector_y, detector_x)
+    
+    # LiberTEM sends functions that create the masks 
+    # rather than mask data to the workers in order 
+    # to reduce transfers in the cluster.
+    mask = lambda: np.ones(shape=mask_shape)
+
+    job = ctx.create_mask_job(dataset=ds, factories=[mask])
+
+    result = ctx.run(job)
+

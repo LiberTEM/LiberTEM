@@ -1,4 +1,4 @@
-import { call, put, select, take, takeEvery } from 'redux-saga/effects';
+import { call, put, select, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
 import { cancelJob, startJob } from '../job/api';
@@ -131,18 +131,17 @@ export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actio
     }
 }
 
-export function* cancelJobOnRemove() {
-    while (true) {
-        const action: ReturnType<typeof analysisActions.Actions.remove> = yield take(analysisActions.ActionTypes.REMOVE);
-        const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-        if (analysis && analysis.currentJob) {
-            yield call(cancelJob, analysis.currentJob);
-        }
+export function* doRemoveAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.remove>) {
+    const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+    try {
+        yield call(cancelJob, analysis.currentJob);
+    } finally {
+        yield put(analysisActions.Actions.removed(action.payload.id));
     }
 }
 
 export function* analysisRootSaga() {
     yield takeEvery(analysisActions.ActionTypes.CREATE, createAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.RUN, runAnalysisSaga);
-    yield takeEvery(analysisActions.ActionTypes.REMOVE, cancelJobOnRemove);
+    yield takeEvery(analysisActions.ActionTypes.REMOVE, doRemoveAnalysisSaga);
 }

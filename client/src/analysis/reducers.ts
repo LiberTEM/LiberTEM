@@ -49,7 +49,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.RUNNING: {
             return updateById(state, action.payload.id, { currentJob: action.payload.job })
         }
-        case analysisActions.ActionTypes.REMOVE: {
+        case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
         case analysisActions.ActionTypes.SET_PREVIEW: {

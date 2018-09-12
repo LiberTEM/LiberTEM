@@ -6,3 +6,14 @@ class JobExecutor(object):
         """
         cleanup resources used by this executor, if any
         """
+
+
+class AsyncJobExecutor(object):
+    async def run_job(self, job):
+        raise NotImplementedError()
+
+    async def close(self):
+        pass
+
+    async def cancel_job(self, job):
+        pass

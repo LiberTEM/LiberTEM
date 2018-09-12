@@ -10,6 +10,7 @@ export enum ActionTypes {
     RUN = 'ANALYSIS_RUN',
     RUNNING = 'ANALYSIS_RUNNING',
     REMOVE = 'ANALYSIS_REMOVE',
+    REMOVED = 'ANALYSIS_REMOVED',
     ERROR = 'ANALYSIS_ERROR',
     SET_PREVIEW = 'ANALYSIS_SET_PREVIEW',
     SET_PREVIEW_MODE = 'ANALYSIS_SET_PREVIEW_MODE',
@@ -24,6 +25,7 @@ export const Actions = {
     run: (id: string) => createAction(ActionTypes.RUN, { id }),
     running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
+    removed: (id: string) => createAction(ActionTypes.REMOVED, { id }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
 }
 

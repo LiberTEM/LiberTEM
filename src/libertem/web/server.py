@@ -1,5 +1,4 @@
 import os
-import sys
 import stat
 import time
 import datetime
@@ -12,7 +11,6 @@ from functools import partial
 import numpy as np
 from matplotlib import cm
 from dask import distributed as dd
-from distributed.asyncio import AioClient
 import tornado.web
 import tornado.gen
 import tornado.websocket
@@ -20,7 +18,7 @@ import tornado.ioloop
 import tornado.escape
 
 import libertem
-from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.dask import AsyncDaskJobExecutor
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
 from libertem.job.sum import SumFramesJob
@@ -39,6 +37,8 @@ log = logging.getLogger(__name__)
 def log_message(message):
     if "job" in message:
         log.info("message: %s (job=%s)" % (message["messageType"], message["job"]))
+    elif "dataset" in message:
+        log.info("message: %s (dataset=%s)" % (message["messageType"], message["dataset"]))
     else:
         log.info("message: %s" % message["messageType"])
 
@@ -126,6 +126,13 @@ class Message(object):
             },
         }
 
+    def cancel_job(self, job_id):
+        return {
+            "status": "ok",
+            "messageType": "CANCEL_JOB",
+            "job": job_id,
+        }
+
     def task_result(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
@@ -164,13 +171,6 @@ class RunJobMixin(object):
     async def run_job(self, uuid, ds, job, full_result):
         self.data.register_job(uuid=uuid, job=job)
         executor = self.data.get_executor()
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
         self.write(Message(self.data).start_job(
             job_id=uuid
         ))
@@ -182,7 +182,7 @@ class RunJobMixin(object):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
-        async for future, result in dd.as_completed(futures, with_results=True):
+        async for result in executor.run_job(job):
             # TODO:
             # + only send PNG of area that has changed (bounding box of all result tiles!)
             # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
@@ -218,6 +218,10 @@ class RunJobMixin(object):
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
+
+        if self.data.job_is_cancelled(uuid):
+            return
+
         results = yield full_result
         images = await result_images(results)
         msg = Message(self.data).finish_job(
@@ -246,7 +250,7 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     async def open(self):
         self.registry.add_handler(self)
-        self.data.verify_datasets()
+        await self.data.verify_datasets()
         if self.data.have_executor():
             msg = Message(self.data).initial_state(
                 jobs=self.data.serialize_jobs(),
@@ -336,9 +340,11 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             pass
 
     async def delete(self, uuid):
-        # TODO: implement this. maybe by setting a flag, or by having all the futures in a list
-        # in shared data and calling cancel on them
-        raise NotImplementedError()
+        await self.data.remove_job(uuid)
+        msg = Message(self.data).cancel_job(uuid)
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        self.write(msg)
 
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -352,7 +358,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         except KeyError:
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return
-        self.data.remove_dataset(uuid)
+        await self.data.remove_dataset(uuid)
         msg = Message(self.data).delete_dataset(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -572,9 +578,9 @@ class SharedData(object):
     def get_cluster_params(self):
         return self.cluster_params
 
-    def set_executor(self, executor, params):
+    async def set_executor(self, executor, params):
         if self.executor is not None:
-            self.executor.close()
+            await self.executor.close()
         self.executor = executor
         self.cluster_params = params
 
@@ -590,15 +596,15 @@ class SharedData(object):
     def get_dataset(self, uuid):
         return self.datasets[uuid]["dataset"]
 
-    def verify_datasets(self):
+    async def verify_datasets(self):
         for uuid, params in self.datasets.items():
             dataset = params["dataset"]
             try:
-                dataset.check_valid()
+                await run_blocking(dataset.check_valid)
             except DataSetException:
-                self.remove_dataset(uuid)
+                await self.remove_dataset(uuid)
 
-    def remove_dataset(self, uuid):
+    async def remove_dataset(self, uuid):
         ds = self.datasets[uuid]["dataset"]
         jobs_to_remove = [
             job
@@ -610,9 +616,7 @@ class SharedData(object):
         del self.datasets[uuid]
         del self.dataset_to_id[ds]
         for job_id in job_ids:
-            del self.jobs[job_id]
-        for job in jobs_to_remove:
-            del self.job_to_id[job]
+            await self.remove_job(job_id)
 
     def register_job(self, uuid, job):
         assert uuid not in self.jobs
@@ -620,8 +624,18 @@ class SharedData(object):
         self.job_to_id[job] = uuid
         return self
 
+    async def remove_job(self, uuid):
+        job = self.jobs[uuid]
+        executor = self.get_executor()
+        await executor.cancel_job(job)
+        del self.jobs[uuid]
+        del self.job_to_id[job]
+
     def get_job(self, uuid):
         return self.jobs[uuid]
+
+    def job_is_cancelled(self, uuid):
+        return uuid not in self.jobs
 
     def serialize_job(self, job_id):
         job = self.jobs[job_id]
@@ -693,24 +707,21 @@ class ConnectHandler(tornado.web.RequestHandler):
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         if connection["type"].lower() == "tcp":
-            dask_client = await AioClient(address=connection['address'])
-            executor = DaskJobExecutor(client=dask_client, is_local=connection['isLocal'])
+            executor = AsyncDaskJobExecutor.connect(
+                scheduler_uri=connection['address'],
+                is_local=connection['isLocal']
+            )
         elif connection["type"].lower() == "local":
-            # NOTE: we can't use DaskJobExecutor.make_local as it doesn't use AioClient
-            # which then conflicts with LocalCluster(asynchronous=True)
-            # error message: "RuntimeError: Non-thread-safe operation invoked on an event loop
-            # other than the current one"
-            # related: debugging via env var PYTHONASYNCIODEBUG=1
             cluster_kwargs = {
                 "threads_per_worker": 1,
                 "asynchronous": True,
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
-            cluster = dd.LocalCluster(**cluster_kwargs)
-            dask_client = await AioClient(address=cluster)
-            executor = DaskJobExecutor(client=dask_client, is_local=True)
-        self.data.set_executor(executor, request_data)
+            executor = await AsyncDaskJobExecutor.make_local(
+                cluster_kwargs=cluster_kwargs,
+            )
+        await self.data.set_executor(executor, request_data)
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),
@@ -807,17 +818,23 @@ def make_app():
     ], **settings)
 
 
-def sig_exit(signum, frame):
-    tornado.ioloop.IOLoop.instance().add_callback_from_signal(do_stop)
-
-
-def do_stop():
+async def do_stop():
     log.warning("Exiting...")
-    try:
-        data.get_executor().close()
-        tornado.ioloop.IOLoop.instance().stop()
-    finally:
-        sys.exit(0)
+    log.debug("closing executor")
+    if data.executor is not None:
+        await data.executor.close()
+    loop = asyncio.get_event_loop()
+    log.debug("shutting down async generators")
+    loop.shutdown_asyncgens()
+    log.debug("stopping event loop")
+    loop.stop()
+
+
+def sig_exit(signum, frame):
+    loop = tornado.ioloop.IOLoop.instance()
+    loop.add_callback_from_signal(
+        lambda: asyncio.ensure_future(do_stop())
+    )
 
 
 def main(host, port):
@@ -828,6 +845,7 @@ def main(host, port):
     log.info("listening on %s:%s" % (host, port))
     app = make_app()
     app.listen(address=host, port=port)
+    return app
 
 
 def run(host, port):

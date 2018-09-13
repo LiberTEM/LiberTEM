@@ -28,11 +28,10 @@ There are a few command line options available::
 
     Options:
       --port INTEGER  port on which the server should listen on
-      --host TEXT     host on which the server should listen on
       --help          Show this message and exit.
     
-As there is currently no authentication yet, it is discouraged to listen on a different host than
-`127.0.0.1` / `localhost`. As a workaround, if you want to access LiberTEM from a different computer,
+As there is currently no authentication yet, listening on a different host than
+`127.0.0.1` / `localhost` is disabled. As a workaround, if you want to access LiberTEM from a different computer,
 you can use ssh port forwarding (example command for conda):
 
 .. code-block:: shell

@@ -7,6 +7,7 @@ import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import HandleParent from "../../widgets/HandleParent";
 import { JobState } from "../types";
+import ResultImage from "./ResultImage";
 
 interface ResultProps {
     width: number,
@@ -38,11 +39,10 @@ class Result extends React.Component<MergedProps> {
     public render() {
         const { analysis, job, idx, width, height } = this.props;
         const { x, y } = analysis.preview.pick;
-        const result = job.results[idx];
 
         return (
             <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-                <image style={{ width: "100%", height: "auto", imageRendering: "pixelated" }} xlinkHref={result.imageURL} width={width} height={height} />
+                <ResultImage job={job} idx={idx} width={width} height={height} />
                 {analysis.preview.mode === "PICK" ?
                     <HandleParent width={width} height={height}>
                         <DraggableHandle x={x} y={y} withCross={true}

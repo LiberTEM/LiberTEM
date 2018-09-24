@@ -18,7 +18,7 @@ function* getConfigOnReconnect() {
  */
 function* getConfigSaga() {
     yield put(configActions.Actions.fetch());
-    const configResponse : GetConfigResponse = yield call(getConfig);
+    const configResponse: GetConfigResponse = yield call(getConfig);
     try {
         const mergedConfig = mergeLocalStorage(configResponse.config);
         yield put(configActions.Actions.fetched(mergedConfig));
@@ -57,12 +57,12 @@ function* updateLastOpenedConfig() {
 }
 
 export function* firstConfigFetch() {
-    yield call(getConfigSaga);
+    yield fork(getConfigSaga);
     yield fork(getConfigOnReconnect);
 }
 
 export function* configRootSaga() {
-    yield call(firstConfigFetch);
+    yield fork(firstConfigFetch);
     yield fork(updateConfigCWD);
     yield fork(updateLastOpenedConfig);
 }

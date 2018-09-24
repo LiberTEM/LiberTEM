@@ -33,5 +33,6 @@ export function clearLocalStorage(): void {
 export function getDefaultLocalConfig(config: MsgPartConfig): ConfigState {
     return Object.assign({}, config, {
         lastOpened: {},
+        cwd: "/",
     });
 }

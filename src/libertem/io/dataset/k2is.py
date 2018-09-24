@@ -32,9 +32,9 @@ def decode_uint12_le(inp, out):
 
     based partially on https://stackoverflow.com/a/45070947/540644
     """
-    assert np.mod(inp.shape[0], 3) == 0
+    assert np.mod(len(inp), 3) == 0
 
-    for i in range(inp.shape[0] // 3):
+    for i in range(len(inp) // 3):
         fst_uint8 = np.uint16(inp[i * 3])
         mid_uint8 = np.uint16(inp[i * 3 + 1])
         lst_uint8 = np.uint16(inp[i * 3 + 2])

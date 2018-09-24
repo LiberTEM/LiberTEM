@@ -25,19 +25,24 @@ NUM_SECTORS = 8
 SECTOR_SIZE = (2 * 930, 256)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def decode_uint12_le(inp, out):
     """
     decode bytes from bytestring ``inp`` as 12 bit into ``out``
+
+    based partially on https://stackoverflow.com/a/45070947/540644
     """
-    o = 0
-    for i in range(0, len(inp), 3):
-        s = inp[i:i + 3]
-        a = s[0] | (s[1] & 0x0F) << 8
-        b = (s[1] & 0xF0) >> 4 | s[2] << 4
-        out[o] = a
-        out[o + 1] = b
-        o += 2
+    assert np.mod(inp.shape[0], 3) == 0
+
+    for i in range(inp.shape[0] // 3):
+        fst_uint8 = np.uint16(inp[i * 3])
+        mid_uint8 = np.uint16(inp[i * 3 + 1])
+        lst_uint8 = np.uint16(inp[i * 3 + 2])
+
+        a = fst_uint8 | (mid_uint8 & 0x0F) << 8
+        b = (mid_uint8 & 0xF0) >> 4 | lst_uint8 << 4
+        out[i * 2] = a
+        out[i * 2 + 1] = b
 
 
 class K2FileSet:

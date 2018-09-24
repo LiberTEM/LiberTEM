@@ -24,6 +24,8 @@ FIRST_FRAME_SCAN_SIZE = 400
 NUM_SECTORS = 8
 SECTOR_SIZE = (2 * 930, 256)
 
+SHUTTER_ACTIVE_MASK = 0x1
+
 
 @numba.njit
 def decode_uint12_le(inp, out):
@@ -89,16 +91,10 @@ class K2FileSet:
             assert b.is_valid
 
     def sync_to_first_frame(self):
-        first_frame_id = self.first_blocks()[0].header['frame_id']
-        scan_blocks = list(itertools.islice(self.sectors[0].get_blocks(),
-                                       FIRST_FRAME_SCAN_SIZE * BLOCKS_PER_SECTOR_PER_FRAME))
-        log.debug("unique frame ids found: %d", len({b.header['frame_id'] for b in scan_blocks}))
-        log.debug("finding frames with frame_id < %d", first_frame_id)
-        if any(b.header['frame_id'] < first_frame_id for b in scan_blocks):
-            log.debug("have non-sequential frames, setting new offsets")
-            for s in self.sectors:
-                offset = s.first_block_with(lambda b: b.header['frame_id'] < first_frame_id).offset
-                s.set_first_block_offset(offset)
+        log.debug("synchronizing to shutter_active flag...")
+        for s in self.sectors:
+            offset = s.first_block_with(lambda b: b.shutter_active).offset
+            s.set_first_block_offset(offset)
         log.debug("first_block_offsets #3: %r", [s.first_block_offset for s in self.sectors])
 
     def validate_sync(self):
@@ -267,7 +263,8 @@ class DataBlock:
         ('sync', '>u4'),
         ('padding1', (bytes, 4)),
         ('version', '>u1'),
-        ('padding2', (bytes, 7)),
+        ('flags', '>u1'),
+        ('padding2', (bytes, 6)),
         ('block_count', '>u4'),
         ('width', '>u2'),
         ('height', '>u2'),
@@ -309,6 +306,10 @@ class DataBlock:
             header[field] = self._header_raw[field][0]
         self._header = header
         return header
+
+    @property
+    def shutter_active(self):
+        return self.header['flags'] & SHUTTER_ACTIVE_MASK == 1
 
     @property
     def pixel_data_raw(self):

@@ -24,9 +24,9 @@ in a web browser.
 LiberTEM currently opens most file formats used for pixelated STEM:
 
 - Raw binary files, for example for the Thermo Fisher EMPAD detector
-- Quantum Detectors MIB format
+- Quantum Detectors MIB format (currently alpha, more testing and sample files highly appreciated)
 - Nanomegas .blo block files
-- Gatan K2IS raw format
+- Gatan K2IS raw format (currently beta)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD
 - Please contact us if you are interested in support for an additional format!
 

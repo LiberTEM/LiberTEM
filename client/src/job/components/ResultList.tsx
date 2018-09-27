@@ -11,7 +11,7 @@ interface ResultProps {
 }
 
 interface ExternalResultProps {
-    job: string,
+    job?: string,
     analysis: string,
 }
 
@@ -45,16 +45,14 @@ class ResultList extends React.Component<MergedProps, ResultState> {
         const { job, analysis, dataset, width, height } = this.props;
         let msg;
         let img = (
-            <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
+            <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
         );
         if (!job || !dataset) {
             msg = <p>&nbsp;</p>;
         } else {
-            if (job.results.length > 0) {
-                img = (
-                    <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
-                );
-            }
+            img = (
+                <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
+            );
             if (job.startTimestamp && job.endTimestamp) {
                 const dt = (job.endTimestamp - job.startTimestamp) / 1000;
                 msg = <p>Analysis done in {dt.toFixed(3)} seconds</p>;

@@ -1,6 +1,6 @@
 import { ActionsUnion, createAction } from "../helpers/actionHelpers";
 import { AnalysisParameters, AnalysisTypes } from "../messages";
-import { AnalysisState, FramePreview, PreviewMode } from "./types";
+import { AnalysisState, FrameMode, JobKind } from "./types";
 
 
 export enum ActionTypes {
@@ -12,18 +12,16 @@ export enum ActionTypes {
     REMOVE = 'ANALYSIS_REMOVE',
     REMOVED = 'ANALYSIS_REMOVED',
     ERROR = 'ANALYSIS_ERROR',
-    SET_PREVIEW = 'ANALYSIS_SET_PREVIEW',
     SET_PREVIEW_MODE = 'ANALYSIS_SET_PREVIEW_MODE',
 }
 
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
     created: (analysis: AnalysisState) => createAction(ActionTypes.CREATED, { analysis }),
-    updateParameters: (id: string, parameters: Partial<AnalysisParameters>) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, parameters }),
-    setPreview: (id: string, preview: FramePreview) => createAction(ActionTypes.SET_PREVIEW, { id, preview }),
-    setPreviewMode: (id: string, mode: PreviewMode) => createAction(ActionTypes.SET_PREVIEW_MODE, { id, mode }),
-    run: (id: string) => createAction(ActionTypes.RUN, { id }),
-    running: (id: string, job: string) => createAction(ActionTypes.RUNNING, { id, job }),
+    updateParameters: (id: string, parameters: Partial<AnalysisParameters>, kind: JobKind) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, kind, parameters }),
+    setPreviewMode: (id: string, mode: FrameMode, initialParams: Partial<AnalysisParameters>) => createAction(ActionTypes.SET_PREVIEW_MODE, { id, mode, initialParams }),
+    run: (id: string, kind: JobKind) => createAction(ActionTypes.RUN, { id, kind }),
+    running: (id: string, job: string, kind: JobKind) => createAction(ActionTypes.RUNNING, { id, job, kind }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
     removed: (id: string) => createAction(ActionTypes.REMOVED, { id }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),

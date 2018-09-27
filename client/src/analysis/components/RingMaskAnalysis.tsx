@@ -20,13 +20,13 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
             // FIXME: updateParameters doesn't seem to be typed strong enough
             // the following doesn't raise a type error:
             // dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { foo: "bar" }));
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }));
+            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
         }),
         handleRIChange: defaultDebounce((ri: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ri }));
+            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ri }, "RESULT"));
         }),
         handleROChange: defaultDebounce((ro: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ro }));
+            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ro }, "RESULT"));
         }),
     }
 }

@@ -1,9 +1,13 @@
 import * as React from "react";
+import { connect } from "react-redux";
 import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import ResultList from "../../job/components/ResultList";
-import { DatasetState } from "../../messages";
+import { JobReducerState } from "../../job/reducers";
+import { AnalysisTypes, DatasetState } from "../../messages";
+import { RootReducer } from "../../store";
+import BusyWrapper from "../../widgets/BusyWrapper";
 import { AnalysisState } from "../types";
-import PreviewModeSelector from "./PreviewModeSelector";
+import FrameViewModeSelector from "./FrameViewModeSelector";
 import Toolbar from "./Toolbar";
 
 interface AnalysisItemProps {
@@ -13,12 +17,15 @@ interface AnalysisItemProps {
     subtitle: React.ReactNode,
 }
 
-const AnalysisItem: React.SFC<AnalysisItemProps> = ({ analysis, dataset, title, subtitle, children }) => {
-    const { currentJob } = analysis;
+type MergedProps = AnalysisItemProps & ReturnType<typeof mapStateToProps>;
+
+const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, title, subtitle, children }) => {
     const { shape } = dataset.params;
     const resultWidth = shape[1];
     const resultHeight = shape[0];
-    const pickCoords = analysis.preview.mode === "AVERAGE" ? null : `Pick: x=${analysis.preview.pick.x}, y=${analysis.preview.pick.y}`;
+    const pickCoords = analysis.preview.type === AnalysisTypes.SUM_FRAMES ? null : `Pick: x=${analysis.preview.parameters.x}, y=${analysis.preview.parameters.y}`;
+
+    const frameViewBusy = frameJob !== undefined ? frameJob.running !== "DONE" : false;
 
     return (
         <>
@@ -30,12 +37,14 @@ const AnalysisItem: React.SFC<AnalysisItemProps> = ({ analysis, dataset, title, 
                 <Grid columns={2}>
                     <Grid.Row>
                         <Grid.Column>
-                            {children}
-                            <PreviewModeSelector analysis={analysis} />
+                            <BusyWrapper busy={frameViewBusy}>
+                                {children}
+                            </BusyWrapper>
+                            <FrameViewModeSelector analysis={analysis} />
                             <p>{subtitle} {pickCoords}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <ResultList analysis={analysis.id} job={currentJob} width={resultWidth} height={resultHeight} />
+                            <ResultList analysis={analysis.id} job={analysis.jobs.RESULT} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
@@ -45,4 +54,18 @@ const AnalysisItem: React.SFC<AnalysisItemProps> = ({ analysis, dataset, title, 
     )
 }
 
-export default AnalysisItem;
+const getFrameJob = (analysis: AnalysisState, jobs: JobReducerState) => {
+    const frameJobId = analysis.jobs.FRAME;
+    if (frameJobId === undefined) {
+        return;
+    }
+    return jobs.byId[frameJobId];
+}
+
+const mapStateToProps = (state: RootReducer, ownProps: AnalysisItemProps) => {
+    return {
+        frameJob: getFrameJob(ownProps.analysis, state.jobs)
+    }
+}
+
+export default connect(mapStateToProps)(AnalysisItem);

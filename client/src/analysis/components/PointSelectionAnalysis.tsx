@@ -17,7 +17,7 @@ interface AnalysisProps {
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
     return {
         handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }));
+            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
         }),
     }
 }

@@ -1,6 +1,9 @@
 import * as React from "react";
-import { getPickFrameURL, getPreviewURL } from "../../dataset/api";
+import { connect } from "react-redux";
+import ResultImage from "../../job/components/ResultImage";
+import { JobReducerState } from "../../job/reducers";
 import { DatasetState } from "../../messages";
+import { RootReducer } from "../../store";
 import { AnalysisState } from "../types";
 
 export interface PreviewProps {
@@ -8,26 +11,35 @@ export interface PreviewProps {
     dataset: DatasetState,
 }
 
+type MergedProps = PreviewProps & ReturnType<typeof mapStateToProps>;
 
-const Preview: React.SFC<PreviewProps> = ({ analysis, dataset }) => {
+const Preview: React.SFC<MergedProps> = ({ analysis, dataset, job }) => {
     const { shape } = dataset.params;
 
     const imageWidth = shape[3];
     const imageHeight = shape[2];
 
-    let previewURL;
+    if (job === undefined) {
+        return null;
+    }
 
-    if (analysis.preview.mode === "AVERAGE") {
-        previewURL = getPreviewURL(dataset);
-    } else if (analysis.preview.mode === "PICK") {
-        if (analysis.preview.pick !== undefined) {
-            previewURL = getPickFrameURL(dataset, analysis.preview.pick.x, analysis.preview.pick.y);
-        }
-    }
-    if (previewURL) {
-        return <image xlinkHref={previewURL} width={imageWidth} height={imageHeight} style={{ imageRendering: "pixelated" }} />
-    }
-    return null;
+    return (
+        <ResultImage job={job} idx={0} width={imageWidth} height={imageHeight} />
+    );
 }
 
-export default Preview;
+const getJob = (analysis: AnalysisState, jobs: JobReducerState) => {
+    const jobId = analysis.jobs.FRAME;
+    if (jobId === undefined) {
+        return;
+    }
+    return jobs.byId[jobId];
+}
+
+const mapStateToProps = (state: RootReducer, ownProps: PreviewProps) => {
+    return {
+        job: getJob(ownProps.analysis, state.jobs),
+    }
+}
+
+export default connect(mapStateToProps)(Preview);

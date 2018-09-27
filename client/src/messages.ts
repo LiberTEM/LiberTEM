@@ -215,12 +215,18 @@ export interface CenterOfMassParams {
     r: number,
 }
 
+export interface PickFrameParams {
+    x: number,
+    y: number,
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    PICK_FRAME = "PICK_FRAME",
 }
 
 export interface RingMaskDetails {
@@ -248,8 +254,13 @@ export interface SumFramesDetails {
     parameters: {},
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails;
+export interface PickFrameDetails {
+    type: AnalysisTypes.PICK_FRAME,
+    parameters: PickFrameParams,
+}
+
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails;
 
 export interface StartJobRequest {
     job: {

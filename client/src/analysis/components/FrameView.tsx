@@ -6,14 +6,14 @@ import { DatasetState } from "../../messages";
 import { RootReducer } from "../../store";
 import { AnalysisState } from "../types";
 
-export interface PreviewProps {
+export interface FrameViewProps {
     analysis: AnalysisState,
     dataset: DatasetState,
 }
 
-type MergedProps = PreviewProps & ReturnType<typeof mapStateToProps>;
+type MergedProps = FrameViewProps & ReturnType<typeof mapStateToProps>;
 
-const Preview: React.SFC<MergedProps> = ({ analysis, dataset, job }) => {
+const FrameView: React.SFC<MergedProps> = ({ analysis, dataset, job }) => {
     const { shape } = dataset.params;
 
     const imageWidth = shape[3];
@@ -36,10 +36,10 @@ const getJob = (analysis: AnalysisState, jobs: JobReducerState) => {
     return jobs.byId[jobId];
 }
 
-const mapStateToProps = (state: RootReducer, ownProps: PreviewProps) => {
+const mapStateToProps = (state: RootReducer, ownProps: FrameViewProps) => {
     return {
         job: getJob(ownProps.analysis, state.jobs),
     }
 }
 
-export default connect(mapStateToProps)(Preview);
+export default connect(mapStateToProps)(FrameView);

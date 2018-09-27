@@ -23,7 +23,7 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
     const { shape } = dataset.params;
     const resultWidth = shape[1];
     const resultHeight = shape[0];
-    const pickCoords = analysis.preview.type === AnalysisTypes.SUM_FRAMES ? null : `Pick: x=${analysis.preview.parameters.x}, y=${analysis.preview.parameters.y}`;
+    const pickCoords = analysis.frameDetails.type === AnalysisTypes.SUM_FRAMES ? null : `Pick: x=${analysis.frameDetails.parameters.x}, y=${analysis.frameDetails.parameters.y}`;
 
     const frameViewBusy = frameJob !== undefined ? frameJob.running !== "DONE" : false;
 

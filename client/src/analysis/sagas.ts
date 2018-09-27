@@ -93,8 +93,8 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
         const analysis: AnalysisState = {
             id: uuid(),
             dataset: action.payload.dataset,
-            details: getAnalysisDetails(action.payload.analysisType, datasetState),
-            preview: { type: AnalysisTypes.SUM_FRAMES, parameters: {} },
+            resultDetails: getAnalysisDetails(action.payload.analysisType, datasetState),
+            frameDetails: { type: AnalysisTypes.SUM_FRAMES, parameters: {} },
             jobs: {},
         }
         yield put(analysisActions.Actions.created(analysis))
@@ -133,9 +133,9 @@ export function* runAnalysis(analysis: AnalysisState, kind: JobKind) {
 
         // TODO: make it more generic
         if (kind === "RESULT") {
-            job = yield call(startJob, jobId, analysis.dataset, analysis.details);
+            job = yield call(startJob, jobId, analysis.dataset, analysis.resultDetails);
         } else {
-            job = yield call(startJob, jobId, analysis.dataset, analysis.preview);
+            job = yield call(startJob, jobId, analysis.dataset, analysis.frameDetails);
         }
 
         return yield put(analysisActions.Actions.running(
@@ -155,7 +155,7 @@ export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actio
     yield fork(runAnalysis, analysis, action.payload.kind);
 }
 
-export function* updateFrameViewMode(action: ReturnType<typeof analysisActions.Actions.setPreviewMode>) {
+export function* updateFrameViewMode(action: ReturnType<typeof analysisActions.Actions.setFrameViewMode>) {
     yield put(analysisActions.Actions.run(action.payload.id, "FRAME"));
 }
 
@@ -179,6 +179,6 @@ export function* analysisRootSaga() {
     yield takeEvery(analysisActions.ActionTypes.CREATE, createAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.REMOVE, doRemoveAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.RUN, runAnalysisSaga);
-    yield takeEvery(analysisActions.ActionTypes.SET_PREVIEW_MODE, updateFrameViewMode);
+    yield takeEvery(analysisActions.ActionTypes.SET_FRAMEVIEW_MODE, updateFrameViewMode);
     yield takeEvery(analysisActions.ActionTypes.UPDATE_PARAMETERS, updateFrameViewParams);
 }

@@ -22,18 +22,18 @@ const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {
 type MergedProps = AnalysisProps & ReturnType<typeof mapStateToProps>;
 
 const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
-    switch (analysis.details.type) {
+    switch (analysis.resultDetails.type) {
         case AnalysisTypes.APPLY_DISK_MASK: {
-            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
+            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
         };
         case AnalysisTypes.APPLY_RING_MASK: {
-            return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
+            return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
         }
         case AnalysisTypes.CENTER_OF_MASS: {
-            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />;
+            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
         }
         case AnalysisTypes.APPLY_POINT_SELECTOR: {
-            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.details.parameters} />
+            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
         }
     }
 

@@ -36,10 +36,10 @@ class Result extends React.Component<MergedProps> {
 
     public renderPickHandles() {
         const { analysis, width, height } = this.props;
-        if (analysis.preview.type !== AnalysisTypes.PICK_FRAME) {
+        if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
             return null;
         }
-        const { x, y } = analysis.preview.parameters;
+        const { x, y } = analysis.frameDetails.parameters;
         return (
             <HandleParent width={width} height={height}>
                 <DraggableHandle x={x} y={y} withCross={true}

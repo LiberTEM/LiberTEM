@@ -12,8 +12,8 @@ export interface Analysis {
     id: string,
     dataset: string,
     jobs: JobList,
-    preview: PickFrameDetails | SumFramesDetails,
-    details: AnalysisDetails,
+    frameDetails: PickFrameDetails | SumFramesDetails,
+    resultDetails: AnalysisDetails,
 }
 
 export type AnalysisState = Analysis & {

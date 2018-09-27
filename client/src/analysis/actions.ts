@@ -12,14 +12,14 @@ export enum ActionTypes {
     REMOVE = 'ANALYSIS_REMOVE',
     REMOVED = 'ANALYSIS_REMOVED',
     ERROR = 'ANALYSIS_ERROR',
-    SET_PREVIEW_MODE = 'ANALYSIS_SET_PREVIEW_MODE',
+    SET_FRAMEVIEW_MODE = 'ANALYSIS_SET_FRAMEVIEW_MODE',
 }
 
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
     created: (analysis: AnalysisState) => createAction(ActionTypes.CREATED, { analysis }),
     updateParameters: (id: string, parameters: Partial<AnalysisParameters>, kind: JobKind) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, kind, parameters }),
-    setPreviewMode: (id: string, mode: FrameMode, initialParams: Partial<AnalysisParameters>) => createAction(ActionTypes.SET_PREVIEW_MODE, { id, mode, initialParams }),
+    setFrameViewMode: (id: string, mode: FrameMode, initialParams: Partial<AnalysisParameters>) => createAction(ActionTypes.SET_FRAMEVIEW_MODE, { id, mode, initialParams }),
     run: (id: string, kind: JobKind) => createAction(ActionTypes.RUN, { id, kind }),
     running: (id: string, job: string, kind: JobKind) => createAction(ActionTypes.RUNNING, { id, job, kind }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),

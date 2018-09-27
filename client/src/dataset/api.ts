@@ -1,4 +1,4 @@
-import { DatasetState, DeleteDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
+import { DeleteDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
 export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
     return fetch(`/api/datasets/${id}/`, {
@@ -6,14 +6,6 @@ export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<Op
         credentials: "same-origin",
         method: "PUT",
     }).then(r => r.json());
-}
-
-export function getPreviewURL(dataset: DatasetState) {
-    return `/api/datasets/${dataset.id}/preview/`;
-}
-
-export function getPickFrameURL(dataset: DatasetState, x: number, y: number) {
-    return `/api/datasets/${dataset.id}/pick/${x}/${y}/`;
 }
 
 export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {

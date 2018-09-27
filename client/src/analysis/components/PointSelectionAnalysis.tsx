@@ -6,7 +6,7 @@ import Point from "../../widgets/Point";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
-import Preview from "./Preview";
+import FrameView from "./FrameView";
 
 interface AnalysisProps {
     parameters: PointDef,
@@ -30,7 +30,7 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
     const imageWidth = shape[3];
     const imageHeight = shape[2];
 
-    const image = <Preview dataset={dataset} analysis={analysis} />
+    const image = <FrameView dataset={dataset} analysis={analysis} />
 
     return (
         <AnalysisItem analysis={analysis} dataset={dataset} title="Point analysis" subtitle={

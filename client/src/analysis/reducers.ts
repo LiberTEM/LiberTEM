@@ -16,7 +16,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             return insertById(state, action.payload.analysis.id, action.payload.analysis);
         }
         case analysisActions.ActionTypes.UPDATE_PARAMETERS: {
-            const key = action.payload.kind === "FRAME" ? "preview" : "details";
+            const key = action.payload.kind === "FRAME" ? "frameDetails" : "resultDetails";
             const details = state.byId[action.payload.id][key];
             const newDetails = Object.assign({}, details, {
                 parameters: Object.assign({}, details.parameters, action.payload.parameters),
@@ -24,11 +24,11 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             // TODO: find generic way
             if (action.payload.kind === "FRAME") {
                 return updateById(state, action.payload.id, {
-                    preview: newDetails,
+                    frameDetails: newDetails,
                 });
             } else {
                 return updateById(state, action.payload.id, {
-                    details: newDetails,
+                    resultDetails: newDetails,
                 });
             }
         }
@@ -41,12 +41,12 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
-        case analysisActions.ActionTypes.SET_PREVIEW_MODE: {
-            const newPreview = Object.assign({}, state.byId[action.payload.id].preview, {
+        case analysisActions.ActionTypes.SET_FRAMEVIEW_MODE: {
+            const newFrameDetails = Object.assign({}, state.byId[action.payload.id].frameDetails, {
                 type: action.payload.mode,
                 parameters: action.payload.initialParams,
             });
-            return updateById(state, action.payload.id, { preview: newPreview });
+            return updateById(state, action.payload.id, { frameDetails: newFrameDetails });
         }
     }
     return state;

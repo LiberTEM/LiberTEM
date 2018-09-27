@@ -6,7 +6,7 @@ import { RootReducer } from "../../store";
 import * as analysisActions from '../actions';
 import { AnalysisState, FrameMode } from "../types";
 
-const previewModeOptions = [
+const frameViewModeOptions = [
     {
         text: "Average",
         value: AnalysisTypes.SUM_FRAMES,
@@ -18,7 +18,7 @@ const previewModeOptions = [
 ]
 
 const mapDispatchToProps = {
-    setPreviewMode: analysisActions.Actions.setPreviewMode,
+    setFrameViewMode: analysisActions.Actions.setFrameViewMode,
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: PMSProps) => {
@@ -49,7 +49,7 @@ class FrameViewModeSelector extends React.Component<MergedProps> {
                 y: Math.round(scanHeight / 2),
             }
         }
-        this.props.setPreviewMode(analysis.id, value, initialParams);
+        this.props.setFrameViewMode(analysis.id, value, initialParams);
     }
 
     public render() {
@@ -61,8 +61,8 @@ class FrameViewModeSelector extends React.Component<MergedProps> {
                     Mode:{' '}
                     <Dropdown
                         inline={true}
-                        options={previewModeOptions}
-                        value={analysis.preview.type}
+                        options={frameViewModeOptions}
+                        value={analysis.frameDetails.type}
                         onChange={this.handleChange}
                     />
                 </div>

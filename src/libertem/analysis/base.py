@@ -27,7 +27,24 @@ class BaseAnalysis(object):
         self.parameters = parameters
 
     def get_results(self, job_results):
+        """
+        Parameters
+        ----------
+        job_results : list of :class:`~numpy.ndarray`
+            raw results from the job
+
+        Returns
+        -------
+        list of AnalysisResult
+            one or more annotated results
+        """
         raise NotImplementedError()
 
     def get_job(self):
+        """
+        Returns
+        -------
+        Job
+            a Job instance
+        """
         raise NotImplementedError()

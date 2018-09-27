@@ -9,7 +9,7 @@ class SumFramesJob(Job):
             yield SumFramesTask(partition=partition)
 
     def get_result_shape(self):
-        return self.dataset.shape[2:],
+        return self.dataset.shape[2:]
 
 
 class SumFramesTask(Task):

@@ -8,7 +8,7 @@ class SumAnalysis(BaseAnalysis):
         return SumFramesJob(dataset=self.dataset)
 
     def get_results(self, job_results):
-        data = job_results[0]
+        data = job_results
         return [
             AnalysisResult(raw_data=data, visualized=visualize_simple(data),
                    title="intensity", desc="sum of all frames"),

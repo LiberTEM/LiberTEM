@@ -1,16 +1,12 @@
 import os
 import stat
 import time
-import datetime
 import logging
 import asyncio
 import signal
 import psutil
 from functools import partial
 
-import numpy as np
-from matplotlib import cm
-from dask import distributed as dd
 import tornado.web
 import tornado.gen
 import tornado.websocket
@@ -21,13 +17,9 @@ import libertem
 from libertem.executor.dask import AsyncDaskJobExecutor
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
-from libertem.job.sum import SumFramesJob
-from libertem.job.raw import PickFrameJob
-from libertem.common.slice import Slice
-from libertem.viz import visualize_simple, encode_image
 from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    COMAnalysis, SumAnalysis
+    COMAnalysis, SumAnalysis, PickFrameAnalysis
 )
 
 
@@ -311,6 +303,7 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             "APPLY_POINT_SELECTOR": PointMaskAnalysis,
             "CENTER_OF_MASS": COMAnalysis,
             "SUM_FRAMES": SumAnalysis,
+            "PICK_FRAME": PickFrameAnalysis,
         }
         return analysis_by_type[type_]
 
@@ -428,121 +421,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
 
 
-class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def get_preview_image(self, dataset_uuid):
-        ds = self.data.get_dataset(dataset_uuid)
-        job = SumFramesJob(dataset=ds)
-
-        executor = self.data.get_executor()
-
-        log.info("creating preview for dataset %s" % dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-        log.info("preview futures created")
-
-        full_result = np.zeros(shape=ds.shape[2:], dtype="float32")
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("preview done, encoding image (dtype=%s)", full_result.dtype)
-        visualized = await run_blocking(
-            visualize_simple,
-            full_result,
-            colormap=cm.gist_earth,
-        )
-        image = await run_blocking(
-            encode_image,
-            visualized
-        )
-        log.info("image encoded, sending response")
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid):
-        """
-        make a preview and return it as HTTP response
-        """
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.get_preview_image(uuid)
-        self.write(image)
-
-
-class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def pick_frame(self, dataset_uuid, x, y):
-        ds = self.data.get_dataset(dataset_uuid)
-        x = int(x)
-        y = int(y)
-        slice_ = Slice(
-            origin=(y, x, 0, 0),
-            shape=(1, 1, ds.shape[2], ds.shape[3])
-        )
-        job = PickFrameJob(dataset=ds, slice_=slice_)
-
-        executor = self.data.get_executor()
-
-        log.info("picking %d/%d from %s", x, y, dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-
-        full_result = np.zeros(shape=ds.shape[2:], dtype=ds.dtype)
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("picking %d/%d done, encoding image (dtype=%s)", x, y, full_result.dtype)
-        visualized = await run_blocking(
-            visualize_simple,
-            full_result,
-            colormap=cm.gist_earth,
-        )
-        image = await run_blocking(
-            encode_image,
-            visualized
-        )
-        log.info("image %d/%d encoded, sending response", x, y)
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid, x, y):
-        """
-        pick a raw frame and return it as HTTP response
-        """
-        x = int(x)
-        y = int(y)
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.pick_frame(uuid, x, y)
-        self.write(image)
-
-
 class SharedData(object):
     def __init__(self):
         self.datasets = {}
@@ -625,11 +503,15 @@ class SharedData(object):
         return self
 
     async def remove_job(self, uuid):
-        job = self.jobs[uuid]
-        executor = self.get_executor()
-        await executor.cancel_job(job)
-        del self.jobs[uuid]
-        del self.job_to_id[job]
+        try:
+            job = self.jobs[uuid]
+            executor = self.get_executor()
+            await executor.cancel_job(job)
+            del self.jobs[uuid]
+            del self.job_to_id[job]
+            return True
+        except KeyError:
+            return False
 
     def get_job(self, uuid):
         return self.jobs[uuid]
@@ -787,14 +669,6 @@ def make_app():
     return tornado.web.Application([
         (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
-            "data": data,
-            "event_registry": event_registry
-        }),
-        (r"/api/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
-            "data": data,
-            "event_registry": event_registry
-        }),
-        (r"/api/datasets/([^/]+)/pick/([0-9]+)/([0-9]+)/", DataSetPickHandler, {
             "data": data,
             "event_registry": event_registry
         }),

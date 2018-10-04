@@ -210,6 +210,8 @@ class RunJobMixin(object):
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
+            if self.data.job_is_cancelled(uuid):
+                return
 
         if self.data.job_is_cancelled(uuid):
             return

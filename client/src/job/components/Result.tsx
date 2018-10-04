@@ -28,9 +28,19 @@ type MergedProps = ResultProps & DispatchProps<typeof mapDispatchToProps>;
 
 class Result extends React.Component<MergedProps> {
     public onCenterChange = (x: number, y: number) => {
+        const { analysis } = this.props;
+        if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
+            return;
+        }
+        const oldParams = analysis.frameDetails.parameters;
+        const newX = Math.round(x);
+        const newY = Math.round(y);
+        if (oldParams.x === newX && oldParams.y === newY) {
+            return;
+        }
         this.props.updateParameters(this.props.analysis.id, {
-            x: Math.round(x),
-            y: Math.round(y)
+            x: newX,
+            y: newY,
         }, "FRAME");
     }
 

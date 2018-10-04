@@ -8,10 +8,15 @@ export type AnalysisStatus = "busy" | "idle";
 
 export type JobList = Partial<{ [K in JobKind]: string }>;
 
+export type JobHistory = {
+    [K in JobKind]: string[]
+};
+
 export interface Analysis {
     id: string,
     dataset: string,
     jobs: JobList,
+    jobHistory: JobHistory,
     frameDetails: PickFrameDetails | SumFramesDetails,
     resultDetails: AnalysisDetails,
 }

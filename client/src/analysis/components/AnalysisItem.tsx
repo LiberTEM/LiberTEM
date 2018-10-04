@@ -44,7 +44,7 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
                             <p>{subtitle} {pickCoords}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <ResultList analysis={analysis.id} job={analysis.jobs.RESULT} width={resultWidth} height={resultHeight} />
+                            <ResultList analysis={analysis.id} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

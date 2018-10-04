@@ -4,11 +4,24 @@ export interface JobResultType {
     description: { title: string, desc: string },
 }
 
+export enum JobRunning {
+    CREATING = 'CREATING',
+    RUNNING = 'RUNNING',
+    DONE = 'DONE',
+}
+
+export enum JobStatus {
+    CREATING = 'CREATING',
+    IN_PROGRESS = 'IN_PROGRESS',
+    CANCELLED = 'CANCELLED',
+    SUCCESS = 'SUCCESS',
+}
+
 export interface JobState {
     id: string,
     dataset: string,
-    running: "CREATING" | "RUNNING" | "DONE",
-    status: "CREATING" | "IN_PROGRESS" | "CANCELLED" | "SUCCESS",
+    running: JobRunning,
+    status: JobStatus,
     results: JobResultType[],
     startTimestamp: number,
     endTimestamp: number,

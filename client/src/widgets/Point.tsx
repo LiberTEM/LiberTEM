@@ -15,7 +15,7 @@ export interface PointProps {
 
 const Point: React.SFC<PointProps> = ({ imageWidth, imageHeight, cx, cy, image, onCenterChange }) => {
     return (
-        <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
+        <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
             {image}
             <HandleParent width={imageWidth} height={imageHeight}>
                 <DraggableHandle x={cx} y={cy} withCross={true}

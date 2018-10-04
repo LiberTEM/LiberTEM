@@ -96,6 +96,10 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
             resultDetails: getAnalysisDetails(action.payload.analysisType, datasetState),
             frameDetails: { type: AnalysisTypes.SUM_FRAMES, parameters: {} },
             jobs: {},
+            jobHistory: {
+                FRAME: [],
+                RESULT: [],
+            }
         }
         yield put(analysisActions.Actions.created(analysis))
         yield put(analysisActions.Actions.run(analysis.id, "FRAME"));
@@ -161,6 +165,14 @@ export function* updateFrameViewMode(action: ReturnType<typeof analysisActions.A
 
 export function* updateFrameViewParams(action: ReturnType<typeof analysisActions.Actions.updateParameters>) {
     if (action.payload.kind === "FRAME") {
+        const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+        /*const jobs: JobReducerState = yield select((state: RootReducer) => state.jobs);
+        const lastJobId = analysis.jobHistory.FRAME[0];
+        if(lastJobId) {
+            const lastJob = jobs.byId[lastJobId];
+        }*/
+        // tslint:disable-next-line:no-console
+        console.log(action, analysis);
         yield put(analysisActions.Actions.run(action.payload.id, "FRAME"));
     }
 }

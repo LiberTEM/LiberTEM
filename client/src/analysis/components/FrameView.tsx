@@ -33,7 +33,18 @@ const getJob = (analysis: AnalysisState, jobs: JobReducerState) => {
     if (jobId === undefined) {
         return;
     }
-    return jobs.byId[jobId];
+    const job = jobs.byId[jobId];
+    if (job.results.length > 0) {
+        return job;
+    }
+    const history = analysis.jobHistory.FRAME;
+    for (const tmpJobId of history) {
+        const tmpJob = jobs.byId[tmpJobId];
+        if (tmpJob.results.length > 0) {
+            return tmpJob;
+        }
+    }
+    return;
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: FrameViewProps) => {

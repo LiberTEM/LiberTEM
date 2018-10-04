@@ -21,7 +21,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             const newDetails = Object.assign({}, details, {
                 parameters: Object.assign({}, details.parameters, action.payload.parameters),
             })
-            // TODO: find generic way
+            // TODO: convince typescript that `[key]: newDetails` is a better way...
             if (action.payload.kind === "FRAME") {
                 return updateById(state, action.payload.id, {
                     frameDetails: newDetails,
@@ -33,10 +33,20 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             }
         }
         case analysisActions.ActionTypes.RUNNING: {
-            const newJobs: JobList = Object.assign({}, state.byId[action.payload.id].jobs, {
+            const { kind, id } = action.payload;
+            const analysis = state.byId[id];
+            const oldJob = analysis.jobs[kind];
+            let jobHistory = analysis.jobHistory;
+            if (oldJob !== undefined) {
+                // TODO: length restriction?
+                jobHistory = Object.assign({}, jobHistory, {
+                    [kind]: [oldJob, ...jobHistory[kind]],
+                });
+            }
+            const newJobs: JobList = Object.assign({}, analysis.jobs, {
                 [action.payload.kind]: action.payload.job,
             });
-            return updateById(state, action.payload.id, { jobs: newJobs })
+            return updateById(state, action.payload.id, { jobs: newJobs, jobHistory })
         }
         case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);

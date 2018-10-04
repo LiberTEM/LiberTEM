@@ -335,22 +335,18 @@ def interpolate_color(fraction, start, end):
     return r1, r2, r3
 
 
-def _normalize(result):
+def _get_norm(result, norm_cls=colors.Normalize):
     # TODO: only normalize across the area where we already have values
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
     result = result.astype(np.float32)
     max_ = np.max(result)
+    min_ = 0
     result_gt_zero = result[result > 0]
-    if len(result_gt_zero) == 0:
-        min_ = 0
-    else:
+    if len(result_gt_zero) > 0:
         min_ = np.min(result_gt_zero)
 
-    normalized = result - min_
-    if max_ > 0:
-        normalized = normalized / max_
-    return normalized
+    return norm_cls(vmin=min_, vmax=max_)
 
 
 def encode_image(result, save_kwargs=None):
@@ -390,7 +386,8 @@ def visualize_simple(result, colormap=None):
     """
     if colormap is None:
         colormap = cm.gist_earth
-    normalized = _normalize(result)
+    norm = _get_norm(result)
+    normalized = norm(result)
     colored = colormap(normalized, bytes=True)
     return colored
 

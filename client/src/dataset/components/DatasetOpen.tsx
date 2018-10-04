@@ -42,18 +42,17 @@ interface DatasetOpenState {
 
 
 class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
-    public static getDerivedStateFromProps(props: MergedProps, state: DatasetOpenState) {
-        if (props.formInitial !== undefined) {
-            return {
-                datasetType: props.formInitial.type
-            };
-        } else {
-            return {};
-        }
-    }
-
     public state = {
         datasetType: DatasetTypes.RAW,
+    }
+
+    constructor(props: MergedProps) {
+        super(props);
+        if (props.formInitial !== undefined) {
+            this.state = {
+                datasetType: props.formInitial.type,
+            };
+        }
     }
 
     public setDatasetType = (e: React.SyntheticEvent, data: DropdownProps) => {

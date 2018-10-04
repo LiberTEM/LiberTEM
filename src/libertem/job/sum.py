@@ -27,7 +27,7 @@ class SumFramesTask(Task):
             part[
                 tile_slice[2],
                 tile_slice[3],
-            ] = result
+            ] += result
         return [
             SumResultTile(
                 data=part,

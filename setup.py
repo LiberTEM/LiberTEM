@@ -97,7 +97,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         "numpy",
-        "distributed",
+        "distributed>=1.23.2",
         "click",
         "tornado",
         "matplotlib",

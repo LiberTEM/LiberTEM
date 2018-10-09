@@ -15,6 +15,7 @@ import tornado.escape
 
 import libertem
 from libertem.executor.dask import AsyncDaskJobExecutor
+from libertem.executor.base import JobCancelledError
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
 from libertem.analysis import (
@@ -125,6 +126,13 @@ class Message(object):
             "job": job_id,
         }
 
+    def cancel_failed(self, job_id):
+        return {
+            "status": "error",
+            "messageType": "CANCEL_JOB_FAILED",
+            "job": job_id,
+        }
+
     def task_result(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
@@ -174,50 +182,41 @@ class RunJobMixin(object):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
-        async for result in executor.run_job(job):
-            # TODO:
-            # + only send PNG of area that has changed (bounding box of all result tiles!)
-            # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
-            # + if min/max changes, send whole channel (all results up to this point re-normalized)
-            # + maybe saturate up to some point (20% over current max => keep current max) and send
-            #   whole result image once finished
-            # + maybe use visualization framework in-browser (example: GR)
+        try:
+            async for result in executor.run_job(job):
+                for tile in result:
+                    tile.copy_to_result(full_result)
+                if time.time() - t < 0.3:
+                    continue
+                t = time.time()
+                results = yield full_result
+                images = await result_images(results)
 
-            # TODO: update task_result message:
-            # + send bbox for blitting
-
-            for tile in result:
-                tile.copy_to_result(full_result)
-            if time.time() - t < 0.3:
-                continue
-            t = time.time()
-            results = yield full_result
-            images = await result_images(results)
-
-            # NOTE: make sure the following broadcast_event messages are sent atomically!
-            # (that is: keep the code below synchronous, and only send the messages
-            # once the images have finished encoding, and then send all at once)
-            msg = Message(self.data).task_result(
-                job_id=uuid,
-                num_images=len(results),
-                image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
-                    for result in results
-                ],
-            )
-            log_message(msg)
-            self.event_registry.broadcast_event(msg)
-            for image in images:
-                raw_bytes = image.read()
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
-            if self.data.job_is_cancelled(uuid):
-                return
-
-        if self.data.job_is_cancelled(uuid):
-            return
+                # NOTE: make sure the following broadcast_event messages are sent atomically!
+                # (that is: keep the code below synchronous, and only send the messages
+                # once the images have finished encoding, and then send all at once)
+                msg = Message(self.data).task_result(
+                    job_id=uuid,
+                    num_images=len(results),
+                    image_descriptions=[
+                        {"title": result.title, "desc": result.desc}
+                        for result in results
+                    ],
+                )
+                log_message(msg)
+                self.event_registry.broadcast_event(msg)
+                for image in images:
+                    raw_bytes = image.read()
+                    self.event_registry.broadcast_event(raw_bytes, binary=True)
+        except JobCancelledError:
+            return  # TODO: maybe write a message on the websocket?
 
         results = yield full_result
+        if self.data.job_is_cancelled(uuid):
+            return
         images = await result_images(results)
+        if self.data.job_is_cancelled(uuid):
+            return
         msg = Message(self.data).finish_job(
             job_id=uuid,
             num_images=len(results),
@@ -335,11 +334,18 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             pass
 
     async def delete(self, uuid):
-        await self.data.remove_job(uuid)
-        msg = Message(self.data).cancel_job(uuid)
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-        self.write(msg)
+        result = await self.data.remove_job(uuid)
+        if result:
+            msg = Message(self.data).cancel_job(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
+        else:
+            log.warn("tried to remove unknown job %s", uuid)
+            msg = Message(self.data).cancel_failed(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
 
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):

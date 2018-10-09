@@ -1,7 +1,7 @@
 import tornado.util
 from dask import distributed as dd
 from distributed.asyncio import AioClient
-from .base import JobExecutor, AsyncJobExecutor
+from .base import JobExecutor, AsyncJobExecutor, JobCancelledError
 
 
 # NOTE:
@@ -43,6 +43,8 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         futures = self._get_futures(job)
         self._futures[job] = futures
         async for future, result in dd.as_completed(futures, with_results=True):
+            if future.cancelled():
+                raise JobCancelledError()
             yield result
         del self._futures[job]
 

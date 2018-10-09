@@ -1,7 +1,7 @@
 import { AllActions } from "../actions";
 import * as analysisActions from '../analysis/actions';
 import * as channelActions from '../channel/actions';
-import { ById, constructById, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, insertById, updateById } from "../helpers/reducerHelpers";
 import { JobResultType, JobState } from "./types";
 
 export type JobReducerState = ById<JobState>;
@@ -13,20 +13,6 @@ const initialJobState: JobReducerState = {
 
 export function jobReducer(state = initialJobState, action: AllActions) {
     switch (action.type) {
-        case channelActions.ActionTypes.INITIAL_STATE: {
-            const jobs = action.payload.jobs.map(job => ({
-                dataset: job.dataset,
-                id: job.id,
-                results: ([] as JobResultType[]),
-                // TODO: real status here
-                running: "DONE",
-                status: "SUCCESS",
-            }))
-            return {
-                byId: constructById(jobs, job => job.id),
-                ids: jobs.map(job => job.id)
-            };
-        }
         case analysisActions.ActionTypes.RUNNING: {
             // in case there is no job record yet for the job id, 
             const currentJob = state.byId[action.payload.job];
@@ -36,7 +22,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                     action.payload.job,
                     {
                         id: action.payload.job,
-                        results: ([] as JobResultType[]),
+                        results: [] as JobResultType[],
                         running: "CREATING",
                         status: "CREATING",
                     }
@@ -52,7 +38,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 {
                     id: action.payload.job,
                     dataset: action.payload.dataset,
-                    results: ([] as JobResultType[]),
+                    results: [] as JobResultType[],
                     running: "RUNNING",
                     status: "IN_PROGRESS",
                     startTimestamp: action.payload.timestamp,

@@ -5,56 +5,71 @@ import { RootReducer } from "../../store";
 import { JobState } from "../types";
 import Result from "./Result";
 
-interface ResultProps {
+interface ResultListProps {
     width: number,
     height: number,
 }
 
-interface ExternalResultProps {
-    job: string,
+interface ExternalResultListProps {
     analysis: string,
 }
 
-const mapStateToProps = (state: RootReducer, ownProps: ExternalResultProps) => {
-    const job = ownProps.job ? state.jobs.byId[ownProps.job] : undefined;
-    const ds = (job !== undefined) ? state.datasets.byId[job.dataset] : undefined;
+const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
     const analysis = state.analyses.byId[ownProps.analysis];
+    const jobId = analysis.jobs.RESULT;
+    const job = jobId ? state.jobs.byId[jobId] : undefined;
+    const ds = job ? state.datasets.byId[job.dataset] : undefined;
 
     return {
-        job,
+        currentJob: job,
+        jobsById: state.jobs.byId,
         analysis,
         dataset: ds,
     };
 };
 
-type MergedProps = ResultProps & ReturnType<typeof mapStateToProps>;
+type MergedProps = ResultListProps & ReturnType<typeof mapStateToProps>;
 
-interface ResultState {
+interface ResultListState {
     selectedImg: number,
 }
 
-class ResultList extends React.Component<MergedProps, ResultState> {
-    public state: ResultState = { selectedImg: 0 };
+class ResultList extends React.Component<MergedProps, ResultListState> {
+    public state: ResultListState = { selectedImg: 0 };
 
     public selectImage = (e: React.SyntheticEvent, data: DropdownProps) => {
         const value = data.value as number;
         this.setState({ selectedImg: value });
     }
 
+    public getJob = () => {
+        const { currentJob, analysis, jobsById } = this.props;
+        if (!currentJob) {
+            return;
+        }
+        if (currentJob.results.length > 0) {
+            return currentJob;
+        }
+        const history = analysis.jobHistory.RESULT;
+        if (history.length > 0) {
+            return jobsById[history[0]];
+        }
+        return;
+    }
+
     public render() {
-        const { job, analysis, dataset, width, height } = this.props;
+        const { analysis, dataset, width, height } = this.props;
         let msg;
         let img = (
-            <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
+            <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
         );
+        const job = this.getJob();
         if (!job || !dataset) {
             msg = <p>&nbsp;</p>;
         } else {
-            if (job.results.length > 0) {
-                img = (
-                    <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
-                );
-            }
+            img = (
+                <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
+            );
             if (job.startTimestamp && job.endTimestamp) {
                 const dt = (job.endTimestamp - job.startTimestamp) / 1000;
                 msg = <p>Analysis done in {dt.toFixed(3)} seconds</p>;

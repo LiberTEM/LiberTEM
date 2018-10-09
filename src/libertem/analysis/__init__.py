@@ -4,6 +4,7 @@ from .disk import DiskMaskAnalysis
 from .ring import RingMaskAnalysis
 from .point import PointMaskAnalysis
 from .masks import MasksAnalysis
+from .raw import PickFrameAnalysis
 
 __all__ = [
     'SumAnalysis',
@@ -12,4 +13,5 @@ __all__ = [
     'RingMaskAnalysis',
     'PointMaskAnalysis',
     'MasksAnalysis',
+    'PickFrameAnalysis',
 ]

@@ -1,3 +1,14 @@
+class ExecutorError(Exception):
+    pass
+
+
+class JobCancelledError(Exception):
+    """
+    raised by async executors in run_job if the job was cancelled
+    """
+    pass
+
+
 class JobExecutor(object):
     def run_job(self, job):
         raise NotImplementedError()

@@ -1,16 +1,12 @@
 import os
 import stat
 import time
-import datetime
 import logging
 import asyncio
 import signal
 import psutil
 from functools import partial
 
-import numpy as np
-from matplotlib import cm
-from dask import distributed as dd
 import tornado.web
 import tornado.gen
 import tornado.websocket
@@ -19,15 +15,12 @@ import tornado.escape
 
 import libertem
 from libertem.executor.dask import AsyncDaskJobExecutor
+from libertem.executor.base import JobCancelledError
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
-from libertem.job.sum import SumFramesJob
-from libertem.job.raw import PickFrameJob
-from libertem.common.slice import Slice
-from libertem.viz import visualize_simple, encode_image
 from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    COMAnalysis, SumAnalysis
+    COMAnalysis, SumAnalysis, PickFrameAnalysis
 )
 
 
@@ -133,6 +126,13 @@ class Message(object):
             "job": job_id,
         }
 
+    def cancel_failed(self, job_id):
+        return {
+            "status": "error",
+            "messageType": "CANCEL_JOB_FAILED",
+            "job": job_id,
+        }
+
     def task_result(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
@@ -182,48 +182,41 @@ class RunJobMixin(object):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
-        async for result in executor.run_job(job):
-            # TODO:
-            # + only send PNG of area that has changed (bounding box of all result tiles!)
-            # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
-            # + if min/max changes, send whole channel (all results up to this point re-normalized)
-            # + maybe saturate up to some point (20% over current max => keep current max) and send
-            #   whole result image once finished
-            # + maybe use visualization framework in-browser (example: GR)
+        try:
+            async for result in executor.run_job(job):
+                for tile in result:
+                    tile.copy_to_result(full_result)
+                if time.time() - t < 0.3:
+                    continue
+                t = time.time()
+                results = yield full_result
+                images = await result_images(results)
 
-            # TODO: update task_result message:
-            # + send bbox for blitting
-
-            for tile in result:
-                tile.copy_to_result(full_result)
-            if time.time() - t < 0.3:
-                continue
-            t = time.time()
-            results = yield full_result
-            images = await result_images(results)
-
-            # NOTE: make sure the following broadcast_event messages are sent atomically!
-            # (that is: keep the code below synchronous, and only send the messages
-            # once the images have finished encoding, and then send all at once)
-            msg = Message(self.data).task_result(
-                job_id=uuid,
-                num_images=len(results),
-                image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
-                    for result in results
-                ],
-            )
-            log_message(msg)
-            self.event_registry.broadcast_event(msg)
-            for image in images:
-                raw_bytes = image.read()
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
-
-        if self.data.job_is_cancelled(uuid):
-            return
+                # NOTE: make sure the following broadcast_event messages are sent atomically!
+                # (that is: keep the code below synchronous, and only send the messages
+                # once the images have finished encoding, and then send all at once)
+                msg = Message(self.data).task_result(
+                    job_id=uuid,
+                    num_images=len(results),
+                    image_descriptions=[
+                        {"title": result.title, "desc": result.desc}
+                        for result in results
+                    ],
+                )
+                log_message(msg)
+                self.event_registry.broadcast_event(msg)
+                for image in images:
+                    raw_bytes = image.read()
+                    self.event_registry.broadcast_event(raw_bytes, binary=True)
+        except JobCancelledError:
+            return  # TODO: maybe write a message on the websocket?
 
         results = yield full_result
+        if self.data.job_is_cancelled(uuid):
+            return
         images = await result_images(results)
+        if self.data.job_is_cancelled(uuid):
+            return
         msg = Message(self.data).finish_job(
             job_id=uuid,
             num_images=len(results),
@@ -311,6 +304,7 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             "APPLY_POINT_SELECTOR": PointMaskAnalysis,
             "CENTER_OF_MASS": COMAnalysis,
             "SUM_FRAMES": SumAnalysis,
+            "PICK_FRAME": PickFrameAnalysis,
         }
         return analysis_by_type[type_]
 
@@ -340,11 +334,18 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             pass
 
     async def delete(self, uuid):
-        await self.data.remove_job(uuid)
-        msg = Message(self.data).cancel_job(uuid)
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-        self.write(msg)
+        result = await self.data.remove_job(uuid)
+        if result:
+            msg = Message(self.data).cancel_job(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
+        else:
+            log.warn("tried to remove unknown job %s", uuid)
+            msg = Message(self.data).cancel_failed(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
 
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -426,121 +427,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         log_message(msg)
         self.write(msg)
         self.event_registry.broadcast_event(msg)
-
-
-class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def get_preview_image(self, dataset_uuid):
-        ds = self.data.get_dataset(dataset_uuid)
-        job = SumFramesJob(dataset=ds)
-
-        executor = self.data.get_executor()
-
-        log.info("creating preview for dataset %s" % dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-        log.info("preview futures created")
-
-        full_result = np.zeros(shape=ds.shape[2:], dtype="float32")
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("preview done, encoding image (dtype=%s)", full_result.dtype)
-        visualized = await run_blocking(
-            visualize_simple,
-            full_result,
-            colormap=cm.gist_earth,
-        )
-        image = await run_blocking(
-            encode_image,
-            visualized
-        )
-        log.info("image encoded, sending response")
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid):
-        """
-        make a preview and return it as HTTP response
-        """
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.get_preview_image(uuid)
-        self.write(image)
-
-
-class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def pick_frame(self, dataset_uuid, x, y):
-        ds = self.data.get_dataset(dataset_uuid)
-        x = int(x)
-        y = int(y)
-        slice_ = Slice(
-            origin=(y, x, 0, 0),
-            shape=(1, 1, ds.shape[2], ds.shape[3])
-        )
-        job = PickFrameJob(dataset=ds, slice_=slice_)
-
-        executor = self.data.get_executor()
-
-        log.info("picking %d/%d from %s", x, y, dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-
-        full_result = np.zeros(shape=ds.shape[2:], dtype=ds.dtype)
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("picking %d/%d done, encoding image (dtype=%s)", x, y, full_result.dtype)
-        visualized = await run_blocking(
-            visualize_simple,
-            full_result,
-            colormap=cm.gist_earth,
-        )
-        image = await run_blocking(
-            encode_image,
-            visualized
-        )
-        log.info("image %d/%d encoded, sending response", x, y)
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid, x, y):
-        """
-        pick a raw frame and return it as HTTP response
-        """
-        x = int(x)
-        y = int(y)
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.pick_frame(uuid, x, y)
-        self.write(image)
 
 
 class SharedData(object):
@@ -625,11 +511,15 @@ class SharedData(object):
         return self
 
     async def remove_job(self, uuid):
-        job = self.jobs[uuid]
-        executor = self.get_executor()
-        await executor.cancel_job(job)
-        del self.jobs[uuid]
-        del self.job_to_id[job]
+        try:
+            job = self.jobs[uuid]
+            executor = self.get_executor()
+            await executor.cancel_job(job)
+            del self.jobs[uuid]
+            del self.job_to_id[job]
+            return True
+        except KeyError:
+            return False
 
     def get_job(self, uuid):
         return self.jobs[uuid]
@@ -787,14 +677,6 @@ def make_app():
     return tornado.web.Application([
         (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
-            "data": data,
-            "event_registry": event_registry
-        }),
-        (r"/api/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
-            "data": data,
-            "event_registry": event_registry
-        }),
-        (r"/api/datasets/([^/]+)/pick/([0-9]+)/([0-9]+)/", DataSetPickHandler, {
             "data": data,
             "event_registry": event_registry
         }),

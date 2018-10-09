@@ -28,3 +28,7 @@ export const Actions = {
 }
 
 export type Actions = ActionsUnion<typeof Actions>;
+
+export type ActionParts = {
+    [K in keyof typeof Actions]: ReturnType<typeof Actions[K]>
+}

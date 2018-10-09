@@ -22,7 +22,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                     action.payload.job,
                     {
                         id: action.payload.job,
-                        results: ([] as JobResultType[]),
+                        results: [] as JobResultType[],
                         running: "CREATING",
                         status: "CREATING",
                     }
@@ -38,7 +38,7 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 {
                     id: action.payload.job,
                     dataset: action.payload.dataset,
-                    results: ([] as JobResultType[]),
+                    results: [] as JobResultType[],
                     running: "RUNNING",
                     status: "IN_PROGRESS",
                     startTimestamp: action.payload.timestamp,

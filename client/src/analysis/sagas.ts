@@ -1,4 +1,5 @@
-import { call, fork, put, select, takeEvery } from 'redux-saga/effects';
+import { buffers } from 'redux-saga';
+import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
 import * as uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
 import { cancelJob, startJob } from '../job/api';
@@ -87,6 +88,15 @@ function selectDataset(state: RootReducer, dataset: string) {
     return state.datasets.byId[dataset];
 }
 
+function selectAnalysis(state: RootReducer, id: string) {
+    return state.analyses.byId[id];
+}
+
+function selectJob(state: RootReducer, id: string) {
+    return state.jobs.byId[id];
+}
+
+
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
     try {
         const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
@@ -101,21 +111,23 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
                 RESULT: [],
             }
         }
-        yield put(analysisActions.Actions.created(analysis))
+
+        const sidecarTask = yield fork(analysisSidecar, analysis.id);
+
+        yield put(analysisActions.Actions.created(analysis));
         yield put(analysisActions.Actions.run(analysis.id, "FRAME"));
+
+        while (true) {
+            const removeAction: ReturnType<typeof analysisActions.Actions.remove> = yield take(analysisActions.ActionTypes.REMOVE);
+            if (removeAction.payload.id === analysis.id) {
+                yield cancel(sidecarTask);
+            }
+        }
     } catch (e) {
         const timestamp = Date.now();
         const id = uuid();
         yield put(analysisActions.Actions.error(`Error creating analysis: ${e.toString()}`, timestamp, id));
     }
-}
-
-function selectAnalysis(state: RootReducer, id: string) {
-    return state.analyses.byId[id];
-}
-
-function selectJob(state: RootReducer, id: string) {
-    return state.jobs.byId[id];
 }
 
 export function* cancelOldJob(analysis: AnalysisState, kind: JobKind) {
@@ -128,35 +140,45 @@ export function* cancelOldJob(analysis: AnalysisState, kind: JobKind) {
     }
 }
 
-export function* runAnalysis(analysis: AnalysisState, kind: JobKind) {
-    try {
-        yield call(cancelOldJob, analysis, kind);
+export function* analysisSidecar(analysisId: string) {
+    // channel for incoming actions:
+    // all actions that arrive while we block in `call` will be buffered here.
+    // because the buffer is sliding of size 1, we only keep the latest action!
+    const runOrParamsChannel = yield actionChannel(analysisActions.ActionTypes.RUN, buffers.sliding(1));
 
-        const jobId = uuid();
-        let job;
+    while (true) {
+        try {
+            const action: analysisActions.ActionParts["run"] = yield take(runOrParamsChannel);
 
-        // TODO: make it more generic
-        if (kind === "RESULT") {
-            job = yield call(startJob, jobId, analysis.dataset, analysis.resultDetails);
-        } else {
-            job = yield call(startJob, jobId, analysis.dataset, analysis.frameDetails);
+            // ignore actions meant for other analyses
+            if (action.payload.id !== analysisId) {
+                continue;
+            }
+
+            // get the current state incl. configuration
+            const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+
+            const kind = action.payload.kind;
+            const job: JobState = yield select(selectJob, analysis.jobs[kind]);
+            if (job && job.running !== "DONE") {
+                // wait until the job is cancelled:
+                yield call(cancelJob, analysis.jobs[kind]);
+            }
+
+            const jobId = uuid();
+            // wait until the job is started
+            if (kind === "FRAME") {
+                yield call(startJob, jobId, analysis.dataset, analysis.frameDetails);
+            } else if (kind === "RESULT") {
+                yield call(startJob, jobId, analysis.dataset, analysis.resultDetails);
+            }
+            yield put(analysisActions.Actions.running(analysis.id, jobId, kind))
+        } catch (e) {
+            const timestamp = Date.now();
+            const id = uuid();
+            yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
         }
-
-        return yield put(analysisActions.Actions.running(
-            analysis.id,
-            job.job,
-            kind,
-        ));
-    } catch (e) {
-        const timestamp = Date.now();
-        const id = uuid();
-        yield put(analysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
     }
-}
-
-export function* runAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.run>) {
-    const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-    yield fork(runAnalysis, analysis, action.payload.kind);
 }
 
 export function* updateFrameViewMode(action: ReturnType<typeof analysisActions.Actions.setFrameViewMode>) {
@@ -165,14 +187,6 @@ export function* updateFrameViewMode(action: ReturnType<typeof analysisActions.A
 
 export function* updateFrameViewParams(action: ReturnType<typeof analysisActions.Actions.updateParameters>) {
     if (action.payload.kind === "FRAME") {
-        const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
-        /*const jobs: JobReducerState = yield select((state: RootReducer) => state.jobs);
-        const lastJobId = analysis.jobHistory.FRAME[0];
-        if(lastJobId) {
-            const lastJob = jobs.byId[lastJobId];
-        }*/
-        // tslint:disable-next-line:no-console
-        console.log(action, analysis);
         yield put(analysisActions.Actions.run(action.payload.id, "FRAME"));
     }
 }
@@ -190,7 +204,6 @@ export function* doRemoveAnalysisSaga(action: ReturnType<typeof analysisActions.
 export function* analysisRootSaga() {
     yield takeEvery(analysisActions.ActionTypes.CREATE, createAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.REMOVE, doRemoveAnalysisSaga);
-    yield takeEvery(analysisActions.ActionTypes.RUN, runAnalysisSaga);
     yield takeEvery(analysisActions.ActionTypes.SET_FRAMEVIEW_MODE, updateFrameViewMode);
     yield takeEvery(analysisActions.ActionTypes.UPDATE_PARAMETERS, updateFrameViewParams);
 }

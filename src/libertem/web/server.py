@@ -413,20 +413,20 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         try:
             ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)
             await run_blocking(ds.check_valid)
-        except DataSetException as e:
+            self.data.register_dataset(
+                uuid=uuid,
+                dataset=ds,
+                params=request_data['dataset'],
+            )
+            msg = Message(self.data).create_dataset(dataset=uuid)
+            log_message(msg)
+            self.write(msg)
+            self.event_registry.broadcast_event(msg)
+        except Exception as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
             log_message(msg)
             self.write(msg)
             return
-        self.data.register_dataset(
-            uuid=uuid,
-            dataset=ds,
-            params=request_data['dataset'],
-        )
-        msg = Message(self.data).create_dataset(dataset=uuid)
-        log_message(msg)
-        self.write(msg)
-        self.event_registry.broadcast_event(msg)
 
 
 class SharedData(object):

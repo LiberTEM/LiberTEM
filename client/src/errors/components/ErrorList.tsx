@@ -8,7 +8,8 @@ const mapStateToProps = (state: RootReducer) => {
     return {
         errors: state.errors,
         clusterConnected: state.clusterConnection.status === "connected",
-        channelConnected: state.channelStatus.status === "connected",
+        channelConnected: (state.channelStatus.status === "connected" ||
+            state.channelStatus.status === "ready"),
     }
 }
 

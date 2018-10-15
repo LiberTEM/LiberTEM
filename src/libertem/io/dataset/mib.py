@@ -28,8 +28,9 @@ class MIBFile(object):
         image_size = (int(parts[5]), int(parts[4]))
         header_size_bytes = int(parts[2])
         bytes_per_pixel = int(parts[6][1:]) // 8
-        num_images = filesize // (image_size[0] * image_size[1] * bytes_per_pixel +
-                                  header_size_bytes)
+        num_images = filesize // (
+            image_size[0] * image_size[1] * bytes_per_pixel + header_size_bytes
+        )
         self._fields = {
             'header_size_bytes': header_size_bytes,
             'dtype': self._get_np_dtype(parts[6]),
@@ -57,18 +58,19 @@ class MIBFile(object):
         num : int
             number of frames to read
         offset : int
-            index of first frame to read
+            index of first frame to read (number of frames to skip)
         """
-        imagesize = self.fields['image_size']
-        framesize = imagesize[0] * imagesize[1] * self.fields['bytes_per_pixel']
-        imagesize_incl_header = framesize + self.fields['header_size_bytes']
-        header_size_num_px = self.fields['header_size_bytes'] // self.fields['bytes_per_pixel']
+        bpp = self.fields['bytes_per_pixel']
+        hsize = self.fields['header_size_bytes']
+        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
+        size = size_px * bpp  # bytes
+        imagesize_incl_header = size + hsize  # bytes
         mapped = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
                            offset=offset * imagesize_incl_header)
         idx = 0
         while idx < num:
-            start = (idx * imagesize_incl_header + header_size_num_px)
-            end = start + framesize
+            start = idx * (imagesize_incl_header // bpp) + hsize // bpp
+            end = start + size_px
             yield idx, mapped[start:end]
             idx += 1
 

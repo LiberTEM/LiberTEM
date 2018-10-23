@@ -342,10 +342,9 @@ def _get_norm(result, norm_cls=colors.Normalize):
     result = result.astype(np.float32)
     max_ = np.max(result)
     min_ = 0
-    result_gt_zero = result[result > 0]
-    if len(result_gt_zero) > 0:
-        min_ = np.min(result_gt_zero)
-
+    result_ne_zero = result[result != 0]
+    if len(result_ne_zero) > 0:
+        min_ = np.min(result_ne_zero)
     return norm_cls(vmin=min_, vmax=max_)
 
 

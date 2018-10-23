@@ -19,3 +19,8 @@ def test_rgb_from_vector():
 def test_interpolate_color():
     rgb = viz.interpolate_color(0.5, (0, 0, 0), (1, 1, 1))
     np.testing.assert_equal(rgb, (0.5, 0.5, 0.5))
+
+
+def test_norm_negative():
+    data = -1 * np.ones((16, 16))
+    viz.visualize_simple(data)

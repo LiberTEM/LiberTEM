@@ -1,4 +1,5 @@
 import { AllActions } from "../actions";
+import * as datasetActions from "../dataset/actions";
 import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as analysisActions from "./actions";
 import { AnalysisState, JobList } from "./types";
@@ -57,6 +58,9 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
                 parameters: action.payload.initialParams,
             });
             return updateById(state, action.payload.id, { frameDetails: newFrameDetails });
+        }
+        case datasetActions.ActionTypes.DELETE: {
+            return filterWithPred(state, (r: AnalysisState) => r.dataset !== action.payload.dataset);
         }
     }
     return state;

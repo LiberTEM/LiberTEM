@@ -107,6 +107,14 @@ class Message(object):
             "details": self.data.serialize_job(job_id),
         }
 
+    def job_error(self, job_id, msg):
+        return {
+            "status": "error",
+            "messageType": "JOB_ERROR",
+            "job": job_id,
+            "msg": msg,
+        }
+
     def finish_job(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
@@ -332,6 +340,11 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
                 await job_runner.asend(results)
         except StopAsyncIteration:
             pass
+        except Exception as e:
+            log.exception("error running job")
+            msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
+            self.event_registry.broadcast_event(msg)
+            await self.data.remove_job(uuid)
 
     async def delete(self, uuid):
         result = await self.data.remove_job(uuid)

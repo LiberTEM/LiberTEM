@@ -57,12 +57,17 @@ function* updateLastOpenedConfig() {
 }
 
 export function* firstConfigFetch() {
-    yield fork(getConfigSaga);
-    yield fork(getConfigOnReconnect);
+    try {
+        yield call(getConfigSaga);
+    } catch (e) {
+        // tslint:disable-next-line:no-console
+        console.error("failed to fetch config");
+    }
 }
 
 export function* configRootSaga() {
     yield fork(firstConfigFetch);
+    yield fork(getConfigOnReconnect);
     yield fork(updateConfigCWD);
     yield fork(updateLastOpenedConfig);
 }

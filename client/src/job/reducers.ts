@@ -66,6 +66,17 @@ export function jobReducer(state = initialJobState, action: AllActions) {
                 }
             );
         }
+        case channelActions.ActionTypes.JOB_ERROR: {
+            return updateById(
+                state,
+                action.payload.job,
+                {
+                    running: "DONE",
+                    status: "ERROR",
+                    endTimestamp: action.payload.timestamp,
+                }
+            )
+        }
     }
     return state;
 }

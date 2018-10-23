@@ -24,7 +24,8 @@ export function errorReducer(state = initialErrorState, action: AllActions): Err
         case browserActions.ActionTypes.ERROR:
         case datasetActions.ActionTypes.ERROR:
         case channelActions.ActionTypes.ERROR:
-        case analysisActions.ActionTypes.ERROR: {
+        case analysisActions.ActionTypes.ERROR:
+        case channelActions.ActionTypes.JOB_ERROR: {
             return insertById(state, action.payload.id, {
                 id: action.payload.id,
                 msg: action.payload.msg,

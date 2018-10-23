@@ -119,6 +119,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(datasetActions.Actions.deleted(msg.dataset));
                     break;
                 }
+                case channelMessages.MessageTypes.JOB_ERROR: {
+                    const id = uuid();
+                    yield put(channelActions.Actions.jobError(msg.job, msg.msg, id, timestamp));
+                }
             }
         }
     } finally {

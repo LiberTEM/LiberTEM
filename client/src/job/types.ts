@@ -15,6 +15,7 @@ export enum JobStatus {
     IN_PROGRESS = 'IN_PROGRESS',
     CANCELLED = 'CANCELLED',
     SUCCESS = 'SUCCESS',
+    ERROR = 'ERROR',
 }
 
 export interface JobState {

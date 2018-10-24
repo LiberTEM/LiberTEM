@@ -8,8 +8,7 @@ from scipy.ndimage import measurements
 
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.executor.inline import InlineJobExecutor
-from libertem.masks import gradient_x, gradient_y
-from libertem.job.masks import ApplyMasksJob
+from libertem.analysis.com import COMAnalysis
 
 
 @pytest.fixture
@@ -47,21 +46,18 @@ def do_com(fn, tileshape):
         target_size=512*1024*1024,
     )
 
-    masks = [
-        # summation of all pixels:
-        lambda: np.ones(shape=ds.shape[2:]),
+    params = {
+        "cx": 0,
+        "cy": 0,
+        "r": 2 * max(ds.shape),
+    }
 
-        # gradient from left to right
-        lambda: gradient_x(*ds.shape[2:]),
-
-        # gradient from top to bottom
-        lambda: gradient_y(*ds.shape[2:]),
-    ]
-    job = ApplyMasksJob(dataset=ds, mask_factories=masks)
+    analysis = COMAnalysis(dataset=ds, parameters=params)
+    job = analysis.get_job()
     print(job.masks.computed_masks)
     print("\n\n")
     executor = InlineJobExecutor()
-    full_result = np.zeros(shape=(3,) + ds.shape[:2])
+    full_result = job.get_result_buffer()
     color = np.zeros(shape=(3,) + ds.shape[:2])
     for result in executor.run_job(job):
         for tile in result:
@@ -69,9 +65,11 @@ def do_com(fn, tileshape):
             print(tile.data[0])
             color[tile.tile_slice.get()[:2]] += 1
             tile.copy_to_result(full_result)
-    x_centers = np.divide(full_result[1], full_result[0])
-    y_centers = np.divide(full_result[2], full_result[0])
     print(color)
+
+    results = analysis.get_results(full_result)
+    x_centers = results[3].raw_data
+    y_centers = results[4].raw_data
 
     return full_result, x_centers, y_centers
 
@@ -130,8 +128,8 @@ def test_center_of_mass_from_h5_2(hdf5_ds_2):
     assert x.shape == (5, 5)
     assert y.shape == (5, 5)
     assert full.shape == (3, 5, 5)
-    assert np.all(np.isnan(x))
-    assert np.all(np.isnan(y))
+    assert not np.any(np.isnan(x))
+    assert not np.any(np.isnan(y))
 
 
 def test_center_of_mass_from_h5_3(hdf5_ds_3):
@@ -139,17 +137,18 @@ def test_center_of_mass_from_h5_3(hdf5_ds_3):
     ds shape: (5, 5, 3, 3)
     5x5 scan positions
     3x3 pixels per frame
+    data: all ones
     """
     full, x, y = do_com(hdf5_ds_3.filename, tileshape=(1, 3, 2, 2))
     assert x.shape == (5, 5)
     assert y.shape == (5, 5)
     assert full.shape == (3, 5, 5)
+    assert np.all(full[0] == 3 * 3)
+    assert np.all(full[1] == sum(range(3)) * 3)
+    assert np.all(full[2] == sum(range(3)) * 3)
+    assert np.all(x == 1)
+    assert np.all(y == 1)
 
     scx, scy = measurements.center_of_mass(hdf5_ds_3['data'][0, 0])
     assert scx == 1
     assert scy == 1
-    assert np.all(x == 1)
-    assert np.all(y == 1)
-    assert np.all(full[0] == 3 * 3)
-    assert np.all(full[1] == sum(range(3)) * 3)
-    assert np.all(full[2] == sum(range(3)) * 3)

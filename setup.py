@@ -97,7 +97,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         "numpy",
-        "distributed>=1.23.2",
+        "distributed>=1.23.3",
         "click",
         "tornado",
         "matplotlib",
@@ -133,6 +133,7 @@ setup(
     },
     classifiers=[
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',

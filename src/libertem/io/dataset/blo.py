@@ -93,7 +93,7 @@ class BloDataSet(DataSet):
         with open(self._path, 'rb') as f:
             data = np.memmap(f, mode='r', offset=int(self.header['Data_offset_2']),
                              dtype=self._endianess + 'u1')
-            NX, NY, DP_SZ, _ = self.shape
+            NY, NX, DP_SZ, _ = self.shape
             data = data.reshape((NY, NX, DP_SZ * DP_SZ + 6))
             data = data[:, :, 6:]
             data = data.reshape(self.shape)

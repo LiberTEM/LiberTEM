@@ -1,4 +1,5 @@
 from functools import reduce
+import logging
 
 import numpy as np
 
@@ -6,6 +7,9 @@ from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
 from .base import AnalysisResult
 from .masks import MasksAnalysis
+
+
+log = logging.getLogger(__name__)
 
 
 def divergence(arr):
@@ -18,8 +22,12 @@ class COMAnalysis(MasksAnalysis):
         img_sum, img_x, img_y = job_results[0], job_results[1], job_results[2]
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
-        x_centers = np.divide(img_x, img_sum) - ref_x
-        y_centers = np.divide(img_y, img_sum) - ref_y
+        x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
+        y_centers = np.divide(img_y, img_sum, where=img_sum != 0)
+        x_centers[img_sum == 0] = ref_x
+        y_centers[img_sum == 0] = ref_y
+        x_centers -= ref_x
+        y_centers -= ref_y
         d = divergence([x_centers, y_centers])
         m = np.sqrt(x_centers**2 + y_centers**2)
         f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))

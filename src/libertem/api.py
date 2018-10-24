@@ -111,7 +111,7 @@ class Context:
             squeeze=True,
         )
 
-    def run(self, job: Job, out: np.ndarray=None):
+    def run(self, job: Job, out: np.ndarray = None):
         """
         Run the given `Job` and return the result data.
 

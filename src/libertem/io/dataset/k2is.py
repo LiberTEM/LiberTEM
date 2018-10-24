@@ -194,9 +194,9 @@ class Sector:
                 # log.debug("outer_frame=%d", outer_frame)
                 for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
                     offset = (
-                        self.first_block_offset +
-                        outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME +
-                        blockidx * BLOCK_SIZE
+                        self.first_block_offset
+                        + outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                        + blockidx * BLOCK_SIZE
                     )
                     # end of the row, calculate rest of stack:
                     if outer_frame % scan_width > (outer_frame + stackheight) % scan_width:
@@ -273,7 +273,7 @@ class DataBlock:
         ('pixel_y_start', '>u2'),  # first pixel y coordinate within sector
         ('pixel_x_end', '>u2'),  # last pixel x coordinate within sector
         ('pixel_y_end', '>u2'),  # last pixel y coordinate within sector
-        ('block_size', '>u4'),
+        ('block_size', '>u4'),  # should be fixed 0x5758
     ]
 
     def __init__(self, offset, sector):
@@ -286,10 +286,10 @@ class DataBlock:
     @property
     def is_valid(self):
         return (
-            self.sector.filesize >= self.offset + BLOCK_SIZE and
-            self.header['width'] == 256 and
-            self.header['height'] == 1860 and
-            self.header['sync'] == 0xFFFF0055
+            self.sector.filesize >= self.offset + BLOCK_SIZE
+            and self.header['width'] == 256
+            and self.header['height'] == 1860
+            and self.header['sync'] == 0xFFFF0055
         )
 
     @property

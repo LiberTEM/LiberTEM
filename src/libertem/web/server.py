@@ -179,14 +179,12 @@ class RunJobMixin(object):
     async def run_job(self, uuid, ds, job, full_result):
         self.data.register_job(uuid=uuid, job=job)
         executor = self.data.get_executor()
-        self.write(Message(self.data).start_job(
-            job_id=uuid
-        ))
-        self.finish()
         msg = Message(self.data).start_job(
             job_id=uuid,
         )
         log_message(msg)
+        self.write(msg)
+        self.finish()
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
@@ -341,7 +339,7 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         except StopAsyncIteration:
             pass
         except Exception as e:
-            log.exception("error running job")
+            log.exception("error running job, params=%r", params)
             msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
             self.event_registry.broadcast_event(msg)
             await self.data.remove_job(uuid)

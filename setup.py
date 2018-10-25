@@ -2,6 +2,7 @@ import re
 import os
 import codecs
 import distutils
+from distutils.command.sdist import sdist
 from distutils.command.build_py import build_py
 import subprocess
 from setuptools import setup
@@ -68,25 +69,23 @@ class CopyClientCommand(distutils.cmd.Command):
         subprocess.check_call(cmd, shell=True)
 
 
-class BakedRevisionBuilder(build_py):
+class BakedRevisionBuilderSdist(sdist):
+    def make_release_tree(self, base_dir, files):
+        if not self.dry_run:
+            write_baked_revision(base_dir)
+        sdist.make_release_tree(self, base_dir, files)
+
+
+class BakedRevisionBuilderBuildPy(build_py):
     def run(self):
         if not self.dry_run:
-            baked_dest = os.path.join(self.build_lib, 'libertem/_baked_revision.py')
-
-            with open(baked_dest, "w") as f:
-                f.write(r'revision = "%s"' % self.get_git_rev())
+            write_baked_revision(self.build_lib)
         build_py.run(self)
 
-    def get_git_rev(self):
-        # NOTE: this is a copy from src/libertem/versioning.py
-        # this is because it is not guaranteed that we can import our own packages
-        # from setup.py AFAIK
-        try:
-            new_cwd = os.path.abspath(os.path.dirname(__file__))
-            rev_raw = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=new_cwd)
-            return rev_raw.decode("utf8").strip()
-        except subprocess.CalledProcessError:
-            return "unknown"
+
+def mkpath(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def read(*parts):
@@ -94,6 +93,27 @@ def read(*parts):
     #   https://github.com/pypa/virtualenv/issues/201#issuecomment-3145690
     here = os.path.abspath(os.path.dirname(__file__))
     return codecs.open(os.path.join(here, *parts), 'r').read()
+
+
+def get_git_rev():
+    # NOTE: this is a copy from src/libertem/versioning.py
+    # this is because it is not guaranteed that we can import our own packages
+    # from setup.py AFAIK
+    try:
+        new_cwd = os.path.abspath(os.path.dirname(__file__))
+        rev_raw = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=new_cwd)
+        return rev_raw.decode("utf8").strip()
+    except subprocess.CalledProcessError:
+        return "unknown"
+
+
+def write_baked_revision(base_dir):
+    dest_dir = os.path.join(base_dir, 'libertem')
+    baked_dest = os.path.join(dest_dir, '_baked_revision.py')
+    mkpath(dest_dir)
+
+    with open(baked_dest, "w") as f:
+        f.write(r'revision = "%s"' % get_git_rev())
 
 
 def find_version(*file_paths):
@@ -111,11 +131,9 @@ def find_version(*file_paths):
 setup(
     name="libertem",
     version=find_version("src", "libertem", "__init__.py"),
-    url="https://libertem.github.io/LiberTEM/",
-    author_email="a.clausen@fz-juelich.de",
-    author="Alexander Clausen",
     license='GPL v3',
     include_package_data=True,
+    zip_safe=False,
     python_requires='>=3.6',
     install_requires=[
         "numpy",
@@ -152,8 +170,16 @@ setup(
     cmdclass={
         'build_client': BuildClientCommand,
         'copy_client': CopyClientCommand,
-        'build_py': BakedRevisionBuilder,
+        'sdist': BakedRevisionBuilderSdist,
+        'build_py': BakedRevisionBuilderBuildPy,
     },
+    keywords="electron microscopy",
+    description="Open pixelated STEM framework",
+    long_description=read("README.rst"),
+    long_description_content_type="text/x-rst",
+    url="https://libertem.github.io/LiberTEM/",
+    author_email="libertem-dev@googlegroups.com",
+    author="the LiberTEM team",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3.6',

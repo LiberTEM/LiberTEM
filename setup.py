@@ -2,6 +2,7 @@ import re
 import os
 import codecs
 import distutils
+from distutils.command.build_py import build_py
 import subprocess
 from setuptools import setup
 
@@ -67,6 +68,27 @@ class CopyClientCommand(distutils.cmd.Command):
         subprocess.check_call(cmd, shell=True)
 
 
+class BakedRevisionBuilder(build_py):
+    def run(self):
+        if not self.dry_run:
+            baked_dest = os.path.join(self.build_lib, 'libertem/_baked_revision.py')
+
+            with open(baked_dest, "w") as f:
+                f.write(r'revision = "%s"' % self.get_git_rev())
+        build_py.run(self)
+
+    def get_git_rev(self):
+        # NOTE: this is a copy from src/libertem/versioning.py
+        # this is because it is not guaranteed that we can import our own packages
+        # from setup.py AFAIK
+        try:
+            new_cwd = os.path.abspath(os.path.dirname(__file__))
+            rev_raw = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=new_cwd)
+            return rev_raw.decode("utf8").strip()
+        except subprocess.CalledProcessError:
+            return "unknown"
+
+
 def read(*parts):
     # intentionally *not* adding an encoding option to open, See:
     #   https://github.com/pypa/virtualenv/issues/201#issuecomment-3145690
@@ -130,8 +152,10 @@ setup(
     cmdclass={
         'build_client': BuildClientCommand,
         'copy_client': CopyClientCommand,
+        'build_py': BakedRevisionBuilder,
     },
     classifiers=[
+        'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -139,5 +163,15 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Microsoft :: Windows',
+        'Environment :: Web Environment',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'Programming Language :: JavaScript',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Scientific/Engineering :: Visualization',
     ],
 )

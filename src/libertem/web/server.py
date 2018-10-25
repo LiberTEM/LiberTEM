@@ -458,6 +458,7 @@ class SharedData(object):
     def get_config(self):
         return {
             "version": libertem.__version__,
+            "revision": libertem.revision,
             "localCores": self.get_local_cores(),
             "cwd": os.getcwd(),
             "separator": os.sep,

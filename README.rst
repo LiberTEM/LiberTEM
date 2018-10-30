@@ -52,7 +52,7 @@ our `development mailing list <https://groups.google.com/forum/#!forum/libertem-
 and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_. 
 
 Installation
-~~~~~~~~~~~~
+------------
 
 The short version:
 

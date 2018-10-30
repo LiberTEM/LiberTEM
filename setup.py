@@ -1,10 +1,10 @@
 import re
 import os
 import codecs
-import distutils
-from distutils.command.sdist import sdist
-from distutils.command.build_py import build_py
 import subprocess
+import distutils
+from setuptools.command.sdist import sdist
+from setuptools.command.build_py import build_py
 from setuptools import setup
 
 

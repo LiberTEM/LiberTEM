@@ -130,7 +130,7 @@ def find_version(*file_paths):
 
 setup(
     name="libertem",
-    version=find_version("src", "libertem", "__init__.py"),
+    version=find_version("src", "libertem", "__version__.py"),
     license='GPL v3',
     include_package_data=True,
     zip_safe=False,

@@ -1,7 +1,7 @@
 # keep version and revision in separate files such that we can
 # generate them without any regex magic
 
-from .__version__ import version as __version__
+from .__version__ import __version__
 
 try:
     from ._baked_revision import revision

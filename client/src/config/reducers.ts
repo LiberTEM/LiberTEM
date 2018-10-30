@@ -12,6 +12,7 @@ export type ConfigState = MsgPartConfig & {
 
 const initialConfigState: ConfigState = {
     version: "",
+    revision: "",
     localCores: 0,
     cwd: "/",
     separator: "/",

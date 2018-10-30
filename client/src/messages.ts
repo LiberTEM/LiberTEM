@@ -10,6 +10,7 @@ export interface FollowupPart {
 
 export interface MsgPartConfig {
     version: string,
+    revision: string,
     localCores: number,
     cwd: string,
     separator: string,

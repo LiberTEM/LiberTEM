@@ -6,15 +6,16 @@ import { RootReducer } from "./store";
 const mapStateToProps = (state: RootReducer) => {
     return {
         version: state.config.version,
+        revision: state.config.revision,
     }
 }
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const About: React.SFC<MergedProps> = ({ version }) => {
+const About: React.SFC<MergedProps> = ({ version, revision }) => {
     return (
         <>
-            <Header as="h3">This is LiberTEM version {version}</Header>
+            <Header as="h3">This is LiberTEM version {version} (revision {revision.slice(0, 8)})</Header>
             <List>
                 <List.Item>
                     <List.Icon name="github" />

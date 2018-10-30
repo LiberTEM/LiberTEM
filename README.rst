@@ -50,3 +50,16 @@ If you like to influence the direction this
 project is taking, or if you'd like to contribute, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_,
 our `development mailing list <https://groups.google.com/forum/#!forum/libertem-dev>`_,
 and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_. 
+
+Installation
+~~~~~~~~~~~~
+
+The short version:
+
+.. code-block:: shell
+
+    $ virtualenv -p python3.6 ~/libertem-venv/
+    $ source ~/libertem-venv/bin/activate
+    (libertem) $ pip install libertem[torch]
+
+Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!

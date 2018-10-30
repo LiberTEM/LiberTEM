@@ -82,6 +82,18 @@ Now the environment is ready to install LiberTEM.
 For more information about conda, see their `documentation about 
 creating and managing environments <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_.
 
+Installing from PyPi
+~~~~~~~~~~~~~~~~~~~~
+
+To install the latest release version, you can use pip. Activate the Python environment (conda or virtualenv) and install using:
+
+.. code-block:: shell
+
+    (libertem) $ pip install libertem
+
+This should install LiberTEM and its dependencies in the environment. Please
+continue by reading the :doc:`usage documentation <usage>`.
+
 Installing from a git clone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -92,7 +104,7 @@ from a git clone:
 
     $ git clone https://github.com/LiberTEM/LiberTEM.git
 
-Activate the python environment (conda or virtualenv) and change to the newly created directory with the clone of the LiberTEM repository. Now you can start the LiberTEM installation:
+Activate the Python environment (conda or virtualenv) and change to the newly created directory with the clone of the LiberTEM repository. Now you can start the LiberTEM installation:
 
 .. code-block:: shell
     
@@ -106,10 +118,17 @@ PyTorch
 
 LiberTEM can use `PyTorch <https://pytorch.org/>`_ for processing if it is available. Otherwise it uses numpy as a fallback. We've experienced up to 2x speed-ups with PyTorch compared to a default numpy installation. For that reason we recommend `installing PyTorch <https://pytorch.org/>`_. We currently use PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
 
-Installing from PyPi
-~~~~~~~~~~~~~~~~~~~~
+You can let pip install PyTorch automatically by using the torch variant, for example from PyPi:
 
-TODO: write once we have our package published in pypi
+.. code-block:: shell
+
+    (libertem) $ pip install libertem[torch]
+
+Or from git checkout:
+
+.. code-block:: shell
+
+    (libertem) $ pip install -e .[torch]
 
 Updating
 ~~~~~~~~

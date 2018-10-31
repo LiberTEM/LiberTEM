@@ -10,7 +10,7 @@ import click
 
 
 VERSION_RE = re.compile(
-    r'^(\d+)\.(\d+)\.(\d+)(\.rc\d+)?(\.dev0)?$'
+    r'^(?P<breaking>\d+)\.(?P<feature>\d+)\.(?P<fix>\d+)(?P<rc>\.rc\d+)?(?P<dev>\.dev0)?$'
 )
 
 
@@ -44,23 +44,36 @@ def do_git_tag(tag):
 
 @click.command()
 @click.argument('new_version', type=str)
-@click.option('--tag/--no-tag', help='create a git tag after bumping', default=False)
-@click.option('--commit/--no-commit', help='create a git commit after bumping', default=False)
-def main(new_version, tag, commit):
+@click.option('--tag/--no-tag', help='create a git tag after bumping (implies --commit)',
+              default=False)
+@click.option('--commit/--no-commit', help='create a git commit after bumping',
+              default=False)
+@click.option('--force/--no-force', help='force operation, even if it doesn\'t fit our conventions',
+              default=False)
+def main(new_version, tag, commit, force):
     """
     bump the version in libertem.__version__
 
     NEW_VERSION should be pep440 compatible and conform to our version conventions
     """
     if tag and not commit:
-        raise click.UsageError("can only tag together with commit")
-    if VERSION_RE.match(new_version) is None:
+        commit = True
+        print("NOTE: implicitly enabling --commit")
+    match = VERSION_RE.match(new_version)
+    if match is None:
         raise click.UsageError("could not parse version, may not conform to our scheme")
     here = os.path.abspath(os.path.dirname(__file__))
     version_file = os.path.join(here, '..', 'src', 'libertem', '__version__.py')
     old_version = read_version(version_file)
     render_version(version_file, new_version)
     version_tag = "v{}".format(new_version)
+
+    if tag and match.groupdict()['dev'] is not None:
+        if not force:
+            raise click.ClickException("dev releases should not be tagged, use --force to override")
+        else:
+            print("NOTE: tagging a dev release because of --force")
+
     if commit:
         do_git_commit(old_version=old_version, new_version=new_version,
                       version_file=version_file)

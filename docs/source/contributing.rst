@@ -3,6 +3,11 @@ Contributing
 
 TODO
 
+Updating Acknowledgments and Author List
+----------------------------------------
+
+Please update ``docs/source/acknowledgments.rst`` and ``.zenodo.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited.
+
 Running the Tests
 -----------------
 

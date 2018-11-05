@@ -1,8 +1,8 @@
 Acknowledgments
 ===============
 
-Authors
-~~~~~~~
+Contributions
+~~~~~~~~~~~~~
 
 The following people contributed to source code, documentation, sample files and design. 
 Please help us keeping this list up-to-date and complete! If you feel that you should be listed here, please contact us. 
@@ -92,7 +92,7 @@ We are grateful for every contribution, and if your contribution is not listed h
 **Francisco de la Peña (Lille)**
     Discussions
 
-Notable upstream projects
+Notable Upstream Projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Python, PyData universe, Dask.distributed, PyTorch, Numpy, OpenBLAS, Click, Tornado web, Matplotlib, Pillow, H5Py, Numba, Psutil, Hdfs3

@@ -100,7 +100,7 @@ LiberTEM kindly acknowledges funding and support from the following sources:
 
 **ERC Proof-of-Concept grant VIDEO**
 
-.. image:: ./images/eu.jpg
+.. image:: ./images/EU.jpg
     :align: left
     :width: 100px
     :alt: European Union flag

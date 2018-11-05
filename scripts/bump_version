@@ -16,12 +16,8 @@ VERSION_RE = re.compile(
 
 def render_version(version_file, new_version):
     version_stm = '__version__ = "{}"\n'.format(new_version)
-    with tempfile.NamedTemporaryFile(
-            dir=os.path.dirname(version_file),
-            delete=False
-    ) as tmpf:
-        tmpf.write(version_stm.encode("utf8"))
-        shutil.move(tmpf.name, version_file)
+    with open(version_file, 'wb') as f:
+        f.write(version_stm.encode("utf8"))
 
 
 def read_version(version_file):

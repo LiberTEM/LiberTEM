@@ -33,7 +33,7 @@ We are grateful for every contribution, and if your contribution is not listed h
     Discussions, supporting deployment on Australian eResearch infrastructure
 
 **@probonopd, @theassassin**
-    Help with setting up Continuous Integration
+    Help with setting up AppImage building and Continuous Integration
 
 **Eduardo Nebot, Liam O'Ryan (Quantum Detectors)**
     Support, discussions, sample files, funding applications
@@ -74,8 +74,8 @@ We are grateful for every contribution, and if your contribution is not listed h
 **Andy Stewart (U Limerick)**
     Discussions
 
-**Jacob Wilbrink (Gatan)**
-    Discussions
+**Jacob Wilbrink, Ana Pakzad (Gatan)**
+    Discussions, support for implementing K2 raw file format
 
 **Christoph Koch (HU Berlin)**
     Discussions

@@ -160,6 +160,12 @@ Differences:
 
     $ activate libertem
     
+* You might have to install pip into your local libertem conda environment to make sure that ``pip install`` installs packages into your local environment and not into the global Anaconda base environment. This helps to avoid permission issues and interference between environments.
+
+.. code-block:: shell  
+
+    $ conda install pip
+
 
 Troubleshooting
 ---------------

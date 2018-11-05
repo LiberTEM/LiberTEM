@@ -92,6 +92,14 @@ We are grateful for every contribution, and if your contribution is not listed h
 **Francisco de la Peña (Lille)**
     Discussions
 
+Notable upstream projects
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python, PyData universe, Dask.distributed, PyTorch, Numpy, OpenBLAS, Click, Tornado web, Matplotlib, Pillow, H5Py, Numba, Psutil, Hdfs3
+
+Typescript, React, React Window, Redux, Redux-saga, Semantic UI
+
+Not dependencies, but notable related projects: Hyperspy, NeXus, Apache Spark, Hadoop FS
 
 Funding
 ~~~~~~~

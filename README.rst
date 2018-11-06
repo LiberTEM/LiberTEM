@@ -1,4 +1,4 @@
-|gitter|_ |travis|_ |appveyor|_
+|gitter|_ |travis|_ |appveyor|_ |zenodo|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
@@ -8,6 +8,9 @@
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/wokeo6ee2frq481m?svg=true
 .. _appveyor: https://ci.appveyor.com/project/sk1p/libertem
+
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1478763.svg
+.. _zenodo: https://doi.org/10.5281/zenodo.1478763
 
 
 

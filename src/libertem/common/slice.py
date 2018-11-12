@@ -235,7 +235,7 @@ class Slice(object):
         # FIXME: allow for partitions smaller than one scan row
         # FIXME: allow specifying the "aspect ratio" for a partition?
         num_frames = datashape[0] * datashape[1]
-        bytes_per_frame = framesize * np.typeDict[str(dtype)]().itemsize
+        bytes_per_frame = framesize * np.dtype(str(dtype)).itemsize
         frames_per_partition = target_size // bytes_per_frame
         num_partitions = num_frames // frames_per_partition
         num_partitions = max(min_num_partitions, num_partitions)

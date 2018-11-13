@@ -444,7 +444,10 @@ class K2ISDataSet(DataSet):
         stat = os.stat(sector0_fname)
         size = stat.st_size
         # let's try to aim for 512MB per partition
-        return size // (512*1024*1024)
+        res = size // (512*1024*1024)
+        if res == 0:
+            res = 1
+        return res
 
     def get_partitions(self):
         fs = self._get_fileset()

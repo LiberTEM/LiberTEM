@@ -58,14 +58,14 @@ def do_com(fn, tileshape):
     print("\n\n")
     executor = InlineJobExecutor()
     full_result = job.get_result_buffer()
-    color = np.zeros(shape=(3,) + ds.shape[:2])
+    # color = np.zeros(shape=(3,) + ds.shape[:2])
     for result in executor.run_job(job):
         for tile in result:
             print(tile)
             print(tile.data[0])
-            color[tile.tile_slice.get()[:2]] += 1
+            # color[tile.tile_slice.get()[:2]] += 1
             tile.copy_to_result(full_result)
-    print(color)
+    # print(color)
 
     results = analysis.get_results(full_result)
     x_centers = results[3].raw_data

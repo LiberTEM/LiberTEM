@@ -158,30 +158,30 @@ class ApplyMasksTask(Task):
                 tile_slice.shape[1],
             )
 
-    def copy_to_part_result(self, tile_slice, tile_result, result):
+    def copy_to_part_result(self, tile_slice, tile_result, dest):
         """
-        copy the result in `tile_result` to `result`
+        copy the result in `tile_result` to `dest`
         """
         # is this tile contiguous on (num_masks, num_frames)?
-        if tile_slice.shape[0] == 1 or tile_slice.shape[1] == result.shape[2]:
-            s = result.shape
-            result_flat = result.reshape((s[0], s[1] * s[2]))
+        if tile_slice.shape[0] == 1 or tile_slice.shape[1] == dest.shape[2]:
+            s = dest.shape
+            dest_flat = dest.reshape((s[0], s[1] * s[2]))
             reshaped = self.reshaped_data(
                 data=tile_result,
                 tile_slice=tile_slice,
             )
-            result_flat[self._get_dest_slice_3d(tile_slice=tile_slice, result_shape=s)] += reshaped
+            dest_flat[self._get_dest_slice_3d(tile_slice=tile_slice, result_shape=s)] += reshaped
         else:
-            result[self._get_dest_slice_4d(tile_slice=tile_slice)] += self.reshaped_data(
+            dest[self._get_dest_slice_4d(tile_slice=tile_slice)] += self.reshaped_data(
                 data=tile_result,
                 tile_slice=tile_slice,
                 flat_frames=False
             )
-        return result
+        return dest
 
     def __call__(self):
         num_masks = len(self.masks)
-        part = np.zeros((num_masks,) + self.partition.dataset.shape[:2], dtype="float32")
+        part = np.zeros((num_masks,) + self.partition.shape[:2], dtype="float32")
         for data_tile in self.partition.get_tiles():
             # print("dotting\n%r\nwith\n%r\n\n" % (data_tile.flat_data, self.masks[data_tile]))
             data = data_tile.flat_data
@@ -196,27 +196,32 @@ class ApplyMasksTask(Task):
             else:
                 result = data.dot(masks)
             self.copy_to_part_result(
-                tile_slice=data_tile.tile_slice,
+                tile_slice=data_tile.tile_slice.shift(self.partition.slice),
                 tile_result=result,
-                result=part
+                dest=part
             )
         return [
-            ResultTile(data=part, tile_slice=self.partition.slice)
+            ResultTile(
+                data=part,
+                partition_slice=self.partition.slice,
+                dest_slice=self._get_dest_slice_4d(self.partition.slice),
+            )
         ]
 
 
 class ResultTile(object):
-    def __init__(self, data, tile_slice):
+    def __init__(self, data, partition_slice, dest_slice):
         self.data = data
-        self.tile_slice = tile_slice
+        self.partition_slice = partition_slice
+        self.dest_slice = dest_slice
 
     def __repr__(self):
-        return "<ResultTile for slice=%r>" % self.tile_slice
+        return "<ResultTile for slice=%r>" % self.partition_slice
 
     @property
     def dtype(self):
         return self.data.dtype
 
     def copy_to_result(self, result):
-        result += self.data
+        result[self.dest_slice] += self.data
         return result

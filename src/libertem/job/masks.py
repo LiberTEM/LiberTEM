@@ -112,8 +112,76 @@ class ApplyMasksTask(Task):
         self.use_torch = use_torch
         super().__init__(*args, **kwargs)
 
+    def _get_dest_slice_3d(self, result_shape, tile_slice):
+        sy0 = tile_slice.origin[0]
+        sx0 = tile_slice.origin[1]
+
+        start_idx = sy0 * result_shape[2] + sx0
+        num_frames = tile_slice.shape[0] * tile_slice.shape[1]
+
+        return (
+            Ellipsis,
+            slice(start_idx, start_idx + num_frames),
+        )
+
+    def _get_dest_slice_4d(self, tile_slice):
+        tile_slice = tile_slice.get()
+
+        return (
+            Ellipsis,
+            tile_slice[0],
+            tile_slice[1],
+        )
+
+    def reshaped_data(self, data, tile_slice, flat_frames=True):
+        """
+        Reshapes the result from the flattened and interleaved version to a shape
+        that fits the result array (masks, y, x) or (masks, num_frames)
+        """
+
+        num_masks = data.shape[1]
+
+        deinterleaved = np.stack(
+            [data.ravel()[idx::num_masks]
+             for idx in range(num_masks)],
+            axis=0,
+        )
+        if flat_frames:
+            return deinterleaved.reshape(
+                num_masks,
+                tile_slice.shape[0] * tile_slice.shape[1],
+            )
+        else:
+            return deinterleaved.reshape(
+                num_masks,
+                tile_slice.shape[0],
+                tile_slice.shape[1],
+            )
+
+    def copy_to_part_result(self, tile_slice, tile_result, result):
+        """
+        copy the result in `tile_result` to `result`
+        """
+        # is this tile contiguous on (num_masks, num_frames)?
+        if tile_slice.shape[0] == 1 or tile_slice.shape[1] == result.shape[2]:
+            s = result.shape
+            result_flat = result.reshape((s[0], s[1] * s[2]))
+            reshaped = self.reshaped_data(
+                data=tile_result,
+                tile_slice=tile_slice,
+            )
+            result_flat[self._get_dest_slice_3d(tile_slice=tile_slice, result_shape=s)] += reshaped
+        else:
+            result[self._get_dest_slice_4d(tile_slice=tile_slice)] += self.reshaped_data(
+                data=tile_result,
+                tile_slice=tile_slice,
+                flat_frames=False
+            )
+        return result
+
     def __call__(self):
-        parts = []
+        num_masks = len(self.masks)
+        part = np.zeros((num_masks,) + self.partition.dataset.shape[:2], dtype="float32")
         for data_tile in self.partition.get_tiles():
             # print("dotting\n%r\nwith\n%r\n\n" % (data_tile.flat_data, self.masks[data_tile]))
             data = data_tile.flat_data
@@ -127,13 +195,14 @@ class ApplyMasksTask(Task):
                 ).numpy()
             else:
                 result = data.dot(masks)
-            parts.append(
-                ResultTile(
-                    data=result,
-                    tile_slice=data_tile.tile_slice,
-                )
+            self.copy_to_part_result(
+                tile_slice=data_tile.tile_slice,
+                tile_result=result,
+                result=part
             )
-        return parts
+        return [
+            ResultTile(data=part, tile_slice=self.partition.slice)
+        ]
 
 
 class ResultTile(object):
@@ -144,63 +213,10 @@ class ResultTile(object):
     def __repr__(self):
         return "<ResultTile for slice=%r>" % self.tile_slice
 
-    def _get_dest_slice_3d(self, result_shape):
-        tile_slice = self.tile_slice
-        sy0 = tile_slice.origin[0]
-        sx0 = tile_slice.origin[1]
-
-        start_idx = sy0 * result_shape[2] + sx0
-        num_frames = tile_slice.shape[0] * tile_slice.shape[1]
-
-        return (
-            Ellipsis,
-            slice(start_idx, start_idx + num_frames),
-        )
-
-    def _get_dest_slice_4d(self):
-        tile_slice = self.tile_slice.get()
-
-        return (
-            Ellipsis,
-            tile_slice[0],
-            tile_slice[1],
-        )
-
-    def reshaped_data(self, flat_frames=True):
-        """
-        Reshapes the result from the flattened and interleaved version to a shape
-        that fits the result array (masks, y, x) or (masks, num_frames)
-        """
-
-        num_masks = self.data.shape[1]
-
-        deinterleaved = np.stack(
-            [self.data.ravel()[idx::num_masks]
-             for idx in range(num_masks)],
-            axis=0,
-        )
-        if flat_frames:
-            return deinterleaved.reshape(
-                num_masks,
-                self.tile_slice.shape[0] * self.tile_slice.shape[1],
-            )
-        else:
-            return deinterleaved.reshape(
-                num_masks,
-                self.tile_slice.shape[0],
-                self.tile_slice.shape[1],
-            )
-
     @property
     def dtype(self):
         return self.data.dtype
 
     def copy_to_result(self, result):
-        # is this tile contiguous on (num_masks, num_frames)?
-        if self.tile_slice.shape[0] == 1 or self.tile_slice.shape[1] == result.shape[2]:
-            s = result.shape
-            result_flat = result.reshape((s[0], s[1] * s[2]))
-            result_flat[self._get_dest_slice_3d(s)] += self.reshaped_data()
-        else:
-            result[self._get_dest_slice_4d()] += self.reshaped_data(flat_frames=False)
+        result += self.data
         return result

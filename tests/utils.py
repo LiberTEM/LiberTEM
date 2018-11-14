@@ -52,6 +52,9 @@ class MemoryPartition(Partition):
     def get_locations(self):
         return "127.0.1.1"  # FIXME
 
+    def __repr__(self):
+        return "<MemoryPartition for %r>" % self.slice
+
 
 def _naive_mask_apply(masks, data):
     """

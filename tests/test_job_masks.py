@@ -70,42 +70,28 @@ def test_for_datatile_with_frame_origin(masks):
     )
 
 
-def test_copy_to_result():
-    # result tile: for three masks, insert all ones into the given position:
-    res_tile = ResultTile(
-        data=np.ones((
-            4,  # xdim*ydim, flattened
-            3,  # num masks
-        )),
-        tile_slice=Slice(origin=(2, 2, 0, 0), shape=(1, 4, 10, 10)),
+def test_weird_partition_shapes_1():
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 2, 2))
+    print(list(dataset.get_partitions()))
+    mask_factories = [
+        lambda: mask,
+    ]
+    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
+    executor = InlineJobExecutor()
+
+    result = np.zeros((1, 16, 16))
+    for tiles in executor.run_job(job):
+        for tile in tiles:
+            tile.copy_to_result(result)
+
+    assert np.allclose(
+        result,
+        expected
     )
-    result = np.zeros(
-        (3,     # num masks
-         10,    # ydim
-         10)    # xdim
-    )
-    res_tile.copy_to_result(result)
-    res_tile.copy_to_result(result)
-    print(result)
-
-    dest_slice = res_tile._get_dest_slice_3d(result.shape)
-    assert dest_slice[0] == Ellipsis
-    # actually let's not test the implementation details here:
-    # assert dest_slice[1] == slice(2, 3, None)
-    # assert dest_slice[2] == slice(2, 6, None)
-    # assert len(dest_slice) == 3
-
-    # let's see if we can select the right slice:
-    assert result[..., 2:3, 2:6].shape == (3, 1, 4)
-
-    # the region selected above should be 2:
-    assert np.all(result[..., 2:3, 2:6] == 2)
-
-    # everything else should be 0:
-    assert np.all(result[..., 2:3, :2] == 0)
-    assert np.all(result[..., 2:3, 6:] == 0)
-    assert np.all(result[..., :2, :] == 0)
-    assert np.all(result[..., 3:, :] == 0)
 
 
 def test_single_frame_tiles():
@@ -194,6 +180,54 @@ def test_multirow_tileshape():
         lambda: mask,
     ]
     dataset = MemoryDataSet(data=data, tileshape=(4, 16, 16, 16), partition_shape=(16, 16, 16, 16))
+    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
+
+    executor = InlineJobExecutor()
+
+    result = np.zeros((1, 16, 16))
+    for tiles in executor.run_job(job):
+        for tile in tiles:
+            tile.copy_to_result(result)
+
+    assert np.allclose(
+        result,
+        expected
+    )
+
+
+def test_mask_uint():
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    mask = np.random.choice(a=[0, 1], size=(16, 16)).astype("uint16")
+    expected = _naive_mask_apply([mask], data)
+
+    mask_factories = [
+        lambda: mask,
+    ]
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
+
+    executor = InlineJobExecutor()
+
+    result = np.zeros((1, 16, 16))
+    for tiles in executor.run_job(job):
+        for tile in tiles:
+            tile.copy_to_result(result)
+
+    assert np.allclose(
+        result,
+        expected
+    )
+
+
+def test_mask_uint_2():
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("uint16")
+    mask = np.random.choice(a=[0, 1], size=(16, 16)).astype("uint16")
+    expected = _naive_mask_apply([mask], data)
+
+    mask_factories = [
+        lambda: mask,
+    ]
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
     job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
 
     executor = InlineJobExecutor()

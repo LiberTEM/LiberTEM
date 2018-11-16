@@ -28,16 +28,20 @@ sys.path.insert(
     )
 )
 
+import libertem
+
 # -- Project information -----------------------------------------------------
 
 project = 'LiberTEM'
 copyright = '2018, LiberTEM Authors'
 author = 'LiberTEM Authors'
 
+_version_bits = libertem.__version__.split('.')
 # The short X.Y version
-version = ''
+version = _version_bits[0] + '.' + _version_bits[1]
 # The full version, including alpha/beta/rc tags
-release = ''
+
+release = libertem.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -100,7 +104,9 @@ html_favicon = '../../corporatedesign/logo/favicon.ico'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'logo': 'logo.png'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -42,9 +42,21 @@ const About: React.SFC<MergedProps> = ({ version, revision }) => {
                     </List.Content>
                 </List.Item>
                 <List.Item>
+                    <List.Icon name="user" />
+                    <List.Content>
+                        Read <a href="https://libertem.github.io/LiberTEM/acknowledgments.html">the acknowledgments</a>
+                    </List.Content>
+                </List.Item>
+                <List.Item>
                     <List.Icon name="gitter" />
                     <List.Content>
                         Join our <a href="https://gitter.im/LiberTEM/Lobby">chat on gitter!</a>
+                    </List.Content>
+                </List.Item>
+                <List.Item>
+                    <List.Icon name="linkify" />
+                    <List.Content>
+                    <a href="https://doi.org/10.5281/zenodo.1478763"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1478763.svg" alt="DOI"/></a>
                     </List.Content>
                 </List.Item>
             </List>

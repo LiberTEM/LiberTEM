@@ -3,6 +3,7 @@ import os
 import codecs
 import subprocess
 import distutils
+import shutil
 from setuptools.command.sdist import sdist
 from setuptools.command.build_py import build_py
 from setuptools import setup
@@ -25,8 +26,10 @@ class BuildClientCommand(distutils.cmd.Command):
             "building js client",
             level=distutils.log.INFO
         )
-        for command in [['npm', 'install'],
-                        ['npm', 'run-script', 'build']]:
+        npm = shutil.which('npm')
+        for command in [[npm, 'install'],
+                        [npm, 'run-script', 'build']]:
+            self.announce(' '.join(command), distutils.log.INFO)
             subprocess.check_call(command, cwd=cwd_client)
         self.run_command('copy_client')
 
@@ -46,27 +49,18 @@ class CopyClientCommand(distutils.cmd.Command):
         cwd_client = os.path.join(cwd, 'client')
         client = os.path.join(cwd, 'src', 'libertem', 'web', 'client')
 
-        cmd = ["rm", "-rf", client]
         self.announce(
-            "preparing output directory: %s" % cmd,
+            "preparing output directory: %s" % client,
             level=distutils.log.INFO
         )
-        subprocess.check_call(cmd)
-
-        cmd = ["mkdir", client]
-        self.announce(
-            "creating output directory: %s" % cmd,
-            level=distutils.log.INFO
-        )
-        subprocess.check_call(cmd)
+        shutil.rmtree(client)
 
         build = os.path.join(cwd_client, "build")
-        cmd = "cp -r %s/* %s" % (build, client)
         self.announce(
-            "copying client: %s" % cmd,
+            "copying client: %s -> %s" % (build, client),
             level=distutils.log.INFO
         )
-        subprocess.check_call(cmd, shell=True)
+        shutil.copytree(build, client)
 
 
 class BakedRevisionBuilderSdist(sdist):

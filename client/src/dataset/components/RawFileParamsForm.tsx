@@ -58,7 +58,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="dtype">Datatype (uint16, uint32, float32, float64, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
+                <label htmlFor="dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
                 <input type="text" name="dtype" value={values.dtype}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>

@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import ResultList from "../../job/components/ResultList";
 import { JobReducerState } from "../../job/reducers";
-import { AnalysisTypes, DatasetState } from "../../messages";
+import { DatasetState } from "../../messages";
 import { RootReducer } from "../../store";
 import BusyWrapper from "../../widgets/BusyWrapper";
 import { AnalysisState } from "../types";
@@ -23,7 +23,6 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
     const { shape } = dataset.params;
     const resultWidth = shape[1];
     const resultHeight = shape[0];
-    const pickCoords = analysis.frameDetails.type === AnalysisTypes.SUM_FRAMES ? null : `Pick: x=${analysis.frameDetails.parameters.x}, y=${analysis.frameDetails.parameters.y}`;
 
     const frameViewBusy = frameJob !== undefined ? frameJob.running !== "DONE" : false;
 
@@ -41,7 +40,7 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
                                 {children}
                             </BusyWrapper>
                             <FrameViewModeSelector analysis={analysis} />
-                            <p>{subtitle} {pickCoords}</p>
+                            <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
                             <ResultList analysis={analysis.id} width={resultWidth} height={resultHeight} />

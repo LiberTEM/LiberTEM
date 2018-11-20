@@ -19,7 +19,6 @@ conda create -n libertem python=3.6 -y || exit 1
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )
 
 pip install "$BASE_DIR"/dist/*.whl || exit 1
-pip install torch
 
 rm -r ./usr/pkgs/
 mkdir -p ./usr/share/applications/

@@ -2,6 +2,7 @@ import re
 import io
 import os
 import glob
+import functools
 
 import numpy as np
 
@@ -134,6 +135,7 @@ class MIBDataSet(DataSet):
         for path in self._filenames():
             yield MIBFile(path, self._headers.get(path))
 
+    @functools.lru_cache(maxsize=None)
     def _files_sorted(self):
         return sorted(self._files(), key=lambda f: f.fields['sequence_first_image'])
 

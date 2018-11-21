@@ -122,6 +122,7 @@ For a full API reference, please see :doc:`Reference <reference>`.
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
     import numpy as np
+    import matplotlib.pyplot as plt
 
     from libertem import api
 
@@ -142,7 +143,19 @@ For a full API reference, please see :doc:`Reference <reference>`.
     # to reduce transfers in the cluster.
     mask = lambda: np.ones(shape=mask_shape)
 
-    job = ctx.create_mask_job(dataset=ds, factories=[mask])
+    job = ctx.create_mask_analysis(dataset=ds, factories=[mask])
 
     result = ctx.run(job)
 
+    # do something useful with the result:
+    print(result)
+
+    # for each mask, one channel is present in the result.
+    # this may be different for other analyses.
+    # you can access the result channels by their key on the result object:
+    plt.figure()
+    plt.imshow(result.mask_0.raw_data)
+
+    # otherwise, results handle like lists,
+    # for example, you can iterate over the result channels:
+    raw_result_list = [channel.raw_data for channel in result]

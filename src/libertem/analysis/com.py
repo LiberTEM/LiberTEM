@@ -5,8 +5,8 @@ import numpy as np
 
 from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
-from .base import AnalysisResult
-from .masks import MasksAnalysis
+from .base import AnalysisResult, AnalysisResultSet
+from .masks import BaseMasksAnalysis
 
 
 log = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ def divergence(arr):
                            for i in range(len(arr))])
 
 
-class COMAnalysis(MasksAnalysis):
+class COMAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         img_sum, img_x, img_y = job_results[0], job_results[1], job_results[2]
         ref_x = self.parameters["cx"]
@@ -32,18 +32,18 @@ class COMAnalysis(MasksAnalysis):
         m = np.sqrt(x_centers**2 + y_centers**2)
         f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
 
-        return [
+        return AnalysisResultSet([
             AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
-                   title="field", desc="cubehelix colorwheel visualization"),
+                   key="field", title="field", desc="cubehelix colorwheel visualization"),
             AnalysisResult(raw_data=m, visualized=visualize_simple(m),
-                   title="magnitude", desc="magnitude of the vector field"),
+                   key="magnitude", title="magnitude", desc="magnitude of the vector field"),
             AnalysisResult(raw_data=d, visualized=visualize_simple(d),
-                   title="divergence", desc="divergence of the vector field"),
+                   key="divergence", title="divergence", desc="divergence of the vector field"),
             AnalysisResult(raw_data=x_centers, visualized=visualize_simple(x_centers),
-                   title="x", desc="x component of the center"),
+                   key="x", title="x", desc="x component of the center"),
             AnalysisResult(raw_data=y_centers, visualized=visualize_simple(y_centers),
-                   title="y", desc="y component of the center"),
-        ]
+                   key="y", title="y", desc="y component of the center"),
+        ])
 
     def get_mask_factories(self):
         cx = self.parameters['cx']

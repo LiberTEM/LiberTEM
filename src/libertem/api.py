@@ -1,4 +1,5 @@
 import psutil
+from typing import Union
 
 import numpy as np
 from libertem.io.dataset import load, filetypes
@@ -8,6 +9,13 @@ from libertem.job.raw import PickFrameJob
 from libertem.job.base import Job
 from libertem.common.slice import Slice
 from libertem.executor.dask import DaskJobExecutor
+from libertem.analysis.com import COMAnalysis
+from libertem.analysis.disk import DiskMaskAnalysis
+from libertem.analysis.ring import RingMaskAnalysis
+from libertem.analysis.sum import SumAnalysis
+from libertem.analysis.point import PointMaskAnalysis
+from libertem.analysis.masks import MasksAnalysis
+from libertem.analysis.base import BaseAnalysis
 
 
 class Context:
@@ -58,7 +66,7 @@ class Context:
 
     def create_mask_job(self, factories, dataset):
         """
-        Create a mask application job. Each factory function should, when called,
+        Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
 
         Parameters
@@ -82,6 +90,132 @@ class Context:
             dataset=dataset,
             mask_factories=factories,
         )
+
+    def create_mask_analysis(self, factories, dataset):
+        """
+        Create a mask application analysis. Each factory function should, when called,
+        return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
+
+        This is a more high-level method than `create_mask_job` and differs in the way the result
+        is returned. With `create_mask_job`, it is a single numpy array, here we split it up for
+        each mask we apply, make some default visualization available etc.
+
+        Parameters
+        ----------
+        factories
+            list of functions that take no arguments and create masks
+        dataset
+            dataset to work on
+
+        Examples
+        --------
+        >>> from libertem.api import Context
+        >>> ctx = Context()
+        >>> ds = ctx.load("...")
+        >>> job = ctx.create_mask_analysis(
+        ... factories=[lambda: np.ones(dataset.shape[2:])],
+        ... dataset=dataset)
+        >>> result = ctx.run(job)
+        >>> result.mask_0.raw_data
+        """
+        return MasksAnalysis(
+            dataset=dataset,
+            parameters={
+                'factories': factories,
+            }
+        )
+
+    def create_com_analysis(self, dataset, cx: int, cy: int, mask_radius: int = None):
+        """
+        Perform a center-of-mass (first moment) analysis, possibly masked.
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        cx
+            reference center x value
+        cy
+            reference center y value
+        mask_radius
+            mask out intensity outside of mask_radius from (cy, cx)
+        """
+        if mask_radius is None:
+            mask_radius = max(dataset.shape[2:])
+        analysis = COMAnalysis(
+            dataset=dataset,
+            parameters={
+                'cx': cx,
+                'cy': cy,
+                'r': mask_radius,
+            },
+        )
+        return analysis
+
+    def create_disk_analysis(self, dataset, cx: int, cy: int, r: int):
+        """
+        Integrate over a disk (i.e. filled circle)
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        cx
+            center x value
+        cy
+            center y value
+        r
+            radius of the disk
+        """
+        return DiskMaskAnalysis(dataset=dataset, parameters={
+            'cx': cx,
+            'cy': cy,
+            'r': r,
+        })
+
+    def create_ring_analysis(self, dataset, cx: int, cy: int, ri: int, ro: int):
+        """
+        Integrate over a ring
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        cx
+            center x value
+        cy
+            center y value
+        ri
+            inner radius
+        ro
+            outer radius
+        """
+        return RingMaskAnalysis(dataset=dataset, parameters={
+            'cx': cx,
+            'cy': cy,
+            'ri': ri,
+            'ro': ro,
+        })
+
+    def create_point_analysis(self, dataset, x: int, y: int):
+        """
+        Select the pixel with coords (y, x) from each frame
+        """
+        return PointMaskAnalysis(dataset=dataset, parameters={
+            'cx': x,
+            'cy': y,
+        })
+
+    def create_sum_analysis(self, dataset):
+        """
+        Sum over all frames
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        """
+        return SumAnalysis(dataset=dataset, parameters={})
 
     def create_pick_job(self, dataset, y: int, x: int) -> np.ndarray:
         """
@@ -111,26 +245,28 @@ class Context:
             squeeze=True,
         )
 
-    def run(self, job: Job, out: np.ndarray = None):
+    def run(self, job: Union[Job, BaseAnalysis]):
         """
-        Run the given `Job` and return the result data.
+        Run the given `Job` or `Analysis` and return the result data.
 
         Parameters
         ----------
         job
-            the job to run
-        out : :py:class:`numpy.ndarray`
-            ndarray to store the result, if None it is created for you
+            the job or analysis to run
         """
-        if out is None:
-            out = job.get_result_buffer()
+        analysis = None
+        if hasattr(job, 'get_job'):
+            analysis = job
+            job_to_run = analysis.get_job()
         else:
-            # TODO: assert out.shape == job.get_result_shape()
-            # and/or try to reshape out into the right shape
-            pass
-        for tiles in self.executor.run_job(job):
+            job_to_run = job
+
+        out = job_to_run.get_result_buffer()
+        for tiles in self.executor.run_job(job_to_run):
             for tile in tiles:
                 tile.copy_to_result(out)
+        if analysis is not None:
+            return analysis.get_results(out)
         return out
 
     def _create_local_executor(self):

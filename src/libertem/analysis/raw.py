@@ -1,7 +1,7 @@
 from libertem.viz import visualize_simple
 from libertem.common.slice import Slice
 from libertem.job.raw import PickFrameJob
-from .base import BaseAnalysis, AnalysisResult
+from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 
 class PickFrameAnalysis(BaseAnalysis):
@@ -19,7 +19,8 @@ class PickFrameAnalysis(BaseAnalysis):
 
     def get_results(self, job_results):
         x, y = self.parameters['x'], self.parameters['y']
-        return [
+        return AnalysisResultSet([
             AnalysisResult(raw_data=job_results, visualized=visualize_simple(job_results),
-                           title="intensity", desc="the frame at x=%d y=%d" % (x, y)),
-        ]
+                           key="intensity", title="intensity",
+                           desc="the frame at x=%d y=%d" % (x, y)),
+        ])

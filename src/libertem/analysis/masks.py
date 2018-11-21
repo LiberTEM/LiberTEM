@@ -1,9 +1,10 @@
 import numpy as np
-from .base import BaseAnalysis
+from libertem.viz import visualize_simple
+from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
 from libertem.job.masks import ApplyMasksJob
 
 
-class MasksAnalysis(BaseAnalysis):
+class BaseMasksAnalysis(BaseAnalysis):
     """
     base class for any masks-based analysis; you only need to implement
     ``get_results`` and ``get_mask_factories``
@@ -20,3 +21,17 @@ class MasksAnalysis(BaseAnalysis):
 
     def get_mask_factories(self):
         raise NotImplementedError()
+
+
+class MasksAnalysis(BaseMasksAnalysis):
+    def get_mask_factories(self):
+        return self.parameters['factories']
+
+    def get_results(self, job_results):
+        data = job_results[0]
+        return AnalysisResultSet([
+            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
+                           key="mask_%d" % i, title="mask %d" % i,
+                           desc="intensity for mask %d" % i)
+            for i, mask_result in enumerate(job_results)
+        ])

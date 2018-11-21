@@ -10,9 +10,12 @@ from .base import DataSet, Partition, DataTile, DataSetException
 
 
 class MIBFile(object):
-    def __init__(self, path):
+    def __init__(self, path, fields=None):
         self.path = path
-        self._fields = {}
+        if fields is None:
+            self._fields = {}
+        else:
+            self._fields = fields
 
     def _get_np_dtype(self, dtype):
         dtype = dtype.lower()
@@ -101,8 +104,19 @@ class MIBDataSet(DataSet):
         self._path = path
         self._tileshape = tileshape
         self._scan_size = tuple(scan_size)
+        self._filename_cache = None
+        self._headers = {}
+        self._headers = self._preread_headers()
 
-    def _files(self):
+    def _preread_headers(self):
+        res = {}
+        for f in self._files():
+            res[f.path] = f.fields
+        return res
+
+    def _filenames(self):
+        if self._filename_cache is not None:
+            return self._filename_cache
         path, ext = os.path.splitext(self._path)
         if ext == '.mib':
             pattern = "%s*.mib" % (
@@ -112,9 +126,13 @@ class MIBDataSet(DataSet):
             pattern = "%s*.mib" % path
         else:
             raise DataSetException("unknown extension")
+        fns = glob.glob(pattern)
+        self._filename_cache = fns
+        return fns
 
-        for path in glob.glob(pattern):
-            yield MIBFile(path)
+    def _files(self):
+        for path in self._filenames():
+            yield MIBFile(path, self._headers.get(path))
 
     def _files_sorted(self):
         return sorted(self._files(), key=lambda f: f.fields['sequence_first_image'])

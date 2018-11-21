@@ -23,7 +23,7 @@ or conda environments.
 Using virtualenv
 ################
 
-You can use virtualenv if you have a system wide Python 3.6 installation. For Mac OS X, using conda
+You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system wide Python 3.6 or 3.7 installation. For Mac OS X, using conda
 is recommended.
 
 To create a new virtualenv for LiberTEM, you can use the following command:
@@ -160,12 +160,51 @@ Differences:
 
     $ activate libertem
     
-* You might have to install pip into your local libertem conda environment to make sure that ``pip install`` installs packages into your local environment and not into the global Anaconda base environment. This helps to avoid permission issues and interference between environments.
+* You might have to install pip into your local LiberTEM conda environment to make sure that ``pip install`` installs packages into your local environment and not into the global Anaconda base environment. This helps to avoid permission issues and interference between environments.
 
 .. code-block:: shell  
 
     $ conda install pip
 
+Jupyter
+-------
+
+To use the Python API from within a Jupyter notebook, you can install Jupyter into your LiberTEM virtual environment.
+
+.. code-block:: shell
+
+    (libertem) $ pip install jupyter
+
+You can then run a local notebook from within the LiberTEM environment, which should open a browser window with Jupyter that uses your LiberTEM environment.
+
+.. code-block:: shell
+
+    (libertem) $ jupyter notebook
+
+JupyterHub
+----------
+
+If you'd like to use the Python API from a LiberTEM virtual environment on a system that manages logins with JupyterHub, you can easily `install a custom kernel definition <https://ipython.readthedocs.io/en/stable/install/kernel_install.html>`_ for your LiberTEM environment.
+
+First, you can launch a terminal on JupyterHub from the "New" drop-down menu in the file browser. Alternatively you can execute shell commands by prefixing them with "!" in a Python notebook.
+
+In the terminal you can create and activate virtual environments and perform the LiberTEM installation as described above. Within the activated LiberTEM environment you additionally install ipykernel:
+
+.. code-block:: shell
+
+    (libertem) $ pip install ipykernel
+
+Now you can create a custom ipython kernel definition for your environment:
+
+.. code-block:: shell
+
+    (libertem) $ python -m ipykernel install --user --name libertem --display-name "Python (libertem)"
+
+After reloading the file browser window, a new Notebook option "Python (libertem)" should be available in the "New" drop-down menu. You can test it by creating a new notebook and running
+
+.. code-block:: python
+
+    In [1]: import libertem
 
 Troubleshooting
 ---------------

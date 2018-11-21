@@ -37,6 +37,9 @@ class AnalysisResultSet(object):
     def __getitem__(self, k):
         return self.results[k]
 
+    def __len__(self):
+        return len(self.results)
+
 
 class BaseAnalysis(object):
     def __init__(self, dataset, parameters):

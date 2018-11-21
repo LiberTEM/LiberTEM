@@ -115,6 +115,15 @@ class MIBDataSet(DataSet):
             res[f.path] = f.fields
         return res
 
+    def __getstate__(self):
+        res = {}
+        for k, v in self.__dict__.items():
+            if k == "_headers":
+                res[k] = {}
+            else:
+                res[k] = v
+        return res
+
     def _filenames(self):
         if self._filename_cache is not None:
             return self._filename_cache

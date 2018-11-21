@@ -164,7 +164,7 @@ Differences:
 
 .. code-block:: shell  
 
-    $ conda install pip
+    (libertem) $ conda install pip
 
 Jupyter
 -------

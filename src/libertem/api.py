@@ -25,12 +25,14 @@ class Context:
     them.
     """
 
-    def __init__(self):
+    def __init__(self, executor=None):
         """
         Create a new context. In the background, this creates a suitable
         executor and spins up a local Dask cluster.
         """
-        self.executor = self._create_local_executor()
+        if executor is None:
+            executor = self._create_local_executor()
+        self.executor = executor
 
     def load(self, filetype: str, *args, **kwargs) -> DataSet:
         """

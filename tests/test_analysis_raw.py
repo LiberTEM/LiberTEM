@@ -6,26 +6,18 @@ from libertem.common.slice import Slice
 from utils import MemoryDataSet
 
 
-def test_get_single_frame():
+def test_get_single_frame(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 16, 16))
 
-    job = PickFrameJob(dataset=dataset, slice_=Slice(
-        origin=(5, 5, 0, 0), shape=(1, 1, 16, 16)
-    ))
+    job = lt_ctx.create_pick_job(dataset=dataset, x=5, y=5)
+    result = lt_ctx.run(job)
 
-    executor = InlineJobExecutor()
-
-    result = np.zeros(job.get_result_shape())
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
-
-    assert result.shape == (1, 1, 16, 16)
-    assert np.allclose(result[0, 0], data[5, 5])
+    assert result.shape == (16, 16)
+    assert np.allclose(result, data[5, 5])
 
 
-def test_get_multiple_frames():
+def test_get_multiple_frames(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 16, 16))
 
@@ -33,12 +25,7 @@ def test_get_multiple_frames():
         origin=(0, 0, 0, 0), shape=(1, 2, 16, 16)
     ))
 
-    executor = InlineJobExecutor()
-
-    result = np.zeros(job.get_result_shape())
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    result = lt_ctx.run(job)
 
     print(result[0, 0].astype("uint32"))
     print(data[0, 0])

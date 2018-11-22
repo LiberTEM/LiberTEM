@@ -2,9 +2,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from libertem.common.slice import Slice
-from libertem.job.masks import MaskContainer, ResultTile, ApplyMasksJob
+from libertem.job.masks import MaskContainer
 from libertem.io.dataset.base import DataTile
-from libertem.executor.inline import InlineJobExecutor
 from libertem.masks import gradient_x
 from utils import MemoryDataSet, _naive_mask_apply
 
@@ -70,174 +69,145 @@ def test_for_datatile_with_frame_origin(masks):
     )
 
 
-def test_weird_partition_shapes_1():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_weird_partition_shapes_1(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 2, 2))
-    print(list(dataset.get_partitions()))
-    mask_factories = [
-        lambda: mask,
-    ]
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
-    executor = InlineJobExecutor()
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
 
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_single_frame_tiles():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_single_frame_tiles(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
 
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_subframe_tiles():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_subframe_tiles(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 4, 4), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
 
-    part = next(dataset.get_partitions())
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
-
-    print(part.shape)
-    print(expected)
-    print(result)
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_4d_tilesize():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_4d_tilesize(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_multirow_tileshape():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_multirow_tileshape(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(4, 16, 16, 16), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_mask_uint():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+def test_mask_uint(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16)).astype("uint16")
     expected = _naive_mask_apply([mask], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
+        results.mask_0.raw_data,
         expected
     )
 
 
-def test_mask_uint_2():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("uint16")
-    mask = np.random.choice(a=[0, 1], size=(16, 16)).astype("uint16")
-    expected = _naive_mask_apply([mask], data)
+def test_multi_masks(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask0, mask1], data)
 
-    mask_factories = [
-        lambda: mask,
-    ]
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    job = ApplyMasksJob(dataset=dataset, mask_factories=mask_factories)
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros((1, 16, 16))
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.copy_to_result(result)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+    )
+    results = lt_ctx.run(analysis)
 
     assert np.allclose(
-        result,
-        expected
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_mask_job(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask0, mask1], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+    )
+    results = lt_ctx.run(job)
+
+    assert np.allclose(
+        results,
+        expected,
     )

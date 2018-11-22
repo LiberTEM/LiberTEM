@@ -63,11 +63,15 @@ def _naive_mask_apply(masks, data):
 
     returns array of shape (num_masks, scan_y, scan_x)
     """
-    res = np.zeros((len(masks),) + tuple(masks[0].shape))
+    assert len(data.shape) == 4
+    for mask in masks:
+        assert mask.shape == data.shape[2:], "mask doesn't fit frame size"
+
+    res = np.zeros((len(masks),) + tuple(data.shape[:2]))
     for n in range(len(masks)):
         mask = masks[n]
-        for i in range(mask.shape[0]):
-            for j in range(mask.shape[1]):
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
                 item = data[i, j].ravel().dot(mask.ravel())
                 res[n, i, j] = item
     return res

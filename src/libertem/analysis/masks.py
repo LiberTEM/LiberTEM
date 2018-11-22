@@ -28,9 +28,8 @@ class MasksAnalysis(BaseMasksAnalysis):
         return self.parameters['factories']
 
     def get_results(self, job_results):
-        data = job_results[0]
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
+            AnalysisResult(raw_data=mask_result, visualized=visualize_simple(mask_result),
                            key="mask_%d" % i, title="mask %d" % i,
                            desc="intensity for mask %d" % i)
             for i, mask_result in enumerate(job_results)

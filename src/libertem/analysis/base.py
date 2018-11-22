@@ -13,7 +13,10 @@ class AnalysisResult(object):
         self.key = key
 
     def __str__(self):
-        return self.title
+        result = ""
+        for k in ("title", "desc", "key", "raw_data", "visualized"):
+            result += "%s: %s\n" % (k, getattr(self, k))
+        return result
 
     def __repr__(self):
         return "<AnalysisResult: %s>" % self.key

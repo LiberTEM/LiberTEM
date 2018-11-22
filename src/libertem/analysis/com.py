@@ -65,10 +65,10 @@ class COMAnalysis(BaseMasksAnalysis):
                 imageSizeX=frame_size[1],
                 imageSizeY=frame_size[0],
                 dtype=self.dtype,
-            ) * (np.ones(frame_size) * disk_mask()),
+            ) * disk_mask(),
             lambda: masks.gradient_y(
                 imageSizeX=frame_size[1],
                 imageSizeY=frame_size[0],
                 dtype=self.dtype,
-            ) * (np.ones(frame_size) * disk_mask()),
+            ) * disk_mask(),
         ]

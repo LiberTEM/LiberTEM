@@ -141,7 +141,7 @@ class Context:
             mask out intensity outside of mask_radius from (cy, cx)
         """
         if mask_radius is None:
-            mask_radius = max(dataset.shape[2:])
+            mask_radius = float('inf')
         analysis = COMAnalysis(
             dataset=dataset,
             parameters={

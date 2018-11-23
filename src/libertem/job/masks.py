@@ -193,10 +193,12 @@ class ApplyMasksTask(Task):
                 data = data.astype("float32")
             masks = self.masks[data_tile]
             if sp is not None and sp.issparse(masks[0]):
-                raise NotImplementedError("Sparse matrices not supported yet by back-end")
-                # For some reason this consumes a LOT of memory and crashes
-                # More tests and research required
-                # result = np.array(np.dot(data, masks))
+                # for some reason, the result is a np array of matrices if the masks are sparse.
+                # we collapse that -- should be observed closely.
+                # TODO: what happens when dense and sparse is mixed?
+                m = sp.hstack(masks)
+                result = m.T.dot(data.T).T
+                # raise NotImplementedError("Sparse matrices not supported yet by back-end")
             elif self.use_torch and torch is not None:
                 result = torch.mm(
                     torch.from_numpy(data),

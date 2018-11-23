@@ -53,7 +53,7 @@ class ApplyMasksJob(Job):
 
 
 class MaskContainer(object):
-    def __init__(self, mask_factories, dtype, use_sparse):
+    def __init__(self, mask_factories, dtype, use_sparse=None):
         self.mask_factories = mask_factories
         self.dtype = dtype
         self.use_sparse = use_sparse

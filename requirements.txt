@@ -2,6 +2,7 @@ h5py
 numpy
 scipy
 distributed
+numba
 
 pytest
 pytest-cov

@@ -22,6 +22,6 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         cy = self.parameters['cy']
 
         def _point_inner():
-            a = sp.csr_matrix((1, (int(cy), int(cx))), dtype=self.dtype, shape=self.dataset.shape[2:])
+            a = sp.csr_matrix(((1,), ((int(cy),), (int(cx),))), dtype=self.dtype, shape=self.dataset.shape[2:])
             return a
         return [_point_inner]

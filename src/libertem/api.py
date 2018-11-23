@@ -66,7 +66,7 @@ class Context:
 
     load.__doc__ = load.__doc__ % {'types': ", ".join(filetypes.keys())}
 
-    def create_mask_job(self, factories, dataset):
+    def create_mask_job(self, factories, dataset, use_sparse=None):
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
@@ -91,9 +91,10 @@ class Context:
         return ApplyMasksJob(
             dataset=dataset,
             mask_factories=factories,
+            use_sparse=use_sparse
         )
 
-    def create_mask_analysis(self, factories, dataset):
+    def create_mask_analysis(self, factories, dataset, use_sparse=None):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
@@ -124,6 +125,7 @@ class Context:
             dataset=dataset,
             parameters={
                 'factories': factories,
+                'use_sparse': use_sparse
             }
         )
 

@@ -16,7 +16,7 @@ class BaseMasksAnalysis(BaseAnalysis):
 
     def get_job(self):
         mask_factories = self.get_mask_factories()
-        job = ApplyMasksJob(dataset=self.dataset, mask_factories=mask_factories)
+        job = ApplyMasksJob(dataset=self.dataset, mask_factories=mask_factories, use_sparse=self.parameters['use_sparse'])
         return job
 
     def get_mask_factories(self):

@@ -4,6 +4,10 @@ try:
     import torch
 except ImportError:
     torch = None
+try:
+    import scipy.sparse as sp
+except ImportError:
+    sp = None
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
@@ -19,10 +23,10 @@ def _make_mask_slicer(computed_masks):
             # .reshape((-1,)) -> like flatten, but no copies
             # should save us one copy as we np.stack() immediately afterwards
             # https://stackoverflow.com/a/28930580/540644
-            slice_.get(mask, signal_only=True).reshape((-1,))
+            slice_.get(mask, signal_only=True).reshape((-1, 1))
             for mask in computed_masks
         ]
-        return np.stack(sliced_masks, axis=1)
+        return np.hstack(sliced_masks)
     return _get_masks_for_slice
 
 
@@ -188,7 +192,12 @@ class ApplyMasksTask(Task):
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
             masks = self.masks[data_tile]
-            if self.use_torch and torch is not None:
+            if sp is not None and sp.issparse(masks[0]):
+                raise NotImplementedError("Sparse matrices not supported yet by back-end")
+                # For some reason this consumes a LOT of memory and crashes
+                # More tests and research required
+                # result = np.array(np.dot(data, masks))
+            elif self.use_torch and torch is not None:
                 result = torch.mm(
                     torch.from_numpy(data),
                     torch.from_numpy(masks),

@@ -23,7 +23,7 @@ def _make_mask_slicer(computed_masks):
             slice_.get(mask, signal_only=True).reshape((-1, 1))
             for mask in computed_masks
         ]
-        # MaskContainer assures that all or none of the masks are sparse 
+        # MaskContainer assures that all or none of the masks are sparse
         if sp.issparse(sliced_masks[0]):
             return sp.hstack(sliced_masks)
         else:
@@ -90,7 +90,7 @@ class MaskContainer(object):
         a list of masks as they were created by the factories
         """
         # Make sure all the masks are either sparse or dense
-        # If the use_sparse property is set to Ture or False, 
+        # If the use_sparse property is set to Ture or False,
         # it takes precedence.
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
@@ -99,7 +99,7 @@ class MaskContainer(object):
                 return a.toarray()
             else:
                 return a
-        
+
         def to_sparse(a):
             if sp.issparse(a):
                 return a
@@ -111,7 +111,7 @@ class MaskContainer(object):
             masks = [to_sparse(m) for m in raw_masks]
         elif self.use_sparse is False:
             masks = [to_dense(m) for m in raw_masks]
-        else:            
+        else:
             sparse = [sp.issparse(m) for m in raw_masks]
             if all(sparse):
                 self.use_sparse = True
@@ -224,7 +224,8 @@ class ApplyMasksTask(Task):
                 data = data.astype("float32")
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
-                # The sparse matrix has to be the left-hand side, for that reason we transpose before and after multiplication.
+                # The sparse matrix has to be the left-hand side, for that
+                # reason we transpose before and after multiplication.
                 result = masks.T.dot(data.T).T
             elif self.use_torch and torch is not None:
                 result = torch.mm(

@@ -18,7 +18,7 @@ def _make_mask_slicer(computed_masks):
         """
         """
         sliced_masks = [
-            # .reshape((-1, 1)) -> like flatten, but compatible with sparse 
+            # .reshape((-1, 1)) -> like flatten, but compatible with sparse
             # matrices and no copies
             # should save us one copy as we np.hstack() immediately afterwards
             # https://stackoverflow.com/a/28930580/540644
@@ -90,7 +90,7 @@ class MaskContainer(object):
         Returns
         -------
         a list of masks with contents as they were created by the factories
-        and converted uniformly to dense or sparse matrices depending on 
+        and converted uniformly to dense or sparse matrices depending on
         ``self.use_sparse``.
         """
         # Make sure all the masks are either sparse or dense

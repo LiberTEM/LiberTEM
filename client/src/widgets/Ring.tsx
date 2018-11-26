@@ -3,6 +3,7 @@ import { getPathArc } from "../helpers/svg";
 import { cbToRadius, inRectConstraint, riConstraint, roConstraints } from "./constraints";
 import DraggableHandle from "./DraggableHandle";
 import HandleParent from "./HandleParent";
+import { handleKeyEvent, ModifyCoords } from "./kbdHandler";
 import { defaultMaskStyles } from "./styles";
 
 export interface RingProps {
@@ -34,11 +35,23 @@ const Ring: React.SFC<RingProps> = ({ imageWidth, imageHeight, cx, cy, ri, ro, i
         getPathArc({ x: cx, y: cy }, 90, 90, ri)
     ]
     const pathSpec = pathSpecs.join(' ');
+
+
+    const myKeyEvent = (e: React.KeyboardEvent<SVGElement>) => {
+        const update = (fn: ModifyCoords) => {
+            if (onCenterChange) {
+                const newCoords = fn(cx, cy);
+                onCenterChange(newCoords.x, newCoords.y);
+            };
+        }
+        handleKeyEvent(e, update)
+    }
+
     return (
         <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={imageWidth} height={imageHeight} viewBox={`0 0 ${imageWidth} ${imageHeight}`}>
             {image}
             <path d={pathSpec} fillRule="evenodd" style={{ ...defaultMaskStyles(imageWidth) }} />
-            <HandleParent width={imageWidth} height={imageHeight}>
+            <HandleParent width={imageWidth} height={imageHeight} onKeyboardEvent={myKeyEvent}>
                 <DraggableHandle x={cx} y={cy}
                     imageWidth={imageWidth}
                     onDragMove={onCenterChange}

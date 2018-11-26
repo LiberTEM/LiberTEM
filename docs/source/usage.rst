@@ -98,6 +98,16 @@ Some analyses, such as the Center of Mass (COM) analysis, can render the result 
 
 ..  figure:: ./images/use/image.png
 
+
+Keyboard controls
+~~~~~~~~~~~~~~~~~
+
+You can use arrow keys to change the coordinate parameters of any analysis. To do this, click on the
+image that contains the handle you want to modify, and then use the arrow keys to move the handle.
+Hold shift to move in larger steps. Currently, only one coordinate parameter can be changed with the
+keyboard, which is usually the center of the mask, or the pick coordinates.
+
+
 The Python API
 --------------
 

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { handleKeyEvent, ModifyCoords } from "src/widgets/kbdHandler";
 import * as analysisActions from '../../analysis/actions';
 import { AnalysisState } from "../../analysis/types";
 import { AnalysisTypes, DatasetState } from "../../messages";
@@ -50,8 +51,17 @@ class Result extends React.Component<MergedProps> {
             return null;
         }
         const { x, y } = analysis.frameDetails.parameters;
+
+        const myKeyEvent = (e: React.KeyboardEvent<SVGElement>) => {
+            const update = (fn: ModifyCoords) => {
+                const newCoords = fn(x, y);
+                this.onCenterChange(newCoords.x, newCoords.y);
+            }
+            handleKeyEvent(e, update);
+        }
+
         return (
-            <HandleParent width={width} height={height}>
+            <HandleParent width={width} height={height} onKeyboardEvent={myKeyEvent}>
                 <DraggableHandle x={x} y={y} withCross={true}
                     imageWidth={width}
                     onDragMove={this.onCenterChange}

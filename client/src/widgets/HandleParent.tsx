@@ -4,6 +4,7 @@ import { DraggableHandle } from "./DraggableHandle";
 export interface HandleParentProps {
     width: number,
     height: number,
+    onKeyboardEvent?: React.KeyboardEventHandler<SVGElement>,
 }
 
 export class HandleParent extends React.Component<HandleParentProps> {
@@ -37,11 +38,17 @@ export class HandleParent extends React.Component<HandleParentProps> {
 
     public render() {
         const { width, height } = this.props;
+        const styles = {
+            outline: "1px dashed black"
+        }
         return (
             <g
                 onMouseMove={this.handleMouseMove}
                 onMouseLeave={this.handleMouseLeave}
                 onMouseUp={this.handleMouseUp}
+                onKeyDown={this.props.onKeyboardEvent}
+                style={styles}
+                tabIndex={0}
             >
                 <rect style={{ fill: "transparent" }}
                     x={0} y={0} width={width} height={height}

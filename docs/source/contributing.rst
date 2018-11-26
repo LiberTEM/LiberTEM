@@ -118,6 +118,8 @@ which listens on port 3000, will only be able to serve requests for JavaScript a
 for handling HTTP API requests you still need to run the Python libertem-server process.
 Run it on the default port (9000) to allow proxying from the front-end server to the API server.
 
+To learn more about the build process, please see `the README in the client directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
+
 You can then use any editor you like to change the client source files, in the client/src directory.
 We recommend `visual studio code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
 

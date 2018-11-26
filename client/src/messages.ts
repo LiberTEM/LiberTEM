@@ -122,7 +122,6 @@ export type DatasetParamsK2IS = {
     type: DatasetTypes.K2IS,
     path: string,
     scanSize: number[],
-    skipFrames: number,
 } & DatasetParamsCommon
 
 export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS

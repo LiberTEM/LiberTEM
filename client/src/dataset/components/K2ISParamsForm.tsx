@@ -9,11 +9,9 @@ import { OpenFormProps } from "../types";
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
     "path"
-    | "skipFrames"
     | "scanSize"
     | "type"> & {
     scanSize: string,
-    skipFrames: string,
 };
 
 type FormValues = DatasetParamsK2ISForForm
@@ -47,11 +45,6 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
                 <input type="text" name="scanSize" value={values.scanSize}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
-            <Form.Field>
-                <label htmlFor="scanSize">Skip Frames:</label>
-                <input type="text" name="skipFrames" value={values.skipFrames}
-                    onChange={handleChange} onBlur={handleBlur} />
-            </Form.Field>
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
@@ -63,7 +56,6 @@ export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         scanSize: getInitial("scanSize", "32, 32", initial),
-        skipFrames: getInitial("skipFrames", "0", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
@@ -71,7 +63,6 @@ export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
             path,
             type: DatasetTypes.K2IS,
             name: values.name,
-            skipFrames: +values.skipFrames,
             scanSize: parseNumList(values.scanSize),
         });
     }

@@ -351,11 +351,14 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
-    def __init__(self, path, scan_size, skip_frames=0):
+    def __init__(self, path, scan_size):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._start_offsets = None
-        self._skip_frames = skip_frames
+        # NOTE: the sync flag appears to be set one frame too early, so
+        # we compensate here by setting a negative _skip_frames value.
+        # skip_frames is applied after synchronization.
+        self._skip_frames = -1
 
     @property
     def dtype(self):
@@ -389,7 +392,7 @@ class K2ISDataSet(DataSet):
             {"name": "est. number of frames (from first sector)",
              "value": str(est_num_frames)},
 
-            {"name": "first frame id after sync, including skip_frames (from first sector)",
+            {"name": "first frame id after sync, (from first sector)",
              "value": str(first_block.header['frame_id'])},
 
             {"name": "first frame id before sync (from first sector)",
@@ -424,7 +427,7 @@ class K2ISDataSet(DataSet):
             s.first_block_offset
             for s in fs.sectors
         ]
-        # FIXME
+        # apply skip_frames value to the start_offsets
         self._start_offsets = [o + BLOCK_SIZE*self._skip_frames*32
                                for o in self._start_offsets]
 

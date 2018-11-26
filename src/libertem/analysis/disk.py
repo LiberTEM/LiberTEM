@@ -8,13 +8,13 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         data = job_results[0]
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
-                           key="intensity", title="intensity",
-                           desc="intensity of the integration over the selected disk"),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data),
+                key="intensity",
+                title="intensity",
+                desc="intensity of the integration over the selected disk"),
         ])
-
-    def get_use_sparse(self):
-        return False
 
     def get_mask_factories(self):
         cx = self.parameters['cx']
@@ -24,11 +24,13 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
 
         def disk_mask():
             return masks.circular(
-                centerX=cx, centerY=cy,
+                centerX=cx,
+                centerY=cy,
                 imageSizeX=frame_size[1],
                 imageSizeY=frame_size[0],
                 radius=r,
             )
+
         return [
             disk_mask,
         ]

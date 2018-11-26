@@ -45,9 +45,6 @@ class COMAnalysis(BaseMasksAnalysis):
                    key="y", title="y", desc="y component of the center"),
         ])
 
-    def get_use_sparse(self):
-        return False
-
     def get_mask_factories(self):
         cx = self.parameters['cx']
         cy = self.parameters['cy']

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as sp
 
 
 def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
@@ -90,3 +91,17 @@ def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
 
 def gradient_y(imageSizeX, imageSizeY, dtype=np.float32):
     return gradient_x(imageSizeY, imageSizeX, dtype).transpose()
+
+
+def to_dense(a):
+    if sp.issparse(a):
+        return a.toarray()
+    else:
+        return a
+
+
+def to_sparse(a):
+    if sp.issparse(a):
+        return a
+    else:
+        return sp.csr_matrix(a)

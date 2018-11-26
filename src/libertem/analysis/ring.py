@@ -8,9 +8,12 @@ class RingMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         data = job_results[0]
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
-                           key="intensity", title="intensity",
-                           desc="intensity of the integration over the selected ring"),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data),
+                key="intensity",
+                title="intensity",
+                desc="intensity of the integration over the selected ring"),
         ])
 
     def get_use_sparse(self):
@@ -25,10 +28,11 @@ class RingMaskAnalysis(BaseMasksAnalysis):
 
         def _ring_inner():
             return masks.ring(
-                centerX=cx, centerY=cy,
+                centerX=cx,
+                centerY=cy,
                 imageSizeX=frame_size[1],
                 imageSizeY=frame_size[0],
                 radius=ro,
-                radius_inner=ri
-            )
+                radius_inner=ri)
+
         return [_ring_inner]

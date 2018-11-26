@@ -3,6 +3,7 @@ numpy
 scipy
 distributed
 numba
+psutil
 
 pytest
 pytest-cov

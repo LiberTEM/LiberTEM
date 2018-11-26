@@ -9,6 +9,7 @@ import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task
+from libertem.masks import to_dense, to_sparse
 
 
 def _make_mask_slicer(computed_masks):
@@ -94,17 +95,7 @@ class MaskContainer(object):
         # it takes precedence.
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
-        def to_dense(a):
-            if sp.issparse(a):
-                return a.toarray()
-            else:
-                return a
 
-        def to_sparse(a):
-            if sp.issparse(a):
-                return a
-            else:
-                return sp.csr_matrix(a)
         raw_masks = [f().astype(self.dtype)
             for f in self.mask_factories]
         if self.use_sparse is True:

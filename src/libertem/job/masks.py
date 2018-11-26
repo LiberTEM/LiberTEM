@@ -18,8 +18,9 @@ def _make_mask_slicer(computed_masks):
         """
         """
         sliced_masks = [
-            # .reshape((-1,)) -> like flatten, but no copies
-            # should save us one copy as we np.stack() immediately afterwards
+            # .reshape((-1, 1)) -> like flatten, but compatible with sparse 
+            # matrices and no copies
+            # should save us one copy as we np.hstack() immediately afterwards
             # https://stackoverflow.com/a/28930580/540644
             slice_.get(mask, signal_only=True).reshape((-1, 1))
             for mask in computed_masks
@@ -88,7 +89,9 @@ class MaskContainer(object):
 
         Returns
         -------
-        a list of masks as they were created by the factories
+        a list of masks with contents as they were created by the factories
+        and converted uniformly to dense or sparse matrices depending on 
+        ``self.use_sparse``.
         """
         # Make sure all the masks are either sparse or dense
         # If the use_sparse property is set to Ture or False,
@@ -96,20 +99,30 @@ class MaskContainer(object):
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
 
-        raw_masks = [f().astype(self.dtype)
-            for f in self.mask_factories]
+        raw_masks = [
+            f().astype(self.dtype)
+            for f in self.mask_factories
+        ]
         if self.use_sparse is True:
-            masks = [to_sparse(m) for m in raw_masks]
+            masks = [
+                to_sparse(m) for m in raw_masks
+            ]
         elif self.use_sparse is False:
-            masks = [to_dense(m) for m in raw_masks]
+            masks = [
+                to_dense(m) for m in raw_masks
+            ]
         else:
-            sparse = [sp.issparse(m) for m in raw_masks]
+            sparse = [
+                sp.issparse(m) for m in raw_masks
+            ]
             if all(sparse):
                 self.use_sparse = True
                 masks = raw_masks
             else:
                 self.use_sparse = False
-                masks = [to_dense(m) for m in raw_masks]
+                masks = [
+                    to_dense(m) for m in raw_masks
+                ]
         return masks
 
     def get_masks_for_slice(self, slice_):

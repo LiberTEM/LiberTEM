@@ -80,3 +80,54 @@ To start the live building process:
 
 You can then view a live-built version at http://localhost:8008
 
+Building the client
+-------------------
+
+The LiberTEM client is written in TypeScript, using a combination of React/Redux/Redux-Saga. The
+client communicates with the Python API server using both HTTP and websockets. Because browsers
+can't directly execute TypeScript, there is a build step involved, which translates the TypeScript
+code into JavaScript that is then understood by the browser. 
+This build step is needed both for development and then again for building the production version.
+
+If you would like to contribute to the client, you first need to set up the development environment.
+For this, first install nodejs. On Linux, we recommend to `install via package manager <https://nodejs.org/en/download/package-manager/>`_,
+on Windows `the installer <https://nodejs.org/en/download/>`_ should be fine. Choose the current LTS version, which is 10.x at the time of writing.
+
+One you have nodejs installed, you should have the npm command available in your path. You can then install
+the needed build tools and dependencies by changing to the client directory and running the install command:
+
+.. code-block:: shell
+
+   $ cd client/
+   $ npm install
+
+.. note::
+   
+   It is always a good idea to start development with installing the current dependencies with the
+   above command. Having old versions of dependencies installed may cause the build to fail or
+   cause unpredictable failures.
+
+Once this command finished without errors, you can start a development server:
+
+.. code-block:: shell
+
+   $ npm run start
+
+This server watches all source files for changes and automatically starts the build process. This server,
+which listens on port 3000, will only be able to serve requests for JavaScript and other static files -
+for handling HTTP API requests you still need to run the Python libertem-server process.
+Run it on the default port (9000) to allow proxying from the front-end server to the API server.
+
+You can then use any editor you like to change the client source files, in the client/src directory.
+We recommend `visual studio code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
+
+To simplify development and installing from a git checkout, we currently always ship a production build
+of the client in the git repository. When you are creating a pull request for the client, please always
+include a current production build. You can create it using a tox shortcut:
+
+.. code-block:: shell
+
+   $ tox -e build_client
+
+This will build an optimized production version of the client and copy it into src/libertem/web/client.
+This version will then be used when you start a libertem-server without the client development proxy in front.

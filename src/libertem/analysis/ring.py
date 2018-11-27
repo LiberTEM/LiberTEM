@@ -16,9 +16,6 @@ class RingMaskAnalysis(BaseMasksAnalysis):
                 desc="intensity of the integration over the selected ring"),
         ])
 
-    def get_use_sparse(self):
-        return False
-
     def get_mask_factories(self):
         cx = self.parameters['cx']
         cy = self.parameters['cy']

@@ -34,8 +34,8 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="dsPath">HDF5 Dataset Path:</label>
-                <input type="text" name="dsPath" value={values.ds_path}
+                <label htmlFor="ds_path">HDF5 Dataset Path:</label>
+                <input type="text" name="ds_path" value={values.ds_path}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>

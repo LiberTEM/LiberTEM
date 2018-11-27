@@ -157,6 +157,16 @@ def test_mask_uint(lt_ctx):
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
+def test_endian(lt_ctx):
+    data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype(">u2")
+    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    
+    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
 def test_multi_masks(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask0 = np.random.choice(a=[0, 1], size=(16, 16))
@@ -196,6 +206,7 @@ def test_mask_job(lt_ctx):
         expected,
     )
 
+
 def test_all_sparse_analysis(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
@@ -216,3 +227,65 @@ def test_all_sparse_analysis(lt_ctx):
         results.mask_1.raw_data,
         expected[1],
     )
+
+
+def test_uses_sparse_all_default(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+    )
+    
+    tiles = job.dataset.get_partitions()
+    tile = next(tiles)
+
+    assert sp.issparse(job.masks[tile])
+
+
+def test_uses_sparse_mixed_default(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+    )
+    tiles = job.dataset.get_partitions()
+    tile = next(tiles)
+
+    assert not sp.issparse(job.masks[tile])
+
+
+def test_uses_sparse_true(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1], use_sparse=True
+    )
+
+    tiles = job.dataset.get_partitions()
+    tile = next(tiles)
+
+    assert sp.issparse(job.masks[tile])
+
+
+def test_uses_sparse_false(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1], use_sparse=False
+    )
+    tiles = job.dataset.get_partitions()
+    tile = next(tiles)
+
+    assert not sp.issparse(job.masks[tile])

@@ -5,6 +5,7 @@ import logging
 import asyncio
 import signal
 import psutil
+from pwd import getpwuid
 from functools import partial
 
 import tornado.web
@@ -172,7 +173,9 @@ class Message(object):
             return {
                 "name":  item["name"],
                 "size":  item["stat"].st_size,
+                "ctime": item["stat"].st_ctime,
                 "mtime": item["stat"].st_mtime,
+                "owner": getpwuid(item["stat"].st_uid).pw_name,
             }
 
         return {

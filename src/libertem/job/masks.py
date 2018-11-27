@@ -4,10 +4,12 @@ try:
     import torch
 except ImportError:
     torch = None
+import scipy.sparse as sp
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task
+from libertem.masks import to_dense, to_sparse
 
 
 def _make_mask_slicer(computed_masks):
@@ -16,23 +18,28 @@ def _make_mask_slicer(computed_masks):
         """
         """
         sliced_masks = [
-            # .reshape((-1,)) -> like flatten, but no copies
-            # should save us one copy as we np.stack() immediately afterwards
+            # .reshape((-1, 1)) -> like flatten, but compatible with sparse
+            # matrices and no copies
+            # should save us one copy as we np.hstack() immediately afterwards
             # https://stackoverflow.com/a/28930580/540644
-            slice_.get(mask, signal_only=True).reshape((-1,))
+            slice_.get(mask, signal_only=True).reshape((-1, 1))
             for mask in computed_masks
         ]
-        return np.stack(sliced_masks, axis=1)
+        # MaskContainer assures that all or none of the masks are sparse
+        if sp.issparse(sliced_masks[0]):
+            return sp.hstack(sliced_masks)
+        else:
+            return np.hstack(sliced_masks)
     return _get_masks_for_slice
 
 
 class ApplyMasksJob(Job):
-    def __init__(self, mask_factories, use_torch=True, *args, **kwargs):
+    def __init__(self, mask_factories, use_torch=True, use_sparse=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         mask_dtype = np.dtype(self.dataset.dtype)
         if mask_dtype.kind == 'u':
             mask_dtype = np.dtype("float32")
-        self.masks = MaskContainer(mask_factories, dtype=mask_dtype)
+        self.masks = MaskContainer(mask_factories, dtype=mask_dtype, use_sparse=use_sparse)
         self.use_torch = use_torch
 
     def get_tasks(self):
@@ -48,9 +55,10 @@ class ApplyMasksJob(Job):
 
 
 class MaskContainer(object):
-    def __init__(self, mask_factories, dtype):
+    def __init__(self, mask_factories, dtype, use_sparse=None):
         self.mask_factories = mask_factories
         self.dtype = dtype
+        self.use_sparse = use_sparse
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
@@ -81,10 +89,41 @@ class MaskContainer(object):
 
         Returns
         -------
-        a list of masks as they were created by the factories
+        a list of masks with contents as they were created by the factories
+        and converted uniformly to dense or sparse matrices depending on
+        ``self.use_sparse``.
         """
-        return [f().astype(self.dtype)
-                for f in self.mask_factories]
+        # Make sure all the masks are either sparse or dense
+        # If the use_sparse property is set to Ture or False,
+        # it takes precedence.
+        # If it is None, use sparse only if all masks are sparse
+        # and set the use_sparse property accordingly
+
+        raw_masks = [
+            f().astype(self.dtype)
+            for f in self.mask_factories
+        ]
+        if self.use_sparse is True:
+            masks = [
+                to_sparse(m) for m in raw_masks
+            ]
+        elif self.use_sparse is False:
+            masks = [
+                to_dense(m) for m in raw_masks
+            ]
+        else:
+            sparse = [
+                sp.issparse(m) for m in raw_masks
+            ]
+            if all(sparse):
+                self.use_sparse = True
+                masks = raw_masks
+            else:
+                self.use_sparse = False
+                masks = [
+                    to_dense(m) for m in raw_masks
+                ]
+        return masks
 
     def get_masks_for_slice(self, slice_):
         if self._get_masks_for_slice is None:
@@ -188,7 +227,11 @@ class ApplyMasksTask(Task):
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
             masks = self.masks[data_tile]
-            if self.use_torch and torch is not None:
+            if self.masks.use_sparse:
+                # The sparse matrix has to be the left-hand side, for that
+                # reason we transpose before and after multiplication.
+                result = masks.T.dot(data.T).T
+            elif self.use_torch and torch is not None:
                 result = torch.mm(
                     torch.from_numpy(data),
                     torch.from_numpy(masks),

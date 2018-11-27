@@ -131,6 +131,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         "numpy",
+        "scipy",
         "distributed>=1.23.3",
         "click",
         "tornado",

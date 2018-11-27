@@ -1,4 +1,4 @@
-import numpy as np
+import scipy.sparse as sp
 from libertem.viz import visualize_simple
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
@@ -13,12 +13,15 @@ class PointMaskAnalysis(BaseMasksAnalysis):
                            desc="intensity of the integration over the selected point"),
         ])
 
+    def get_use_sparse(self):
+        return True
+
     def get_mask_factories(self):
         cx = self.parameters['cx']
         cy = self.parameters['cy']
 
         def _point_inner():
-            a = np.zeros(self.dataset.shape[2:])
-            a[int(cy), int(cx)] = 1
-            return a.astype(self.dtype)
+            a = sp.csr_matrix(([1], ([int(cy)], [int(cx)])),
+                    dtype=self.dtype, shape=self.dataset.shape[2:])
+            return a
         return [_point_inner]

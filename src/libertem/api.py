@@ -64,9 +64,9 @@ class Context:
         ds.check_valid()
         return ds
 
-    load.__doc__ = load.__doc__ % {'types': ", ".join(filetypes.keys())}
+    load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
-    def create_mask_job(self, factories, dataset):
+    def create_mask_job(self, factories, dataset, use_sparse=None):
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
@@ -74,9 +74,16 @@ class Context:
         Parameters
         ----------
         factories
-            list of functions that take no arguments and create masks
+            list of functions that take no arguments and create masks. The returned masks can be
+            numpy arrays or scipy.sparse matrices.
         dataset
             dataset to work on
+        use_sparse
+            * None (default): Use sparse matrix multiplication if all factory functions return a \
+            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
+            multiplication
+            * True: Convert all masks to sparse matrices.
+            * False: Convert all masks to dense matrices.
 
         Examples
         --------
@@ -89,11 +96,10 @@ class Context:
         >>> result = ctx.run(job)
         """
         return ApplyMasksJob(
-            dataset=dataset,
-            mask_factories=factories,
+            dataset=dataset, mask_factories=factories, use_sparse=use_sparse
         )
 
-    def create_mask_analysis(self, factories, dataset):
+    def create_mask_analysis(self, factories, dataset, use_sparse=None):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
@@ -105,9 +111,16 @@ class Context:
         Parameters
         ----------
         factories
-            list of functions that take no arguments and create masks
+            list of functions that take no arguments and create masks. The returned masks can be
+            numpy arrays or scipy.sparse matrices.
         dataset
             dataset to work on
+        use_sparse
+            * None (default): Use sparse matrix multiplication if all factory functions return a \
+            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
+            multiplication
+            * True: Convert all masks to sparse matrices.
+            * False: Convert all masks to dense matrices.
 
         Examples
         --------
@@ -122,9 +135,7 @@ class Context:
         """
         return MasksAnalysis(
             dataset=dataset,
-            parameters={
-                'factories': factories,
-            }
+            parameters={"factories": factories, "use_sparse": use_sparse},
         )
 
     def create_com_analysis(self, dataset, cx: int, cy: int, mask_radius: int = None):
@@ -143,14 +154,9 @@ class Context:
             mask out intensity outside of mask_radius from (cy, cx)
         """
         if mask_radius is None:
-            mask_radius = float('inf')
+            mask_radius = float("inf")
         analysis = COMAnalysis(
-            dataset=dataset,
-            parameters={
-                'cx': cx,
-                'cy': cy,
-                'r': mask_radius,
-            },
+            dataset=dataset, parameters={"cx": cx, "cy": cy, "r": mask_radius}
         )
         return analysis
 
@@ -169,11 +175,9 @@ class Context:
         r
             radius of the disk
         """
-        return DiskMaskAnalysis(dataset=dataset, parameters={
-            'cx': cx,
-            'cy': cy,
-            'r': r,
-        })
+        return DiskMaskAnalysis(
+            dataset=dataset, parameters={"cx": cx, "cy": cy, "r": r}
+        )
 
     def create_ring_analysis(self, dataset, cx: int, cy: int, ri: int, ro: int):
         """
@@ -192,21 +196,15 @@ class Context:
         ro
             outer radius
         """
-        return RingMaskAnalysis(dataset=dataset, parameters={
-            'cx': cx,
-            'cy': cy,
-            'ri': ri,
-            'ro': ro,
-        })
+        return RingMaskAnalysis(
+            dataset=dataset, parameters={"cx": cx, "cy": cy, "ri": ri, "ro": ro}
+        )
 
     def create_point_analysis(self, dataset, x: int, y: int):
         """
         Select the pixel with coords (y, x) from each frame
         """
-        return PointMaskAnalysis(dataset=dataset, parameters={
-            'cx': x,
-            'cy': y,
-        })
+        return PointMaskAnalysis(dataset=dataset, parameters={"cx": x, "cy": y})
 
     def create_sum_analysis(self, dataset):
         """
@@ -240,10 +238,7 @@ class Context:
         shape = dataset.shape
         return PickFrameJob(
             dataset=dataset,
-            slice_=Slice(
-                origin=(y, x, 0, 0),
-                shape=(1, 1) + shape[2:],
-            ),
+            slice_=Slice(origin=(y, x, 0, 0), shape=(1, 1) + shape[2:]),
             squeeze=True,
         )
 
@@ -257,7 +252,7 @@ class Context:
             the job or analysis to run
         """
         analysis = None
-        if hasattr(job, 'get_job'):
+        if hasattr(job, "get_job"):
             analysis = job
             job_to_run = analysis.get_job()
         else:
@@ -275,7 +270,6 @@ class Context:
         cores = psutil.cpu_count(logical=False)
         if cores is None:
             cores = 2
-        return DaskJobExecutor.make_local(cluster_kwargs={
-            "threads_per_worker": 1,
-            "n_workers": cores,
-        })
+        return DaskJobExecutor.make_local(
+            cluster_kwargs={"threads_per_worker": 1, "n_workers": cores}
+        )

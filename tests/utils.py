@@ -2,6 +2,7 @@ import numpy as np
 
 from libertem.io.dataset.base import DataTile, DataSet, Partition
 from libertem.common.slice import Slice
+from libertem.masks import to_dense
 
 
 class MemoryDataSet(DataSet):
@@ -69,7 +70,7 @@ def _naive_mask_apply(masks, data):
 
     res = np.zeros((len(masks),) + tuple(data.shape[:2]))
     for n in range(len(masks)):
-        mask = masks[n]
+        mask = to_dense(masks[n])
         for i in range(data.shape[0]):
             for j in range(data.shape[1]):
                 item = data[i, j].ravel().dot(mask.ravel())

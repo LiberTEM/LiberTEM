@@ -21,6 +21,11 @@ def load(filetype, *args, **kwargs):
 
     additional parameters are passed to the concrete DataSet implementation
     """
+    cls = _get_dataset_cls(filetype)
+    return cls(*args, **kwargs)
+
+
+def _get_dataset_cls(filetype):
     try:
         ft = filetypes[filetype.lower()]
     except KeyError:
@@ -30,4 +35,20 @@ def load(filetype, *args, **kwargs):
     cls = parts[-1]
     module = importlib.import_module(module)
     cls = getattr(module, cls)
-    return cls(*args, **kwargs)
+    return cls
+
+
+def detect(path):
+    for filetype in filetypes.keys():
+        cls = _get_dataset_cls(filetype)
+        try:
+            maybe_params = cls.detect_params(path)
+        except NotImplementedError:
+            continue
+        if not maybe_params:
+            continue
+        params = {}
+        params.update(maybe_params)
+        params.update({"type": filetype})
+        return params
+    return {}

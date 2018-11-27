@@ -109,6 +109,15 @@ class MIBDataSet(DataSet):
         self._headers = {}
         self._headers = self._preread_headers()
 
+    @classmethod
+    def detect_params(cls, path):
+        if path.endswith(".mib"):
+            return {
+                "path": path,
+                "tileshape": (1, 8, 256, 256),
+            }
+        return False
+
     def _preread_headers(self):
         res = {}
         for f in self._files():
@@ -128,6 +137,7 @@ class MIBDataSet(DataSet):
         if self._filename_cache is not None:
             return self._filename_cache
         path, ext = os.path.splitext(self._path)
+        ext = ext.lower()
         if ext == '.mib':
             pattern = "%s*.mib" % (
                 re.sub(r'[0-9]+$', '', path)

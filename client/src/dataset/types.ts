@@ -5,7 +5,7 @@ export type DatasetsState = ById<DatasetState>;
 
 export interface OpenDatasetState {
     formVisible: boolean,
-    formPath?: string,
+    formPath: string,
     formInitialParams?: DatasetFormParams,
 }
 

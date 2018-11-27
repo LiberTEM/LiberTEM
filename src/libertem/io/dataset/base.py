@@ -20,6 +20,13 @@ class DataSet(object):
     def check_valid(self):
         raise NotImplementedError()
 
+    @classmethod
+    def detect_params(cls, path):
+        """
+        returns False if path is definitely not of a matching type
+        """  # TODO: better doc string
+        raise NotImplementedError()
+
     @property
     def diagnostics(self):
         """

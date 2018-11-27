@@ -47,6 +47,31 @@ def decode_uint12_le(inp, out):
         out[i * 2 + 1] = b
 
 
+def _pattern(path):
+    path, ext = os.path.splitext(path)
+    ext = ext.lower()
+    if ext == ".gtg":
+        pattern = "%s*.bin" % path
+    elif ext == ".bin":
+        pattern = "%s*.bin" % (
+            re.sub(r'[0-9]+$', '', path)
+        )
+    else:
+        raise DataSetException("unknown extension: %s" % ext)
+    return pattern
+
+
+def _get_gtg_path(full_path):
+    path, ext = os.path.splitext(full_path)
+    ext = ext.lower()
+    if ext == ".gtg":
+        return full_path
+    elif ext == ".bin":
+        return "%s.gtg" % (
+            re.sub(r'[0-9]+$', '', path)
+        )
+
+
 class K2FileSet:
     def __init__(self, paths, start_offsets=None):
         self.paths = paths
@@ -355,7 +380,7 @@ class K2ISDataSet(DataSet):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._start_offsets = None
-        # NOTE: the sync flag appears to be set one frame too early, so
+        # NOTE: the sync flag appears to be set one frame too late, so
         # we compensate here by setting a negative _skip_frames value.
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
@@ -367,6 +392,39 @@ class K2ISDataSet(DataSet):
     @property
     def shape(self):
         return self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+
+    @classmethod
+    def detect_params(cls, path):
+        """
+        detect if path points to a file that is part of a k2is dataset.
+        extension needs to be bin or gtg, and number of files of the dataset needs to match
+        the number of sectors. no further checking is done yet. in certain cases there may be false
+        positives, for example if users name their binary files .bin and have 8 of them
+        in a directory.
+        """
+        try:
+            pattern = _pattern(path)
+            files = glob.glob(pattern)
+            if len(files) != NUM_SECTORS:
+                return False
+        except DataSetException:
+            return False
+        params = {
+            "path": path,
+        }
+        try:
+            # FIXME: hyperspy is GPL, so this would infect our K2 reader:
+            """
+            from hyperspy.io_plugins.digital_micrograph import DigitalMicrographReader
+            with open(_get_gtg_path(path), "rb") as f:
+                reader = DigitalMicrographReader(f)
+                reader.parse_file()
+            size = reader.tags_dict['SI Dimensions']
+            params['scan_size'] = (size['Size Y'], size['Size X'])
+            """
+        except Exception:
+            pass
+        return params
 
     def check_valid(self):
         try:
@@ -399,20 +457,8 @@ class K2ISDataSet(DataSet):
              "value": str(first_block_nosync.header['frame_id'])},
         ]
 
-    def _pattern(self):
-        path, ext = os.path.splitext(self._path)
-        if ext == ".gtg":
-            pattern = "%s*.bin" % path
-        elif ext == ".bin":
-            pattern = "%s*.bin" % (
-                re.sub(r'[0-9]+$', '', path)
-            )
-        else:
-            raise DataSetException("unknown extension: %s" % ext)
-        return pattern
-
     def _files(self):
-        pattern = self._pattern()
+        pattern = _pattern(self._path)
         files = glob.glob(pattern)
         if len(files) != NUM_SECTORS:
             raise DataSetException("expected %d files at %s, found %d" % (
@@ -484,7 +530,7 @@ class K2ISDataSet(DataSet):
 
     def __repr__(self):
         return "<K2ISDataSet for pattern=%s scan_size=%s>" % (
-            self._pattern(), self._scan_size
+            _pattern(self._path), self._scan_size
         )
 
 

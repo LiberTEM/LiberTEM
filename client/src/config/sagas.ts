@@ -1,4 +1,5 @@
 import { call, fork, put, select, take, takeEvery } from 'redux-saga/effects';
+import * as uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
 import * as datasetActions from '../dataset/actions';
@@ -32,27 +33,16 @@ function* getConfigSaga() {
 }
 
 /**
- * when browsing in the file browser, update localStorage cwd config entry
+ * update localStorage config on opening files or using the file browser
  */
-function* updateConfigCWD() {
+function* updateLocalStorageConfig() {
     while (true) {
-        const action: ReturnType<typeof browserActions.Actions.dirListing> = yield take(browserActions.ActionTypes.DIRECTORY_LISTING)
+        yield take([
+            datasetActions.ActionTypes.CREATE,
+            browserActions.ActionTypes.DIRECTORY_LISTING
+        ]);
         const config: ConfigState = yield select((state: RootReducer) => state.config);
-        const newConfig = Object.assign({}, config, { cwd: action.payload.path })
-        setLocalStorage(newConfig);
-    }
-}
-
-/**
- * when opening a dataset, update lastOpened config value
- */
-function* updateLastOpenedConfig() {
-    while (true) {
-        const action: ReturnType<typeof datasetActions.Actions.create> = yield take(datasetActions.ActionTypes.CREATE);
-        const config: ConfigState = yield select((state: RootReducer) => state.config);
-        const newLastOpened = Object.assign({}, config.lastOpened, { [action.payload.dataset.params.path]: action.payload.dataset.params });
-        const newConfig = Object.assign({}, config, { lastOpened: newLastOpened });
-        setLocalStorage(newConfig);
+        setLocalStorage(config);
     }
 }
 
@@ -60,14 +50,14 @@ export function* firstConfigFetch() {
     try {
         yield call(getConfigSaga);
     } catch (e) {
-        // tslint:disable-next-line:no-console
-        console.error("failed to fetch config");
+        const timestamp = Date.now();
+        const id = uuid();
+        yield put(configActions.Actions.fetchFailed(`failed to fetch config: ${e.toString()}`, timestamp, id));
     }
 }
 
 export function* configRootSaga() {
     yield fork(firstConfigFetch);
     yield fork(getConfigOnReconnect);
-    yield fork(updateConfigCWD);
-    yield fork(updateLastOpenedConfig);
+    yield fork(updateLocalStorageConfig);
 }

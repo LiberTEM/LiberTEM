@@ -9,9 +9,9 @@ import { OpenFormProps } from "../types";
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
     "path"
-    | "scanSize"
+    | "scan_size"
     | "type"> & {
-    scanSize: string,
+    scan_size: string,
 };
 
 type FormValues = DatasetParamsK2ISForForm
@@ -41,8 +41,8 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="scanSize">Scan Size:</label>
-                <input type="text" name="scanSize" value={values.scanSize}
+                <label htmlFor="scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
 
@@ -55,7 +55,7 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        scanSize: getInitial("scanSize", "32, 32", initial),
+        scan_size: getInitial("scan_size", "32, 32", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
@@ -63,7 +63,7 @@ export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
             path,
             type: DatasetTypes.K2IS,
             name: values.name,
-            scanSize: parseNumList(values.scanSize),
+            scan_size: parseNumList(values.scan_size),
         });
     }
 })(K2ISFileParamsForm);

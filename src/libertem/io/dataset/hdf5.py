@@ -7,6 +7,23 @@ from libertem.common.slice import Slice
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
+def _get_datasets(path):
+    datasets = []
+
+    def _make_list(name, obj):
+        if hasattr(obj, 'size') and hasattr(obj, 'shape'):
+            datasets.append((name, obj.size, obj.shape, obj.dtype))
+
+    with h5py.File(path, 'r') as f:
+        f.visititems(_make_list)
+        for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0]):
+            yield {"name": name, "value": [
+                {"name": "Size", "value": str(size)},
+                {"name": "Shape", "value": str(shape)},
+                {"name": "Datatype", "value": str(dtype)},
+            ]}
+
+
 class H5DataSet(DataSet):
     def __init__(self, path, ds_path, tileshape,
                  target_size=512*1024*1024, min_num_partitions=None):
@@ -15,6 +32,33 @@ class H5DataSet(DataSet):
         self.target_size = target_size
         self.tileshape = tileshape
         self.min_num_partitions = min_num_partitions
+
+    @classmethod
+    def detect_params(cls, path):
+        try:
+            with h5py.File(path, 'r'):
+                pass
+        except (IOError, OSError, KeyError, ValueError):
+            # not a h5py file or can't open for some reason:
+            return False
+
+        # try to guess the hdf5 dataset path:
+        datasets = []
+
+        def _make_list(name, obj):
+            if hasattr(obj, 'size') and hasattr(obj, 'shape'):
+                datasets.append((name, obj.size, obj.shape, obj.dtype))
+        with h5py.File(path, 'r') as f:
+            f.visititems(_make_list)
+        largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
+        name, size, shape, dtype = largest_ds
+
+        return {
+            "path": path,
+            "ds_path": name,
+            # FIXME: shape may not be 4D, number of frames may not match L3 size
+            "tileshape": (1, 8) + shape[2:],
+        }
 
     @contextlib.contextmanager
     def get_h5ds(self):
@@ -39,29 +83,13 @@ class H5DataSet(DataSet):
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
-    def _get_datasets(self):
-        datasets = []
-
-        def _make_list(name, obj):
-            if hasattr(obj, 'size') and hasattr(obj, 'shape'):
-                datasets.append((name, obj.size, obj.shape, obj.dtype))
-
-        with h5py.File(self.path, 'r') as f:
-            f.visititems(_make_list)
-            for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0]):
-                yield {"name": name, "value": [
-                    {"name": "Size", "value": str(size)},
-                    {"name": "Shape", "value": str(shape)},
-                    {"name": "Datatype", "value": str(dtype)},
-                ]}
-
     def get_diagnostics(self):
         with self.get_h5ds() as ds:
             return [
                 {"name": "dtype", "value": str(ds.dtype)},
                 {"name": "chunks", "value": str(ds.chunks)},
                 {"name": "compression", "value": str(ds.compression)},
-                {"name": "datasets", "value": list(self._get_datasets())},
+                {"name": "datasets", "value": list(_get_datasets(self.path))},
             ]
 
     def get_partitions(self):

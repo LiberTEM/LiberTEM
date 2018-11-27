@@ -11,13 +11,13 @@ type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     "type"
     | "tileshape"
     | "path"
-    | "scanSize"
-    | "detectorSizeRaw"
-    | "cropDetectorTo"> & {
+    | "scan_size"
+    | "detector_size_raw"
+    | "crop_detector_to"> & {
     tileshape: string,
-    scanSize: string
-    detectorSizeRaw: string,
-    cropDetectorTo: string,
+    scan_size: string
+    detector_size_raw: string,
+    crop_detector_to: string,
 };
 
 type FormValues = DatasetParamsRawForForm
@@ -53,8 +53,8 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="scanSize">Scan Size:</label>
-                <input type="text" name="scanSize" value={values.scanSize}
+                <label htmlFor="scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
@@ -64,13 +64,13 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
 
             <Form.Field>
-                <label htmlFor="detectorSizeRaw">Detector Size (as in the file):</label>
-                <input type="text" name="detectorSizeRaw" value={values.detectorSizeRaw}
+                <label htmlFor="detector_size_raw">Detector Size (as in the file):</label>
+                <input type="text" name="detector_size_raw" value={values.detector_size_raw}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="cropDetectorTo">Detector Size Crop:</label>
-                <input type="text" name="cropDetectorTo" value={values.cropDetectorTo}
+                <label htmlFor="crop_detector_to">Detector Size Crop:</label>
+                <input type="text" name="crop_detector_to" value={values.crop_detector_to}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -83,9 +83,9 @@ export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
-        detectorSizeRaw: getInitial("detectorSizeRaw", "130, 128", initial),
-        cropDetectorTo: getInitial("cropDetectorTo", "128, 128", initial),
-        scanSize: getInitial("scanSize", "256, 256", initial),
+        detector_size_raw: getInitial("detector_size_raw", "130, 128", initial),
+        crop_detector_to: getInitial("crop_detector_to", "128, 128", initial),
+        scan_size: getInitial("scan_size", "256, 256", initial),
         dtype: getInitial("dtype", "float32", initial),
     }),
     handleSubmit: (values, formikBag) => {
@@ -96,9 +96,9 @@ export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
             name: values.name,
             dtype: values.dtype,
             tileshape: parseNumList(values.tileshape),
-            scanSize: parseNumList(values.scanSize),
-            detectorSizeRaw: parseNumList(values.detectorSizeRaw),
-            cropDetectorTo: parseNumList(values.cropDetectorTo),
+            scan_size: parseNumList(values.scan_size),
+            detector_size_raw: parseNumList(values.detector_size_raw),
+            crop_detector_to: parseNumList(values.crop_detector_to),
         });
     }
 })(RawFileParamsForm);

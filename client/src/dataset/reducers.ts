@@ -48,7 +48,7 @@ export function datasetReducer(state = initialDatasetState, action: AllActions):
 
 const initialOpenDatasetState: OpenDatasetState = {
     formVisible: false,
-    formPath: undefined,
+    formPath: "/",
     formInitialParams: undefined,
 }
 

@@ -47,6 +47,7 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             })
             break;
         }
+        case browserActions.ActionTypes.SELECT_FULL_PATH:
         case browserActions.ActionTypes.SELECT: {
             return Object.assign({}, state, {
                 isLoading: false,

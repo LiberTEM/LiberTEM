@@ -35,7 +35,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
             <Form.Field>
                 <label htmlFor="dsPath">HDF5 Dataset Path:</label>
-                <input type="text" name="dsPath" value={values.dsPath}
+                <input type="text" name="dsPath" value={values.ds_path}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
@@ -53,7 +53,7 @@ export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
-        dsPath: getInitial("dsPath", "", initial),
+        ds_path: getInitial("ds_path", "", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
@@ -61,7 +61,7 @@ export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
             path,
             type: DatasetTypes.HDF5,
             name: values.name,
-            dsPath: values.dsPath,
+            ds_path: values.ds_path,
             tileshape: values.tileshape.split(",").map(part => +part),
         });
     }

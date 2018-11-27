@@ -1,4 +1,5 @@
 import { call, fork, put, select, take } from "redux-saga/effects";
+import { joinPaths } from "src/config/helpers";
 import * as uuid from 'uuid/v4';
 import { ConfigState } from "../config/reducers";
 import { DirectoryListingResponse } from "../messages";
@@ -22,7 +23,7 @@ function* fetchDirectoryListing(action: ReturnType<typeof browserActions.Actions
     try {
         const { name, path } = action.payload;
         const config: ConfigState = yield select((state: RootReducer) => state.config)
-        const newPath = name !== undefined ? `${path}${config.separator}${name}` : path;
+        const newPath = name !== undefined ? joinPaths(config, path, name) : path;
         const result: DirectoryListingResponse = yield call(getDirectoryListing, newPath);
         if (result.status === "ok") {
             yield put(browserActions.Actions.dirListing(result.path, result.dirs, result.files));

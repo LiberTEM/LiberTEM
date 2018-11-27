@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dropdown, DropdownProps } from "semantic-ui-react";
-import { AnalysisTypes } from "src/messages";
+import { AnalysisTypes } from "../../messages";
 import { RootReducer } from "../../store";
 import { JobState } from "../types";
 import Result from "./Result";

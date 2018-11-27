@@ -1,10 +1,13 @@
+import * as _ from 'lodash';
 import { MsgPartConfig } from "../messages";
 import { ConfigState } from "./reducers";
 
 const CONFIG_KEY = "LiberTEM.config";
 
 export function joinPaths(config: ConfigState, ...parts: string[]) {
-    return parts.join(config.separator);
+    const removeSep = (part: string) => part.replace(new RegExp(`${_.escapeRegExp(config.separator)}$`), "")
+    parts = [removeSep(parts[0]), ...parts.slice(1)];
+    return parts.map(part => part.trim()).join(config.separator);
 }
 
 export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
@@ -19,7 +22,7 @@ export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
 }
 
 export function setLocalStorage(config: ConfigState): void {
-    const localSettings = ["cwd", "lastOpened"].reduce((acc, item: keyof ConfigState) => {
+    const localSettings = ["cwd", "lastOpened", "fileHistory"].reduce((acc, item: keyof ConfigState) => {
         acc[item] = config[item];
         return acc;
     }, {} as ConfigState);
@@ -33,6 +36,17 @@ export function clearLocalStorage(): void {
 export function getDefaultLocalConfig(config: MsgPartConfig): ConfigState {
     return Object.assign({}, config, {
         lastOpened: {},
+        fileHistory: [],
         cwd: "/",
     });
+}
+
+export function makeUnique<T>(inp: T[]): T[] {
+    return inp.reduce((acc: T[], curr: T) => {
+        if (acc.indexOf(curr) === -1) {
+            return [...acc, curr];
+        } else {
+            return acc;
+        }
+    }, [] as T[]);
 }

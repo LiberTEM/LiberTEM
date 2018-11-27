@@ -5,6 +5,8 @@ import numpy as np
 from libertem.common.slice import Slice
 from .base import DataSet, Partition, DataTile, DataSetException
 
+MAGIC_EXPECT = 258
+
 
 # stolen from hyperspy
 def get_header_dtype_list(endianess='<'):
@@ -43,6 +45,20 @@ class BloDataSet(DataSet):
         self._header = None
         self._endianess = endianess
 
+    @classmethod
+    def detect_params(cls, path):
+        try:
+            ds = cls(path, tileshape=(1, 1, 144, 144), endianess='<')
+            if not ds.check_valid():
+                return False
+            return {
+                "path": path,
+                "tileshape": (1, 8) + ds.shape[2:],  # FIXME: maybe adjust number of frames?
+                "endianess": "<",
+            }
+        except Exception:
+            return False
+
     @property
     def dtype(self):
         return np.dtype("u1")
@@ -68,6 +84,9 @@ class BloDataSet(DataSet):
     def check_valid(self):
         try:
             self._read_header()
+            magic = self.header['MAGIC'][0]
+            if magic != MAGIC_EXPECT:
+                raise DataSetException("invalid magic number: %x != %x" % (magic, MAGIC_EXPECT))
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)

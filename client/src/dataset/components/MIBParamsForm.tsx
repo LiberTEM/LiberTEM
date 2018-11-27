@@ -11,10 +11,10 @@ type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
     "path"
     | "type"
     | "tileshape"
-    | "scanSize"
+    | "scan_size"
     > & {
     tileshape: string,
-    scanSize: string,
+    scan_size: string,
 };
 
 type FormValues = DatasetParamsMIBForForm
@@ -50,8 +50,8 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="scanSize">Scan Size:</label>
-                <input type="text" name="scanSize" value={values.scanSize}
+                <label htmlFor="scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -68,7 +68,7 @@ export default withFormik<OpenFormProps<DatasetParamsMIB>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial),
-        scanSize: getInitial("scanSize", "256, 256", initial),
+        scan_size: getInitial("scan_size", "256, 256", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
@@ -77,7 +77,7 @@ export default withFormik<OpenFormProps<DatasetParamsMIB>, FormValues>({
             type: DatasetTypes.MIB,
             name: values.name,
             tileshape: parseNumList(values.tileshape),
-            scanSize: parseNumList(values.scanSize),
+            scan_size: parseNumList(values.scan_size),
         });
     }
 })(RawFileParamsForm);

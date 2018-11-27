@@ -99,6 +99,21 @@ class Message(object):
             "dataset": dataset,
         }
 
+    def dataset_detect(self, params):
+        return {
+            "status": "ok",
+            "messageType": "DATASET_DETECTED",
+            "datasetParams": params,
+        }
+
+    def dataset_detect_failed(self, path):
+        return {
+            "status": "error",
+            "messageType": "DATASET_DETECTION_FAILED",
+            "path": path,
+            "msg": "could not automatically determine dataset format",
+        }
+
     def start_job(self, job_id):
         return {
             "status": "ok",
@@ -177,6 +192,7 @@ class Message(object):
     def browse_failed(self, path, code, msg):
         return {
             "status": "error",
+            "messageType": "DIRECTORY_LISTING_FAILED",
             "path": path,
             "code": code,
             "msg": msg,
@@ -400,23 +416,23 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         elif params["type"].lower() == "hdf5":
             dataset_params = {
                 "path": params["path"],
-                "ds_path": params["dsPath"],
+                "ds_path": params["ds_path"],
                 "tileshape": params["tileshape"],
             }
         elif params["type"].lower() == "raw":
             dataset_params = {
                 "path": params["path"],
                 "dtype": params["dtype"],
-                "detector_size_raw": params["detectorSizeRaw"],
-                "crop_detector_to": params["cropDetectorTo"],
+                "detector_size_raw": params["detector_size_raw"],
+                "crop_detector_to": params["crop_detector_to"],
                 "tileshape": params["tileshape"],
-                "scan_size": params["scanSize"],
+                "scan_size": params["scan_size"],
             }
         elif params["type"].lower() == "mib":
             dataset_params = {
                 "path": params["path"],
                 "tileshape": params["tileshape"],
-                "scan_size": params["scanSize"],
+                "scan_size": params["scan_size"],
             }
         elif params["type"].lower() == "blo":
             dataset_params = {
@@ -426,7 +442,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         elif params["type"].lower() == "k2is":
             dataset_params = {
                 "path": params["path"],
-                "scan_size": params["scanSize"],
+                "scan_size": params["scan_size"],
             }
         try:
             ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)
@@ -445,6 +461,25 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             log_message(msg)
             self.write(msg)
             return
+
+
+class DataSetDetectHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get(self):
+        path = self.request.arguments['path'][0].decode("utf8")
+        params = await run_blocking(dataset.detect, path=path)
+        if not params:
+            msg = Message(self.data).dataset_detect_failed(path=path)
+            log_message(msg)
+            self.write(msg)
+            return
+        params['type'] = params['type'].upper()
+        msg = Message(self.data).dataset_detect(params=params)
+        log_message(msg)
+        self.write(msg)
 
 
 class SharedData(object):
@@ -702,6 +737,10 @@ def make_app():
     }
     return tornado.web.Application([
         (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/datasets/detect/", DataSetDetectHandler, {
+            "data": data,
+            "event_registry": event_registry
+        }),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
             "data": data,
             "event_registry": event_registry

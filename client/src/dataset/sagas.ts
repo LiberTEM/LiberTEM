@@ -3,10 +3,10 @@ import * as uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
-import { OpenDatasetResponse } from '../messages';
+import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
-import { deleteDataset, openDataset } from './api';
+import { deleteDataset, detectDataset, openDataset } from './api';
 
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {
@@ -36,15 +36,33 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     }
 }
 
+export function* doOpenDataset(fullPath: string) {
+    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    let prefillParams = config.lastOpened[fullPath];
+    if (!prefillParams) {
+        const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
+        if (detectResult.status === "ok") {
+            prefillParams = detectResult.datasetParams;
+        }
+    }
+    yield put(datasetActions.Actions.open(fullPath, prefillParams));
+}
+
+export function* openDatasetSagaFullPath(action: ReturnType<typeof browserActions.Actions.selectFullPath>) {
+    const fullPath = action.payload.path;
+    yield call(doOpenDataset, fullPath);
+}
+
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
     // TODO: ask the server what it thinks about this file
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
-    yield put(datasetActions.Actions.open(fullPath, config.lastOpened[fullPath]));
+    yield call(doOpenDataset, fullPath);
 }
 
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
     yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
     yield takeEvery(browserActions.ActionTypes.SELECT, openDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT_FULL_PATH, openDatasetSagaFullPath);
 }

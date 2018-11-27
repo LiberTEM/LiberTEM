@@ -1,6 +1,5 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { handleKeyEvent, ModifyCoords } from "src/widgets/kbdHandler";
 import * as analysisActions from '../../analysis/actions';
 import { AnalysisState } from "../../analysis/types";
 import { AnalysisTypes, DatasetState } from "../../messages";
@@ -8,6 +7,7 @@ import BusyWrapper from "../../widgets/BusyWrapper";
 import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import HandleParent from "../../widgets/HandleParent";
+import { handleKeyEvent, ModifyCoords } from "../../widgets/kbdHandler";
 import { JobState } from "../types";
 import ResultImage from "./ResultImage";
 

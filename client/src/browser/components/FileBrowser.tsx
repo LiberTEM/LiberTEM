@@ -7,6 +7,7 @@ import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
 import FileEntry from "./FileEntry";
 import FolderEntry from "./FolderEntry";
+import RecentFiles from "./RecentFiles";
 
 const mapStateToProps = (state: RootReducer) => {
     const { browser } = state;
@@ -48,7 +49,6 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
-
 const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
@@ -57,31 +57,16 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
     const entryFn: EntryFn = ({ index, style }) => {
         return entries[index](style)
     };
+
     return (
         <Segment.Group>
             <Segment.Group horizontal={true}>
                 <Segment>
                     <Header as="h2">Open dataset</Header>
                 </Segment>
-                {
-                    /* 
-                type DropdownOptions = Array<{
-                    text: string,
-                    value: string,
-                }>;
-                const recentFiles: DropdownOptions = [
-                ];
                 <Segment style={{ flexShrink: 1, flexGrow: 0 }}>
-                    <Dropdown text="Recent" icon="ellipsis vertical" floating={true} labeled={true} button={true} className='icon'>
-                        <Dropdown.Menu>
-                            <Dropdown.Header content="recent datasets" />
-                            {recentFiles.map(option => <Dropdown.Item key={option.value} />)}
-                        </Dropdown.Menu>
-                    </Dropdown>
+                    <RecentFiles />
                 </Segment>
-                    */
-                }
-
             </Segment.Group>
             <Segment>
                 <p>Path: {path}</p>

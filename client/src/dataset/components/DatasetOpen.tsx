@@ -75,12 +75,6 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
                 </Segment>
             );
         }
-        if (formPath === undefined) {
-            // tslint:disable-next-line:no-console
-            console.error("formPath is undefined");
-            return null;
-        }
-
         switch (datasetType) {
             case DatasetTypes.HDF5: {
                 const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;

@@ -91,7 +91,7 @@ export type DatasetParamsHDFS = {
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
-    dsPath: string,
+    ds_path: string,
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -99,16 +99,16 @@ export type DatasetParamsRaw = {
     type: DatasetTypes.RAW,
     path: string,
     dtype: string,
-    detectorSizeRaw: number[],
-    cropDetectorTo: number[],
-    scanSize: number[],
+    detector_size_raw: number[],
+    crop_detector_to: number[],
+    scan_size: number[],
     tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsMIB = {
     type: DatasetTypes.MIB,
     path: string,
-    scanSize: number[],
+    scan_size: number[],
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -121,7 +121,7 @@ export type DatasetParamsBLO = {
 export type DatasetParamsK2IS = {
     type: DatasetTypes.K2IS,
     path: string,
-    scanSize: number[],
+    scan_size: number[],
 } & DatasetParamsCommon
 
 export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS
@@ -172,6 +172,19 @@ export interface DeleteDatasetResponse {
     status: "ok",
     dataset: string,
 }
+
+export interface DetectDatasetSuccessResponse {
+    status: "ok",
+    datasetParams: DatasetFormParams,
+}
+
+export interface DetectDatasetErrorResponse {
+    status: "error",
+    path: string,
+    msg: string,
+}
+
+export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
 
 export type MsgPartDataset = Dataset
 

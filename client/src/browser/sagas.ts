@@ -7,24 +7,35 @@ import * as browserActions from './actions';
 import { getDirectoryListing } from "./api";
 
 export function* directoryListingSaga() {
-    yield fork(fetchDirectoryListing);
+    yield fork(fetchOnRequest);
     yield fork(fetchDirectoryListOnOpen);
 }
 
-function* fetchDirectoryListing() {
+function* fetchOnRequest() {
     while (true) {
         const action: ReturnType<typeof browserActions.Actions.list> = yield take(browserActions.ActionTypes.LIST_DIRECTORY);
-        try {
-            const { name, path } = action.payload;
-            const config: ConfigState = yield select((state: RootReducer) => state.config)
-            const newPath = name !== undefined ? `${path}${config.separator}${name}` : path;
-            const result: DirectoryListingResponse = yield call(getDirectoryListing, newPath);
+        yield fork(fetchDirectoryListing, action);
+    }
+}
+
+function* fetchDirectoryListing(action: ReturnType<typeof browserActions.Actions.list>) {
+    try {
+        const { name, path } = action.payload;
+        const config: ConfigState = yield select((state: RootReducer) => state.config)
+        const newPath = name !== undefined ? `${path}${config.separator}${name}` : path;
+        const result: DirectoryListingResponse = yield call(getDirectoryListing, newPath);
+        if (result.status === "ok") {
             yield put(browserActions.Actions.dirListing(result.path, result.dirs, result.files));
-        } catch (e) {
+        } else if (result.status === "error") {
             const timestamp = Date.now();
             const id = uuid();
-            yield put(browserActions.Actions.error(`Error browsing directory: ${e.toString()}`, timestamp, id));
+            yield put(browserActions.Actions.error(`Error browsing directory: ${result.msg}`, timestamp, id));
+            yield put(browserActions.Actions.list(config.separator));
         }
+    } catch (e) {
+        const timestamp = Date.now();
+        const id = uuid();
+        yield put(browserActions.Actions.error(`Error browsing directory: ${e.toString()}`, timestamp, id));
     }
 }
 

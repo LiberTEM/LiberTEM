@@ -174,6 +174,14 @@ class Message(object):
             ],
         }
 
+    def browse_failed(self, path, code, msg):
+        return {
+            "status": "error",
+            "path": path,
+            "code": code,
+            "msg": msg,
+        }
+
 
 class RunJobMixin(object):
     async def run_job(self, uuid, ds, job, full_result):
@@ -653,7 +661,14 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path']
         assert len(path) == 1
         path = path[0].decode("utf8")
-        assert os.path.isdir(path)
+        if not os.path.isdir(path):
+            msg = Message(self.data).browse_failed(
+                path=path,
+                code="NOT_FOUND",
+                msg="path %s could not be found" % path,
+            )
+            self.write(msg)
+            return
         path = os.path.abspath(path)
         names = os.listdir(path)
         dirs = []

@@ -291,9 +291,18 @@ export interface DirectoryListingDetails {
     mtime: number,
 }
 
-export interface DirectoryListingResponse {
+export interface DirectoryListingResponseOK {
     status: "ok",
     path: string,
     files: DirectoryListingDetails[],
     dirs: DirectoryListingDetails[],
 }
+
+export interface DirectoryListingResponseError {
+    status: "error",
+    path: string,
+    code: string,
+    msg: string,
+}
+
+export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;

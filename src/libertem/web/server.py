@@ -168,7 +168,7 @@ class Message(object):
             },
         }
 
-    def directory_listing(self, path, files, dirs):
+    def directory_listing(self, path, files, dirs, drives):
         def _details(item):
             return {
                 "name":  item["name"],
@@ -181,6 +181,7 @@ class Message(object):
         return {
             "status": "ok",
             "messageType": "DIRECTORY_LISTING",
+            "drives": drives,
             "path": path,
             "files": [
                 _details(f)
@@ -726,7 +727,12 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
                 dirs.append(res)
             else:
                 files.append(res)
-        msg = Message(self.data).directory_listing(path, files=files, dirs=dirs)
+        drives = [
+            part.mountpoint
+            for part in psutil.disk_partitions()
+            if part.fstype != "squashfs"
+        ]
+        msg = Message(self.data).directory_listing(path, files=files, dirs=dirs, drives=drives)
         self.write(msg)
 
 

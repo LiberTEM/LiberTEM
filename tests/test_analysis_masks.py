@@ -8,6 +8,7 @@ from libertem.io.dataset.base import DataTile
 from libertem.masks import gradient_x, to_dense, to_sparse
 from utils import MemoryDataSet, _naive_mask_apply
 
+
 def _run_mask_test_program(lt_ctx, dataset, mask, expected):
     analysis_default = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask]
@@ -34,6 +35,7 @@ def _run_mask_test_program(lt_ctx, dataset, mask, expected):
         results_dense.mask_0.raw_data,
         expected
     )
+
 
 @pytest.fixture
 def masks():
@@ -133,7 +135,7 @@ def test_4d_tilesize(lt_ctx):
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    
+
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
@@ -143,7 +145,7 @@ def test_multirow_tileshape(lt_ctx):
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 16, 16, 16), partition_shape=(16, 16, 16, 16))
-    
+
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
@@ -153,7 +155,7 @@ def test_mask_uint(lt_ctx):
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    
+
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
@@ -163,7 +165,7 @@ def test_endian(lt_ctx):
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
-    
+
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
@@ -238,7 +240,7 @@ def test_uses_sparse_all_default(lt_ctx):
     job = lt_ctx.create_mask_job(
         dataset=dataset, factories=[lambda: mask0, lambda: mask1]
     )
-    
+
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 

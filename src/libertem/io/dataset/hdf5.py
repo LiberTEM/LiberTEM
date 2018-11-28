@@ -50,8 +50,11 @@ class H5DataSet(DataSet):
                 datasets.append((name, obj.size, obj.shape, obj.dtype))
         with h5py.File(path, 'r') as f:
             f.visititems(_make_list)
-        largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
-        name, size, shape, dtype = largest_ds
+        try:
+            largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
+            name, size, shape, dtype = largest_ds
+        except IndexError:
+            return {"path": path}
 
         return {
             "path": path,

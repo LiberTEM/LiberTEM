@@ -1,4 +1,6 @@
 import importlib
+from libertem.io.dataset.base import DataSetException
+
 
 filetypes = {
     "hdfs": "libertem.io.dataset.hdfs.BinaryHDFSDataSet",
@@ -29,21 +31,24 @@ def _get_dataset_cls(filetype):
     try:
         ft = filetypes[filetype.lower()]
     except KeyError:
-        raise ValueError("unknown filetype: %s" % filetype)
+        raise DataSetException("unknown filetype: %s" % filetype)
     parts = ft.split(".")
     module = ".".join(parts[:-1])
     cls = parts[-1]
-    module = importlib.import_module(module)
+    try:
+        module = importlib.import_module(module)
+    except ImportError as e:
+        raise DataSetException("could not load dataset: %s" % str(e))
     cls = getattr(module, cls)
     return cls
 
 
 def detect(path):
     for filetype in filetypes.keys():
-        cls = _get_dataset_cls(filetype)
         try:
+            cls = _get_dataset_cls(filetype)
             maybe_params = cls.detect_params(path)
-        except NotImplementedError:
+        except (NotImplementedError, DataSetException):
             continue
         if not maybe_params:
             continue

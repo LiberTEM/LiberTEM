@@ -1,6 +1,6 @@
 import { call, fork, put, select, take } from "redux-saga/effects";
-import { joinPaths } from "src/config/helpers";
 import * as uuid from 'uuid/v4';
+import { joinPaths } from "../config/helpers";
 import { ConfigState } from "../config/reducers";
 import { DirectoryListingResponse } from "../messages";
 import { RootReducer } from "../store";

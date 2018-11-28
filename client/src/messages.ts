@@ -301,7 +301,9 @@ export interface CancelJobResponse {
 export interface DirectoryListingDetails {
     name: string,
     size: number,
+    ctime: number,
     mtime: number,
+    owner: string,
 }
 
 export interface DirectoryListingResponseOK {

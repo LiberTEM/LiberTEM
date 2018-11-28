@@ -1,10 +1,11 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList as List } from "react-window";
 import { Button, Header, Segment } from "semantic-ui-react";
 import { DirectoryListingDetails } from "../../messages";
 import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
+import FileBrowserHeader from "./FileBrowserHeader";
 import FileEntry from "./FileEntry";
 import FolderEntry from "./FolderEntry";
 import RecentFiles from "./RecentFiles";
@@ -54,9 +55,10 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
     const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
     const entries = dirEntries.concat(fileEntries);
-    const entryFn: EntryFn = ({ index, style }) => {
+
+    const cellFn: EntryFn = ({ index, style }) => {
         return entries[index](style)
-    };
+    }
 
     return (
         <Segment.Group>
@@ -70,8 +72,9 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
             </Segment.Group>
             <Segment>
                 <p>Path: {path}</p>
-                <List ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
-                    {entryFn}
+                <FileBrowserHeader />
+                <List style={{ overflowY: "scroll" }} ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
+                    {cellFn}
                 </List>
             </Segment>
             <Segment>

@@ -1,35 +1,31 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
-import { Icon } from "semantic-ui-react";
 import { DirectoryListingDetails } from "../../messages";
 import * as browserActions from '../actions';
+import FileBrowserEntry from "./FileBrowserEntry";
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: FileEntryProps) => {
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: FolderEntryProps) => {
     return {
-        list: (e: React.MouseEvent) => {
+        list: () => {
             dispatch(browserActions.Actions.list(ownProps.path, ownProps.details.name));
             window.setTimeout(() => ownProps.onChange(), 0);
         },
     };
 }
 
-interface FileEntryProps {
+interface FolderEntryProps {
     path: string,
     style: object,
-    details: DirectoryListingDetails
-    onChange: () => void
+    details: DirectoryListingDetails,
+    onChange: () => void,
 }
 
-type MergedProps = FileEntryProps & ReturnType<typeof mapDispatchToProps>;
+type MergedProps = FolderEntryProps & ReturnType<typeof mapDispatchToProps>;
 
 const FolderEntry: React.SFC<MergedProps> = ({ list, details, style, onChange }) => {
-    const myStyle = {
-        cursor: "pointer",
-        ...style,
-    }
     return (
-        <div onClick={list} style={myStyle}><Icon name="folder" /> {details.name}</div>
-    );
+        <FileBrowserEntry onClick={list} style={style} details={details} icon="folder" />
+    )
 }
 
 export default connect(null, mapDispatchToProps)(FolderEntry);

@@ -1,8 +1,8 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
-import { DatasetTypes } from "src/messages";
-import { RootReducer } from "src/store";
+import { DatasetTypes } from "../../messages";
+import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
 
 

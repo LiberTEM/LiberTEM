@@ -3,6 +3,20 @@ import msvcrt
 import ctypes
 from ctypes import windll, wintypes, byref
 
+try:
+    import pwd
+
+    def get_owner_name(full_path, stat):
+        return pwd.getpwuid(stat.st_uid).pwname
+except ModuleNotFoundError:
+    import win32security
+
+    def get_owner_name(full_path, stat):
+        s = win32security.GetFileSecurity(full_path, win32security.OWNER_SECURITY_INFORMATION)
+        sid = s.GetSecurityDescriptorOwner()
+        (name, domain, t) = win32security.LookupAccountSid(None, sid)
+        return "%s\\%s" % (domain, name)
+
 
 ENABLE_QUICK_EDIT = 0x0040
 ENABLE_EXTENDED_FLAGS = 0x0080

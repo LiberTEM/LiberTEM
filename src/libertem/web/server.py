@@ -22,7 +22,7 @@ from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
     COMAnalysis, SumAnalysis, PickFrameAnalysis
 )
-from libertem.win_tweaks import get_owner_name
+from libertem.io.utils import get_owner_name
 
 
 log = logging.getLogger(__name__)

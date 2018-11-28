@@ -1,6 +1,6 @@
 import os
 
-from libertem.win_tweaks import get_owner_name
+from libertem.io.utils import get_owner_name
 
 
 def test_get_owner_name():

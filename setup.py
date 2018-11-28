@@ -140,6 +140,7 @@ setup(
         "h5py",
         "psutil",
         "numba",
+        'pypiwin32;platform_system=="Windows"'
     ],
     extras_require={
         'hdfs': 'hfds3',

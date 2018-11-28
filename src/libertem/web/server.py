@@ -5,7 +5,6 @@ import logging
 import asyncio
 import signal
 import psutil
-from pwd import getpwuid
 from functools import partial
 
 import tornado.web
@@ -23,6 +22,7 @@ from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
     COMAnalysis, SumAnalysis, PickFrameAnalysis
 )
+from libertem.win_tweaks import get_owner_name
 
 
 log = logging.getLogger(__name__)
@@ -175,7 +175,7 @@ class Message(object):
                 "size":  item["stat"].st_size,
                 "ctime": item["stat"].st_ctime,
                 "mtime": item["stat"].st_mtime,
-                "owner": getpwuid(item["stat"].st_uid).pw_name,
+                "owner": item["owner"],
             }
 
         return {
@@ -716,11 +716,12 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
             full_path = os.path.join(path, name)
             try:
                 s = os.stat(full_path)
+                owner = get_owner_name(full_path, s)
             except FileNotFoundError:
                 # this can happen either because of a TOCTOU-like race condition
                 # or for example for things like broken softlinks
                 continue
-            res = {"name": name, "stat": s}
+            res = {"name": name, "stat": s, "owner": owner}
             if stat.S_ISDIR(s.st_mode):
                 dirs.append(res)
             else:

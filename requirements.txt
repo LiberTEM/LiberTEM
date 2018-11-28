@@ -4,6 +4,7 @@ scipy
 distributed
 numba
 psutil
+pypiwin32;sys_platform == 'Windows'
 
 pytest
 pytest-cov

@@ -27,3 +27,8 @@ test_script:
 
 on_success:
   - "%PYTHON%/Scripts/codecov -f coverage.xml"
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/

@@ -1,7 +1,8 @@
 import * as React from "react";
+import { Cell } from "./FileBrowserEntry";
 
 const FileBrowserHeader: React.SFC = () => {
-    const tsStyles: React.CSSProperties = {
+    const alignRight: React.CSSProperties = {
         textAlign: "right",
     };
 
@@ -10,11 +11,20 @@ const FileBrowserHeader: React.SFC = () => {
         <div style={{ paddingRight: "20px", paddingBottom: "10px" }}>
             <div style={{ display: "flex" }}>
                 <div style={{ width: "20%", flexGrow: 1 }}>
-                    Name
+                    <Cell>Name</Cell>
                 </div>
-                <div style={{ width: "15%" }}>Owner</div>
-                <div style={{ width: "18%", ...tsStyles }}>Created</div>
-                <div style={{ width: "18%", ...tsStyles }}>Modified</div>
+                <div style={{ width: "10%", ...alignRight }}>
+                    <Cell>Size</Cell>
+                </div>
+                <div style={{ width: "10%" }}>
+                    <Cell>Owner</Cell>
+                </div>
+                <div style={{ width: "18%", ...alignRight }}>
+                    <Cell>Created</Cell>
+                </div>
+                <div style={{ width: "18%", ...alignRight }}>
+                    <Cell>Modified</Cell>
+                </div>
             </div>
         </div>
     );

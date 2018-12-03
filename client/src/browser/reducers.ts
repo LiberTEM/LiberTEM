@@ -8,6 +8,8 @@ const initialBrowserState: DirectoryBrowserState = {
     isOpen: false,
     isLoading: true,
     path: "/",
+    drives: [],
+    places: [],
     files: [] as DirectoryListingDetails[],
     dirs: [] as DirectoryListingDetails[],
 }
@@ -32,6 +34,7 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             })
             break;
         }
+        case browserActions.ActionTypes.LIST_FULL_PATH:
         case browserActions.ActionTypes.LIST_DIRECTORY: {
             return Object.assign({}, state, {
                 isLoading: true,
@@ -44,6 +47,8 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
                 path: action.payload.path,
                 files: action.payload.files,
                 dirs: action.payload.dirs,
+                drives: action.payload.drives,
+                places: action.payload.places,
             })
             break;
         }

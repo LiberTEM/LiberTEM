@@ -8,7 +8,7 @@ import * as browserActions from '../actions';
 import FileBrowserHeader from "./FileBrowserHeader";
 import FileEntry from "./FileEntry";
 import FolderEntry from "./FolderEntry";
-import RecentFiles from "./RecentFiles";
+import PathBar from "./PathBar";
 
 const mapStateToProps = (state: RootReducer) => {
     const { browser } = state;
@@ -16,6 +16,9 @@ const mapStateToProps = (state: RootReducer) => {
         files: browser.files,
         dirs: browser.dirs,
         path: browser.path,
+        drives: browser.drives,
+        places: browser.places,
+        isLoading: browser.isLoading,
     };
 }
 
@@ -50,7 +53,7 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
-const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
+const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isLoading }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
     const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
@@ -60,22 +63,30 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, cancel }) => {
         return entries[index](style)
     }
 
+    let list = (
+        <List style={{ overflowY: "scroll" }} ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
+            {cellFn}
+        </List>
+    );
+
+    if (isLoading) {
+        // FIXME: hardcoded height
+        list = (
+            <Segment loading={true} style={{ height: "300px" }} />
+        )
+    }
+
     return (
         <Segment.Group>
-            <Segment.Group horizontal={true}>
-                <Segment>
-                    <Header as="h2">Open dataset</Header>
-                </Segment>
-                <Segment style={{ flexShrink: 1, flexGrow: 0 }}>
-                    <RecentFiles />
-                </Segment>
-            </Segment.Group>
             <Segment>
-                <p>Path: {path}</p>
+                <Header as="h2">Open dataset</Header>
+            </Segment>
+            <Segment>
+                <PathBar currentPath={path} drives={drives} places={places} onChange={scrollToTop} />
+            </Segment>
+            <Segment>
                 <FileBrowserHeader />
-                <List style={{ overflowY: "scroll" }} ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
-                    {cellFn}
-                </List>
+                {list}
             </Segment>
             <Segment>
                 <Button onClick={cancel}>Cancel</Button>

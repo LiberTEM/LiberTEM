@@ -298,6 +298,12 @@ export interface CancelJobResponse {
  * fs browser 
  */
 
+// some named place, i.e. "Documents", "Home", ...
+export interface FSPlace {
+    title: string,
+    path: string,
+}
+
 export interface DirectoryListingDetails {
     name: string,
     size: number,
@@ -311,6 +317,8 @@ export interface DirectoryListingResponseOK {
     path: string,
     files: DirectoryListingDetails[],
     dirs: DirectoryListingDetails[],
+    drives: string[],
+    places: FSPlace[],
 }
 
 export interface DirectoryListingResponseError {

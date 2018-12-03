@@ -9,25 +9,35 @@ import { getDirectoryListing } from "./api";
 
 export function* directoryListingSaga() {
     yield fork(fetchOnRequest);
+    yield fork(fetchOnRequestFullPath);
     yield fork(fetchDirectoryListOnOpen);
 }
 
 function* fetchOnRequest() {
     while (true) {
         const action: ReturnType<typeof browserActions.Actions.list> = yield take(browserActions.ActionTypes.LIST_DIRECTORY);
-        yield fork(fetchDirectoryListing, action);
-    }
-}
 
-function* fetchDirectoryListing(action: ReturnType<typeof browserActions.Actions.list>) {
-    try {
         const { name, path } = action.payload;
         const config: ConfigState = yield select((state: RootReducer) => state.config)
         const newPath = name !== undefined ? joinPaths(config, path, name) : path;
-        const result: DirectoryListingResponse = yield call(getDirectoryListing, newPath);
+        yield fork(fetchDirectoryListing, newPath);
+    }
+}
+
+function* fetchOnRequestFullPath() {
+    while (true) {
+        const action: ReturnType<typeof browserActions.Actions.listFullPath> = yield take(browserActions.ActionTypes.LIST_FULL_PATH);
+        yield fork(fetchDirectoryListing, action.payload.path);
+    }
+}
+
+function* fetchDirectoryListing(path: string) {
+    try {
+        const result: DirectoryListingResponse = yield call(getDirectoryListing, path);
         if (result.status === "ok") {
-            yield put(browserActions.Actions.dirListing(result.path, result.dirs, result.files));
+            yield put(browserActions.Actions.dirListing(result.path, result.dirs, result.files, result.drives, result.places));
         } else if (result.status === "error") {
+            const config: ConfigState = yield select((state: RootReducer) => state.config)
             const timestamp = Date.now();
             const id = uuid();
             yield put(browserActions.Actions.error(`Error browsing directory: ${result.msg}`, timestamp, id));

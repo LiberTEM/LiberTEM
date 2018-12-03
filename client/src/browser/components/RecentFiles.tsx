@@ -46,7 +46,7 @@ const RecentFiles: React.SFC<MergedProps> = ({ lastOpened, fileHistory, select }
     const onClick = (e: React.MouseEvent<HTMLDivElement>, data: DropdownItemProps) => data.value && select(data.value.toString())
 
     return (
-        <Dropdown direction="left" text="Recent" icon="ellipsis vertical" floating={true} labeled={true} button={true} className='icon'>
+        <Dropdown item={true} text="Recent" floating={true}>
             <Dropdown.Menu>
                 <Dropdown.Header content="recent datasets" />
                 {recentFiles.map((option, idx) => (

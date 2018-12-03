@@ -6,6 +6,7 @@ import asyncio
 import signal
 import psutil
 from functools import partial
+from pathlib import Path
 
 import tornado.web
 import tornado.gen
@@ -168,7 +169,7 @@ class Message(object):
             },
         }
 
-    def directory_listing(self, path, files, dirs, drives):
+    def directory_listing(self, path, files, dirs, drives, places):
         def _details(item):
             return {
                 "name":  item["name"],
@@ -182,6 +183,7 @@ class Message(object):
             "status": "ok",
             "messageType": "DIRECTORY_LISTING",
             "drives": drives,
+            "places": places,
             "path": path,
             "files": [
                 _details(f)
@@ -696,7 +698,7 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
-    def get(self):
+    async def get(self):
         path = self.request.arguments['path']
         assert len(path) == 1
         path = path[0].decode("utf8")
@@ -732,7 +734,12 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
             for part in psutil.disk_partitions()
             if part.fstype != "squashfs"
         ]
-        msg = Message(self.data).directory_listing(path, files=files, dirs=dirs, drives=drives)
+        places = [
+            {"title": "Home", "path": str(Path.home())},
+        ]
+        msg = Message(self.data).directory_listing(
+            path, files=files, dirs=dirs, drives=drives, places=places,
+        )
         self.write(msg)
 
 

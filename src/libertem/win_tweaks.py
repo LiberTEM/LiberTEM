@@ -4,13 +4,17 @@ import ctypes
 from ctypes import windll, wintypes, byref
 
 import win32security
+import pywintypes
 
 
 def get_owner_name(full_path, stat):
-    s = win32security.GetFileSecurity(full_path, win32security.OWNER_SECURITY_INFORMATION)
-    sid = s.GetSecurityDescriptorOwner()
-    (name, domain, t) = win32security.LookupAccountSid(None, sid)
-    return "%s\\%s" % (domain, name)
+    try:
+        s = win32security.GetFileSecurity(full_path, win32security.OWNER_SECURITY_INFORMATION)
+        sid = s.GetSecurityDescriptorOwner()
+        (name, domain, t) = win32security.LookupAccountSid(None, sid)
+        return "%s\\%s" % (domain, name)
+    except pywintypes.error as e:
+        raise IOError(e)
 
 
 ENABLE_QUICK_EDIT = 0x0040

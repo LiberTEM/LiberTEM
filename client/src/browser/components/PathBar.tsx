@@ -1,10 +1,11 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import { Dropdown, Input, Menu } from "semantic-ui-react";
+import { Dropdown, Menu } from "semantic-ui-react";
 import { FSPlace } from "../../messages";
 import * as browserActions from '../actions';
 import PathDropDownItem from "./PathDropDownItem";
+import PathInput from "./PathInput";
 import RecentFiles from "./RecentFiles";
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathBarProps) => {
@@ -13,20 +14,27 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathBarProps) => {
             dispatch(browserActions.Actions.listFullPath(ownProps.currentPath));
             window.setTimeout(() => ownProps.onChange(), 0);
         },
+        handleInputChange: (path: string) => {
+            dispatch(browserActions.Actions.listFullPath(path));
+            window.setTimeout(() => ownProps.onChange(), 0);
+        },
+        goUp: () => {
+            dispatch(browserActions.Actions.list(ownProps.currentPath, '..'));
+            window.setTimeout(() => ownProps.onChange(), 0);
+        },
     };
 }
 
 interface PathBarProps {
     currentPath: string,
     onChange: () => void,
-    onUp?: () => void,
     drives: string[],
     places: FSPlace[],
 }
 
 type MergedProps = ReturnType<typeof mapDispatchToProps> & PathBarProps;
 
-const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, onChange, refresh }) => {
+const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, onChange, refresh, goUp, handleInputChange }) => {
     const driveOptions = drives.map((path) => ({ key: path, text: path }));
     const placeOptions = places.map((place) => ({ key: place.path, text: place.title }))
     return (
@@ -44,8 +52,9 @@ const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, onChange
                     })}
                 </Dropdown.Menu>
             </Dropdown>
+            <Menu.Item icon="arrow up" onClick={goUp} />
             <Menu.Item style={{ flexGrow: 1 }}>
-                <Input disabled={true} value={currentPath} />
+                <PathInput onChange={handleInputChange} initialPath={currentPath} />
             </Menu.Item>
             <Menu.Item icon="refresh" onClick={refresh} />
         </Menu>

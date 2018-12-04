@@ -302,6 +302,7 @@ export interface CancelJobResponse {
 export interface FSPlace {
     title: string,
     path: string,
+    key: string,
 }
 
 export interface DirectoryListingDetails {
@@ -326,6 +327,7 @@ export interface DirectoryListingResponseError {
     path: string,
     code: string,
     msg: string,
+    alternative?: string,
 }
 
 export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;

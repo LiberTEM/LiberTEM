@@ -7,7 +7,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: DropdownItemProps) => 
     return {
         list: () => {
             if (ownProps.value !== undefined) {
-                dispatch(browserActions.Actions.listFullPath(ownProps.value.toString()));
+                dispatch(browserActions.Actions.list(ownProps.value.toString()));
                 window.setTimeout(() => ownProps.onChange(), 0);
             }
         },

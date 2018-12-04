@@ -1,6 +1,6 @@
 import { AllActions } from "../actions";
 import * as configActions from '../config/actions';
-import { DirectoryListingDetails } from "../messages";
+import { DirectoryListingDetails, FSPlace } from "../messages";
 import * as browserActions from './actions';
 import { DirectoryBrowserState } from "./types";
 
@@ -9,7 +9,7 @@ const initialBrowserState: DirectoryBrowserState = {
     isLoading: true,
     path: "/",
     drives: [],
-    places: [],
+    places: {},
     files: [] as DirectoryListingDetails[],
     dirs: [] as DirectoryListingDetails[],
 }
@@ -34,7 +34,6 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             })
             break;
         }
-        case browserActions.ActionTypes.LIST_FULL_PATH:
         case browserActions.ActionTypes.LIST_DIRECTORY: {
             return Object.assign({}, state, {
                 isLoading: true,
@@ -42,13 +41,18 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             break;
         }
         case browserActions.ActionTypes.DIRECTORY_LISTING: {
+            const places = action.payload.places.reduce((acc, place: FSPlace) => {
+                return Object.assign({}, acc, {
+                    [place.key]: place,
+                })
+            }, {});
             return Object.assign({}, state, {
                 isLoading: false,
                 path: action.payload.path,
                 files: action.payload.files,
                 dirs: action.payload.dirs,
                 drives: action.payload.drives,
-                places: action.payload.places,
+                places,
             })
             break;
         }

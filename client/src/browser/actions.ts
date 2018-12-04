@@ -16,7 +16,6 @@ export enum ActionTypes {
 
 export const Actions = {
     list: (path: string, name?: string) => createAction(ActionTypes.LIST_DIRECTORY, { path, name }),
-    listFullPath: (path: string) => createAction(ActionTypes.LIST_FULL_PATH, { path }),
     dirListing: (path: string, dirs: DirectoryListingDetails[], files: DirectoryListingDetails[], drives: string[], places: FSPlace[]) => createAction(ActionTypes.DIRECTORY_LISTING, { path, dirs, files, drives, places }),
     open: () => createAction(ActionTypes.OPEN),
     cancel: () => createAction(ActionTypes.CANCEL),

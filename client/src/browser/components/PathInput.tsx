@@ -27,7 +27,7 @@ const PathInput: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
             <Form.Field>
-                <Input onBlur={handleBlur} onChange={handleChange} value={values.path} name="path" />
+                <Input autoComplete="off" onBlur={handleBlur} onChange={handleChange} value={values.path} name="path" />
             </Form.Field>
         </Form>
     )

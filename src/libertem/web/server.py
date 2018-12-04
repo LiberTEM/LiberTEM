@@ -29,6 +29,25 @@ from libertem.io.utils import get_owner_name
 log = logging.getLogger(__name__)
 
 
+def _get_alt_path(path):
+    cur_path = Path(path).resolve()
+    while not _access_ok(cur_path):
+        cur_path = cur_path / '..'
+        cur_path = cur_path.resolve()
+        # we have reached the root (either / or a drive letter on windows)
+        if Path(cur_path.anchor) == cur_path:
+            if _access_ok(cur_path):
+                return cur_path
+            else:
+                # we can only suggest the home directory:
+                return str(Path.home())
+    return cur_path
+
+
+def _access_ok(path):
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+
+
 def log_message(message):
     if "job" in message:
         log.info("message: %s (job=%s)" % (message["messageType"], message["job"]))
@@ -195,13 +214,14 @@ class Message(object):
             ],
         }
 
-    def browse_failed(self, path, code, msg):
+    def browse_failed(self, path, code, msg, alternative=None):
         return {
             "status": "error",
             "messageType": "DIRECTORY_LISTING_FAILED",
             "path": path,
             "code": code,
             "msg": msg,
+            "alternative": alternative,
         }
 
 
@@ -707,6 +727,16 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
                 path=path,
                 code="NOT_FOUND",
                 msg="path %s could not be found" % path,
+                alternative=str(_get_alt_path(path)),
+            )
+            self.write(msg)
+            return
+        if not _access_ok(path):
+            msg = Message(self.data).browse_failed(
+                path=path,
+                code="ACCESS_DENIED",
+                msg="access to %s was denied" % path,
+                alternative=str(_get_alt_path(path)),
             )
             self.write(msg)
             return
@@ -740,7 +770,7 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
             if part.fstype != "squashfs"
         ]
         places = [
-            {"title": "Home", "path": str(Path.home())},
+            {"key": "home", "title": "Home", "path": str(Path.home())},
         ]
         msg = Message(self.data).directory_listing(
             path, files=files, dirs=dirs, drives=drives, places=places,

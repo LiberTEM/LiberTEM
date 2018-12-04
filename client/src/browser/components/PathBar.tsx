@@ -2,8 +2,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { Dropdown, Menu } from "semantic-ui-react";
-import { FSPlace } from "../../messages";
 import * as browserActions from '../actions';
+import { FSPlaces } from "../types";
 import PathDropDownItem from "./PathDropDownItem";
 import PathInput from "./PathInput";
 import RecentFiles from "./RecentFiles";
@@ -11,11 +11,11 @@ import RecentFiles from "./RecentFiles";
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathBarProps) => {
     return {
         refresh: () => {
-            dispatch(browserActions.Actions.listFullPath(ownProps.currentPath));
+            dispatch(browserActions.Actions.list(ownProps.currentPath));
             window.setTimeout(() => ownProps.onChange(), 0);
         },
         handleInputChange: (path: string) => {
-            dispatch(browserActions.Actions.listFullPath(path));
+            dispatch(browserActions.Actions.list(path));
             window.setTimeout(() => ownProps.onChange(), 0);
         },
         goUp: () => {
@@ -29,14 +29,14 @@ interface PathBarProps {
     currentPath: string,
     onChange: () => void,
     drives: string[],
-    places: FSPlace[],
+    places: FSPlaces,
 }
 
 type MergedProps = ReturnType<typeof mapDispatchToProps> & PathBarProps;
 
 const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, onChange, refresh, goUp, handleInputChange }) => {
     const driveOptions = drives.map((path) => ({ key: path, text: path }));
-    const placeOptions = places.map((place) => ({ key: place.path, text: place.title }))
+    const placeOptions = Object.keys(places).map((key) => ({ key: places[key].path, text: places[key].title }))
     return (
         <Menu>
             <RecentFiles />

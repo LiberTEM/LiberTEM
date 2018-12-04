@@ -6,10 +6,10 @@ import { DirectoryListingResponse } from "../messages";
 import { RootReducer } from "../store";
 import * as browserActions from './actions';
 import { getDirectoryListing } from "./api";
+import { DirectoryBrowserState } from "./types";
 
 export function* directoryListingSaga() {
     yield fork(fetchOnRequest);
-    yield fork(fetchOnRequestFullPath);
     yield fork(fetchDirectoryListOnOpen);
 }
 
@@ -24,29 +24,25 @@ function* fetchOnRequest() {
     }
 }
 
-function* fetchOnRequestFullPath() {
-    while (true) {
-        const action: ReturnType<typeof browserActions.Actions.listFullPath> = yield take(browserActions.ActionTypes.LIST_FULL_PATH);
-        yield fork(fetchDirectoryListing, action.payload.path);
-    }
-}
-
 function* fetchDirectoryListing(path: string) {
     try {
         const result: DirectoryListingResponse = yield call(getDirectoryListing, path);
         if (result.status === "ok") {
             yield put(browserActions.Actions.dirListing(result.path, result.dirs, result.files, result.drives, result.places));
         } else if (result.status === "error") {
-            const config: ConfigState = yield select((state: RootReducer) => state.config)
+            const browserState: DirectoryBrowserState = yield select((state: RootReducer) => state.browser);
             const timestamp = Date.now();
             const id = uuid();
+            const alternative = result.alternative ? result.alternative : browserState.places.home.path;
             yield put(browserActions.Actions.error(`Error browsing directory: ${result.msg}`, timestamp, id));
-            yield put(browserActions.Actions.list(config.separator));
+            yield put(browserActions.Actions.list(alternative));
         }
     } catch (e) {
+        const browserState: DirectoryBrowserState = yield select((state: RootReducer) => state.browser);
         const timestamp = Date.now();
         const id = uuid();
         yield put(browserActions.Actions.error(`Error browsing directory: ${e.toString()}`, timestamp, id));
+        yield put(browserActions.Actions.list(browserState.places.home.path));
     }
 }
 

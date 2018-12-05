@@ -753,12 +753,14 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
                 # this can happen either because of a TOCTOU-like race condition
                 # or for example for things like broken softlinks
                 continue
+
             try:
                 owner = get_owner_name(full_path, s)
-            except IOError:  # only from win_tweaks.py version
-                owner = "<Unknown>"
             except FileNotFoundError:  # only from win_tweaks.py version
                 continue
+            except IOError:  # only from win_tweaks.py version
+                owner = "<Unknown>"
+
             res = {"name": name, "stat": s, "owner": owner}
             if stat.S_ISDIR(s.st_mode):
                 dirs.append(res)

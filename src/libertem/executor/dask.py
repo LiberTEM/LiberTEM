@@ -1,3 +1,7 @@
+import subprocess
+import json
+from time import sleep
+
 import tornado.util
 from dask import distributed as dd
 from distributed.asyncio import AioClient
@@ -88,9 +92,10 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):
-    def __init__(self, client, is_local=False):
+    def __init__(self, client, is_local=False, subprocess=None):
         self.is_local = is_local
         self.client = client
+        self.subprocess = subprocess
 
     def run_job(self, job):
         futures = self._get_futures(job)
@@ -99,10 +104,13 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     def close(self):
         if self.is_local:
-            try:
-                self.client.cluster.close(timeout=1)
-            except tornado.util.TimeoutError:
-                pass
+            if self.client.cluster is not None:
+                try:
+                    self.client.cluster.close(timeout=1)
+                except tornado.util.TimeoutError:
+                    pass
+        if self.subprocess is not None:
+            self.subprocess.terminate()
         self.client.close()
 
     @classmethod
@@ -135,3 +143,49 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
         return cls(client=client, is_local=True)
+
+    @classmethod
+    def subprocess_make_local(cls, cluster_kwargs=None, client_kwargs=None):
+        c = (
+            "import sys\n"
+            "from time import sleep\n"
+            "import json\n"
+
+            "try:\n"
+            "    import distributed as dd\n"
+
+            "    input = sys.stdin.readline()\n"
+            "    cluster_kwargs = json.loads(input)\n"
+            "    cluster = dd.LocalCluster(**(cluster_kwargs or {}))\n"
+            "    response = {'scheduler_address': cluster.scheduler_address, 'success': True}\n"
+            "    print(json.dumps(response), file=sys.stdout, flush=True)\n"
+            "    while True:\n"
+            "        sleep(100)\n"
+            "except Exception as e:\n"
+            "    response = {'success': False, 'exception': str(e)}\n"
+            "    print(json.dumps(response), file=sys.stdout, flush=True)\n"
+            "    print(str(e), file=sys.stderr, flush=True)\n"
+        )
+        sp = subprocess.Popen(
+            ['pythonw', '-c', c],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8'
+        )
+        print(json.dumps(cluster_kwargs), file=sp.stdin, flush=True)
+        # wait for syntax error or startup failures
+        sleep(1)
+        # Terminated prematurely
+        if sp.poll() is not None:
+            stderr = sp.stderr.read()
+            stdout = sp.stdout.read()
+            raise Exception("Starting subprocess failed. stderr: %s, stdout: %s" % (stderr, stdout))
+        response = json.loads(sp.stdout.readline())
+        # print(response)
+        if not response['success']:
+            raise Exception("Starting subprocess failed. Exception: %s" % response['exception'])
+        uri = response['scheduler_address']
+        # print(uri)
+        client = dd.Client(uri, **(client_kwargs or {}))
+        return cls(client=client, is_local=True, subprocess=sp)

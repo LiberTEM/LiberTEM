@@ -17,8 +17,10 @@ class CommonDaskMixin(object):
         futures = []
         for task in job.get_tasks():
             submit_kwargs = {}
-            if not self.is_local:
-                submit_kwargs['workers'] = task.get_locations()
+            locations = task.get_locations()
+            if locations is not None and len(locations) == 0:
+                raise ValueError("no workers found for task")
+            submit_kwargs['workers'] = locations
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )

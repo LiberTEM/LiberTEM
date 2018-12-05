@@ -80,7 +80,8 @@ class Partition(object):
         raise NotImplementedError()
 
     def get_locations(self):
-        raise NotImplementedError()
+        # Allow using any worker by default
+        return None
 
 
 class DataTile(object):

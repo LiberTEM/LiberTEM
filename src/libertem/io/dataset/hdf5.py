@@ -147,6 +147,3 @@ class H5Partition(Partition):
                     # reuse buffer
                     dataset.read_direct(data, source_sel=tile_slice.get())
                     yield DataTile(data=data, tile_slice=tile_slice)
-
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME

@@ -612,9 +612,6 @@ class K2ISPartition(Partition):
         finally:
             s.close()
 
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME
-
     def __repr__(self):
         return "<K2ISPartition: sector %d, start_frame=%d, num_frames=%d>" % (
             self._get_sector().idx, self._start_frame, self._num_frames,

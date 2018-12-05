@@ -251,6 +251,3 @@ class MIBPartition(Partition):
                     continue
             self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data)
             yield DataTile(data=data, tile_slice=tile_slice)
-
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME

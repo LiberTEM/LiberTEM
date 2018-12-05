@@ -83,6 +83,3 @@ class RawFilePartition(Partition):
                 data=f[tile_slice.get()],
                 tile_slice=tile_slice
             )
-
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME

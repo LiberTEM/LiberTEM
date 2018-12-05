@@ -140,6 +140,3 @@ class BloPartition(Partition):
                     data=data[tile_slice.get()],
                     tile_slice=tile_slice
                 )
-
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME

@@ -146,7 +146,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     @classmethod
     def subprocess_make_local(cls, cluster_kwargs=None, client_kwargs=None):
-        c = (
+        c = ("# breakme\n"
             "import sys\n"
             "from time import sleep\n"
             "import json\n"
@@ -156,6 +156,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
             "    input = sys.stdin.readline()\n"
             "    cluster_kwargs = json.loads(input)\n"
+            "#    cluster_kwargs['breakme'] = 'die die die'\n"
             "    cluster = dd.LocalCluster(**(cluster_kwargs or {}))\n"
             "    response = {'scheduler_address': cluster.scheduler_address, 'success': True}\n"
             "    print(json.dumps(response), file=sys.stdout, flush=True)\n"
@@ -164,8 +165,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             "except Exception as e:\n"
             "    response = {'success': False, 'exception': str(e)}\n"
             "    print(json.dumps(response), file=sys.stdout, flush=True)\n"
-            "    print(str(e), file=sys.stderr, flush=True)\n"
-        )
+            "    raise\n")
         # We trust that the environment is set up
         # to start the correct python interpreter
         try:
@@ -193,13 +193,20 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if sp.poll() is not None:
             stderr = sp.stderr.read()
             stdout = sp.stdout.read()
-            raise Exception("Starting subprocess failed. stderr: %s, stdout: %s" % (stderr, stdout))
+            raise Exception(
+                "Starting subprocess failed. stderr: %s\n\nstdout: %s" % (stderr, stdout)
+            )
         # We made sure that the process either terminates or writes something to stdout
         # so that this doesn't block forever
         response = json.loads(sp.stdout.readline())
         # print(response)
         if not response['success']:
-            raise Exception("Starting subprocess failed. Exception: %s" % response['exception'])
+            sp.terminate()
+            stderr = sp.stderr.read()
+            stdout = sp.stdout.read()
+            raise Exception("Starting subprocess failed. Exception: %s\n\nstderr: %s\n\n stdout: %s"
+                % (response['exception'], stderr, stdout)
+            )
         uri = response['scheduler_address']
         # print(uri)
         client = dd.Client(uri, **(client_kwargs or {}))

@@ -46,9 +46,12 @@ class COMAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        cx = self.parameters['cx']
-        cy = self.parameters['cy']
-        r = self.parameters['r']
+        (detector_y, detector_x) = self.dataset.shape[2:]
+
+        cx = self.parameters.get('cx', detector_x / 2)
+        cy = self.parameters.get('cy', detector_y / 2)
+        r = self.parameters.get('r', float('inf'))
+
         frame_size = self.dataset.shape[2:]
 
         def disk_mask():

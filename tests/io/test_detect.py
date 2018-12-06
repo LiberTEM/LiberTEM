@@ -1,8 +1,8 @@
 from libertem.io.dataset import detect
 
 
-def test_detection_empty_hdf5(hdf5):
-    fn = hdf5.filename
+def test_detection_empty_hdf5(empty_hdf5):
+    fn = empty_hdf5.filename
     params = detect(fn)
     assert params != {}
     assert list(params.keys()) == ["path", "type"]

@@ -8,7 +8,7 @@ from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
 from libertem.job.base import Job
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from libertem.executor.dask import DaskJobExecutor
 from libertem.analysis.com import COMAnalysis
 from libertem.analysis.disk import DiskMaskAnalysis
@@ -237,9 +237,12 @@ class Context:
             the frame as numpy array
         """
         shape = dataset.shape
+        assert shape.nav.dims == 2, "can only handle 2D nav currently"
         return PickFrameJob(
             dataset=dataset,
-            slice_=Slice(origin=(y, x, 0, 0), shape=(1, 1) + shape[2:]),
+            slice_=Slice(origin=(y, x) + tuple([0] * shape.sig.dims),
+                         shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
+                                     sig_dims=shape.sig.dims)),
             squeeze=True,
         )
 

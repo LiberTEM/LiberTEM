@@ -15,14 +15,12 @@ from libertem.masks import to_dense, to_sparse
 def _make_mask_slicer(computed_masks):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
-        """
-        """
         sliced_masks = [
             # .reshape((-1, 1)) -> like flatten, but compatible with sparse
             # matrices and no copies
             # should save us one copy as we np.hstack() immediately afterwards
             # https://stackoverflow.com/a/28930580/540644
-            slice_.get(mask, signal_only=True).reshape((-1, 1))
+            slice_.get(mask, sig_only=True).reshape((-1, 1))
             for mask in computed_masks
         ]
         # MaskContainer assures that all or none of the masks are sparse
@@ -76,6 +74,7 @@ class MaskContainer(object):
             raise TypeError(
                 "MaskContainer[k] can only be called with DataTile/ResultTile instances"
             )
+        # FIXME: for caching, make sure to only pass the signal part of the mask here!
         return self.get_masks_for_slice(slice_)
 
     @property
@@ -128,7 +127,7 @@ class MaskContainer(object):
     def get_masks_for_slice(self, slice_):
         if self._get_masks_for_slice is None:
             self._get_masks_for_slice = _make_mask_slicer(self.computed_masks)
-        return self._get_masks_for_slice(slice_.discard_scan())
+        return self._get_masks_for_slice(slice_)
 
     @property
     def computed_masks(self):
@@ -222,7 +221,6 @@ class ApplyMasksTask(Task):
         num_masks = len(self.masks)
         part = np.zeros((num_masks,) + self.partition.shape[:2], dtype="float32")
         for data_tile in self.partition.get_tiles():
-            # print("dotting\n%r\nwith\n%r\n\n" % (data_tile.flat_data, self.masks[data_tile]))
             data = data_tile.flat_data
             if data.dtype.kind == 'u':
                 data = data.astype("float32")

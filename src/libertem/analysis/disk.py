@@ -20,7 +20,8 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
         cx = self.parameters['cx']
         cy = self.parameters['cy']
         r = self.parameters['r']
-        frame_size = self.dataset.shape[2:]
+        frame_size = self.dataset.shape.sig
+        assert frame_size.dims == 2, "can only handle 2D signals currently"
 
         def disk_mask():
             return masks.circular(

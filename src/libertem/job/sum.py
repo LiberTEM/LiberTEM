@@ -9,7 +9,7 @@ class SumFramesJob(Job):
             yield SumFramesTask(partition=partition)
 
     def get_result_shape(self):
-        return self.dataset.shape[2:]
+        return self.dataset.shape.sig
 
 
 class SumFramesTask(Task):
@@ -17,17 +17,13 @@ class SumFramesTask(Task):
         """
         sum frames
         """
-        part = np.zeros(self.partition.dataset.shape[2:], dtype="float32")
+        part = np.zeros(self.partition.dataset.shape.sig, dtype="float32")
         for data_tile in self.partition.get_tiles():
             data = data_tile.data
             if data.dtype.kind == 'u':
                 data = data.astype("float32")
             result = data_tile.data.sum(axis=(0, 1))
-            tile_slice = data_tile.tile_slice.get()
-            part[
-                tile_slice[2],
-                tile_slice[3],
-            ] += result
+            part[data_tile.tile_slice.get(sig_only=True)] += result
         return [
             SumResultTile(
                 data=part,

@@ -1,6 +1,6 @@
 import numpy as np
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
@@ -18,6 +18,7 @@ class RawFileDataSet(DataSet):
             # (actual tiles are then as large as the partitions)
             tileshape = self._scan_size + self._detector_size
         self._tileshape = tuple(tileshape)
+        self._sig_dims = len(self._detector_size)
 
     def open_file(self):
         f = np.memmap(self._path, dtype=self.dtype, mode='r',
@@ -31,7 +32,7 @@ class RawFileDataSet(DataSet):
 
     @property
     def shape(self):
-        return self._scan_size + self._detector_size
+        return Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
 
     def check_valid(self):
         try:
@@ -42,7 +43,7 @@ class RawFileDataSet(DataSet):
 
     def get_partitions(self):
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
-        partition_shape = Slice.partition_shape(
+        partition_shape = self.partition_shape(
             datashape=self.shape,
             framesize=self._detector_size[0] * self._detector_size[1],
             dtype=self.dtype,

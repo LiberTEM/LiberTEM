@@ -48,13 +48,16 @@ def _access_ok(path):
     return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
 
 
-def log_message(message):
+def log_message(message, exception=False):
+    log_fn = log.info
+    if exception:
+        log_fn = log.exception
     if "job" in message:
-        log.info("message: %s (job=%s)" % (message["messageType"], message["job"]))
+        log_fn("message: %s (job=%s)" % (message["messageType"], message["job"]))
     elif "dataset" in message:
-        log.info("message: %s (dataset=%s)" % (message["messageType"], message["dataset"]))
+        log_fn("message: %s (dataset=%s)" % (message["messageType"], message["dataset"]))
     else:
-        log.info("message: %s" % message["messageType"])
+        log_fn("message: %s" % message["messageType"])
 
 
 async def result_images(results, save_kwargs=None):
@@ -484,7 +487,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.event_registry.broadcast_event(msg)
         except Exception as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
-            log_message(msg)
+            log_message(msg, exception=True)
             self.write(msg)
             return
 
@@ -626,7 +629,7 @@ class SharedData(object):
             "id": dataset_id,
             "params": {
                 **dataset["params"]["params"],
-                "shape": dataset["dataset"].shape,
+                "shape": tuple(dataset["dataset"].shape),
             },
             "diagnostics": dataset["dataset"].diagnostics,
         }

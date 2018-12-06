@@ -19,9 +19,10 @@ class PointMaskAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         cx = self.parameters['cx']
         cy = self.parameters['cy']
+        assert self.dataset.shape.sig.dims == 2, "can only handle 2D signals currently"
 
         def _point_inner():
             a = sp.csr_matrix(([1], ([int(cy)], [int(cx)])),
-                    dtype=self.dtype, shape=self.dataset.shape[2:])
+                    dtype=self.dtype, shape=self.dataset.shape.sig)
             return a
         return [_point_inner]

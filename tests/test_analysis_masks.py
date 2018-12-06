@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import scipy.sparse as sp
 from numpy.testing import assert_array_almost_equal
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from libertem.job.masks import MaskContainer
 from libertem.io.dataset.base import DataTile
 from libertem.masks import gradient_x, to_dense, to_sparse
@@ -55,7 +55,7 @@ def test_merge_masks(masks):
 
 def test_for_datatile_1(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(0, 0, 0, 0), shape=(1, 1, 1, 1)),
+        tile_slice=Slice(origin=(0, 0, 0, 0), shape=Shape((1, 1, 1, 1), sig_dims=2)),
         data=np.ones((1, 1, 1, 1))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
@@ -64,7 +64,7 @@ def test_for_datatile_1(masks):
 
 def test_for_datatile_2(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(0, 0, 0, 0), shape=(2, 2, 10, 10)),
+        tile_slice=Slice(origin=(0, 0, 0, 0), shape=Shape((2, 2, 10, 10), sig_dims=2)),
         data=np.ones((2, 2, 10, 10))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
@@ -73,7 +73,7 @@ def test_for_datatile_2(masks):
 
 def test_for_datatile_with_scan_origin(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(10, 10, 0, 0), shape=(2, 2, 10, 10)),
+        tile_slice=Slice(origin=(10, 10, 0, 0), shape=Shape((2, 2, 10, 10), sig_dims=2)),
         data=np.ones((2, 2, 10, 10))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
@@ -82,7 +82,7 @@ def test_for_datatile_with_scan_origin(masks):
 
 def test_for_datatile_with_frame_origin(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(10, 10, 10, 10), shape=(2, 2, 1, 5)),
+        tile_slice=Slice(origin=(10, 10, 10, 10), shape=Shape((2, 2, 1, 5), sig_dims=2)),
         data=np.ones((2, 2, 1, 5))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
@@ -99,7 +99,8 @@ def test_for_datatile_with_frame_origin(masks):
     )
 
 
-def test_weird_partition_shapes_1(lt_ctx):
+@pytest.mark.slow
+def test_weird_partition_shapes_1_slow(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
@@ -107,6 +108,24 @@ def test_weird_partition_shapes_1(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 2, 2))
 
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+    p = next(dataset.get_partitions())
+    t = next(p.get_tiles())
+    assert tuple(t.tile_slice.shape) == (1, 1, 2, 2)
+
+
+def test_weird_partition_shapes_1_fast(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, 8, 16, 16), partition_shape=(16, 16, 8, 8))
+
+    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+    p = next(dataset.get_partitions())
+    t = next(p.get_tiles())
+    assert tuple(t.tile_slice.shape) == (1, 8, 8, 8)
 
 
 def test_single_frame_tiles(lt_ctx):
@@ -119,12 +138,23 @@ def test_single_frame_tiles(lt_ctx):
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
-def test_subframe_tiles(lt_ctx):
+@pytest.mark.slow
+def test_subframe_tiles_slow(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 4, 4), partition_shape=(16, 16, 16, 16))
+
+    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
+def test_subframe_tiles_fast(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, 8, 4, 4), partition_shape=(16, 16, 16, 16))
 
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 

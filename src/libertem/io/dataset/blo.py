@@ -2,7 +2,7 @@ import contextlib
 
 import numpy as np
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 MAGIC_EXPECT = 258
@@ -69,7 +69,7 @@ class BloDataSet(DataSet):
         NY = int(h['NY'])
         NX = int(h['NX'])
         DP_SZ = int(h['DP_SZ'])
-        return (NY, NX, DP_SZ, DP_SZ)
+        return Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
 
     def _read_header(self):
         with open(self._path, 'rb') as f:
@@ -93,7 +93,7 @@ class BloDataSet(DataSet):
 
     def get_partitions(self):
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
-        partition_shape = Slice.partition_shape(
+        partition_shape = self.partition_shape(
             datashape=self.shape,
             framesize=self.shape[2] * self.shape[3],
             dtype=self.dtype,

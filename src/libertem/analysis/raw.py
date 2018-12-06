@@ -1,5 +1,5 @@
 from libertem.viz import visualize_simple
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
@@ -8,11 +8,13 @@ class PickFrameAnalysis(BaseAnalysis):
     def get_job(self):
         x, y = self.parameters['x'], self.parameters['y']
         shape = self.dataset.shape
+        assert shape.nav.dims == 2, "can only handle 2D nav currently"
         return PickFrameJob(
             dataset=self.dataset,
             slice_=Slice(
-                origin=(y, x, 0, 0),
-                shape=(1, 1) + shape[2:],
+                origin=(y, x) + tuple([0] * shape.sig.dims),
+                shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
+                            sig_dims=shape.sig.dims),
             ),
             squeeze=True,
         )

@@ -1,15 +1,16 @@
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, DataSet, Partition
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from libertem.masks import to_dense
 
 
 class MemoryDataSet(DataSet):
-    def __init__(self, data, tileshape, partition_shape):
+    def __init__(self, data, tileshape, partition_shape, sig_dims=2):
         self.data = data
         self.tileshape = tileshape
         self.partition_shape = partition_shape
+        self.sig_dims = sig_dims
 
     @property
     def dtype(self):
@@ -17,7 +18,7 @@ class MemoryDataSet(DataSet):
 
     @property
     def shape(self):
-        return self.data.shape
+        return Shape(self.data.shape, sig_dims=self.sig_dims)
 
     def check_valid(self):
         return True

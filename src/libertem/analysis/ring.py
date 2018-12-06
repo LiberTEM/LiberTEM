@@ -21,7 +21,8 @@ class RingMaskAnalysis(BaseMasksAnalysis):
         cy = self.parameters['cy']
         ri = self.parameters['ri']
         ro = self.parameters['ro']
-        frame_size = self.dataset.shape[2:]
+        frame_size = self.dataset.shape.sig
+        assert frame_size.dims == 2, "can only handle 2D signals currently"
 
         def _ring_inner():
             return masks.ring(

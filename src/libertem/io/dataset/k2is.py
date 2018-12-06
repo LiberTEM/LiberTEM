@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 import numba
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 log = logging.getLogger(__name__)
@@ -156,6 +156,8 @@ class Sector:
         self.idx = idx
         self.filesize = os.fstat(self.f.fileno()).st_size
         self.first_block_offset = initial_offset
+        # FIXME: hardcoded sig_dims
+        self.sig_dims = 2
 
     def seek(self, pos):
         self.f.seek(pos)
@@ -167,16 +169,17 @@ class Sector:
         # we are working on full rows here:
         assert start % scan_size[1] == 0
         assert (stop - start) % scan_size[1] == 0
+        # FIXME: non-4d k2is data will fail here
         return Slice(
             origin=(
                 start // scan_size[1],
                 0,
                 0, SECTOR_SIZE[1] * self.idx
             ),
-            shape=(
+            shape=Shape((
                 (stop - start) // scan_size[1],
                 scan_size[1],
-            ) + SECTOR_SIZE
+            ) + SECTOR_SIZE, sig_dims=self.sig_dims)
         )
 
     def get_blocks(self):
@@ -244,7 +247,7 @@ class Sector:
                             start_y,
                             start_x,
                         ),
-                        shape=current_tileshape,
+                        shape=Shape(current_tileshape, sig_dims=self.sig_dims),
                     )
                     if crop_to is not None:
                         intersection = tile_slice.intersection_with(crop_to)
@@ -379,6 +382,7 @@ class K2ISDataSet(DataSet):
     def __init__(self, path, scan_size):
         self._path = path
         self._scan_size = tuple(scan_size)
+        self._sig_dims = 2
         self._start_offsets = None
         # NOTE: the sync flag appears to be set one frame too late, so
         # we compensate here by setting a negative _skip_frames value.
@@ -391,7 +395,8 @@ class K2ISDataSet(DataSet):
 
     @property
     def shape(self):
-        return self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+        return Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
+                     sig_dims=self._sig_dims)
 
     @classmethod
     def detect_params(cls, path):
@@ -550,7 +555,7 @@ class K2ISPartition(Partition):
         return Sector(
             fname=self._path,
             idx=self._index,
-            initial_offset=self._offset
+            initial_offset=self._offset,
         )
 
     def get_tiles(self, crop_to=None, strat=None):
@@ -597,12 +602,13 @@ class K2ISPartition(Partition):
                 scan_pos_x = frame_idx % scan[1]
                 h = block.header
                 # TODO: move tile_slice stuff to datablock?
+                # FIXME: hardcoded sig_dims
                 sector_offset = SECTOR_SIZE[1] * block.sector.idx
                 tile_slice = Slice(
                     origin=(scan_pos_y, scan_pos_x,
                             h['pixel_y_start'],
                             sector_offset + h['pixel_x_start']),
-                    shape=(1, 1) + BLOCK_SHAPE,
+                    shape=Shape((1, 1) + BLOCK_SHAPE, sig_dims=2),
                 )
                 block.readinto(buf)
                 yield DataTile(

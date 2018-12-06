@@ -36,15 +36,15 @@ you can use ssh port forwarding (example command for conda):
 
 .. code-block:: shell
 
-     $ ssh -L 9000:localhost:9000 remote-hostname "source activate libertem; libertem-server"
+     $ ssh -L 9000:localhost:9000 <remote-hostname> "source activate libertem; libertem-server"
 
 Or, with virtualenv:
 
 .. code-block:: shell
 
-     $ ssh -L 9000:localhost:9000 remote-hostname "/path/to/virtualenv/bin/libertem-server"
+     $ ssh -L 9000:localhost:9000 <remote-hostname> "/path/to/virtualenv/bin/libertem-server"
 
-This then makes LiberTEM that is running on `remote-host` available on your local host via http://localhost:9000/
+This then makes LiberTEM that is running on `remote-hostname` available on your local host via http://localhost:9000/
 
 
 The user interface

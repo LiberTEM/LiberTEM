@@ -158,13 +158,13 @@ Differences:
 
 .. code-block:: shell  
 
-    $ activate libertem
+    > activate libertem
     
 * You might have to install pip into your local LiberTEM conda environment to make sure that ``pip install`` installs packages into your local environment and not into the global Anaconda base environment. This helps to avoid permission issues and interference between environments.
 
 .. code-block:: shell  
 
-    (libertem) $ conda install pip
+    (libertem) > conda install pip
 
 Jupyter
 -------

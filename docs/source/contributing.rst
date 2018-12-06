@@ -62,7 +62,7 @@ To execute tests with Python 3.7, you create a new environment with Python 3.7:
 
 .. code-block:: shell
 
-    $ conda create -n libertem-3.7 python=3.7
+    > conda create -n libertem-3.7 python=3.7
     
 Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment alongside :literal:`python3.6.bat` and make it execute the Python interpreter of your new libertem-3.7 environment:
 

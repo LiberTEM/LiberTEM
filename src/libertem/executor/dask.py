@@ -166,13 +166,26 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             "    print(json.dumps(response), file=sys.stdout, flush=True)\n"
             "    print(str(e), file=sys.stderr, flush=True)\n"
         )
-        sp = subprocess.Popen(
-            ['pythonw', '-c', c],
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding='utf-8'
-        )
+        # We trust that the environment is set up
+        # to start the correct python interpreter
+        try:
+            # On Windows use pythonw.exe
+            sp = subprocess.Popen(
+                ['pythonw', '-c', c],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding='utf-8'
+            )
+        except FileNotFoundError:
+            # Fall back to python / python.exe
+            sp = subprocess.Popen(
+                ['python', '-c', c],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding='utf-8'
+            )
         print(json.dumps(cluster_kwargs), file=sp.stdin, flush=True)
         # wait for syntax error or startup failures
         sleep(1)
@@ -181,6 +194,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             stderr = sp.stderr.read()
             stdout = sp.stdout.read()
             raise Exception("Starting subprocess failed. stderr: %s, stdout: %s" % (stderr, stdout))
+        # We made sure that the process either terminates or writes something to stdout
+        # so that this doesn't block forever
         response = json.loads(sp.stdout.readline())
         # print(response)
         if not response['success']:

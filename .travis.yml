@@ -7,6 +7,9 @@ script:
 install:
   - pip install tox
 
+env:
+  - LT_RUN_FUNCTIONAL=1
+
 jobs:
   include:
     - stage: test

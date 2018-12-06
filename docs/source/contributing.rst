@@ -30,6 +30,22 @@ Or specify a specific environment you want to run:
 
     $ tox -e py36
 
+Long-running tests such as starting a real local dask cluster are only executed if the environment variable `LT_RUN_FUNCTIONAL` is set. This 
+
+With bash:
+
+.. code-block:: shell
+
+    $ LT_RUN_FUNCTIONAL=1 tox
+
+With Windows cmd:
+
+.. code-block:: shell
+
+    > set LT_RUN_FUNCTIONAL=1
+    > tox
+
+
 On Windows
 ~~~~~~~~~~
 

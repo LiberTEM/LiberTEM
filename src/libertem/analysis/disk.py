@@ -17,17 +17,18 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        cx = self.parameters['cx']
-        cy = self.parameters['cy']
-        r = self.parameters['r']
-        frame_size = self.dataset.shape[2:]
+        (detector_y, detector_x) = self.dataset.shape[2:]
+
+        cx = self.parameters.get('cx', detector_x / 2)
+        cy = self.parameters.get('cy', detector_y / 2)
+        r = self.parameters.get('r', min(detector_y, detector_x) / 2 * 0.3)
 
         def disk_mask():
             return masks.circular(
                 centerX=cx,
                 centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 radius=r,
             )
 

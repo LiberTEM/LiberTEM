@@ -17,18 +17,19 @@ class RingMaskAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        cx = self.parameters['cx']
-        cy = self.parameters['cy']
-        ri = self.parameters['ri']
-        ro = self.parameters['ro']
-        frame_size = self.dataset.shape[2:]
+        (detector_y, detector_x) = self.dataset.shape[2:]
+
+        cx = self.parameters.get('cx', detector_x / 2)
+        cy = self.parameters.get('cy', detector_y / 2)
+        ro = self.parameters.get('ro', min(detector_y, detector_x) / 2)
+        ri = self.parameters.get('ri', ro * 0.8)
 
         def _ring_inner():
             return masks.ring(
                 centerX=cx,
                 centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 radius=ro,
                 radius_inner=ri)
 

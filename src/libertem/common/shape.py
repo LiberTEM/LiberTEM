@@ -19,8 +19,8 @@ class Shape(object):
         """
         nav_dims = len(shape) - sig_dims
         self._sig_dims = sig_dims
-        self._nav_shape = shape[:nav_dims]
-        self._sig_shape = shape[nav_dims:]
+        self._nav_shape = tuple(shape[:nav_dims])
+        self._sig_shape = tuple(shape[nav_dims:])
 
     @property
     def nav(self):

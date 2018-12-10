@@ -40,10 +40,11 @@ class MasksAnalysis(BaseMasksAnalysis):
         return self.parameters['use_sparse']
 
     def get_results(self, job_results):
+        shape = tuple(self.dataset.effective_shape.nav)
         return AnalysisResultSet([
             AnalysisResult(
-                raw_data=mask_result,
-                visualized=visualize_simple(mask_result),
+                raw_data=mask_result.reshape(shape),
+                visualized=visualize_simple(mask_result.reshape(shape)),
                 key="mask_%d" % i,
                 title="mask %d" % i,
                 desc="intensity for mask %d" % i)

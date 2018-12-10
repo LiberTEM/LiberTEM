@@ -20,7 +20,17 @@ class DataSet(object):
 
     @property
     def shape(self):
+        """
+        the "real" shape of the dataset, as it makes sense for the format
+        """
         raise NotImplementedError()
+
+    @property
+    def effective_shape(self):
+        """
+        the effective shape, for example imprinted by the scan_size parameter of some dataset impls
+        """
+        return self.shape
 
     def check_valid(self):
         raise NotImplementedError()

@@ -33,6 +33,9 @@ def _make_mask_slicer(computed_masks):
 
 
 class ApplyMasksJob(Job):
+    """
+    Apply masks to signals/frames in the dataset.
+    """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         mask_dtype = np.dtype(self.dataset.dtype)

@@ -69,7 +69,7 @@ class Slice(object):
         new_shape = [max(0, s) for s in new_shape]
         result = Slice(
             origin=new_origin,
-            shape=Shape(new_shape, sig_dims=len(self.shape.sig)),
+            shape=Shape(new_shape, sig_dims=self.shape.sig.dims),
         )
         return result
 
@@ -204,13 +204,7 @@ class Slice(object):
             _make_slice(origin=tuple([
                 o + i * s
                 for (o, i, s) in zip(self.origin, indexes, shape)
-            ]), new_shape=Shape(tuple(shape), sig_dims=len(self.shape.sig)))
+            ]), new_shape=Shape(tuple(shape), sig_dims=self.shape.sig.dims))
 
             for indexes in np.ndindex(ni)
         )
-
-    def subslice_from_offset(self, offset, length):
-        """
-        in scan dimensions
-        """
-        raise Exception("nope")

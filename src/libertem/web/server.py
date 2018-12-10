@@ -629,7 +629,7 @@ class SharedData(object):
             "id": dataset_id,
             "params": {
                 **dataset["params"]["params"],
-                "shape": tuple(dataset["dataset"].shape),
+                "shape": tuple(dataset["dataset"].effective_shape),
             },
             "diagnostics": dataset["dataset"].diagnostics,
         }

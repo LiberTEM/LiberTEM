@@ -6,11 +6,12 @@ from libertem.masks import to_dense
 
 
 class MemoryDataSet(DataSet):
-    def __init__(self, data, tileshape, partition_shape, sig_dims=2):
+    def __init__(self, data, tileshape, partition_shape, sig_dims=2, effective_shape=None):
         self.data = data
         self.tileshape = tileshape
         self.partition_shape = partition_shape
         self.sig_dims = sig_dims
+        self._effective_shape = effective_shape
 
     @property
     def dtype(self):
@@ -20,11 +21,15 @@ class MemoryDataSet(DataSet):
     def shape(self):
         return Shape(self.data.shape, sig_dims=self.sig_dims)
 
+    @property
+    def effective_shape(self):
+        return self._effective_shape or self.shape
+
     def check_valid(self):
         return True
 
     def get_partitions(self):
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
+        ds_slice = Slice(origin=tuple([0] * self.shape.dims), shape=self.shape)
         for pslice in ds_slice.subslices(self.partition_shape):
             yield MemoryPartition(
                 tileshape=self.tileshape,
@@ -40,7 +45,7 @@ class MemoryPartition(Partition):
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None):
-        subslices = list(self.slice.subslices(shape=self.tileshape))
+        subslices = self.slice.subslices(shape=self.tileshape)
         for tile_slice in subslices:
             if crop_to is not None:
                 intersection = tile_slice.intersection_with(crop_to)

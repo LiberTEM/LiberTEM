@@ -139,7 +139,7 @@ class Context:
             parameters={"factories": factories, "use_sparse": use_sparse},
         )
 
-    def create_com_analysis(self, dataset, cx: int, cy: int, mask_radius: int = None):
+    def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):
         """
         Perform a center-of-mass (first moment) analysis, possibly masked.
 
@@ -154,14 +154,16 @@ class Context:
         mask_radius
             mask out intensity outside of mask_radius from (cy, cx)
         """
-        if mask_radius is None:
-            mask_radius = float("inf")
+        loc = locals()
+        parameters = {name: loc[name] for name in ['cx', 'cy'] if loc[name] is not None}
+        if mask_radius is not None:
+            parameters['r'] = mask_radius
         analysis = COMAnalysis(
-            dataset=dataset, parameters={"cx": cx, "cy": cy, "r": mask_radius}
+            dataset=dataset, parameters=parameters
         )
         return analysis
 
-    def create_disk_analysis(self, dataset, cx: int, cy: int, r: int):
+    def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None):
         """
         Integrate over a disk (i.e. filled circle)
 
@@ -176,11 +178,14 @@ class Context:
         r
             radius of the disk
         """
+        loc = locals()
+        parameters = {name: loc[name] for name in ['cx', 'cy', 'r'] if loc[name] is not None}
         return DiskMaskAnalysis(
-            dataset=dataset, parameters={"cx": cx, "cy": cy, "r": r}
+            dataset=dataset, parameters=parameters
         )
 
-    def create_ring_analysis(self, dataset, cx: int, cy: int, ri: int, ro: int):
+    def create_ring_analysis(
+            self, dataset, cx: int = None, cy: int = None, ri: int = None, ro: int = None):
         """
         Integrate over a ring
 
@@ -197,15 +202,19 @@ class Context:
         ro
             outer radius
         """
+        loc = locals()
+        parameters = {name: loc[name] for name in ['cx', 'cy', 'ri', 'ro'] if loc[name] is not None}
         return RingMaskAnalysis(
-            dataset=dataset, parameters={"cx": cx, "cy": cy, "ri": ri, "ro": ro}
+            dataset=dataset, parameters=parameters
         )
 
-    def create_point_analysis(self, dataset, x: int, y: int):
+    def create_point_analysis(self, dataset, x: int = None, y: int = None):
         """
         Select the pixel with coords (y, x) from each frame
         """
-        return PointMaskAnalysis(dataset=dataset, parameters={"cx": x, "cy": y})
+        loc = locals()
+        parameters = {name: loc[name] for name in ['x', 'y'] if loc[name] is not None}
+        return PointMaskAnalysis(dataset=dataset, parameters=parameters)
 
     def create_sum_analysis(self, dataset):
         """

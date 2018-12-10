@@ -46,30 +46,33 @@ class COMAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        cx = self.parameters['cx']
-        cy = self.parameters['cy']
-        r = self.parameters['r']
-        frame_size = self.dataset.shape.sig
-        assert frame_size.dims == 2, "can only handle 2D signals currently"
+        if self.dataset.shape.sig.dims != 2:
+            raise ValueError("can only handle 2D signals currently")
+
+        (detector_y, detector_x) = self.dataset.shape.sig
+
+        cx = self.parameters.get('cx', detector_x / 2)
+        cy = self.parameters.get('cy', detector_y / 2)
+        r = self.parameters.get('r', float('inf'))
 
         def disk_mask():
             return masks.circular(
                 centerX=cx, centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 radius=r,
             )
 
         return [
             disk_mask,
             lambda: masks.gradient_x(
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 dtype=self.dtype,
             ) * disk_mask(),
             lambda: masks.gradient_y(
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 dtype=self.dtype,
             ) * disk_mask(),
         ]

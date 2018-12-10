@@ -119,10 +119,13 @@ class Slice(object):
         --------
         >>> import numpy as np
         >>> from libertem.common import Slice, Shape
-        >>> s = Slice(shape=Shape((16, 16, 16, 16), sig_dims=2), origin=(0, 0, 4, 4))
+        >>> s = Slice(shape=Shape((16, 16, 4, 4), sig_dims=2), origin=(0, 0, 12, 12))
         >>> data = np.ones((16, 16))
-        >>> data[s.get(sig_only=True)
-        ...
+        >>> data[s.get(sig_only=True)]
+        array([[1., 1., 1., 1.],
+               [1., 1., 1., 1.],
+               [1., 1., 1., 1.],
+               [1., 1., 1., 1.]])
         """
         if sig_only:
             o, s = self.origin, self.shape

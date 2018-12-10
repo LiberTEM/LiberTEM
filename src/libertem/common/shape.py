@@ -57,7 +57,7 @@ class Shape(object):
 
         >>> from libertem.common import Shape
         >>> s = Shape((5, 5, 16, 16), sig_dims=2)
-        >>> s.nav
+        >>> s.sig
         (16, 16)
         """
         return Shape(shape=self._sig_shape, sig_dims=self._sig_dims)

@@ -10,6 +10,7 @@ import numpy as np
 from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task
 from libertem.masks import to_dense, to_sparse
+from libertem.common import Slice
 
 
 def _make_mask_slicer(computed_masks):
@@ -70,12 +71,13 @@ class MaskContainer(object):
             slice_ = key.slice
         elif isinstance(key, (DataTile, ResultTile)):
             slice_ = key.tile_slice
+        elif isinstance(key, Slice):
+            slice_ = key
         else:
             raise TypeError(
                 "MaskContainer[k] can only be called with DataTile/ResultTile instances"
             )
-        # FIXME: for caching, make sure to only pass the signal part of the mask here!
-        return self.get_masks_for_slice(slice_)
+        return self.get_masks_for_slice(slice_.discard_nav())
 
     @property
     def shape(self):

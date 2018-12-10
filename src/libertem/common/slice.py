@@ -8,12 +8,12 @@ class Slice(object):
 
     def __init__(self, origin, shape):
         """
-        A ND slice, defined by origin and shape
+        A n-dimensional slice, defined by origin and shape
 
         Parameters
         ----------
         origin : tuple of int
-            global top-left coordinates of this slice
+            global "top-left" coordinates of this slice
         shape : Shape instance
             the size of this slice
         """
@@ -25,19 +25,30 @@ class Slice(object):
                     len(self.origin), len(self.shape)
                 )
             )
-        if not hasattr(shape, 'to_tuple'):
+        if not hasattr(shape, 'sig'):
             raise ValueError("please use libertem.common.Shape instance as shape parameter")
 
     def __repr__(self):
         return "<Slice origin=%r shape=%r>" % (self.origin, self.shape)
 
     def __hash__(self):
+        # enables using a Slice as a key in dict, an item in sets etc.
+        # in this case important for use as cache key for our mask container
         return hash((self.origin, tuple(self.shape)))
 
     def __eq__(self, other):
         return self.shape == other.shape and self.origin == other.origin
 
     def intersection_with(self, other):
+        """
+        Calculate the intersection between this slice and `other`. May result in
+        dimensions that are zero, which means that there is no intersection.
+
+        Returns
+        -------
+        slice : Slice
+            the intersection between this and the other slice
+        """
         if len(self.origin) != len(other.origin):
             raise ValueError("cannot intersect slices with different dimensionality")
         if len(self.shape.sig) != len(other.shape.sig):
@@ -63,6 +74,9 @@ class Slice(object):
         return result
 
     def is_null(self):
+        """
+        If any part of our shape is zero, this slice doesn't span any data and is null / empty.
+        """
         return any(s == 0 for s in self.shape)
 
     def shift(self, other):
@@ -81,7 +95,7 @@ class Slice(object):
     def get(self, arr=None, sig_only=False, nav_only=False):
         """
         Get a standard python tuple-of-slice-object which can be used
-        to slice any 2D/4D ndarray
+        to slice any compatible ndarray
 
         Parameters
         ----------
@@ -89,6 +103,9 @@ class Slice(object):
             something implementing the slice interface. if given, returns arr[slice]
         sig_only : bool
             get a signal-only slice for frames/masks
+        nav_only : bool
+            get a nav-only slice, for example for indexing something that is shaped like
+            the navigation dimensions of this Slice.
 
         Returns
         -------
@@ -96,6 +113,16 @@ class Slice(object):
             returns standard python slices computed from
             our origin+shape model or arr indexed with this slicing
             if arr is given
+
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from libertem.common import Slice, Shape
+        >>> s = Slice(shape=Shape((16, 16, 16, 16), sig_dims=2), origin=(0, 0, 4, 4))
+        >>> data = np.ones((16, 16))
+        >>> data[s.get(sig_only=True)
+        ...
         """
         if sig_only:
             o, s = self.origin, self.shape

@@ -158,10 +158,8 @@ class DataTile(object):
         """
         shape = self.tile_slice.shape
         tileshape = (
-            shape.nav.size,
-            shape.sig.size,
-            # shape[0] * shape[1],    # stackheight, number of frames we process at once
-            # shape[2] * shape[3],    # framesize, number of pixels per tile
+            shape.nav.size,    # stackheight, number of frames we process at once
+            shape.sig.size,    # framesize, number of pixels per tile
         )
         return self.data.reshape(tileshape)
 

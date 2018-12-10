@@ -6,7 +6,7 @@ import functools
 
 import numpy as np
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
@@ -108,6 +108,7 @@ class MIBDataSet(DataSet):
         self._filename_cache = None
         self._headers = {}
         self._headers = self._preread_headers()
+        self._sig_dims = 2
 
     @classmethod
     def detect_params(cls, path):
@@ -169,7 +170,7 @@ class MIBDataSet(DataSet):
     @property
     def shape(self):
         first_file = self._first_file()
-        return self._scan_size + first_file.fields['image_size']
+        return Shape(self._scan_size + first_file.fields['image_size'], sig_dims=self._sig_dims)
 
     def check_valid(self):
         try:

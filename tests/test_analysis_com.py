@@ -12,7 +12,7 @@ def ds_w_zero_frame():
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16)
+        partition_shape=(8, 16, 16, 16)
     )
     return dataset
 

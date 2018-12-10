@@ -151,12 +151,13 @@ class Slice(object):
 
     def discard_nav(self):
         """
-        returns a copy with the nav dimensions zeroed
+        returns a copy with the origin/shape zeroed in the nav dimensions
 
         this is used to create uniform cache keys
         """
         o, s = self.origin, self.shape
-        return Slice(origin=tuple([0] * s.nav.dims) + o[s.nav.dims:], shape=s)
+        new_shape = Shape(tuple([0] * s.nav.dims) + s[s.nav.dims:], sig_dims=s.sig.dims)
+        return Slice(origin=tuple([0] * s.nav.dims) + o[s.nav.dims:], shape=new_shape)
 
     def subslices(self, shape):
         """

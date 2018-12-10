@@ -51,9 +51,6 @@ class MemoryPartition(Partition):
                 tile_slice=tile_slice
             )
 
-    def get_locations(self):
-        return "127.0.1.1"  # FIXME
-
     def __repr__(self):
         return "<MemoryPartition for %r>" % self.slice
 

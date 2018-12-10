@@ -128,6 +128,16 @@ def test_weird_partition_shapes_1_fast(lt_ctx):
     assert tuple(t.tile_slice.shape) == (1, 8, 8, 8)
 
 
+def test_normal_partition_shape(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
+    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(1, 8, 16, 16))
+
+    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
 def test_single_frame_tiles(lt_ctx):
     data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
     mask = np.random.choice(a=[0, 1], size=(16, 16))

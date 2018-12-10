@@ -77,7 +77,7 @@ class H5DataSet(DataSet):
     @property
     def shape(self):
         with self.get_h5ds() as h5ds:
-            return h5ds.shape
+            return Shape(h5ds.shape, sig_dims=self.sig_dims)
 
     def check_valid(self):
         try:
@@ -128,7 +128,7 @@ class H5Partition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         with self.dataset.get_h5ds() as dataset:

@@ -6,7 +6,8 @@ from .masks import BaseMasksAnalysis
 
 class RingMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
-        data = job_results[0]
+        shape = tuple(self.dataset.effective_shape.nav)
+        data = job_results[0].reshape(shape)
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=data,

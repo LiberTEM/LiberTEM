@@ -107,6 +107,7 @@ class MIBDataSet(DataSet):
         self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
         self._scan_size = tuple(scan_size)
         self._filename_cache = None
+        self._files_sorted_cache = None
         # ._preread_headers() calls ._files() which passes the cached headers down to MIBFile,
         # if they exist. So we need to make sure to initialize self._headers
         # before calling _preread_headers!
@@ -158,10 +159,11 @@ class MIBDataSet(DataSet):
         for path in self._filenames():
             yield MIBFile(path, self._headers.get(path))
 
-    # FIXME: this cache is not working yet!
-    @functools.lru_cache(maxsize=None)
     def _files_sorted(self):
-        return sorted(self._files(), key=lambda f: f.fields['sequence_first_image'])
+        if self._files_sorted_cache is None:
+            self._files_sorted_cache = list(sorted(self._files(),
+                                                   key=lambda f: f.fields['sequence_first_image']))
+        return self._files_sorted_cache
 
     def _first_file(self):
         return next(iter(self._files_sorted()))
@@ -226,11 +228,16 @@ class MIBDataSet(DataSet):
         """
         we keep it simple: one MIB file == one partition
         """
+
+        @functools.lru_cache(maxsize=None)
+        def pshape_for_length(length):
+            return Shape((length,) + tuple(self.shape.sig), sig_dims=self._sig_dims)
+
         for f in self._files_sorted():
             idx = f.fields['sequence_first_image'] - 1
             length = f.fields['num_images']
 
-            pshape = Shape((length,) + tuple(self.shape.sig), sig_dims=self._sig_dims)
+            pshape = pshape_for_length(length)
             pslice = Slice(origin=(idx, 0, 0), shape=pshape)
 
             yield MIBPartition(

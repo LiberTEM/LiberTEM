@@ -37,18 +37,6 @@ def test_check_valid(default_mib):
     default_mib.check_valid()
 
 
-@pytest.mark.xfail(reason="_files_sorted cache is not working yet, needs a fix")
-def test_files_sorted(default_mib):
-    assert len(default_mib._files_sorted()) == 1
-    assert default_mib._files_sorted.cache_info().misses == 1
-    assert default_mib._files_sorted.cache_info().hits == 0
-    # trigger cache reads (should be hits)
-    assert len(default_mib._files_sorted()) == 1
-    assert len(default_mib._files_sorted()) == 1
-    assert default_mib._files_sorted.cache_info().misses == 1
-    assert default_mib._files_sorted.cache_info().hits == 2
-
-
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
     p = next(partitions)

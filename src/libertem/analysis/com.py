@@ -19,7 +19,12 @@ def divergence(arr):
 
 class COMAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
-        img_sum, img_x, img_y = job_results[0], job_results[1], job_results[2]
+        shape = tuple(self.dataset.effective_shape.nav)
+        img_sum, img_x, img_y = (
+            job_results[0].reshape(shape),
+            job_results[1].reshape(shape),
+            job_results[2].reshape(shape)
+        )
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         x_centers = np.divide(img_x, img_sum, where=img_sum != 0)

@@ -82,3 +82,30 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
         scx, scy = measurements.center_of_mass(masked_frame)
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
+
+
+def test_com_fails_with_non_4d_data_1(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        tileshape=(1, 16, 16),
+        partition_shape=(8, 16, 16)
+    )
+    with pytest.raises(Exception):
+        lt_ctx.create_com_analysis(
+            dataset=dataset, cx=0, cy=0, mask_radius=8
+        )
+
+
+def test_com_fails_with_non_4d_data_2(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16 * 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        tileshape=(1, 16, 16),
+        partition_shape=(16, 16, 16),
+        sig_dims=1,
+    )
+    with pytest.raises(Exception):
+        lt_ctx.create_com_analysis(
+            dataset=dataset, cx=0, cy=0, mask_radius=8
+        )

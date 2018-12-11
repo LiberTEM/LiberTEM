@@ -70,7 +70,7 @@ class Context:
     def create_mask_job(self, factories, dataset, use_sparse=None):
         """
         Create a low-level mask application job. Each factory function should, when called,
-        return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
+        return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
 
         Parameters
         ----------
@@ -92,7 +92,7 @@ class Context:
         >>> ctx = Context()
         >>> ds = ctx.load("...")
         >>> job = ctx.create_mask_job(
-        ... factories=[lambda: np.ones(dataset.shape[2:])],
+        ... factories=[lambda: np.ones(dataset.shape.sig)],
         ... dataset=dataset)
         >>> result = ctx.run(job)
         """
@@ -103,7 +103,7 @@ class Context:
     def create_mask_analysis(self, factories, dataset, use_sparse=None):
         """
         Create a mask application analysis. Each factory function should, when called,
-        return a numpy array with the same shape as frames in the dataset (so dataset.shape[2:]).
+        return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
 
         This is a more high-level method than `create_mask_job` and differs in the way the result
         is returned. With `create_mask_job`, it is a single numpy array, here we split it up for
@@ -129,7 +129,7 @@ class Context:
         >>> ctx = Context()
         >>> ds = ctx.load("...")
         >>> job = ctx.create_mask_analysis(
-        ... factories=[lambda: np.ones(dataset.shape[2:])],
+        ... factories=[lambda: np.ones(dataset.shape.sig)],
         ... dataset=dataset)
         >>> result = ctx.run(job)
         >>> result.mask_0.raw_data
@@ -154,6 +154,10 @@ class Context:
         mask_radius
             mask out intensity outside of mask_radius from (cy, cx)
         """
+        if dataset.effective_shape.nav.dims != 2:
+            raise ValueError("incompatible dataset: need two navigation dimensions")
+        if dataset.effective_shape.sig.dims != 2:
+            raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy'] if loc[name] is not None}
         if mask_radius is not None:
@@ -178,6 +182,8 @@ class Context:
         r
             radius of the disk
         """
+        if dataset.effective_shape.sig.dims != 2:
+            raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy', 'r'] if loc[name] is not None}
         return DiskMaskAnalysis(
@@ -202,6 +208,8 @@ class Context:
         ro
             outer radius
         """
+        if dataset.effective_shape.sig.dims != 2:
+            raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy', 'ri', 'ro'] if loc[name] is not None}
         return RingMaskAnalysis(
@@ -212,13 +220,15 @@ class Context:
         """
         Select the pixel with coords (y, x) from each frame
         """
+        if dataset.effective_shape.nav.dims != 2:
+            raise ValueError("incompatible dataset: need two navigation dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['x', 'y'] if loc[name] is not None}
         return PointMaskAnalysis(dataset=dataset, parameters=parameters)
 
     def create_sum_analysis(self, dataset):
         """
-        Sum over all frames
+        Sum of all signal elements
 
         Parameters
         ----------
@@ -245,13 +255,19 @@ class Context:
         :py:class:`numpy.ndarray`
             the frame as numpy array
         """
+        if dataset.effective_shape.nav.dims != 2:
+            raise ValueError("incompatible dataset: need two navigation dimensions")
         shape = dataset.shape
-        assert shape.nav.dims == 2, "can only handle 2D nav currently"
+        if shape.nav.dims == 2:
+            origin = (y, x)
+        else:
+            origin = (np.ravel_multi_index((y, x), dataset.effective_shape.nav),)
+        slice_ = Slice(origin=origin + tuple([0] * shape.sig.dims),
+                       shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
+                                   sig_dims=shape.sig.dims))
         return PickFrameJob(
             dataset=dataset,
-            slice_=Slice(origin=(y, x) + tuple([0] * shape.sig.dims),
-                         shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
-                                     sig_dims=shape.sig.dims)),
+            slice_=slice_,
             squeeze=True,
         )
 

@@ -50,9 +50,15 @@ class Slice(object):
             the intersection between this and the other slice
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot intersect slices with different dimensionality")
-        if len(self.shape.sig) != len(other.shape.sig):
-            raise ValueError("cannot intersect slices with different signal dimensionality")
+            raise ValueError("cannot intersect slices with different dimensionality (%s vs %s)" % (
+                len(self.origin), len(other.origin)
+            ))
+        if self.shape.sig.dims != other.shape.sig.dims:
+            raise ValueError(
+                "cannot intersect slices with different signal dimensionality (%s vs %s)" % (
+                    self.shape.sig.dims, other.shape.sig.dims
+                )
+            )
         new_origin = tuple([
             max(o1, o2)
             for (o1, o2) in zip(self.origin, other.origin)
@@ -87,7 +93,9 @@ class Slice(object):
         useful for translating to the local coordinate system of ``other``
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot shift slices with different dimensionality")
+            raise ValueError("cannot shift slices with different dimensionality (%s vs %s)" % (
+                self.origin, other.origin
+            ))
         return Slice(origin=tuple(our_coord - their_coord
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
@@ -176,15 +184,16 @@ class Slice(object):
         """
         # example: self.shape=(3, 1, 1, 1), subslice shape=(2, 1, 1, 1)
         # math.ceil(3/2) = math.ceil(1.5) = 2 -> we need two subslices across the y dimension
-        if len(self.shape) != len(shape):
+        shape = Shape(shape, sig_dims=self.shape.sig.dims)
+        if self.shape.dims != shape.dims:
             raise ValueError("cannot create subslices with different dimensionality (%d vs %d)" % (
-                len(self.shape), len(shape)
+                self.shape.dims, shape.dims
             ))
         ni = tuple([math.ceil(s1 / s)
                     for (s1, s) in zip(self.shape, shape)])
 
         def _make_slice(origin, new_shape):
-            sig_dims = len(new_shape.sig)
+            sig_dims = new_shape.sig.dims
             # this makes sure that the border tiles have the correct shape set
             new_shape = tuple([
                 min(ns, so + s - o)

@@ -12,6 +12,7 @@ def test_sum_dataset_tilesize_1(lt_ctx):
 
     results = lt_ctx.run(analysis)
 
+    assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(results.intensity.raw_data, expected)
 
 
@@ -24,6 +25,7 @@ def test_sum_dataset_tilesize_2(lt_ctx):
 
     results = lt_ctx.run(analysis)
 
+    assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(results.intensity.raw_data, expected)
 
 
@@ -48,10 +50,11 @@ def test_sum_timeseries(lt_ctx):
 
     results = lt_ctx.run(analysis)
 
+    assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(results.intensity.raw_data, expected)
 
 
-def test_sum_spectrum(lt_ctx):
+def test_sum_spectrum_2d_frames(lt_ctx):
     """
     sum over the first two axes of a 3D dataset
     """
@@ -71,6 +74,7 @@ def test_sum_spectrum(lt_ctx):
 
     results = lt_ctx.run(analysis)
 
+    assert results.intensity.raw_data.shape == (16 * 16,)
     assert np.allclose(results.intensity.raw_data, expected)
 
 
@@ -94,4 +98,24 @@ def test_sum_spectrum_linescan(lt_ctx):
 
     results = lt_ctx.run(analysis)
 
+    assert results.intensity.raw_data.shape == (16 * 16,)
+    assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_sum_hyperspectral(lt_ctx):
+    # flat navigation dimension to simulate "image stack"-like file formats:
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16, 16)).astype("<u2")
+    dataset = MemoryDataSet(
+        data=data,
+        effective_shape=(16, 16, 16, 16, 16),
+        tileshape=(1, 16, 16, 16),
+        partition_shape=(8, 16, 16, 16),
+        sig_dims=3,
+    )
+
+    expected = data.sum(axis=(0,))
+    analysis = lt_ctx.create_sum_analysis(dataset=dataset)
+    results = lt_ctx.run(analysis)
+
+    assert results.intensity.raw_data.shape == (16, 16, 16)
     assert np.allclose(results.intensity.raw_data, expected)

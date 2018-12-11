@@ -273,11 +273,9 @@ class MIBPartition(Partition):
                 item > 0
                 for item in tile_slice.shift(self.slice).shape
             ])
-            if not all([
+            assert all([
                 item >= 0
                 for item in tile_slice.shift(self.slice).origin
-            ]):
-                print()
-                assert False
+            ])
 
             yield DataTile(data=data, tile_slice=tile_slice)

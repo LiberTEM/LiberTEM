@@ -265,3 +265,54 @@ def test_uses_sparse_false(lt_ctx):
     tile = next(tiles)
 
     assert not sp.issparse(job.masks[tile])
+
+
+def test_masks_timeseries_2d_frames(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16)).astype("<u2")
+    dataset = MemoryDataSet(
+        data=data,
+        effective_shape=(16 * 16, 16, 16),
+        tileshape=(2, 16, 16),
+        partition_shape=(8, 16, 16)
+    )
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0]
+    )
+    results = lt_ctx.run(analysis)
+    assert results.mask_0.raw_data.shape == (256,)
+
+
+def test_masks_spectrum(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16, 16, 16 * 16)).astype("<u2")
+    dataset = MemoryDataSet(
+        data=data,
+        effective_shape=(16, 16, 16 * 16),
+        tileshape=(1, 2, 16 * 16),
+        partition_shape=(1, 8, 16 * 16),
+        sig_dims=1,
+    )
+    mask0 = np.random.choice(a=[0, 1], size=(16 * 16,))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0]
+    )
+    results = lt_ctx.run(analysis)
+    assert results.mask_0.raw_data.shape == (16, 16)
+
+
+def test_masks_hyperspectral(lt_ctx):
+    # flat navigation dimension to simulate "image stack"-like file formats:
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16, 16)).astype("<u2")
+    dataset = MemoryDataSet(
+        data=data,
+        effective_shape=(16, 16, 16, 16, 16),
+        tileshape=(1, 16, 16, 16),
+        partition_shape=(8, 16, 16, 16),
+        sig_dims=3,
+    )
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16, 16))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0]
+    )
+    results = lt_ctx.run(analysis)
+    assert results.mask_0.raw_data.shape == (16, 16)

@@ -7,10 +7,11 @@ from .masks import BaseMasksAnalysis
 class DiskMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         data = job_results[0]
+        shape = tuple(self.dataset.effective_shape.nav)
         return AnalysisResultSet([
             AnalysisResult(
-                raw_data=data,
-                visualized=visualize_simple(data),
+                raw_data=data.reshape(shape),
+                visualized=visualize_simple(data.reshape(shape)),
                 key="intensity",
                 title="intensity",
                 desc="intensity of the integration over the selected disk"),

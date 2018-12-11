@@ -8,10 +8,10 @@ from libertem.masks import to_dense
 class MemoryDataSet(DataSet):
     def __init__(self, data, tileshape, partition_shape, sig_dims=2, effective_shape=None):
         self.data = data
-        self.tileshape = tileshape
-        self.partition_shape = partition_shape
+        self.tileshape = Shape(tileshape, sig_dims=sig_dims)
+        self.partition_shape = Shape(partition_shape, sig_dims=sig_dims)
         self.sig_dims = sig_dims
-        self._effective_shape = effective_shape
+        self._effective_shape = effective_shape and Shape(effective_shape, sig_dims) or None
 
     @property
     def dtype(self):

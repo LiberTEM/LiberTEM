@@ -117,3 +117,37 @@ def test_pick_analysis(lt_ctx):
 
     assert result.intensity.raw_data.shape == (16, 16)
     assert np.allclose(result.intensity.raw_data, data[5, 5])
+
+
+def test_pick_from_3d_ds(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(1, 16, 16),
+        partition_shape=(16, 16, 16),
+        effective_shape=(16, 16, 16, 16),
+        sig_dims=2
+    )
+
+    analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 5, "y": 5})
+    result = lt_ctx.run(analysis)
+
+    assert result.intensity.raw_data.shape == (16, 16)
+    assert np.allclose(result.intensity.raw_data, data.reshape(dataset._effective_shape)[5, 5])
+
+
+def test_pick_from_3d_ds_job(lt_ctx):
+    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(1, 16, 16),
+        partition_shape=(16, 16, 16),
+        effective_shape=(16, 16, 16, 16),
+        sig_dims=2
+    )
+
+    job = lt_ctx.create_pick_job(dataset=dataset, x=5, y=5)
+    result = lt_ctx.run(job)
+
+    assert result.shape == (16, 16)
+    assert np.allclose(result, data.reshape(dataset._effective_shape)[5, 5])

@@ -166,20 +166,14 @@ class Sector:
         return self.f.read(size)
 
     def get_slice(self, scan_size, start, stop):
-        # we are working on full rows here:
-        assert start % scan_size[1] == 0
-        assert (stop - start) % scan_size[1] == 0
-        # FIXME: non-4d k2is data will fail here
+        """
+        start, stop: frame indices
+        """
         return Slice(
             origin=(
-                start // scan_size[1],
-                0,
-                0, SECTOR_SIZE[1] * self.idx
+                start, 0, SECTOR_SIZE[1] * self.idx
             ),
-            shape=Shape((
-                (stop - start) // scan_size[1],
-                scan_size[1],
-            ) + SECTOR_SIZE, sig_dims=self.sig_dims)
+            shape=Shape(((stop - start),) + SECTOR_SIZE, sig_dims=self.sig_dims)
         )
 
     def get_blocks(self):
@@ -394,8 +388,15 @@ class K2ISDataSet(DataSet):
         return np.dtype("uint16")
 
     @property
-    def shape(self):
+    def effective_shape(self):
         return Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
+                     sig_dims=self._sig_dims)
+
+    @property
+    def shape(self):
+        # FIXME: the number of frames should come from the dataset, not from the user (scan_size)
+        ss = self._scan_size
+        return Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=self._sig_dims)
 
     @classmethod

@@ -1,5 +1,5 @@
 import psutil
-from typing import Union
+from typing import Union, Tuple
 from contextlib import contextmanager
 
 import numpy as np
@@ -237,34 +237,64 @@ class Context:
         """
         return SumAnalysis(dataset=dataset, parameters={})
 
-    def create_pick_job(self, dataset, y: int, x: int) -> np.ndarray:
+    def create_pick_job(self, dataset, origin: Tuple[int], shape: Tuple[int] = None) -> np.ndarray:
         """
-        Pick a full frame at scan coordinates (y, x)
+        Pick raw data from `origin` with the size defined in `shape`. Note: if you just
+        want to read single frames, it is easier to use `create_pick_analysis`.
 
         Parameters
         ----------
         dataset
-            the dataset to work on
-        y
-            the y coordinate of the frame
-        x
-            the x coordinate of the frame
+            The dataset to work on
+        origin
+            Where to start reading. You can either specify all dimensions, or only nav dimensions,
+            in which case the signal is read starting from (0, ..., 0).
+        shape
+            The shape of the data to read. If None, read a "frame" or single signal element
 
         Returns
         -------
         :py:class:`numpy.ndarray`
             the frame as numpy array
+
+
+        Examples
+        --------
+        >>> from libertem.api import Context
+        >>> ctx = Context()
+        >>> ds = ctx.load("...")
+        >>> origin = (7, 8, 9)
+        >>> job = create_pick_job(dataset=ds, origin=origin)
+        >>> result = ctx.run(job)
+        >>> assert result.shape == ds.shape.sig
+
         """
-        if dataset.shape.nav.dims != 2:
-            raise ValueError("incompatible dataset: need two navigation dimensions")
-        shape = dataset.raw_shape
-        if shape.nav.dims == 2:
-            origin = (y, x)
+        # FIXME: this method works well if we can flatten to 3D
+        # need vectorized I/O for general case
+        raw_shape = dataset.raw_shape
+        if len(origin) == dataset.shape.nav.dims:
+            if raw_shape.dims != len(origin) and raw_shape.nav.dims == 1:
+                origin = (np.ravel_multi_index(origin, dataset.shape.nav),)
+            origin = origin + tuple([0] * dataset.shape.sig.dims)
+        elif len(origin) == dataset.shape.dims:
+            if raw_shape.dims != len(origin) and raw_shape.nav.dims == 1:
+                origin = (np.ravel_multi_index(origin, dataset.shape),)
         else:
-            origin = (np.ravel_multi_index((y, x), dataset.shape.nav),)
-        slice_ = Slice(origin=origin + tuple([0] * shape.sig.dims),
-                       shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
-                                   sig_dims=shape.sig.dims))
+            raise ValueError(
+                "incompatible dataset: origin needs to match dataset shape (%r)" % dataset.shape
+            )
+        if shape is None:
+            shape = tuple([1] * raw_shape.nav.dims) + tuple(raw_shape.sig)
+        else:
+            if len(shape) != dataset.shape.dims:
+                raise ValueError(
+                    "incompatible: shape needs to match the dataset shape"
+                )
+        shape = Shape(shape, sig_dims=raw_shape.sig.dims)
+        if raw_shape.dims != len(shape) and raw_shape.nav.dims == 1:
+            shape = shape.flatten_nav()
+        slice_ = Slice(origin=origin,
+                       shape=Shape(shape, sig_dims=raw_shape.sig.dims))
         return PickFrameJob(
             dataset=dataset,
             slice_=slice_,

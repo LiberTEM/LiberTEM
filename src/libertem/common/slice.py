@@ -21,9 +21,10 @@ class Slice(object):
         self.shape = shape
         if len(self.origin) != len(self.shape):
             raise ValueError(
-                "cannot build slice with dimensionality of shape/origin mismatch (%d vs %d)" % (
-                    len(self.origin), len(self.shape)
-                )
+                ("cannot build slice with dimensionality of shape/origin mismatch (%d vs %d); "
+                 "origin=%r, shape=%r") % (
+                     len(self.origin), len(self.shape), self.origin, self.shape,
+                 )
             )
         if not hasattr(shape, 'sig'):
             raise ValueError("please use libertem.common.Shape instance as shape parameter")

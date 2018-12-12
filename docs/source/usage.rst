@@ -120,52 +120,15 @@ jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTE
 
 For a full API reference, please see :doc:`Reference <reference>`.
 
+.. include:: /../../examples/basic.py
+    :code:
+
+From an embedded interpreter
+----------------------------
+
+If LiberTEM is run from within an embedded interpreter, the `correct executable for spawning subprocesses <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_executable>`_ has to be set. This is necessary for Python scripting in Digital Micrograph, for example.
+
 .. code-block:: python
-
-    import os
-    # Disable threading, we already use multiprocessing 
-    # to saturate the CPUs
-    # The variables have to be set before any numerics 
-    # libraries are loaded
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["MKL_NUM_THREADS"] = "1"
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    from libertem import api
-
-    ctx = api.Context()
-
-    ds = ctx.load(
-        'hdf5',
-        path='/path/to/file.emd',
-        ds_path='experimental/science_data/data',
-        tileshape=(1,8,128,128)
-    )
-
-    (scan_y, scan_x, detector_y, detector_x) = ds.shape
-    mask_shape = (detector_y, detector_x)
     
-    # LiberTEM sends functions that create the masks 
-    # rather than mask data to the workers in order 
-    # to reduce transfers in the cluster.
-    mask = lambda: np.ones(shape=mask_shape)
-
-    job = ctx.create_mask_analysis(dataset=ds, factories=[mask])
-
-    result = ctx.run(job)
-
-    # do something useful with the result:
-    print(result)
-
-    # for each mask, one channel is present in the result.
-    # this may be different for other analyses.
-    # you can access the result channels by their key on the result object:
-    plt.figure()
-    plt.imshow(result.mask_0.raw_data)
-
-    # otherwise, results handle like lists,
-    # for example, you can iterate over the result channels:
-    raw_result_list = [channel.raw_data for channel in result]
+    multiprocessing.set_executable(
+        os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only

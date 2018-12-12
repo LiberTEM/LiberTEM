@@ -1,3 +1,8 @@
+import multiprocessing
+
+import numpy as np
+
+
 class DataSetException(Exception):
     pass
 
@@ -15,6 +20,16 @@ class DataSet(object):
 
     @property
     def shape(self):
+        """
+        the effective shape, for example imprinted by the scan_size parameter of some dataset impls
+        """
+        return self.raw_shape
+
+    @property
+    def raw_shape(self):
+        """
+        the "real" shape of the dataset, as it makes sense for the format
+        """
         raise NotImplementedError()
 
     def check_valid(self):
@@ -23,8 +38,14 @@ class DataSet(object):
     @classmethod
     def detect_params(cls, path):
         """
-        returns False if path is definitely not of a matching type
-        """  # TODO: better doc string
+        Guess if path can be opened using this DataSet implementation and
+        detect parameters.
+
+        returns dict of detected parameters if path matches this dataset type,
+        returns False if path is most likely not of a matching type.
+        """
+        # FIXME: return hints for the user and additional values,
+        # for example number of signal elements
         raise NotImplementedError()
 
     @property
@@ -50,6 +71,41 @@ class DataSet(object):
         """
         return []
 
+    def partition_shape(self, datashape, framesize, dtype, target_size, min_num_partitions=None):
+        """
+        Calculate partition shape for the given ``target_size``
+        Parameters
+        ----------
+        datashape : (int, int, int, int)
+            size of the whole dataset
+        framesize : int
+            number of pixels per frame
+        dtype : numpy.dtype or str
+            data type of the dataset
+        target_size : int
+            target size in bytes - how large should each partition be?
+        min_num_partitions : int
+            minimum number of partitions desired, defaults to twice the number of CPU cores
+        Returns
+        -------
+        (int, int, int, int)
+            the shape calculated from the given parameters
+        """
+        min_num_partitions = min_num_partitions or multiprocessing.cpu_count()
+        # FIXME: allow for partitions smaller than one scan row
+        # FIXME: allow specifying the "aspect ratio" for a partition?
+        num_frames = datashape[0] * datashape[1]
+        bytes_per_frame = framesize * np.dtype(str(dtype)).itemsize
+        frames_per_partition = target_size // bytes_per_frame
+        num_partitions = num_frames // frames_per_partition
+        num_partitions = max(min_num_partitions, num_partitions)
+
+        # number of partitions should evenly divide number of scan rows:
+        # assert datashape[1] % num_partitions == 0,\
+        #     "%d %% %d != 0 (datashape=%r)" % (datashape[1], num_partitions, datashape)
+
+        return (max(1, datashape[0] // num_partitions), datashape[1], datashape[2], datashape[3])
+
 
 class Partition(object):
     def __init__(self, dataset, dtype, partition_slice):
@@ -59,6 +115,9 @@ class Partition(object):
 
     @property
     def shape(self):
+        """
+        the shape of the partition; dimensionality depends on format
+        """
         return self.slice.shape
 
     def get_tiles(self, crop_to=None):
@@ -85,6 +144,8 @@ class Partition(object):
 
 
 class DataTile(object):
+    __slots__ = ["data", "tile_slice"]
+
     def __init__(self, data, tile_slice):
         """
         A unit of data that can easily be processed at once, for example using
@@ -101,7 +162,8 @@ class DataTile(object):
         """
         self.data = data
         self.tile_slice = tile_slice
-        assert data.shape == tile_slice.shape,\
+        assert hasattr(tile_slice.shape, "to_tuple")
+        assert data.shape == tuple(tile_slice.shape),\
             "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
 
     @property
@@ -115,8 +177,8 @@ class DataTile(object):
         """
         shape = self.tile_slice.shape
         tileshape = (
-            shape[0] * shape[1],    # stackheight, number of frames we process at once
-            shape[2] * shape[3],    # framesize, number of pixels per tile
+            shape.nav.size,    # stackheight, number of frames we process at once
+            shape.sig.size,    # framesize, number of pixels per tile
         )
         return self.data.reshape(tileshape)
 

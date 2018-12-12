@@ -6,7 +6,7 @@ import functools
 
 import numpy as np
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
@@ -102,10 +102,15 @@ class MIBFile(object):
 
 class MIBDataSet(DataSet):
     def __init__(self, path, tileshape, scan_size):
+        self._sig_dims = 2
         self._path = path
-        self._tileshape = tileshape
+        self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
         self._scan_size = tuple(scan_size)
         self._filename_cache = None
+        self._files_sorted_cache = None
+        # ._preread_headers() calls ._files() which passes the cached headers down to MIBFile,
+        # if they exist. So we need to make sure to initialize self._headers
+        # before calling _preread_headers!
         self._headers = {}
         self._headers = self._preread_headers()
 
@@ -154,12 +159,17 @@ class MIBDataSet(DataSet):
         for path in self._filenames():
             yield MIBFile(path, self._headers.get(path))
 
-    @functools.lru_cache(maxsize=None)
     def _files_sorted(self):
-        return sorted(self._files(), key=lambda f: f.fields['sequence_first_image'])
+        if self._files_sorted_cache is None:
+            self._files_sorted_cache = list(sorted(self._files(),
+                                                   key=lambda f: f.fields['sequence_first_image']))
+        return self._files_sorted_cache
 
     def _first_file(self):
         return next(iter(self._files_sorted()))
+
+    def _num_images(self):
+        return sum(f.fields['num_images'] for f in self._files())
 
     @property
     def dtype(self):
@@ -168,23 +178,35 @@ class MIBDataSet(DataSet):
 
     @property
     def shape(self):
+        """
+        the 4D shape imprinted by number of images and scan_size
+        """
         first_file = self._first_file()
-        return self._scan_size + first_file.fields['image_size']
+        return Shape(self._scan_size + first_file.fields['image_size'], sig_dims=self._sig_dims)
+
+    @property
+    def raw_shape(self):
+        """
+        the original 3D shape
+        """
+        first_file = self._first_file()
+        total_images = self._num_images()
+        return Shape((total_images,) + first_file.fields['image_size'], sig_dims=self._sig_dims)
 
     def check_valid(self):
         try:
             s = self._scan_size
-            num_images = sum(f.fields['num_images'] for f in self._files())
+            num_images = self._num_images()
             if s[0] * s[1] != num_images:
                 raise DataSetException(
                     "scan_size (%r) does not match number of images (%d)" % (
                         s, num_images
                     )
                 )
-            if tuple(self._tileshape[2:]) != self.shape[2:]:
+            if self._tileshape.sig != self.raw_shape.sig:
                 raise DataSetException(
                     "MIB only supports tileshapes that match whole frames, %r != %r" % (
-                        self._tileshape[2:], self.shape[2:]
+                        self._tileshape.sig, self.raw_shape.sig
                     )
                 )
             if self._tileshape[0] != 1:
@@ -207,12 +229,16 @@ class MIBDataSet(DataSet):
         we keep it simple: one MIB file == one partition
         """
 
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
+        @functools.lru_cache(maxsize=None)
+        def pshape_for_length(length):
+            return Shape((length,) + tuple(self.raw_shape.sig), sig_dims=self._sig_dims)
+
         for f in self._files_sorted():
             idx = f.fields['sequence_first_image'] - 1
             length = f.fields['num_images']
 
-            pslice = ds_slice.subslice_from_offset(offset=idx, length=length)
+            pshape = pshape_for_length(length)
+            pslice = Slice(origin=(idx, 0, 0), shape=pshape)
 
             yield MIBPartition(
                 tileshape=self._tileshape,
@@ -223,7 +249,7 @@ class MIBDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.raw_shape)
 
 
 class MIBPartition(Partition):
@@ -235,19 +261,28 @@ class MIBPartition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("MIBDataSet only supports whole-frame crops for now")
-        stackheight = self.tileshape[1]
+        stackheight = self.tileshape.nav.size
 
-        data = np.ndarray(self.tileshape, dtype=self.dtype)
         num_tiles = self.partfile.fields['num_images'] // stackheight
 
+        tshape = self.tileshape.flatten_nav()
+        data = np.ndarray(tshape, dtype=self.dtype)
         for t in range(num_tiles):
-            tile_slice = self.slice.subslice_from_offset(offset=t * stackheight,
-                                                         length=stackheight)
+            tile_slice = Slice(origin=(t * stackheight + self.slice.origin[0], 0, 0), shape=tshape)
             if crop_to is not None:
                 intersection = tile_slice.intersection_with(crop_to)
                 if intersection.is_null():
                     continue
             self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data)
+            assert all([
+                item > 0
+                for item in tile_slice.shift(self.slice).shape
+            ])
+            assert all([
+                item >= 0
+                for item in tile_slice.shift(self.slice).origin
+            ])
+
             yield DataTile(data=data, tile_slice=tile_slice)

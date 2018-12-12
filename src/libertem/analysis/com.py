@@ -19,7 +19,12 @@ def divergence(arr):
 
 class COMAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
-        img_sum, img_x, img_y = job_results[0], job_results[1], job_results[2]
+        shape = tuple(self.dataset.shape.nav)
+        img_sum, img_x, img_y = (
+            job_results[0].reshape(shape),
+            job_results[1].reshape(shape),
+            job_results[2].reshape(shape)
+        )
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
@@ -46,32 +51,33 @@ class COMAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        (detector_y, detector_x) = self.dataset.shape[2:]
+        if self.dataset.raw_shape.sig.dims != 2:
+            raise ValueError("can only handle 2D signals currently")
+
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
 
         cx = self.parameters.get('cx', detector_x / 2)
         cy = self.parameters.get('cy', detector_y / 2)
         r = self.parameters.get('r', float('inf'))
 
-        frame_size = self.dataset.shape[2:]
-
         def disk_mask():
             return masks.circular(
                 centerX=cx, centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 radius=r,
             )
 
         return [
             disk_mask,
             lambda: masks.gradient_x(
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 dtype=self.dtype,
             ) * disk_mask(),
             lambda: masks.gradient_y(
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
+                imageSizeX=detector_x,
+                imageSizeY=detector_y,
                 dtype=self.dtype,
             ) * disk_mask(),
         ]

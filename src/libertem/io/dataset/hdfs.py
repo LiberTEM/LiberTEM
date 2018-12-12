@@ -45,7 +45,7 @@ class BinaryHDFSDataSet(DataSet):
         return self._index['dtype']
 
     @property
-    def shape(self):
+    def raw_shape(self):
         return self._index['shape']
 
     def check_valid(self):
@@ -86,7 +86,7 @@ class BinaryHDFSPartition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("BinaryHDFSDataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         subslices = list(self.slice.subslices(shape=self.tileshape))

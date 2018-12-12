@@ -3,7 +3,7 @@ import contextlib
 import numpy as np
 import h5py
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
@@ -30,7 +30,8 @@ class H5DataSet(DataSet):
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size
-        self.tileshape = tileshape
+        self.sig_dims = 2  # FIXME!
+        self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
 
     @classmethod
@@ -74,9 +75,9 @@ class H5DataSet(DataSet):
             return h5ds.dtype
 
     @property
-    def shape(self):
+    def raw_shape(self):
         with self.get_h5ds() as h5ds:
-            return h5ds.shape
+            return Shape(h5ds.shape, sig_dims=self.sig_dims)
 
     def check_valid(self):
         try:
@@ -97,8 +98,9 @@ class H5DataSet(DataSet):
 
     def get_partitions(self):
         with self.get_h5ds() as h5ds:
-            ds_slice = Slice(origin=(0, 0, 0, 0), shape=h5ds.shape)
-            partition_shape = Slice.partition_shape(
+            ds_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+            ds_slice = Slice(origin=(0, 0, 0, 0), shape=ds_shape)
+            partition_shape = self.partition_shape(
                 datashape=h5ds.shape,
                 framesize=h5ds[0][0].size,
                 dtype=h5ds.dtype,
@@ -126,7 +128,7 @@ class H5Partition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
         with self.dataset.get_h5ds() as dataset:

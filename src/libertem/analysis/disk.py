@@ -7,17 +7,20 @@ from .masks import BaseMasksAnalysis
 class DiskMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         data = job_results[0]
+        shape = tuple(self.dataset.shape.nav)
         return AnalysisResultSet([
             AnalysisResult(
-                raw_data=data,
-                visualized=visualize_simple(data),
+                raw_data=data.reshape(shape),
+                visualized=visualize_simple(data.reshape(shape)),
                 key="intensity",
                 title="intensity",
                 desc="intensity of the integration over the selected disk"),
         ])
 
     def get_mask_factories(self):
-        (detector_y, detector_x) = self.dataset.shape[2:]
+        if self.dataset.raw_shape.sig.dims != 2:
+            raise ValueError("can only handle 2D signals currently")
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
 
         cx = self.parameters.get('cx', detector_x / 2)
         cy = self.parameters.get('cy', detector_y / 2)

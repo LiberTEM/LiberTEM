@@ -7,6 +7,7 @@ from libertem import api
 from utils import _naive_mask_apply
 from libertem.executor.dask import DaskJobExecutor
 
+
 @pytest.mark.skipif('LT_RUN_FUNCTIONAL' not in os.environ, reason="Takes a long time")
 def test_start_local(hdf5_ds_1):
     mask = np.random.choice(a=[0, 1], size=(16, 16))

@@ -1,6 +1,3 @@
-import os
-import tempfile
-
 import pytest
 import h5py
 import numpy as np
@@ -20,8 +17,6 @@ def lt_ctx(inline_executor):
     return lt.Context(executor=inline_executor)
 
 
-
-
 @pytest.fixture(scope='session')
 def hdf5(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
@@ -35,6 +30,7 @@ def hdf5(tmpdir_factory):
         with h5py.File(filename, 'r') as f:
             yield f
 
+
 @pytest.fixture(scope='session')
 def empty_hdf5(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
@@ -47,6 +43,7 @@ def empty_hdf5(tmpdir_factory):
             pass
         with h5py.File(filename, 'r') as f:
             yield f
+
 
 @pytest.fixture
 def hdf5_ds_1(hdf5):

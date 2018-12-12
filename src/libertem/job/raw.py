@@ -22,7 +22,7 @@ class PickFrameJob(Job):
 
     def get_result_shape(self):
         if self._squeeze:
-            return self._slice.shape[2:]
+            return self._slice.shape.sig
         return self._slice.shape
 
 

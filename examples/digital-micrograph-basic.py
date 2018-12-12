@@ -8,12 +8,12 @@ import multiprocessing
 from libertem import api
 import numpy as np
 
+# Since the interpreter is embedded, we have to set the Python executable.
+# Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
 multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
 
 if __name__ == "__main__":
-    # We use the special subprocess method to create a local executor.
-    # The normal method doesn't work from within an embedded interpreter
-    # The context manager makes sure that the executor is closed in the end
+
     with api.Context() as ctx:
 
         ds = ctx.load(

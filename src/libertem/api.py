@@ -1,7 +1,6 @@
-import psutil
 from typing import Union, Tuple
-from contextlib import contextmanager
 
+import psutil
 import numpy as np
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
@@ -383,17 +382,3 @@ class Context:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-
-@contextmanager
-def subprocess_create_executor():
-    cores = psutil.cpu_count(logical=False)
-    if cores is None:
-        cores = 2
-    executor = DaskJobExecutor.subprocess_make_local(
-        cluster_kwargs={"threads_per_worker": 1, "n_workers": cores}
-    )
-    try:
-        yield executor
-    finally:
-        executor.close()

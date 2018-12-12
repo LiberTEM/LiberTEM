@@ -29,8 +29,8 @@ def test_detect():
 
 
 def test_simple_open(default_mib):
-    assert tuple(default_mib.effective_shape) == (32, 32, 256, 256)
-    assert tuple(default_mib.shape) == (32 * 32, 256, 256)
+    assert tuple(default_mib.shape) == (32, 32, 256, 256)
+    assert tuple(default_mib.raw_shape) == (32 * 32, 256, 256)
 
 
 def test_check_valid(default_mib):

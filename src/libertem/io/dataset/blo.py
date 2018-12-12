@@ -53,7 +53,7 @@ class BloDataSet(DataSet):
                 return False
             return {
                 "path": path,
-                "tileshape": (1, 8) + ds.shape[2:],  # FIXME: maybe adjust number of frames?
+                "tileshape": (1, 8) + ds.shape.sig,  # FIXME: maybe adjust number of frames?
                 "endianess": "<",
             }
         except Exception:
@@ -64,7 +64,7 @@ class BloDataSet(DataSet):
         return np.dtype("u1")
 
     @property
-    def shape(self):
+    def raw_shape(self):
         h = self.header
         NY = int(h['NY'])
         NX = int(h['NX'])
@@ -126,7 +126,7 @@ class BloPartition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("BloDataSet only supports whole-frame crops for now")
         with self.dataset.get_data() as data:
             subslices = list(self.slice.subslices(shape=self.tileshape))

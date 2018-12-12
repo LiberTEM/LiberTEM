@@ -18,18 +18,18 @@ class MemoryDataSet(DataSet):
         return self.data.dtype
 
     @property
-    def shape(self):
+    def raw_shape(self):
         return Shape(self.data.shape, sig_dims=self.sig_dims)
 
     @property
-    def effective_shape(self):
-        return self._effective_shape or self.shape
+    def shape(self):
+        return self._effective_shape or self.raw_shape
 
     def check_valid(self):
         return True
 
     def get_partitions(self):
-        ds_slice = Slice(origin=tuple([0] * self.shape.dims), shape=self.shape)
+        ds_slice = Slice(origin=tuple([0] * self.raw_shape.dims), shape=self.raw_shape)
         for pslice in ds_slice.subslices(self.partition_shape):
             yield MemoryPartition(
                 tileshape=self.tileshape,

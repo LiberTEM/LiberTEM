@@ -53,7 +53,7 @@ class ApplyMasksJob(Job):
             )
 
     def get_result_shape(self):
-        return (len(self.masks),) + tuple(self.dataset.shape.nav)
+        return (len(self.masks),) + tuple(self.dataset.raw_shape.nav)
 
 
 class MaskContainer(object):

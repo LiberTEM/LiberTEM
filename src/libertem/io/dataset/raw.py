@@ -34,10 +34,16 @@ class RawFileDataSet(DataSet):
     def shape(self):
         return Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
 
+    @property
+    def raw_shape(self):
+        return Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
+
     def check_valid(self):
         try:
             self.open_file()
-            return True  # TODO: try to read from file? anything else?
+            # TODO: check file size match
+            # TODO: try to read from file?
+            return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
@@ -70,7 +76,7 @@ class RawFilePartition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape[2:] != self.dataset.shape[2:]:
+            if crop_to.shape.sig != self.dataset.shape.sig:
                 raise DataSetException("RawFileDataSet only supports whole-frame crops for now")
         f = self.dataset.open_file()
         subslices = list(self.slice.subslices(shape=self.tileshape))

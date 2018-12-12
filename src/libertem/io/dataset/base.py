@@ -21,16 +21,16 @@ class DataSet(object):
     @property
     def shape(self):
         """
+        the effective shape, for example imprinted by the scan_size parameter of some dataset impls
+        """
+        return self.raw_shape
+
+    @property
+    def raw_shape(self):
+        """
         the "real" shape of the dataset, as it makes sense for the format
         """
         raise NotImplementedError()
-
-    @property
-    def effective_shape(self):
-        """
-        the effective shape, for example imprinted by the scan_size parameter of some dataset impls
-        """
-        return self.shape
 
     def check_valid(self):
         raise NotImplementedError()
@@ -38,8 +38,14 @@ class DataSet(object):
     @classmethod
     def detect_params(cls, path):
         """
-        returns False if path is definitely not of a matching type
-        """  # TODO: better doc string
+        Guess if path can be opened using this DataSet implementation and
+        detect parameters.
+
+        returns dict of detected parameters if path matches this dataset type,
+        returns False if path is most likely not of a matching type.
+        """
+        # FIXME: return hints for the user and additional values,
+        # for example number of signal elements
         raise NotImplementedError()
 
     @property
@@ -109,6 +115,9 @@ class Partition(object):
 
     @property
     def shape(self):
+        """
+        the shape of the partition; dimensionality depends on format
+        """
         return self.slice.shape
 
     def get_tiles(self, crop_to=None):

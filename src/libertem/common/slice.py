@@ -50,9 +50,12 @@ class Slice(object):
             the intersection between this and the other slice
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot intersect slices with different dimensionality (%s vs %s)" % (
-                len(self.origin), len(other.origin)
-            ))
+            raise ValueError(
+                ("cannot intersect slices with different dimensionality (%s vs %s); "
+                 "self.origin=%r, other.origin=%r") % (
+                    len(self.origin), len(other.origin), self.origin, other.origin,
+                )
+            )
         if self.shape.sig.dims != other.shape.sig.dims:
             raise ValueError(
                 "cannot intersect slices with different signal dimensionality (%s vs %s)" % (
@@ -186,9 +189,12 @@ class Slice(object):
         # math.ceil(3/2) = math.ceil(1.5) = 2 -> we need two subslices across the y dimension
         shape = Shape(shape, sig_dims=self.shape.sig.dims)
         if self.shape.dims != shape.dims:
-            raise ValueError("cannot create subslices with different dimensionality (%d vs %d)" % (
-                self.shape.dims, shape.dims
-            ))
+            raise ValueError(
+                ("cannot create subslices with different dimensionality (%d vs %d); "
+                 "self.shape=%r, shape=%r") % (
+                    self.shape.dims, shape.dims, self.shape, shape,
+                )
+            )
         ni = tuple([math.ceil(s1 / s)
                     for (s1, s) in zip(self.shape, shape)])
 

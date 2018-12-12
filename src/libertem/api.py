@@ -154,9 +154,9 @@ class Context:
         mask_radius
             mask out intensity outside of mask_radius from (cy, cx)
         """
-        if dataset.effective_shape.nav.dims != 2:
+        if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
-        if dataset.effective_shape.sig.dims != 2:
+        if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy'] if loc[name] is not None}
@@ -182,7 +182,7 @@ class Context:
         r
             radius of the disk
         """
-        if dataset.effective_shape.sig.dims != 2:
+        if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy', 'r'] if loc[name] is not None}
@@ -208,7 +208,7 @@ class Context:
         ro
             outer radius
         """
-        if dataset.effective_shape.sig.dims != 2:
+        if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['cx', 'cy', 'ri', 'ro'] if loc[name] is not None}
@@ -220,7 +220,7 @@ class Context:
         """
         Select the pixel with coords (y, x) from each frame
         """
-        if dataset.effective_shape.nav.dims != 2:
+        if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
         loc = locals()
         parameters = {name: loc[name] for name in ['x', 'y'] if loc[name] is not None}
@@ -255,13 +255,13 @@ class Context:
         :py:class:`numpy.ndarray`
             the frame as numpy array
         """
-        if dataset.effective_shape.nav.dims != 2:
+        if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
-        shape = dataset.shape
+        shape = dataset.raw_shape
         if shape.nav.dims == 2:
             origin = (y, x)
         else:
-            origin = (np.ravel_multi_index((y, x), dataset.effective_shape.nav),)
+            origin = (np.ravel_multi_index((y, x), dataset.shape.nav),)
         slice_ = Slice(origin=origin + tuple([0] * shape.sig.dims),
                        shape=Shape(tuple([1] * shape.nav.dims) + tuple(shape.sig),
                                    sig_dims=shape.sig.dims))

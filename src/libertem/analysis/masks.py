@@ -40,7 +40,7 @@ class MasksAnalysis(BaseMasksAnalysis):
         return self.parameters['use_sparse']
 
     def get_results(self, job_results):
-        shape = tuple(self.dataset.effective_shape.nav)
+        shape = tuple(self.dataset.shape.nav)
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=mask_result.reshape(shape),

@@ -7,14 +7,14 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 class PickFrameAnalysis(BaseAnalysis):
     def get_job(self):
-        assert self.dataset.effective_shape.nav.dims == 2, "can only handle 2D nav currently"
+        assert self.dataset.shape.nav.dims == 2, "can only handle 2D nav currently"
         x, y = self.parameters['x'], self.parameters['y']
-        shape = self.dataset.shape
+        shape = self.dataset.raw_shape
 
         if shape.nav.dims == 2:
             origin = (y, x)
         else:
-            origin = (np.ravel_multi_index((y, x), self.dataset.effective_shape.nav),)
+            origin = (np.ravel_multi_index((y, x), self.dataset.shape.nav),)
 
         return PickFrameJob(
             dataset=self.dataset,
@@ -28,7 +28,7 @@ class PickFrameAnalysis(BaseAnalysis):
 
     def get_results(self, job_results):
         x, y = self.parameters['x'], self.parameters['y']
-        shape = tuple(self.dataset.effective_shape.sig)
+        shape = tuple(self.dataset.shape.sig)
         data = job_results.reshape(shape)
 
         return AnalysisResultSet([

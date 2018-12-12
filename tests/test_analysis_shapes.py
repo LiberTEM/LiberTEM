@@ -64,7 +64,7 @@ def test_ring_3d_ds(lt_ctx):
     analysis = lt_ctx.create_ring_analysis(dataset=dataset, cx=8, cy=8, ri=5, ro=8)
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
-    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.effective_shape))
+    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.shape))
     assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(
         results.intensity.raw_data,
@@ -108,7 +108,7 @@ def test_point_3d_ds(lt_ctx):
     results = lt_ctx.run(analysis)
     mask = np.zeros((16, 16))
     mask[8, 8] = 1
-    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.effective_shape))
+    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.shape))
     assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(
         results.intensity.raw_data,

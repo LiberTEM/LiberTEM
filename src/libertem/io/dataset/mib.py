@@ -177,7 +177,7 @@ class MIBDataSet(DataSet):
         return first_file.fields['dtype']
 
     @property
-    def effective_shape(self):
+    def shape(self):
         """
         the 4D shape imprinted by number of images and scan_size
         """
@@ -185,7 +185,7 @@ class MIBDataSet(DataSet):
         return Shape(self._scan_size + first_file.fields['image_size'], sig_dims=self._sig_dims)
 
     @property
-    def shape(self):
+    def raw_shape(self):
         """
         the original 3D shape
         """
@@ -203,10 +203,10 @@ class MIBDataSet(DataSet):
                         s, num_images
                     )
                 )
-            if self._tileshape.sig != self.shape.sig:
+            if self._tileshape.sig != self.raw_shape.sig:
                 raise DataSetException(
                     "MIB only supports tileshapes that match whole frames, %r != %r" % (
-                        self._tileshape.sig, self.shape.sig
+                        self._tileshape.sig, self.raw_shape.sig
                     )
                 )
             if self._tileshape[0] != 1:
@@ -231,7 +231,7 @@ class MIBDataSet(DataSet):
 
         @functools.lru_cache(maxsize=None)
         def pshape_for_length(length):
-            return Shape((length,) + tuple(self.shape.sig), sig_dims=self._sig_dims)
+            return Shape((length,) + tuple(self.raw_shape.sig), sig_dims=self._sig_dims)
 
         for f in self._files_sorted():
             idx = f.fields['sequence_first_image'] - 1
@@ -249,7 +249,7 @@ class MIBDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.raw_shape)
 
 
 class MIBPartition(Partition):

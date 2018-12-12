@@ -29,8 +29,8 @@ def test_detect():
 
 
 def test_simple_open(default_k2is):
-    assert tuple(default_k2is.effective_shape) == (34, 35, 1860, 2048)
-    assert tuple(default_k2is.shape) == (34 * 35, 1860, 2048)
+    assert tuple(default_k2is.shape) == (34, 35, 1860, 2048)
+    assert tuple(default_k2is.raw_shape) == (34 * 35, 1860, 2048)
 
 
 def test_check_valid(default_k2is):

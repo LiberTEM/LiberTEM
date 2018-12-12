@@ -19,7 +19,7 @@ def divergence(arr):
 
 class COMAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
-        shape = tuple(self.dataset.effective_shape.nav)
+        shape = tuple(self.dataset.shape.nav)
         img_sum, img_x, img_y = (
             job_results[0].reshape(shape),
             job_results[1].reshape(shape),
@@ -51,10 +51,10 @@ class COMAnalysis(BaseMasksAnalysis):
         ])
 
     def get_mask_factories(self):
-        if self.dataset.shape.sig.dims != 2:
+        if self.dataset.raw_shape.sig.dims != 2:
             raise ValueError("can only handle 2D signals currently")
 
-        (detector_y, detector_x) = self.dataset.shape.sig
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
 
         cx = self.parameters.get('cx', detector_x / 2)
         cy = self.parameters.get('cy', detector_y / 2)

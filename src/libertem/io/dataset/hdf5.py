@@ -75,7 +75,7 @@ class H5DataSet(DataSet):
             return h5ds.dtype
 
     @property
-    def shape(self):
+    def raw_shape(self):
         with self.get_h5ds() as h5ds:
             return Shape(h5ds.shape, sig_dims=self.sig_dims)
 

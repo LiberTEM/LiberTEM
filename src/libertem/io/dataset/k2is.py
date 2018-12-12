@@ -416,12 +416,12 @@ class K2ISDataSet(DataSet):
         return np.dtype("uint16")
 
     @property
-    def effective_shape(self):
+    def shape(self):
         return Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=self._sig_dims)
 
     @property
-    def shape(self):
+    def raw_shape(self):
         # FIXME: the number of frames should come from the dataset, not from the user (scan_size)
         ss = self._scan_size
         return Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
@@ -535,7 +535,7 @@ class K2ISDataSet(DataSet):
 
     def get_partitions(self):
         fs = self._get_fileset()
-        num_frames = self.effective_shape.nav.size
+        num_frames = self.shape.nav.size
         f_per_part = num_frames // self._get_partitions_per_file()
         try:
             for s in fs.sectors:

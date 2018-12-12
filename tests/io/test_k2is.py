@@ -91,7 +91,7 @@ def test_sum_analysis(default_k2is, lt_ctx):
 
 
 def test_pick_job(default_k2is, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_k2is, x=16, y=16)
+    analysis = lt_ctx.create_pick_job(dataset=default_k2is, origin=(16, 16))
     results = lt_ctx.run(analysis)
     assert results.shape == (1860, 2048)
 

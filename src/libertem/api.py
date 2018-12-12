@@ -10,6 +10,7 @@ from libertem.job.raw import PickFrameJob
 from libertem.job.base import Job
 from libertem.common import Slice, Shape
 from libertem.executor.dask import DaskJobExecutor
+from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
 from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
@@ -239,8 +240,12 @@ class Context:
 
     def create_pick_job(self, dataset, origin: Tuple[int], shape: Tuple[int] = None) -> np.ndarray:
         """
-        Pick raw data from `origin` with the size defined in `shape`. Note: if you just
-        want to read single frames, it is easier to use `create_pick_analysis`.
+        Pick raw data from `origin` with the size defined in `shape`.
+
+        NOTE: if you just want to read single frames, it is easier to use `create_pick_analysis`.
+
+        NOTE: It is not efficient to use this method on large parts of datasets, please consider
+        implementing an analysis instead.
 
         Parameters
         ----------
@@ -255,8 +260,7 @@ class Context:
         Returns
         -------
         :py:class:`numpy.ndarray`
-            the frame as numpy array
-
+            the raw data as numpy array
 
         Examples
         --------
@@ -300,6 +304,44 @@ class Context:
             slice_=slice_,
             squeeze=True,
         )
+
+    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None):
+        """
+        Pick a single frame / signal element from (z, y, x). Number of parameters
+        must match number of navigation dimensions in the dataset, for example if
+        you have a 4D dataset with two signal dimensions and two navigation dimensions,
+        you need to specify x and y.
+
+        Parameters
+        ----------
+        dataset
+            The dataset to work on
+        x
+            x coordinate
+        y
+            y coordinate
+        z
+            z coordinate
+
+        Returns
+        -------
+        :py:class:`numpy.ndarray`
+            the frame as numpy array
+
+        Examples
+        --------
+        >>> from libertem.api import Context
+        >>> ctx = Context()
+        >>> ds = ctx.load("...")
+        >>> origin = (7, 8, 9)
+        >>> job = create_pick_job(dataset=ds, origin=origin)
+        >>> result = ctx.run(job)
+        >>> assert result.shape == ds.shape.sig
+
+        """
+        loc = locals()
+        parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
+        return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
     def run(self, job: Union[Job, BaseAnalysis]):
         """

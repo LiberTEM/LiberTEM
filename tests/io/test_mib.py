@@ -18,7 +18,9 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 @pytest.fixture
 def default_mib():
     scan_size = (32, 32)
-    return MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 8, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 8, 256, 256), scan_size=scan_size)
+    ds = ds.initialize()
+    return ds
 
 
 def test_detect():

@@ -429,6 +429,7 @@ class K2ISDataSet(DataSet):
     def initialize(self):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
+        return self
 
     @property
     def dtype(self):

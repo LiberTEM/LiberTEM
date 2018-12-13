@@ -107,12 +107,31 @@ class MIBDataSet(DataSet):
         self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
         self._scan_size = tuple(scan_size)
         self._filename_cache = None
-        self._files_sorted_cache = None
+        self._files_sorted = None
         # ._preread_headers() calls ._files() which passes the cached headers down to MIBFile,
         # if they exist. So we need to make sure to initialize self._headers
         # before calling _preread_headers!
         self._headers = {}
+        self._dtype = None
+        self._shape = None
+        self._raw_shape = None
+
+    def initialize(self):
         self._headers = self._preread_headers()
+        self._files_sorted = list(sorted(self._files(),
+                                         key=lambda f: f.fields['sequence_first_image']))
+
+        try:
+            first_file = self._files_sorted[0]
+        except IndexError:
+            raise DataSetException("no files found")
+        self._shape = Shape(
+            self._scan_size + first_file.fields['image_size'],
+            sig_dims=self._sig_dims
+        )
+        self._raw_shape = self._shape.flatten_nav()
+        self._dtype = first_file.fields['dtype']
+        return self
 
     @classmethod
     def detect_params(cls, path):
@@ -159,39 +178,26 @@ class MIBDataSet(DataSet):
         for path in self._filenames():
             yield MIBFile(path, self._headers.get(path))
 
-    def _files_sorted(self):
-        if self._files_sorted_cache is None:
-            self._files_sorted_cache = list(sorted(self._files(),
-                                                   key=lambda f: f.fields['sequence_first_image']))
-        return self._files_sorted_cache
-
-    def _first_file(self):
-        return next(iter(self._files_sorted()))
-
     def _num_images(self):
         return sum(f.fields['num_images'] for f in self._files())
 
     @property
     def dtype(self):
-        first_file = self._first_file()
-        return first_file.fields['dtype']
+        return self._dtype
 
     @property
     def shape(self):
         """
         the 4D shape imprinted by number of images and scan_size
         """
-        first_file = self._first_file()
-        return Shape(self._scan_size + first_file.fields['image_size'], sig_dims=self._sig_dims)
+        return self._shape
 
     @property
     def raw_shape(self):
         """
         the original 3D shape
         """
-        first_file = self._first_file()
-        total_images = self._num_images()
-        return Shape((total_images,) + first_file.fields['image_size'], sig_dims=self._sig_dims)
+        return self._raw_shape
 
     def check_valid(self):
         try:
@@ -233,7 +239,7 @@ class MIBDataSet(DataSet):
         def pshape_for_length(length):
             return Shape((length,) + tuple(self.raw_shape.sig), sig_dims=self._sig_dims)
 
-        for f in self._files_sorted():
+        for f in self._files_sorted:
             idx = f.fields['sequence_first_image'] - 1
             length = f.fields['num_images']
 

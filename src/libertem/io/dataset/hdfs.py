@@ -23,6 +23,7 @@ class BinaryHDFSDataSet(DataSet):
         with self._fs.open(self.index_path) as f:
             self._index = json.load(f)
         assert self._index['mode'] == 'rect', 'unsupported mode: %s' % self._index['mode']
+        return self
 
     def get_fs(self):
         # TODO: maybe this needs to be a context manager, too, so we can do:

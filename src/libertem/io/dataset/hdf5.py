@@ -39,6 +39,7 @@ class H5DataSet(DataSet):
         with self.get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             self._raw_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+        return self
 
     @classmethod
     def detect_params(cls, path):

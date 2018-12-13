@@ -48,6 +48,12 @@ class BloDataSet(DataSet):
 
     def initialize(self):
         self._read_header()
+        h = self.header
+        NY = int(h['NY'])
+        NX = int(h['NX'])
+        DP_SZ = int(h['DP_SZ'])
+        self._shape = Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
+        return self
 
     @classmethod
     def detect_params(cls, path):
@@ -69,11 +75,9 @@ class BloDataSet(DataSet):
 
     @property
     def raw_shape(self):
-        h = self.header
-        NY = int(h['NY'])
-        NX = int(h['NX'])
-        DP_SZ = int(h['DP_SZ'])
-        return Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
+        if self._shape is None:
+            raise RuntimeError("please call initialize() before using the dataset")
+        return self._shape
 
     def _read_header(self):
         with open(self._path, 'rb') as f:
@@ -82,7 +86,7 @@ class BloDataSet(DataSet):
     @property
     def header(self):
         if self._header is None:
-            raise RuntimeError("please call load() before using the dataset")
+            raise RuntimeError("please call initialize() before using the dataset")
         return self._header
 
     def check_valid(self):

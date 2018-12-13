@@ -10,7 +10,7 @@ class DataSetException(Exception):
 class DataSet(object):
     def initialize(self):
         """
-        pre-load metadata. this will be executed on a worker node
+        pre-load metadata. this will be executed on a worker node. should return self.
         """
         raise NotImplementedError()
 

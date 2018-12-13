@@ -283,9 +283,10 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         self.registry.add_handler(self)
         if self.data.have_executor():
             await self.data.verify_datasets()
+            datasets = await self.data.serialize_datasets()
             msg = Message(self.data).initial_state(
                 jobs=self.data.serialize_jobs(),
-                datasets=self.data.serialize_datasets(),
+                datasets=datasets,
             )
             log_message(msg)
             self.registry.broadcast_event(msg)

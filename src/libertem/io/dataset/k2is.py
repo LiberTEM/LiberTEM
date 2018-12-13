@@ -410,6 +410,7 @@ class K2ISDataSet(DataSet):
         # we compensate here by setting a negative _skip_frames value.
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
+        self._files = self._get_files()
 
     @property
     def dtype(self):
@@ -491,7 +492,7 @@ class K2ISDataSet(DataSet):
              "value": str(first_block_nosync.header['frame_id'])},
         ]
 
-    def _files(self):
+    def _get_files(self):
         pattern = _pattern(self._path)
         files = glob.glob(pattern)
         if len(files) != NUM_SECTORS:
@@ -513,20 +514,20 @@ class K2ISDataSet(DataSet):
 
     def _get_fileset(self, with_sync=True):
         if not with_sync:
-            return K2FileSet(self._files())
+            return K2FileSet(self._files)
         if self._start_offsets is None:
-            fs = K2FileSet(self._files())
+            fs = K2FileSet(self._files)
             fs.sync()
             self._cache_first_block_offsets(fs)
         else:
-            fs = K2FileSet(self._files(), start_offsets=self._start_offsets)
+            fs = K2FileSet(self._files, start_offsets=self._start_offsets)
         return fs
 
     def _get_partitions_per_file(self):
         """
         returns the number of partitions each file (sector) should be split into
         """
-        sector0_fname = self._files()[0]
+        sector0_fname = self._files[0]
         stat = os.stat(sector0_fname)
         size = stat.st_size
         # let's try to aim for 512MB per partition

@@ -61,8 +61,8 @@ class Context:
         Additional parameters are passed to the concrete DataSet implementation
         """
         # delegate to libertem.io.dataset.load:
-        ds = load(filetype, *args, **kwargs)
-        ds.check_valid()
+        ds = self.executor.run_function(load, filetype, *args, **kwargs)
+        self.executor.run_function(ds.check_valid)
         return ds
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}

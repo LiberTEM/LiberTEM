@@ -8,3 +8,6 @@ class InlineJobExecutor(JobExecutor):
     def run_job(self, job):
         for task in job.get_tasks():
             yield task()
+
+    def run_function(self, fn, *args, **kwargs):
+        return fn(*args, **kwargs)

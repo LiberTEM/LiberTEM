@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 
-from libertem.web.server import _get_alt_path
+from libertem.io.fs import _get_alt_path
 
 
 @pytest.mark.skipif(os.name != 'nt',

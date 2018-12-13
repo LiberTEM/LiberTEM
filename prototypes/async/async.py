@@ -84,7 +84,7 @@ def main():
         # print(cluster.scheduler_address)
         # (can be replaced with asyncio.run(coro) in Python 3.7)
         loop.run_until_complete(async_main(cluster.scheduler_address))
-        
+
     finally:
         # loop.close()
         print("Close cluster")

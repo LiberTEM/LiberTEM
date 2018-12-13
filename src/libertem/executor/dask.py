@@ -1,3 +1,4 @@
+import functools
 import tornado.util
 from dask import distributed as dd
 from distributed.asyncio import AioClient
@@ -50,6 +51,13 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
             yield result
         del self._futures[job]
 
+    async def run_function(self, fn, *args, **kwargs):
+        """
+        run a callable `fn`
+        """
+        future = self.client.submit(functools.partial(fn, *args, **kwargs))
+        return await future
+
     async def cancel_job(self, job):
         if job in self._futures:
             futures = self._futures[job]
@@ -96,6 +104,13 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         futures = self._get_futures(job)
         for future, result in dd.as_completed(futures, with_results=True):
             yield result
+
+    def run_function(self, fn, *args, **kwargs):
+        """
+        run a callable `fn`
+        """
+        future = self.client.submit(functools.partial(fn, *args, **kwargs))
+        return future.result()
 
     def close(self):
         if self.is_local:

@@ -1,12 +1,10 @@
 import os
-import stat
 import time
 import logging
 import asyncio
 import signal
 import psutil
 from functools import partial
-from pathlib import Path
 
 import tornado.web
 import tornado.gen
@@ -15,6 +13,7 @@ import tornado.ioloop
 import tornado.escape
 
 import libertem
+from libertem.io.fs import get_fs_listing, FSError
 from libertem.executor.dask import AsyncDaskJobExecutor
 from libertem.executor.base import JobCancelledError
 from libertem.io.dataset.base import DataSetException
@@ -23,29 +22,9 @@ from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
     COMAnalysis, SumAnalysis, PickFrameAnalysis
 )
-from libertem.io.utils import get_owner_name
 
 
 log = logging.getLogger(__name__)
-
-
-def _get_alt_path(path):
-    cur_path = Path(path).resolve()
-    while not _access_ok(cur_path):
-        cur_path = cur_path / '..'
-        cur_path = cur_path.resolve()
-        # we have reached the root (either / or a drive letter on windows)
-        if Path(cur_path.anchor) == cur_path:
-            if _access_ok(cur_path):
-                return cur_path
-            else:
-                # we can only suggest the home directory:
-                return str(Path.home())
-    return cur_path
-
-
-def _access_ok(path):
-    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
 
 
 def log_message(message, exception=False):
@@ -302,8 +281,8 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     async def open(self):
         self.registry.add_handler(self)
-        await self.data.verify_datasets()
         if self.data.have_executor():
+            await self.data.verify_datasets()
             msg = Message(self.data).initial_state(
                 jobs=self.data.serialize_jobs(),
                 datasets=self.data.serialize_datasets(),
@@ -474,8 +453,10 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "scan_size": params["scan_size"],
             }
         try:
-            ds = await run_blocking(dataset.load, filetype=params["type"], **dataset_params)
-            await run_blocking(ds.check_valid)
+            executor = self.data.get_executor()
+            ds = await executor.run_function(dataset.load,
+                                             filetype=params["type"], **dataset_params)
+            await executor.run_function(ds.check_valid)
             self.data.register_dataset(
                 uuid=uuid,
                 dataset=ds,
@@ -499,7 +480,9 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
 
     async def get(self):
         path = self.request.arguments['path'][0].decode("utf8")
-        params = await run_blocking(dataset.detect, path=path)
+        executor = self.data.get_executor()
+
+        params = await executor.run_function(dataset.detect, path=path)
         if not params:
             msg = Message(self.data).dataset_detect_failed(path=path)
             log_message(msg)
@@ -566,10 +549,11 @@ class SharedData(object):
         return self.datasets[uuid]["dataset"]
 
     async def verify_datasets(self):
+        executor = self.get_executor()
         for uuid, params in self.datasets.items():
             dataset = params["dataset"]
             try:
-                await run_blocking(dataset.check_valid)
+                await executor.run_function(dataset.check_valid)
             except DataSetException:
                 await self.remove_dataset(uuid)
 
@@ -695,6 +679,7 @@ class ConnectHandler(tornado.web.RequestHandler):
                 cluster_kwargs=cluster_kwargs,
             )
         await self.data.set_executor(executor, request_data)
+        await self.data.verify_datasets()
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
             datasets=self.data.serialize_datasets(),
@@ -722,65 +707,22 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         self.event_registry = event_registry
 
     async def get(self):
+        executor = self.data.get_executor()
         path = self.request.arguments['path']
-        assert len(path) == 1
-        path = path[0].decode("utf8")
-        if not os.path.isdir(path):
-            msg = Message(self.data).browse_failed(
-                path=path,
-                code="NOT_FOUND",
-                msg="path %s could not be found" % path,
-                alternative=str(_get_alt_path(path)),
+        try:
+            listing = await executor.run_function(get_fs_listing, path)
+            msg = Message(self.data).directory_listing(
+                **listing
             )
             self.write(msg)
-            return
-        if not _access_ok(path):
+        except FSError as e:
             msg = Message(self.data).browse_failed(
                 path=path,
-                code="ACCESS_DENIED",
-                msg="access to %s was denied" % path,
-                alternative=str(_get_alt_path(path)),
+                code=e.code,
+                msg=e.msg,
+                alternative=e.alternative,
             )
             self.write(msg)
-            return
-        path = os.path.abspath(path)
-        names = os.listdir(path)
-        dirs = []
-        files = []
-        names = [".."] + names
-        for name in names:
-            full_path = os.path.join(path, name)
-            try:
-                s = os.stat(full_path)
-            except FileNotFoundError:
-                # this can happen either because of a TOCTOU-like race condition
-                # or for example for things like broken softlinks
-                continue
-
-            try:
-                owner = get_owner_name(full_path, s)
-            except FileNotFoundError:  # only from win_tweaks.py version
-                continue
-            except IOError:  # only from win_tweaks.py version
-                owner = "<Unknown>"
-
-            res = {"name": name, "stat": s, "owner": owner}
-            if stat.S_ISDIR(s.st_mode):
-                dirs.append(res)
-            else:
-                files.append(res)
-        drives = [
-            part.mountpoint
-            for part in psutil.disk_partitions()
-            if part.fstype != "squashfs"
-        ]
-        places = [
-            {"key": "home", "title": "Home", "path": str(Path.home())},
-        ]
-        msg = Message(self.data).directory_listing(
-            path, files=files, dirs=dirs, drives=drives, places=places,
-        )
-        self.write(msg)
 
 
 # shared state:

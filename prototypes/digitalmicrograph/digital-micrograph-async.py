@@ -112,7 +112,7 @@ async def async_main(address):
 
     while counter < 20:
         counter += 1
-        result_buffer = np.zeros(rect_job.get_result_shape())
+        result_buffer[:] = 0
         async for part_result in run(executor, rect_job, result_buffer):
             np.copyto(result_image_buffer, 
                 result_buffer[0].reshape(result_image_buffer.shape), 

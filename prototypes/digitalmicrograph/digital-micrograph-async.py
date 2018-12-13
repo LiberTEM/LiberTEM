@@ -77,11 +77,20 @@ async def async_main(address):
     
     executor = await AsyncDaskJobExecutor.connect(address)
 
+    #ds = load(
+    #    "blo",
+    #    path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
+    #    "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
+    #    tileshape=(1,8,144,144)
+    #)
+
     ds = load(
-        "blo",
-        path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-        "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
-        tileshape=(1,8,144,144)
+        "raw",
+        path = '/data/users/weber/scan_11_x256_y256.raw',
+        dtype = "float32",
+        scan_size = (256, 256),
+        detector_size_raw = (130, 128),
+        crop_detector_to = (128, 128)
     )
 
     sum_job = SumFramesJob(dataset=ds)
@@ -149,17 +158,17 @@ def main():
         "n_workers": cores
     }
 
-    cluster = dd.LocalCluster(**cluster_kwargs)
+    #cluster = dd.LocalCluster(**cluster_kwargs)
     loop = asyncio.get_event_loop()
-
+    address = 'tcp://localhost:31313'
     try:
         # (can be replaced with asyncio.run(coro) in Python 3.7)
-        loop.run_until_complete(async_main(cluster.scheduler_address))
+        loop.run_until_complete(async_main(address))
         
     finally:
         # loop.close()
         print("Close cluster")
-        cluster.close()
+        #cluster.close()
 
 
 if __name__ == "__main__":

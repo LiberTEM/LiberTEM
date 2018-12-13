@@ -671,7 +671,6 @@ class ConnectHandler(tornado.web.RequestHandler):
         if connection["type"].lower() == "tcp":
             executor = await AsyncDaskJobExecutor.connect(
                 scheduler_uri=connection['address'],
-                is_local=connection['isLocal']
             )
         elif connection["type"].lower() == "local":
             cluster_kwargs = {

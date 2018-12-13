@@ -47,7 +47,6 @@ export interface ConnectRequestLocalCluster {
 
 export interface ConnectRequestTCP {
     type: ClusterTypes.TCP,
-    isLocal: boolean,
     address: string,
 }
 

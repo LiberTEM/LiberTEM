@@ -27,13 +27,6 @@ const TCPConnectionForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="isLocal">Is a local cluster:</label>
-                <input type="checkbox" name="isLocal" checked={values.isLocal}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.isLocal && touched.isLocal && errors.isLocal}
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="address">Scheduler URI</label>
                 <input type="text" name="address" value={values.address}
                     onChange={handleChange}
@@ -47,7 +40,6 @@ const TCPConnectionForm: React.SFC<MergedProps> = ({
 
 export default withFormik<FormProps, FormValues>({
     mapPropsToValues: () => ({
-        isLocal: true,
         address: "tcp://localhost:8786",
     }),
     handleSubmit: (values, formikBag) => {

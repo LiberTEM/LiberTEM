@@ -86,7 +86,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
             the connected JobExecutor
         """
         client = await AioClient(address=scheduler_uri)
-        return cls(client=client, *args, **kwargs)
+        return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
     async def make_local(cls, cluster_kwargs=None, client_kwargs=None):
@@ -144,7 +144,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             the connected JobExecutor
         """
         client = dd.Client(address=scheduler_uri)
-        return cls(client=client, *args, **kwargs)
+        return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
     def make_local(cls, cluster_kwargs=None, client_kwargs=None):

@@ -39,11 +39,12 @@ def test_check_valid(default_raw):
 def test_read(default_raw):
     partitions = default_raw.get_partitions()
     p = next(partitions)
-    assert tuple(p.shape) == (2, 16, 128, 128)
+    # FIXME: partition shape can vary by number of cores
+    # assert tuple(p.shape) == (2, 16, 128, 128)
     tiles = p.get_tiles()
     t = next(tiles)
     # default tileshape -> whole partition
-    assert tuple(t.tile_slice.shape) == (2, 16, 128, 128)
+    assert tuple(t.tile_slice.shape) == tuple(p.shape)
 
 
 def test_pickle_is_small(default_raw):

@@ -8,8 +8,8 @@ from libertem.io.utils import get_owner_name
 
 
 class FSError(Exception):
-    def __init__(self, code, alternative=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, msg, code, alternative=None):
+        super().__init__(msg, code, alternative)
         self.code = code
         self.alternative = alternative
 
@@ -34,13 +34,11 @@ def _get_alt_path(path):
 
 
 def get_fs_listing(path):
-    assert len(path) == 1
-    path = path[0].decode("utf8")
     if not os.path.isdir(path):
         raise FSError(
             code="NOT_FOUND",
             msg="path %s could not be found" % path,
-            alternative=str(_get_alt_path(path))
+            alternative=str(_get_alt_path(path)),
         )
     if not _access_ok(path):
         raise FSError(

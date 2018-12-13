@@ -664,7 +664,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         if connection["type"].lower() == "tcp":
-            executor = AsyncDaskJobExecutor.connect(
+            executor = await AsyncDaskJobExecutor.connect(
                 scheduler_uri=connection['address'],
                 is_local=connection['isLocal']
             )
@@ -709,6 +709,8 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
     async def get(self):
         executor = self.data.get_executor()
         path = self.request.arguments['path']
+        assert len(path) == 1
+        path = path[0].decode("utf8")
         try:
             listing = await executor.run_function(get_fs_listing, path)
             msg = Message(self.data).directory_listing(
@@ -719,7 +721,7 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
             msg = Message(self.data).browse_failed(
                 path=path,
                 code=e.code,
-                msg=e.msg,
+                msg=str(e),
                 alternative=e.alternative,
             )
             self.write(msg)

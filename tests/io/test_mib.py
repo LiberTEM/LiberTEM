@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import numpy as np
 import pytest
@@ -51,7 +52,6 @@ def test_pickle_doesnt_pickle_headers(default_mib):
     """
     warning, testing an implementation detail here, but useful to see if it actually works
     """
-    import pickle
     pickled = pickle.dumps(default_mib)
     assert len(default_mib._headers) > 0
     reloaded = pickle.loads(pickled)

@@ -1,7 +1,10 @@
 import functools
+import logging
+
 import tornado.util
 from dask import distributed as dd
 from distributed.asyncio import AioClient
+
 from .base import JobExecutor, AsyncJobExecutor, JobCancelledError
 
 
@@ -11,6 +14,9 @@ from .base import JobExecutor, AsyncJobExecutor, JobCancelledError
 # error message: "RuntimeError: Non-thread-safe operation invoked on an event loop
 # other than the current one"
 # related: debugging via env var PYTHONASYNCIODEBUG=1
+
+
+log = logging.getLogger(__name__)
 
 
 class CommonDaskMixin(object):
@@ -35,12 +41,18 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         self._futures = {}
 
     async def close(self):
-        await self.client.close()
-        if self.is_local:
-            try:
-                self.client.cluster.close(timeout=1)
-            except tornado.util.TimeoutError:
-                pass
+        try:
+            if self.client is None:
+                log.error("could not close dask executor, client is None")
+                return
+            await self.client.close()
+            if self.is_local:
+                try:
+                    self.client.cluster.close(timeout=1)
+                except tornado.util.TimeoutError:
+                    pass
+        except Exception:
+            log.exception("could not close dask executor")
 
     async def run_job(self, job):
         futures = self._get_futures(job)
@@ -56,7 +68,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         run a callable `fn`
         """
         future = self.client.submit(functools.partial(fn, *args, **kwargs))
-        return await future
+        return await self.client.gather(future)
 
     async def cancel_job(self, job):
         if job in self._futures:

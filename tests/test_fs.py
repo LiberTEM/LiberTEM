@@ -1,9 +1,10 @@
 import os
 import uuid
+import pickle
 
 import pytest
 
-from libertem.io.fs import _get_alt_path
+from libertem.io.fs import _get_alt_path, FSError
 
 
 @pytest.mark.skipif(os.name != 'nt',
@@ -24,3 +25,9 @@ def test_doesnt_exist_posix():
 
     alt = str(_get_alt_path(path))
     assert alt == "/"
+
+
+def test_pickle_fserror():
+    e = FSError("wat", code="WAT", alternative="/wat/")
+    pickled = pickle.dumps(e)
+    pickle.loads(pickled)

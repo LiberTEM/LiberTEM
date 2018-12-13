@@ -457,6 +457,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             executor = self.data.get_executor()
             ds = await executor.run_function(dataset.load,
                                              filetype=params["type"], **dataset_params)
+            await executor.run_function(ds.initialize)
             await executor.run_function(ds.check_valid)
             self.data.register_dataset(
                 uuid=uuid,

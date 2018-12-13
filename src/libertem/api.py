@@ -62,6 +62,7 @@ class Context:
         """
         # delegate to libertem.io.dataset.load:
         ds = self.executor.run_function(load, filetype, *args, **kwargs)
+        self.executor.run_function(ds.initialize)
         self.executor.run_function(ds.check_valid)
         return ds
 

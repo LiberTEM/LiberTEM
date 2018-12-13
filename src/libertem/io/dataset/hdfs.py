@@ -1,13 +1,11 @@
 import os
 import json
 import socket
-import operator
-import functools
 
 import numpy as np
 import hdfs3
 
-from libertem.common.slice import Slice
+from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException
 
 
@@ -18,10 +16,13 @@ class BinaryHDFSDataSet(DataSet):
         self.host = host
         self.port = port
         self._fs = self.get_fs()
-        self.check_valid()
-        self._load()
         self.tileshape = tileshape
-        self.framesize = functools.reduce(operator.mul, tuple(self._index['shape'][-2:]))
+        self._sig_dims = 2  # FIXME: need to put this into the json metadata!
+
+    def initialize(self):
+        with self._fs.open(self.index_path) as f:
+            self._index = json.load(f)
+        assert self._index['mode'] == 'rect', 'unsupported mode: %s' % self._index['mode']
 
     def get_fs(self):
         # TODO: maybe this needs to be a context manager, too, so we can do:
@@ -35,23 +36,22 @@ class BinaryHDFSDataSet(DataSet):
             }
         )
 
-    def _load(self):
-        with self._fs.open(self.index_path) as f:
-            self._index = json.load(f)
-        assert self._index['mode'] == 'rect', 'unsupported mode: %s' % self._index['mode']
-
     @property
     def dtype(self):
         return self._index['dtype']
 
     @property
+    def shape(self):
+        return Shape(self._index['shape'], sig_dims=self._sig_dims)
+
+    @property
     def raw_shape(self):
-        return self._index['shape']
+        # FIXME: need to distinguish shape/raw_shape in json metadata
+        return Shape(self._index['shape'], sig_dims=self._sig_dims)
 
     def check_valid(self):
         # TODO: maybe later relax the validity requirements to reduce load
         try:
-            self._load()
             for partition in self._index['partitions']:
                 path = os.path.join(self.dirname, partition['filename'])
                 with self.get_fs().open(path, "rb"):

@@ -26,6 +26,9 @@ class RawFileDataSet(DataSet):
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
         return f[ds_slice.get()]  # crop off the two extra rows
 
+    def initialize(self):
+        pass
+
     @property
     def dtype(self):
         return self._dtype

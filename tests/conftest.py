@@ -47,6 +47,8 @@ def empty_hdf5(tmpdir_factory):
 
 @pytest.fixture
 def hdf5_ds_1(hdf5):
-    return H5DataSet(
+    ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16), target_size=512*1024*1024
     )
+    ds.initialize()
+    return ds

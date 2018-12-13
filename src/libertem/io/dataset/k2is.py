@@ -423,6 +423,10 @@ class K2ISDataSet(DataSet):
         # we compensate here by setting a negative _skip_frames value.
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
+        self._files = None
+        self._fileset = None
+
+    def initialize(self):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
 

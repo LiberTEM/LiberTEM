@@ -19,7 +19,9 @@ pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testda
 @pytest.fixture
 def default_k2is():
     scan_size = (34, 35)
-    return K2ISDataSet(path=K2IS_TESTDATA_PATH, scan_size=scan_size)
+    ds = K2ISDataSet(path=K2IS_TESTDATA_PATH, scan_size=scan_size)
+    ds.initialize()
+    return ds
 
 
 def test_detect():

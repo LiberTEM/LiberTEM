@@ -44,6 +44,10 @@ class BloDataSet(DataSet):
         self._path = path
         self._header = None
         self._endianess = endianess
+        self._shape = None
+
+    def initialize(self):
+        self._read_header()
 
     @classmethod
     def detect_params(cls, path):
@@ -78,7 +82,7 @@ class BloDataSet(DataSet):
     @property
     def header(self):
         if self._header is None:
-            self._read_header()
+            raise RuntimeError("please call load() before using the dataset")
         return self._header
 
     def check_valid(self):

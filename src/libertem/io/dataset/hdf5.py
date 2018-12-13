@@ -26,13 +26,19 @@ def _get_datasets(path):
 
 class H5DataSet(DataSet):
     def __init__(self, path, ds_path, tileshape,
-                 target_size=512*1024*1024, min_num_partitions=None):
+                 target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size
-        self.sig_dims = 2  # FIXME!
+        self.sig_dims = sig_dims
         self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
+        self._dtype = None
+
+    def initialize(self):
+        with self.get_h5ds() as h5ds:
+            self._dtype = h5ds.dtype
+            self._raw_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
 
     @classmethod
     def detect_params(cls, path):
@@ -71,13 +77,15 @@ class H5DataSet(DataSet):
 
     @property
     def dtype(self):
-        with self.get_h5ds() as h5ds:
-            return h5ds.dtype
+        if self._dtype is None:
+            raise RuntimeError("please call initialize")
+        return self._dtype
 
     @property
     def raw_shape(self):
-        with self.get_h5ds() as h5ds:
-            return Shape(h5ds.shape, sig_dims=self.sig_dims)
+        if self._raw_shape is None:
+            raise RuntimeError("please call initialize")
+        return self._raw_shape
 
     def check_valid(self):
         try:
@@ -97,25 +105,24 @@ class H5DataSet(DataSet):
             ]
 
     def get_partitions(self):
-        with self.get_h5ds() as h5ds:
-            ds_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
-            ds_slice = Slice(origin=(0, 0, 0, 0), shape=ds_shape)
-            partition_shape = self.partition_shape(
-                datashape=h5ds.shape,
-                framesize=h5ds[0][0].size,
-                dtype=h5ds.dtype,
-                target_size=self.target_size,
-                min_num_partitions=self.min_num_partitions,
+        ds_shape = Shape(self.raw_shape, sig_dims=self.sig_dims)
+        ds_slice = Slice(origin=(0, 0, 0, 0), shape=ds_shape)
+        dtype = self.dtype
+        partition_shape = self.partition_shape(
+            datashape=self.raw_shape,
+            framesize=self.raw_shape.sig.size,
+            dtype=dtype,
+            target_size=self.target_size,
+            min_num_partitions=self.min_num_partitions,
+        )
+        for pslice in ds_slice.subslices(partition_shape):
+            # TODO: where should the tileshape be set? let the user choose for now
+            yield H5Partition(
+                tileshape=self.tileshape,
+                dataset=self,
+                dtype=dtype,
+                partition_slice=pslice,
             )
-            dtype = h5ds.dtype
-            for pslice in ds_slice.subslices(partition_shape):
-                # TODO: where should the tileshape be set? let the user choose for now
-                yield H5Partition(
-                    tileshape=self.tileshape,
-                    dataset=self,
-                    dtype=dtype,
-                    partition_slice=pslice,
-                )
 
     def __repr__(self):
         return "<H5DataSet of %s shape=%s>" % (self.dtype, self.shape)

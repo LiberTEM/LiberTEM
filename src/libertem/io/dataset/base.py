@@ -8,6 +8,12 @@ class DataSetException(Exception):
 
 
 class DataSet(object):
+    def initialize(self):
+        """
+        pre-load metadata. this will be executed on a worker node
+        """
+        raise NotImplementedError()
+
     def get_partitions(self):
         """
         Return a generator over all Partitions in this DataSet

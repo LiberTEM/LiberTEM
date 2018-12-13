@@ -79,12 +79,12 @@ class Message(object):
             "config": config,
         }
 
-    def create_dataset(self, dataset):
+    def create_dataset(self, dataset, details):
         return {
             "status": "ok",
             "messageType": "CREATE_DATASET",
             "dataset": dataset,
-            "details": self.data.serialize_dataset(dataset),
+            "details": details,
         }
 
     def create_dataset_error(self, dataset, msg):
@@ -462,7 +462,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 dataset=ds,
                 params=request_data['dataset'],
             )
-            msg = Message(self.data).create_dataset(dataset=uuid)
+            details = await self.data.serialize_dataset(dataset_id=uuid)
+            msg = Message(self.data).create_dataset(dataset=uuid, details=details)
             log_message(msg)
             self.write(msg)
             self.event_registry.broadcast_event(msg)
@@ -607,20 +608,22 @@ class SharedData(object):
             for job_id in self.jobs.keys()
         ]
 
-    def serialize_dataset(self, dataset_id):
+    async def serialize_dataset(self, dataset_id):
+        executor = self.get_executor()
         dataset = self.datasets[dataset_id]
+        diag = await executor.run_function(lambda: dataset["dataset"].diagnostics)
         return {
             "id": dataset_id,
             "params": {
                 **dataset["params"]["params"],
                 "shape": tuple(dataset["dataset"].shape),
             },
-            "diagnostics": dataset["dataset"].diagnostics,
+            "diagnostics": diag,
         }
 
-    def serialize_datasets(self):
+    async def serialize_datasets(self):
         return [
-            self.serialize_dataset(dataset_id)
+            await self.serialize_dataset(dataset_id)
             for dataset_id in self.datasets.keys()
         ]
 
@@ -680,9 +683,10 @@ class ConnectHandler(tornado.web.RequestHandler):
             )
         await self.data.set_executor(executor, request_data)
         await self.data.verify_datasets()
+        datasets = await self.data.serialize_datasets()
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
-            datasets=self.data.serialize_datasets(),
+            datasets=datasets,
         )
         log_message(msg)
         self.event_registry.broadcast_event(msg)

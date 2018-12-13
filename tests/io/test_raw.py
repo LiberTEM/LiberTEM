@@ -16,13 +16,15 @@ def default_raw(tmpdir_factory):
     data = np.random.choice([0, 1], (16, 16, 128, 128)).astype("float32")
     data.tofile(str(filename))
     del data
-    yield RawFileDataSet(
+    ds = RawFileDataSet(
         path=str(filename),
         scan_size=(16, 16),
         dtype="float32",
         detector_size_raw=(128, 128),
         crop_detector_to=(128, 128),
     )
+    ds = ds.initialize()
+    yield ds
 
 
 def test_simple_open(default_raw):

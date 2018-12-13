@@ -23,6 +23,7 @@ from libertem.job.masks import ApplyMasksJob
 # Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
 multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
 
+
 async def background_task():
     # this loop exits when Task.cancel() is called
     while True:
@@ -35,7 +36,8 @@ def get_result_image(job):
     empty = np.zeros(job.get_result_shape())
     image = DM.CreateImage(empty)
     return image
-    
+
+
 def get_result_mask_image(job):
     buffer = np.zeros(job.get_result_shape())
     image = DM.CreateImage(buffer[0])
@@ -51,19 +53,23 @@ async def run(executor, job, out):
         yield out
     print("Run finished")
 
+
 def mask_factory_from_rect(rect, mask_shape):
     (t, l, b, r) = rect
+    (y, x) = mask_shape
     t = int(max(0, t))
     l = int(max(0, l))
-    b = int(min(144, b))
-    r = int(min(144, r))
-    
+    b = int(min(y, b))
+    r = int(min(x, r))
+
+
     def mask():
         m = np.zeros(mask_shape)
         m[int(t):int(b), int(l):int(r)] = 1
         return m
         
     return mask
+
 
 async def async_main(address):
     # start background task: (can be replaced with asyncio.create_task(coro) in Python 3.7)
@@ -79,14 +85,14 @@ async def async_main(address):
     )
 
     sum_job = SumFramesJob(dataset=ds)
-
+    (y, x) = sum_job.get_result_shape()
     sum_image = get_result_image(sum_job)
     sum_buffer = sum_image.GetNumArray()
     
     doc = DM.NewImageDocument("test document")
     r = doc.GetRootComponent()
     d = doc.AddImageDisplay(sum_image, 1)
-    c = d.AddNewComponent(5, 60, 60, 84, 84)
+    c = d.AddNewComponent(5, int(y * 0.4), int(x * 0.4), int(y * 0.6), int(x * 0.6))
     c.SetForegroundColor(1, 0, 0)
 
     doc.Show()
@@ -114,7 +120,9 @@ async def async_main(address):
         counter += 1
         result_buffer[:] = 0
         async for part_result in run(executor, rect_job, result_buffer):
-            np.copyto(result_image_buffer, 
+            np.copyto(result_image_buffer,
+                # for some reason, the buffer of the image has a different shape than the original
+                # numpy array to create the image
                 result_buffer[0].reshape(result_image_buffer.shape), 
                 casting='unsafe')
             result_image.UpdateImage()

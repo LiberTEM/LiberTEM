@@ -6,6 +6,7 @@ import math
 import mmap
 import logging
 import itertools
+from contextlib import contextmanager
 
 import numpy as np
 import numba
@@ -153,18 +154,31 @@ class K2FileSet:
 class Sector:
     def __init__(self, fname, idx, initial_offset=0):
         self.fname = fname
-        self.f = open(fname, "rb")
         self.idx = idx
-        self.filesize = os.fstat(self.f.fileno()).st_size
+        self.filesize = os.stat(fname).st_size
         self.first_block_offset = initial_offset
         # FIXME: hardcoded sig_dims
         self.sig_dims = 2
+
+    def open(self):
+        self.f = open(self.fname, "rb")
+
+    def close(self):
+        self.f.close()
+        self.f = None
 
     def seek(self, pos):
         self.f.seek(pos)
 
     def read(self, size):
         return self.f.read(size)
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def get_slice(self, start, stop):
         """
@@ -301,9 +315,6 @@ class Sector:
 
         return _rec(0, upper)
 
-    def close(self):
-        self.f.close()
-
     def __repr__(self):
         return "<Sector %d>" % self.idx
 
@@ -345,8 +356,9 @@ class DataBlock:
     @property
     def header(self):
         if self._header_raw is None:
-            self.sector.seek(self.offset)
-            self._header_raw = np.fromfile(self.sector.f, dtype=self.header_dtype, count=1)
+            with self.sector:
+                self.sector.seek(self.offset)
+                self._header_raw = np.fromfile(self.sector.f, dtype=self.header_dtype, count=1)
         if self._header is not None:
             return self._header
         header = {}
@@ -364,8 +376,9 @@ class DataBlock:
     @property
     def pixel_data_raw(self):
         if self._data_raw is None:
-            self.sector.seek(self.offset + HEADER_SIZE)
-            self._data_raw = self.sector.read(BLOCK_SIZE - HEADER_SIZE)
+            with self.sector:
+                self.sector.seek(self.offset + HEADER_SIZE)
+                self._data_raw = self.sector.read(BLOCK_SIZE - HEADER_SIZE)
         return self._data_raw
 
     def readinto(self, out):
@@ -411,6 +424,7 @@ class K2ISDataSet(DataSet):
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
         self._files = self._get_files()
+        self._fileset = self._get_fileset()
 
     @property
     def dtype(self):
@@ -471,9 +485,9 @@ class K2ISDataSet(DataSet):
 
     def get_diagnostics(self):
         p = next(self.get_partitions())
-        sector = p._get_sector()
-        est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
-        first_block = next(sector.get_blocks())
+        with p._get_sector() as sector:
+            est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
+            first_block = next(sector.get_blocks())
         fs_nosync = self._get_fileset(with_sync=False)
         sector_nosync = fs_nosync.sectors[0]
         first_block_nosync = next(sector_nosync.get_blocks())
@@ -527,39 +541,36 @@ class K2ISDataSet(DataSet):
         """
         returns the number of partitions each file (sector) should be split into
         """
-        sector0_fname = self._files[0]
-        stat = os.stat(sector0_fname)
-        size = stat.st_size
+        sector0 = self._fileset.sectors[0]
+        size = sector0.filesize
         # let's try to aim for 512MB per partition
         res = max(1, size // (512*1024*1024))
         return res
 
     def get_partitions(self):
-        fs = self._get_fileset()
+        fs = self._fileset
         num_frames = self.shape.nav.size
         f_per_part = num_frames // self._get_partitions_per_file()
-        try:
-            for s in fs.sectors:
-                c0 = itertools.count(start=0, step=f_per_part)
-                c1 = itertools.count(start=f_per_part, step=f_per_part)
-                for (start, stop) in zip(c0, c1):
-                    if start >= num_frames:
-                        break
-                    stop = min(stop, num_frames)
-                    yield K2ISPartition(
-                        dataset=self,
-                        dtype=self.dtype,
-                        partition_slice=s.get_slice(
-                            start=start, stop=stop
-                        ),
-                        path=s.fname,
-                        index=s.idx,
-                        offset=s.first_block_offset,
-                        start_frame=start,
-                        num_frames=stop - start,
-                    )
-        finally:
-            fs.close()
+
+        for sector in fs.sectors:
+            c0 = itertools.count(start=0, step=f_per_part)
+            c1 = itertools.count(start=f_per_part, step=f_per_part)
+            for (start, stop) in zip(c0, c1):
+                if start >= num_frames:
+                    break
+                stop = min(stop, num_frames)
+                yield K2ISPartition(
+                    dataset=self,
+                    dtype=self.dtype,
+                    partition_slice=sector.get_slice(
+                        start=start, stop=stop
+                    ),
+                    path=sector.fname,
+                    index=sector.idx,
+                    offset=sector.first_block_offset,
+                    start_frame=start,
+                    num_frames=stop - start,
+                )
 
     def __repr__(self):
         return "<K2ISDataSet for pattern=%s scan_size=%s>" % (
@@ -578,12 +589,14 @@ class K2ISPartition(Partition):
         self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
+    @contextmanager
     def _get_sector(self):
-        return Sector(
+        with Sector(
             fname=self._path,
             idx=self._index,
             initial_offset=self._offset,
-        )
+        ) as sector:
+            yield sector
 
     def get_tiles(self, crop_to=None, strat=None):
         if strat is None:
@@ -596,24 +609,19 @@ class K2ISPartition(Partition):
             raise DataSetException("unknown strategy")
 
     def _read_stacked(self, crop_to=None):
-        s = self._get_sector()
-
-        try:
+        with self._get_sector() as s:
             yield from s.read_stacked(
                 start_at_frame=self._start_frame,
                 num_frames=self._num_frames,
                 crop_to=crop_to
             )
-        finally:
-            s.close()
 
     def _get_tiles_tile_per_datablock(self):
         """
         yield one tile per underlying data block
         """
-        s = self._get_sector()
 
-        try:
+        with self._get_sector() as s:
             all_blocks = s.get_blocks()
             blocks_to_read = (
                 BLOCKS_PER_SECTOR_PER_FRAME * self.slice.shape.nav.size,
@@ -635,10 +643,8 @@ class K2ISPartition(Partition):
                     data=buf,
                     tile_slice=tile_slice
                 )
-        finally:
-            s.close()
 
     def __repr__(self):
         return "<K2ISPartition: sector %d, start_frame=%d, num_frames=%d>" % (
-            self._get_sector().idx, self._start_frame, self._num_frames,
+            self._index, self._start_frame, self._num_frames,
         )

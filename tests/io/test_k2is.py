@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import numpy as np
 import pytest
@@ -39,8 +40,8 @@ def test_check_valid(default_k2is):
 
 def test_sync(default_k2is):
     p = next(default_k2is.get_partitions())
-    sector = p._get_sector()
-    first_block = next(sector.get_blocks())
+    with p._get_sector() as sector:
+        first_block = next(sector.get_blocks())
     assert first_block.header['frame_id'] == 60
 
 
@@ -100,3 +101,11 @@ def test_pick_analysis(default_k2is, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_k2is, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
+
+
+def test_dataset_is_picklable(default_k2is):
+    pickled = pickle.dumps(default_k2is)
+    pickle.loads(pickled)
+
+    # let's keep the pickled dataset size small-ish:
+    assert len(pickled) < 2 * 1024

@@ -58,6 +58,14 @@ def test_pickle_doesnt_pickle_headers(default_mib):
     assert len(reloaded._headers) == 0
 
 
+def test_pickle_is_small(default_mib):
+    pickled = pickle.dumps(default_mib)
+    pickle.loads(pickled)
+
+    # let's keep the pickled dataset size small-ish:
+    assert len(pickled) < 2 * 1024
+
+
 def test_apply_mask_on_mib_job(default_mib, lt_ctx):
     mask = np.ones((256, 256))
 

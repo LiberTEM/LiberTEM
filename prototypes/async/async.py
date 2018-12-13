@@ -18,11 +18,6 @@ from libertem.executor.dask import AsyncDaskJobExecutor, DaskJobExecutor
 from libertem.job.sum import SumFramesJob
 
 
-# Since the interpreter is embedded, we have to set the Python executable.
-# Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
-# multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
-
-
 async def background_task():
     # this loop exits when Task.cancel() is called
     while True:

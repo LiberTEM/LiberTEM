@@ -67,7 +67,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         """
         run a callable `fn`
         """
-        future = self.client.submit(functools.partial(fn, *args, **kwargs))
+        future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
         return await self.client.gather(future)
 
     async def cancel_job(self, job):
@@ -121,7 +121,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         """
         run a callable `fn`
         """
-        future = self.client.submit(functools.partial(fn, *args, **kwargs))
+        future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
         return future.result()
 
     def close(self):

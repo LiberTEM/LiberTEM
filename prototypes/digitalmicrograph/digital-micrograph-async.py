@@ -2,9 +2,7 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
-from functools import partial
 import asyncio
-import time
 import sys
 import multiprocessing
 
@@ -12,9 +10,8 @@ import numpy as np
 import psutil
 import dask.distributed as dd
 
-from libertem import api
 from libertem.io.dataset import load
-from libertem.executor.dask import AsyncDaskJobExecutor, DaskJobExecutor
+from libertem.executor.dask import AsyncDaskJobExecutor
 from libertem.job.sum import SumFramesJob
 from libertem.job.masks import ApplyMasksJob
 
@@ -28,7 +25,6 @@ async def background_task():
     # this loop exits when Task.cancel() is called
     while True:
         DM.DoEvents()
-        # print("DoEvents")
         await asyncio.sleep(0.1)
 
 
@@ -45,13 +41,14 @@ def get_result_mask_image(job):
 
 
 async def run(executor, job, out):
-    # print("run entered")
     async for tiles in executor.run_job(job):
-        # print("Tiles")
         for tile in tiles:
+            # This works with square detectors only
+            # in current alpha version of DM
+            # due to a bug
+            # Will be fixed in final DM release
             tile.copy_to_result(out)
         yield out
-    print("Run finished")
 
 
 def mask_factory_from_rect(rect, mask_shape):
@@ -62,80 +59,81 @@ def mask_factory_from_rect(rect, mask_shape):
     b = int(min(y, b))
     r = int(min(x, r))
 
-
     def mask():
         m = np.zeros(mask_shape)
         m[int(t):int(b), int(l):int(r)] = 1
         return m
-        
+
     return mask
 
 
 async def async_main(address):
-    # start background task: (can be replaced with asyncio.create_task(coro) in Python 3.7)
+
     GUI_events = asyncio.ensure_future(background_task())
-    
+
     executor = await AsyncDaskJobExecutor.connect(address)
 
-    #ds = load(
-    #    "blo",
-    #    path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-    #    "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
-    #    tileshape=(1,8,144,144)
-    #)
+    # Just an alternative dataset that works better on a slower machine
 
+    # ds = load(
+    #     "blo",
+    #     path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
+    #     "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
+    #     tileshape=(1,8,144,144)
+    # )
+
+    # For a remote cluster this has to be the path on the worker nodes, not the client
     ds = load(
         "raw",
-        path = '/data/users/weber/scan_11_x256_y256.raw',
-        dtype = "float32",
-        scan_size = (256, 256),
-        detector_size_raw = (130, 128),
-        crop_detector_to = (128, 128)
+        path='/data/users/weber/scan_11_x256_y256.raw',
+        dtype="float32",
+        scan_size=(256, 256),
+        detector_size_raw=(130, 128),
+        crop_detector_to=(128, 128)
     )
 
     sum_job = SumFramesJob(dataset=ds)
     (y, x) = sum_job.get_result_shape()
     sum_image = get_result_image(sum_job)
     sum_buffer = sum_image.GetNumArray()
-    
+
     doc = DM.NewImageDocument("test document")
-    r = doc.GetRootComponent()
     d = doc.AddImageDisplay(sum_image, 1)
     c = d.AddNewComponent(5, int(y * 0.4), int(x * 0.4), int(y * 0.6), int(x * 0.6))
     c.SetForegroundColor(1, 0, 0)
 
     doc.Show()
 
-    async for part_result in run(executor, sum_job, sum_buffer):
-        # print("Part result")
+    async for _ in run(executor, sum_job, sum_buffer):
         sum_image.UpdateImage()
-        
+
     rect = c.GetRect()
-    
+
     mask = mask_factory_from_rect(rect, tuple(ds.shape.sig))
 
     rect_job = ApplyMasksJob(dataset=ds, mask_factories=[mask])
-    
+
     result_buffer = np.zeros(rect_job.get_result_shape())
     result_image = DM.CreateImage(result_buffer[0])
 
     result_image.ShowImage()
 
     result_image_buffer = result_image.GetNumArray()
-        
-    counter = 0
 
+    # For now we do a limited number of runs
+    # FIXME implement a proper way to exit the loop
+    counter = 0
     while counter < 20:
         counter += 1
         result_buffer[:] = 0
-        async for part_result in run(executor, rect_job, result_buffer):
+        async for _ in run(executor, rect_job, result_buffer):
             np.copyto(result_image_buffer,
-                # for some reason, the buffer of the image has a different shape than the original
-                # numpy array to create the image
-                result_buffer[0].reshape(result_image_buffer.shape), 
+                # The reshape is a workaround for a bug in the current alpha version of DM
+                # This will not be required in the final DM release
+                result_buffer[0].reshape(result_image_buffer.shape),
                 casting='unsafe')
             result_image.UpdateImage()
-        
+
         while True:
             newrect = c.GetRect()
             if newrect != rect:
@@ -149,26 +147,36 @@ async def async_main(address):
 
 
 def main():
-    cores = psutil.cpu_count(logical=False)
 
-    if cores is None:
-        cores = 2
-    cluster_kwargs = {
-        "threads_per_worker": 1,
-        "n_workers": cores
-    }
+    # Code to start local cluster
 
-    #cluster = dd.LocalCluster(**cluster_kwargs)
-    loop = asyncio.get_event_loop()
+    # cores = psutil.cpu_count(logical=False)
+
+    # if cores is None:
+    #     cores = 2
+    # cluster_kwargs = {
+    #     "threads_per_worker": 1,
+    #     "n_workers": cores
+    # }
+
+    # cluster = dd.LocalCluster(**cluster_kwargs)
+    # address = cluster.scheduler_address
+
+    # use external cluster
     address = 'tcp://localhost:31313'
+
+    loop = asyncio.get_event_loop()
     try:
-        # (can be replaced with asyncio.run(coro) in Python 3.7)
         loop.run_until_complete(async_main(address))
-        
     finally:
-        # loop.close()
-        print("Close cluster")
-        #cluster.close()
+        # We CAN'T close the loop here because the interpreter
+        # has to continue running in DM
+        # Do NOT call loop.close()!
+
+        # Required for local cluster
+        # cluster.close()
+
+        print("Exit processing loop")
 
 
 if __name__ == "__main__":

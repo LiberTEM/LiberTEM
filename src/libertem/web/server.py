@@ -518,7 +518,8 @@ class SharedData(object):
             "revision": libertem.revision,
             "localCores": self.get_local_cores(),
             "cwd": os.getcwd(),
-            "separator": os.sep,
+            # '/' works on Windows, too.
+            "separator": '/'
         }
 
     def get_executor(self):

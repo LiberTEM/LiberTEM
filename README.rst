@@ -66,3 +66,8 @@ The short version:
     (libertem) $ pip install libertem[torch]
 
 Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!
+
+License
+-------
+
+LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT license, please see LICENSE files for details.

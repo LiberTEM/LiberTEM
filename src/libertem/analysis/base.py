@@ -1,4 +1,6 @@
-from libertem.viz import encode_image
+import numpy as np
+
+from libertem.viz import encode_image, visualize_simple
 
 
 class AnalysisResult(object):
@@ -36,6 +38,9 @@ class AnalysisResultSet(object):
         for result in self.results:
             if result.key == k:
                 return result
+        raise AttributeError("result with key '%s' not found, have: %s" % (
+            k, ", ".join([r.key for r in self.results])
+        ))
 
     def __getitem__(self, k):
         return self.results[k]
@@ -71,3 +76,30 @@ class BaseAnalysis(object):
             a Job instance
         """
         raise NotImplementedError()
+
+    def get_complex_results(self, job_result, key_prefix, title, desc):
+        magn = np.abs(job_result)
+        return [
+            # for compatability, the magnitude has key=key_prefix
+            AnalysisResult(
+                raw_data=magn,
+                visualized=visualize_simple(magn),
+                key=key_prefix,
+                title="%s [magn]" % title,
+                desc="%s [magn]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result.real,
+                visualized=visualize_simple(job_result.real),
+                key="%s_real" % key_prefix,
+                title="%s [real]" % title,
+                desc="%s [real]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result.imag,
+                visualized=visualize_simple(job_result.imag),
+                key="%s_imag" % key_prefix,
+                title="%s [imag]" % title,
+                desc="%s [imag]" % desc,
+            ),
+        ]

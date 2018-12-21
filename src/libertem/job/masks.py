@@ -152,9 +152,13 @@ class ApplyMasksTask(Task):
         masks : MaskContainer
             the masks to apply to the partition
         """
+        super().__init__(*args, **kwargs)
         self.masks = masks
         self.use_torch = use_torch
-        super().__init__(*args, **kwargs)
+        if torch is None:
+            self.use_torch = False
+        if np.dtype(self.partition.dtype).kind == 'c':
+            self.use_torch = False
 
     def reshaped_data(self, data, dest_slice):
         """
@@ -171,19 +175,23 @@ class ApplyMasksTask(Task):
         )
         return deinterleaved.reshape((num_masks,) + tuple(dest_slice.shape.nav))
 
+    # @profile
     def __call__(self):
         num_masks = len(self.masks)
-        part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype="float32")
+        dest_dtype = np.dtype(self.partition.dtype)
+        if dest_dtype.kind not in ('c', 'f'):
+            dest_dtype = 'float32'
+        part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
             data = data_tile.flat_data
-            if data.dtype.kind == 'u':
+            if data.dtype.kind not in ('c', 'f'):
                 data = data.astype("float32")
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
                 # The sparse matrix has to be the left-hand side, for that
                 # reason we transpose before and after multiplication.
                 result = masks.T.dot(data.T).T
-            elif self.use_torch and torch is not None:
+            elif self.use_torch:
                 result = torch.mm(
                     torch.from_numpy(data),
                     torch.from_numpy(masks),

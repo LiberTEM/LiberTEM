@@ -8,7 +8,7 @@ class RawFileDataSet(DataSet):
     def __init__(self, path, scan_size, dtype, detector_size_raw, crop_detector_to, tileshape=None):
         self._path = path
         self._scan_size = tuple(scan_size)
-        self._dtype = dtype
+        self._dtype = np.dtype(dtype)
         assert len(detector_size_raw) == 2
         self._detector_size_raw = tuple(detector_size_raw)  # example: (130, 128)
         self._detector_size = tuple(crop_detector_to)                # example: (128, 128)

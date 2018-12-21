@@ -48,3 +48,7 @@ class Task(object):
 
     def __call__(self):
         raise NotImplementedError()
+
+
+class ResultTile(object):
+    pass  # TODO

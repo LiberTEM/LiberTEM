@@ -17,10 +17,13 @@ class SumFramesTask(Task):
         """
         sum frames over navigation axes
         """
-        part = np.zeros(self.partition.dataset.raw_shape.sig, dtype="float32")
+        dest_dtype = np.dtype(self.partition.dtype)
+        if dest_dtype.kind not in ('c', 'f'):
+            dest_dtype = 'float32'
+        part = np.zeros(self.partition.dataset.raw_shape.sig, dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
             data = data_tile.data
-            if data.dtype.kind == 'u':
+            if data.dtype.kind not in ('c', 'f'):
                 data = data.astype("float32")
             # sum over all navigation axes; for 2d this would be (0, 1), for 1d (0,) etc.:
             axis = tuple(range(data_tile.tile_slice.shape.nav.dims))

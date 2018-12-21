@@ -62,8 +62,14 @@ class PickFrameAnalysis(BaseAnalysis):
         shape = tuple(self.dataset.shape.sig)
         data = job_results.reshape(shape)
 
+        if data.dtype.kind == 'c':
+            # FIXME: maybe frame picking should also have multiple channels? may need UI changes
+            visualized = visualize_simple(np.abs(data))
+        else:
+            visualized = visualize_simple(data)
+
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
+            AnalysisResult(raw_data=data, visualized=visualized,
                            key="intensity", title="intensity",
                            desc="the frame at %s" % (coords,)),
         ])

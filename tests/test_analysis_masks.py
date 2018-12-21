@@ -333,3 +333,44 @@ def test_masks_hyperspectral(lt_ctx):
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
+
+
+def test_numerics(lt_ctx):
+    dtype = 'float32'
+    # Highest expected detector resolution
+    RESOLUTION = 4096
+    # Highest expected detector dynamic range
+    RANGE = 1e6
+    # default value for all cells
+    # The test fails for 1.1 using float32!
+    VAL = 1.0
+
+    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=dtype)
+    data[0, 0, 0, 0] += VAL * RANGE
+    dataset = MemoryDataSet(
+        data=data,
+        effective_shape=(2, 2, RESOLUTION, RESOLUTION),
+        tileshape=(1, 2, RESOLUTION, RESOLUTION),
+        partition_shape=(1, 2, RESOLUTION, RESOLUTION),
+        sig_dims=2,
+    )
+    mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=dtype)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0]
+    )
+
+    results = lt_ctx.run(analysis)    
+    expected = np.array([[
+        [VAL*RESOLUTION**2 + VAL*RANGE, VAL*RESOLUTION**2],
+        [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
+    ]])
+    naive = _naive_mask_apply([mask0], data)
+
+    # print(expected)
+    # print(naive)
+    # print(results.mask_0.raw_data)
+
+    assert np.allclose(expected, naive)
+    assert np.allclose(expected[0], results.mask_0.raw_data)
+
+

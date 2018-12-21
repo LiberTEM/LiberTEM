@@ -1,6 +1,6 @@
 import numpy as np
 
-from libertem.viz import encode_image, visualize_simple
+from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
 
 
 class AnalysisResult(object):
@@ -79,6 +79,8 @@ class BaseAnalysis(object):
 
     def get_complex_results(self, job_result, key_prefix, title, desc):
         magn = np.abs(job_result)
+        angle = np.angle(job_result)
+        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((job_result.imag, job_result.real))
         return [
             # for compatability, the magnitude has key=key_prefix
             AnalysisResult(
@@ -101,5 +103,19 @@ class BaseAnalysis(object):
                 key="%s_imag" % key_prefix,
                 title="%s [imag]" % title,
                 desc="%s [imag]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=angle,
+                visualized=visualize_simple(angle),
+                key="%s_angle" % key_prefix,
+                title="%s [angle]" % title,
+                desc="%s [angle]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result,
+                visualized=wheel,
+                key="%s_complex" % key_prefix,
+                title="%s [complex]" % title,
+                desc="%s [complex]" % desc,
             ),
         ]

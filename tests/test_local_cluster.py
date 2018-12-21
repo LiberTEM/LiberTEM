@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from libertem import api
-from utils import _naive_mask_apply
+from utils import _naive_mask_apply, _mk_random
 
 
 @pytest.mark.skipif('LT_RUN_FUNCTIONAL' not in os.environ, reason="Takes a long time")

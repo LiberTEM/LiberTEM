@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import scipy.sparse as sp
 from libertem.masks import to_dense, to_sparse
-from utils import MemoryDataSet, _naive_mask_apply
+from utils import MemoryDataSet, _naive_mask_apply, _mk_random
 
 
 def _run_mask_test_program(lt_ctx, dataset, mask, expected):
@@ -35,8 +35,8 @@ def _run_mask_test_program(lt_ctx, dataset, mask, expected):
 
 @pytest.mark.slow
 def test_weird_partition_shapes_1_slow(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 2, 2))
@@ -49,8 +49,8 @@ def test_weird_partition_shapes_1_slow(lt_ctx):
 
 
 def test_weird_partition_shapes_1_fast(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 8, 16, 16), partition_shape=(16, 16, 8, 8))
@@ -63,8 +63,8 @@ def test_weird_partition_shapes_1_fast(lt_ctx):
 
 
 def test_normal_partition_shape(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(1, 8, 16, 16))
@@ -73,8 +73,8 @@ def test_normal_partition_shape(lt_ctx):
 
 
 def test_single_frame_tiles(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(16, 16, 16, 16))
@@ -84,8 +84,8 @@ def test_single_frame_tiles(lt_ctx):
 
 @pytest.mark.slow
 def test_subframe_tiles_slow(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -94,8 +94,8 @@ def test_subframe_tiles_slow(lt_ctx):
 
 
 def test_subframe_tiles_fast(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 8, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -104,8 +104,8 @@ def test_subframe_tiles_fast(lt_ctx):
 
 
 def test_4d_tilesize(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -114,8 +114,8 @@ def test_4d_tilesize(lt_ctx):
 
 
 def test_multirow_tileshape(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 16, 16, 16), partition_shape=(16, 16, 16, 16))
@@ -124,8 +124,8 @@ def test_multirow_tileshape(lt_ctx):
 
 
 def test_mask_uint(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16)).astype("uint16")
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask = _mk_random(size=(16, 16)).astype("uint16")
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -135,7 +135,7 @@ def test_mask_uint(lt_ctx):
 
 def test_endian(lt_ctx):
     data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype(">u2")
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -144,9 +144,9 @@ def test_endian(lt_ctx):
 
 
 def test_multi_masks(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
-    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = _mk_random(size=(16, 16))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
     expected = _naive_mask_apply([mask0, mask1], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -166,9 +166,9 @@ def test_multi_masks(lt_ctx):
 
 
 def test_mask_job(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
-    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = _mk_random(size=(16, 16))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
     expected = _naive_mask_apply([mask0, mask1], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -184,9 +184,9 @@ def test_mask_job(lt_ctx):
 
 
 def test_all_sparse_analysis(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
-    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
     expected = _naive_mask_apply([mask0, mask1], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
@@ -206,9 +206,9 @@ def test_all_sparse_analysis(lt_ctx):
 
 
 def test_uses_sparse_all_default(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
-    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
     job = lt_ctx.create_mask_job(
@@ -222,9 +222,9 @@ def test_uses_sparse_all_default(lt_ctx):
 
 
 def test_uses_sparse_mixed_default(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
-    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = _mk_random(size=(16, 16))
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
     job = lt_ctx.create_mask_job(
@@ -237,9 +237,9 @@ def test_uses_sparse_mixed_default(lt_ctx):
 
 
 def test_uses_sparse_true(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
-    mask1 = np.random.choice(a=[0, 1], size=(16, 16))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = _mk_random(size=(16, 16))
+    mask1 = _mk_random(size=(16, 16))
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
     job = lt_ctx.create_mask_job(
@@ -253,9 +253,9 @@ def test_uses_sparse_true(lt_ctx):
 
 
 def test_uses_sparse_false(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype("<u2")
-    mask0 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
-    mask1 = sp.csr_matrix(np.random.choice(a=[0, 1], size=(16, 16)))
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
 
     dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
     job = lt_ctx.create_mask_job(
@@ -268,14 +268,14 @@ def test_uses_sparse_false(lt_ctx):
 
 
 def test_masks_timeseries_2d_frames(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16)).astype("<u2")
+    data = _mk_random(size=(16 * 16, 16, 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
         effective_shape=(16 * 16, 16, 16),
         tileshape=(2, 16, 16),
         partition_shape=(8, 16, 16)
     )
-    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    mask0 = _mk_random(size=(16, 16))
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask0]
     )
@@ -284,7 +284,7 @@ def test_masks_timeseries_2d_frames(lt_ctx):
 
 
 def test_masks_spectrum_linescan(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16 * 16)).astype("<u2")
+    data = _mk_random(size=(16 * 16, 16 * 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
         effective_shape=(16 * 16, 16 * 16),
@@ -292,7 +292,7 @@ def test_masks_spectrum_linescan(lt_ctx):
         partition_shape=(8, 16 * 16),
         sig_dims=1,
     )
-    mask0 = np.random.choice(a=[0, 1], size=(16 * 16,))
+    mask0 = _mk_random(size=(16 * 16, ))
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask0]
     )
@@ -301,7 +301,7 @@ def test_masks_spectrum_linescan(lt_ctx):
 
 
 def test_masks_spectrum(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16 * 16)).astype("<u2")
+    data = _mk_random(size=(16, 16, 16 * 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
         effective_shape=(16, 16, 16 * 16),
@@ -309,7 +309,7 @@ def test_masks_spectrum(lt_ctx):
         partition_shape=(1, 8, 16 * 16),
         sig_dims=1,
     )
-    mask0 = np.random.choice(a=[0, 1], size=(16 * 16,))
+    mask0 = _mk_random(size=(16 * 16, ))
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask0]
     )
@@ -319,7 +319,7 @@ def test_masks_spectrum(lt_ctx):
 
 def test_masks_hyperspectral(lt_ctx):
     # flat navigation dimension to simulate "image stack"-like file formats:
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16, 16)).astype("<u2")
+    data = _mk_random(size=(16 * 16, 16, 16, 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
         effective_shape=(16, 16, 16, 16, 16),
@@ -327,7 +327,7 @@ def test_masks_hyperspectral(lt_ctx):
         partition_shape=(8, 16, 16, 16),
         sig_dims=3,
     )
-    mask0 = np.random.choice(a=[0, 1], size=(16, 16, 16))
+    mask0 = _mk_random(size=(16, 16, 16))
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask0]
     )

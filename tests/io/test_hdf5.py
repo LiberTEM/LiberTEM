@@ -1,10 +1,10 @@
 import numpy as np
 
-from utils import _naive_mask_apply
+from utils import _naive_mask_apply, _mk_random
 
 
 def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
-    mask = np.random.choice(a=[0, 1], size=(16, 16))
+    mask = _mk_random(size=(16, 16))
     with hdf5_ds_1.get_h5ds() as h5ds:
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)

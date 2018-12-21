@@ -8,12 +8,14 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 
+from utils import _mk_random
+
 
 @pytest.fixture(scope='session')
 def default_raw(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-default'
-    data = np.random.choice([0, 1], (16, 16, 128, 128)).astype("float32")
+    data = _mk_random(size=(16, 16, 128, 128), dtype='float32')
     data.tofile(str(filename))
     del data
     ds = RawFileDataSet(

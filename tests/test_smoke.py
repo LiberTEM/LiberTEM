@@ -14,6 +14,7 @@ import libertem.job.sum
 import libertem.web.server
 import libertem.web.cli
 import libertem.api
+import libertem.preload
 
 
 def test_stuff():

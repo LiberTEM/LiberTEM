@@ -342,3 +342,17 @@ def test_masks_complex_ds(lt_ctx, ds_complex):
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
+
+
+def test_masks_complex_mask(lt_ctx, ds_complex):
+    mask0 = np.random.choice(a=[0, 1, 0+1j, (0-1j)], size=(16, 16))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=ds_complex, factories=[lambda: mask0]
+    )
+    expected = _naive_mask_apply([mask0], ds_complex.data)
+    results = lt_ctx.run(analysis)
+    assert results.mask_0_complex.raw_data.shape == (16, 16)
+    assert np.allclose(
+        results.mask_0_complex.raw_data,
+        expected
+    )

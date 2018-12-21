@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-from utils import MemoryDataSet, _naive_mask_apply
+from utils import MemoryDataSet, _naive_mask_apply, _mk_random
 
 
 @pytest.fixture
 def ds_random():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 1, 16, 16),
@@ -53,7 +53,7 @@ def test_ring_1(lt_ctx, ds_random):
 
 
 def test_ring_3d_ds(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),
@@ -96,7 +96,7 @@ def test_point_1(lt_ctx, ds_random):
 
 
 def test_point_3d_ds(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),

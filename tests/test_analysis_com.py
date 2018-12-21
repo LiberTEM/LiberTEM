@@ -2,12 +2,12 @@ import pytest
 import numpy as np
 from scipy.ndimage import measurements
 from libertem import masks
-from utils import MemoryDataSet
+from utils import MemoryDataSet, _mk_random
 
 
 @pytest.fixture
 def ds_w_zero_frame():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     data[0, 0] = np.zeros((16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
@@ -19,7 +19,7 @@ def ds_w_zero_frame():
 
 @pytest.fixture
 def ds_random():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 1, 16, 16),
@@ -85,7 +85,7 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
 
 
 def test_com_fails_with_non_4d_data_1(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),
@@ -98,7 +98,7 @@ def test_com_fails_with_non_4d_data_1(lt_ctx):
 
 
 def test_com_fails_with_non_4d_data_2(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16 * 16))
+    data = _mk_random(size=(16, 16, 16 * 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),

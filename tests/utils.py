@@ -82,3 +82,19 @@ def _naive_mask_apply(masks, data):
                 item = data[i, j].ravel().dot(mask.ravel())
                 res[n, i, j] = item
     return res
+
+
+# This function introduces asymmetries so that errors won't average out so
+# easily with large data sets
+def _mk_random(size, dtype='float32'):
+    dtype = np.dtype(dtype)
+    if dtype.kind == 'c':
+        choice = [0, 1, -1, 0+1j, 0-1j]
+    else:
+        choice = [0, 1]
+    data = np.random.choice(choice, size=size).astype(dtype)
+    coords2 = tuple((np.random.choice(range(c)) for c in size))
+    coords10 = tuple((np.random.choice(range(c)) for c in size))
+    data[coords2] = np.random.choice(choice) * sum(size)
+    data[coords10] = np.random.choice(choice) * 10 * sum(size)
+    return data

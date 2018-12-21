@@ -5,11 +5,11 @@ from libertem.job.raw import PickFrameJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common import Slice, Shape
-from utils import MemoryDataSet
+from utils import MemoryDataSet, _mk_random
 
 
 def test_get_single_frame(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),
@@ -25,7 +25,7 @@ def test_get_single_frame(lt_ctx):
 
 
 def test_get_multiple_frames(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),
@@ -51,7 +51,7 @@ def test_get_multiple_frames(lt_ctx):
 
 
 def test_get_multiple_frames_2():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),
@@ -77,7 +77,7 @@ def test_get_multiple_frames_2():
 
 
 def test_get_multiple_frame_row():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),
@@ -105,7 +105,7 @@ def test_pick_analysis(lt_ctx):
     """
     the other tests cover the pick job, this one uses the analysis
     """
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),
@@ -121,7 +121,7 @@ def test_pick_analysis(lt_ctx):
 
 
 def test_pick_from_3d_ds(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -138,7 +138,7 @@ def test_pick_from_3d_ds(lt_ctx):
 
 
 def test_pick_from_3d_ds_job(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -155,7 +155,7 @@ def test_pick_from_3d_ds_job(lt_ctx):
 
 
 def test_pick_from_3d_ds_job_w_shape(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -172,7 +172,7 @@ def test_pick_from_3d_ds_job_w_shape(lt_ctx):
 
 
 def test_pick_analysis_via_api_1_3d_ds(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -189,7 +189,7 @@ def test_pick_analysis_via_api_1_3d_ds(lt_ctx):
 
 
 def test_pick_analysis_via_api_2_3d_ds(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -206,7 +206,7 @@ def test_pick_analysis_via_api_2_3d_ds(lt_ctx):
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_1(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16 * 16, 16, 16))
+    data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -229,7 +229,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_1(lt_ctx):
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_2(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
@@ -248,7 +248,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_2(lt_ctx):
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_3(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16, 16),
@@ -267,7 +267,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_3(lt_ctx):
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_4(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16, 16, 16))
+    data = _mk_random(size=(16, 16, 16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16, 16),
@@ -294,7 +294,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_4(lt_ctx):
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_5(lt_ctx):
-    data = np.random.choice(a=[0, 1], size=(16, 256, 16, 16))
+    data = _mk_random(size=(16, 256, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),

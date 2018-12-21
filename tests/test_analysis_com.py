@@ -118,9 +118,7 @@ def test_com_default_params(lt_ctx, ds_random):
 
 @pytest.mark.xfail(reason="we disagree with the scipy impl for complex numbers")
 def test_com_complex_numbers(lt_ctx):
-    data = np.random.choice(
-        a=[0, 1, 0+1j, 0-1j, 1+1j, 1-1j], size=(16, 16, 16, 16)
-    ).astype('complex64')
+    data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
     ds_complex = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),

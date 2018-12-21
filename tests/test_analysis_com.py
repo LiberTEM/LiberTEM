@@ -53,11 +53,11 @@ def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
     )
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
-    field_y, field_x = results.field.raw_data
-    field_y = field_y.reshape((16 * 16))
+    field_x, field_y = results.field.raw_data
     field_x = field_x.reshape((16 * 16))
+    field_y = field_y.reshape((16 * 16))
     for idx in range(16 * 16):
-        scx, scy = measurements.center_of_mass(raw_data_by_frame[idx])
+        scy, scx = measurements.center_of_mass(raw_data_by_frame[idx])
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
 
@@ -68,9 +68,9 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
     )
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
-    field_y, field_x = results.field.raw_data
-    field_y = field_y.reshape((16 * 16))
+    field_x, field_y = results.field.raw_data
     field_x = field_x.reshape((16 * 16))
+    field_y = field_y.reshape((16 * 16))
     disk_mask = masks.circular(
         centerX=0, centerY=0,
         imageSizeX=16,
@@ -79,7 +79,7 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
     )
     for idx in range(16 * 16):
         masked_frame = raw_data_by_frame[idx] * disk_mask
-        scx, scy = measurements.center_of_mass(masked_frame)
+        scy, scx = measurements.center_of_mass(masked_frame)
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
 
@@ -116,15 +116,88 @@ def test_com_default_params(lt_ctx, ds_random):
     lt_ctx.run(analysis)
 
 
-def test_com_complex_numbers(lt_ctx, ds_complex):
+@pytest.mark.xfail(reason="we disagree with the scipy impl for complex numbers")
+def test_com_complex_numbers(lt_ctx):
+    data = np.random.choice(
+        a=[0, 1, 0+1j, 0-1j, 1+1j, 1-1j], size=(16, 16, 16, 16)
+    ).astype('complex64')
+    ds_complex = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 16, 16),
+        partition_shape=(16, 16, 16, 16)
+    )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
     results = lt_ctx.run(analysis)
 
-    abs_data = ds_complex.data.reshape((16 * 16, 16, 16))
-    field_y, field_x = results.field.raw_data
-    field_y = field_y.reshape((16 * 16))
+    reshaped_data = ds_complex.data.reshape((16 * 16, 16, 16))
+    field_x, field_y = results.field.raw_data
     field_x = field_x.reshape((16 * 16))
+    field_y = field_y.reshape((16 * 16))
     for idx in range(16 * 16):
-        scx, scy = measurements.center_of_mass(abs_data[idx])
+        scy, scx = measurements.center_of_mass(reshaped_data[idx])
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
+
+
+def test_com_complex_numbers_handcrafted_1(lt_ctx):
+    data = np.ones((3, 3, 4, 4), dtype="complex64")
+    data[0, 0] = np.array([
+        [0,    0,    0, 0],
+        [0, 1+2j, 1-2j, 0],
+        [0, 1-2j, 1+2j, 0],
+        [0,    0,    0, 0],
+    ])
+    ds_complex = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 4, 4),
+        partition_shape=(1, 1, 4, 4)
+    )
+    analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    results = lt_ctx.run(analysis)
+
+    field_x, field_y = results.field.raw_data
+    assert field_x[0, 0] == 1.5
+    assert field_y[0, 0] == 1.5
+
+
+def test_com_complex_numbers_handcrafted_2(lt_ctx):
+    data = np.ones((3, 3, 4, 4), dtype="complex64")
+    data[0, 0] = np.array([
+        [0,    0,    0, 0],
+        [0,    0, 1-2j, 0],
+        [0, 1-2j,    0, 0],
+        [0,    0,    0, 0],
+    ])
+    ds_complex = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 4, 4),
+        partition_shape=(1, 1, 4, 4)
+    )
+    analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    results = lt_ctx.run(analysis)
+
+    field_x, field_y = results.field.raw_data
+    assert field_x[0, 0] == 1.5
+    assert field_y[0, 0] == 1.5
+
+
+def test_com_complex_numbers_handcrafted_3(lt_ctx):
+    data = np.ones((3, 3, 4, 4), dtype="complex64")
+    data[0, 0] = np.array([
+        0,    0,    0, 0,
+        0,    0, 1-2j, 0,
+        0,    0,    0, 0,
+        0,    0,    0, 0,
+    ], dtype="complex64").reshape((4, 4))
+    ds_complex = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 4, 4),
+        partition_shape=(1, 1, 4, 4)
+    )
+    analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    results = lt_ctx.run(analysis)
+
+    print(data[0, 0])
+    field_x, field_y = results.field.raw_data
+    assert field_x[0, 0] == 2
+    assert field_y[0, 0] == 1

@@ -34,6 +34,10 @@ class COMAnalysis(BaseMasksAnalysis):
             job_results[2].reshape(shape)
         )
         if img_sum.dtype.kind == 'c':
+            # FIXME: review correctness of using absolute values and masks in this way
+            # NOTE: the center is first calculated from (0, 0), and later shifted by the
+            # reference center. np.abs(...) is only used for converting to real number, we
+            # don't lose any signs here.
             img_sum = np.abs(img_sum)
             img_x = np.abs(img_x)
             img_y = np.abs(img_y)

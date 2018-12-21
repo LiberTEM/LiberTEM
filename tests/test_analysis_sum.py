@@ -127,4 +127,4 @@ def test_sum_complex(lt_ctx, ds_complex):
     results = lt_ctx.run(analysis)
 
     assert results.intensity.raw_data.shape == (16, 16)
-    assert np.allclose(results.intensity.raw_data, expected)
+    assert np.allclose(results.intensity_complex.raw_data, expected)

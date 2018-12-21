@@ -58,7 +58,9 @@ def hdf5_ds_1(hdf5):
 
 @pytest.fixture
 def ds_complex():
-    data = np.random.choice(a=[0, 1], size=(16, 16, 16, 16)).astype('complex64')
+    data = np.random.choice(
+        a=[0, 1, 0+1j, 0-1j, 1+1j, 1-1j], size=(16, 16, 16, 16)
+    ).astype('complex64')
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 1, 16, 16),

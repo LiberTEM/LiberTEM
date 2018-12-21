@@ -356,3 +356,7 @@ def test_masks_complex_mask(lt_ctx, ds_complex):
         results.mask_0_complex.raw_data,
         expected
     )
+
+    # also execute _run_mask_test_program to check sparse implementation.
+    # _run_mask_test_program checks mask_0 result, which is np.abs(mask_0_complex)
+    _run_mask_test_program(lt_ctx, ds_complex, mask0, np.abs(expected))

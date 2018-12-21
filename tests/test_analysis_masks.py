@@ -333,3 +333,12 @@ def test_masks_hyperspectral(lt_ctx):
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
+
+
+def test_masks_complex_ds(lt_ctx, ds_complex):
+    mask0 = np.random.choice(a=[0, 1], size=(16, 16))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=ds_complex, factories=[lambda: mask0]
+    )
+    results = lt_ctx.run(analysis)
+    assert results.mask_0.raw_data.shape == (16, 16)

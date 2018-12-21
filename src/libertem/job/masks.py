@@ -155,9 +155,7 @@ class ApplyMasksTask(Task):
         super().__init__(*args, **kwargs)
         self.masks = masks
         self.use_torch = use_torch
-        if torch is None:
-            self.use_torch = False
-        if np.dtype(self.partition.dtype).kind == 'c':
+        if torch is None or np.dtype(self.partition.dtype).kind == 'c':
             self.use_torch = False
 
     def reshaped_data(self, data, dest_slice):
@@ -175,7 +173,6 @@ class ApplyMasksTask(Task):
         )
         return deinterleaved.reshape((num_masks,) + tuple(dest_slice.shape.nav))
 
-    # @profile
     def __call__(self):
         num_masks = len(self.masks)
         dest_dtype = np.dtype(self.partition.dtype)

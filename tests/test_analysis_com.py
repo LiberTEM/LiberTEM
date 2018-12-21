@@ -109,3 +109,22 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         lt_ctx.create_com_analysis(
             dataset=dataset, cx=0, cy=0, mask_radius=8
         )
+
+
+def test_com_default_params(lt_ctx, ds_random):
+    analysis = lt_ctx.create_com_analysis(dataset=ds_random)
+    lt_ctx.run(analysis)
+
+
+def test_com_complex_numbers(lt_ctx, ds_complex):
+    analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    results = lt_ctx.run(analysis)
+
+    abs_data = ds_complex.data.reshape((16 * 16, 16, 16))
+    field_y, field_x = results.field.raw_data
+    field_y = field_y.reshape((16 * 16))
+    field_x = field_x.reshape((16 * 16))
+    for idx in range(16 * 16):
+        scx, scy = measurements.center_of_mass(abs_data[idx])
+        assert np.allclose(scx, field_x[idx])
+        assert np.allclose(scy, field_y[idx])

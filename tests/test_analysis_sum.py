@@ -119,3 +119,12 @@ def test_sum_hyperspectral(lt_ctx):
 
     assert results.intensity.raw_data.shape == (16, 16, 16)
     assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_sum_complex(lt_ctx, ds_complex):
+    expected = ds_complex.data.sum(axis=(0, 1))
+    analysis = lt_ctx.create_sum_analysis(dataset=ds_complex)
+    results = lt_ctx.run(analysis)
+
+    assert results.intensity.raw_data.shape == (16, 16)
+    assert np.allclose(results.intensity.raw_data, expected)

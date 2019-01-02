@@ -47,6 +47,8 @@ export function datasetReducer(state = initialDatasetState, action: AllActions):
 }
 
 const initialOpenDatasetState: OpenDatasetState = {
+    busy: false,
+    busyPath: "",
     formVisible: false,
     formPath: "/",
     formInitialParams: undefined,
@@ -72,6 +74,21 @@ export function openDatasetReducer(state = initialOpenDatasetState, action: AllA
             return {
                 ...state,
                 formVisible: false,
+            }
+        }
+        case datasetActions.ActionTypes.DETECT: {
+            return {
+                ...state,
+                busyPath: action.payload.path,
+                busy: true,
+            }
+        }
+        case datasetActions.ActionTypes.DETECTED:
+        case datasetActions.ActionTypes.DETECT_FAILED: {
+            return {
+                ...state,
+                busyPath: "",
+                busy: false,
             }
         }
     }

@@ -5,6 +5,7 @@ import { RootReducer } from "../../store";
 import { DatasetsState } from "../types";
 import Dataset from "./Dataset";
 import DatasetOpen from "./DatasetOpen";
+import DatasetOpenSpinner from "./DatasetOpenSpinner";
 
 interface DatasetListProps {
     datasets: DatasetsState
@@ -27,6 +28,7 @@ class DatasetList extends React.Component<MergedProps> {
         return (
             <>
                 {datasets.ids.map(dsId => <Dataset dataset={datasets.byId[dsId]} key={dsId} />)}
+                <DatasetOpenSpinner />
                 {formVisible && <DatasetOpen />}
                 <BrowserWrapper />
             </>

@@ -223,8 +223,15 @@ class Context:
         """
         if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
-        loc = locals()
-        parameters = {name: loc[name] for name in ['x', 'y'] if loc[name] is not None}
+        parameters = {
+            'cx': x,
+            'cy': y,
+        }
+        parameters = {
+            k: v
+            for k, v in parameters.items()
+            if v is not None
+        }
         return PointMaskAnalysis(dataset=dataset, parameters=parameters)
 
     def create_sum_analysis(self, dataset):

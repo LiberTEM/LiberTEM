@@ -1,7 +1,9 @@
 import os
-# Disable threading, we already use multiprocessing 
+import sys
+import logging
+# Disable threading, we already use multiprocessing
 # to saturate the CPUs
-# The variables have to be set before any numerics 
+# The variables have to be set before any numerics
 # libraries are loaded.
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -12,6 +14,9 @@ import matplotlib.pyplot as plt
 
 from libertem import api
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 # Protect the entry point.
 # LiberTEM uses dask, which uses multiprocessing to
 # start worker processes.
@@ -21,21 +26,24 @@ if __name__ == '__main__':
     # api.Context() starts a new local cluster.
     # The "with" clause makes sure we shut it down in the end.
     with api.Context() as ctx:
-
+        try:
+            path = sys.argv[1]
+        except IndexError:
+            path = ('C:/Users/weber/Nextcloud/Projects/'
+                    'Open Pixelated STEM framework/Data/EMPAD/'
+                    'scan_11_x256_y256.emd')
         ds = ctx.load(
             'hdf5',
-            path=('C:/Users/weber/Nextcloud/Projects/'
-            'Open Pixelated STEM framework/Data/EMPAD/'
-            'scan_11_x256_y256.emd'),
+            path=path,
             ds_path='experimental/science_data/data',
             tileshape=(1, 8, 128, 128)
         )
 
         (scan_y, scan_x, detector_y, detector_x) = ds.shape
         mask_shape = (detector_y, detector_x)
-        
-        # LiberTEM sends functions that create the masks 
-        # rather than mask data to the workers in order 
+
+        # LiberTEM sends functions that create the masks
+        # rather than mask data to the workers in order
         # to reduce transfers in the cluster.
         def mask(): return np.ones(shape=mask_shape)
 

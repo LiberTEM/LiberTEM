@@ -32,8 +32,8 @@ class PointMaskAnalysis(BaseMasksAnalysis):
 
         (detector_y, detector_x) = self.dataset.raw_shape.sig
 
-        cx = self.parameters.get('x', detector_x / 2)
-        cy = self.parameters.get('y', detector_y / 2)
+        cx = self.parameters.get('cx', detector_x / 2)
+        cy = self.parameters.get('cy', detector_y / 2)
 
         def _point_inner():
             a = sp.csr_matrix(([1], ([int(cy)], [int(cx)])),

@@ -190,3 +190,13 @@ class DataTile(object):
 
     def __repr__(self):
         return "<DataTile %r>" % self.tile_slice
+
+    def __getstate__(self):
+        return {
+            k: getattr(self, k)
+            for k in self.__slots__
+        }
+
+    def __setstate__(self, state):
+        for k, v in state.items():
+            setattr(self, k, v)

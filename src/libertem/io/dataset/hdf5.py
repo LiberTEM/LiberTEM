@@ -34,6 +34,7 @@ class H5DataSet(DataSet):
         self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
+        self._raw_shape = None
 
     def initialize(self):
         with self.get_h5ds() as h5ds:
@@ -126,7 +127,7 @@ class H5DataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<H5DataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return "<H5DataSet of %s raw_shape=%s>" % (self._dtype, self._raw_shape)
 
 
 class H5Partition(Partition):

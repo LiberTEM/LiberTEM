@@ -369,7 +369,7 @@ class Context:
         out = job_to_run.get_result_buffer()
         for tiles in self.executor.run_job(job_to_run):
             for tile in tiles:
-                tile.copy_to_result(out)
+                tile.reduce_into_result(out)
         if analysis is not None:
             return analysis.get_results(out)
         return out

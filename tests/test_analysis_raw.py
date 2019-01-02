@@ -68,7 +68,7 @@ def test_get_multiple_frames_2():
     result = np.zeros(job.get_result_shape())
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(result)
+            tile.reduce_into_result(result)
 
     assert result.shape == (5, 5, 16, 16)
     assert not np.allclose(result[0, 0], result[0, 1])
@@ -94,7 +94,7 @@ def test_get_multiple_frame_row():
     result = np.zeros(job.get_result_shape())
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(result)
+            tile.reduce_into_result(result)
 
     assert result.shape == (1, 16, 16, 16)
     assert not np.allclose(result[0, 0], result[0, 1])

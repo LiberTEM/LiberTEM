@@ -8,7 +8,7 @@ import scipy.sparse as sp
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
-from .base import Job, Task
+from .base import Job, Task, ResultTile
 from libertem.masks import to_dense, to_sparse
 from libertem.common import Slice
 
@@ -195,14 +195,14 @@ class ApplyMasksTask(Task):
             # Ellipsis to match the "number of masks" part of the result
             part[(Ellipsis,) + dest_slice.get(nav_only=True)] += reshaped
         return [
-            ResultTile(
+            MaskResultTile(
                 data=part,
                 dest_slice=self.partition.slice.get(nav_only=True),
             )
         ]
 
 
-class ResultTile(object):
+class MaskResultTile(ResultTile):
     def __init__(self, data, dest_slice):
         self.data = data
         self.dest_slice = dest_slice
@@ -214,6 +214,6 @@ class ResultTile(object):
     def dtype(self):
         return self.data.dtype
 
-    def copy_to_result(self, result):
+    def reduce_into_result(self, result):
         result[(Ellipsis,) + self.dest_slice] += self.data
         return result

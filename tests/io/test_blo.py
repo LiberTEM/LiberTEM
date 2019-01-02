@@ -62,7 +62,7 @@ def test_apply_mask_on_raw_job(default_blo, lt_ctx):
 
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
     assert results[0].shape == (90, 121)

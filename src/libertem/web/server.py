@@ -223,7 +223,7 @@ class RunJobMixin(object):
         try:
             async for result in executor.run_job(job):
                 for tile in result:
-                    tile.copy_to_result(full_result)
+                    tile.reduce_into_result(full_result)
                 if time.time() - t < 0.3:
                     continue
                 t = time.time()

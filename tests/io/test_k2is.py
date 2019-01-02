@@ -69,7 +69,7 @@ def test_apply_mask_job(default_k2is, lt_ctx):
 
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
     assert results[0].shape == (34 * 35,)

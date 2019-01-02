@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base import Job, Task
+from .base import Job, Task, ResultTile
 
 
 class SumFramesJob(Job):
@@ -33,7 +33,7 @@ class SumFramesTask(Task):
         ]
 
 
-class SumResultTile(object):
+class SumResultTile(ResultTile):
     def __init__(self, data):
         self.data = data
 
@@ -41,6 +41,6 @@ class SumResultTile(object):
     def dtype(self):
         return self.data.dtype
 
-    def copy_to_result(self, result):
+    def reduce_into_result(self, result):
         result += self.data
         return result

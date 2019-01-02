@@ -47,7 +47,7 @@ async def run(executor, job, out):
             # in current alpha version of DM
             # due to a bug
             # Will be fixed in final DM release
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
         yield out
 
 

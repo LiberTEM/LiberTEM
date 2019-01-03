@@ -1,5 +1,5 @@
 import { call, fork, put, select, take, takeEvery } from 'redux-saga/effects';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
 import * as datasetActions from '../dataset/actions';

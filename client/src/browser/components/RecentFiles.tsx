@@ -32,7 +32,7 @@ type MergedProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDis
 
 const RecentFiles: React.SFC<MergedProps> = ({ lastOpened, fileHistory, select }) => {
 
-    const recentFiles: DropdownOptions = fileHistory.filter(path => lastOpened[path]).map(path => {
+    const recentFiles: DropdownOptions = fileHistory.filter((path: string) => lastOpened[path]).map((path: string) => {
         const item = lastOpened[path];
         return {
             text: item.path,

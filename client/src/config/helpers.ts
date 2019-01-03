@@ -22,7 +22,8 @@ export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
 }
 
 export function setLocalStorage(config: ConfigState): void {
-    const localSettings = ["cwd", "lastOpened", "fileHistory"].reduce((acc, item: keyof ConfigState) => {
+    const keys: Array<Partial<keyof ConfigState>> = ["cwd", "lastOpened", "fileHistory"];
+    const localSettings = keys.reduce((acc, item) => {
         acc[item] = config[item];
         return acc;
     }, {} as ConfigState);

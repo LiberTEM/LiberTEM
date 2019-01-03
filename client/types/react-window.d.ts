@@ -1,6 +1,4 @@
-import * as React from "react";
-
-export interface FixedSizeListProps {
+interface FixedSizeListProps {
     height: number | string,
     width: number | string,
     itemCount: number,
@@ -8,7 +6,7 @@ export interface FixedSizeListProps {
     style: React.CSSProperties,
 }
 
-export interface VariableSizeGridProps {
+interface VariableSizeGridProps {
     columnCount: number,
     columnWidth: (idx: number) => number,
     rowCount: number,
@@ -18,12 +16,14 @@ export interface VariableSizeGridProps {
 }
 
 
-export interface ScrollToGridItem {
+interface ScrollToGridItem {
     rowIndex: number,
     columnIndex: number,
 }
 
 declare module 'react-window' {
+    import * as React from "react";
+
     export class FixedSizeList extends React.Component<FixedSizeListProps> {
         scrollToItem: (a: number) => void
     }

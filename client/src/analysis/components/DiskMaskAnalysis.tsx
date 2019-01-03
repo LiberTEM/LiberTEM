@@ -46,4 +46,4 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(DiskMaskAnalysis);
+export default connect(null, mapDispatchToProps)(DiskMaskAnalysis);

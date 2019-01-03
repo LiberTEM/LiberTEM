@@ -43,4 +43,4 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(PointSelectionAnalysis);
+export default connect(null, mapDispatchToProps)(PointSelectionAnalysis);

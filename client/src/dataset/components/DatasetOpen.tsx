@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect, Dispatch } from 'react-redux';
 import { DropdownProps, Header, Segment } from "semantic-ui-react";
-import * as uuid from "uuid/v4";
+import uuid from "uuid/v4";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";

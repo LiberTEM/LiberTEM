@@ -12,16 +12,14 @@ type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
     | "type"
     | "tileshape"
     | "scan_size"
-    > & {
+> & {
     tileshape: string,
     scan_size: string,
 };
 
 type FormValues = DatasetParamsMIBForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB> & {
-    initial: DatasetParamsMIB,
-};
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB>;
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,

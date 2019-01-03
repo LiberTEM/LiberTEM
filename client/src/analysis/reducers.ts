@@ -11,7 +11,7 @@ const initialAnalysisState: AnalysisReducerState = {
     ids: [],
 }
 
-export function analysisReducer(state = initialAnalysisState, action: AllActions) {
+export function analysisReducer(state = initialAnalysisState, action: AllActions): AnalysisReducerState {
     switch (action.type) {
         case analysisActions.ActionTypes.CREATED: {
             return insertById(state, action.payload.analysis.id, action.payload.analysis);

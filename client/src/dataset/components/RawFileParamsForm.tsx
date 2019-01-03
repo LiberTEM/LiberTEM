@@ -14,17 +14,15 @@ type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     | "scan_size"
     | "detector_size_raw"
     | "crop_detector_to"> & {
-    tileshape: string,
-    scan_size: string
-    detector_size_raw: string,
-    crop_detector_to: string,
-};
+        tileshape: string,
+        scan_size: string
+        detector_size_raw: string,
+        crop_detector_to: string,
+    };
 
 type FormValues = DatasetParamsRawForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsRaw> & {
-    initial: DatasetParamsRaw,
-};
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsRaw>;
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,

@@ -60,12 +60,12 @@ function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
     return res;
 }
 
+const posRef = React.createRef<SVGRectElement>();
+
 /**
  * stateful draggable handle, to be used as part of <svg/>
  */
 export class DraggableHandle extends React.Component<DraggableHandleProps> {
-    public posRef: SVGElement | null;
-
     public state = {
         dragging: false,
         drag: { x: 0, y: 0 },
@@ -98,10 +98,10 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     public startDrag = (e: React.MouseEvent<SVGElement>): void => {
         e.preventDefault();
         const { parentOnDragStart } = this.props;
-        if (this.posRef) {
+        if (posRef.current) {
             this.setState({
                 dragging: true,
-                drag: this.applyConstraint(relativeCoords(e, this.posRef)),
+                drag: this.applyConstraint(relativeCoords(e, posRef.current)),
             });
             if (parentOnDragStart) {
                 parentOnDragStart(this);
@@ -116,9 +116,9 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         if (!this.state.dragging) {
             return;
         }
-        if (this.posRef) {
+        if (posRef.current) {
             this.setState({
-                drag: this.applyConstraint(relativeCoords(e, this.posRef)),
+                drag: this.applyConstraint(relativeCoords(e, posRef.current)),
             }, () => {
                 if (onDragMove) {
                     const constrained = this.applyConstraint(this.state.drag)
@@ -152,7 +152,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
             <g>
                 <rect
                     style={{ visibility: "hidden" }}
-                    ref={e => this.posRef = e}
+                    ref={posRef}
                     x={0} y={0} width={0} height={0}
                 />
                 <Handle scale={scale} x={x} y={y} withCross={this.props.withCross}

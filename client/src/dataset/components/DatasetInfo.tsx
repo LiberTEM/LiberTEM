@@ -1,13 +1,13 @@
 import * as React from "react";
 import { Table } from "semantic-ui-react";
-import { DatasetState, DiagElem } from "../../messages";
+import { DatasetState, DiagElemMsg } from "../../messages";
 import DatasetParams from "./DatasetParams";
 
 interface DatasetInfoProps {
     dataset: DatasetState,
 }
 
-const renderValue = (elem: DiagElem) => {
+const renderValue = (elem: DiagElemMsg) => {
     if (elem.value instanceof Array) {
         return <DiagElems diagnostics={elem.value} />
     } else {
@@ -15,7 +15,7 @@ const renderValue = (elem: DiagElem) => {
     }
 }
 
-const DiagElem: React.SFC<{ elem: DiagElem }> = ({ elem }) => {
+const DiagElem: React.SFC<{ elem: DiagElemMsg }> = ({ elem }) => {
     return (
         <Table.Row>
             <Table.Cell>{elem.name}</Table.Cell>
@@ -24,7 +24,7 @@ const DiagElem: React.SFC<{ elem: DiagElem }> = ({ elem }) => {
     )
 }
 
-const DiagElems: React.SFC<{ diagnostics: DiagElem[] }> = ({ diagnostics }) => {
+const DiagElems: React.SFC<{ diagnostics: DiagElemMsg[] }> = ({ diagnostics }) => {
     if (diagnostics.length === 0) {
         return null;
     }

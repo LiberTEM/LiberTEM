@@ -47,4 +47,4 @@ const CenterOfMassAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, da
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(CenterOfMassAnalysis);
+export default connect(null, mapDispatchToProps)(CenterOfMassAnalysis);

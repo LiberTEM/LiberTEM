@@ -1,6 +1,6 @@
 import { buffers } from 'redux-saga';
 import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
 import { cancelJob, startJob } from '../job/api';
 import { JobState } from '../job/types';
@@ -131,12 +131,14 @@ export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Ac
 }
 
 export function* cancelOldJob(analysis: AnalysisState, kind: JobKind) {
-    if (analysis.jobs[kind] === undefined) {
+    const jobId = analysis.jobs[kind]
+    if (jobId === undefined) {
         return;
-    }
-    const job: JobState = yield select(selectJob, analysis.jobs[kind]);
-    if (job.running !== "DONE") {
-        yield call(cancelJob, analysis.jobs[kind]);
+    } else {
+        const job: JobState = yield select(selectJob, jobId);
+        if (job.running !== "DONE") {
+            yield call(cancelJob, jobId);
+        }
     }
 }
 
@@ -159,10 +161,13 @@ export function* analysisSidecar(analysisId: string) {
             const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
 
             const kind = action.payload.kind;
-            const job: JobState = yield select(selectJob, analysis.jobs[kind]);
-            if (job && job.running !== "DONE") {
-                // wait until the job is cancelled:
-                yield call(cancelJob, analysis.jobs[kind]);
+            const oldJobId = analysis.jobs[kind];
+            if (oldJobId !== undefined) {
+                const job: JobState = yield select(selectJob, oldJobId);
+                if (job && job.running !== "DONE") {
+                    // wait until the job is cancelled:
+                    yield call(cancelJob, oldJobId);
+                }
             }
 
             const jobId = uuid();

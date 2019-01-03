@@ -136,9 +136,9 @@ export enum DatasetStatus {
     DELETING = "DELETING",
 }
 
-export interface DiagElem {
+export interface DiagElemMsg {
     name: string,
-    value: string | DiagElem[],
+    value: string | DiagElemMsg[],
 }
 
 export type Dataset = DatasetCreateParams & {
@@ -146,7 +146,7 @@ export type Dataset = DatasetCreateParams & {
     params: {
         shape: number[],
     }
-    diagnostics: DiagElem[],
+    diagnostics: DiagElemMsg[],
 }
 
 export interface OpenDatasetRequest {

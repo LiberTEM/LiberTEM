@@ -51,4 +51,4 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(RingMaskAnalysis);
+export default connect(null, mapDispatchToProps)(RingMaskAnalysis);

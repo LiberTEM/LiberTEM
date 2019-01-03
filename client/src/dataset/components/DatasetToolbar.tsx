@@ -1,8 +1,9 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { Button } from "semantic-ui-react";
 import { DatasetState } from "../../messages";
 import * as datasetActions from "../actions";
+import { Dispatch } from "redux";
 
 interface DatasetProps {
     dataset: DatasetState,

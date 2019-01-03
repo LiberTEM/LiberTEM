@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { Message } from 'semantic-ui-react';
 import * as errorActions from '../actions';
 import { ErrorMessage } from '../reducers';
+import { Dispatch } from 'redux';
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: ErrorProps) => {
     return {

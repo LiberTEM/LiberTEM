@@ -1,5 +1,5 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import { DatasetState, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
@@ -7,6 +7,7 @@ import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
 import FrameView from "./FrameView";
+import { Dispatch } from "redux";
 
 interface AnalysisProps {
     parameters: MaskDefRing,
@@ -17,9 +18,6 @@ interface AnalysisProps {
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
     return {
         handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            // FIXME: updateParameters doesn't seem to be typed strong enough
-            // the following doesn't raise a type error:
-            // dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { foo: "bar" }));
             dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
         }),
         handleRIChange: defaultDebounce((ri: number) => {

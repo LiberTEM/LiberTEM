@@ -1,5 +1,5 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import { DatasetState, PointDef } from "../../messages";
 import Point from "../../widgets/Point";
@@ -7,6 +7,7 @@ import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
 import FrameView from "./FrameView";
+import { Dispatch } from "redux";
 
 interface AnalysisProps {
     parameters: PointDef,

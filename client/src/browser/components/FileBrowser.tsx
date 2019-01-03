@@ -1,5 +1,5 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { FixedSizeList as List } from "react-window";
 import { Button, Header, Segment } from "semantic-ui-react";
 import { DirectoryListingDetails } from "../../messages";
@@ -9,6 +9,7 @@ import FileBrowserHeader from "./FileBrowserHeader";
 import FileEntry from "./FileEntry";
 import FolderEntry from "./FolderEntry";
 import PathBar from "./PathBar";
+import { Dispatch } from "redux";
 
 const mapStateToProps = (state: RootReducer) => {
     const { browser } = state;

@@ -7,8 +7,8 @@ import { DatasetTypes } from "../../messages";
 const datasetTypeKeys = getEnumValues(DatasetTypes);
 const datasetTypeOptions = datasetTypeKeys.map(t => ({
     // text: DatasetTypeMetadata[DatasetTypes[t as any]].short,
-    text: DatasetTypes[t as any],
-    value: DatasetTypes[t as any],
+    text: DatasetTypes[t],
+    value: DatasetTypes[t],
 }));
 
 interface DatasetTypeSelectProps {

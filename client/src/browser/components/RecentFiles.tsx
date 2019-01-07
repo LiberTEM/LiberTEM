@@ -1,10 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
 import { DatasetTypes } from "../../messages";
 import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
-import { Dispatch } from "redux";
 
 
 type DropdownOptions = Array<{

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Table } from "semantic-ui-react";
-import { DatasetState, DiagElemMsg } from "../../messages";
+import { DatasetOpen, DiagElemMsg } from "../../messages";
 import DatasetParams from "./DatasetParams";
 
 interface DatasetInfoProps {
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const renderValue = (elem: DiagElemMsg) => {

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MsgPartConfig } from "../messages";
-import { ConfigState } from "./reducers";
+import { ConfigParams, ConfigState, LocalConfig } from "./reducers";
 
 const CONFIG_KEY = "LiberTEM.config";
 
@@ -10,14 +10,14 @@ export function joinPaths(config: ConfigState, ...parts: string[]) {
     return parts.map(part => part.trim()).join(config.separator);
 }
 
-export function mergeLocalStorage(config: MsgPartConfig): ConfigState {
+export function mergeLocalStorage(serverConfig: MsgPartConfig): ConfigParams {
     const localSettings = window.localStorage.getItem(CONFIG_KEY);
     if (localSettings === null) {
-        return getDefaultLocalConfig(config);
+        return Object.assign({}, serverConfig, getDefaultLocalConfig(serverConfig));
     }
     const localSettingsParsed = JSON.parse(localSettings);
-    const defaultConfig = getDefaultLocalConfig(config);
-    const mergedConfig: ConfigState = Object.assign(defaultConfig, localSettingsParsed);
+    const defaultConfig = getDefaultLocalConfig(serverConfig);
+    const mergedConfig = Object.assign({}, defaultConfig, serverConfig, localSettingsParsed);
     return mergedConfig;
 }
 
@@ -34,12 +34,11 @@ export function clearLocalStorage(): void {
     window.localStorage.removeItem(CONFIG_KEY);
 }
 
-export function getDefaultLocalConfig(config: MsgPartConfig): ConfigState {
-    return Object.assign({}, config, {
+export function getDefaultLocalConfig(config: MsgPartConfig): LocalConfig {
+    return {
         lastOpened: {},
         fileHistory: [],
-        cwd: "/",
-    });
+    };
 }
 
 export function makeUnique<T>(inp: T[]): T[] {

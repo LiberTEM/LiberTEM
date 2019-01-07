@@ -2,9 +2,10 @@ import { buffers } from 'redux-saga';
 import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import { assertNotReached } from '../helpers';
+import * as jobActions from '../job/actions';
 import { cancelJob, startJob } from '../job/api';
 import { JobState } from '../job/types';
-import { AnalysisDetails, AnalysisTypes, DatasetState } from '../messages';
+import { AnalysisDetails, AnalysisTypes, DatasetOpen, DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
 import * as analysisActions from './actions';
 import { AnalysisState, JobKind } from './types';
@@ -14,7 +15,7 @@ import { AnalysisState, JobKind } from './types';
 // classes should provide:
 //  + methods for default parameters
 //  + creation of a job from current parameters
-function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetState): AnalysisDetails {
+function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetOpen): AnalysisDetails {
     const shape = dataset.params.shape;
     const width = shape[3];
     const height = shape[2];
@@ -100,6 +101,9 @@ function selectJob(state: RootReducer, id: string) {
 export function* createAnalysisSaga(action: ReturnType<typeof analysisActions.Actions.create>) {
     try {
         const datasetState: DatasetState = yield select(selectDataset, action.payload.dataset)
+        if (datasetState.status !== DatasetStatus.OPEN) {
+            throw new Error("invalid dataset status");
+        }
         const analysis: AnalysisState = {
             id: uuid(),
             dataset: action.payload.dataset,
@@ -159,8 +163,13 @@ export function* analysisSidecar(analysisId: string) {
 
             // get the current state incl. configuration
             const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+            const { kind } = action.payload;
 
-            const kind = action.payload.kind;
+            // prepare running the job:
+            const jobId = uuid();
+            yield put(jobActions.Actions.create(jobId, analysis.dataset, Date.now()));
+            yield put(analysisActions.Actions.prepareRun(analysis.id, kind, jobId));
+
             const oldJobId = analysis.jobs[kind];
             if (oldJobId !== undefined) {
                 const job: JobState = yield select(selectJob, oldJobId);
@@ -170,7 +179,11 @@ export function* analysisSidecar(analysisId: string) {
                 }
             }
 
-            const jobId = uuid();
+            // FIXME: we have a race here, as the websocket msg FINISH_JOB may
+            // arrive before call(startJob, ...) returns. this causes the apply button
+            // to feel unresponsive (the action gets done, but only after we finish here...)
+            // best reproduced in "Slow 3G" network simulation mode in devtools
+
             // wait until the job is started
             if (kind === "FRAME") {
                 yield call(startJob, jobId, analysis.dataset, analysis.frameDetails);

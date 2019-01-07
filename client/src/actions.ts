@@ -5,6 +5,7 @@ import * as clusterActions from './cluster/actions';
 import * as configActions from './config/actions';
 import * as datasetActions from './dataset/actions';
 import * as errorActions from './errors/actions';
+import * as jobActions from './job/actions';
 
 export type AllActions = channelActions.Actions
     | datasetActions.Actions
@@ -13,3 +14,4 @@ export type AllActions = channelActions.Actions
     | configActions.Actions
     | errorActions.Actions
     | browserActions.Actions
+    | jobActions.Actions

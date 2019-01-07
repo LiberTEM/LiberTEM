@@ -5,12 +5,19 @@ import { DatasetFormParams, MsgPartConfig } from "../messages";
 import * as configActions from './actions';
 import { makeUnique } from "./helpers";
 
-export type ConfigState = MsgPartConfig & {
+export interface LocalConfig {
     fileHistory: string[],
     lastOpened: {
         [path: string]: DatasetFormParams
     }
-};
+}
+
+export interface ConfigMeta {
+    haveConfig: boolean,
+}
+
+export type ConfigParams = MsgPartConfig & LocalConfig;
+export type ConfigState = ConfigParams & ConfigMeta;
 
 const initialConfigState: ConfigState = {
     version: "",
@@ -20,12 +27,13 @@ const initialConfigState: ConfigState = {
     separator: "/",
     lastOpened: {},
     fileHistory: [],
+    haveConfig: false,
 }
 
-export function configReducer(state = initialConfigState, action: AllActions) {
+export function configReducer(state = initialConfigState, action: AllActions): ConfigState {
     switch (action.type) {
         case configActions.ActionTypes.FETCHED: {
-            return action.payload.config;
+            return Object.assign({}, action.payload.config, { haveConfig: true });
         }
         case browserActions.ActionTypes.DIRECTORY_LISTING: {
             return Object.assign({}, state, {

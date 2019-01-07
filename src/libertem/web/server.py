@@ -120,7 +120,7 @@ class Message(object):
     def start_job(self, job_id):
         return {
             "status": "ok",
-            "messageType": "START_JOB",
+            "messageType": "JOB_STARTED",
             "job": job_id,
             "details": self.data.serialize_job(job_id),
         }

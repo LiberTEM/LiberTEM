@@ -1,18 +1,18 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
-import { DatasetState, MaskDefRing } from "../../messages";
+import { DatasetOpen, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
 import FrameView from "./FrameView";
-import { Dispatch } from "redux";
 
 interface AnalysisProps {
     parameters: MaskDefRing,
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {

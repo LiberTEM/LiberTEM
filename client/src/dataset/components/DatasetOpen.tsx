@@ -1,5 +1,6 @@
 import * as React from "react";
 import { connect } from 'react-redux';
+import { Dispatch } from "redux";
 import { DropdownProps, Header, Segment } from "semantic-ui-react";
 import uuid from "uuid/v4";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
@@ -12,7 +13,6 @@ import HDFSParamsForm from './HDFSParamsForm';
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
-import { Dispatch } from "redux";
 
 const mapDispatchToProps = (dispatch: Dispatch) => {
     return {

@@ -8,6 +8,6 @@ export function defaultDebounce<T extends (...args: any[]) => any>(fn: T, delay:
     return _.debounce(fn, delay, { maxWait: delay });
 }
 
-export function getEnumValues(e: any) {
-    return Object.keys(e).filter(k => typeof e[k as any] === "string");
+export function getEnumValues<E>(e: E): Array<keyof E> {
+    return Object.keys(e) as Array<keyof E>;
 }

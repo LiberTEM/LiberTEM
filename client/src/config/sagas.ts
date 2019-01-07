@@ -28,7 +28,8 @@ function* getConfigSaga() {
             clearLocalStorage();
             // tslint:disable-next-line:no-empty
         } catch (e) { }
-        yield put(configActions.Actions.fetched(getDefaultLocalConfig(configResponse.config)));
+        const defaultConfig = Object.assign({}, configResponse.config, getDefaultLocalConfig(configResponse.config));
+        yield put(configActions.Actions.fetched(defaultConfig));
     }
 }
 

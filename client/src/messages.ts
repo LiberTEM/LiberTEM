@@ -141,13 +141,28 @@ export interface DiagElemMsg {
     value: string | DiagElemMsg[],
 }
 
-export type Dataset = DatasetCreateParams & {
-    status: DatasetStatus,
+interface DatasetCommon {
+    id: string,
+    params: DatasetFormParams,
+}
+
+export type DatasetOpening = DatasetCommon & {
+    status: DatasetStatus.OPENING,
+}
+
+export type DatasetDeleting = DatasetCommon & {
+    status: DatasetStatus.DELETING,
+}
+
+export type DatasetOpen = DatasetCommon & {
+    status: DatasetStatus.OPEN,
     params: {
         shape: number[],
     }
     diagnostics: DiagElemMsg[],
 }
+
+export type Dataset = DatasetOpening | DatasetOpen | DatasetDeleting;
 
 export interface OpenDatasetRequest {
     dataset: DatasetCreateParams
@@ -185,7 +200,7 @@ export interface DetectDatasetErrorResponse {
 
 export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
 
-export type MsgPartDataset = Dataset
+export type MsgPartInitialDataset = DatasetOpen
 
 // type alias to add client-side state to datasets
 export type DatasetState = Dataset & {}

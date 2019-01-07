@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { Dropdown, DropdownProps } from "semantic-ui-react";
 import { AnalysisTypes } from "../../messages";
 import { RootReducer } from "../../store";
-import { JobState } from "../types";
+import { JobRunning, JobState } from "../types";
 import Result from "./Result";
 
 interface ResultListProps {
@@ -73,7 +73,7 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
             img = (
                 <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
             );
-            if (job.startTimestamp && job.endTimestamp) {
+            if (job.running === JobRunning.DONE) {
                 const dt = (job.endTimestamp - job.startTimestamp) / 1000;
                 msg = <>Analysis done in {dt.toFixed(3)} seconds</>;
             } else {

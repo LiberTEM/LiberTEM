@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { assertNotReached } from '../../helpers';
-import { AnalysisTypes } from "../../messages";
+import { AnalysisTypes, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 import { AnalysisState } from "../types";
 import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
@@ -22,6 +22,10 @@ const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {
 type MergedProps = AnalysisProps & ReturnType<typeof mapStateToProps>;
 
 const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
+    if (dataset.status !== DatasetStatus.OPEN) {
+        return null;
+    }
+
     switch (analysis.resultDetails.type) {
         case AnalysisTypes.APPLY_DISK_MASK: {
             return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;

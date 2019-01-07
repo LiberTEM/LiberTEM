@@ -1,8 +1,8 @@
 import { AllActions } from "../actions";
-import * as analysisActions from '../analysis/actions';
 import * as channelActions from '../channel/actions';
 import { ById, insertById, updateById } from "../helpers/reducerHelpers";
-import { JobResultType, JobState } from "./types";
+import * as jobActions from './actions';
+import { JobRunning, JobState, JobStatus } from "./types";
 
 export type JobReducerState = ById<JobState>;
 
@@ -11,36 +11,30 @@ const initialJobState: JobReducerState = {
     ids: [],
 };
 
-export function jobReducer(state = initialJobState, action: AllActions) {
+export function jobReducer(state = initialJobState, action: AllActions): JobReducerState {
     switch (action.type) {
-        case analysisActions.ActionTypes.RUNNING: {
-            // in case there is no job record yet for the job id, 
-            const currentJob = state.byId[action.payload.job];
-            if (currentJob === undefined) {
-                return insertById(
-                    state,
-                    action.payload.job,
-                    {
-                        id: action.payload.job,
-                        results: [] as JobResultType[],
-                        running: "CREATING",
-                        status: "CREATING",
-                    }
-                )
-            } else {
-                return state;
-            }
+        case jobActions.ActionTypes.CREATE: {
+            const createResult = insertById(
+                state,
+                action.payload.id,
+                {
+                    id: action.payload.id,
+                    dataset: action.payload.dataset,
+                    running: JobRunning.CREATING,
+                    status: JobStatus.CREATING,
+                    results: [],
+                    startTimestamp: action.payload.timestamp,
+                }
+            )
+            return createResult;
         }
-        case channelActions.ActionTypes.START_JOB: {
-            return insertById(
+        case channelActions.ActionTypes.JOB_STARTED: {
+            return updateById(
                 state,
                 action.payload.job,
                 {
-                    id: action.payload.job,
-                    dataset: action.payload.dataset,
-                    results: [] as JobResultType[],
-                    running: "RUNNING",
-                    status: "IN_PROGRESS",
+                    running: JobRunning.RUNNING,
+                    status: JobStatus.IN_PROGRESS,
                     startTimestamp: action.payload.timestamp,
                 }
             )
@@ -55,25 +49,27 @@ export function jobReducer(state = initialJobState, action: AllActions) {
             );
         }
         case channelActions.ActionTypes.FINISH_JOB: {
+            const { job, timestamp, results } = action.payload;
             return updateById(
                 state,
-                action.payload.job,
+                job,
                 {
-                    results: action.payload.results,
-                    running: "DONE",
-                    status: "SUCCESS",
-                    endTimestamp: action.payload.timestamp,
+                    running: JobRunning.DONE,
+                    status: JobStatus.SUCCESS,
+                    results,
+                    endTimestamp: timestamp,
                 }
             );
         }
         case channelActions.ActionTypes.JOB_ERROR: {
+            const { job, timestamp } = action.payload;
             return updateById(
                 state,
-                action.payload.job,
+                job,
                 {
-                    running: "DONE",
-                    status: "ERROR",
-                    endTimestamp: action.payload.timestamp,
+                    running: JobRunning.DONE,
+                    status: JobStatus.ERROR,
+                    endTimestamp: timestamp,
                 }
             )
         }

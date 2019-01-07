@@ -2,13 +2,13 @@ import * as React from "react";
 import { connect } from "react-redux";
 import ResultImage from "../../job/components/ResultImage";
 import { JobReducerState } from "../../job/reducers";
-import { DatasetState } from "../../messages";
+import { DatasetOpen } from "../../messages";
 import { RootReducer } from "../../store";
 import { AnalysisState } from "../types";
 
 export interface FrameViewProps {
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 type MergedProps = FrameViewProps & ReturnType<typeof mapStateToProps>;

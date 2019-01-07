@@ -24,8 +24,8 @@ type MergedProps = DispatchProps<typeof mapDispatchToProps> & ReturnType<typeof 
 
 const clusterTypeKeys = getEnumValues(ClusterTypes);
 const clusterTypeOptions = clusterTypeKeys.map(t => ({
-    text: ClusterTypeMetadata[ClusterTypes[t as any]].label,
-    value: ClusterTypes[t as any],
+    text: ClusterTypeMetadata[ClusterTypes[t]].label,
+    value: ClusterTypes[t],
 }));
 
 interface ConnectionParamsState {

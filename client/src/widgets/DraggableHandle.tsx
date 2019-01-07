@@ -60,15 +60,20 @@ function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
     return res;
 }
 
-const posRef = React.createRef<SVGRectElement>();
-
 /**
  * stateful draggable handle, to be used as part of <svg/>
  */
 export class DraggableHandle extends React.Component<DraggableHandleProps> {
+    public posRef: React.RefObject<SVGRectElement>;
+
     public state = {
         dragging: false,
         drag: { x: 0, y: 0 },
+    }
+
+    constructor(props: DraggableHandleProps) {
+        super(props);
+        this.posRef = React.createRef<SVGRectElement>();
     }
 
     // mousemove event from outside (delegated from surrounding element)
@@ -98,10 +103,10 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     public startDrag = (e: React.MouseEvent<SVGElement>): void => {
         e.preventDefault();
         const { parentOnDragStart } = this.props;
-        if (posRef.current) {
+        if (this.posRef.current) {
             this.setState({
                 dragging: true,
-                drag: this.applyConstraint(relativeCoords(e, posRef.current)),
+                drag: this.applyConstraint(relativeCoords(e, this.posRef.current)),
             });
             if (parentOnDragStart) {
                 parentOnDragStart(this);
@@ -116,9 +121,9 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         if (!this.state.dragging) {
             return;
         }
-        if (posRef.current) {
+        if (this.posRef.current) {
             this.setState({
-                drag: this.applyConstraint(relativeCoords(e, posRef.current)),
+                drag: this.applyConstraint(relativeCoords(e, this.posRef.current)),
             }, () => {
                 if (onDragMove) {
                     const constrained = this.applyConstraint(this.state.drag)
@@ -152,7 +157,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
             <g>
                 <rect
                     style={{ visibility: "hidden" }}
-                    ref={posRef}
+                    ref={this.posRef}
                     x={0} y={0} width={0} height={0}
                 />
                 <Handle scale={scale} x={x} y={y} withCross={this.props.withCross}

@@ -62,7 +62,6 @@ export function* openDatasetSagaFullPath(action: ReturnType<typeof browserAction
 }
 
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
-    // TODO: ask the server what it thinks about this file
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
     yield call(doOpenDataset, fullPath);

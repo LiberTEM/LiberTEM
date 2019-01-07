@@ -1,5 +1,5 @@
 import { ActionCreatorsMapObject } from "redux";
-import { FollowupPart, MsgPartDataset, MsgPartJob } from "../messages";
+import { FollowupPart, MsgPartInitialDataset, MsgPartJob } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T
@@ -11,7 +11,7 @@ export function createMessage<T extends string, O>(messageType: T, attribs: O) {
 
 export enum MessageTypes {
     INITIAL_STATE = "INITIAL_STATE",
-    START_JOB = "START_JOB",
+    JOB_STARTED = "JOB_STARTED",
     FINISH_JOB = "FINISH_JOB",
     TASK_RESULT = "TASK_RESULT",
     JOB_ERROR = "JOB_ERROR",
@@ -23,8 +23,8 @@ export enum MessageTypes {
 }
 
 export const Messages = {
-    initialState: (jobs: MsgPartJob[], datasets: MsgPartDataset[]) => createMessage(MessageTypes.INITIAL_STATE, { jobs, datasets }),
-    startJob: (job: string, dataset: string) => createMessage(MessageTypes.START_JOB, { job, dataset }),
+    initialState: (jobs: MsgPartJob[], datasets: MsgPartInitialDataset[]) => createMessage(MessageTypes.INITIAL_STATE, { jobs, datasets }),
+    startJob: (job: string, dataset: string) => createMessage(MessageTypes.JOB_STARTED, { job, dataset }),
     finishJob: (job: string, followup: FollowupPart) => createMessage(MessageTypes.FINISH_JOB, { job, followup }),
     taskResult: (job: string, followup: FollowupPart) => createMessage(MessageTypes.TASK_RESULT, { job, followup }),
     jobError: (job: string, msg: string) => createMessage(MessageTypes.JOB_ERROR, { job, msg }),

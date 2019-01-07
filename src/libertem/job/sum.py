@@ -17,7 +17,7 @@ class SumFramesTask(Task):
         """
         sum frames over navigation axes
         """
-        part = np.zeros(self.partition.dataset.raw_shape.sig, dtype="float32")
+        part = np.zeros(self.partition.meta.raw_shape.sig, dtype="float32")
         for data_tile in self.partition.get_tiles():
             data = data_tile.data
             if data.dtype.kind == 'u':

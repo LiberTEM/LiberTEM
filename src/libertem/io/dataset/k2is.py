@@ -12,7 +12,7 @@ import numpy as np
 import numba
 
 from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException
+from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 log = logging.getLogger(__name__)
 
@@ -429,6 +429,16 @@ class K2ISDataSet(DataSet):
     def initialize(self):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
+        ss = self._scan_size
+        self._meta = DataSetMeta(
+            shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
+                     sig_dims=self._sig_dims),
+            # FIXME: the number of frames should come from the dataset,
+            # not from the user (scan_size)
+            raw_shape=Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
+                            sig_dims=self._sig_dims),
+            dtype=self.dtype,
+        )
         return self
 
     @property
@@ -437,15 +447,11 @@ class K2ISDataSet(DataSet):
 
     @property
     def shape(self):
-        return Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                     sig_dims=self._sig_dims)
+        return self._meta.shape
 
     @property
     def raw_shape(self):
-        # FIXME: the number of frames should come from the dataset, not from the user (scan_size)
-        ss = self._scan_size
-        return Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                     sig_dims=self._sig_dims)
+        return self._meta.raw_shape
 
     @classmethod
     def detect_params(cls, path):
@@ -565,8 +571,7 @@ class K2ISDataSet(DataSet):
                     break
                 stop = min(stop, num_frames)
                 yield K2ISPartition(
-                    dataset=self,
-                    dtype=self.dtype,
+                    meta=self._meta,
                     partition_slice=sector.get_slice(
                         start=start, stop=stop
                     ),

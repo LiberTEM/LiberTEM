@@ -2,12 +2,15 @@ import re
 import io
 import os
 import glob
+import logging
 import functools
 
 import numpy as np
 
 from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException
+from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+
+log = logging.getLogger(__name__)
 
 
 class MIBFile(object):
@@ -112,9 +115,7 @@ class MIBDataSet(DataSet):
         # if they exist. So we need to make sure to initialize self._headers
         # before calling _preread_headers!
         self._headers = {}
-        self._dtype = None
-        self._shape = None
-        self._raw_shape = None
+        self._meta = None
 
     def initialize(self):
         self._headers = self._preread_headers()
@@ -125,12 +126,14 @@ class MIBDataSet(DataSet):
             first_file = self._files_sorted[0]
         except IndexError:
             raise DataSetException("no files found")
-        self._shape = Shape(
+        shape = Shape(
             self._scan_size + first_file.fields['image_size'],
             sig_dims=self._sig_dims
         )
-        self._raw_shape = self._shape.flatten_nav()
-        self._dtype = first_file.fields['dtype']
+        raw_shape = shape.flatten_nav()
+        dtype = first_file.fields['dtype']
+        meta = DataSetMeta(shape=shape, raw_shape=raw_shape, dtype=dtype)
+        self._meta = meta
         return self
 
     @classmethod
@@ -146,15 +149,6 @@ class MIBDataSet(DataSet):
         res = {}
         for f in self._files():
             res[f.path] = f.fields
-        return res
-
-    def __getstate__(self):
-        res = {}
-        for k, v in self.__dict__.items():
-            if k == "_headers":
-                res[k] = {}
-            else:
-                res[k] = v
         return res
 
     def _filenames(self):
@@ -183,21 +177,21 @@ class MIBDataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._dtype
+        return self._meta.dtype
 
     @property
     def shape(self):
         """
         the 4D shape imprinted by number of images and scan_size
         """
-        return self._shape
+        return self._meta.shape
 
     @property
     def raw_shape(self):
         """
         the original 3D shape
         """
-        return self._raw_shape
+        return self._meta.raw_shape
 
     def check_valid(self):
         try:
@@ -248,9 +242,8 @@ class MIBDataSet(DataSet):
 
             yield MIBPartition(
                 tileshape=self._tileshape,
-                dataset=self,
+                meta=self._meta,
                 partfile=f,
-                dtype=self.dtype,
                 partition_slice=pslice,
             )
 
@@ -267,7 +260,7 @@ class MIBPartition(Partition):
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape.sig != self.dataset.shape.sig:
+            if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("MIBDataSet only supports whole-frame crops for now")
         stackheight = self.tileshape.nav.size
 

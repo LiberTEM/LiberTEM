@@ -3,7 +3,7 @@ import contextlib
 import numpy as np
 
 from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException
+from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 MAGIC_EXPECT = 258
 
@@ -38,6 +38,25 @@ def get_header_dtype_list(endianess='<'):
     return dtype_list
 
 
+class BloReader(object):
+    def __init__(self, path, endianess, meta, offset_2):
+        self._path = path
+        self._offset_2 = offset_2
+        self._endianess = endianess
+        self._meta = meta
+
+    @contextlib.contextmanager
+    def get_data(self):
+        with open(self._path, 'rb') as f:
+            data = np.memmap(f, mode='r', offset=self._offset_2,
+                             dtype=self._endianess + 'u1')
+            NY, NX, DP_SZ, _ = self._meta.shape
+            data = data.reshape((NY, NX, DP_SZ * DP_SZ + 6))
+            data = data[:, :, 6:]
+            data = data.reshape(self._meta.shape)
+            yield data
+
+
 class BloDataSet(DataSet):
     def __init__(self, path, tileshape, endianess='<'):
         self._tileshape = tileshape
@@ -53,7 +72,20 @@ class BloDataSet(DataSet):
         NX = int(h['NX'])
         DP_SZ = int(h['DP_SZ'])
         self._shape = Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
+        self._meta = DataSetMeta(
+            shape=self._shape,
+            raw_shape=self._shape,
+            dtype=self.dtype,
+        )
         return self
+
+    def get_reader(self):
+        return BloReader(
+            path=self._path,
+            offset_2=int(self.header['Data_offset_2']),
+            endianess=self._endianess,
+            meta=self._meta,
+        )
 
     @classmethod
     def detect_params(cls, path):
@@ -110,33 +142,23 @@ class BloDataSet(DataSet):
         for pslice in ds_slice.subslices(partition_shape):
             yield BloPartition(
                 tileshape=self._tileshape,
-                dataset=self,
-                dtype=self.dtype,
+                meta=self._meta,
+                reader=self.get_reader(),
                 partition_slice=pslice,
             )
 
-    @contextlib.contextmanager
-    def get_data(self):
-        with open(self._path, 'rb') as f:
-            data = np.memmap(f, mode='r', offset=int(self.header['Data_offset_2']),
-                             dtype=self._endianess + 'u1')
-            NY, NX, DP_SZ, _ = self.shape
-            data = data.reshape((NY, NX, DP_SZ * DP_SZ + 6))
-            data = data[:, :, 6:]
-            data = data.reshape(self.shape)
-            yield data
-
 
 class BloPartition(Partition):
-    def __init__(self, tileshape, *args, **kwargs):
+    def __init__(self, tileshape, reader, *args, **kwargs):
         self.tileshape = tileshape
+        self.reader = reader
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape.sig != self.dataset.shape.sig:
+            if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("BloDataSet only supports whole-frame crops for now")
-        with self.dataset.get_data() as data:
+        with self.reader.get_data() as data:
             subslices = list(self.slice.subslices(shape=self.tileshape))
             for tile_slice in subslices:
                 if crop_to is not None:

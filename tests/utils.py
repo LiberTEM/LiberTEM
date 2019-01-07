@@ -1,8 +1,13 @@
 import numpy as np
 
-from libertem.io.dataset.base import DataTile, DataSet, Partition
+from libertem.io.dataset.base import DataTile, DataSet, Partition, DataSetMeta
 from libertem.common import Slice, Shape
 from libertem.masks import to_dense
+
+
+class MemoryReader(object):
+    def __init__(self, data):
+        self.data = data
 
 
 class MemoryDataSet(DataSet):
@@ -12,6 +17,11 @@ class MemoryDataSet(DataSet):
         self.partition_shape = Shape(partition_shape, sig_dims=sig_dims)
         self.sig_dims = sig_dims
         self._effective_shape = effective_shape and Shape(effective_shape, sig_dims) or None
+        self._meta = DataSetMeta(
+            shape=self.shape,
+            raw_shape=self.raw_shape,
+            dtype=self.data.dtype,
+        )
 
     @property
     def dtype(self):
@@ -28,20 +38,24 @@ class MemoryDataSet(DataSet):
     def check_valid(self):
         return True
 
+    def get_reader(self):
+        return MemoryReader(data=self.data)
+
     def get_partitions(self):
         ds_slice = Slice(origin=tuple([0] * self.raw_shape.dims), shape=self.raw_shape)
         for pslice in ds_slice.subslices(self.partition_shape):
             yield MemoryPartition(
                 tileshape=self.tileshape,
-                dataset=self,
-                dtype=self.dtype,
+                meta=self._meta,
+                reader=self.get_reader(),
                 partition_slice=pslice,
             )
 
 
 class MemoryPartition(Partition):
-    def __init__(self, tileshape, *args, **kwargs):
+    def __init__(self, tileshape, reader, *args, **kwargs):
         self.tileshape = tileshape
+        self.reader = reader
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None):
@@ -52,7 +66,7 @@ class MemoryPartition(Partition):
                 if intersection.is_null():
                     continue
             yield DataTile(
-                data=self.dataset.data[tile_slice.get()],
+                data=self.reader.data[tile_slice.get()],
                 tile_slice=tile_slice
             )
 

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from libertem import api
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 
 
 # Protect the entry point.

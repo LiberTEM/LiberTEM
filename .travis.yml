@@ -1,5 +1,8 @@
 language: python
-cache: pip
+cache:
+  - pip
+  - directories:
+    - client/node_modules/
 
 script:
   - tox
@@ -30,6 +33,13 @@ jobs:
     - stage: test
       python: 3.6
       env: TOXENV=docs-deploy
+    - stage: test
+      language: node_js
+      node_js:
+        - 8
+      script:
+        - (cd client && npm run build)
+        - (cd client && npm test)
 
     - stage: packaging
       sudo: require

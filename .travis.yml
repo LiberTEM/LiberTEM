@@ -38,8 +38,9 @@ jobs:
       node_js:
         - 8
       install:
-        - (cd client && npm run build)
+        - (cd client && npm install)
       script:
+        - (cd client && npm run build)
         - (cd client && npm test)
 
     - stage: packaging

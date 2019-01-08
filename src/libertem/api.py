@@ -77,7 +77,9 @@ class Context:
         ----------
         factories
             list of functions that take no arguments and create masks. The returned masks can be
-            numpy arrays or scipy.sparse matrices.
+            numpy arrays or scipy.sparse matrices. The mask factories should not reference large
+            objects because they can create significant overheads when they are pickled and
+            unpickled.
         dataset
             dataset to work on
         use_sparse
@@ -92,8 +94,12 @@ class Context:
         >>> from libertem.api import Context
         >>> ctx = Context()
         >>> ds = ctx.load("...")
+        >>> # Use intermediate variables instead of referencing
+        >>> # large complex objects like a dataset within the
+        >>> # factory function
+        >>> shape = dataset.shape.sig
         >>> job = ctx.create_mask_job(
-        ... factories=[lambda: np.ones(dataset.shape.sig)],
+        ... factories=[lambda: np.ones(shape)],
         ... dataset=dataset)
         >>> result = ctx.run(job)
         """
@@ -114,7 +120,9 @@ class Context:
         ----------
         factories
             list of functions that take no arguments and create masks. The returned masks can be
-            numpy arrays or scipy.sparse matrices.
+            numpy arrays or scipy.sparse matrices. The mask factories should not reference large
+            objects because they can create significant overheads when they are pickled and
+            unpickled.
         dataset
             dataset to work on
         use_sparse
@@ -129,8 +137,12 @@ class Context:
         >>> from libertem.api import Context
         >>> ctx = Context()
         >>> ds = ctx.load("...")
+        >>> # Use intermediate variables instead of referencing
+        >>> # large complex objects like a dataset within the
+        >>> # factory function
+        >>> shape = dataset.shape.sig
         >>> job = ctx.create_mask_analysis(
-        ... factories=[lambda: np.ones(dataset.shape.sig)],
+        ... factories=[lambda: np.ones(shape)],
         ... dataset=dataset)
         >>> result = ctx.run(job)
         >>> result.mask_0.raw_data

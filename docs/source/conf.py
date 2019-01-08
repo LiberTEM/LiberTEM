@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
+
 from os.path import join, abspath, dirname
 import sys
 
@@ -192,3 +192,9 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'python': ('https://docs.python.org/3.7', None)
 }
+
+# Sphinx' link checker.
+linkcheck_ignore = [
+    # Local URLs:
+    r'^http://localhost.*'
+]

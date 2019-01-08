@@ -37,8 +37,9 @@ jobs:
       language: node_js
       node_js:
         - 8
-      script:
+      install:
         - (cd client && npm run build)
+      script:
         - (cd client && npm test)
 
     - stage: packaging

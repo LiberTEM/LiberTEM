@@ -1,4 +1,5 @@
 import functools
+import logging
 
 try:
     import torch
@@ -11,6 +12,8 @@ from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task, ResultTile
 from libertem.masks import to_dense, to_sparse
 from libertem.common import Slice
+
+log = logging.getLogger(__name__)
 
 
 def _make_mask_slicer(computed_masks):
@@ -65,6 +68,15 @@ class MaskContainer(object):
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
         self._get_masks_for_slice = None
+        self.validate_mask_functions()
+
+    def validate_mask_functions(self):
+        for fn in self.mask_factories:
+            try:
+                if 'self' in fn.__code__.co_freevars:
+                    log.warn('mask factory closes over self, may be inefficient')
+            except Exception:
+                raise
 
     def __len__(self):
         return len(self.mask_factories)

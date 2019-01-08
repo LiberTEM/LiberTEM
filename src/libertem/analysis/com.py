@@ -56,9 +56,9 @@ class COMAnalysis(BaseMasksAnalysis):
 
         (detector_y, detector_x) = self.dataset.raw_shape.sig
 
-        cx = self.parameters.get('cx', detector_x / 2)
-        cy = self.parameters.get('cy', detector_y / 2)
-        r = self.parameters.get('r', float('inf'))
+        cx = self.parameters['cx']
+        cy = self.parameters['cy']
+        r = self.parameters['r']
 
         def disk_mask():
             return masks.circular(
@@ -81,3 +81,15 @@ class COMAnalysis(BaseMasksAnalysis):
                 dtype=self.dtype,
             ) * disk_mask(),
         ]
+
+    def get_parameters(self, parameters):
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
+
+        cx = parameters.get('cx', detector_x / 2)
+        cy = parameters.get('cy', detector_y / 2)
+        r = parameters.get('r', float('inf'))
+        return {
+            'cx': cx,
+            'cy': cy,
+            'r': r,
+        }

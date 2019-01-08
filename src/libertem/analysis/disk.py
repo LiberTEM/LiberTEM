@@ -22,9 +22,9 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
             raise ValueError("can only handle 2D signals currently")
         (detector_y, detector_x) = self.dataset.raw_shape.sig
 
-        cx = self.parameters.get('cx', detector_x / 2)
-        cy = self.parameters.get('cy', detector_y / 2)
-        r = self.parameters.get('r', min(detector_y, detector_x) / 2 * 0.3)
+        cx = self.parameters['cx']
+        cy = self.parameters['cy']
+        r = self.parameters['r']
 
         def disk_mask():
             return masks.circular(
@@ -38,3 +38,15 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
         return [
             disk_mask,
         ]
+
+    def get_parameters(self, parameters):
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
+
+        cx = parameters.get('cx', detector_x / 2)
+        cy = parameters.get('cy', detector_y / 2)
+        r = parameters.get('r', min(detector_y, detector_x) / 2 * 0.3)
+        return {
+            'cx': cx,
+            'cy': cy,
+            'r': r,
+        }

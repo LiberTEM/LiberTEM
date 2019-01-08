@@ -22,10 +22,10 @@ class RingMaskAnalysis(BaseMasksAnalysis):
             raise ValueError("can only handle 2D signals currently")
         (detector_y, detector_x) = self.dataset.raw_shape.sig
 
-        cx = self.parameters.get('cx', detector_x / 2)
-        cy = self.parameters.get('cy', detector_y / 2)
-        ro = self.parameters.get('ro', min(detector_y, detector_x) / 2)
-        ri = self.parameters.get('ri', ro * 0.8)
+        cx = self.parameters['cx']
+        cy = self.parameters['cy']
+        ri = self.parameters['ri']
+        ro = self.parameters['ro']
 
         def _ring_inner():
             return masks.ring(
@@ -37,3 +37,18 @@ class RingMaskAnalysis(BaseMasksAnalysis):
                 radius_inner=ri)
 
         return [_ring_inner]
+
+    def get_parameters(self, parameters):
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
+
+        cx = parameters.get('cx', detector_x / 2)
+        cy = parameters.get('cy', detector_y / 2)
+        ro = parameters.get('ro', min(detector_y, detector_x) / 2)
+        ri = parameters.get('ri', ro * 0.8)
+
+        return {
+            'cx': cx,
+            'cy': cy,
+            'ri': ri,
+            'ro': ro,
+        }

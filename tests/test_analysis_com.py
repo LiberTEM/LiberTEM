@@ -109,3 +109,17 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         lt_ctx.create_com_analysis(
             dataset=dataset, cx=0, cy=0, mask_radius=8
         )
+
+
+def test_com_default_params(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        tileshape=(1, 1, 16, 16),
+        partition_shape=(1, 16, 16, 16),
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+    )
+    lt_ctx.run(analysis)

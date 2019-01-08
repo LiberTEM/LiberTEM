@@ -39,7 +39,7 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
 export function* doOpenDataset(fullPath: string) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     let prefillParams = config.lastOpened[fullPath];
-    if (!prefillParams || true) {
+    if (!prefillParams) {
         try {
             yield put(datasetActions.Actions.detect(fullPath));
             const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);

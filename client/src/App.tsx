@@ -11,11 +11,11 @@ class App extends React.Component {
     public render() {
         return (
             <Container style={{ margin: "5em 1em 5em 1em" }}>
-                <div style={{display: "flex"}}>
-                <img src={logo} width="200" height="46" alt="LiberTEM" style={{marginBottom: "20px"}}/>
+                <div style={{ display: "flex" }}>
+                    <img src={logo} width="200" height="46" alt="LiberTEM" style={{ marginBottom: "20px" }} />
                     {' '}
                     <Modal trigger={
-                            <Icon name="info circle" link={true} style={{alignSelf: "flex-start"}}/>
+                        <Icon name="info circle" link={true} style={{ alignSelf: "flex-start" }} />
                     }>
                         <Popup.Header>About LiberTEM</Popup.Header>
                         <Popup.Content>

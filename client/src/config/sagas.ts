@@ -1,5 +1,5 @@
 import { call, fork, put, select, take, takeEvery } from 'redux-saga/effects';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
 import * as datasetActions from '../dataset/actions';
@@ -28,7 +28,8 @@ function* getConfigSaga() {
             clearLocalStorage();
             // tslint:disable-next-line:no-empty
         } catch (e) { }
-        yield put(configActions.Actions.fetched(getDefaultLocalConfig(configResponse.config)));
+        const defaultConfig = Object.assign({}, configResponse.config, getDefaultLocalConfig(configResponse.config));
+        yield put(configActions.Actions.fetched(defaultConfig));
     }
 }
 

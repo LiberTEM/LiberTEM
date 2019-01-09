@@ -48,3 +48,12 @@ class Task(object):
 
     def __call__(self):
         raise NotImplementedError()
+
+
+class ResultTile(object):
+    @property
+    def dtype(self):
+        raise NotImplementedError
+
+    def reduce_into_result(self, result):
+        raise NotImplementedError

@@ -1,7 +1,8 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
-import { DatasetState, PointDef } from "../../messages";
+import { DatasetOpen, PointDef } from "../../messages";
 import Point from "../../widgets/Point";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
@@ -11,7 +12,7 @@ import FrameView from "./FrameView";
 interface AnalysisProps {
     parameters: PointDef,
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
@@ -43,4 +44,4 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(PointSelectionAnalysis);
+export default connect(null, mapDispatchToProps)(PointSelectionAnalysis);

@@ -1,5 +1,6 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
 import { DatasetTypes } from "../../messages";
 import { RootReducer } from "../../store";
@@ -32,7 +33,7 @@ type MergedProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDis
 
 const RecentFiles: React.SFC<MergedProps> = ({ lastOpened, fileHistory, select }) => {
 
-    const recentFiles: DropdownOptions = fileHistory.filter(path => lastOpened[path]).map(path => {
+    const recentFiles: DropdownOptions = fileHistory.filter((path: string) => lastOpened[path]).map((path: string) => {
         const item = lastOpened[path];
         return {
             text: item.path,

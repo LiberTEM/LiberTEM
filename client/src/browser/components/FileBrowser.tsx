@@ -1,6 +1,7 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { FixedSizeList as List } from "react-window";
+import { Dispatch } from "redux";
 import { Button, Header, Segment } from "semantic-ui-react";
 import { DirectoryListingDetails } from "../../messages";
 import { RootReducer } from "../../store";

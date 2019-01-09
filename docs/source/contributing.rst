@@ -149,3 +149,62 @@ include a current production build. You can create it using a tox shortcut:
 
 This will build an optimized production version of the client and copy it into src/libertem/web/client.
 This version will then be used when you start a libertem-server without the client development proxy in front.
+
+Release checklist
+-----------------
+
+Not all aspects of LiberTEM are covered with automated unit tests. For that reason we should perform some manual tests before and after a release.
+
+Before
+~~~~~~
+
+* Full documentation review and update
+* `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
+* Install release candidate packages from GitHub in a clean environment
+* Correct version info displayed in info dialogue?
+* Link check in version info dialogue
+* Copy test files of all supported types to a fresh location or purge the parameter cache
+    * Include floats, ints, big endian, little endian, complex raw data
+* Open each test file
+    * Are parameters recognized correctly, as far as implemented?
+    * Any bad default values?
+    * Does the file open correctly?
+    * Have a look at the dataset info dialogue. Reasonable values?
+* Perform all analyses on each test file.
+    * Does the result change when the input parameters are changed?
+    * All display channels present and looking reasonable?
+    * Reasonable performance?
+    * Use pick mode.
+* Re-open all the files
+    * Are the files listed in "recent files"?
+    * Are the parameters filled from the cache correctly?
+* Try opening all file types with wrong parameters
+    * Proper understandable error messages?
+* Pick one file and confirm keyboard and mouse interaction for all analyses
+    * Correct bounds check for keyboard and mouse?
+* Check what happens when trying to open non-existent files or directories in the GUI. 
+    * Proper understandable error message?
+    * Possible to continue working?
+* Shut down libertem-server while analysis is running
+    * Shut down within a few seconds?
+    * All workers reaped?
+* Check what happens when trying to open non-existent files by scripting.
+    * Proper understandable error message? TODO automate?
+* Check what happens when opening all file types with bad parameters by scripting
+    * Proper understandable error message? TODO automate?
+* Run all examples
+* Check all examples in documentation, including API docstrings.
+* Run libertem-server on Windows, connect to a remote dask cluster running on Linux, open all file types and perform an analysis for each file type.
+* Use the GUI while a long-running analysis is running
+    * Still usable, decent response times?
+
+After releasing on GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Confirm that all release packages are built
+* Install release package
+* Confirm correct version info
+* Upload to PyPi
+* Upload to zenodo.org
+* Update documentation with new links, if necessary
+* Send announcement message on mailing list

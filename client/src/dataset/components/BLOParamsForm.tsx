@@ -11,15 +11,13 @@ type DatasetParamsBLOForForm = Omit<DatasetParamsBLO,
     "path"
     | "type"
     | "tileshape"> & {
-    tileshape: string,
-};
+        tileshape: string,
+    };
 
 type FormValues = DatasetParamsBLOForForm
 
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsBLO> & {
-    initial: DatasetParamsBLO,
-};
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsBLO>;
 
 const BLOFileParamsForm: React.SFC<MergedProps> = ({
     values,

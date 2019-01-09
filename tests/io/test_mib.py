@@ -50,22 +50,12 @@ def test_read(default_mib):
     assert tuple(t.tile_slice.shape) == (8, 256, 256)
 
 
-def test_pickle_doesnt_pickle_headers(default_mib):
-    """
-    warning, testing an implementation detail here, but useful to see if it actually works
-    """
-    pickled = pickle.dumps(default_mib)
-    assert len(default_mib._headers) > 0
-    reloaded = pickle.loads(pickled)
-    assert len(reloaded._headers) == 0
-
-
 def test_pickle_is_small(default_mib):
     pickled = pickle.dumps(default_mib)
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 2 * 1024
+    assert len(pickled) < 1 * 1024
 
 
 def test_apply_mask_on_mib_job(default_mib, lt_ctx):
@@ -78,7 +68,7 @@ def test_apply_mask_on_mib_job(default_mib, lt_ctx):
 
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
     assert results[0].shape == (1024,)

@@ -2,44 +2,51 @@
   "name": "libertem-client",
   "version": "0.1.0",
   "private": true,
-  "proxy": {
-    "/api": {
-      "target": "http://localhost:9000/",
-      "ws": true
-    }
-  },
+  "proxy": "http://localhost:9000/",
   "homepage": "/static/",
   "dependencies": {
-    "@types/lodash": "^4.14.110",
-    "@types/prop-types": "^15.5.3",
-    "@types/uuid": "^3.4.3",
-    "formik": "^0.11.11",
-    "lodash": "^4.17.10",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
-    "react-scripts-ts": "2.16.0",
-    "react-window": "^1.2.4"
+    "@types/deep-freeze": "^0.1.1",
+    "@types/lodash": "^4.14.119",
+    "@types/prop-types": "^15.5.8",
+    "@types/uuid": "^3.4.4",
+    "formik": "^1.4.1",
+    "lodash": "^4.17.11",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "react-redux": "^6.0.0",
+    "react-window": "^1.5.0",
+    "redux": "^4.0.1",
+    "redux-saga": "^0.16.2",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^0.84.0",
+    "uuid": "^3.3.2"
   },
   "scripts": {
-    "start": "react-scripts-ts start",
-    "build": "react-scripts-ts build",
-    "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject"
+    "lint": "tslint -p tsconfig.json",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "@types/jest": "^23.1.1",
-    "@types/node": "^10.3.4",
-    "@types/react": "^16.4.0",
-    "@types/react-dom": "^16.0.6",
-    "@types/react-redux": "^6.0.2",
-    "react-redux": "^5.0.7",
-    "redux": "^4.0.0",
-    "redux-saga": "^0.16.0",
-    "semantic-ui-css": "^2.3.2",
-    "semantic-ui-react": "^0.81.1",
-    "typescript": "^2.9.2",
-    "utility-types": "^2.0.0",
-    "uuid": "^3.2.1",
-    "url-parse": "1.4.3"
-  }
+    "@types/jest": "^23.3.11",
+    "@types/node": "^10.12.18",
+    "@types/react": "^16.7.18",
+    "@types/react-dom": "^16.0.11",
+    "@types/react-redux": "^6.0.11",
+    "deep-freeze": "0.0.1",
+    "http-proxy-middleware": "^0.19.1",
+    "react-scripts": "^2.1.2",
+    "tslint": "^5.12.0",
+    "tslint-config-prettier": "^1.17.0",
+    "tslint-react": "^3.6.0",
+    "typescript": "^3.2.2",
+    "utility-types": "^3.2.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

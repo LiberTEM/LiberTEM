@@ -8,6 +8,7 @@ const mapStateToProps = (state: RootReducer) => {
     return {
         channelStatus: state.channelStatus,
         clusterConnection: state.clusterConnection,
+        haveConfig: state.config.haveConfig,
     }
 }
 
@@ -24,13 +25,16 @@ const clusterMessages = {
     unknown: "Connected, fetching cluster status...",
 }
 
-const ChannelStatus: React.SFC<MergedProps> = ({ children, channelStatus, clusterConnection }) => {
+const ChannelStatus: React.SFC<MergedProps> = ({ haveConfig, children, channelStatus, clusterConnection }) => {
     switch (channelStatus.status) {
         case "waiting":
         case "connecting": {
             return <ChannelConnecting msg={messages[channelStatus.status]} />;
         }
         case "connected": {
+            if (!haveConfig) {
+                return <ChannelConnecting msg="waiting for configuration..." />;
+            }
             if (clusterConnection.status === "disconnected") {
                 return <ClusterConnectionForm />
             } else if (clusterConnection.status === "connected") {

@@ -8,7 +8,7 @@ import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import HandleParent from "../../widgets/HandleParent";
 import { handleKeyEvent, ModifyCoords } from "../../widgets/kbdHandler";
-import { JobState } from "../types";
+import { JobRunning, JobState } from "../types";
 import ResultImage from "./ResultImage";
 
 interface ResultProps {
@@ -72,7 +72,7 @@ class Result extends React.Component<MergedProps> {
 
     public render() {
         const { job, idx, width, height } = this.props;
-        const busy = job.running !== "DONE";
+        const busy = job.running !== JobRunning.DONE;
 
         return (
             <BusyWrapper busy={busy}>

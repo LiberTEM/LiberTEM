@@ -1,7 +1,8 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
-import { CenterOfMassParams, DatasetState } from "../../messages";
+import { CenterOfMassParams, DatasetOpen } from "../../messages";
 import Disk from "../../widgets/Disk";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
@@ -11,7 +12,7 @@ import FrameView from "./FrameView";
 interface AnalysisProps {
     parameters: CenterOfMassParams,
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
@@ -47,4 +48,4 @@ const CenterOfMassAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, da
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(CenterOfMassAnalysis);
+export default connect(null, mapDispatchToProps)(CenterOfMassAnalysis);

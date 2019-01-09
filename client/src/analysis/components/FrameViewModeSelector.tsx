@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dropdown, DropdownProps } from "semantic-ui-react";
-import { AnalysisTypes } from "../../messages";
+import { AnalysisTypes, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 import * as analysisActions from '../actions';
 import { AnalysisState, FrameMode } from "../types";
@@ -23,6 +23,9 @@ const mapDispatchToProps = {
 
 const mapStateToProps = (state: RootReducer, ownProps: PMSProps) => {
     const dataset = state.datasets.byId[ownProps.analysis.dataset]
+    if (dataset.status !== DatasetStatus.OPEN) {
+        throw Error("invalid dataset status");
+    }
     const shape = dataset.params.shape;
     const scanWidth = shape[1];
     const scanHeight = shape[0];

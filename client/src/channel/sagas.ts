@@ -1,6 +1,6 @@
 import { Channel, delay, END, eventChannel } from "redux-saga";
 import { call, fork, put, take } from "redux-saga/effects";
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as datasetActions from '../dataset/actions';
 import * as channelActions from "./actions";
 import * as channelMessages from './messages';
@@ -103,8 +103,8 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, timestamp));
                     break;
                 }
-                case channelMessages.MessageTypes.START_JOB: {
-                    yield put(channelActions.Actions.startJob(msg.job, msg.details.dataset, timestamp));
+                case channelMessages.MessageTypes.JOB_STARTED: {
+                    yield put(channelActions.Actions.jobStarted(msg.job, msg.details.dataset, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.FINISH_JOB: {

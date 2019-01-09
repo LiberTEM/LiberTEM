@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base import Job, Task
+from .base import Job, Task, ResultTile
 
 
 class SumFramesJob(Job):
@@ -20,11 +20,8 @@ class SumFramesTask(Task):
         dest_dtype = np.dtype(self.partition.dtype)
         if dest_dtype.kind not in ('c', 'f'):
             dest_dtype = 'float32'
-        part = np.zeros(self.partition.dataset.raw_shape.sig, dtype=dest_dtype)
+        part = np.zeros(self.partition.meta.raw_shape.sig, dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
-            data = data_tile.data
-            if data.dtype.kind not in ('c', 'f'):
-                data = data.astype("float32")
             # sum over all navigation axes; for 2d this would be (0, 1), for 1d (0,) etc.:
             axis = tuple(range(data_tile.tile_slice.shape.nav.dims))
             result = data_tile.data.sum(axis=axis)
@@ -36,7 +33,7 @@ class SumFramesTask(Task):
         ]
 
 
-class SumResultTile(object):
+class SumResultTile(ResultTile):
     def __init__(self, data):
         self.data = data
 
@@ -44,6 +41,6 @@ class SumResultTile(object):
     def dtype(self):
         return self.data.dtype
 
-    def copy_to_result(self, result):
+    def reduce_into_result(self, result):
         result += self.data
         return result

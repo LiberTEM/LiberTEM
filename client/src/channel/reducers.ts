@@ -1,24 +1,31 @@
 import { AllActions } from "../actions";
 import * as channelActions from './actions';
 
-interface ChannelState {
-    status: "connecting" | "connected" | "ready" | "waiting"
+export interface ChannelStatusReducer {
+    status: ChannelStatusCodes,
 }
 
-const initialChannelState: ChannelState = {
-    status: "waiting",
+export enum ChannelStatusCodes {
+    CONNECTING = "connecting",
+    CONNECTED = "connected",
+    READY = "ready",
+    WAITING = "waiting",
 }
 
-export function channelStatusReducer(state = initialChannelState, action: AllActions) {
+const initialChannelState: ChannelStatusReducer = {
+    status: ChannelStatusCodes.WAITING,
+}
+
+export function channelStatusReducer(state = initialChannelState, action: AllActions): ChannelStatusReducer {
     switch (action.type) {
         case channelActions.ActionTypes.OPEN: {
-            return { status: "connected" };
+            return { status: ChannelStatusCodes.CONNECTED };
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
-            return { status: "ready" };
+            return { status: ChannelStatusCodes.READY };
         }
         case channelActions.ActionTypes.CLOSE: {
-            return { status: "waiting" };
+            return { status: ChannelStatusCodes.WAITING };
         }
     }
     return state;

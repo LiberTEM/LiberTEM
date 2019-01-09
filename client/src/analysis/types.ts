@@ -12,12 +12,14 @@ export type JobHistory = {
     [K in JobKind]: string[]
 };
 
+export type FrameAnalysisDetails = PickFrameDetails | SumFramesDetails;
+
 export interface Analysis {
     id: string,
     dataset: string,
     jobs: JobList,
     jobHistory: JobHistory,
-    frameDetails: PickFrameDetails | SumFramesDetails,
+    frameDetails: FrameAnalysisDetails,
     resultDetails: AnalysisDetails,
 }
 

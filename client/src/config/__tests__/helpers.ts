@@ -1,7 +1,13 @@
 import { joinPaths, makeUnique } from '../helpers'
 import { ConfigState } from '../reducers';
 
-const config: ConfigState = { separator: '/', version: '', revision: '', cwd: '/', lastOpened: {}, fileHistory: [], localCores: 0 };
+const config: ConfigState = {
+    separator: '/', version: '', revision: '', cwd: '/',
+    lastOpened: {},
+    fileHistory: [],
+    localCores: 0,
+    haveConfig: true,
+};
 
 describe('joinPaths', () => {
     it('properly joins paths', () => {

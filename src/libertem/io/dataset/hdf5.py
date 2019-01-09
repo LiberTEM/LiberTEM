@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException
+from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
 def _get_datasets(path):
@@ -24,6 +24,17 @@ def _get_datasets(path):
             ]}
 
 
+class H5Reader(object):
+    def __init__(self, path, ds_path):
+        self._path = path
+        self._ds_path = ds_path
+
+    @contextlib.contextmanager
+    def get_h5ds(self):
+        with h5py.File(self._path, 'r') as f:
+            yield f[self._ds_path]
+
+
 class H5DataSet(DataSet):
     def __init__(self, path, ds_path, tileshape,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
@@ -34,11 +45,23 @@ class H5DataSet(DataSet):
         self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
+        self._raw_shape = None
+
+    def get_reader(self):
+        return H5Reader(
+            path=self.path,
+            ds_path=self.ds_path
+        )
 
     def initialize(self):
-        with self.get_h5ds() as h5ds:
+        with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             self._raw_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+            self._meta = DataSetMeta(
+                shape=self.shape,
+                raw_shape=self._raw_shape,
+                dtype=self._dtype,
+            )
         return self
 
     @classmethod
@@ -71,11 +94,6 @@ class H5DataSet(DataSet):
             "tileshape": (1, 8) + shape[2:],
         }
 
-    @contextlib.contextmanager
-    def get_h5ds(self):
-        with h5py.File(self.path, 'r') as f:
-            yield f[self.ds_path]
-
     @property
     def dtype(self):
         if self._dtype is None:
@@ -90,14 +108,14 @@ class H5DataSet(DataSet):
 
     def check_valid(self):
         try:
-            with self.get_h5ds() as h5ds:
+            with self.get_reader().get_h5ds() as h5ds:
                 h5ds.shape
             return True
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_diagnostics(self):
-        with self.get_h5ds() as ds:
+        with self.get_reader().get_h5ds() as ds:
             return [
                 {"name": "dtype", "value": str(ds.dtype)},
                 {"name": "chunks", "value": str(ds.chunks)},
@@ -120,26 +138,27 @@ class H5DataSet(DataSet):
             # TODO: where should the tileshape be set? let the user choose for now
             yield H5Partition(
                 tileshape=self.tileshape,
-                dataset=self,
-                dtype=dtype,
+                meta=self._meta,
+                reader=self.get_reader(),
                 partition_slice=pslice,
             )
 
     def __repr__(self):
-        return "<H5DataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return "<H5DataSet of %s raw_shape=%s>" % (self._dtype, self._raw_shape)
 
 
 class H5Partition(Partition):
-    def __init__(self, tileshape, *args, **kwargs):
+    def __init__(self, tileshape, reader, *args, **kwargs):
         self.tileshape = tileshape
+        self.reader = reader
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None):
         if crop_to is not None:
-            if crop_to.shape.sig != self.dataset.shape.sig:
+            if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
         data = np.ndarray(self.tileshape, dtype=self.dtype)
-        with self.dataset.get_h5ds() as dataset:
+        with self.reader.get_h5ds() as dataset:
             subslices = list(self.slice.subslices(shape=self.tileshape))
             for tile_slice in subslices:
                 if crop_to is not None:

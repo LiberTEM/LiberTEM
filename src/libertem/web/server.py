@@ -120,7 +120,7 @@ class Message(object):
     def start_job(self, job_id):
         return {
             "status": "ok",
-            "messageType": "START_JOB",
+            "messageType": "JOB_STARTED",
             "job": job_id,
             "details": self.data.serialize_job(job_id),
         }
@@ -223,7 +223,7 @@ class RunJobMixin(object):
         try:
             async for result in executor.run_job(job):
                 for tile in result:
-                    tile.copy_to_result(full_result)
+                    tile.reduce_into_result(full_result)
                 if time.time() - t < 0.3:
                     continue
                 t = time.time()

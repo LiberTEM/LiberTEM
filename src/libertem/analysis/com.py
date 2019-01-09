@@ -18,14 +18,6 @@ def divergence(arr):
 
 
 class COMAnalysis(BaseMasksAnalysis):
-    def _get_params(self):
-        (detector_y, detector_x) = self.dataset.raw_shape.sig
-        return {
-            'cx': self.parameters.get('cx', detector_x / 2),
-            'cy': self.parameters.get('cy', detector_y / 2),
-            'r': self.parameters.get('r', float('inf')),
-        }
-
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
         img_sum, img_x, img_y = (
@@ -41,9 +33,8 @@ class COMAnalysis(BaseMasksAnalysis):
             img_sum = np.abs(img_sum)
             img_x = np.abs(img_x)
             img_y = np.abs(img_y)
-        parameters = self._get_params()
-        ref_x = parameters["cx"]
-        ref_y = parameters["cy"]
+        ref_x = self.parameters["cx"]
+        ref_y = self.parameters["cy"]
         x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
         y_centers = np.divide(img_y, img_sum, where=img_sum != 0)
         x_centers[img_sum == 0] = ref_x
@@ -72,11 +63,11 @@ class COMAnalysis(BaseMasksAnalysis):
             raise ValueError("can only handle 2D signals currently")
 
         (detector_y, detector_x) = self.dataset.raw_shape.sig
-        parameters = self._get_params()
 
-        cx = parameters['cx']
-        cy = parameters['cy']
-        r = parameters['r']
+        cx = self.parameters['cx']
+        cy = self.parameters['cy']
+        r = self.parameters['r']
+        dtype = self.dtype
 
         def disk_mask():
             return masks.circular(
@@ -91,11 +82,23 @@ class COMAnalysis(BaseMasksAnalysis):
             lambda: masks.gradient_x(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
-                dtype=self.dtype,
+                dtype=dtype,
             ) * disk_mask(),
             lambda: masks.gradient_y(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
-                dtype=self.dtype,
+                dtype=dtype,
             ) * disk_mask(),
         ]
+
+    def get_parameters(self, parameters):
+        (detector_y, detector_x) = self.dataset.raw_shape.sig
+
+        cx = parameters.get('cx', detector_x / 2)
+        cy = parameters.get('cy', detector_y / 2)
+        r = parameters.get('r', float('inf'))
+        return {
+            'cx': cx,
+            'cy': cy,
+            'r': r,
+        }

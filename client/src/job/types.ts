@@ -18,12 +18,21 @@ export enum JobStatus {
     ERROR = 'ERROR',
 }
 
-export interface JobState {
+export interface JobStateCommon {
     id: string,
     dataset: string,
-    running: JobRunning,
     status: JobStatus,
-    results: JobResultType[],
     startTimestamp: number,
+    results: JobResultType[],
+}
+
+export type JobStateStart = JobStateCommon & {
+    running: JobRunning.CREATING | JobRunning.RUNNING,
+}
+
+export type JobStateDone = JobStateCommon & {
+    running: JobRunning.DONE,
     endTimestamp: number,
 }
+
+export type JobState = JobStateStart | JobStateDone;

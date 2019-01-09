@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from .base import Job, Task
+from .base import Job, Task, ResultTile
 
 
 log = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class PickFrameTask(Task):
         return [PickFrameResultTile(data=result)]
 
 
-class PickFrameResultTile(object):
+class PickFrameResultTile(ResultTile):
     def __init__(self, data):
         self.data = data
 
@@ -55,7 +55,7 @@ class PickFrameResultTile(object):
     def dtype(self):
         return self.data.dtype
 
-    def copy_to_result(self, result):
+    def reduce_into_result(self, result):
         out = result.reshape(self.data.shape)
         out += self.data
         return result

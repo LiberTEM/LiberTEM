@@ -2,7 +2,7 @@ import { AllActions } from "../actions";
 import * as datasetActions from "../dataset/actions";
 import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as analysisActions from "./actions";
-import { AnalysisState, JobList } from "./types";
+import { Analysis, AnalysisState, FrameAnalysisDetails, JobList } from "./types";
 
 export type AnalysisReducerState = ById<AnalysisState>;
 
@@ -11,13 +11,13 @@ const initialAnalysisState: AnalysisReducerState = {
     ids: [],
 }
 
-export function analysisReducer(state = initialAnalysisState, action: AllActions) {
+export function analysisReducer(state = initialAnalysisState, action: AllActions): AnalysisReducerState {
     switch (action.type) {
         case analysisActions.ActionTypes.CREATED: {
             return insertById(state, action.payload.analysis.id, action.payload.analysis);
         }
         case analysisActions.ActionTypes.UPDATE_PARAMETERS: {
-            const key = action.payload.kind === "FRAME" ? "frameDetails" : "resultDetails";
+            const key: keyof Analysis = action.payload.kind === "FRAME" ? "frameDetails" : "resultDetails";
             const details = state.byId[action.payload.id][key];
             const newDetails = Object.assign({}, details, {
                 parameters: Object.assign({}, details.parameters, action.payload.parameters),
@@ -25,7 +25,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             // TODO: convince typescript that `[key]: newDetails` is a better way...
             if (action.payload.kind === "FRAME") {
                 return updateById(state, action.payload.id, {
-                    frameDetails: newDetails,
+                    frameDetails: newDetails as FrameAnalysisDetails,
                 });
             } else {
                 return updateById(state, action.payload.id, {
@@ -33,7 +33,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
                 });
             }
         }
-        case analysisActions.ActionTypes.RUNNING: {
+        case analysisActions.ActionTypes.PREPARE_RUN: {
             const { kind, id } = action.payload;
             const analysis = state.byId[id];
             const oldJob = analysis.jobs[kind];

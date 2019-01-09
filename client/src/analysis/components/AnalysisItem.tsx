@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import ResultList from "../../job/components/ResultList";
 import { JobReducerState } from "../../job/reducers";
-import { DatasetState } from "../../messages";
+import { DatasetOpen } from "../../messages";
 import { RootReducer } from "../../store";
 import BusyWrapper from "../../widgets/BusyWrapper";
 import { AnalysisState } from "../types";
@@ -12,7 +12,7 @@ import Toolbar from "./Toolbar";
 
 interface AnalysisItemProps {
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
     title: string,
     subtitle: React.ReactNode,
 }

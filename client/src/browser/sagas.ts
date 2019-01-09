@@ -1,5 +1,5 @@
 import { call, fork, put, select, take } from "redux-saga/effects";
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { joinPaths } from "../config/helpers";
 import { ConfigState } from "../config/reducers";
 import { DirectoryListingResponse } from "../messages";

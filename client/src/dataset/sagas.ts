@@ -1,5 +1,5 @@
 import { call, put, select, takeEvery } from 'redux-saga/effects';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
@@ -40,9 +40,17 @@ export function* doOpenDataset(fullPath: string) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     let prefillParams = config.lastOpened[fullPath];
     if (!prefillParams) {
-        const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
-        if (detectResult.status === "ok") {
-            prefillParams = detectResult.datasetParams;
+        try {
+            yield put(datasetActions.Actions.detect(fullPath));
+            const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
+            if (detectResult.status === "ok") {
+                prefillParams = detectResult.datasetParams;
+                yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            } else {
+                yield put(datasetActions.Actions.detectFailed(fullPath));
+            }
+        } catch (e) {
+            yield put(datasetActions.Actions.detectFailed(fullPath));
         }
     }
     yield put(datasetActions.Actions.open(fullPath, prefillParams));
@@ -54,7 +62,6 @@ export function* openDatasetSagaFullPath(action: ReturnType<typeof browserAction
 }
 
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
-    // TODO: ask the server what it thinks about this file
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
     yield call(doOpenDataset, fullPath);

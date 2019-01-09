@@ -52,7 +52,8 @@ class AnalysisResultSet(object):
 class BaseAnalysis(object):
     def __init__(self, dataset, parameters):
         self.dataset = dataset
-        self.parameters = parameters
+        self.parameters = self.get_parameters(parameters)
+        self.parameters.update(parameters)
 
     def get_results(self, job_results):
         """
@@ -119,3 +120,9 @@ class BaseAnalysis(object):
                 desc="%s [complex]" % desc,
             ),
         ]
+
+    def get_parameters(self, parameters):
+        """
+        Get analysis parameters. Override to set defaults
+        """
+        return parameters

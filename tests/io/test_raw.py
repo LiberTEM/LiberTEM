@@ -67,7 +67,7 @@ def test_apply_mask_on_raw_job(default_raw, lt_ctx):
 
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
     # FIXME: should the result here be 1D or 2D?

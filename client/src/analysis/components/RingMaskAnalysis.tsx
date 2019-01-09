@@ -1,7 +1,8 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
-import { DatasetState, MaskDefRing } from "../../messages";
+import { DatasetOpen, MaskDefRing } from "../../messages";
 import Ring from "../../widgets/Ring";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
@@ -11,15 +12,12 @@ import FrameView from "./FrameView";
 interface AnalysisProps {
     parameters: MaskDefRing,
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
     return {
         handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            // FIXME: updateParameters doesn't seem to be typed strong enough
-            // the following doesn't raise a type error:
-            // dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { foo: "bar" }));
             dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
         }),
         handleRIChange: defaultDebounce((ri: number) => {
@@ -51,4 +49,4 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameter
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(RingMaskAnalysis);
+export default connect(null, mapDispatchToProps)(RingMaskAnalysis);

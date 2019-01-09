@@ -44,12 +44,16 @@ def test_read(default_blo):
     assert tuple(t.tile_slice.shape) == (1, 8, 144, 144)
 
 
-def test_pickle_is_small(default_blo):
-    pickled = pickle.dumps(default_blo)
+def test_pickle_meta_is_small(default_blo):
+    pickled = pickle.dumps(default_blo._meta)
     pickle.loads(pickled)
+    assert len(pickled) < 512
 
-    # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 2 * 1024
+
+def test_pickle_reader_is_small(default_blo):
+    pickled = pickle.dumps(default_blo.get_reader())
+    pickle.loads(pickled)
+    assert len(pickled) < 512
 
 
 def test_apply_mask_on_raw_job(default_blo, lt_ctx):
@@ -62,7 +66,7 @@ def test_apply_mask_on_raw_job(default_blo, lt_ctx):
 
     for tiles in executor.run_job(job):
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
     assert results[0].shape == (90, 121)

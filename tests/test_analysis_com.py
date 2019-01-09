@@ -111,11 +111,6 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         )
 
 
-def test_com_default_params(lt_ctx, ds_random):
-    analysis = lt_ctx.create_com_analysis(dataset=ds_random)
-    lt_ctx.run(analysis)
-
-
 @pytest.mark.xfail(reason="we disagree with the scipy impl for complex numbers")
 def test_com_complex_numbers(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
@@ -199,3 +194,17 @@ def test_com_complex_numbers_handcrafted_3(lt_ctx):
     field_x, field_y = results.field.raw_data
     assert field_x[0, 0] == 2
     assert field_y[0, 0] == 1
+
+
+def test_com_default_params(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        tileshape=(1, 1, 16, 16),
+        partition_shape=(1, 16, 16, 16),
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+    )
+    lt_ctx.run(analysis)

@@ -1,11 +1,17 @@
 language: python
-cache: pip
+cache:
+  - pip
+  - directories:
+    - client/node_modules/
+
+install:
+  - pip install tox
 
 script:
   - tox
 
-install:
-  - pip install tox
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -f coverage.xml -f client/coverage/coverage-final.json
 
 env:
   global:
@@ -30,6 +36,15 @@ jobs:
     - stage: test
       python: 3.6
       env: TOXENV=docs-deploy
+    - stage: test
+      language: node_js
+      node_js:
+        - 8
+      install:
+        - (cd client && npm install)
+      script:
+        - (cd client && npm run build)
+        - (cd client && npm test -- --coverage)
 
     - stage: packaging
       sudo: require
@@ -38,7 +53,6 @@ jobs:
         - bash -ex packaging/appimage/make_app_image.sh
         - ls -lh
       after_success:
-        - bash <(curl -s https://codecov.io/bash) -f coverage.xml
         - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
         - bash -c "chmod +x upload.sh && ./upload.sh LiberTEM*.AppImage* dist/*"
 

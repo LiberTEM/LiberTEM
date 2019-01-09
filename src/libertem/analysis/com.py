@@ -25,14 +25,6 @@ class COMAnalysis(BaseMasksAnalysis):
             job_results[1].reshape(shape),
             job_results[2].reshape(shape)
         )
-        if img_sum.dtype.kind == 'c':
-            # FIXME: review correctness of using absolute values and masks in this way
-            # NOTE: the center is first calculated from (0, 0), and later shifted by the
-            # reference center. np.abs(...) is only used for converting to real number, we
-            # don't lose any signs here.
-            img_sum = np.abs(img_sum)
-            img_x = np.abs(img_x)
-            img_y = np.abs(img_y)
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
@@ -41,22 +33,38 @@ class COMAnalysis(BaseMasksAnalysis):
         y_centers[img_sum == 0] = ref_y
         x_centers -= ref_x
         y_centers -= ref_y
-        d = divergence([x_centers, y_centers])
-        m = np.sqrt(x_centers**2 + y_centers**2)
-        f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
 
-        return AnalysisResultSet([
-            AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
-                   key="field", title="field", desc="cubehelix colorwheel visualization"),
-            AnalysisResult(raw_data=m, visualized=visualize_simple(m),
-                   key="magnitude", title="magnitude", desc="magnitude of the vector field"),
-            AnalysisResult(raw_data=d, visualized=visualize_simple(d),
-                   key="divergence", title="divergence", desc="divergence of the vector field"),
-            AnalysisResult(raw_data=x_centers, visualized=visualize_simple(x_centers),
-                   key="x", title="x", desc="x component of the center"),
-            AnalysisResult(raw_data=y_centers, visualized=visualize_simple(y_centers),
-                   key="y", title="y", desc="y component of the center"),
-        ])
+        if img_sum.dtype.kind == 'c':
+            x_real, x_imag = np.real(x_centers), np.imag(x_centers)
+            y_real, y_imag = np.real(y_centers), np.imag(y_centers)
+
+            return AnalysisResultSet([
+                AnalysisResult(raw_data=x_real, visualized=visualize_simple(x_real),
+                       key="x_real", title="x [real]", desc="x component of the center"),
+                AnalysisResult(raw_data=y_real, visualized=visualize_simple(y_real),
+                       key="y_real", title="y [real]", desc="y component of the center"),
+                AnalysisResult(raw_data=x_imag, visualized=visualize_simple(x_imag),
+                       key="x_imag", title="x [imag]", desc="x component of the center"),
+                AnalysisResult(raw_data=y_imag, visualized=visualize_simple(y_imag),
+                       key="y_imag", title="y [imag]", desc="y component of the center"),
+            ])
+        else:
+            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
+            d = divergence([x_centers, y_centers])
+            m = np.sqrt(x_centers**2 + y_centers**2)
+
+            return AnalysisResultSet([
+                AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
+                       key="field", title="field", desc="cubehelix colorwheel visualization"),
+                AnalysisResult(raw_data=m, visualized=visualize_simple(m),
+                       key="magnitude", title="magnitude", desc="magnitude of the vector field"),
+                AnalysisResult(raw_data=d, visualized=visualize_simple(d),
+                       key="divergence", title="divergence", desc="divergence of the vector field"),
+                AnalysisResult(raw_data=x_centers, visualized=visualize_simple(x_centers),
+                       key="x", title="x", desc="x component of the center"),
+                AnalysisResult(raw_data=y_centers, visualized=visualize_simple(y_centers),
+                       key="y", title="y", desc="y component of the center"),
+            ])
 
     def get_mask_factories(self):
         if self.dataset.raw_shape.sig.dims != 2:

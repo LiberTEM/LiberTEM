@@ -20,11 +20,11 @@ class SumFramesTask(Task):
         part = np.zeros(self.partition.meta.raw_shape.sig, dtype="float32")
         for data_tile in self.partition.get_tiles():
             data = data_tile.data
-            if data.dtype.kind == 'u':
+            if data.dtype.kind in ('u', 'i'):
                 data = data.astype("float32")
             # sum over all navigation axes; for 2d this would be (0, 1), for 1d (0,) etc.:
             axis = tuple(range(data_tile.tile_slice.shape.nav.dims))
-            result = data_tile.data.sum(axis=axis)
+            result = data.sum(axis=axis)
             part[data_tile.tile_slice.get(sig_only=True)] += result
         return [
             SumResultTile(

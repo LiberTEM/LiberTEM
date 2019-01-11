@@ -24,7 +24,7 @@ class Job(object):
 
     def get_result_dtype(self):
         dtype = np.dtype(self.dataset.dtype)
-        if dtype.kind == 'u':
+        if dtype.kind in ('u', 'i'):
             dtype = np.dtype("float32")
         return dtype
 

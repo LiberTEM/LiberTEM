@@ -42,20 +42,30 @@ def test_check_valid(default_k2is):
 
 def test_sync(default_k2is):
     p = next(default_k2is.get_partitions())
-    with p._get_sector() as sector:
+    with p._sectors[0] as sector:
         first_block = next(sector.get_blocks())
     assert first_block.header['frame_id'] == 60
 
 
 def test_read(default_k2is):
-    partitions = default_k2is.get_partitions()
+    partitions = default_k2is.get_partitions(strat='READ_STACKED')
     p = next(partitions)
     # NOTE: partition shape may change in the future
-    assert tuple(p.shape) == (595, 2 * 930, 256)
+    assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
     tiles = p.get_tiles()
     t = next(tiles)
     # we get 3D tiles here, because K2IS partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
+
+
+def test_read_full_frames(default_k2is):
+    partitions = default_k2is.get_partitions(strat='READ_FULL_FRAMES')
+    p = next(partitions)
+    # NOTE: partition shape may change in the future
+    assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
+    tiles = p.get_tiles(strat='READ_FULL_FRAMES')
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == (1, 1860, 2048)
 
 
 @pytest.mark.slow

@@ -6,7 +6,7 @@ import math
 import mmap
 import logging
 import itertools
-from contextlib import contextmanager
+import contextlib
 
 import numpy as np
 import numba
@@ -37,6 +37,7 @@ def decode_uint12_le(inp, out):
     based partially on https://stackoverflow.com/a/45070947/540644
     """
     assert np.mod(len(inp), 3) == 0
+    assert len(out) >= len(inp) * 2 / 3
 
     for i in range(len(inp) // 3):
         fst_uint8 = np.uint16(inp[i * 3])
@@ -180,17 +181,6 @@ class Sector:
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
-    def get_slice(self, start, stop):
-        """
-        start, stop: frame indices
-        """
-        return Slice(
-            origin=(
-                start, 0, SECTOR_SIZE[1] * self.idx
-            ),
-            shape=Shape(((stop - start),) + SECTOR_SIZE, sig_dims=self.sig_dims)
-        )
-
     def get_block_by_index(self, idx):
         offset = self.first_block_offset + idx * BLOCK_SIZE
         return DataBlock(offset=offset, sector=self)
@@ -200,6 +190,32 @@ class Sector:
         while offset + BLOCK_SIZE < self.filesize:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
+
+    def read_full_frame(self, frame, buf, dtype="float32", crop_to=None):
+        raw_data = mmap.mmap(
+            fileno=self.f.fileno(),
+            length=0,   # whole file
+            access=mmap.ACCESS_READ,
+        )
+        # FIXME: can we somehow get rid of this buffer?
+        block_buf = np.zeros(BLOCK_SHAPE, dtype=dtype).reshape((-1,))
+        for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
+            offset = (
+                self.first_block_offset
+                + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                + blockidx * BLOCK_SIZE
+            )
+            input_start = offset + HEADER_SIZE
+            input_end = offset + HEADER_SIZE + DATA_SIZE
+            block_x = 256 - (16 * (blockidx % 16 + 1))
+            block_y = 930 * (blockidx // 16)
+            decode_uint12_le(
+                inp=raw_data[input_start:input_end],
+                out=block_buf,
+            )
+            buf[:,
+                block_y:(block_y + BLOCK_SHAPE[0]),
+                block_x:(block_x + BLOCK_SHAPE[1])] = block_buf.reshape((1,) + BLOCK_SHAPE)
 
     def read_stacked(self, start_at_frame, num_frames, stackheight=16,
                      dtype="float32", crop_to=None):
@@ -417,7 +433,6 @@ class K2ISDataSet(DataSet):
     def __init__(self, path, scan_size):
         self._path = path
         self._scan_size = tuple(scan_size)
-        self._sig_dims = 2
         self._start_offsets = None
         # NOTE: the sync flag appears to be set one frame too late, so
         # we compensate here by setting a negative _skip_frames value.
@@ -432,11 +447,11 @@ class K2ISDataSet(DataSet):
         ss = self._scan_size
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                     sig_dims=self._sig_dims),
+                     sig_dims=2),
             # FIXME: the number of frames should come from the dataset,
             # not from the user (scan_size)
             raw_shape=Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                            sig_dims=self._sig_dims),
+                            sig_dims=2),
             dtype=self.dtype,
         )
         return self
@@ -548,39 +563,42 @@ class K2ISDataSet(DataSet):
             fs = K2FileSet(self._files, start_offsets=self._start_offsets)
         return fs
 
-    def _get_partitions_per_file(self):
+    def _get_num_partitions(self):
         """
-        returns the number of partitions each file (sector) should be split into
+        returns the number of partitions the dataset should be split into
         """
-        sector0 = self._fileset.sectors[0]
-        size = sector0.filesize
+        size = sum(sector.filesize
+                   for sector in self._fileset.sectors)
         # let's try to aim for 512MB per partition
         res = max(1, size // (512*1024*1024))
         return res
 
-    def get_partitions(self):
+    def get_partitions(self, strat='READ_STACKED'):
         fs = self._fileset
         num_frames = self.shape.nav.size
-        f_per_part = num_frames // self._get_partitions_per_file()
+        f_per_part = num_frames // self._get_num_partitions()
 
-        for sector in fs.sectors:
-            c0 = itertools.count(start=0, step=f_per_part)
-            c1 = itertools.count(start=f_per_part, step=f_per_part)
-            for (start, stop) in zip(c0, c1):
-                if start >= num_frames:
-                    break
-                stop = min(stop, num_frames)
-                yield K2ISPartition(
-                    meta=self._meta,
-                    partition_slice=sector.get_slice(
-                        start=start, stop=stop
-                    ),
-                    path=sector.fname,
-                    index=sector.idx,
-                    offset=sector.first_block_offset,
-                    start_frame=start,
-                    num_frames=stop - start,
-                )
+        c0 = itertools.count(start=0, step=f_per_part)
+        c1 = itertools.count(start=f_per_part, step=f_per_part)
+        for (start, stop) in zip(c0, c1):
+            if start >= num_frames:
+                break
+            stop = min(stop, num_frames)
+            part_slice = Slice(
+                origin=(
+                    start, 0, 0,
+                ),
+                shape=Shape(((stop - start), SECTOR_SIZE[0], SECTOR_SIZE[1] * NUM_SECTORS),
+                            sig_dims=2)
+            )
+            yield K2ISPartition(
+                meta=self._meta,
+                partition_slice=part_slice,
+                sectors=fs.sectors,
+                start_frame=start,
+                num_frames=stop - start,
+                strategy=strat,
+            )
 
     def __repr__(self):
         return "<K2ISDataSet for pattern=%s scan_size=%s>" % (
@@ -589,72 +607,60 @@ class K2ISDataSet(DataSet):
 
 
 class K2ISPartition(Partition):
-    def __init__(self, path, index, offset, start_frame, num_frames,
+    def __init__(self, sectors, start_frame, num_frames,
                  strategy='READ_STACKED', *args, **kwargs):
-        self._path = path
-        self._index = index
-        self._offset = offset
-        self._strategy = strategy
+        self._sectors = sectors
         self._start_frame = start_frame
         self._num_frames = num_frames
+        self._strategy = strategy
         super().__init__(*args, **kwargs)
-
-    @contextmanager
-    def _get_sector(self):
-        with Sector(
-            fname=self._path,
-            idx=self._index,
-            initial_offset=self._offset,
-        ) as sector:
-            yield sector
 
     def get_tiles(self, crop_to=None, strat=None):
         if strat is None:
             strat = self._strategy
-        if strat == 'BLOCK_BY_BLOCK':
-            yield from self._get_tiles_tile_per_datablock()
-        elif strat == 'READ_STACKED':
+        if strat == 'READ_STACKED':
             yield from self._read_stacked(crop_to=crop_to)
+        elif strat == 'READ_FULL_FRAMES':
+            yield from self._read_full_frames(crop_to=crop_to)
         else:
             raise DataSetException("unknown strategy")
 
-    def _read_stacked(self, crop_to=None):
-        with self._get_sector() as s:
-            yield from s.read_stacked(
-                start_at_frame=self._start_frame,
-                num_frames=self._num_frames,
-                crop_to=crop_to
-            )
-
-    def _get_tiles_tile_per_datablock(self):
-        """
-        yield one tile per underlying data block
-        """
-
-        with self._get_sector() as s:
-            all_blocks = s.get_blocks()
-            blocks_to_read = (
-                BLOCKS_PER_SECTOR_PER_FRAME * self.slice.shape.nav.size,
-            )
-            buf = np.zeros((1, 1) + BLOCK_SHAPE, dtype="float32")
-            for block_idx, block in enumerate(itertools.islice(all_blocks, blocks_to_read)):
-                frame_idx = block_idx // BLOCKS_PER_SECTOR_PER_FRAME
-                h = block.header
-                # FIXME: hardcoded sig_dims
-                sector_offset = SECTOR_SIZE[1] * block.sector.idx
+    def _read_full_frames(self, crop_to=None):
+        with contextlib.ExitStack() as stack:
+            frame_buf = np.zeros((1, 1860, 2048), dtype="float32")
+            open_sectors = [
+                stack.enter_context(sector)
+                for sector in self._sectors
+            ]
+            for frame in range(self._start_frame, self._start_frame + self._num_frames + 1):
                 tile_slice = Slice(
-                    origin=(frame_idx,
-                            h['pixel_y_start'],
-                            sector_offset + h['pixel_x_start']),
-                    shape=Shape((1,) + BLOCK_SHAPE, sig_dims=2),
+                    origin=(frame, 0, 0),
+                    shape=Shape(frame_buf.shape, sig_dims=2),
                 )
-                block.readinto(buf)
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
+                for s in open_sectors:
+                    s.read_full_frame(
+                        frame=frame,
+                        buf=frame_buf[:, :, s.idx * SECTOR_SIZE[1]:(s.idx + 1) * SECTOR_SIZE[1]]
+                    )
                 yield DataTile(
-                    data=buf,
+                    data=frame_buf,
                     tile_slice=tile_slice
                 )
 
+    def _read_stacked(self, crop_to=None):
+        for sector in self._sectors:
+            with sector as s:
+                yield from s.read_stacked(
+                    start_at_frame=self._start_frame,
+                    num_frames=self._num_frames,
+                    crop_to=crop_to,
+                )
+
     def __repr__(self):
-        return "<K2ISPartition: sector %d, start_frame=%d, num_frames=%d>" % (
-            self._index, self._start_frame, self._num_frames,
+        return "<K2ISPartition: start_frame=%d, num_frames=%d>" % (
+            self._start_frame, self._num_frames,
         )

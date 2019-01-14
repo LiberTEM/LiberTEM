@@ -1,3 +1,5 @@
+import functools
+
 from .base import JobExecutor
 
 
@@ -11,3 +13,11 @@ class InlineJobExecutor(JobExecutor):
 
     def run_function(self, fn, *args, **kwargs):
         return fn(*args, **kwargs)
+
+    def map_partitions(self, dataset, fn, *args, **kwargs):
+        for partition in dataset.get_partitions():
+            fn_kwargs = {}
+            fn_kwargs.update(kwargs)
+            fn_kwargs.update({'partition': partition})
+            fn_bound = functools.partial(fn, *args, **fn_kwargs)
+            yield fn_bound()

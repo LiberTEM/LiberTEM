@@ -124,6 +124,23 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
         return future.result()
 
+    def map_partitions(self, dataset, fn, *args, **kwargs):
+        # FIXME: map_partitions should maybe not be part of executor? not sure about right place
+        # FIXME: *args, **kwargs should be separate from our own args
+        # (example: we take dataset as kwargs, so the fn can't take any arg that is called
+        # dataset! if we want to add additional flags, we get the same namespace problem)
+        futures = []
+        for partition in dataset.get_partitions():
+            fn_kwargs = {}
+            fn_kwargs.update(kwargs)
+            fn_kwargs.update({'partition': partition})
+            fn_bound = functools.partial(fn, *args, **fn_kwargs)
+            futures.append(
+                self.client.submit(fn_bound)
+            )
+        for future, result in dd.as_completed(futures, with_results=True):
+            yield result
+
     def close(self):
         if self.is_local:
             if self.client.cluster is not None:

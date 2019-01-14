@@ -82,6 +82,12 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     return bool_mask
 
 
+def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
+    x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
+    mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
+    return mask
+
+
 # TODO: dtype parameter? consistency with ring/circular above
 def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(

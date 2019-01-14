@@ -173,6 +173,17 @@ class DataTile(object):
             "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
 
     @property
+    def flat_nav(self):
+        """
+        Flatten the nav axis of the data.
+        """
+        shape = self.tile_slice.shape
+        tileshape = (
+            shape.nav.size,    # stackheight, number of frames we process at once
+        ) + tuple(shape.sig)
+        return self.data.reshape(tileshape)
+
+    @property
     def flat_data(self):
         """
         Flatten the data.

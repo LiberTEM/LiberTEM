@@ -18,8 +18,6 @@ except ImportError:
 
 class Karina1PhaseCorrelationAnalysis(BaseAnalysis):
     def get_parameters(self, parameters):
-        params = {}
-        params.update(parameters)
         return {
             'radius': parameters['radius'],
             'num_disks': parameters['num_disks'],
@@ -27,7 +25,6 @@ class Karina1PhaseCorrelationAnalysis(BaseAnalysis):
             'padding': parameters.get('padding', 0),
             'enable_scaling': parameters.get('enable_scaling', True),
         }
-        return params
 
     def __getstate__(self):
         # FIXME: ugly hack to check if pickle performance is bad:

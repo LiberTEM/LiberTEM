@@ -82,7 +82,7 @@ def map_partition(partition, make_result_buffers, init_fn, frame_fn):
     return result_buffers, partition
 
 
-def map_partitions(dataset, executor, merge, make_result_buffers, init_fn, frame_fn):
+def map_frames(dataset, executor, merge, make_result_buffers, init_fn, frame_fn):
     result_buffers = make_result_buffers()
     for buf in result_buffers.values():
         buf.set_shape_ds(dataset)

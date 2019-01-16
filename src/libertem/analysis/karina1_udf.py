@@ -3,8 +3,9 @@ import functools
 import numpy as np
 from skimage.feature import peak_local_max
 
-from libertem.udf import ResultBuffer, map_partitions
+from libertem.udf import ResultBuffer, map_frames
 from libertem.masks import radial_gradient
+from libertem.job.sum import SumFramesJob
 
 try:
     import pyfftw
@@ -146,7 +147,14 @@ def pass_1_merge(partition_result_buffers, sum_buffer):
 
 
 def run_analysis(dataset, executor, parameters):
-    pass_1_results = map_partitions(
+    sum_job = SumFramesJob(dataset=dataset)
+    sum_result = sum_job.get_result_buffer()
+    for tiles in executor.run_job(sum_job):
+        for tile in tiles:
+            tile.reduce_into_result(sum_result)
+
+    """
+    pass_1_results = map_frames(
         executor=executor,
         dataset=dataset,
         make_result_buffers=get_result_buffers_pass_1,
@@ -154,14 +162,15 @@ def run_analysis(dataset, executor, parameters):
         init_fn=init_pass_1,
         frame_fn=pass_1,
     )
+    """
 
     peaks = get_peaks(
         parameters=parameters,
         framesize=tuple(dataset.shape.sig),
-        sum_result=pass_1_results['sum_buffer'].data,
+        sum_result=np.log(sum_result - np.min(sum_result) + 1)  # pass_1_results['sum_buffer'].data,
     )
 
-    pass_2_results = map_partitions(
+    pass_2_results = map_frames(
         executor=executor,
         dataset=dataset,
         make_result_buffers=functools.partial(

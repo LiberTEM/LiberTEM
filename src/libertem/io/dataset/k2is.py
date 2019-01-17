@@ -10,6 +10,7 @@ import contextlib
 
 import numpy as np
 import numba
+from ncempy.io import dm
 
 from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
@@ -430,9 +431,8 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
-    def __init__(self, path, scan_size):
+    def __init__(self, path):
         self._path = path
-        self._scan_size = tuple(scan_size)
         self._start_offsets = None
         # NOTE: the sync flag appears to be set one frame too late, so
         # we compensate here by setting a negative _skip_frames value.
@@ -444,17 +444,29 @@ class K2ISDataSet(DataSet):
     def initialize(self):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
+        self._scan_size = self._get_scansize()
         ss = self._scan_size
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
-            # FIXME: the number of frames should come from the dataset,
-            # not from the user (scan_size)
             raw_shape=Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                             sig_dims=2),
             dtype=self.dtype,
         )
         return self
+
+    def _get_scansize(self):
+        with dm.fileDM(_get_gtg_path(self._path)) as dm_file:
+            return (int(dm_file.allTags['.SI Dimensions.Size Y']),
+                    int(dm_file.allTags['.SI Dimensions.Size X']))
+
+    def _scansize_without_flyback(self):
+        with dm.fileDM(_get_gtg_path(self._path)) as dm_file:
+            ss = (
+                dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Height (pixels)'],
+                dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Width (pixels)']
+            )
+            return tuple(int(i) for i in ss)
 
     @property
     def dtype(self):
@@ -487,18 +499,6 @@ class K2ISDataSet(DataSet):
         params = {
             "path": path,
         }
-        try:
-            # FIXME: hyperspy is GPL, so this would infect our K2 reader:
-            """
-            from hyperspy.io_plugins.digital_micrograph import DigitalMicrographReader
-            with open(_get_gtg_path(path), "rb") as f:
-                reader = DigitalMicrographReader(f)
-                reader.parse_file()
-            size = reader.tags_dict['SI Dimensions']
-            params['scan_size'] = (size['Size Y'], size['Size X'])
-            """
-        except Exception:
-            pass
         return params
 
     def check_valid(self):
@@ -511,7 +511,7 @@ class K2ISDataSet(DataSet):
 
     def get_diagnostics(self):
         p = next(self.get_partitions())
-        with p._get_sector() as sector:
+        with p._sectors[0] as sector:
             est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
             first_block = next(sector.get_blocks())
         fs_nosync = self._get_fileset(with_sync=False)

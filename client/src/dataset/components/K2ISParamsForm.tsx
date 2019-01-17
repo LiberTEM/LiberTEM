@@ -3,16 +3,12 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList } from "../helpers";
+import { getInitial } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
-    "path"
-    | "scan_size"
-    | "type"> & {
-    scan_size: string,
-};
+    "path" | "type">;
 
 type FormValues = DatasetParamsK2ISForForm
 
@@ -40,11 +36,6 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
             </Form.Field>
-            <Form.Field>
-                <label htmlFor="scan_size">Scan Size:</label>
-                <input type="text" name="scan_size" value={values.scan_size}
-                    onChange={handleChange} onBlur={handleBlur} />
-            </Form.Field>
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
@@ -55,7 +46,6 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        scan_size: getInitial("scan_size", "32, 32", initial),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
@@ -63,7 +53,6 @@ export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
             path,
             type: DatasetTypes.K2IS,
             name: values.name,
-            scan_size: parseNumList(values.scan_size),
         });
     }
 })(K2ISFileParamsForm);

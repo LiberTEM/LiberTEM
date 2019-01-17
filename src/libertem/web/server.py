@@ -451,7 +451,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         elif params["type"].lower() == "k2is":
             dataset_params = {
                 "path": params["path"],
-                "scan_size": params["scan_size"],
             }
         try:
             executor = self.data.get_executor()

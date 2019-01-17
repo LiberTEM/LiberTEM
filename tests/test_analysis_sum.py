@@ -29,6 +29,32 @@ def test_sum_dataset_tilesize_2(lt_ctx):
     assert np.allclose(results.intensity.raw_data, expected)
 
 
+def test_sum_endian(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype='>u2')
+    dataset = MemoryDataSet(data=data, tileshape=(1, 8, 16, 16), partition_shape=(1, 8, 16, 16))
+    expected = data.sum(axis=(0, 1))
+
+    analysis = lt_ctx.create_sum_analysis(dataset=dataset)
+
+    results = lt_ctx.run(analysis)
+
+    assert results.intensity.raw_data.shape == (16, 16)
+    assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_sum_signed(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype='<i4')
+    dataset = MemoryDataSet(data=data, tileshape=(1, 8, 16, 16), partition_shape=(1, 8, 16, 16))
+    expected = data.sum(axis=(0, 1))
+
+    analysis = lt_ctx.create_sum_analysis(dataset=dataset)
+
+    results = lt_ctx.run(analysis)
+
+    assert results.intensity.raw_data.shape == (16, 16)
+    assert np.allclose(results.intensity.raw_data, expected)
+
+
 def test_sum_timeseries(lt_ctx):
     """
     sum over the first axis of a 3D dataset

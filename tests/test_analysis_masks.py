@@ -143,6 +143,16 @@ def test_endian(lt_ctx):
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
+def test_signed(lt_ctx):
+    data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype("<i4")
+    mask = _mk_random(size=(16, 16))
+    expected = _naive_mask_apply([mask], data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4, 4, 4, 4), partition_shape=(16, 16, 16, 16))
+
+    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
 def test_multi_masks(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))
@@ -359,7 +369,7 @@ def test_numerics(lt_ctx):
         dataset=dataset, factories=[lambda: mask0]
     )
 
-    results = lt_ctx.run(analysis)    
+    results = lt_ctx.run(analysis)
     expected = np.array([[
         [VAL*RESOLUTION**2 + VAL*RANGE, VAL*RESOLUTION**2],
         [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
@@ -372,5 +382,3 @@ def test_numerics(lt_ctx):
 
     assert np.allclose(expected, naive)
     assert np.allclose(expected[0], results.mask_0.raw_data)
-
-

@@ -1,4 +1,5 @@
 import os
+import json
 import pickle
 
 import numpy as np
@@ -18,8 +19,7 @@ pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testda
 
 @pytest.fixture
 def default_k2is():
-    scan_size = (34, 35)
-    ds = K2ISDataSet(path=K2IS_TESTDATA_PATH, scan_size=scan_size)
+    ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
     ds.initialize()
     return ds
 
@@ -34,6 +34,10 @@ def test_detect():
 def test_simple_open(default_k2is):
     assert tuple(default_k2is.shape) == (34, 35, 1860, 2048)
     assert tuple(default_k2is.raw_shape) == (34 * 35, 1860, 2048)
+
+    # shapes are JSON-encodable:
+    json.dumps(tuple(default_k2is.shape))
+    json.dumps(tuple(default_k2is.raw_shape))
 
 
 def test_check_valid(default_k2is):
@@ -121,3 +125,18 @@ def test_dataset_is_picklable(default_k2is):
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024
+
+
+def test_partition_is_picklable(default_k2is):
+    pickled = pickle.dumps(next(default_k2is.get_partitions()))
+    pickle.loads(pickled)
+
+    # let's keep the pickled dataset size small-ish:
+    assert len(pickled) < 2 * 1024
+
+
+def test_get_diags(default_k2is):
+    diags = default_k2is.diagnostics
+
+    # diags are JSON-encodable:
+    json.dumps(diags)

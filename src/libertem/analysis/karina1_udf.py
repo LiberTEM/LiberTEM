@@ -27,7 +27,7 @@ def get_peaks(parameters, framesize, sum_result):
     """
     radius = parameters['radius']
     num_disks = parameters['num_disks']
-    spec_mask = get_template(sig_shape=framesize, radius=radius, mask_type=None)  # FIXME: mask_type
+    spec_mask = get_template(sig_shape=framesize, radius=radius, mask_type=parameters['mask_type'])
     spec_sum = fft.rfft2(sum_result)
     corrspec = spec_mask * spec_sum
     corr = fft.fftshift(fft.irfft2(corrspec))
@@ -44,6 +44,8 @@ def do_correlation(template, crop_part):
 
 
 def get_template(sig_shape, radius, mask_type):
+    if mask_type != "radial_gradient":
+        raise ValueError("unknown mask type: %s" % mask_type)
     mask = radial_gradient(
         centerY=sig_shape[0] // 2,
         centerX=sig_shape[1] // 2,
@@ -124,54 +126,18 @@ def pass_2_merge(partition_result_buffers, centers, peak_values):
     peak_values[:] = partition_result_buffers['peak_values'].data
 
 
-def get_result_buffers_pass_1():
-    return {
-        'sum_buffer': ResultBuffer(
-            kind="sig", dtype="float32"
-        ),
-    }
-
-
-def init_pass_1(partition):
-    return {
-        'scale_buf': np.zeros(partition.meta.shape.sig, dtype="float32")
-    }
-
-
-def pass_1(frame, sum_buffer, scale_buf):
-    sum_buffer[:] += log_scale(frame, out=scale_buf)
-
-
-def pass_1_merge(partition_result_buffers, sum_buffer):
-    sum_buffer += partition_result_buffers['sum_buffer'].data
-
-
-def run_analysis(dataset, executor, parameters):
+def run_analysis(ctx, dataset, parameters):
     sum_job = SumFramesJob(dataset=dataset)
-    sum_result = sum_job.get_result_buffer()
-    for tiles in executor.run_job(sum_job):
-        for tile in tiles:
-            tile.reduce_into_result(sum_result)
-
-    """
-    pass_1_results = map_frames(
-        executor=executor,
-        dataset=dataset,
-        make_result_buffers=get_result_buffers_pass_1,
-        merge=pass_1_merge,
-        init_fn=init_pass_1,
-        frame_fn=pass_1,
-    )
-    """
+    sum_result = ctx.run(sum_job)
 
     peaks = get_peaks(
         parameters=parameters,
         framesize=tuple(dataset.shape.sig),
-        sum_result=np.log(sum_result - np.min(sum_result) + 1)  # pass_1_results['sum_buffer'].data,
+        sum_result=np.log(sum_result - np.min(sum_result) + 1)
     )
 
     pass_2_results = map_frames(
-        executor=executor,
+        ctx=ctx,
         dataset=dataset,
         make_result_buffers=functools.partial(
             get_result_buffers_pass_2,

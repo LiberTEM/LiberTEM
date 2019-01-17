@@ -14,7 +14,7 @@ class ResultBuffer(object):
         self._shape = self._shape_for_kind(self._kind, partition.shape)
 
     def set_shape_ds(self, dataset):
-        self._shape = self._shape_for_kind(self._kind, dataset.shape)
+        self._shape = self._shape_for_kind(self._kind, dataset.raw_shape)
 
     def _shape_for_kind(self, kind, orig_shape):
         if self._kind == "nav":
@@ -82,7 +82,7 @@ def map_partition(partition, make_result_buffers, init_fn, frame_fn):
     return result_buffers, partition
 
 
-def map_frames(dataset, executor, merge, make_result_buffers, init_fn, frame_fn):
+def map_frames(ctx, dataset, merge, make_result_buffers, init_fn, frame_fn):
     result_buffers = make_result_buffers()
     for buf in result_buffers.values():
         buf.set_shape_ds(dataset)
@@ -93,7 +93,7 @@ def map_frames(dataset, executor, merge, make_result_buffers, init_fn, frame_fn)
         init_fn=init_fn,
         frame_fn=frame_fn
     )
-    for partition_result_buffers, partition in executor.map_partitions(dataset=dataset, fn=fn):
+    for partition_result_buffers, partition in ctx.executor.map_partitions(dataset=dataset, fn=fn):
         buffer_views = {}
         for k, buf in result_buffers.items():
             buffer_views[k] = buf.get_view_for_partition(partition=partition)

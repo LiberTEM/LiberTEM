@@ -6,8 +6,10 @@ import pytest
 
 from libertem.io.dataset.mib import MIBDataSet
 from libertem.job.masks import ApplyMasksJob
+from libertem.job.raw import PickFrameJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
+from libertem.common import Slice, Shape
 
 MIB_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
@@ -97,3 +99,11 @@ def test_pick_analysis(default_mib, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_mib, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
+
+
+def test_crop_to(default_mib, lt_ctx):
+    slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
+    job = PickFrameJob(dataset=default_mib, slice_=slice_)
+    res = lt_ctx.run(job)
+    assert res.shape == (1024, 64, 64)
+    # TODO: check contents

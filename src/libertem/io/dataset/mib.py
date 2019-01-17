@@ -69,19 +69,23 @@ class MIBFile(object):
         """
         bpp = self.fields['bytes_per_pixel']
         hsize = self.fields['header_size_bytes']
+        assert hsize % bpp == 0
         size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
         size = size_px * bpp  # bytes
         imagesize_incl_header = size + hsize  # bytes
         mapped = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
                            offset=offset * imagesize_incl_header)
-        idx = 0
-        while idx < num:
-            start = idx * (imagesize_incl_header // bpp) + hsize // bpp
-            end = start + size_px
-            yield idx, mapped[start:end]
-            idx += 1
 
-    def read_frames(self, num, offset, out):
+        # limit to number of frames to read
+        mapped = mapped[:num * (size_px + hsize // bpp)]
+        # reshape (num_frames, pixels) incl. header
+        mapped = mapped.reshape((num, size_px + hsize // bpp))
+        # cut off headers
+        mapped = mapped[:, (hsize // bpp):]
+        # reshape to (num_frames, pixels_y, pixels_x)
+        return mapped.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
+
+    def read_frames(self, num, offset, out, crop_to):
         """
         Read a number of frames into an existing buffer, skipping the headers
 
@@ -94,12 +98,13 @@ class MIBFile(object):
             index of first frame to read
         out : buffer
             output buffer that should fit `num` frames
+        crop_to : Slice
+            crop to the signal part of this Slice
         """
-        imagesize = self.fields['image_size']
-        out_reshaped = out.reshape(num, imagesize[0] * imagesize[1])
-
-        for idx, frame in self._frames(num=num, offset=offset):
-            out_reshaped[idx] = frame
+        frames = self._frames(num=num, offset=offset)
+        if crop_to is not None:
+            frames = frames[(...,) + crop_to.get(sig_only=True)]
+        out[:] = frames
         return out
 
 
@@ -259,22 +264,25 @@ class MIBPartition(Partition):
         assert all(s > 0 for s in self.shape), "invalid shape (%r)" % (self.shape,)
 
     def get_tiles(self, crop_to=None):
-        if crop_to is not None:
-            if crop_to.shape.sig != self.meta.shape.sig:
-                raise DataSetException("MIBDataSet only supports whole-frame crops for now")
         stackheight = self.tileshape.nav.size
 
         num_tiles = self.partfile.fields['num_images'] // stackheight
 
         tshape = self.tileshape.flatten_nav()
+        sig_origin = (0, 0)
+        if crop_to is not None and tshape.sig != crop_to.shape.sig:
+            tshape = Shape(tuple(tshape.nav) + tuple(crop_to.shape.sig), sig_dims=tshape.sig.dims)
+            sig_origin = crop_to.origin[1:]
         data = np.ndarray(tshape, dtype=self.dtype)
         for t in range(num_tiles):
-            tile_slice = Slice(origin=(t * stackheight + self.slice.origin[0], 0, 0), shape=tshape)
+            tile_slice = Slice(origin=(t * stackheight + self.slice.origin[0],) + sig_origin,
+                               shape=tshape)
             if crop_to is not None:
                 intersection = tile_slice.intersection_with(crop_to)
                 if intersection.is_null():
                     continue
-            self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data)
+            self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data,
+                                      crop_to=crop_to)
             assert all([
                 item > 0
                 for item in tile_slice.shift(self.slice).shape

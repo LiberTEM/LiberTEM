@@ -42,7 +42,7 @@ class ApplyMasksJob(Job):
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         mask_dtype = np.dtype(self.dataset.dtype)
-        if mask_dtype.kind == 'u':
+        if mask_dtype.kind in ('u', 'i'):
             mask_dtype = np.dtype("float32")
         self.masks = MaskContainer(mask_factories, dtype=mask_dtype, use_sparse=use_sparse)
         self.use_torch = use_torch
@@ -192,9 +192,7 @@ class ApplyMasksTask(Task):
             dest_dtype = 'float32'
         part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
-            data = data_tile.flat_data
-            if data.dtype.kind not in ('c', 'f'):
-                data = data.astype("float32")
+            data = data_tile.flat_data.astype(dest_dtype)
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
                 # The sparse matrix has to be the left-hand side, for that

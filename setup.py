@@ -140,6 +140,7 @@ setup(
         "h5py",
         "psutil",
         "numba",
+        "ncempy>=1.4",
         'pypiwin32;platform_system=="Windows"'
     ],
     extras_require={

@@ -45,6 +45,29 @@ With Windows cmd:
     > set LT_RUN_FUNCTIONAL=1
     > tox
 
+Running tests for the client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To run the testsuite for the client, first install the JavaScript/TypeScript dependencies:
+
+.. code-block:: shell
+
+   $ cd client/
+   $ npm install
+
+Then, in the same dircetory, to run the tests execute:
+
+.. code-block:: shell
+
+   $ npm test -- --coverage
+
+This will run all tests and report code coverage. If you want to run the tests while developing the client,
+you can run them in watch mode, which is the default:
+
+.. code-block:: shell
+
+   $ cd client/
+   $ npm test
 
 On Windows
 ~~~~~~~~~~

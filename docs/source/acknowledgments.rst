@@ -29,6 +29,9 @@ We are grateful for every contribution, and if your contribution is not listed h
 **Magnus Nord (U Antwerp)**
     Discussions, tests, code in related projects
 
+**Peter Ercius (Berkeley Lab)**
+    Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file support.
+
 **Roger Wepf (U Queensland), Caroline Fuery (Microscopy Australia), Wojtek James Goscinski, Chris Hines, Lance Wilson (Monash)**
     Discussions, supporting deployment on Australian eResearch infrastructure
 

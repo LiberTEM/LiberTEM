@@ -2,6 +2,7 @@ import os
 import math
 import logging
 import itertools
+import contextlib
 
 import numpy as np
 from ncempy.io.ser import fileSER
@@ -13,13 +14,17 @@ log = logging.getLogger(__name__)
 
 
 class SERReader(object):
-    def __init__(self, meta, path, emipath=None):
+    def __init__(self, path, emipath=None):
         self._path = path
         self._emipath = emipath
-        self._meta = meta
 
     def _get_handle(self):
         return fileSER(self._path, emifile=self._emipath)
+
+    @contextlib.contextmanager
+    def get_handle(self):
+        with self._get_handle() as f:
+            yield f
 
     def read_images(self, start, stop, out, crop_to=None):
         """
@@ -47,7 +52,8 @@ class SERDataSet(DataSet):
 
     def initialize(self):
         self._filesize = os.stat(self._path).st_size
-        with fileSER(self._path, emifile=self._emipath) as f1:
+        reader = SERReader(path=self._path, emipath=self._emipath)
+        with reader.get_handle() as f1:
             if f1.head['ValidNumberElements'] == 0:
                 raise DataSetException("no data found in file")
 
@@ -135,7 +141,7 @@ class SERDataSet(DataSet):
             yield SERPartition(
                 meta=self._meta,
                 partition_slice=part_slice,
-                reader=SERReader(path=self._path, emipath=self._emipath, meta=self._meta),
+                reader=SERReader(path=self._path, emipath=self._emipath),
                 start_frame=start,
                 num_frames=stop - start,
             )

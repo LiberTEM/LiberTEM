@@ -129,7 +129,7 @@ class BloDataSet(DataSet):
                 raise DataSetException("invalid magic number: %x != %x" % (magic, MAGIC_EXPECT))
             return True
         except (IOError, OSError) as e:
-            raise DataSetException("invalid dataset: %s" % e)
+            raise DataSetException("invalid dataset: %s" % e) from e
 
     def get_partitions(self):
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)

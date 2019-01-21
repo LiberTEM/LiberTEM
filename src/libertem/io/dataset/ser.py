@@ -59,31 +59,15 @@ class SERDataSet(DataSet):
 
             data, meta_data = f1.getDataset(0)
             dtype = f1._dictDataType[meta_data['DataType']]
-            if f1.head['DataTypeID'] == 0x4120:
-                # Spectra as 1D single spectra, 2D line scan or 3D spectrum image
-                spectra_size = data.shape[0]
-                shape = (f1.head['ValidNumberElements'], spectra_size)
-                raw_shape = shape
-                if f1.head['NumberDimensions'] > 1:
-                    scan_x = f1.head['Dimensions'][0]['DimensionSize']
-                    scan_y = f1.head['Dimensions'][1]['DimensionSize']
-                    shape = (scan_x, scan_y, spectra_size)
-
-                self._meta = DataSetMeta(
-                    shape=Shape(shape, sig_dims=1),
-                    raw_shape=Shape(raw_shape, sig_dims=1),
-                    dtype=dtype
-                )
-            elif f1.head['DataTypeID'] == 0x4122:
-                shape = (f1.head['ValidNumberElements'],) + tuple(data.shape)
-                sig_dims = len(data.shape)
-                self._meta = DataSetMeta(
-                    shape=Shape(shape, sig_dims=sig_dims),
-                    raw_shape=Shape(shape, sig_dims=sig_dims),
-                    dtype=dtype
-                )
-            else:
-                raise DataSetException("unknown DataTypeID: %s" % f1.head['DataTypeID'])
+            raw_shape = (f1.head['ValidNumberElements'],) + tuple(data.shape)
+            nav_dims = tuple(dim['DimensionSize'] for dim in f1.head['Dimensions'])
+            shape = nav_dims + tuple(data.shape)
+            sig_dims = len(data.shape)
+            self._meta = DataSetMeta(
+                shape=Shape(shape, sig_dims=sig_dims),
+                raw_shape=Shape(raw_shape, sig_dims=sig_dims),
+                dtype=dtype
+            )
         return self
 
     @classmethod

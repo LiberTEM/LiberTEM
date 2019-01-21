@@ -1,4 +1,3 @@
-import itertools
 import logging
 
 import numpy as np
@@ -10,25 +9,20 @@ from libertem.io.dataset.k2is import K2ISDataSet
 @click.command()
 @click.argument('input_filename', type=click.Path())
 @click.argument('output_filename', type=click.Path())
-@click.argument('scan_size', type=str)
 @click.option('--dtype', default='uint16', type=str)
-def main(input_filename, output_filename, scan_size, dtype):
-    scan_size = tuple(int(x) for x in scan_size.split(","))
-    ds = K2ISDataSet(path=input_filename, scan_size=scan_size)
-
-    tile_iters = [p.get_tiles()
-                  for p in ds.get_partitions()]
-
-    frame_size = (2 * 930, 8 * 256)
+def main(input_filename, output_filename, dtype):
+    ds = K2ISDataSet(path=input_filename)
+    ds.initialize()
 
     out_ds = np.memmap(output_filename, dtype=dtype, mode="w+",
-                       shape=(scan_size[0] * scan_size[1],) + frame_size)
+                       shape=tuple(ds.raw_shape))
 
-    for frame in range(scan_size[0] * scan_size[1]):
-        for tile_iter in tile_iters:
-            for tile in itertools.islice(tile_iter, 32):
-                out_ds[frame][tile.tile_slice.get()[2:]] = tile.data.astype(dtype)
-        print("frame %d" % frame)
+    num_parts = len(list(ds.get_partitions()))
+
+    for p_idx, p in enumerate(ds.get_partitions()):
+        for tile in p.get_tiles():
+            out_ds[tile.tile_slice.get()] = tile.data.astype(dtype)
+        print("partition %d/%d done" % (p_idx + 1, num_parts))
     print("done")
 
 

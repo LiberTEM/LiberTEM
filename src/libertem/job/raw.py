@@ -31,10 +31,6 @@ class PickFrameTask(Task):
         super().__init__(*args, **kwargs)
         self._slice = slice_
 
-    def _get_dest_slice(self, intersection):
-        # shift intersection to be relative to the selected slice:
-        return intersection.shift(self._slice).get()
-
     def __call__(self):
         result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
         for data_tile in self.partition.get_tiles(crop_to=self._slice):
@@ -42,7 +38,7 @@ class PickFrameTask(Task):
             # shift to data_tile relative coordinates:
             shifted = intersection.shift(data_tile.tile_slice)
             result[
-                self._get_dest_slice(intersection)
+                intersection.shift(self._slice).get()
             ] = data_tile.data[shifted.get()]
         return [PickFrameResultTile(data=result)]
 

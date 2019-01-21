@@ -456,12 +456,12 @@ class K2ISDataSet(DataSet):
         return self
 
     def _get_scansize(self):
-        with dm.fileDM(_get_gtg_path(self._path)) as dm_file:
+        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
             return (int(dm_file.allTags['.SI Dimensions.Size Y']),
                     int(dm_file.allTags['.SI Dimensions.Size X']))
 
     def _scansize_without_flyback(self):
-        with dm.fileDM(_get_gtg_path(self._path)) as dm_file:
+        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
             ss = (
                 dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Height (pixels)'],
                 dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Width (pixels)']

@@ -1,3 +1,5 @@
+import numpy as np
+
 from libertem.io.utils import get_partition_shape
 
 
@@ -107,7 +109,7 @@ class DataSetMeta(object):
     def __init__(self, shape, raw_shape, dtype):
         self.shape = shape
         self.raw_shape = raw_shape
-        self.dtype = dtype
+        self.dtype = np.dtype(dtype)
 
 
 class Partition(object):

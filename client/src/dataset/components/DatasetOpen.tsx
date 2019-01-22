@@ -9,6 +9,7 @@ import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
 import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
+import FRMS6ParamsForm from "./FRMS6ParamsForm";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import HDFSParamsForm from './HDFSParamsForm';
 import K2ISParamsForm from "./K2ISParamsForm";
@@ -106,6 +107,11 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
             case DatasetTypes.SER: {
                 const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
                 return renderForm(<SERParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
+            }
+            case DatasetTypes.FRMS6: {
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<FRMS6ParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
+
             }
         }
         return assertNotReached("unknown dataset type");

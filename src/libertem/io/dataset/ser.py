@@ -28,7 +28,7 @@ class SERReader(object):
 
     def read_images(self, start, stop, out, crop_to=None):
         """
-        read [`start`, `stop`) images from this file into `out`
+        Read [`start`, `stop`) images from this file into `out`
         """
         with self._get_handle() as f1:
             num_images = f1.head['ValidNumberElements']
@@ -148,7 +148,7 @@ class SERPartition(Partition):
         self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
-    def _get_stackheight(self, target_size=2 * 1024 * 1024):
+    def _get_stackheight(self, target_size=1 * 1024 * 1024):
         # FIXME: centralize this decision and make it tunable
         framesize = self.meta.shape.sig.size * self.dtype.itemsize
         return min(1, math.floor(target_size / framesize))

@@ -51,7 +51,7 @@ We are grateful for every contribution, and if your contribution is not listed h
     Discussions and support regarding NeXus file format
 
 **Martin Huth, Robert Ritz, Martin Simson (PNDetector)**
-    Discussions, sample files
+    Discussions, sample files, documentation for implementing FRMS6 support
 
 **Robert Bücker (MPSD)**
     Discussions, sample files

@@ -22,6 +22,16 @@ class DataSet(object):
 
     @property
     def dtype(self):
+        """
+        the destination data type
+        """
+        raise NotImplementedError()
+
+    @property
+    def raw_dtype(self):
+        """
+        the underlying data type
+        """
         raise NotImplementedError()
 
     @property
@@ -106,10 +116,13 @@ class Reader(object):
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, raw_shape, dtype):
+    def __init__(self, shape, raw_shape, dtype, raw_dtype=None):
         self.shape = shape
         self.raw_shape = raw_shape
         self.dtype = np.dtype(dtype)
+        if raw_dtype is None:
+            raw_dtype = dtype
+        self.raw_dtype = np.dtype(raw_dtype)
 
 
 class Partition(object):

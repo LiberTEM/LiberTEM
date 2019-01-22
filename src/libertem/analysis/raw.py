@@ -38,6 +38,7 @@ class PickFrameAnalysis(BaseAnalysis):
             if raw_shape.nav.dims != 1:
                 raise ValueError("can only reduce origin from N dims to 1D")
             origin = (np.ravel_multi_index(origin, self.dataset.shape.nav),)
+        shape = self.dataset.shape
 
         origin = origin + tuple([0] * self.dataset.shape.sig.dims)
 
@@ -45,8 +46,8 @@ class PickFrameAnalysis(BaseAnalysis):
             dataset=self.dataset,
             slice_=Slice(
                 origin=origin,
-                shape=Shape(tuple([1] * raw_shape.nav.dims) + tuple(raw_shape.sig),
-                            sig_dims=raw_shape.sig.dims),
+                shape=Shape(tuple([1] * raw_shape.nav.dims) + tuple(shape.sig),
+                            sig_dims=shape.sig.dims),
             ),
             squeeze=True,
         )

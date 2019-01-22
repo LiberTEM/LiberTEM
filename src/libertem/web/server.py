@@ -414,7 +414,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser"]
+        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser",
+                                          "frms6"]
         if params["type"].lower() == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
@@ -453,6 +454,10 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 "path": params["path"],
             }
         elif params["type"].lower() == "ser":
+            dataset_params = {
+                "path": params["path"],
+            }
+        elif params["type"].lower() == "frms6":
             dataset_params = {
                 "path": params["path"],
             }

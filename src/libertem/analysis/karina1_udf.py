@@ -129,11 +129,12 @@ def pass_2_merge(partition_result_buffers, centers, peak_values):
 def run_analysis(ctx, dataset, parameters):
     sum_job = SumFramesJob(dataset=dataset)
     sum_result = ctx.run(sum_job)
+    sum_result = np.log(sum_result - np.min(sum_result) + 1)
 
     peaks = get_peaks(
         parameters=parameters,
         framesize=tuple(dataset.shape.sig),
-        sum_result=np.log(sum_result - np.min(sum_result) + 1)
+        sum_result=sum_result,
     )
 
     pass_2_results = map_frames(
@@ -148,4 +149,4 @@ def run_analysis(ctx, dataset, parameters):
         frame_fn=pass_2,
     )
 
-    return pass_2_results
+    return sum_result, pass_2_results['centers'], pass_2_results['peak_values'], peaks

@@ -59,8 +59,13 @@ class SERDataSet(DataSet):
 
             data, meta_data = f1.getDataset(0)
             dtype = f1._dictDataType[meta_data['DataType']]
-            raw_shape = (f1.head['ValidNumberElements'],) + tuple(data.shape)
-            nav_dims = tuple(dim['DimensionSize'] for dim in f1.head['Dimensions'])
+            raw_shape = (int(f1.head['ValidNumberElements']),) + tuple(data.shape)
+            nav_dims = tuple(
+                reversed([
+                    int(dim['DimensionSize'])
+                    for dim in f1.head['Dimensions']
+                ])
+            )
             shape = nav_dims + tuple(data.shape)
             sig_dims = len(data.shape)
             self._meta = DataSetMeta(
@@ -72,7 +77,9 @@ class SERDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path):
-        raise NotImplementedError()
+        if path.lower().endswith(".ser"):
+            return {"path": path}
+        return False
 
     @property
     def dtype(self):

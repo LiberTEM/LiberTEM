@@ -75,6 +75,7 @@ export enum DatasetTypes {
     MIB = "MIB",
     BLO = "BLO",
     K2IS = "K2IS",
+    SER = "SER",
 }
 
 export interface DatasetParamsCommon {
@@ -122,7 +123,12 @@ export type DatasetParamsK2IS = {
     path: string,
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS
+export type DatasetParamsSER = {
+    type: DatasetTypes.SER,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER
 
 export interface DatasetCreateParams {
     id: string,

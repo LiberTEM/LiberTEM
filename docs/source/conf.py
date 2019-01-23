@@ -196,5 +196,8 @@ intersphinx_mapping = {
 # Sphinx' link checker.
 linkcheck_ignore = [
     # Local URLs:
-    r'^http://localhost.*'
+    r'^http://localhost.*',
+    # Temporary workaround for user agent filtering at fz-juelich.de
+    # FIXME check if this persists and remove if possible
+    r'^http://.*.fz-juelich.de.*'
 ]

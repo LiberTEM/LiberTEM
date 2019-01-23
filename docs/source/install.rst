@@ -56,7 +56,7 @@ Using conda
 If you are already using conda, or if you don't have a system-wide Python 3.6 installation,
 you can create a conda environment for LiberTEM.
 
-This section assumes that you have `installed conda <https://conda.io/docs/user-guide/install/index.html#regular-installation>`_
+This section assumes that you have `installed conda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
 and that your installation is working.
 
 You can create a new conda environment to install LiberTEM with the following command:
@@ -80,7 +80,7 @@ Afterwards, your shell prompt should be prefixed with `(libertem)` to indicate t
 Now the environment is ready to install LiberTEM.
     
 For more information about conda, see their `documentation about 
-creating and managing environments <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_.
+creating and managing environments <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
 
 Installing from PyPi
 ~~~~~~~~~~~~~~~~~~~~

@@ -30,7 +30,7 @@ We are grateful for every contribution, and if your contribution is not listed h
     Discussions, tests, code in related projects
 
 **Peter Ercius (Berkeley Lab)**
-    Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file support.
+    Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file and SER support.
 
 **Roger Wepf (U Queensland), Caroline Fuery (Microscopy Australia), Wojtek James Goscinski, Chris Hines, Lance Wilson (Monash)**
     Discussions, supporting deployment on Australian eResearch infrastructure
@@ -98,7 +98,7 @@ We are grateful for every contribution, and if your contribution is not listed h
 Notable Upstream Projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Python, PyData universe, Dask.distributed, PyTorch, Numpy, OpenBLAS, Click, Tornado web, Matplotlib, Pillow, H5Py, Numba, Psutil, Hdfs3
+Python, PyData universe, Dask.distributed, PyTorch, Numpy, OpenBLAS, Click, Tornado web, Matplotlib, Pillow, H5Py, Numba, Psutil, Hdfs3, Ncempy
 
 Typescript, React, React Window, Redux, Redux-saga, Semantic UI
 

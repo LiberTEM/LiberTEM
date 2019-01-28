@@ -3,16 +3,19 @@ import { connect } from 'react-redux';
 import { Dispatch } from "redux";
 import { DropdownProps, Header, Segment } from "semantic-ui-react";
 import uuid from "uuid/v4";
+import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
 import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
+import FRMS6ParamsForm from "./FRMS6ParamsForm";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import HDFSParamsForm from './HDFSParamsForm';
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
+import SERParamsForm from "./SERParamsForm";
 
 const mapDispatchToProps = (dispatch: Dispatch) => {
     return {
@@ -101,7 +104,17 @@ class DatasetOpen extends React.Component<MergedProps, DatasetOpenState> {
                 const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
                 return renderForm(<K2ISParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
             }
+            case DatasetTypes.SER: {
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<SERParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
+            }
+            case DatasetTypes.FRMS6: {
+                const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+                return renderForm(<FRMS6ParamsForm path={formPath} initial={initial} onSubmit={createDataset} onCancel={onCancel} />);
+
+            }
         }
+        return assertNotReached("unknown dataset type");
     }
 
 }

@@ -28,7 +28,7 @@ class SERReader(object):
 
     def read_images(self, start, stop, out, crop_to=None):
         """
-        read [`start`, `stop`) images from this file into `out`
+        Read [`start`, `stop`) images from this file into `out`
         """
         with self._get_handle() as f1:
             num_images = f1.head['ValidNumberElements']
@@ -59,8 +59,13 @@ class SERDataSet(DataSet):
 
             data, meta_data = f1.getDataset(0)
             dtype = f1._dictDataType[meta_data['DataType']]
-            raw_shape = (f1.head['ValidNumberElements'],) + tuple(data.shape)
-            nav_dims = tuple(dim['DimensionSize'] for dim in f1.head['Dimensions'])
+            raw_shape = (int(f1.head['ValidNumberElements']),) + tuple(data.shape)
+            nav_dims = tuple(
+                reversed([
+                    int(dim['DimensionSize'])
+                    for dim in f1.head['Dimensions']
+                ])
+            )
             shape = nav_dims + tuple(data.shape)
             sig_dims = len(data.shape)
             self._meta = DataSetMeta(
@@ -72,7 +77,9 @@ class SERDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path):
-        raise NotImplementedError()
+        if path.lower().endswith(".ser"):
+            return {"path": path}
+        return False
 
     @property
     def dtype(self):
@@ -141,7 +148,7 @@ class SERPartition(Partition):
         self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
-    def _get_stackheight(self, target_size=2 * 1024 * 1024):
+    def _get_stackheight(self, target_size=1 * 1024 * 1024):
         # FIXME: centralize this decision and make it tunable
         framesize = self.meta.shape.sig.size * self.dtype.itemsize
         return min(1, math.floor(target_size / framesize))

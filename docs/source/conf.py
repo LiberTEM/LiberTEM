@@ -196,5 +196,5 @@ intersphinx_mapping = {
 # Sphinx' link checker.
 linkcheck_ignore = [
     # Local URLs:
-    r'^http://localhost.*'
+    r'^http://localhost.*',
 ]

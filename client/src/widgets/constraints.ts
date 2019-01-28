@@ -1,7 +1,7 @@
 export const inRectConstraint = (width: number, height: number) => (p: Point2D) => {
     return {
-        x: Math.max(0, Math.min(width, p.x)),
-        y: Math.max(0, Math.min(height, p.y)),
+        x: Math.max(0, Math.min(width - 1, p.x)),
+        y: Math.max(0, Math.min(height - 1, p.y)),
     }
 }
 

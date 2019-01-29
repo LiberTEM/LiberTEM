@@ -111,13 +111,16 @@ def init_pass_2(partition, peaks, parameters):
 
 def pass_2(frame, template, crop_buf, peaks, padding, radius,
            centers, peak_values):
+    crop_size = get_crop_size(radius, padding)
     for disk_idx, crop_part in enumerate(crop_disks_from_frame(peaks=peaks,
                                                                frame=frame,
                                                                padding=padding,
                                                                radius=radius)):
         scaled = log_scale(crop_part, out=crop_buf)
         center, peak_value = do_correlation(template, scaled)
-        centers[disk_idx] = center
+        crop_origin = peaks[disk_idx] - [crop_size, crop_size]
+        abs_center = tuple(center + crop_origin)
+        centers[disk_idx] = abs_center
         peak_values[disk_idx] = peak_value
 
 

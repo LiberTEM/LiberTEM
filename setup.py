@@ -141,7 +141,9 @@ setup(
         "psutil",
         "numba",
         "ncempy>=1.4",
-        'pypiwin32;platform_system=="Windows"'
+        'pypiwin32;platform_system=="Windows"',
+        'skimage',
+        'hdbscan'
     ],
     extras_require={
         'hdfs': 'hfds3',

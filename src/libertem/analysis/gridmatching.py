@@ -126,7 +126,6 @@ def match_all(points, zero, a, b, parameters):
     indices = vector_solver(points, zero, a, b)
     rounded = np.around(indices)
     errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
-    # FIXME magic number, make user parameter
     matched_selector = errors < cutoff
     matched = points[matched_selector]
     matched_indices = rounded[matched_selector].astype(np.int)

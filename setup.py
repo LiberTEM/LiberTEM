@@ -142,7 +142,9 @@ setup(
         "numba",
         "ncempy>=1.4",
         'pypiwin32;platform_system=="Windows"',
-        'skimage',
+        # FIXME pull request #259
+        # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
+        'scikit-image',
         'hdbscan'
     ],
     extras_require={

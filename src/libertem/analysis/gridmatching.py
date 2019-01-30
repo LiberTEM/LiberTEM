@@ -1,6 +1,5 @@
 import numpy as np
 import hdbscan
-import scipy.optimize
 
 
 # Calculate coordinates from lattice vectors a, b and indices
@@ -38,45 +37,25 @@ def angle_check(p1, p2, limit):
 # The size filter only retains vectors with absolute values between min_delta
 # and max_delta to avoid calculating for unwanted higher order or random smaller vectors
 def make_polar_vectors(coords, parameters):
-    try:
-        min_delta = parameters["min_delta"]
-    except KeyError:
-        min_delta = 0
-    try:
-        max_delta = parameters["max_delta"]
-    except KeyError:
-        max_delta = np.float("inf")
     # sort by x coordinate so that we have always positive x difference vectors
     sort_indices = np.argsort(coords[:, 0])
     coords = coords[sort_indices]
-    i, j = np.mgrid[0 : len(coords), 0 : len(coords)]
+    i, j = np.mgrid[0: len(coords), 0: len(coords)]
     selector = j > i
     deltas = coords[j[selector]] - coords[i[selector]]
     polar = make_polar(deltas)
-    return size_filter(polar, min_delta, max_delta)
+    return size_filter(polar, parameters["min_delta"], parameters["max_delta"])
 
 
 def make_hdbscan_config(points, parameters):
     result = {}
-    try:
-        min_cluster_size_fraction = parameters["min_cluster_size_fraction"]
-    except KeyError:
-        min_cluster_size_fraction = 4
-
-    try:
-        min_samples_fraction = parameters["min_samples_fraction"]
-    except KeyError:
-        min_samples_fraction = 20
-
+    # This is handled here because the defaults depend on the number of points
     defaults = {
-        "min_cluster_size": max(len(points) // min_cluster_size_fraction, 2),
-        "min_samples": max(len(points) // min_samples_fraction, 1),
+        "min_cluster_size": max(len(points) // parameters["min_cluster_size_fraction"], 2),
+        "min_samples": max(len(points) // parameters["min_samples_fraction"], 1),
     }
     for (key, default) in defaults.items():
-        try:
-            result[key] = parameters[key]
-        except KeyError:
-            result[key] = default
+        result[key] = parameters.get(key, default)
     return result
 
 
@@ -105,7 +84,6 @@ def hdbscan_candidates(points, parameters):
 
         cand.append(mean)
     # return the shortest candidate vectors
-    # FIXME magic number 5
     return np.array(sorted(cand, key=lambda d: d[0])[:parameters['num_candidates']])
 
 
@@ -195,40 +173,49 @@ def find_best_vector_match(points, zero, candidates, parameters):
         raise NotFoundException
 
 
-def optimize(zero, a, b, matched, matched_indices):
-    # The minimizer expects a flat array, so we disassemble the vectors
-    z1, z2 = zero
-    a1, a2 = a
-    b1, b2 = b
+def optimize(matched, matched_indices, parameters):
+    # We stack an index of 1 to the index list for the zero component
+    indices = np.hstack([
+        np.ones((len(matched_indices), 1)),
+        matched_indices
+    ])
 
-    def error_function(vec):
-        # ... and reassemble them here
-        z1, z2, a1, a2, b1, b2 = vec
-        zero = np.array((z1, z2))
-        a = np.array((a1, a2))
-        b = np.array((b1, b2))
-        errors = matched - calc_coords(zero, a, b, matched_indices)
-        error = (errors ** 2).sum()
-        return error
-
-    x0 = np.array((z1, z2, a1, a2, b1, b2))
-    res = scipy.optimize.minimize(error_function, x0=x0)
-
-    z1, z2, a1, a2, b1, b2 = res.x
-
-    new_zero = np.array((z1, z2))
-    new_a = np.array((a1, a2))
-    new_b = np.array((b1, b2))
-
-    return np.array((new_zero, new_a, new_b))
+    (x, residuals, rank, s) = np.linalg.lstsq(indices, matched, rcond=parameters['tolerance'])
+    # (zero, a, b)
+    return x
 
 
-# In the real world, this would distinguish more between finding good candidates
-# from sum frames or region of interest
-# and then match to individual frames
-# The remainder of all frames could be thrown together for an additional round of matching
-# to find faint and sparse peaks.
 def full_match(points, zero, cand=[], parameters={}):
+    # FIXME check formatting when included in documentation
+    '''
+    In the real world, this would distinguish more between finding good candidates
+    from sum frames or region of interest
+    and then match to individual frames
+    The remainder of all frames could be thrown together for an additional round of matching
+    to find faint and sparse peaks.
+
+    Parameters
+    ----------
+    points
+        The list of points to match, numpy array of (x, y) coordinate pairs
+    zero
+        The initial guess for the zero point as numpy array (x, y).
+    cand
+        List of candidate vectors to use in a first matching round before guessing.
+    parameters
+        Parameters for the matching.
+        min_angle: Minimum angle between two vectors to be considered candidates
+        tolerance: Relative position tolerance for peaks to be considered matches
+        min_points: Minimum points to try clustering matching. Otherwise match directly
+        min_match: Minimum matched clusters from clustering matching to be considered successful
+        min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
+            smaller or fuzzier clusters.
+        min_samples_fraction: Tuning parameter for clustering matching. Larger values allow smaller
+            or fuzzier clusters.
+        num_candidates: Maximum number of candidates to return from clustering matching
+        min_delta: Minimum length of a potential grid vector
+        max_delta: Maximum length of a potential grid vector
+    '''
     matches = []
     remainder = []
     p = make_params(parameters)
@@ -248,7 +235,7 @@ def full_match(points, zero, cand=[], parameters={}):
             a, b, (matched, matched_indices, remainder) = find_best_vector_match(
                 points, zero, polar_candidate_vectors, p
             )
-            opt_zero, a, b = optimize(zero, a, b, matched, matched_indices)
+            opt_zero, a, b = optimize(matched, matched_indices, parameters)
         except NotFoundException:
             # print("no match found:\n", points)
             break
@@ -256,7 +243,7 @@ def full_match(points, zero, cand=[], parameters={}):
         (matched, matched_indices, remainder) = match_all(
             points, opt_zero, a, b, parameters
         )
-        opt_zero, a, b = optimize(opt_zero, a, b, matched, matched_indices)
+        opt_zero, a, b = optimize(matched, matched_indices, parameters)
 
         matches.append((opt_zero, a, b, matched, matched_indices))
         # doesn't span a lattice
@@ -274,18 +261,38 @@ def full_match(points, zero, cand=[], parameters={}):
     return (matches, remainder)
 
 
-# This function is much, much faster than the full match.
-# It works well to match a large number of point sets
-# that share the same lattice vectors, for example from a
-# larger grain or monocrystalline material
 def fastmatch(points, zero, a, b, parameters):
+    # FIXME check formatting when included in documentation
+    '''
+    This function finds matches for zero point and lattice vectors
+    a, b within the list of points.
+    This function is much, much faster than the full match.
+    It works well to match a large number of point sets
+    that share the same lattice vectors, for example from a
+    larger grain or monocrystalline material
+
+    Parameters
+    ----------
+    points
+        The list of points to match, numpy array of (x, y) coordinate pairs
+    zero
+        The near approximate zero point as numpy array (x, y).
+    a, b
+        The near approximate vectors a, b to match the grid as numpy arrays (x, y).
+    parameters
+        Parameters for the matching.
+        tolerance: Relative position tolerance for peaks to be considered matches
+        min_delta: Minimum length of a potential grid vector
+        max_delta: Maximum length of a potential grid vector
+    '''
+
     p = make_params(parameters)
     # We match twice
     for _ in range(2):
         (matched, matched_indices, remainder) = match_all(
             points, zero, a, b, p
         )
-        zero, a, b = optimize(zero, a, b, matched, matched_indices)
+        zero, a, b = optimize(matched, matched_indices, parameters)
     return (zero, a, b, matched, matched_indices, remainder)
 
 
@@ -297,7 +304,10 @@ def make_params(p):
         "min_match": 3,
         "min_cluster_size_fraction": 4,
         "min_samples_fraction": 20,
-        "num_candidates": 7
+        "num_candidates": 7,
+        "min_delta": 0,
+        "max_delta": np.float('inf')
+
     }
     parameters.update(p)
     return parameters

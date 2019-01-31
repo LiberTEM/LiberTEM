@@ -23,7 +23,7 @@ def make_polar(cartesian):
 
 
 def size_filter(polar, min_delta, max_delta):
-    select = (polar[:, 0] > min_delta) * (polar[:, 0] < max_delta)
+    select = (polar[:, 0] >= min_delta) * (polar[:, 0] <= max_delta)
     return polar[select]
 
 
@@ -123,7 +123,10 @@ class NotFoundException(Exception):
 # Return matched points, corresponding indices, and remainder
 def match_all(points, zero, a, b, parameters):
     cutoff = parameters['max_delta'] * parameters["tolerance"]
-    indices = vector_solver(points, zero, a, b)
+    try:
+        indices = vector_solver(points, zero, a, b)
+    except np.linalg.LinAlgError:
+        return (np.array([[]]), np.array([[]]), points)
     rounded = np.around(indices)
     errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
     matched_selector = errors < cutoff
@@ -234,24 +237,26 @@ def full_match(points, zero, cand=[], parameters={}):
             a, b, (matched, matched_indices, remainder) = find_best_vector_match(
                 points, zero, polar_candidate_vectors, p
             )
-            opt_zero, a, b = optimize(matched, matched_indices, parameters)
+            opt_zero, a, b = optimize(matched, matched_indices, p)
         except NotFoundException:
             # print("no match found:\n", points)
             break
 
         (matched, matched_indices, remainder) = match_all(
-            points, opt_zero, a, b, parameters
+            points, opt_zero, a, b, p
         )
-        opt_zero, a, b = optimize(matched, matched_indices, parameters)
+        if matched.size == 0:
+            # print("no endless loop")
+            break
+
+        opt_zero, a, b = optimize(matched, matched_indices, p)
 
         matches.append((opt_zero, a, b, matched, matched_indices))
         # doesn't span a lattice
         if len(remainder) < 4:
             # print("doesn't span a lattice")
             break
-        if len(matched) == 0:
-            # print("no endless loop")
-            break
+
         points = remainder
         # We always include the zero point because all lattices have it in
         # common and we filter it out each time
@@ -260,7 +265,7 @@ def full_match(points, zero, cand=[], parameters={}):
     return (matches, remainder)
 
 
-def fastmatch(points, zero, a, b, parameters):
+def fastmatch(points, zero, a, b, parameters={}):
     # FIXME check formatting when included in documentation
     '''
     This function finds matches for zero point and lattice vectors
@@ -283,6 +288,9 @@ def fastmatch(points, zero, a, b, parameters):
         tolerance: Relative position tolerance for peaks to be considered matches
         min_delta: Minimum length of a potential grid vector
         max_delta: Maximum length of a potential grid vector
+
+    returns:
+        (zero, a, b, matched, matched_indices, remainder)
     '''
 
     p = make_params(parameters)
@@ -291,7 +299,7 @@ def fastmatch(points, zero, a, b, parameters):
         (matched, matched_indices, remainder) = match_all(
             points, zero, a, b, p
         )
-        zero, a, b = optimize(matched, matched_indices, parameters)
+        zero, a, b = optimize(matched, matched_indices, p)
     return (zero, a, b, matched, matched_indices, remainder)
 
 

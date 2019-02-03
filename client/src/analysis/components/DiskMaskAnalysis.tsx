@@ -8,6 +8,8 @@ import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
 import FrameView from "./FrameView";
+import DraggableHandle from "../../widgets/DraggableHandle";
+import { inRectConstraint, cbToRadius, keepOnCY } from "../../widgets/constraints";
 
 interface AnalysisProps {
     parameters: MaskDefDisk,
@@ -36,10 +38,28 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
 
     const image = <FrameView dataset={dataset} analysis={analysis} />
 
+    const { cx, cy, r } = parameters;
+
+    const rHandle = {
+        x: cx - r,
+        y: cy,
+    }
+
     return (
         <AnalysisItem analysis={analysis} dataset={dataset} title="Disk analysis" subtitle={
             <>Disk: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>
-        }>
+        } frameViewHandles={<>
+
+                <DraggableHandle x={cx} y={cy}
+                    imageWidth={imageWidth}
+                    onDragMove={handleCenterChange}
+                    constraint={inRectConstraint(imageWidth, imageHeight)} />
+                <DraggableHandle x={rHandle.x} y={rHandle.y}
+                    imageWidth={imageWidth}
+                    onDragMove={cbToRadius(cx, cy, handleRChange)}
+                    constraint={keepOnCY(cy)} />
+
+        </>}>
             <Disk cx={parameters.cx} cy={parameters.cy} r={parameters.r}
                 image={image}
                 imageWidth={imageWidth} imageHeight={imageHeight} onCenterChange={handleCenterChange} onRChange={handleRChange} />

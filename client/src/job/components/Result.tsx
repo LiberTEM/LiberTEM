@@ -7,7 +7,6 @@ import BusyWrapper from "../../widgets/BusyWrapper";
 import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import HandleParent from "../../widgets/HandleParent";
-import { handleKeyEvent, ModifyCoords } from "../../widgets/kbdHandler";
 import { JobRunning, JobState } from "../types";
 import ResultImage from "./ResultImage";
 
@@ -17,6 +16,7 @@ interface ResultProps {
     job: JobState,
     dataset: DatasetState,
     analysis: AnalysisState,
+    extraHandles?: React.ReactElement<SVGElement>,
     idx: number,
 }
 
@@ -28,7 +28,7 @@ const mapDispatchToProps = {
 type MergedProps = ResultProps & DispatchProps<typeof mapDispatchToProps>;
 
 class Result extends React.Component<MergedProps> {
-    public onCenterChange = (x: number, y: number) => {
+    public onPickChange = (x: number, y: number) => {
         const { analysis } = this.props;
         if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
             return;
@@ -45,29 +45,30 @@ class Result extends React.Component<MergedProps> {
         }, "FRAME");
     }
 
-    public renderPickHandles() {
+    public renderPickHandle() {
         const { analysis, width, height } = this.props;
         if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
             return null;
         }
         const { x, y } = analysis.frameDetails.parameters;
 
-        const myKeyEvent = (e: React.KeyboardEvent<SVGElement>) => {
-            const update = (fn: ModifyCoords) => {
-                const newCoords = fn(x, y);
-                this.onCenterChange(newCoords.x, newCoords.y);
-            }
-            handleKeyEvent(e, update);
-        }
-
         return (
-            <HandleParent width={width} height={height} onKeyboardEvent={myKeyEvent}>
-                <DraggableHandle x={x} y={y} withCross={true}
-                    imageWidth={width}
-                    onDragMove={this.onCenterChange}
-                    constraint={inRectConstraint(width, height)} />
-            </HandleParent>
+            <DraggableHandle x={x} y={y} withCross={true}
+                imageWidth={width}
+                onDragMove={this.onPickChange}
+                constraint={inRectConstraint(width, height)} />
         );
+    }
+
+    public renderHandles() {
+        const { width, height, extraHandles } = this.props;
+        // FIXME: re-enable keyboard control
+        return (
+            <HandleParent width={width} height={height}>
+                {this.renderPickHandle()}
+                {extraHandles}
+            </HandleParent>
+        )
     }
 
     public render() {
@@ -78,7 +79,7 @@ class Result extends React.Component<MergedProps> {
             <BusyWrapper busy={busy}>
                 <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
                     <ResultImage job={job} idx={idx} width={width} height={height} />
-                    {this.renderPickHandles()}
+                    {this.renderHandles()}
                 </svg>
             </BusyWrapper>
         );

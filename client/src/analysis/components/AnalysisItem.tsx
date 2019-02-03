@@ -1,11 +1,7 @@
 import * as React from "react";
-import { connect } from "react-redux";
 import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 import ResultList from "../../job/components/ResultList";
-import { JobReducerState } from "../../job/reducers";
 import { DatasetOpen } from "../../messages";
-import { RootReducer } from "../../store";
-import BusyWrapper from "../../widgets/BusyWrapper";
 import { AnalysisState } from "../types";
 import FrameViewModeSelector from "./FrameViewModeSelector";
 import Toolbar from "./Toolbar";
@@ -15,16 +11,18 @@ interface AnalysisItemProps {
     dataset: DatasetOpen,
     title: string,
     subtitle: React.ReactNode,
+    frameViewHandles?: React.ReactElement<SVGElement>,
+    frameViewWidgets?: React.ReactElement<SVGElement>,
 }
 
-type MergedProps = AnalysisItemProps & ReturnType<typeof mapStateToProps>;
+type MergedProps = AnalysisItemProps;
 
-const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, title, subtitle, children }) => {
+const AnalysisItem: React.SFC<MergedProps> = ({ frameViewHandles, analysis, dataset, title, subtitle, children }) => {
     const { shape } = dataset.params;
     const resultWidth = shape[1];
     const resultHeight = shape[0];
-
-    const frameViewBusy = frameJob !== undefined ? frameJob.running !== "DONE" : false;
+    const frameWidth = shape[3];
+    const frameHeight = shape[2];
 
     return (
         <>
@@ -36,14 +34,14 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
                 <Grid columns={2}>
                     <Grid.Row>
                         <Grid.Column>
-                            <BusyWrapper busy={frameViewBusy}>
-                                {children}
-                            </BusyWrapper>
                             <FrameViewModeSelector analysis={analysis} />
+                            <ResultList extraHandles={frameViewHandles} kind='FRAME' analysis={analysis.id} width={frameWidth} height={frameHeight} >
+                                {children}
+                            </ResultList>
                             <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <ResultList analysis={analysis.id} width={resultWidth} height={resultHeight} />
+                            <ResultList kind='RESULT' analysis={analysis.id} width={resultWidth} height={resultHeight} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
@@ -53,18 +51,4 @@ const AnalysisItem: React.SFC<MergedProps> = ({ frameJob, analysis, dataset, tit
     )
 }
 
-const getFrameJob = (analysis: AnalysisState, jobs: JobReducerState) => {
-    const frameJobId = analysis.jobs.FRAME;
-    if (frameJobId === undefined) {
-        return;
-    }
-    return jobs.byId[frameJobId];
-}
-
-const mapStateToProps = (state: RootReducer, ownProps: AnalysisItemProps) => {
-    return {
-        frameJob: getFrameJob(ownProps.analysis, state.jobs)
-    }
-}
-
-export default connect(mapStateToProps)(AnalysisItem);
+export default AnalysisItem

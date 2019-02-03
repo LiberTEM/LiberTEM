@@ -5,19 +5,23 @@ import { AnalysisTypes } from "../../messages";
 import { RootReducer } from "../../store";
 import { JobRunning, JobState } from "../types";
 import Result from "./Result";
+import { JobKind } from "../../analysis/types";
 
 interface ResultListProps {
     width: number,
     height: number,
+    kind: JobKind,
+    extraHandles?: React.ReactElement<SVGElement>,
 }
 
 interface ExternalResultListProps {
     analysis: string,
+    kind: JobKind,
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
     const analysis = state.analyses.byId[ownProps.analysis];
-    const jobId = analysis.jobs.RESULT;
+    const jobId = analysis.jobs[ownProps.kind];
     const job = jobId ? state.jobs.byId[jobId] : undefined;
     const ds = job ? state.datasets.byId[job.dataset] : undefined;
     const pickCoords = analysis.frameDetails.type === AnalysisTypes.SUM_FRAMES ? null : <>Pick: x={analysis.frameDetails.parameters.x}, y={analysis.frameDetails.parameters.y} &emsp;</>;
@@ -34,26 +38,26 @@ const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) 
 type MergedProps = ResultListProps & ReturnType<typeof mapStateToProps>;
 
 interface ResultListState {
-    selectedImg: number,
+    selectedChannel: number,
 }
 
 class ResultList extends React.Component<MergedProps, ResultListState> {
-    public state: ResultListState = { selectedImg: 0 };
+    public state: ResultListState = { selectedChannel: 0 };
 
-    public selectImage = (e: React.SyntheticEvent, data: DropdownProps) => {
+    public selectChannel = (e: React.SyntheticEvent, data: DropdownProps) => {
         const value = data.value as number;
-        this.setState({ selectedImg: value });
+        this.setState({ selectedChannel: value });
     }
 
     public getJob = () => {
-        const { currentJob, analysis, jobsById } = this.props;
+        const { currentJob, analysis, jobsById, kind } = this.props;
         if (!currentJob) {
             return;
         }
         if (currentJob.results.length > 0) {
             return currentJob;
         }
-        const history = analysis.jobHistory.RESULT;
+        const history = analysis.jobHistory[kind];
         if (history.length > 0) {
             return jobsById[history[0]];
         }
@@ -61,7 +65,7 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
     }
 
     public render() {
-        const { analysis, dataset, width, height, pickCoords } = this.props;
+        const { analysis, dataset, children, width, height, pickCoords, extraHandles } = this.props;
         let msg;
         let img = (
             <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
@@ -71,7 +75,11 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
             msg = <>&nbsp;</>;
         } else {
             img = (
-                <Result analysis={analysis} job={job} dataset={dataset} width={width} height={height} idx={this.state.selectedImg} />
+                <Result analysis={analysis} job={job} dataset={dataset}
+                    extraHandles={extraHandles}
+                    width={width} height={height}
+                    idx={this.state.selectedChannel}
+                />
             );
             if (job.running === JobRunning.DONE) {
                 const dt = (job.endTimestamp - job.startTimestamp) / 1000;
@@ -83,7 +91,8 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
         return (
             <div>
                 {img}
-                <ResultImageSelector job={job} handleChange={this.selectImage} selectedImg={this.state.selectedImg} />
+                {children}
+                <ResultImageSelector job={job} handleChange={this.selectChannel} selectedImg={this.state.selectedChannel} />
                 <p>{pickCoords} {msg}</p>
             </div>
         );
@@ -104,7 +113,7 @@ const ResultImageSelector: React.SFC<ImageSelectorProps> = ({ job, handleChange,
     return (
         <>
             <div>
-                Image:{' '}
+                Channel:{' '}
                 <Dropdown
                     inline={true}
                     options={availableImages}

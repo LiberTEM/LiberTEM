@@ -184,6 +184,8 @@ def optimize(matched, matched_indices, parameters):
 
     (x, residuals, rank, s) = np.linalg.lstsq(indices, matched, rcond=parameters['tolerance'])
     # (zero, a, b)
+    if x.size == 0:
+        raise np.linalg.LinAlgError("Optimizing returned empty result")
     return x
 
 
@@ -295,12 +297,17 @@ def fastmatch(points, zero, a, b, parameters={}):
 
     p = make_params(parameters)
     # We match twice
-    for _ in range(2):
-        (matched, matched_indices, remainder) = match_all(
-            points, zero, a, b, p
-        )
-        zero, a, b = optimize(matched, matched_indices, p)
-    return (zero, a, b, matched, matched_indices, remainder)
+    try:
+        for _ in range(2):
+            (matched, matched_indices, remainder) = match_all(
+                points, zero, a, b, p
+            )
+            zero, a, b = optimize(matched, matched_indices, p)
+        return (zero, a, b, matched, matched_indices, remainder)
+    except np.linalg.LinAlgError:
+        nan = np.float('nan')
+        nan_vec = np.array([nan, nan])
+        return (nan_vec, nan_vec, nan_vec, [], [], points)
 
 
 def make_params(p):

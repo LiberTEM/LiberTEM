@@ -88,6 +88,15 @@ def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
     return mask
 
 
+def background_substraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
+    mask_1 = circular(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
+    sum_1 = np.sum(mask_1)
+    mask_2 = ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner)
+    sum_2 = np.sum(mask_2)
+    mask = mask_1 - mask_2*sum_1/sum_2
+    return mask
+
+
 # TODO: dtype parameter? consistency with ring/circular above
 def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(

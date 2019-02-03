@@ -15,6 +15,8 @@ import libertem.web.server
 import libertem.web.cli
 import libertem.api
 import libertem.preload
+import libertem.analysis.karina1_udf
+import libertem.analysis.gridmatching
 
 
 def test_stuff():

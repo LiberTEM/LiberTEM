@@ -9,7 +9,6 @@ class SumAnalysis(BaseAnalysis):
 
     def get_results(self, job_results):
         if job_results.dtype.kind == 'c':
-            results = []
             return AnalysisResultSet(
                 self.get_complex_results(
                     job_results,
@@ -18,7 +17,6 @@ class SumAnalysis(BaseAnalysis):
                     desc="sum of all frames",
                 )
             )
-            return AnalysisResultSet(results)
         return AnalysisResultSet([
             AnalysisResult(raw_data=job_results, visualized=visualize_simple(job_results),
                    key="intensity", title="intensity", desc="sum of all frames"),

@@ -31,8 +31,8 @@ export interface DraggableHandleProps {
     withCross?: boolean,
     imageWidth?: number,
     onDragMove?: (x: number, y: number) => void,
-    parentOnDragStart?: (h: DraggableHandle) => void,
-    parentOnDrop?: (x: number, y: number) => void,
+    parentOnDragStart: (h: DraggableHandle) => void,
+    parentOnDrop: (x: number, y: number) => void,
     constraint?: (p: Point2D) => Point2D,
 }
 
@@ -103,6 +103,8 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     public startDrag = (e: React.MouseEvent<SVGElement>): void => {
         e.preventDefault();
         const { parentOnDragStart } = this.props;
+        // tslint:disable-next-line:no-console
+        console.log("DraggableHandle.startDrag", parentOnDragStart, this.posRef)
         if (this.posRef.current) {
             this.setState({
                 dragging: true,

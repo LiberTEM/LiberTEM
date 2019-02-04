@@ -1,10 +1,12 @@
 import * as React from "react";
 import { DraggableHandle } from "./DraggableHandle";
+import { HandleRenderFunction } from "./types";
 
 export interface HandleParentProps {
     width: number,
     height: number,
     onKeyboardEvent?: React.KeyboardEventHandler<SVGElement>,
+    handles: HandleRenderFunction[],
 }
 
 export class HandleParent extends React.Component<HandleParentProps> {
@@ -19,6 +21,8 @@ export class HandleParent extends React.Component<HandleParentProps> {
     }
 
     public handleMouseMove = (e: React.MouseEvent<SVGElement>): void => {
+        // tslint:disable-next-line:no-console
+        console.log("HandleParent mouseMove", this.currentHandle);
         if (this.currentHandle) {
             return this.currentHandle.externalMouseMove(e);
         }
@@ -53,23 +57,23 @@ export class HandleParent extends React.Component<HandleParentProps> {
                 <rect style={{ fill: "transparent" }}
                     x={0} y={0} width={width} height={height}
                 />
-                {this.renderChildren()}
+                {this.renderHandles()}
             </g>
         );
     }
 
-    public renderChildren() {
-        const { children } = this.props;
-        return React.Children.map(children, child => {
-            if (!React.isValidElement(child)) {
-                return child;
+    public renderHandles() {
+        const { handles } = this.props;
+        // we need to inform the handle when there are move/up/leave events
+        // on this parent element, for which we need to know the current handle.
+        // so we pass the handle a dragstart/drop function and kindly ask it
+        // to call us if it starts to be dragged or is dropped.
+        return handles.map((h, i) => {
+            const elem = h(this.handleDragStart, this.handleDrop);
+            if (React.isValidElement(elem)) {
+                return React.cloneElement(elem, { key: i });
             }
-            const newProps = {
-                parentOnDragStart: this.handleDragStart,
-                parentOnDrop: this.handleDrop,
-            };
-            return React.cloneElement(child, newProps);
-        })
+        });
     }
 }
 

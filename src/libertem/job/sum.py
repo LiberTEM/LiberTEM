@@ -9,7 +9,7 @@ class SumFramesJob(Job):
             yield SumFramesTask(partition=partition)
 
     def get_result_shape(self):
-        return self.dataset.raw_shape.sig
+        return self.dataset.shape.sig
 
 
 class SumFramesTask(Task):
@@ -20,7 +20,7 @@ class SumFramesTask(Task):
         dest_dtype = np.dtype(self.partition.dtype)
         if dest_dtype.kind not in ('c', 'f'):
             dest_dtype = 'float32'
-        part = np.zeros(self.partition.meta.raw_shape.sig, dtype=dest_dtype)
+        part = np.zeros(self.partition.meta.shape.sig, dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
             data = data_tile.data.astype(dest_dtype)
             # sum over all navigation axes; for 2d this would be (0, 1), for 1d (0,) etc.:

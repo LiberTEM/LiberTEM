@@ -27,15 +27,15 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         return True
 
     def get_mask_factories(self):
-        if self.dataset.raw_shape.sig.dims != 2:
+        if self.dataset.shape.sig.dims != 2:
             raise ValueError("can only handle 2D signals currently")
 
-        (detector_y, detector_x) = self.dataset.raw_shape.sig
+        (detector_y, detector_x) = self.dataset.shape.sig
 
         cx = self.parameters['cx']
         cy = self.parameters['cy']
 
-        sig_shape = self.dataset.raw_shape.sig
+        sig_shape = self.dataset.shape.sig
         dtype = self.dtype
 
         def _point_inner():
@@ -45,7 +45,7 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         return [_point_inner]
 
     def get_parameters(self, parameters):
-        (detector_y, detector_x) = self.dataset.raw_shape.sig
+        (detector_y, detector_x) = self.dataset.shape.sig
 
         cx = parameters.get('cx', detector_x / 2)
         cy = parameters.get('cy', detector_y / 2)

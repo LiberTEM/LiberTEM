@@ -6,4 +6,5 @@ export type HandleDropFn = () => void
 export type HandleRenderFunction = (
     handleDragStart: HandleDragStartFn,
     handleDrop: HandleDropFn,
+    onKeyboardEvent?: (e: React.KeyboardEvent<SVGElement>) => void,
 ) => (JSX.Element | null)

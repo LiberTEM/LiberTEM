@@ -43,7 +43,6 @@ class Result extends React.Component<MergedProps> {
             handles = [...handles, extraHandles];
         }
 
-        // FIXME: re-enable keyboard control
         return (
             <HandleParent width={width} height={height} handles={handles} />
         )

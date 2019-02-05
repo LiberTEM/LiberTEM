@@ -21,8 +21,6 @@ export class HandleParent extends React.Component<HandleParentProps> {
     }
 
     public handleMouseMove = (e: React.MouseEvent<SVGElement>): void => {
-        // tslint:disable-next-line:no-console
-        console.log("HandleParent mouseMove", this.currentHandle);
         if (this.currentHandle) {
             return this.currentHandle.externalMouseMove(e);
         }
@@ -63,13 +61,13 @@ export class HandleParent extends React.Component<HandleParentProps> {
     }
 
     public renderHandles() {
-        const { handles } = this.props;
+        const { handles, onKeyboardEvent } = this.props;
         // we need to inform the handle when there are move/up/leave events
         // on this parent element, for which we need to know the current handle.
         // so we pass the handle a dragstart/drop function and kindly ask it
         // to call us if it starts to be dragged or is dropped.
         return handles.map((h, i) => {
-            const elem = h(this.handleDragStart, this.handleDrop);
+            const elem = h(this.handleDragStart, this.handleDrop, onKeyboardEvent);
             if (React.isValidElement(elem)) {
                 return React.cloneElement(elem, { key: i });
             }

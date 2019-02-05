@@ -19,6 +19,15 @@ const StyledCircle = styled.circle`
     }
 `;
 
+const Cross = styled.path`
+    stroke: red;
+    stroke-width: 1;
+    fill: transparent;
+    g:focus > & {
+        stroke: lightgreen;
+    }
+`;
+
 const FocusGroup = styled.g`
     &:focus { outline: none; }
 `;
@@ -32,7 +41,7 @@ const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, focusRef, ...a
         M${x - r / 2} ${y} L ${x + r / 2} ${y}
         M${x} ${y - r / 2} L ${x} ${y + r / 2}
     `;
-    const cross = withCross ? <path d={crossSpec} style={style} /> : null;
+    const cross = withCross ? <Cross d={crossSpec} style={style} /> : null;
     return (
         <FocusGroup {...args} ref={focusRef}>
             <StyledCircle cx={x} cy={y} r={r} style={style} />

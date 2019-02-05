@@ -1,27 +1,52 @@
 import * as React from "react";
+import styled from 'styled-components';
+import { handleKeyEvent, ModifyCoords } from "./kbdHandler";
 
 export type HandleProps = {
     x: number,
     y: number,
     scale: number,
     withCross?: boolean,
-} & React.SVGProps<SVGCircleElement>;
+    focusRef: React.RefObject<SVGGElement>,
+} & React.SVGProps<SVGGElement>;
 
-const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, ...args }) => {
+const StyledCircle = styled.circle`
+    stroke: red;
+    stroke-width: 1;
+    fill: transparent;
+    g:focus > & {
+        stroke: lightgreen;
+    }
+`;
+
+const Cross = styled.path`
+    stroke: red;
+    stroke-width: 1;
+    fill: transparent;
+    g:focus > & {
+        stroke: lightgreen;
+    }
+`;
+
+const FocusGroup = styled.g`
+    &:focus { outline: none; }
+`;
+
+const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, focusRef, ...args }) => {
     const r = 3;
     // scaleMatrix is needed to set the origin of the scale
     const scaleMatrix = `matrix(${scale}, 0, 0, ${scale}, ${x - scale * x}, ${y - scale * y})`;
-    const style: React.CSSProperties = { transform: scaleMatrix, stroke: "red", strokeWidth: 1, fill: "transparent" };
+    const style: React.CSSProperties = { transform: scaleMatrix };
     const crossSpec = `
         M${x - r / 2} ${y} L ${x + r / 2} ${y}
         M${x} ${y - r / 2} L ${x} ${y + r / 2}
     `;
-    const cross = withCross ? <path d={crossSpec} style={style} /> : null;
+    const cross = withCross ? <Cross d={crossSpec} style={style} /> : null;
     return (
-        <g {...args}>
-            <circle cx={x} cy={y} r={r} style={style} />
+        <FocusGroup {...args} ref={focusRef}>
+            <StyledCircle cx={x} cy={y} r={r} style={style} />
             {cross}
-        </g>
+        </FocusGroup>
     )
 }
 
@@ -31,8 +56,9 @@ export interface DraggableHandleProps {
     withCross?: boolean,
     imageWidth?: number,
     onDragMove?: (x: number, y: number) => void,
-    parentOnDragStart?: (h: DraggableHandle) => void,
-    parentOnDrop?: (x: number, y: number) => void,
+    parentOnDragStart: (h: DraggableHandle) => void,
+    parentOnDrop: (x: number, y: number) => void,
+    onKeyboardEvent?: (e: React.KeyboardEvent<SVGElement>) => void,
     constraint?: (p: Point2D) => Point2D,
 }
 
@@ -65,6 +91,7 @@ function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
  */
 export class DraggableHandle extends React.Component<DraggableHandleProps> {
     public posRef: React.RefObject<SVGRectElement>;
+    public focusRef: React.RefObject<SVGGElement>;
 
     public state = {
         dragging: false,
@@ -74,6 +101,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     constructor(props: DraggableHandleProps) {
         super(props);
         this.posRef = React.createRef<SVGRectElement>();
+        this.focusRef = React.createRef<SVGGElement>();
     }
 
     // mousemove event from outside (delegated from surrounding element)
@@ -110,6 +138,9 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
             });
             if (parentOnDragStart) {
                 parentOnDragStart(this);
+            }
+            if (this.focusRef.current) {
+                this.focusRef.current.focus();
             }
         } else {
             throw new Error("startDrag without posRef");
@@ -149,6 +180,18 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         }
     }
 
+    public handleKeyDown = (e: React.KeyboardEvent<SVGElement>) => {
+        const update = (fn: ModifyCoords) => {
+            const { x, y, onDragMove } = this.props;
+            const newCoords = fn(x, y);
+            const constrained = this.applyConstraint(newCoords);
+            if (onDragMove) {
+                onDragMove(constrained.x, constrained.y);
+            }
+        }
+        handleKeyEvent(e, update);
+    }
+
     public renderCommon(x: number, y: number) {
         const { imageWidth } = this.props;
         const scale = imageWidth === undefined ? 1 : imageWidth / 128;
@@ -161,9 +204,12 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
                     x={0} y={0} width={0} height={0}
                 />
                 <Handle scale={scale} x={x} y={y} withCross={this.props.withCross}
+                    focusRef={this.focusRef}
                     onMouseUp={this.stopDrag}
                     onMouseMove={this.move}
                     onMouseDown={this.startDrag}
+                    onKeyDown={this.handleKeyDown}
+                    tabIndex={0}
                 />
             </g>
         );

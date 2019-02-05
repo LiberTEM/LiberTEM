@@ -13,8 +13,9 @@ class BaseMasksAnalysis(BaseAnalysis):
 
     @property
     def dtype(self):
-        return np.dtype(
-            self.dataset.dtype).kind == 'f' and self.dataset.dtype or "float32"
+        if np.dtype(self.dataset.dtype).kind in ('f', 'c'):
+            return self.dataset.dtype
+        return np.dtype("float32")
 
     def get_job(self):
         mask_factories = self.get_mask_factories()
@@ -41,12 +42,24 @@ class MasksAnalysis(BaseMasksAnalysis):
 
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
+        if job_results.dtype.kind == 'c':
+            results = []
+            for idx, job_result in enumerate(job_results):
+                results.extend(
+                    self.get_complex_results(
+                        job_result,
+                        key_prefix="mask_%d" % idx,
+                        title="mask %d" % idx,
+                        desc="integrated intensity for mask %d" % idx,
+                    )
+                )
+            return AnalysisResultSet(results)
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=mask_result.reshape(shape),
                 visualized=visualize_simple(mask_result.reshape(shape)),
                 key="mask_%d" % i,
                 title="mask %d" % i,
-                desc="intensity for mask %d" % i)
+                desc="integrated intensity for mask %d" % i)
             for i, mask_result in enumerate(job_results)
         ])

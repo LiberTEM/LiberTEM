@@ -127,3 +127,36 @@ def test_point_defaults(lt_ctx, ds_random):
         results.intensity.raw_data,
         expected,
     )
+
+
+def test_disk_complex(lt_ctx, ds_complex):
+    analysis = lt_ctx.create_disk_analysis(dataset=ds_complex)
+    results = lt_ctx.run(analysis)
+    mask = analysis.get_mask_factories()[0]()
+    expected = _naive_mask_apply([mask], ds_complex.data)
+    assert np.allclose(
+        results.intensity_complex.raw_data,
+        expected,
+    )
+
+
+def test_ring_complex(lt_ctx, ds_complex):
+    analysis = lt_ctx.create_ring_analysis(dataset=ds_complex)
+    results = lt_ctx.run(analysis)
+    mask = analysis.get_mask_factories()[0]()
+    expected = _naive_mask_apply([mask], ds_complex.data)
+    assert np.allclose(
+        results.intensity_complex.raw_data,
+        expected,
+    )
+
+
+def test_point_complex(lt_ctx, ds_complex):
+    analysis = lt_ctx.create_point_analysis(dataset=ds_complex)
+    results = lt_ctx.run(analysis)
+    mask = analysis.get_mask_factories()[0]()
+    expected = _naive_mask_apply([mask], ds_complex.data)
+    assert np.allclose(
+        results.intensity_complex.raw_data,
+        expected,
+    )

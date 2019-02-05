@@ -6,6 +6,8 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem import api as lt
 
+from utils import MemoryDataSet
+
 
 @pytest.fixture
 def inline_executor():
@@ -52,3 +54,16 @@ def hdf5_ds_1(hdf5):
     )
     ds.initialize()
     return ds
+
+
+@pytest.fixture
+def ds_complex():
+    data = np.random.choice(
+        a=[0, 1, 0+1j, 0-1j, 1+1j, 1-1j], size=(16, 16, 16, 16)
+    ).astype('complex64')
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 16, 16),
+        partition_shape=(16, 16, 16, 16)
+    )
+    return dataset

@@ -1,13 +1,12 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import styled from 'styled-components';
 import * as analysisActions from '../../analysis/actions';
-import { AnalysisState } from "../../analysis/types";
-import { AnalysisTypes, DatasetState } from "../../messages";
+import { AnalysisState, JobKind } from "../../analysis/types";
+import { DatasetState } from "../../messages";
 import BusyWrapper from "../../widgets/BusyWrapper";
-import { inRectConstraint } from "../../widgets/constraints";
-import DraggableHandle from "../../widgets/DraggableHandle";
 import HandleParent from "../../widgets/HandleParent";
-import { handleKeyEvent, ModifyCoords } from "../../widgets/kbdHandler";
+import { HandleRenderFunction } from "../../widgets/types";
 import { JobRunning, JobState } from "../types";
 import ResultImage from "./ResultImage";
 
@@ -17,9 +16,18 @@ interface ResultProps {
     job: JobState,
     dataset: DatasetState,
     analysis: AnalysisState,
+    extraHandles?: HandleRenderFunction,
+    extraWidgets?: React.ReactElement<SVGElement>,
     idx: number,
+    kind: JobKind,
 }
 
+const ResultWrapper = styled.svg`
+    display: block;
+    border: 1px solid black;
+    width: 100%;
+    height: auto;
+`;
 
 const mapDispatchToProps = {
     updateParameters: analysisActions.Actions.updateParameters,
@@ -28,58 +36,29 @@ const mapDispatchToProps = {
 type MergedProps = ResultProps & DispatchProps<typeof mapDispatchToProps>;
 
 class Result extends React.Component<MergedProps> {
-    public onCenterChange = (x: number, y: number) => {
-        const { analysis } = this.props;
-        if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
-            return;
-        }
-        const oldParams = analysis.frameDetails.parameters;
-        const newX = Math.round(x);
-        const newY = Math.round(y);
-        if (oldParams.x === newX && oldParams.y === newY) {
-            return;
-        }
-        this.props.updateParameters(this.props.analysis.id, {
-            x: newX,
-            y: newY,
-        }, "FRAME");
-    }
-
-    public renderPickHandles() {
-        const { analysis, width, height } = this.props;
-        if (analysis.frameDetails.type !== AnalysisTypes.PICK_FRAME) {
-            return null;
-        }
-        const { x, y } = analysis.frameDetails.parameters;
-
-        const myKeyEvent = (e: React.KeyboardEvent<SVGElement>) => {
-            const update = (fn: ModifyCoords) => {
-                const newCoords = fn(x, y);
-                this.onCenterChange(newCoords.x, newCoords.y);
-            }
-            handleKeyEvent(e, update);
+    public renderHandles() {
+        const { width, height, extraHandles } = this.props;
+        let handles: HandleRenderFunction[] = [];
+        if (extraHandles) {
+            handles = [...handles, extraHandles];
         }
 
         return (
-            <HandleParent width={width} height={height} onKeyboardEvent={myKeyEvent}>
-                <DraggableHandle x={x} y={y} withCross={true}
-                    imageWidth={width}
-                    onDragMove={this.onCenterChange}
-                    constraint={inRectConstraint(width, height)} />
-            </HandleParent>
-        );
+            <HandleParent width={width} height={height} handles={handles} />
+        )
     }
 
     public render() {
-        const { job, idx, width, height } = this.props;
+        const { job, idx, width, height, extraWidgets } = this.props;
         const busy = job.running !== JobRunning.DONE;
 
         return (
             <BusyWrapper busy={busy}>
-                <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+                <ResultWrapper width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
                     <ResultImage job={job} idx={idx} width={width} height={height} />
-                    {this.renderPickHandles()}
-                </svg>
+                    {extraWidgets}
+                    {this.renderHandles()}
+                </ResultWrapper>
             </BusyWrapper>
         );
     }

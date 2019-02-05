@@ -63,8 +63,18 @@ class PickFrameAnalysis(BaseAnalysis):
         shape = tuple(self.dataset.shape.sig)
         data = job_results.reshape(shape)
 
+        if data.dtype.kind == 'c':
+            return AnalysisResultSet(
+                self.get_complex_results(
+                    job_results,
+                    key_prefix="intensity",
+                    title="intensity",
+                    desc="the frame at %s" % (coords,),
+                )
+            )
+        visualized = visualize_simple(data)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
+            AnalysisResult(raw_data=data, visualized=visualized,
                            key="intensity", title="intensity",
                            desc="the frame at %s" % (coords,)),
         ])

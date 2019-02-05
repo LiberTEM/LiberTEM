@@ -345,6 +345,33 @@ def test_masks_hyperspectral(lt_ctx):
     assert results.mask_0.raw_data.shape == (16, 16)
 
 
+def test_masks_complex_ds(lt_ctx, ds_complex):
+    mask0 = _mk_random(size=(16, 16))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=ds_complex, factories=[lambda: mask0]
+    )
+    results = lt_ctx.run(analysis)
+    assert results.mask_0.raw_data.shape == (16, 16)
+
+
+def test_masks_complex_mask(lt_ctx, ds_complex):
+    mask0 = _mk_random(size=(16, 16), dtype="complex64")
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=ds_complex, factories=[lambda: mask0]
+    )
+    expected = _naive_mask_apply([mask0], ds_complex.data)
+    results = lt_ctx.run(analysis)
+    assert results.mask_0_complex.raw_data.shape == (16, 16)
+    assert np.allclose(
+        results.mask_0_complex.raw_data,
+        expected
+    )
+
+    # also execute _run_mask_test_program to check sparse implementation.
+    # _run_mask_test_program checks mask_0 result, which is np.abs(mask_0_complex)
+    _run_mask_test_program(lt_ctx, ds_complex, mask0, np.abs(expected))
+
+
 def test_numerics(lt_ctx):
     dtype = 'float32'
     # Highest expected detector resolution

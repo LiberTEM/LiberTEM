@@ -35,7 +35,7 @@ class RawFileDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims),
             raw_shape=Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims),
-            dtype=dtype
+            dtype=np.dtype(dtype)
         )
 
     def initialize(self):

@@ -8,6 +8,16 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         data = job_results[0]
         shape = tuple(self.dataset.shape.nav)
+
+        if data.dtype.kind == 'c':
+            return AnalysisResultSet(
+                self.get_complex_results(
+                    data,
+                    key_prefix='intensity',
+                    title='intensity',
+                    desc="intensity of the integration over the selected disk",
+                )
+            )
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=data.reshape(shape),

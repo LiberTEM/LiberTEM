@@ -3,11 +3,13 @@ import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
 import { DatasetOpen, MaskDefDisk } from "../../messages";
+import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
+import DraggableHandle from "../../widgets/DraggableHandle";
+import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
-import FrameView from "./FrameView";
 
 interface AnalysisProps {
     parameters: MaskDefDisk,
@@ -34,16 +36,41 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
     const imageWidth = shape[3];
     const imageHeight = shape[2];
 
-    const image = <FrameView dataset={dataset} analysis={analysis} />
+    const { cx, cy, r } = parameters;
+
+    const rHandle = {
+        x: cx - r,
+        y: cy,
+    }
+
+    const frameViewHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
+        <DraggableHandle x={cx} y={cy}
+            imageWidth={imageWidth}
+            onDragMove={handleCenterChange}
+            parentOnDragStart={handleDragStart}
+            parentOnDrop={handleDrop}
+            constraint={inRectConstraint(imageWidth, imageHeight)} />
+        <DraggableHandle x={rHandle.x} y={rHandle.y}
+            imageWidth={imageWidth}
+            onDragMove={cbToRadius(cx, cy, handleRChange)}
+            parentOnDragStart={handleDragStart}
+            parentOnDrop={handleDrop}
+            constraint={keepOnCY(cy)} />
+    </>);
+
+    const frameViewWidgets = (
+        <Disk cx={parameters.cx} cy={parameters.cy} r={parameters.r}
+            imageWidth={imageWidth} imageHeight={imageHeight}
+        />
+    );
+
+    const subtitle = <>Disk: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>;
 
     return (
-        <AnalysisItem analysis={analysis} dataset={dataset} title="Disk analysis" subtitle={
-            <>Disk: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>
-        }>
-            <Disk cx={parameters.cx} cy={parameters.cy} r={parameters.r}
-                image={image}
-                imageWidth={imageWidth} imageHeight={imageHeight} onCenterChange={handleCenterChange} onRChange={handleRChange} />
-        </AnalysisItem>
+        <AnalysisItem analysis={analysis} dataset={dataset}
+            title="Disk analysis" subtitle={subtitle}
+            frameViewHandles={frameViewHandles} frameViewWidgets={frameViewWidgets}
+        />
     );
 }
 

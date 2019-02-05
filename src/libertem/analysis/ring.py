@@ -8,6 +8,15 @@ class RingMaskAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
         data = job_results[0].reshape(shape)
+        if data.dtype.kind == 'c':
+            return AnalysisResultSet(
+                self.get_complex_results(
+                    data,
+                    key_prefix='intensity',
+                    title='intensity',
+                    desc="intensity of the integration over the selected ring",
+                )
+            )
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=data,

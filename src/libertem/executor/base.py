@@ -27,6 +27,15 @@ class JobExecutor(object):
         cleanup resources used by this executor, if any
         """
 
+    def get_available_workers(self):
+        """
+        returns a list of dicts with available workers
+        keys of the dictionary:
+            name : the identifying name of the worker
+            host : ip address or hostname where the worker is running
+        """
+        raise NotImplementedError()
+
 
 class AsyncJobExecutor(object):
     async def run_job(self, job):
@@ -51,3 +60,6 @@ class AsyncJobExecutor(object):
         cancel execution of `job`
         """
         pass
+
+    async def get_available_workers(self):
+        raise NotImplementedError()

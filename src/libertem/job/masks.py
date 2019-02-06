@@ -48,11 +48,12 @@ class ApplyMasksJob(Job):
         self.use_torch = use_torch
 
     def get_tasks(self):
-        for partition in self.dataset.get_partitions():
+        for idx, partition in enumerate(self.dataset.get_partitions()):
             yield ApplyMasksTask(
                 partition=partition,
                 masks=self.masks,
                 use_torch=self.use_torch,
+                idx=idx,
             )
 
     def get_result_shape(self):

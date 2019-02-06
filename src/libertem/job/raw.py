@@ -15,10 +15,10 @@ class PickFrameJob(Job):
         self._squeeze = squeeze
 
     def get_tasks(self):
-        for partition in self.dataset.get_partitions():
+        for idx, partition in enumerate(self.dataset.get_partitions()):
             if self._slice.intersection_with(partition.slice).is_null():
                 continue
-            yield PickFrameTask(partition=partition, slice_=self._slice)
+            yield PickFrameTask(partition=partition, slice_=self._slice, idx=idx)
 
     def get_result_shape(self):
         if self._squeeze:

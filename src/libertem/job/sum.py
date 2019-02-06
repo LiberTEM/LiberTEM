@@ -5,8 +5,8 @@ from .base import Job, Task, ResultTile
 
 class SumFramesJob(Job):
     def get_tasks(self):
-        for partition in self.dataset.get_partitions():
-            yield SumFramesTask(partition=partition)
+        for idx, partition in enumerate(self.dataset.get_partitions()):
+            yield SumFramesTask(partition=partition, idx=idx)
 
     def get_result_shape(self):
         return self.dataset.shape.sig

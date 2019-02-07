@@ -121,6 +121,17 @@ This project has received funding from the European Research Council (ERC) under
 2020 research and innovation programme 
 (`grant agreement No 780487 <https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics>`_).
 
+**ESTEEM3**
+
+.. image:: ./images/EU.jpg
+    :align: left
+    :width: 100px
+    :alt: European Union flag
+
+This project has received funding from the European Union's Horizon 2020 
+research and innovation programme under grant agreement No 823717 – ESTEEM3. 
+
+
 **Forschungszentrum Jülich, Ernst-Ruska Centrum**
 
 .. image:: ./images/FZJ.jpg

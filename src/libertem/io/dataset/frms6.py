@@ -1,12 +1,14 @@
 # -*- encoding: utf-8 -*-
 import os
 import re
+import csv
 import glob
 import math
 import logging
 import itertools
 import configparser
 
+import scipy.io as sio
 import numpy as np
 
 from libertem.common import Slice, Shape
@@ -39,6 +41,10 @@ frame_header_dtype = [
     ('padding_2', (bytes, 12)),
     ('comment', (bytes, 36)),
 ]
+
+
+class GainMapCSVDialect(csv.excel):
+    delimiter = ';'
 
 
 def _unbin(tile_data, factor):
@@ -131,10 +137,25 @@ class FRMS6File(object):
 
 
 class FRMS6FileSet(object):
-    def __init__(self, files, meta, dark_frame):
+    def __init__(self, files, meta, dark_frame, gain_map):
+        """
+        Represents all files belonging to a measurement.
+
+        Parameters:
+        -----------
+        files : list of FRMS6File
+            full paths of all files, without the file containing dark frames
+        meta : DataSetMeta
+            dataset metadata
+        dark_frame : ndarray or None
+            the raw dark frame (2D, not folded)
+        gain_map : ndarray or None
+            gain map (2D, folded)
+        """
         self._files = files
         self._meta = meta
         self._dark_frame = dark_frame
+        self._gain_map = gain_map
 
     def read_images(self, start, stop, out, crop_to=None):
         """
@@ -149,6 +170,8 @@ class FRMS6FileSet(object):
         1) convert into float
         2) offset correction (dark frame substraction)
         3) folding
+        4) apply gain map
+        5) un-binning
         """
 
         frames_read = 0
@@ -180,7 +203,8 @@ class FRMS6FileSet(object):
         assert frames_read == out.shape[0]
 
         # 2) offset correction:
-        raw_buffer -= self._dark_frame
+        if self._dark_frame is not None:
+            raw_buffer -= self._dark_frame
 
         # 3) folding: l(eft) p(art), r(ight) p(art)
         # the right part is folded to below the left part
@@ -194,7 +218,15 @@ class FRMS6FileSet(object):
         # negative strides to flip both x and y direction:
         rp = rp[:, ::-1, ::-1]
 
-        # un-binning:
+        # 4) apply gain map:
+        if self._gain_map is not None:
+            gain_half = self._gain_map.shape[0] // 2
+            gain_lp = self._gain_map[:gain_half, ...]
+            gain_rp = self._gain_map[gain_half:, ...]
+            lp *= gain_lp
+            rp *= gain_rp
+
+        # 5) un-binning:
         bin_factor = self._files[0].global_header['readoutmode']['bin']
         if bin_factor > 1:
             lp = _unbin(lp, factor=bin_factor)
@@ -209,11 +241,27 @@ class FRMS6FileSet(object):
 
 
 class FRMS6DataSet(DataSet):
-    def __init__(self, path, dest_dtype=np.dtype("float32")):
+    def __init__(self, path, enable_offset_correction=True, dest_dtype=np.dtype("float32"),
+                 gain_map_path=None):
+        """
+        Parameters:
+        -----------
+
+        path : string
+            path to one of the files of the FRMS6 dataset
+        enable_offset_correction : boolean
+            substract dark frames when reading data
+        dest_dtype : numpy.dtype
+            convert data into this dtype after reading
+        gain_map_path : string
+            path to a gain map to apply (.mat format)
+        """
         self._path = path
+        self._gain_map_path = gain_map_path
         self._dark_frame = None
         self._meta = None
         self._dest_dtype = dest_dtype
+        self._enable_offset_correction = enable_offset_correction
 
     @property
     def shape(self):
@@ -224,8 +272,8 @@ class FRMS6DataSet(DataSet):
         return self._meta.raw_shape
 
     def initialize(self):
-        dark_file = self._get_dark_file()
-        header = dark_file.header
+        first_file = next(self._get_signal_files())
+        header = first_file.header
         raw_frame_size = header['height'], header['width']
         frame_size = 2 * header['height'], header['width'] // 2
         assert header['width'] % 2 == 0
@@ -243,10 +291,8 @@ class FRMS6DataSet(DataSet):
             raw_shape=Shape((num_frames,) + raw_frame_size, sig_dims=sig_dims),
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
         )
-        # FIXME: currently doing two passes here: dtype conversion and summation
-        self._dark_frame = (
-            dark_file.data.astype(self._meta.dtype).sum(axis=0) / dark_file.data.shape[0]
-        )
+        self._dark_frame = self._get_dark_frame()
+        self._gain_map = self._get_gain_map()
         self._total_filesize = sum(
             os.stat(path).st_size
             for path in self._files()
@@ -261,7 +307,12 @@ class FRMS6DataSet(DataSet):
         parsed = {}
         sections = config.sections()
         if 'measurementInfo' not in sections:
-            raise DataSetException("measurementInfo missing from .hdr file")
+            raise DataSetException(
+                "measurementInfo missing from .hdr file %s, have: %s" % (
+                    hdr_filename,
+                    repr(sections),
+                )
+            )
         msm_info = config['measurementInfo']
         int_fields = {'darkframes', 'dwelltimemicroseconds', 'gain', 'signalframes'}
         for key in msm_info:
@@ -280,12 +331,38 @@ class FRMS6DataSet(DataSet):
         parsed['readoutmode'] = {k: int(v) for k, v in readout_mode.items()}
         return parsed
 
+    def _get_dark_frame(self):
+        if not self._enable_offset_correction:
+            return None
+        dark_file = self._get_dark_file()
+        # FIXME: currently doing two passes here: dtype conversion and summation
+        return (
+            dark_file.data.astype(self._meta.dtype).sum(axis=0) / dark_file.data.shape[0]
+        )
+
     def _get_dark_file(self):
         """
         the file ending with "_000.frms6" contains the dark frames,
         which should be the first in our sorting order
         """
+        # FIXME: dark frame acquisition may be disabled, we then need to either
+        # 1) disable offset correction
+        # 2) load the dark frames from a separate, user-given file
         return FRMS6File(path=self._files()[0])
+
+    def _get_gain_map(self):
+        if self._gain_map_path is None:
+            return None
+        _, ext = os.path.splitext(self._gain_map_path)
+        if ext.lower() == '.mat':
+            gain_mat = sio.loadmat(self._gain_map_path)
+            return gain_mat['GainMap']
+        elif ext.lower() == '.csv':
+            with open(self._gain_map_path) as csv_f:
+                csv_reader = csv.reader(csv_f, dialect=GainMapCSVDialect)
+                csv_gain_data = list(csv_reader)
+                csv_gain_nums = [[float(x) for x in row if x != ''] for row in csv_gain_data]
+                return np.array(csv_gain_nums).T
 
     def _get_signal_files(self):
         start_idx = 0
@@ -298,7 +375,8 @@ class FRMS6DataSet(DataSet):
         return FRMS6FileSet(
             files=list(self._get_signal_files()),
             meta=self._meta,
-            dark_frame=self._dark_frame
+            dark_frame=self._dark_frame,
+            gain_map=self._gain_map,
         )
 
     def _get_base_filename(self):
@@ -306,7 +384,7 @@ class FRMS6DataSet(DataSet):
         if ext == ".hdr":
             base = path
         elif ext == ".frms6":
-            base = re.sub(r'[0-9]+$', '', path)
+            base = re.sub(r'_[0-9]+$', '', path)
         else:
             raise DataSetException("unknown extension: %s" % ext)
         return base

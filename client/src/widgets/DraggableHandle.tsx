@@ -203,7 +203,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
                     ref={this.posRef}
                     x={0} y={0} width={0} height={0}
                 />
-                <Handle scale={scale} x={x} y={y} withCross={this.props.withCross}
+                <Handle scale={scale} x={x + .5} y={y + .5} withCross={this.props.withCross}
                     focusRef={this.focusRef}
                     onMouseUp={this.stopDrag}
                     onMouseMove={this.move}

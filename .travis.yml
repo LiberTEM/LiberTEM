@@ -53,8 +53,7 @@ jobs:
         - bash -ex packaging/appimage/make_app_image.sh
         - ls -lh
       after_success:
-        - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-        - bash -c "chmod +x upload.sh && ./upload.sh LiberTEM*.AppImage* dist/*"
+        - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash -c "chmod +x upload.sh && ./upload.sh LiberTEM*.AppImage* dist/*"
 
 branches:
   except:

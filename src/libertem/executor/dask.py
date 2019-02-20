@@ -20,18 +20,41 @@ log = logging.getLogger(__name__)
 
 
 class CommonDaskMixin(object):
+    def _task_idx_to_workers(self, workers, idx):
+        hosts = list(sorted(set(w['host'] for w in workers)))
+        host_idx = idx % len(hosts)
+        host = hosts[host_idx]
+        return [
+            w['name']
+            for w in workers
+            if w['host'] == host
+        ]
+
     def _get_futures(self, job):
         futures = []
+        available_workers = self.get_available_workers()
         for task in job.get_tasks():
             submit_kwargs = {}
             locations = task.get_locations()
             if locations is not None and len(locations) == 0:
                 raise ValueError("no workers found for task")
+            if locations is None:
+                locations = self._task_idx_to_workers(available_workers, task.idx)
             submit_kwargs['workers'] = locations
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
         return futures
+
+    def get_available_workers(self):
+        info = self.client.scheduler_info()
+        return [
+            {
+                'name': worker['name'],
+                'host': worker['host'],
+            }
+            for worker in info['workers'].values()
+        ]
 
 
 class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
@@ -65,7 +88,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
 
     async def run_function(self, fn, *args, **kwargs):
         """
-        run a callable `fn`
+        run a callable `fn` on any worker. used for simple functionality like filesystem browsing
         """
         future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
         return await self.client.gather(future)

@@ -40,8 +40,9 @@ class Task(object):
     for your specific computation.
     """
 
-    def __init__(self, partition):
+    def __init__(self, partition, idx):
         self.partition = partition
+        self.idx = idx
 
     def get_locations(self):
         return self.partition.get_locations()

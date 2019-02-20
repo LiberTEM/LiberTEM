@@ -30,6 +30,8 @@ LiberTEM currently opens most file formats used for pixelated STEM:
 - Quantum Detectors MIB format (currently alpha, more testing and sample files highly appreciated)
 - Nanomegas .blo block files
 - Gatan K2IS raw format (currently beta)
+- FRMS6 from PNDetector pnCCD cameras (currently alpha, gain correction still needs UI changes)
+- FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD
 - Please contact us if you are interested in support for an additional format!
 
@@ -70,4 +72,4 @@ Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>
 License
 -------
 
-LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT license, please see LICENSE files for details.
+LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT license, please see LICENSE files in the subdirectories for details.

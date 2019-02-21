@@ -132,7 +132,7 @@ setup(
     install_requires=[
         "numpy",
         "scipy",
-        "distributed<=1.25.2,>=1.23.3",
+        "distributed>=1.23.3",
         "click",
         "tornado",
         "matplotlib",

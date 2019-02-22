@@ -278,7 +278,7 @@ def full_match(points, zero, weights=None, cand=[], parameters={}):
             break
 
         (matched, matched_indices, matched_weights, remainder) = match_all(
-            match_points, match_weights, opt_zero, a, b, p
+            match_points, matched_weights, opt_zero, a, b, p
         )
         if matched.size == 0:
             # print("no endless loop")
@@ -293,6 +293,8 @@ def full_match(points, zero, weights=None, cand=[], parameters={}):
             break
 
         match_points = remainder
+        # FIXME We'll have to refactor the whole thing to keep track of what is matchd and what not
+        # match_weights = TODO
         # We always include the zero point because all lattices have it in
         # common and we filter it out each time
         # Gives additional point to match!

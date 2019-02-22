@@ -113,13 +113,46 @@ def refine_center(center, r, corrmap):
         return np.array((refined_y, refined_x))
 
 
+def peak_elevation(center, corrmap, height, r_min=1.5, r_max=np.float('inf')):
+    '''
+    Return the slope of the tightest cone around center with height height
+        that touches corrmap between r_min and r_max.
+
+    The correlation of two disks -- mask and perfect diffraction spot -- has the shape of a cone.
+
+    The height is provided as a parameter since center can be float values from refinement
+    and the height value is conveniently available from the calling function.
+
+    The function's return value correlates with the quality of a correlation. Higher slope
+    means a strong peak and
+    no side maxima, while weak signal or side maxima lead to a flatter slope.
+
+    r_min masks out a small local plateau around the peak that would distort and dominate
+    the calculation.
+
+    r_max can mask out neighboring peaks if a large area with several legitimate peaks is
+    corellated.
+    '''
+    peak_y, peak_x = center
+    (size_y, size_x) = corrmap.shape
+    y, x = np.mgrid[0:size_y, 0:size_x]
+
+    dist = np.sqrt((y - peak_y)**2 + (x - peak_x)**2)
+    select = (dist >= r_min) * (dist < r_max)
+    diff = height - corrmap[select]
+
+    return np.min(diff / dist[select])
+
+
 def do_correlation(template, crop_part):
     spec_part = fft.rfft2(crop_part)
     corrspec = template * spec_part
     corr = fft.fftshift(fft.irfft2(corrspec))
     center = np.unravel_index(np.argmax(corr), corr.shape)
     refined = np.array(refine_center(center, 2, corr), dtype='float32')
-    return np.array(center, dtype='u2'), refined, np.float32(corr[center])
+    height = np.float32(corr[center])
+    elevation = np.float32(peak_elevation(refined, corr, height))
+    return np.array(center, dtype='u2'), refined, height, elevation
 
 
 def log_scale(data, out):
@@ -155,6 +188,9 @@ def get_result_buffers_pass_2(num_disks):
         'peak_values': ResultBuffer(
             kind="nav", extra_shape=(num_disks,), dtype="float32",
         ),
+        'peak_elevations': ResultBuffer(
+            kind="nav", extra_shape=(num_disks,), dtype="float32",
+        ),
     }
 
 
@@ -179,33 +215,38 @@ def check_cast(fromvar, tovar):
 
 
 def pass_2(frame, template, crop_buf, peaks, mask,
-           centers, refineds, peak_values):
+           centers, refineds, peak_values, peak_elevations):
     crop_size = mask.get_crop_size()
     for disk_idx, crop_part in enumerate(
             crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
         scaled = log_scale(crop_part, out=crop_buf)
-        center, refined, peak_value = do_correlation(template, scaled)
+        center, refined, peak_value, peak_elevation = do_correlation(template, scaled)
         crop_origin = np.array(peaks[disk_idx] - [crop_size, crop_size], dtype='u2')
         abs_center = np.array(center + crop_origin, dtype='u2')
         abs_refined = np.array(refined + crop_origin, dtype='float32')
         check_cast(abs_center, centers)
         check_cast(abs_refined, refineds)
         check_cast(peak_value, peak_values)
+        check_cast(peak_elevation, peak_elevations)
         centers[disk_idx] = abs_center
         refineds[disk_idx] = abs_refined
         peak_values[disk_idx] = peak_value
+        peak_elevations[disk_idx] = peak_elevation
 
 
-def pass_2_merge(partition_result_buffers, centers, refineds, peak_values):
+def pass_2_merge(partition_result_buffers, centers, refineds, peak_values, peak_elevations):
     c = partition_result_buffers['centers'].data
     r = partition_result_buffers['refineds'].data
     p = partition_result_buffers['peak_values'].data
+    e = partition_result_buffers['peak_elevations'].data
     check_cast(c, centers)
     check_cast(r, refineds)
     check_cast(p, peak_values)
+    check_cast(e, peak_elevations)
     centers[:] = c
     refineds[:] = r
     peak_values[:] = p
+    peak_elevations[:] = e
 
 
 def run_analysis(ctx, dataset, parameters):
@@ -232,4 +273,5 @@ def run_analysis(ctx, dataset, parameters):
     )
 
     return (sum_result, pass_2_results['centers'],
-        pass_2_results['refineds'], pass_2_results['peak_values'], peaks)
+        pass_2_results['refineds'], pass_2_results['peak_values'],
+        pass_2_results['peak_elevations'], peaks)

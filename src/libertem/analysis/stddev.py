@@ -1,10 +1,10 @@
-import functools
+# import functools
 import collections
 
 import numba
 import numpy as np
 
-from libertem.udf import ResultBuffer, map_frames
+# from libertem.udf import ResultBuffer, map_frames
 
 try:
     import pyfftw

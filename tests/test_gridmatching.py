@@ -8,11 +8,11 @@ import libertem.analysis.gridmatching as grm
 def points():
     return np.array([
         (0, 0),
-        (1, 0),
         (0, 1),
+        (1, 0),
         (1, 1),
-        (-1, 0),
         (0, -1),
+        (-1, 0),
         (-1, -1)
     ])
 
@@ -37,12 +37,12 @@ def zero():
 
 @pytest.fixture
 def a():
-    return np.array([1, 0])
+    return np.array([0, 1])
 
 
 @pytest.fixture
 def b():
-    return np.array([0, 1])
+    return np.array([1, 0])
 
 
 def _fullgrid(zero, a, b, index, skip_zero=False):
@@ -67,9 +67,9 @@ def test_calc_coords(zero, a, b, points, indices):
 
 def test_polar():
     data = np.array([
-        (1, 0),
         (0, 1),
-        (0, -2)
+        (1, 0),
+        (-2, 0)
     ])
     expected = np.array([
         (1, 0),
@@ -121,7 +121,8 @@ def test_angle_ckeck():
 
 def test_fastmatch(zero, a, b):
     grid = _fullgrid(zero, a, b, 5)
-    (m_zero, m_a, m_b, matched, matched_indices, remainder) = grm.fastmatch(grid, zero, a, b)
+    (m_zero, m_a, m_b, matched, matched_indices, matched_weights, remainder) = grm.fastmatch(
+        grid, zero, a, b)
     assert(np.allclose(zero, m_zero))
     assert(np.allclose(a, m_a))
     assert(np.allclose(b, m_b))
@@ -131,8 +132,8 @@ def test_fastmatch(zero, a, b):
 
 
 def test_fullmatch(zero, a, b):
-    aa = np.array([1.2, 1.27])
-    bb = np.array([-1.2, 1.27])
+    aa = np.array([1.27, 1.2])
+    bb = np.array([1.27, -1.2])
 
     grid_1 = _fullgrid(zero, a, b, 7)
     grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
@@ -149,7 +150,7 @@ def test_fullmatch(zero, a, b):
     assert(len(matches) == 2)
     assert(len(remainder) == 0)
 
-    (m_zero, m_a, m_b, matched, matched_indices) = matches[0]
+    (m_zero, m_a, m_b, matched, matched_indices, matched_weights) = matches[0]
 
     assert(np.allclose(zero, m_zero))
     assert(np.allclose(a, m_a) or np.allclose(b, m_a)

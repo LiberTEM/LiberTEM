@@ -134,7 +134,7 @@ setup(
         "scipy",
         "distributed>=1.23.3",
         "click",
-        "tornado",
+        "tornado>=5",
         "matplotlib",
         "pillow",
         "h5py",

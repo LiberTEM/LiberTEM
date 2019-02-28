@@ -31,7 +31,7 @@ def open_direct(path):
     fh = os.open(path, os.O_RDONLY | os.O_DIRECT)
     f = open(fh, "rb", buffering=0)
     yield f
-    os.close(fh)
+    f.close()
 
 
 def readinto_direct(f, out):

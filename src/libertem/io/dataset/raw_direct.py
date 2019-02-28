@@ -37,7 +37,11 @@ class DirectRawFileReader(object):
         return readinto_direct(self._file, out)
 
     def seek_frame(self, idx):
-        self._file.seek(self._calc_offset(idx))
+        offset = self._calc_offset(idx)
+        try:
+            self._file.seek(offset)
+        except OSError as e:
+            raise DataSetException("could not seek to offset {}: {}".format(offset, e)) from e
 
 
 class DirectRawFileDataSet(DataSet):
@@ -152,7 +156,6 @@ class DirectRawFilePartition(Partition):
             for tile_start in c0:
                 if tile_start >= stop:
                     break
-                reader.seek_frame(tile_start)
                 # tile_height is the real height, which may be smaller than stackheight
                 # at the end
                 tile_height = min(stackheight, stop - tile_start)
@@ -167,6 +170,7 @@ class DirectRawFilePartition(Partition):
                     intersection = tileslice.intersection_with(crop_to)
                     if intersection.is_null():
                         continue
+                reader.seek_frame(tile_start)
                 data = reader.readinto(buf)
                 # at partition boundary we may read more than requested, cut it off:
                 data = data[:tile_height * sig_size]

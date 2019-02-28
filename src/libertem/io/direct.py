@@ -1,4 +1,5 @@
 import os
+import math
 import mmap
 import contextlib
 
@@ -6,14 +7,20 @@ import numpy as np
 
 
 def _alloc_aligned(size):
+    # round up to 4k blocks:
+    blocksize = 4096
+    blocks = math.ceil(size / blocksize)
+
     # MAP_SHARED to prevent possible corruption (see open(2))
-    return mmap.mmap(-1, size, mmap.MAP_SHARED)
+    return mmap.mmap(-1, blocksize * blocks, mmap.MAP_SHARED)
 
 
 def empty_aligned(size, dtype):
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size)
-    return np.frombuffer(buf, dtype=dtype)
+    # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
+    npbuf = np.frombuffer(buf, dtype=dtype)[:size]
+    return npbuf
 
 
 @contextlib.contextmanager

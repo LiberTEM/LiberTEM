@@ -2,6 +2,12 @@ import functools
 import numpy as np
 
 
+def check_cast(fromvar, tovar):
+    if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
+        # FIXME exception or warning?
+        raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
+
+
 class ResultBuffer(object):
     def __init__(self, kind, extra_shape=(), dtype="float32"):
         self._kind = kind

@@ -4,7 +4,7 @@ import numpy as np
 from skimage.feature import peak_local_max
 import scipy.ndimage as nd
 
-from libertem.udf import ResultBuffer, map_frames
+from libertem.udf import ResultBuffer, map_frames, check_cast
 from libertem.masks import radial_gradient, background_substraction
 from libertem.job.sum import SumFramesJob
 
@@ -206,12 +206,6 @@ def init_pass_2(partition, peaks, parameters):
         'template': template,
     }
     return kwargs
-
-
-def check_cast(fromvar, tovar):
-    if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
-        # FIXME exception or warning?
-        raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
 
 
 def pass_2(frame, template, crop_buf, peaks, mask,

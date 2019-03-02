@@ -97,7 +97,7 @@ def get_git_rev():
         new_cwd = os.path.abspath(os.path.dirname(__file__))
         rev_raw = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=new_cwd)
         return rev_raw.decode("utf8").strip()
-    except subprocess.CalledProcessError:
+    except Exception:
         return "unknown"
 
 
@@ -132,9 +132,9 @@ setup(
     install_requires=[
         "numpy",
         "scipy",
-        "distributed<=1.25.2,>=1.23.3",
+        "distributed>=1.23.3",
         "click",
-        "tornado",
+        "tornado>=5",
         "matplotlib",
         "pillow",
         "h5py",

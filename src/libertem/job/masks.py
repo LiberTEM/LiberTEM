@@ -193,7 +193,11 @@ class ApplyMasksTask(Task):
             dest_dtype = 'float32'
         part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
-            data = data_tile.flat_data.astype(dest_dtype)
+            flat_data = data_tile.flat_data
+            if flat_data.dtype != dest_dtype:
+                data = flat_data.astype(dest_dtype)
+            else:
+                data = flat_data
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
                 # The sparse matrix has to be the left-hand side, for that

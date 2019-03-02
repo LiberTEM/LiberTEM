@@ -3,17 +3,8 @@ import logging
 
 import tornado.util
 from dask import distributed as dd
-from distributed.asyncio import AioClient
 
 from .base import JobExecutor, AsyncJobExecutor, JobCancelledError
-
-
-# NOTE:
-# if you are mistakenly using dd.Client in an asyncio environment,
-# you get a message like this:
-# error message: "RuntimeError: Non-thread-safe operation invoked on an event loop
-# other than the current one"
-# related: debugging via env var PYTHONASYNCIODEBUG=1
 
 
 log = logging.getLogger(__name__)
@@ -108,7 +99,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         AsyncDaskJobExecutor
             the connected JobExecutor
         """
-        client = await AioClient(address=scheduler_uri)
+        client = await dd.Client(address=scheduler_uri, asynchronous=True)
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
@@ -126,7 +117,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
             the connected JobExecutor
         """
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
-        client = await AioClient(cluster, **(client_kwargs or {}))
+        client = await dd.Client(cluster, asynchronous=True, **(client_kwargs or {}))
         return cls(client=client, is_local=True)
 
 

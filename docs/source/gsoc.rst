@@ -6,9 +6,20 @@ Why LiberTEM
 
 `LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our `architecture <architecture.html>`_ page describes in more detail how exctly it works.
 
+..  figure:: ./images/Principle.png
+    :scale: 50%
+    :alt: In pixelated STEM, a full diffraction image is recorded for each scan position.
+
+    LiberTEM is developed primarily to address challenges in pixelated STEM where a sample is scanned with a focused electron beam and a full image of the transmitted beam is recorded for each scan position. The result is a four-dimensional data hypercube. This application can generate tremendous amounts of data from high-resolution scans with a high-speed high-resolution detector.
+
 The project started in the beginning of 2018 and is currently attracting more and more users because it is orders of magnitude faster and more scalable than established solutions, and at the same time convenient to use. In our field, LiberTEM is seen as the up and coming technology to tap the full scientific potential of modern high-speed detectors. Such detectors can already reach a data rate of 8.5 GB/s and will soon produce more than 50 GB/s of raw data. The conventional established PC-based solutions can't keep up with such data rates, and distributed systems like LiberTEM are required for progress in this field.
 
 Working on LiberTEM will give you experience in developing distributed systems for high-performance data processing with Python. You can learn how to profile an application and optimize performance in a targeted way. Our current records are an aggregate of 49 GB/s on `eight low-end microblade nodes <https://www.supermicro.com/products/system/3U/5038/SYS-5038MD-H8TRF.cfm>`_ reading from mass storage, and 21 GB/s on a single `high-end <https://ark.intel.com/content/www/us/en/ark/products/126793/intel-xeon-w-2195-processor-24-75m-cache-2-30-ghz.html>`_ workstation reading from the file system cache. LiberTEM has its roots in electron microscopy, but can be adopted for other tasks that involve high-throughput data-parallel processing of very large binary data sets.
+
+..  figure:: ./images/Future.png
+    :alt: Envisioned future architecture of LiberTEM
+
+    LiberTEM currently implements distributed offline data processing as shown on the right of this figure, and is designed to be extended to high-throughput distributed live data processing as illustrated on the left.
 
 If you work on our GUI, you'll learn how a responsive web application for big data analytics can be built with a front-end based on TypeScript, React and Redux, and an asynchronous Python back-end based on Tornado and dask.distributed.
 
@@ -37,14 +48,14 @@ How to reach us
 
 The easiest path is our Gitter channel: https://gitter.im/LiberTEM/Lobby
 
-E-Mail: `Dieter Weber d.weber@fz-juelich.de <mailto:d.weber@fz-juelich.de>`_, `Alexander Clausen a.clausen@fz-juelich.de <mailto:a.clausen@fz-juelich.de>`_
+E-Mail: `Dieter Weber <mailto:d.weber@fz-juelich.de>`_ `Alexander Clausen <mailto:a.clausen@fz-juelich.de>`_
 
-Just drop a message! We are based in Germany (UTC+1 / UTC+2) and are generally active during the day. :-)
+Just drop a message! We are based in Germany (UTC+1 / UTC+2) and are generally active during the day.
 
 Getting started
 ---------------
 
- If you have questions, please ask freely: Supporting users and constributors has a high priority for us and your questions help us improve our documentation. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. For that reason it is always a good idea to be in touch directly.
+If you have questions, please ask freely: Supporting users and constributors has a high priority for us and your questions help us improve our documentation. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. For that reason it is always a good idea to be in touch directly.
 
 Installation
 ~~~~~~~~~~~~
@@ -56,7 +67,7 @@ Currently, we are still working on getting suitable sample files online. Please 
 What to wok on
 ~~~~~~~~~~~~~~
 
-Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/LiberTEM/issues>`_ of what we have on our plate. We have a `significant backlog of interesting features and improvements <https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement>`_ where our users and us could really use your help to get them implemented. Further below we list a few specific ideas.
+Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/LiberTEM/issues>`_ of what we have on our plate. We have a `significant waiting list of interesting features and improvements <https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement>`_ where our users and us could really use your help to get them implemented. Further below we list a few specific ideas.
 
 
 Writing your GSoC application

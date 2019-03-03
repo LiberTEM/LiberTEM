@@ -4,54 +4,92 @@ GSoC 2019 ideas
 Why LiberTEM
 --------------
 
-`LiberTEM <https://libertem.github.io/LiberTEM/>`_ LiberTEM is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. 
+`LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our `architecture <architecture.html>`_ page describes in more detail how exctly it works.
 
-It started in the beginning of 2018 and is currently attracting more and more users because it is orders of magnitude faster and more scalable than established solutions, and at the same time convenient to use. In our field, LiberTEM is seen as the leading technology to tap the full scientific potential modern high-speed detectors. Such detectors can already reach 8.5 GB/s and will soon produce more than 50 GB/s of raw data. LiberTEM has its roots in electron microscopy, but can be adopted for other tasks that involve high-throughput data-parallel processing of very large binary data sets.
+The project started in the beginning of 2018 and is currently attracting more and more users because it is orders of magnitude faster and more scalable than established solutions, and at the same time convenient to use. In our field, LiberTEM is seen as the up and coming technology to tap the full scientific potential of modern high-speed detectors. Such detectors can already reach a data rate of 8.5 GB/s and will soon produce more than 50 GB/s of raw data. The conventional established PC-based solutions can't keep up with such data rates, and distributed systems like LiberTEM are required for progress in this field.
 
-Working on LiberTEM will give you experience in developing distributed systems for high-performance data processing with Python. You can learn how to do profiling and targeted performance optimization: Our current records are an aggregate of 49 GB/s on eight low-end microblade nodes reading from mass storage, and 21 GB/s on a single high-end workstation reading from the file system cache. 
+Working on LiberTEM will give you experience in developing distributed systems for high-performance data processing with Python. You can learn how to profile an application and optimize performance in a targeted way. Our current records are an aggregate of 49 GB/s on `eight low-end microblade nodes <https://www.supermicro.com/products/system/3U/5038/SYS-5038MD-H8TRF.cfm>`_ reading from mass storage, and 21 GB/s on a single `high-end <https://ark.intel.com/content/www/us/en/ark/products/126793/intel-xeon-w-2195-processor-24-75m-cache-2-30-ghz.html>`_ workstation reading from the file system cache. LiberTEM has its roots in electron microscopy, but can be adopted for other tasks that involve high-throughput data-parallel processing of very large binary data sets.
 
-If you work on our GUI, you'll learn how a responsive web application for big data analytics can be built with a front-end based on TypeScript, React and Redux, and an asynchronous Python back-end based on on Tornado and dask.distributed. 
+If you work on our GUI, you'll learn how a responsive web application for big data analytics can be built with a front-end based on TypeScript, React and Redux, and an asynchronous Python back-end based on Tornado and dask.distributed.
 
-Our team is experienced in software development methodology and tools, product management, product development, open source business models and strategy, and start-ups. We'd be happy to share our experience with you!
+Working on the application side will give you experience in Python-based big data analytics of large-scale binary data sets with a focus on imaging, physics and materials science with industry-leading throughput and efficiency.
+
+About us
+--------
+
+Alex is an experienced software engineer, systems administrator, Python programmer, web developer, and expert on profiling and performance optimization. He focuses on the implementation side of LiberTEM. 
+
+* https://github.com/sk1p
+* https://www.facebook.com/alex.clausen.foo
+
+
+Dieter has an interdisciplinary background in materials science, computer science, product development, product management and business administration. He is mostly taking care of the application and business side of LiberTEM. 
+
+* https://github.com/uellue
+* http://materials-scientist.com/
+* https://www.facebook.com/uellue
+* https://www.linkedin.com/in/uellue/
+
+We'd be happy to share our experience with you!
 
 How to reach us
 ---------------
 
 The easiest path is our Gitter channel: https://gitter.im/LiberTEM/Lobby
 
-E-Mail: `Dieter Weber d.weber@fz-juelich.de <mailto:d.weber@fz-juelich.de>`_
+E-Mail: `Dieter Weber d.weber@fz-juelich.de <mailto:d.weber@fz-juelich.de>`_, `Alexander Clausen a.clausen@fz-juelich.de <mailto:a.clausen@fz-juelich.de>`_
 
-Just drop a message! We are based in Germany and are generally active during the day. :-)
+Just drop a message! We are based in Germany (UTC+1 / UTC+2) and are generally active during the day. :-)
 
-Getting Started
+Getting started
 ---------------
 
-If you have questions, please ask freely: Supporting users and constributors has a high priority for us. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. Until then it is always a good idea to just ask if you are missing information.
+ If you have questions, please ask freely: Supporting users and constributors has a high priority for us and your questions help us improve our documentation. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. For that reason it is always a good idea to be in touch directly.
 
 Installation
 ~~~~~~~~~~~~
 
-Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details! Forking our repository, cloning the fork and `installing the clone <https://libertem.github.io/LiberTEM/install.html#installing-from-a-git-clone>`_ are the recommended setup if you will be contributing significant amounts of code.
+Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details! Forking our repository, cloning the fork and `installing the clone <https://libertem.github.io/LiberTEM/install.html#installing-from-a-git-clone>`_ are the recommended setup if you will be contributing significant amounts of code. Our `page on contributing <contributing.html>`_ has some -- still incomplete -- information that can help you get started with development. 
 
-Currently, we are still working on getting suitable sample files online. Please contact us to get sample data!
+Currently, we are still working on getting suitable sample files online. Please contact us to get interesting sample data to work on!
+
+What to wok on
+~~~~~~~~~~~~~~
+
+Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/LiberTEM/issues>`_ of what we have on our plate. We have a `significant backlog of interesting features and improvements <https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement>`_ where our users and us could really use your help to get them implemented. Further below we list a few specific ideas.
 
 
-
-What's the process for submitting your first bug fix?
-Where should students look to find easy bugs to try out?
 Writing your GSoC application
-Links to advice about applications and the application template goes here.
+-----------------------------
 
-Remind your students that your sub-org name must be in the title of their applications!
-Here's a link to the student application information for Python
+The PYTHON GSOC website has a good overview for the application process: http://python-gsoc.org/index.html#apply http://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal! 
+
+To write your application, `Mailman <https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt>`_ gives a few general ideas. For us it is most important to know why you'd like to contribute to LiberTEM, what your experience level is and what you'd like to learn in order to find a good match for a project. Generally, we like targeted applications and applicants who contact us directly early-on.
+
+We are happy to work with you for writing up a project idea! For Python GSoC it is a general requirement to already contribute a pull request to a sub-organization before submitting a project idea. Please contact us if you'd like some help with that! `Improving our examples <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_ in code, description and presentation would be both relatively easy and quite useful for us. The examples are currently lagging a bit behind recent changes in the `API <https://github.com/LiberTEM/LiberTEM/blob/master/src/libertem/api.py>`_. You could hunt down discrepancies and suggest updates. Please contact us for the corresponding data to run the examples!
+
 Project Ideas
-You should usually have a couple of project ideas, ranging in difficulty from beginner to expert. Please do try to have at least one, preferably several beginner tasks: GSoC gets a lot of students with minimal open source experience who feel very discouraged (and sometimes even complain to Google) if orgs don't any have projects at their level.
+-------------
 
-1. Project name
-Project description: Make sure you have a high-level description that any student can understand, as well as deeper details
-Skills: programming languages? specific domain knowledge?
-Difficulty level: Easy/Intermediate/Hard classification (students ask for this info frequently to help them narrow down their choices. Difficulty levels are something Google wants to see, so they aren't optional; make your best guess.)
-Related Readings/Links: was there a mailing list discussion about this topic? standards you want the students to read first? bugs/feature requests?
-Potential mentors: A list of mentors likely to be involved with this project, so students know who to look for on IRC/mailing lists if they have questions. (If you've had trouble with students overwhelming specific mentors, feel free to re-iterate here if students should contact the mailing list to reach all mentors.)
-2. Project name
-As above. etc. Unless there's a compelling reason to sort in some other order, ideas should be ordered approximately from easiest to hardest.
+These are somewhat larger work items that can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
+
+1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one. 
+    We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
+
+2. Beginner/Intermediate/Advanced: Compression survey. 
+    Analyse high-throughput compression techniques, dive into lz4/zstd, blosc etc, compare against existing file formats. With this project you can improve your low-level programming experience: Instruction sets, CPU caches, optimizing compilers, auto-vectorization, and so on. Our favorite technology to do work in this area with Python is `numba <http://numba.pydata.org/>`_. Can be done basically independent of the LiberTEM codebase. For a beginner project you can compare existing implementations of common compression algorithms for our kind of data. For an advanced project you could test `autoencoders <https://en.wikipedia.org/wiki/Autoencoder>`_.
+
+3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_. 
+    This will help us to catch performance regressions. In our experience, running a benchmark requires a reproducible, undisturbed environment and comparison to good reference data. For that reason we see it as more challenging that automated tests for functionality and correctness. You could run benchmarks in CI and observe variance, and record and present benchmark results over time.
+
+4. Intermediate/Advanced: Cloud caching layer. 
+    Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
+
+5. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters. 
+    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
+
+6. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_. 
+    Basically an efficient/zoomable/user-friendly/fully-featured replacement for our visualization. Requires a cross-section of different technologies from Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun off into its own project if it is successful!
+
+7. Maybe something Operations/Cloud/Kubernetes/... related?
+    TODO @sk1p could you expand that perhaps? 

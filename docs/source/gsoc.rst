@@ -31,13 +31,11 @@ About us
 Alex is an experienced software engineer, systems administrator, Python programmer, web developer, and expert on profiling and performance optimization. He focuses on the implementation side of LiberTEM. 
 
 * https://github.com/sk1p
-* https://www.facebook.com/alex.clausen.foo
 
 
 Dieter has an interdisciplinary background in materials science, computer science, product development, product management and business administration. He is mostly taking care of the application and business side of LiberTEM. 
 
 * https://github.com/uellue
-* http://materials-scientist.com/
 * https://www.facebook.com/uellue
 * https://www.linkedin.com/in/uellue/
 

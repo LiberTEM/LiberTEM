@@ -10,7 +10,7 @@ Why LiberTEM
     :scale: 50%
     :alt: In pixelated STEM, a full diffraction image is recorded for each scan position.
 
-    LiberTEM is developed primarily to address challenges in pixelated STEM where a sample is scanned with a focused electron beam and a full image of the transmitted beam is recorded for each scan position. The result is a four-dimensional data hypercube. This application can generate tremendous amounts of data from high-resolution scans with a high-speed high-resolution detector.
+    *In pixelated STEM, a sample is scanned with a focused electron beam, and a full image of the transmitted beam is recorded for each scan position. The result is a four-dimensional data hypercube. This application can generate tremendous amounts of data from high-resolution scans with a high-speed high-resolution detector.*
 
 The project started in the beginning of 2018 and is currently attracting more and more users because it is orders of magnitude faster and more scalable than established solutions, and at the same time convenient to use. In our field, LiberTEM is seen as the up and coming technology to tap the full scientific potential of modern high-speed detectors. Such detectors can already reach a data rate of 8.5 GB/s and will soon produce more than 50 GB/s of raw data. The conventional established PC-based solutions can't keep up with such data rates, and distributed systems like LiberTEM are required for progress in this field.
 
@@ -19,7 +19,7 @@ Working on LiberTEM will give you experience in developing distributed systems f
 ..  figure:: ./images/Future.png
     :alt: Envisioned future architecture of LiberTEM
 
-    LiberTEM currently implements distributed offline data processing as shown on the right of this figure, and is designed to be extended to high-throughput distributed live data processing as illustrated on the left.
+    *LiberTEM currently implements distributed offline data processing as shown on the right of this figure, and is designed to be extended to high-throughput distributed live data processing as illustrated on the left.*
 
 If you work on our GUI, you'll learn how a responsive web application for big data analytics can be built with a front-end based on TypeScript, React and Redux, and an asynchronous Python back-end based on Tornado and dask.distributed.
 
@@ -82,7 +82,7 @@ We are happy to work with you for writing up a project idea! For Python GSoC it 
 Project Ideas
 -------------
 
-These are somewhat larger work items that can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
+These are somewhat larger work items. Some of them can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
 
 1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one.
     We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
@@ -96,14 +96,15 @@ These are somewhat larger work items that can keep you busy for the entire time.
 4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
     Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like http://fatiherikli.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
 
-5. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
+5. Intermediate: Deploy LiberTEM with kubernetes.
+    Help us set up a helm chart and documentation to deploy a LiberTEM cluster with kubernetes. The subject is fairly new to us and we'd appreciate your help, in particular if you already have experience with kubernetes.
+
+6. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
-6. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
+7. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
     This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
 
-7. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
+8. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
     Basically an efficient/zoomable/user-friendly/fully-featured replacement for our visualization. Requires a cross-section of different technologies from Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun off into its own project if it is successful!
 
-8. Maybe something Operations/Cloud/Kubernetes/... related?
-    TODO @sk1p could you expand that perhaps? 

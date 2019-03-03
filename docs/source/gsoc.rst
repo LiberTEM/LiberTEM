@@ -53,7 +53,7 @@ Just drop a message! We are based in Germany (UTC+1 / UTC+2) and are generally a
 Getting started
 ---------------
 
-If you have questions, please ask freely: Supporting users and constributors has a high priority for us and your questions help us improve our documentation. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. For that reason it is always a good idea to be in touch directly.
+If you have questions, please ask freely: Supporting users and contributors has a high priority for us and your questions help us improve our documentation. Our development is currently moving very quickly. We are planning to complete our documentation when a few major features have left the prototype stage. For that reason it is always a good idea to be in touch directly.
 
 Installation
 ~~~~~~~~~~~~
@@ -85,12 +85,12 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
 1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one.
     We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
 
-    *Skills:* Communication, software development methodology, Python and numpy programmming.
+    *Skills:* Communication, software development methodology, Python and numpy programming.
     
     *Domain knowledge:* Math, statistics, image processing and physics are of advantage.
 
 2. Beginner/Intermediate/Advanced: Compression survey.
-    Analyse high-throughput compression techniques, dive into lz4/zstd, blosc etc, compare against existing file formats. With this project you can improve your low-level programming experience: Instruction sets, CPU caches, optimizing compilers, auto-vectorization, and so on. Our favorite technology to do work in this area with Python is `numba <http://numba.pydata.org/>`_. Can be done basically independent of the LiberTEM codebase. For a beginner project you can compare existing implementations of common compression algorithms for our kind of data. For an advanced project you could test `autoencoders <https://en.wikipedia.org/wiki/Autoencoder>`_.
+    Analyze high-throughput compression techniques, dive into lz4/zstd, blosc etc., compare against existing file formats. With this project you can improve your low-level programming experience: Instruction sets, CPU caches, optimizing compilers, auto-vectorization, and so on. Our favorite technology to do work in this area with Python is `numba <http://numba.pydata.org/>`_. Can be done basically independent of the LiberTEM codebase. For a beginner project you can compare existing implementations of common compression algorithms for our kind of data. For an advanced project you could test `autoencoders <https://en.wikipedia.org/wiki/Autoencoder>`_.
 
     *Skills:* Programming in C and Python, profiling.
     

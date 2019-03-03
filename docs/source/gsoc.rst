@@ -84,23 +84,26 @@ Project Ideas
 
 These are somewhat larger work items that can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
 
-1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one. 
+1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one.
     We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
 
-2. Beginner/Intermediate/Advanced: Compression survey. 
+2. Beginner/Intermediate/Advanced: Compression survey.
     Analyse high-throughput compression techniques, dive into lz4/zstd, blosc etc, compare against existing file formats. With this project you can improve your low-level programming experience: Instruction sets, CPU caches, optimizing compilers, auto-vectorization, and so on. Our favorite technology to do work in this area with Python is `numba <http://numba.pydata.org/>`_. Can be done basically independent of the LiberTEM codebase. For a beginner project you can compare existing implementations of common compression algorithms for our kind of data. For an advanced project you could test `autoencoders <https://en.wikipedia.org/wiki/Autoencoder>`_.
 
-3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_. 
+3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_.
     This will help us to catch performance regressions. In our experience, running a benchmark requires a reproducible, undisturbed environment and comparison to good reference data. For that reason we see it as more challenging that automated tests for functionality and correctness. You could run benchmarks in CI and observe variance, and record and present benchmark results over time.
 
-4. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_. 
+4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
+    Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like http://fatiherikli.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
+
+5. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
-5. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters. 
+6. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
     This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
 
-6. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_. 
+7. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
     Basically an efficient/zoomable/user-friendly/fully-featured replacement for our visualization. Requires a cross-section of different technologies from Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun off into its own project if it is successful!
 
-7. Maybe something Operations/Cloud/Kubernetes/... related?
+8. Maybe something Operations/Cloud/Kubernetes/... related?
     TODO @sk1p could you expand that perhaps? 

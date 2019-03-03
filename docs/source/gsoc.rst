@@ -93,7 +93,7 @@ These are somewhat larger work items that can keep you busy for the entire time.
 3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_. 
     This will help us to catch performance regressions. In our experience, running a benchmark requires a reproducible, undisturbed environment and comparison to good reference data. For that reason we see it as more challenging that automated tests for functionality and correctness. You could run benchmarks in CI and observe variance, and record and present benchmark results over time.
 
-4. Intermediate/Advanced: Cloud caching layer. 
+4. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_. 
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
 5. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters. 

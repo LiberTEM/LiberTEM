@@ -64,10 +64,10 @@ Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>
 
 Currently, we are still working on getting suitable sample files online. Please contact us to get interesting sample data to work on!
 
-What to wok on
-~~~~~~~~~~~~~~
+What to work on
+~~~~~~~~~~~~~~~
 
-Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/LiberTEM/issues>`_ of what we have on our plate. We have a `significant waiting list of interesting features and improvements <https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement>`_ where our users and us could really use your help to get them implemented. Further below we list a few specific ideas.
+Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/LiberTEM/issues>`_ of what we have on our plate. We've marked a number of `Good first issues <https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_ that might be relatively easy to solve and can help you get introduced to our code base. Further below we list a few specific ideas.
 
 
 Writing your GSoC application

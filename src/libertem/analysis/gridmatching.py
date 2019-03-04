@@ -2,7 +2,360 @@ import numpy as np
 import hdbscan
 
 
+class CorrelationResult:
+    def __init__(self, centers, refineds, peak_values, peak_elevations):
+        assert all(len(centers) == len(other) for other in [refineds, peak_values, peak_elevations])
+        self.centers = centers
+        self.refineds = refineds
+        self.peak_values = peak_values
+        self.peak_elevations = peak_elevations
+        assert all(len(centers) == len(other) for other in [refineds, peak_values, peak_elevations])
+
+    def __len__(self):
+        return len(self.centers)
+
+
+class PointSelection:
+    def __init__(self, correlation_result: CorrelationResult, selector=None):
+        self.correlation_result = correlation_result
+        if selector is None:
+            self.selector = np.ones(len(correlation_result.centers), dtype=np.bool)
+        else:
+            assert len(correlation_result.centers) == len(selector)
+            self.selector = selector
+
+    @property
+    def centers(self):
+        return self.correlation_result.centers[self.selector]
+
+    @property
+    def refineds(self):
+        return self.correlation_result.refineds[self.selector]
+
+    @property
+    def peak_values(self):
+        return self.correlation_result.peak_values[self.selector]
+
+    @property
+    def peak_elevations(self):
+        return self.correlation_result.peak_elevations[self.selector]
+
+    def __len__(self):
+        return np.sum(self.selector)
+
+    def new_selector(self, selector):
+        new_selector = np.copy(self.selector)
+        new_selector[self.selector] = selector
+        return new_selector
+
+    def derive(self, selector=None):
+        if selector is None:
+            selector = self.selector
+        return PointSelection(self.correlation_result, selector)
+
+
+class Match(PointSelection):
+    def __init__(self, correlation_result: CorrelationResult,
+            selector, zero, a, b, indices, parameters={}):
+        self.zero = zero
+        self.a = a
+        self.b = b
+        self.indices = indices
+        self.parameters = self._make_parameters(parameters)
+        super().__init__(correlation_result, selector)
+        assert len(indices) == len(self)
+
+    @classmethod
+    def from_point_selection(cls, point_selection: PointSelection,
+            zero, a, b, indices, selector=None, parameters={}):
+        if selector is None:
+            selector = point_selection.selector
+        return Match(
+            correlation_result=point_selection.correlation_result,
+            selector=selector, zero=zero, a=a, b=b, indices=indices, parameters=parameters)
+
+    @property
+    def calculated_refineds(self):
+        return calc_coords(self.zero, self.a, self.b, self.indices)
+
+    @property
+    def error(self):
+        diff = self.refineds - self.calculated_refineds
+        return np.linalg.norm(diff)
+
+    @classmethod
+    def _make_parameters(cls, p):
+        parameters = {
+            "min_angle": np.pi / 5,
+            "tolerance": 0.02,
+            "min_points": 10,
+            "min_match": 3,
+            "min_cluster_size_fraction": 4,
+            "min_samples_fraction": 20,
+            "num_candidates": 7,
+            "min_delta": 0,
+            "max_delta": np.float('inf'),
+            "min_weight": 0.1
+
+        }
+        parameters.update(p)
+        return parameters
+
+    def derive(self, selector=None, zero=None, a=None, b=None, indices=None, parameters={}):
+        if zero is None:
+            zero = self.zero
+        if a is None:
+            a = self.a
+        if b is None:
+            b = self.b
+        if indices is None:
+            indices = self.indices
+        if selector is None:
+            selector = self.selector
+        new_parameters = dict(self.parameters)
+        new_parameters.update(parameters)
+        return Match(correlation_result=self.correlation_result, selector=selector,
+            zero=zero, a=a, b=b, indices=indices, parameters=parameters)
+
+    def weighted_optimize(self):
+
+        # Following
+        # https://stackoverflow.com/questions/27128688/how-to-use-least-squares-with-weight-matrix-in-python
+
+        # We stack an index of 1 to the index list for the zero component
+        indices = np.hstack([
+            np.ones((len(self.indices), 1)),
+            self.indices
+        ])
+
+        W = np.vstack([self.peak_elevations, self.peak_elevations])
+
+        Aw = indices * np.sqrt(self.peak_elevations[:, np.newaxis])
+        Bw = self.refineds * np.sqrt(W.T)
+        (x, residuals, rank, s) = np.linalg.lstsq(Aw, Bw, rcond=self.parameters['tolerance'] / 100)
+        # (zero, a, b)
+        if x.size == 0:
+            raise np.linalg.LinAlgError("Optimizing returned empty result")
+        zero, a, b = x
+        return self.derive(zero=zero, a=a, b=b)
+
+    def optimize(self):
+        # We stack an index of 1 to the index list for the zero component
+        indices = np.hstack([
+            np.ones((len(self.indices), 1)),
+            self.indices
+        ])
+
+        (x, residuals, rank, s) = np.linalg.lstsq(
+            indices, self.refineds, rcond=self.parameters['tolerance'] / 100)
+        # (zero, a, b)
+        if x.size == 0:
+            raise np.linalg.LinAlgError("Optimizing returned empty result")
+        zero, a, b = x
+        return self.derive(zero=zero, a=a, b=b)
+
+    @classmethod
+    def invalid(cls, correlation_result):
+        nanvec = np.array([np.float('nan'), np.float('nan')])
+        return cls(
+            correlation_result=correlation_result,
+            selector=np.zeros(len(correlation_result), dtype=np.bool),
+            zero=nanvec,
+            a=nanvec,
+            b=nanvec,
+            indices=np.array([]),
+            parameters={}
+        )
+
+    @classmethod
+    def fastmatch(cls, correlation_result: CorrelationResult, zero, a, b, parameters):
+        # FIXME check formatting when included in documentation
+        '''
+        # FIXME Update after refactor!
+        This function finds matches for zero point and lattice vectors
+        a, b within the list of points.
+        This function is much, much faster than the full match.
+        It works well to match a large number of point sets
+        that share the same lattice vectors, for example from a
+        larger grain or monocrystalline material
+
+        Parameters
+        ----------
+        points
+            The list of points to match, numpy array of (y, x) coordinate pairs
+        zero
+            The near approximate zero point as numpy array (y, x).
+        a, b
+            The near approximate vectors a, b to match the grid as numpy arrays (y, x).
+        weights
+            The weight/quality of each point
+        parameters
+            Parameters for the matching.
+            tolerance: Relative position tolerance for peaks to be considered matches
+            min_delta: Minimum length of a potential grid vector
+            max_delta: Maximum length of a potential grid vector
+
+        returns:
+            (zero, a, b, matched, matched_indices, remainder)
+        '''
+        p = cls._make_parameters(parameters)
+
+        filt = correlation_result.peak_elevations >= p['min_weight']
+
+        selection = PointSelection(correlation_result=correlation_result, selector=filt)
+        # We match twice because we might catch more peaks in the second run with better parameters
+        try:
+            match1 = cls._match_all(point_selection=selection, zero=zero, a=a, b=b, parameters=p)
+            if len(match1) >= p['min_match']:
+                match1 = match1.weighted_optimize()
+            else:
+                raise np.linalg.LinAlgError("Not enough matched points")
+            match2 = cls._match_all(
+                point_selection=selection, zero=match1.zero, a=match1.a, b=match1.b, parameters=p)
+            return match2.weighted_optimize()
+        # FIXME proper error handling strategy
+        except np.linalg.LinAlgError:
+            return cls.invalid(correlation_result)
+
+    @classmethod
+    def full_match(cls, correlation_result: CorrelationResult, zero, cand=[], parameters={}):
+        # FIXME check formatting when included in documentation
+        '''
+        FIXME update after refactoring
+        In the real world, this would distinguish more between finding good candidates
+        from sum frames or region of interest
+        and then match to individual frames
+        The remainder of all frames could be thrown together for an additional round of matching
+        to find faint and sparse peaks.
+
+        Parameters
+        ----------
+        points
+            The list of points to match, numpy array of (y, x) coordinate pairs
+        zero
+            The initial guess for the zero point as numpy array (y, x).
+        cand
+            List of candidate vectors to use in a first matching round before guessing.
+        parameters
+            Parameters for the matching.
+            min_angle: Minimum angle between two vectors to be considered candidates
+            tolerance: Relative position tolerance for peaks to be considered matches
+            min_points: Minimum points to try clustering matching. Otherwise match directly
+            min_match: Minimum matched clusters from clustering matching to be considered successful
+            min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
+                smaller or fuzzier clusters.
+            min_samples_fraction: Tuning parameter for clustering matching. Larger values allow
+                smaller or fuzzier clusters.
+            num_candidates: Maximum number of candidates to return from clustering matching
+            min_delta: Minimum length of a potential grid vector
+            max_delta: Maximum length of a potential grid vector
+        '''
+        matches = []
+        p = cls._make_parameters(parameters)
+
+        filt = correlation_result.peak_elevations >= p['min_weight']
+
+        working_set = PointSelection(correlation_result, selector=filt)
+
+        while True:
+            # First, find good candidate
+            # Expensive operation, should be done on smaller sample
+            # or sum frame result, at least for first passes to match majority
+            # of peaks
+            if cand:
+                polar_candidate_vectors = make_polar(np.array(cand))
+                cand = []
+            else:
+                polar_candidate_vectors = candidates(working_set.refineds, p)
+
+            try:
+                match = cls._find_best_vector_match(
+                    point_selection=working_set, zero=zero,
+                    candidates=polar_candidate_vectors, parameters=p)
+                match = match.weighted_optimize()
+            except NotFoundException:
+                # print("no match found:\n", points)
+                break
+            # We redo the match with optimized parameters
+            match = cls._match_all(
+                point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
+            if len(match) == 0:
+                # print("no endless loop")
+                break
+
+            match = match.weighted_optimize()
+
+            matches.append(match)
+            new_selector = np.copy(working_set.selector)
+            # remove the ones that have been matched
+            new_selector[match.selector] = False
+            working_set = working_set.derive(selector=new_selector)
+            # doesn't span a lattice
+            if len(working_set) < 4:
+                # print("doesn't span a lattice")
+                break
+        weak = PointSelection(correlation_result, selector=np.logical_not(filt))
+        unmatched = working_set
+        return (matches, unmatched, weak)
+
+    # Find points that can be generated from the lattice vectors with near integer indices
+    # Return match
+    @classmethod
+    def _match_all(cls, point_selection: PointSelection, zero, a, b, parameters):
+        cutoff = parameters['max_delta'] * parameters["tolerance"]
+        try:
+            indices = vector_solver(point_selection.refineds, zero, a, b)
+        # FIXME proper error handling strategy
+        except np.linalg.LinAlgError:
+            raise
+        rounded = np.around(indices)
+        errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
+        matched_selector = errors < cutoff
+        matched_indices = rounded[matched_selector].astype(np.int)
+        # remove the ones that weren't matched
+        new_selector = point_selection.new_selector(matched_selector)
+        return cls.from_point_selection(
+            point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices)
+
+    # Return a matrix with matches of all pairwise combinations of polar_vectors
+    @classmethod
+    def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
+        match_matrix = {}
+        # we test all pairs of candidate vectors
+        # and populate match_matrix
+        for i in range(len(polar_vectors)):
+            for j in range(i + 1, len(polar_vectors)):
+                a = polar_vectors[i]
+                b = polar_vectors[j]
+                # too parallel, not good lattice vectors
+                if not angle_check(np.array([a]), np.array([b]), parameters['min_angle']):
+                    continue
+                a, b = make_cartesian(np.array([a, b]))
+
+                match = cls._match_all(
+                    point_selection=point_selection, zero=zero, a=a, b=b, parameters=parameters)
+                # At least three points matched
+                if len(match) > 2:
+                    match_matrix[(i, j)] = match
+        return match_matrix
+
+    # Return the match that matches most points
+    @classmethod
+    def _find_best_vector_match(cls, point_selection: PointSelection, zero, candidates, parameters):
+        match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
+        if match_matrix:
+            # we select the entry with highest number of matches
+            candidate_index, match = sorted(
+                match_matrix.items(), key=lambda d: len(d[1]), reverse=True
+            )[0]
+            return match
+        else:
+            # FIXME proper error handling
+            raise NotFoundException
+
+
 # Calculate coordinates from lattice vectors a, b and indices
+# This might be uselful without a full Match class, so we keep it as function
 def calc_coords(zero, a, b, indices):
     coefficients = np.array((a, b))
     return zero + np.dot(indices, coefficients)
@@ -118,264 +471,3 @@ def vector_solver(points, zero, a, b):
 
 class NotFoundException(Exception):
     pass
-
-
-# Find points that can be generated from the lattice vectors with near integer indices
-# Return matched points, corresponding indices, and remainder
-def match_all(points, weights, zero, a, b, parameters):
-    cutoff = parameters['max_delta'] * parameters["tolerance"]
-    try:
-        indices = vector_solver(points, zero, a, b)
-    except np.linalg.LinAlgError:
-        return (np.array([[]]), np.array([[]]), np.array([]), points)
-    rounded = np.around(indices)
-    errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
-    matched_selector = errors < cutoff
-    matched = points[matched_selector]
-    matched_indices = rounded[matched_selector].astype(np.int)
-    remainder = points[np.invert(matched_selector)]
-    return (matched, matched_indices, weights[matched_selector], remainder)
-
-
-# Try out all combinations of polar_vectors and
-# see which one generates most matches
-def do_match(points, weights, zero, polar_vectors, parameters):
-    match_matrix = {}
-    # we test all pairs of candidate vectors
-    # and populate match_matrix
-    for i in range(len(polar_vectors)):
-        for j in range(i + 1, len(polar_vectors)):
-            a = polar_vectors[i]
-            b = polar_vectors[j]
-            # too parallel, not good lattice vectors
-            if not angle_check(np.array([a]), np.array([b]), parameters['min_angle']):
-                continue
-            a, b = make_cartesian(np.array([a, b]))
-
-            match = match_all(points, weights, zero, a, b, parameters)
-            # At least three points matched
-            if len(match[0]) > 2:
-                match_matrix[(i, j)] = match
-    return match_matrix
-
-
-# Find the pair of lattice vectors that generates most matches
-# Return vectors and additional info about the match
-def find_best_vector_match(points, weights, zero, candidates, parameters):
-    match_matrix = do_match(points, weights, zero, candidates, parameters)
-    if match_matrix:
-        # we select the entry with highest number of matches
-        candidate_index, match = sorted(
-            match_matrix.items(), key=lambda d: len(d[1][1]), reverse=True
-        )[0]
-        polar_a = candidates[candidate_index[0]]
-        polar_b = candidates[candidate_index[1]]
-        a, b = make_cartesian(np.array([polar_a, polar_b]))
-        return (a, b, match)
-    else:
-        raise NotFoundException
-
-
-def optimize(matched, matched_indices, parameters):
-    # We stack an index of 1 to the index list for the zero component
-    indices = np.hstack([
-        np.ones((len(matched_indices), 1)),
-        matched_indices
-    ])
-
-    (x, residuals, rank, s) = np.linalg.lstsq(indices, matched, rcond=parameters['tolerance'] / 100)
-    # (zero, a, b)
-    if x.size == 0:
-        raise np.linalg.LinAlgError("Optimizing returned empty result")
-    return x
-
-
-def weighted_optimize(matched, matched_indices, weights, parameters):
-
-    # Following
-    # https://stackoverflow.com/questions/27128688/how-to-use-least-squares-with-weight-matrix-in-python
-
-    # We stack an index of 1 to the index list for the zero component
-    indices = np.hstack([
-        np.ones((len(matched_indices), 1)),
-        matched_indices
-    ])
-
-    W = np.vstack([weights, weights])
-
-    Aw = indices * np.sqrt(weights[:, np.newaxis])
-    Bw = matched * np.sqrt(W.T)
-    (x, residuals, rank, s) = np.linalg.lstsq(Aw, Bw, rcond=parameters['tolerance'] / 100)
-    # (zero, a, b)
-    if x.size == 0:
-        raise np.linalg.LinAlgError("Optimizing returned empty result")
-    return x
-
-
-def full_match(points, zero, weights=None, cand=[], parameters={}):
-    # FIXME check formatting when included in documentation
-    '''
-    In the real world, this would distinguish more between finding good candidates
-    from sum frames or region of interest
-    and then match to individual frames
-    The remainder of all frames could be thrown together for an additional round of matching
-    to find faint and sparse peaks.
-
-    Parameters
-    ----------
-    points
-        The list of points to match, numpy array of (y, x) coordinate pairs
-    zero
-        The initial guess for the zero point as numpy array (y, x).
-    cand
-        List of candidate vectors to use in a first matching round before guessing.
-    parameters
-        Parameters for the matching.
-        min_angle: Minimum angle between two vectors to be considered candidates
-        tolerance: Relative position tolerance for peaks to be considered matches
-        min_points: Minimum points to try clustering matching. Otherwise match directly
-        min_match: Minimum matched clusters from clustering matching to be considered successful
-        min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
-            smaller or fuzzier clusters.
-        min_samples_fraction: Tuning parameter for clustering matching. Larger values allow smaller
-            or fuzzier clusters.
-        num_candidates: Maximum number of candidates to return from clustering matching
-        min_delta: Minimum length of a potential grid vector
-        max_delta: Maximum length of a potential grid vector
-    '''
-    matches = []
-    remainder = []
-    p = make_params(parameters)
-
-    if weights is None:
-        weights = np.ones(len(points))
-
-    filt = weights >= p['min_weight']
-
-    match_points = points[filt]
-    match_weights = weights[filt]
-
-    global_remainder = points[np.invert(filt)]
-
-    while True:
-        # First, find good candidate
-        # Expensive operation, should be done on smaller sample
-        # or sum frame result, at least for first passes to match majority
-        # of peaks
-        if cand:
-            polar_candidate_vectors = make_polar(np.array(cand))
-            cand = []
-        else:
-            polar_candidate_vectors = candidates(match_points, p)
-
-        try:
-            a, b, (matched, matched_indices, matched_weights, remainder) = find_best_vector_match(
-                match_points, match_weights, zero, polar_candidate_vectors, p
-            )
-            opt_zero, a, b = weighted_optimize(matched, matched_indices, matched_weights, p)
-        except NotFoundException:
-            # print("no match found:\n", points)
-            break
-
-        (matched, matched_indices, matched_weights, remainder) = match_all(
-            match_points, matched_weights, opt_zero, a, b, p
-        )
-        if matched.size == 0:
-            # print("no endless loop")
-            break
-
-        opt_zero, a, b = weighted_optimize(matched, matched_indices, matched_weights, p)
-
-        matches.append((opt_zero, a, b, matched, matched_indices, matched_weights))
-        # doesn't span a lattice
-        if len(remainder) < 4:
-            # print("doesn't span a lattice")
-            break
-
-        match_points = remainder
-        # FIXME We'll have to refactor the whole thing to keep track of what is matchd and what not
-        # match_weights = TODO
-        # We always include the zero point because all lattices have it in
-        # common and we filter it out each time
-        # Gives additional point to match!
-        match_points = np.append(match_points, [zero], axis=0)
-    return (matches, np.concatenate((global_remainder, remainder)))
-
-
-def fastmatch(points, zero, a, b, weights=None, parameters={}):
-    # FIXME check formatting when included in documentation
-    '''
-    This function finds matches for zero point and lattice vectors
-    a, b within the list of points.
-    This function is much, much faster than the full match.
-    It works well to match a large number of point sets
-    that share the same lattice vectors, for example from a
-    larger grain or monocrystalline material
-
-    Parameters
-    ----------
-    points
-        The list of points to match, numpy array of (y, x) coordinate pairs
-    zero
-        The near approximate zero point as numpy array (y, x).
-    a, b
-        The near approximate vectors a, b to match the grid as numpy arrays (y, x).
-    weights
-        The weight/quality of each point
-    parameters
-        Parameters for the matching.
-        tolerance: Relative position tolerance for peaks to be considered matches
-        min_delta: Minimum length of a potential grid vector
-        max_delta: Maximum length of a potential grid vector
-
-    returns:
-        (zero, a, b, matched, matched_indices, remainder)
-    '''
-    if weights is None:
-        weights = np.ones(len(points))
-
-    p = make_params(parameters)
-
-    filt = weights >= p['min_weight']
-
-    match_points = points[filt]
-    match_weights = weights[filt]
-
-    global_remainder = points[np.invert(filt)]
-
-    # We match twice
-    try:
-        for _ in range(2):
-            (matched, matched_indices, matched_weights, remainder) = match_all(
-                match_points, match_weights, zero, a, b, p
-            )
-            if len(matched) >= p['min_match']:
-                zero, a, b = weighted_optimize(matched, matched_indices, matched_weights, p)
-            else:
-                raise np.linalg.LinAlgError("Not enough matched points")
-        return (
-            zero, a, b, matched, matched_indices, matched_weights,
-            np.concatenate((global_remainder, remainder))
-        )
-    except np.linalg.LinAlgError:
-        nan = np.float('nan')
-        nan_vec = np.array([nan, nan])
-        return (nan_vec, nan_vec, nan_vec, [], [], [], points)
-
-
-def make_params(p):
-    parameters = {
-        "min_angle": np.pi / 5,
-        "tolerance": 0.02,
-        "min_points": 10,
-        "min_match": 3,
-        "min_cluster_size_fraction": 4,
-        "min_samples_fraction": 20,
-        "num_candidates": 7,
-        "min_delta": 0,
-        "max_delta": np.float('inf'),
-        "min_weight": 0.1
-
-    }
-    parameters.update(p)
-    return parameters

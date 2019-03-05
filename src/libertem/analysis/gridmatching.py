@@ -168,7 +168,7 @@ class Match(PointSelection):
         )
 
     @classmethod
-    def fastmatch(cls, correlation_result: CorrelationResult, zero, a, b, parameters):
+    def fastmatch(cls, correlation_result: CorrelationResult, zero, a, b, parameters={}):
         # FIXME check formatting when included in documentation
         '''
         # FIXME Update after refactor!
@@ -257,6 +257,11 @@ class Match(PointSelection):
 
         working_set = PointSelection(correlation_result, selector=filt)
 
+        zero_selector = np.array([
+            all(correlation_result.centers[i] == zero) + all(correlation_result.refineds[i] == zero)
+            for i in range(len(correlation_result))
+        ], dtype=np.bool)
+
         while True:
             # First, find good candidate
             # Expensive operation, should be done on smaller sample
@@ -289,13 +294,16 @@ class Match(PointSelection):
             new_selector = np.copy(working_set.selector)
             # remove the ones that have been matched
             new_selector[match.selector] = False
-            working_set = working_set.derive(selector=new_selector)
-            # doesn't span a lattice
-            if len(working_set) < 4:
+            # Test if it spans a lattice
+            if sum(new_selector) >= 3:
+                # Add zero point that is shared by all patterns
+                new_selector[zero_selector] = True
+                working_set = working_set.derive(selector=new_selector)
+            else:
                 # print("doesn't span a lattice")
+                unmatched = working_set.derive(selector=new_selector)
                 break
         weak = PointSelection(correlation_result, selector=np.logical_not(filt))
-        unmatched = working_set
         return (matches, unmatched, weak)
 
     # Find points that can be generated from the lattice vectors with near integer indices

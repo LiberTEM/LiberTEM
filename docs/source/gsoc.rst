@@ -89,12 +89,16 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     
     *Domain knowledge:* Math, statistics, image processing and physics are of advantage.
 
+    *Primary contact:* Dieter (@uellue)
+
 2. Beginner/Intermediate/Advanced: Compression survey.
     Analyze high-throughput compression techniques, dive into lz4/zstd, blosc etc., compare against existing file formats. With this project you can improve your low-level programming experience: Instruction sets, CPU caches, optimizing compilers, auto-vectorization, and so on. Our favorite technology to do work in this area with Python is `numba <http://numba.pydata.org/>`_. Can be done basically independent of the LiberTEM codebase. For a beginner project you can compare existing implementations of common compression algorithms for our kind of data. For an advanced project you could test `autoencoders <https://en.wikipedia.org/wiki/Autoencoder>`_.
 
     *Skills:* Programming in C and Python, profiling.
     
     *Domain knowledge:* Good understanding how computers work in detail; neural networks for autoencoder.
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)
 
 3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_.
     This will help us to catch performance regressions. In our experience, running a benchmark requires a reproducible, undisturbed environment and comparison to good reference data. For that reason we see it as more challenging than automated tests for functionality and correctness. You could run benchmarks in CI and observe variance, and record and present benchmark results over time.
@@ -103,12 +107,16 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     
     *Domain knowledge:* Continuous integration and automation tools.
 
+    *Primary contact:* Alex (@sk1p)
+
 4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
     Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like http://fatiherikli.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
 
     *Skills:* Programming in TypeScript, GUI development.
     
     *Domain knowledge:* --
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)
 
 5. Intermediate: Deploy LiberTEM with kubernetes.
     Help us set up a helm chart and documentation to deploy a LiberTEM cluster with kubernetes. The subject is fairly new to us and we'd appreciate your help, in particular if you already have experience with kubernetes.
@@ -117,12 +125,16 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     
     *Domain knowledge:* kubernetes
 
+    *Primary contact:* Alex (@sk1p)
+
 6. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
     *Skills:* Python and numpy programming, profiling. 
     
     *Domain knowledge:* --
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)
 
 7. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
     This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
@@ -131,9 +143,13 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     
     *Domain knowledge:* --
 
+    *Primary contact:* Alex (@sk1p)
+
 8. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
     Basically an efficient/zoomable/user-friendly/fully-featured replacement for our visualization. Requires a cross-section of different technologies from Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun off into its own project if it is successful!
 
     *Skills:* Python and TypeScript programming, web development, asynchronous and parallel programming, numerical processing, visualization. 
     
     *Domain knowledge:* Experience with similar projects and frameworks like for example `GR <https://gr-framework.org/>`_ desirable. Knowledge of `GIS <https://en.wikipedia.org/wiki/Geographic_information_system>`_ could potentially be useful.
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)

@@ -171,9 +171,8 @@ class Match(PointSelection):
     def fastmatch(cls, correlation_result: CorrelationResult, zero, a, b, parameters={}):
         # FIXME check formatting when included in documentation
         '''
-        # FIXME Update after refactor!
-        This function finds matches for zero point and lattice vectors
-        a, b within the list of points.
+        This function creates a Match object from correlation_result and approximates
+        for zero point and lattice vectors a and b.
         This function is much, much faster than the full match.
         It works well to match a large number of point sets
         that share the same lattice vectors, for example from a
@@ -181,14 +180,12 @@ class Match(PointSelection):
 
         Parameters
         ----------
-        points
-            The list of points to match, numpy array of (y, x) coordinate pairs
+        correlation_result
+            CorrelationResult object with coordinates and weights
         zero
             The near approximate zero point as numpy array (y, x).
         a, b
             The near approximate vectors a, b to match the grid as numpy arrays (y, x).
-        weights
-            The weight/quality of each point
         parameters
             Parameters for the matching.
             tolerance: Relative position tolerance for peaks to be considered matches
@@ -196,7 +193,7 @@ class Match(PointSelection):
             max_delta: Maximum length of a potential grid vector
 
         returns:
-            (zero, a, b, matched, matched_indices, remainder)
+            Match
         '''
         p = cls._make_parameters(parameters)
 
@@ -221,21 +218,19 @@ class Match(PointSelection):
     def full_match(cls, correlation_result: CorrelationResult, zero, cand=[], parameters={}):
         # FIXME check formatting when included in documentation
         '''
-        FIXME update after refactoring
-        In the real world, this would distinguish more between finding good candidates
-        from sum frames or region of interest
-        and then match to individual frames
-        The remainder of all frames could be thrown together for an additional round of matching
-        to find faint and sparse peaks.
+        This function extracts a list of Match objects as well two PointCollection objects
+        for unmatched and weak points from correlation_result and zero point.
+
+        The zero point is included in each of the matches because it is shared between all grids.
 
         Parameters
         ----------
-        points
-            The list of points to match, numpy array of (y, x) coordinate pairs
+        correlation_result
+            A CorrelationResult object with coordinates and weights
         zero
-            The initial guess for the zero point as numpy array (y, x).
+            Zero point as numpy array (y, x).
         cand
-            List of candidate vectors to use in a first matching round before guessing.
+            Optional list of candidate vectors to use in a first matching round before guessing.
         parameters
             Parameters for the matching.
             min_angle: Minimum angle between two vectors to be considered candidates
@@ -249,6 +244,9 @@ class Match(PointSelection):
             num_candidates: Maximum number of candidates to return from clustering matching
             min_delta: Minimum length of a potential grid vector
             max_delta: Maximum length of a potential grid vector
+
+        returns:
+            (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
         '''
         matches = []
         p = cls._make_parameters(parameters)
@@ -258,7 +256,8 @@ class Match(PointSelection):
         working_set = PointSelection(correlation_result, selector=filt)
 
         zero_selector = np.array([
-            all(correlation_result.centers[i] == zero) + all(correlation_result.refineds[i] == zero)
+            np.allclose(correlation_result.centers[i], zero)
+            + np.allclose(correlation_result.refineds[i], zero)
             for i in range(len(correlation_result))
         ], dtype=np.bool)
 

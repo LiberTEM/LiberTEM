@@ -121,14 +121,19 @@ def test_angle_ckeck():
 
 def test_fastmatch(zero, a, b):
     grid = _fullgrid(zero, a, b, 5)
-    (m_zero, m_a, m_b, matched, matched_indices, matched_weights, remainder) = grm.fastmatch(
-        grid, zero, a, b)
-    assert(np.allclose(zero, m_zero))
-    assert(np.allclose(a, m_a))
-    assert(np.allclose(b, m_b))
-    assert(len(matched) == len(grid))
-    assert(len(remainder) == 0)
-    assert(np.allclose(grm.calc_coords(m_zero, m_a, m_b, matched_indices), grid))
+    correlation_result = grm.CorrelationResult(
+        centers=grid,
+        refineds=grid,
+        peak_values=np.ones(len(grid)),
+        peak_elevations=np.ones(len(grid))
+    )
+    match = grm.Match.fastmatch(
+        correlation_result=correlation_result, zero=zero, a=a, b=b)
+    assert(np.allclose(zero, match.zero))
+    assert(np.allclose(a, match.a))
+    assert(np.allclose(b, match.b))
+    assert(len(match) == len(grid))
+    assert(np.allclose(match.calculated_refineds, grid))
 
 
 def test_fullmatch(zero, a, b):
@@ -145,29 +150,44 @@ def test_fullmatch(zero, a, b):
         'max_delta': 3,
     }
 
-    (matches, remainder) = grm.full_match(grid, zero, parameters=parameters)
+    correlation_result = grm.CorrelationResult(
+        centers=grid,
+        refineds=grid,
+        peak_values=np.ones(len(grid)),
+        peak_elevations=np.ones(len(grid))
+    )
+
+    (matches, unmatched, weak) = grm.Match.full_match(
+        correlation_result=correlation_result, zero=zero, parameters=parameters)
 
     assert(len(matches) == 2)
-    assert(len(remainder) == 0)
+    print(len(matches[0]), len(grid_1), len(matches[1]), len(grid_2))
+    assert(len(unmatched) == 0)
+    assert(len(weak) == 0)
 
-    (m_zero, m_a, m_b, matched, matched_indices, matched_weights) = matches[0]
+    match1 = matches[0]
 
-    assert(np.allclose(zero, m_zero))
-    assert(np.allclose(a, m_a) or np.allclose(b, m_a)
-           or np.allclose(-a, m_a) or np.allclose(-b, m_a))
-    assert(np.allclose(a, m_b) or np.allclose(b, m_b)
-           or np.allclose(-a, m_b) or np.allclose(-b, m_b))
-    assert(len(matched) == len(grid_1))
-    assert(np.allclose(grm.calc_coords(m_zero, m_a, m_b, matched_indices), grid_1))
+    assert(np.allclose(zero, match1.zero))
+    assert(np.allclose(a, match1.a) or np.allclose(b, match1.a)
+           or np.allclose(-a, match1.a) or np.allclose(-b, match1.a))
+    assert(np.allclose(a, match1.b) or np.allclose(b, match1.b)
+           or np.allclose(-a, match1.b) or np.allclose(-b, match1.b))
+    assert(len(match1) == len(grid_1))
+    assert(np.allclose(match1.calculated_refineds, grid_1))
 
-    (m_zero, m_a, m_b, matched, matched_indices) = matches[1]
+    match2 = matches[1]
 
-    assert(np.allclose(zero, m_zero))
-    assert(np.allclose(aa, m_a) or np.allclose(bb, m_a)
-           or np.allclose(-aa, m_a) or np.allclose(-bb, m_a))
-    assert(np.allclose(aa, m_b) or np.allclose(bb, m_b)
-           or np.allclose(-aa, m_b) or np.allclose(-bb, m_b))
+    assert(np.allclose(zero, match2.zero))
+    assert(np.allclose(aa, match2.a) or np.allclose(bb, match2.a)
+           or np.allclose(-aa, match2.a) or np.allclose(-bb, match2.a))
+    assert(np.allclose(aa, match2.b) or np.allclose(bb, match2.b)
+           or np.allclose(-aa, match2.b) or np.allclose(-bb, match2.b))
     # We always match the zero point for each lattice
-    assert(len(matched) == len(grid_2) + 1)
-    # We skip the last element, which is the added zero point
-    assert(np.allclose(grm.calc_coords(m_zero, m_a, m_b, matched_indices[:-1]), grid_2))
+    assert(len(match2) == len(grid_2) + 1)
+    # We filter out the zero point, which is added in the matching routine to each matching cycle
+    skip_zero = np.array([
+        any(match2.indices[i] != np.array((0, 0))) for i in range(len(match2))
+    ], dtype=np.bool)
+    # We calculate by hand because the built-in method can't skip the zero point
+    assert(np.allclose(grm.calc_coords(
+        match2.zero, match2.a, match2.b, match2.indices[skip_zero]), grid_2))

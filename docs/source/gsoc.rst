@@ -1,6 +1,13 @@
 GSoC 2019 ideas
 ===============
 
+LiberTEM is participating in the `Google Summer of Code <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python Software Foundation <http://python-gsoc.org/>`_. As a student, you can get paid by Google for three months, have fun working on an interesting open source software project, gain real-world development experience, and do something that looks nice on your CV!
+
+* Check out our description and project ideas below
+* Contact us if you'd like to work on LiberTEM
+* Prepare a `proposal <http://python-gsoc.org/index.html#apply>`_ together with us
+* You submit your application at the Google Summer of Code homepage to the Python Software Foundation organization, naming LiberTEM as the sub-organization.
+
 Why LiberTEM
 --------------
 

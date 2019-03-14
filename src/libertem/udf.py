@@ -88,7 +88,13 @@ def map_partition(partition, make_result_buffers, init_fn, frame_fn):
     return result_buffers, partition
 
 
-def map_frames(ctx, dataset, merge, make_result_buffers, init_fn, frame_fn):
+def merge_assign(dest, src):
+    for k in dest:
+        check_cast(dest[k], src[k])
+        dest[k][:] = src[k]
+
+
+def map_frames(ctx, dataset, make_result_buffers, init_fn, frame_fn, merge_fn=merge_assign):
     result_buffers = make_result_buffers()
     for buf in result_buffers.values():
         buf.set_shape_ds(dataset)
@@ -103,5 +109,7 @@ def map_frames(ctx, dataset, merge, make_result_buffers, init_fn, frame_fn):
         buffer_views = {}
         for k, buf in result_buffers.items():
             buffer_views[k] = buf.get_view_for_partition(partition=partition)
-        merge(partition_result_buffers, **buffer_views)
+        buffers = {k: b.data
+                   for k, b in partition_result_buffers.items()}
+        merge_fn(dest=buffer_views, src=buffers)
     return result_buffers

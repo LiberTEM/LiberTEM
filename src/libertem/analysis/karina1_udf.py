@@ -228,21 +228,6 @@ def pass_2(frame, template, crop_buf, peaks, mask,
         peak_elevations[disk_idx] = peak_elevation
 
 
-def pass_2_merge(partition_result_buffers, centers, refineds, peak_values, peak_elevations):
-    c = partition_result_buffers['centers'].data
-    r = partition_result_buffers['refineds'].data
-    p = partition_result_buffers['peak_values'].data
-    e = partition_result_buffers['peak_elevations'].data
-    check_cast(c, centers)
-    check_cast(r, refineds)
-    check_cast(p, peak_values)
-    check_cast(e, peak_elevations)
-    centers[:] = c
-    refineds[:] = r
-    peak_values[:] = p
-    peak_elevations[:] = e
-
-
 def run_analysis(ctx, dataset, parameters):
     sum_job = SumFramesJob(dataset=dataset)
     sum_result = ctx.run(sum_job)
@@ -261,7 +246,6 @@ def run_analysis(ctx, dataset, parameters):
             get_result_buffers_pass_2,
             num_disks=parameters['num_disks'],
         ),
-        merge=pass_2_merge,
         init_fn=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
         frame_fn=pass_2,
     )

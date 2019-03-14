@@ -4,9 +4,10 @@ import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
+from libertem.io.dataset.raw import RawFileDataSet
 from libertem import api as lt
 
-from utils import MemoryDataSet
+from utils import MemoryDataSet, _mk_random
 
 
 @pytest.fixture
@@ -67,3 +68,21 @@ def ds_complex():
         partition_shape=(16, 16, 16, 16)
     )
     return dataset
+
+
+@pytest.fixture(scope='session')
+def default_raw(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-default'
+    data = _mk_random(size=(16, 16, 128, 128), dtype='float32')
+    data.tofile(str(filename))
+    del data
+    ds = RawFileDataSet(
+        path=str(filename),
+        scan_size=(16, 16),
+        dtype="float32",
+        detector_size_raw=(128, 128),
+        crop_detector_to=(128, 128),
+    )
+    ds = ds.initialize()
+    yield ds

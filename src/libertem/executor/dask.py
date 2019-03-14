@@ -61,10 +61,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
                 return
             await self.client.close()
             if self.is_local:
-                try:
-                    self.client.cluster.close(timeout=1)
-                except tornado.util.TimeoutError:
-                    pass
+                await self.client.cluster.close()
         except Exception:
             log.exception("could not close dask executor")
 

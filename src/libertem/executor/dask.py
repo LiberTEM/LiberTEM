@@ -24,6 +24,8 @@ class CommonDaskMixin(object):
     def _get_futures(self, job):
         futures = []
         available_workers = self.get_available_workers()
+        if len(available_workers) == 0:
+            raise RuntimeError("no workers available!")
         for task in job.get_tasks():
             submit_kwargs = {}
             locations = task.get_locations()
@@ -113,7 +115,7 @@ class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
         AsyncDaskJobExecutor
             the connected JobExecutor
         """
-        cluster = dd.LocalCluster(**(cluster_kwargs or {}))
+        cluster = await dd.LocalCluster(**(cluster_kwargs or {}))
         client = await dd.Client(cluster, asynchronous=True, **(client_kwargs or {}))
         return cls(client=client, is_local=True)
 

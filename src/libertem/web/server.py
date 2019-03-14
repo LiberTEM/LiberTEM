@@ -785,7 +785,7 @@ async def do_stop(shared_data):
         await shared_data.executor.close()
     loop = asyncio.get_event_loop()
     log.debug("shutting down async generators")
-    loop.shutdown_asyncgens()
+    await loop.shutdown_asyncgens()
     log.debug("stopping event loop")
     loop.stop()
 

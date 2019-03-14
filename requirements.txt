@@ -8,3 +8,5 @@ pypiwin32;sys_platform == 'Windows'
 
 pytest
 pytest-cov
+pytest-asyncio
+aiohttp

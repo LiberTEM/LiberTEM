@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 import h5py
 import numpy as np
@@ -104,6 +106,8 @@ async def server_port(unused_tcp_port_factory):
     """
     start a LiberTEM API server on a unused port
     """
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
     port = unused_tcp_port_factory()
     event_registry = EventRegistry()
     shared_data = SharedData()

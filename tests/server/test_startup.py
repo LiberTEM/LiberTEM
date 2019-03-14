@@ -1,4 +1,7 @@
+import json
+
 import pytest
+import websockets
 
 
 @pytest.mark.asyncio
@@ -66,3 +69,25 @@ async def test_conn_connect_local(base_url, http_client):
                 "numWorkers": 2,
             }
         }
+
+
+@pytest.mark.asyncio
+async def test_initial_state_empty(default_raw, base_url, http_client, server_port):
+    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 2,
+        }
+    }
+    async with http_client.put(conn_url, json=conn_details) as response:
+        assert response.status == 200
+
+    # connect to ws endpoint:
+    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert initial_msg['messageType'] == "INITIAL_STATE"
+        assert initial_msg['status'] == "ok"
+        assert initial_msg['datasets'] == []
+        assert initial_msg['jobs'] == []

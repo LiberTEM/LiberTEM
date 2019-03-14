@@ -385,7 +385,7 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             self.event_registry.broadcast_event(msg)
             self.write(msg)
         else:
-            log.warn("tried to remove unknown job %s", uuid)
+            log.warning("tried to remove unknown job %s", uuid)
             msg = Message(self.data).cancel_failed(uuid)
             log_message(msg)
             self.event_registry.broadcast_event(msg)

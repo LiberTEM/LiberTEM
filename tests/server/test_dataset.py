@@ -74,7 +74,7 @@ async def test_load_raw_fail(default_raw, base_url, http_client):
         resp_json = await resp.json()
         assert_msg(resp_json, 'CREATE_DATASET_ERROR', status='error')
         assert resp_json['dataset'] == uuid
-        assert resp_json['msg'] == 'invalid dataset: mmap length is greater than file size'
+        assert resp_json['msg'].startswith('invalid dataset: ')
 
 
 @pytest.mark.asyncio

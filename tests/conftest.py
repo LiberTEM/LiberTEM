@@ -114,6 +114,8 @@ async def server_port(unused_tcp_port_factory):
     print("stopping server at port {}".format(port))
     server.stop()
     await server.close_all_connections()
+    if shared_data.have_executor():
+        await shared_data.get_executor().close()
 
 
 @pytest.fixture(scope="function")

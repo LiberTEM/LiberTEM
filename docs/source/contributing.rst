@@ -1,7 +1,7 @@
 Contributing
 ============
 
-TODO
+TODO: introduction, GitHub PR basics/links, ...
 
 Updating Acknowledgments and Author List
 ----------------------------------------
@@ -44,6 +44,21 @@ With Windows cmd:
 
     > set LT_RUN_FUNCTIONAL=1
     > tox
+
+For faster iteration, you can also run only a part of the test suite, without using tox.
+To make this work, first install the test requirements into your virtualenv:
+
+.. code-block:: shell
+
+   (libertem) $ pip install -r test_requirements.txt
+
+Now you can run pytest on a subset of tests, for example:
+
+.. code-block:: shell
+
+   (libertem) $ pytest tests/test_analysis_masks.py
+
+See the `pytest documentation <https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_ for details on how to select which tests to run. Before submitting a pull request, you should always run the whole test suite.
 
 Running tests for the client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,9 +117,16 @@ See also: http://tox.readthedocs.io/en/latest/developers.html#multiple-python-ve
 Code Style
 ----------
 
-TODO
+We try to keep our code `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ -compliant, with
+line-length relaxed to 100 chars, and some rules ignored. See the flake8 section in setup.cfg
+for the current PEP8 settings. As a general rule, try to keep your changes in a similar style
+as the surrounding code.
 
- * pep8
+You can check the code style by running:
+
+.. code-block:: bat
+   
+   $ tox -e flake8
 
 
 Building the Documentation

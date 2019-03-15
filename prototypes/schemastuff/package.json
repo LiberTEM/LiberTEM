@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "json-schema-to-typescript": "^5.5.0"
+    "json-schema-to-typescript": "^6.1.3"
   }
 }

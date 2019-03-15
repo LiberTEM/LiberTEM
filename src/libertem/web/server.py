@@ -385,7 +385,7 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
             self.event_registry.broadcast_event(msg)
             self.write(msg)
         else:
-            log.warn("tried to remove unknown job %s", uuid)
+            log.warning("tried to remove unknown job %s", uuid)
             msg = Message(self.data).cancel_failed(uuid)
             log_message(msg)
             self.event_registry.broadcast_event(msg)
@@ -741,79 +741,81 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
             self.write(msg)
 
 
-# shared state:
-event_registry = EventRegistry()
-data = SharedData()
-
-
-def make_app():
+def make_app(event_registry, shared_data):
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
     return tornado.web.Application([
-        (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
+        (r"/", IndexHandler, {"data": shared_data, "event_registry": event_registry}),
         (r"/api/datasets/detect/", DataSetDetectHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/browse/localfs/", LocalFSBrowseHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/jobs/([^/]+)/", JobDetailHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
-        (r"/api/events/", ResultEventHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/events/", ResultEventHandler, {
+            "data": shared_data,
+            "event_registry": event_registry
+        }),
         (r"/api/config/", ConfigHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/config/connection/", ConnectHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry,
         }),
     ], **settings)
 
 
-async def do_stop():
+async def do_stop(shared_data):
     log.warning("Exiting...")
     log.debug("closing executor")
-    if data.executor is not None:
-        await data.executor.close()
+    if shared_data.executor is not None:
+        await shared_data.executor.close()
     loop = asyncio.get_event_loop()
     log.debug("shutting down async generators")
-    loop.shutdown_asyncgens()
+    await loop.shutdown_asyncgens()
     log.debug("stopping event loop")
     loop.stop()
 
 
-def sig_exit(signum, frame):
+def sig_exit(signum, frame, shared_data):
     loop = tornado.ioloop.IOLoop.instance()
     loop.add_callback_from_signal(
-        lambda: asyncio.ensure_future(do_stop())
+        lambda: asyncio.ensure_future(do_stop(shared_data))
     )
 
 
-def main(host, port):
+def main(host, port, event_registry, shared_data):
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
-    app = make_app()
+    app = make_app(event_registry, shared_data)
     app.listen(address=host, port=port)
     return app
 
 
 def run(host, port):
-    main(host, port)
+    # shared state:
+    event_registry = EventRegistry()
+    shared_data = SharedData()
+
+    main(host, port, event_registry, shared_data)
     loop = asyncio.get_event_loop()
-    signal.signal(signal.SIGINT, sig_exit)
+    signal.signal(signal.SIGINT, partial(sig_exit, shared_data=shared_data))
     loop.run_forever()
 
 

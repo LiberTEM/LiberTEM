@@ -75,7 +75,7 @@ class MaskContainer(object):
         for fn in self.mask_factories:
             try:
                 if 'self' in fn.__code__.co_freevars:
-                    log.warn('mask factory closes over self, may be inefficient')
+                    log.warning('mask factory closes over self, may be inefficient')
             except Exception:
                 raise
 

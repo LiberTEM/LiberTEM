@@ -112,3 +112,9 @@ def _mk_random(size, dtype='float32'):
     data[coords2] = np.random.choice(choice) * sum(size)
     data[coords10] = np.random.choice(choice) * 10 * sum(size)
     return data
+
+
+def assert_msg(msg, msg_type, status='ok'):
+    assert msg['status'] == status
+    assert msg['messageType'] == msg_type,\
+        "expected: {}, is: {}".format(msg_type, msg['messageType'])

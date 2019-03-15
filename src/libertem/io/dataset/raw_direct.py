@@ -10,17 +10,24 @@ from libertem.io.direct import open_direct, empty_aligned, readinto_direct
 
 
 class DirectRawFileReader(object):
-    def __init__(self, meta, path):
+    def __init__(self, meta, path, enable_direct):
         self._path = path
         self._meta = meta
         self._file = None
+        self._enable_direct = enable_direct
 
     @contextlib.contextmanager
     def open_file(self):
-        with open_direct(self._path) as f:
-            self._file = f
-            yield self
-        self._file = None
+        if self._enable_direct:
+            with open_direct(self._path) as f:
+                self._file = f
+                yield self
+            self._file = None
+        else:
+            with open(self._path, "rb") as f:
+                self._file = f
+                yield self
+            self._file = None
 
     def _calc_offset(self, idx):
         frame_size_px = self._meta.shape.sig.size
@@ -45,7 +52,7 @@ class DirectRawFileReader(object):
 
 
 class DirectRawFileDataSet(DataSet):
-    def __init__(self, path, scan_size, dtype, detector_size, stackheight):
+    def __init__(self, path, scan_size, dtype, detector_size, stackheight, enable_direct=True):
         self._path = path
         self._scan_size = tuple(scan_size)
         self._detector_size = detector_size
@@ -58,6 +65,7 @@ class DirectRawFileDataSet(DataSet):
             dtype=np.dtype(dtype)
         )
         self._filesize = None
+        self._enable_direct = enable_direct
 
     def initialize(self):
         self._filesize = os.stat(self._path).st_size
@@ -79,6 +87,7 @@ class DirectRawFileDataSet(DataSet):
         return DirectRawFileReader(
             meta=self._meta,
             path=self._path,
+            enable_direct=self._enable_direct,
         )
 
     def check_valid(self):

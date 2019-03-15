@@ -28,6 +28,7 @@ Documentation
    debugging
    why_python
    reference
+   gsoc
 
 Indices and tables
 ------------------

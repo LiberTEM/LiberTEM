@@ -35,7 +35,7 @@ async def run(executor, job, out):
     async for tiles in executor.run_job(job):
         # print("Tiles")
         for tile in tiles:
-            tile.copy_to_result(out)
+            tile.reduce_into_result(out)
         yield out
     # print("Run finished")
 
@@ -43,15 +43,23 @@ async def run(executor, job, out):
 async def async_main(address):
     # start background task: (can be replaced with asyncio.create_task(coro) in Python 3.7)
     background_events = asyncio.ensure_future(background_task())
-    
+
     executor = await AsyncDaskJobExecutor.connect(address)
+
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    else:
+        path = (
+            "C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
+            "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"
+        )
 
     ds = load(
         "blo",
-        path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-        "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
-        tileshape=(1,8,144,144)
+        path=path,
+        tileshape=(1, 8, 144, 144)
     )
+    ds.initialize()
 
     job = SumFramesJob(dataset=ds)
 

@@ -1,12 +1,34 @@
 Contributing
 ============
 
-TODO: introduction, GitHub PR basics/links, ...
+TODO: introduction
 
-Updating Acknowledgments and Author List
-----------------------------------------
+Our code is hosted `on GitHub <https://github.com/libertem/libertem/>`_, and we are using 
+`pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions.
+
+Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
+To keep your changes organized and to prevent unrelated changes from disturbing your pull request,
+create a new branch for each pull request. 
+
+Before creating a pull request, please make sure all tests still pass. See `Running the Tests`_ for more
+information. You should also update the test suite and add test cases for your contribution. See the section
+`Code coverage`_ below on how to check if your new code is covered by tests.
+
+To make sure our code base stays readable, we have follow a `Code Style`_.
 
 Please update ``docs/source/acknowledgments.rst`` and ``.zenodo.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited.
+
+If you are changing parts of LiberTEM that are currently not covered by tests, please consider writing
+new tests! When changing example code, which is not run as part of the tests, make sure the example
+still runs.
+
+When you have submitted your pull request, someone from the LiberTEM organization will review your
+pull request, and may add comments or ask questions. If everything is good to go, your changes will
+be merged and you can 
+
+See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
+
+
 
 Running the Tests
 -----------------
@@ -59,6 +81,14 @@ Now you can run pytest on a subset of tests, for example:
    (libertem) $ pytest tests/test_analysis_masks.py
 
 See the `pytest documentation <https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_ for details on how to select which tests to run. Before submitting a pull request, you should always run the whole test suite.
+
+
+Code coverage
+-------------
+
+After running the tests, you can inspect the test coverage by opening `htmlcov/index.html` in a web browser. When
+creating a pull request, the change in coverage is also reported by the codecov bot. Ideally, the test coverage
+should go up with each pull request, at least it should stay the same.
 
 Running tests for the client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

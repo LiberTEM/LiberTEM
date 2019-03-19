@@ -4,7 +4,8 @@ import numpy as np
 from skimage.feature import peak_local_max
 import scipy.ndimage as nd
 
-from libertem.udf import ResultBuffer, map_frames, check_cast
+from libertem.udf import map_frames, check_cast
+from libertem.common.buffers import BufferWrapper
 from libertem.masks import radial_gradient, background_substraction
 from libertem.job.sum import SumFramesJob
 
@@ -179,16 +180,16 @@ def get_result_buffers_pass_2(num_disks):
     concrete shapes come later, either for partition or whole dataset
     """
     return {
-        'centers': ResultBuffer(
+        'centers': BufferWrapper(
             kind="nav", extra_shape=(num_disks, 2), dtype="u2"
         ),
-        'refineds': ResultBuffer(
+        'refineds': BufferWrapper(
             kind="nav", extra_shape=(num_disks, 2), dtype="float32"
         ),
-        'peak_values': ResultBuffer(
+        'peak_values': BufferWrapper(
             kind="nav", extra_shape=(num_disks,), dtype="float32",
         ),
-        'peak_elevations': ResultBuffer(
+        'peak_elevations': BufferWrapper(
             kind="nav", extra_shape=(num_disks,), dtype="float32",
         ),
     }

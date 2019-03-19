@@ -4,7 +4,7 @@ import logging
 import tornado.util
 from dask import distributed as dd
 
-from .base import JobExecutor, AsyncJobExecutor, JobCancelledError
+from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
 
 
 log = logging.getLogger(__name__)
@@ -50,91 +50,32 @@ class CommonDaskMixin(object):
         ]
 
 
-class AsyncDaskJobExecutor(CommonDaskMixin, AsyncJobExecutor):
+class DaskJobExecutor(CommonDaskMixin, JobExecutor):
     def __init__(self, client, is_local=False):
         self.is_local = is_local
         self.client = client
         self._futures = {}
 
-    async def close(self):
-        try:
-            if self.client is None:
-                log.error("could not close dask executor, client is None")
-                return
-            await self.client.close()
-            if self.is_local:
-                await self.client.cluster.close()
-        except Exception:
-            log.exception("could not close dask executor")
-
-    async def run_job(self, job):
+    def run_job(self, job):
         futures = self._get_futures(job)
         self._futures[job] = futures
-        async for future, result in dd.as_completed(futures, with_results=True):
+        for future, result in dd.as_completed(futures, with_results=True):
             if future.cancelled():
                 raise JobCancelledError()
             yield result
         del self._futures[job]
 
-    async def run_function(self, fn, *args, **kwargs):
-        """
-        run a callable `fn` on any worker. used for simple functionality like filesystem browsing
-        """
-        future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
-        return await self.client.gather(future)
-
-    async def cancel_job(self, job):
+    def cancel_job(self, job):
         if job in self._futures:
             futures = self._futures[job]
-            await self.client.cancel(futures)
-
-    @classmethod
-    async def connect(cls, scheduler_uri, *args, **kwargs):
-        """
-        Connect to remote dask scheduler
-
-        Returns
-        -------
-        AsyncDaskJobExecutor
-            the connected JobExecutor
-        """
-        client = await dd.Client(address=scheduler_uri, asynchronous=True)
-        return cls(client=client, is_local=False, *args, **kwargs)
-
-    @classmethod
-    async def make_local(cls, cluster_kwargs=None, client_kwargs=None):
-        """
-        Spin up a local dask cluster
-
-        interesting cluster_kwargs:
-            threads_per_worker
-            n_workers
-
-        Returns
-        -------
-        AsyncDaskJobExecutor
-            the connected JobExecutor
-        """
-        cluster = await dd.LocalCluster(**(cluster_kwargs or {}))
-        client = await dd.Client(cluster, asynchronous=True, **(client_kwargs or {}))
-        return cls(client=client, is_local=True)
-
-
-class DaskJobExecutor(CommonDaskMixin, JobExecutor):
-    def __init__(self, client, is_local=False):
-        self.is_local = is_local
-        self.client = client
-
-    def run_job(self, job):
-        futures = self._get_futures(job)
-        for future, result in dd.as_completed(futures, with_results=True):
-            yield result
+            self.client.cancel(futures)
 
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn`
         """
-        future = self.client.submit(functools.partial(fn, *args, **kwargs), priority=1)
+        fn_with_args = functools.partial(fn, *args, **kwargs)
+        future = self.client.submit(fn_with_args, priority=1)
         return future.result()
 
     def close(self):
@@ -176,3 +117,29 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
         return cls(client=client, is_local=True)
+
+
+class AsyncDaskJobExecutor(AsyncAdapter):
+    def __init__(self, wrapped=None, *args, **kwargs):
+        if wrapped is None:
+            wrapped = DaskJobExecutor(*args, **kwargs)
+        super().__init__(wrapped)
+
+    @classmethod
+    async def connect(cls, scheduler_uri, *args, **kwargs):
+        executor = await sync_to_async(functools.partial(
+            DaskJobExecutor.connect,
+            scheduler_uri=scheduler_uri,
+            *args,
+            **kwargs,
+        ))
+        return cls(wrapped=executor)
+
+    @classmethod
+    async def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+        executor = await sync_to_async(functools.partial(
+            DaskJobExecutor.make_local,
+            cluster_kwargs=cluster_kwargs,
+            client_kwargs=client_kwargs,
+        ))
+        return cls(wrapped=executor)

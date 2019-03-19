@@ -149,21 +149,16 @@ async def test_initial_state_after_reconnect(default_raw, base_url, http_client,
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
         assert initial_msg["jobs"] == []
-        assert initial_msg["datasets"] == [
-            {
-                "id": uuid,
-                'params': {
-                    'crop_detector_to': [128, 128],
-                    'detector_size_raw': [128, 128],
-                    'dtype': 'float32',
-                    'path':raw_path,
-                    'scan_size': [16, 16],
-                    'shape': [16, 16, 128, 128],
-                    'tileshape': [1, 1, 128, 128],
-                    'type': 'raw'
-                },
-                'diagnostics': [{'name': 'Partition shape',
-                                 'value': '(2, 16, 128, 128)'},
-                                {'name': 'Number of partitions', 'value': '8'}]
-            }
-        ]
+        assert len(initial_msg["datasets"]) == 1
+        assert initial_msg["datasets"][0]["id"] == uuid
+        assert initial_msg["datasets"][0]["params"] == {
+            'crop_detector_to': [128, 128],
+            'detector_size_raw': [128, 128],
+            'dtype': 'float32',
+            'path': raw_path,
+            'scan_size': [16, 16],
+            'shape': [16, 16, 128, 128],
+            'tileshape': [1, 1, 128, 128],
+            'type': 'raw'
+        }
+        assert len(initial_msg["datasets"][0]["diagnostics"]) == 2

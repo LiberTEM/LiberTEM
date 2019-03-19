@@ -103,6 +103,10 @@ class MyStopIteration(Exception):
 
 class AsyncAdapter(AsyncJobExecutor):
     def __init__(self, wrapped):
+        """
+        Wrap a synchronous JobExecutor and allow to use it as AsyncJobExecutor. All methods are
+        converted to async and executed in a separate thread.
+        """
         self._wrapped = wrapped
 
     async def run_job(self, job):

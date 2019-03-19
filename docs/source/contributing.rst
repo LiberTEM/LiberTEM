@@ -24,7 +24,7 @@ still runs.
 
 When you have submitted your pull request, someone from the LiberTEM organization will review your
 pull request, and may add comments or ask questions. If everything is good to go, your changes will
-be merged and you can 
+be merged and you can delete the branch you created for the pull request.
 
 See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
 

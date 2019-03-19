@@ -112,3 +112,58 @@ async def test_dataset_delete(default_raw, base_url, http_client, server_port):
             assert resp.status == 200
             resp_json = await resp.json()
             assert_msg(resp_json, 'DELETE_DATASET')
+
+
+@pytest.mark.asyncio
+async def test_initial_state_after_reconnect(default_raw, base_url, http_client, server_port):
+    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 2,
+        }
+    }
+    async with http_client.put(conn_url, json=conn_details) as response:
+        assert response.status == 200
+
+    raw_path = default_raw._path
+
+    uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
+    ds_url = "{}/api/datasets/{}/".format(
+        base_url, uuid
+    )
+    ds_data = _get_raw_params(raw_path)
+
+    # connect to ws endpoint:
+    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+
+        async with http_client.put(ds_url, json=ds_data) as resp:
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert_msg(resp_json, 'CREATE_DATASET')
+
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+        assert initial_msg["jobs"] == []
+        assert initial_msg["datasets"] == [
+            {
+                "id": uuid,
+                'params': {
+                    'crop_detector_to': [128, 128],
+                    'detector_size_raw': [128, 128],
+                    'dtype': 'float32',
+                    'path':raw_path,
+                    'scan_size': [16, 16],
+                    'shape': [16, 16, 128, 128],
+                    'tileshape': [1, 1, 128, 128],
+                    'type': 'raw'
+                },
+                'diagnostics': [{'name': 'Partition shape',
+                                 'value': '(2, 16, 128, 128)'},
+                                {'name': 'Number of partitions', 'value': '8'}]
+            }
+        ]

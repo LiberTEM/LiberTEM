@@ -14,8 +14,8 @@ import tornado.escape
 
 import libertem
 from libertem.io.fs import get_fs_listing, FSError
-from libertem.executor.dask import AsyncDaskJobExecutor
-from libertem.executor.base import JobCancelledError
+from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.base import JobCancelledError, AsyncAdapter, sync_to_async
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
 from libertem.analysis import (
@@ -678,19 +678,21 @@ class ConnectHandler(tornado.web.RequestHandler):
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         if connection["type"].lower() == "tcp":
-            executor = await AsyncDaskJobExecutor.connect(
+            sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
                 scheduler_uri=connection['address'],
-            )
+            ))
         elif connection["type"].lower() == "local":
             cluster_kwargs = {
                 "threads_per_worker": 1,
-                "asynchronous": True,
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
-            executor = await AsyncDaskJobExecutor.make_local(
-                cluster_kwargs=cluster_kwargs,
+            sync_executor = await sync_to_async(
+                partial(DaskJobExecutor.make_local, cluster_kwargs=cluster_kwargs)
             )
+        else:
+            raise ValueError("unknown connection type")
+        executor = AsyncAdapter(wrapped=sync_executor)
         await self.data.set_executor(executor, request_data)
         await self.data.verify_datasets()
         datasets = await self.data.serialize_datasets()

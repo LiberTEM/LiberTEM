@@ -21,12 +21,12 @@ class CommonDaskMixin(object):
             if w['host'] == host
         ]
 
-    def _get_futures(self, job):
+    def _get_futures(self, tasks):
         futures = []
         available_workers = self.get_available_workers()
         if len(available_workers) == 0:
             raise RuntimeError("no workers available!")
-        for task in job.get_tasks():
+        for task in tasks:
             submit_kwargs = {}
             locations = task.get_locations()
             if locations is not None and len(locations) == 0:
@@ -57,17 +57,21 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self._futures = {}
 
     def run_job(self, job):
-        futures = self._get_futures(job)
-        self._futures[job] = futures
+        tasks = job.get_tasks()
+        return self.run_tasks(tasks, cancel_id=job)
+
+    def run_tasks(self, tasks, cancel_id):
+        futures = self._get_futures(tasks)
+        self._futures[cancel_id] = futures
         for future, result in dd.as_completed(futures, with_results=True):
             if future.cancelled():
                 raise JobCancelledError()
             yield result
-        del self._futures[job]
+        del self._futures[cancel_id]
 
-    def cancel_job(self, job):
-        if job in self._futures:
-            futures = self._futures[job]
+    def cancel(self, cancel_id):
+        if cancel_id in self._futures:
+            futures = self._futures[cancel_id]
             self.client.cancel(futures)
 
     def run_function(self, fn, *args, **kwargs):
@@ -77,19 +81,6 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         fn_with_args = functools.partial(fn, *args, **kwargs)
         future = self.client.submit(fn_with_args, priority=1)
         return future.result()
-
-    def map_partitions(self, dataset, fn, fn_kwargs=None):
-        if fn_kwargs is None:
-            fn_kwargs = {}
-        # FIXME: map_partitions should maybe not be part of executor? not sure about right place
-        futures = []
-        for partition in dataset.get_partitions():
-            fn_bound = functools.partial(fn, partition=partition, **fn_kwargs)
-            futures.append(
-                self.client.submit(fn_bound, workers=partition.get_locations())
-            )
-        for future, result in dd.as_completed(futures, with_results=True):
-            yield result
 
     def close(self):
         if self.is_local:

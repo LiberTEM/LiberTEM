@@ -1,4 +1,5 @@
 from typing import Union, Tuple
+import uuid
 
 import psutil
 import numpy as np
@@ -17,6 +18,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import BaseAnalysis
+from libertem.udf import make_udf_tasks, merge_assign
 
 
 class Context:
@@ -384,6 +386,24 @@ class Context:
         if analysis is not None:
             return analysis.get_results(out)
         return out
+
+    def run_udf(self, dataset, fn, init, make_buffers, merge=merge_assign):
+        result_buffers = make_buffers()
+        for buf in result_buffers.values():
+            buf.set_shape_ds(dataset)
+            buf.allocate()
+        cancel_id = str(uuid.uuid4())
+
+        tasks = make_udf_tasks(dataset, fn, init, make_buffers)
+
+        for partition_result_buffers, partition in self.executor.run_tasks(tasks, cancel_id):
+            buffer_views = {}
+            for k, buf in result_buffers.items():
+                buffer_views[k] = buf.get_view_for_partition(partition=partition)
+            buffers = {k: b.data
+                       for k, b in partition_result_buffers.items()}
+            merge(dest=buffer_views, src=buffers)
+        return result_buffers
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

@@ -4,7 +4,7 @@ import numpy as np
 from skimage.feature import peak_local_max
 import scipy.ndimage as nd
 
-from libertem.udf import map_frames, check_cast
+from libertem.udf import check_cast
 from libertem.common.buffers import BufferWrapper
 from libertem.masks import radial_gradient, background_substraction
 from libertem.job.sum import SumFramesJob
@@ -160,17 +160,31 @@ def log_scale(data, out):
     return np.log(data - np.min(data) + 1, out=out)
 
 
-def get_crop_size(radius, padding):
-    return int(radius + radius * padding)
-
-
 def crop_disks_from_frame(peaks, frame, mask):
     crop_size = mask.get_crop_size()
     for peak in peaks:
-        yield frame[
-            peak[0] - crop_size:peak[0] + crop_size,
-            peak[1] - crop_size:peak[1] + crop_size,
-        ]
+        slice_ = (
+            slice(max(peak[0] - crop_size, 0), min(peak[0] + crop_size, frame.shape[0])),
+            slice(max(peak[1] - crop_size, 0), min(peak[1] + crop_size, frame.shape[1])),
+        )
+
+        # also calculate the slice into the crop buffer, which may be smaller
+        # than the buffer if we are operating on peaks near edges:
+        size = (
+            slice_[0].stop - slice_[0].start,
+            slice_[1].stop - slice_[1].start,
+        )
+        crop_buf_slice = (
+            slice(
+                max(crop_size - peak[0], 0),
+                max(crop_size - peak[0], 0) + size[0]
+            ),
+            slice(
+                max(crop_size - peak[1], 0),
+                max(crop_size - peak[1], 0) + size[1]
+            ),
+        )
+        yield frame[slice_], crop_buf_slice
 
 
 def get_result_buffers_pass_2(num_disks):
@@ -212,10 +226,12 @@ def init_pass_2(partition, peaks, parameters):
 def pass_2(frame, template, crop_buf, peaks, mask,
            centers, refineds, peak_values, peak_elevations):
     crop_size = mask.get_crop_size()
-    for disk_idx, crop_part in enumerate(
+    for disk_idx, (crop_part, crop_buf_slice) in enumerate(
             crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
-        scaled = log_scale(crop_part, out=crop_buf)
-        center, refined, peak_value, peak_elevation = do_correlation(template, scaled)
+
+        crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
+        log_scale(crop_part, out=crop_buf[crop_buf_slice])
+        center, refined, peak_value, peak_elevation = do_correlation(template, crop_buf)
         crop_origin = np.array(peaks[disk_idx] - [crop_size, crop_size], dtype='u2')
         abs_center = np.array(center + crop_origin, dtype='u2')
         abs_refined = np.array(refined + crop_origin, dtype='float32')
@@ -240,15 +256,14 @@ def run_analysis(ctx, dataset, parameters):
         sum_result=sum_result,
     )
 
-    pass_2_results = map_frames(
-        ctx=ctx,
+    pass_2_results = ctx.run_udf(
         dataset=dataset,
-        make_result_buffers=functools.partial(
+        fn=pass_2,
+        init=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
+        make_buffers=functools.partial(
             get_result_buffers_pass_2,
             num_disks=parameters['num_disks'],
         ),
-        init_fn=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
-        frame_fn=pass_2,
     )
 
     return (sum_result, pass_2_results['centers'],

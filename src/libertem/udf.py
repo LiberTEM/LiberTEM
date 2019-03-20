@@ -1,5 +1,6 @@
-import functools
 import numpy as np
+
+from libertem.job.base import Task
 
 
 def check_cast(fromvar, tovar):
@@ -8,50 +9,43 @@ def check_cast(fromvar, tovar):
         raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
 
 
-def map_partition(partition, make_result_buffers, init_fn, frame_fn):
-    result_buffers = make_result_buffers()
-    for buf in result_buffers.values():
-        buf.set_shape_partition(partition)
-        buf.allocate()
-    kwargs = init_fn(partition)
-    kwargs.update(result_buffers)
-    for tile in partition.get_tiles():
-        data = tile.flat_nav
-        for frame_idx, frame in enumerate(data):
-            buffer_views = {}
-            for k, buf in result_buffers.items():
-                buffer_views[k] = buf.get_view_for_frame(
-                    partition=partition,
-                    tile=tile,
-                    frame_idx=frame_idx
-                )
-            kwargs.update(buffer_views)
-            frame_fn(frame=frame, **kwargs)
-    return result_buffers, partition
-
-
 def merge_assign(dest, src):
     for k in dest:
         check_cast(dest[k], src[k])
         dest[k][:] = src[k]
 
 
-def map_frames(ctx, dataset, make_result_buffers, init_fn, frame_fn, merge_fn=merge_assign):
-    result_buffers = make_result_buffers()
-    for buf in result_buffers.values():
-        buf.set_shape_ds(dataset)
-        buf.allocate()
-    fn = functools.partial(
-        map_partition,
-        make_result_buffers=make_result_buffers,
-        init_fn=init_fn,
-        frame_fn=frame_fn
+class UDFTask(Task):
+    def __init__(self, partition, idx, make_buffers, init, fn):
+        super().__init__(partition=partition, idx=idx)
+        self._make_buffers = make_buffers
+        self._init = init
+        self._fn = fn
+
+    def __call__(self):
+        result_buffers = self._make_buffers()
+        for buf in result_buffers.values():
+            buf.set_shape_partition(self.partition)
+            buf.allocate()
+        kwargs = self._init(self.partition)
+        kwargs.update(result_buffers)
+        for tile in self.partition.get_tiles():
+            data = tile.flat_nav
+            for frame_idx, frame in enumerate(data):
+                buffer_views = {}
+                for k, buf in result_buffers.items():
+                    buffer_views[k] = buf.get_view_for_frame(
+                        partition=self.partition,
+                        tile=tile,
+                        frame_idx=frame_idx
+                    )
+                kwargs.update(buffer_views)
+                self._fn(frame=frame, **kwargs)
+        return result_buffers, self.partition
+
+
+def make_udf_tasks(dataset, fn, init, make_buffers):
+    return (
+        UDFTask(partition=partition, idx=idx, fn=fn, init=init, make_buffers=make_buffers)
+        for idx, partition in enumerate(dataset.get_partitions())
     )
-    for partition_result_buffers, partition in ctx.executor.map_partitions(dataset=dataset, fn=fn):
-        buffer_views = {}
-        for k, buf in result_buffers.items():
-            buffer_views[k] = buf.get_view_for_partition(partition=partition)
-        buffers = {k: b.data
-                   for k, b in partition_result_buffers.items()}
-        merge_fn(dest=buffer_views, src=buffers)
-    return result_buffers

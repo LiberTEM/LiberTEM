@@ -1,6 +1,5 @@
 import numpy as np
 
-from libertem.udf import map_frames
 from libertem.common.buffers import BufferWrapper
 
 from utils import MemoryDataSet, _mk_random
@@ -24,12 +23,11 @@ def test_sum_frames(lt_ctx):
     def my_frame_fn(frame, pixelsum):
         pixelsum[:] = np.sum(frame)
 
-    res = map_frames(
-        ctx=lt_ctx,
+    res = lt_ctx.run_udf(
         dataset=dataset,
-        make_result_buffers=my_buffers,
-        init_fn=my_init,
-        frame_fn=my_frame_fn,
+        fn=my_frame_fn,
+        init=my_init,
+        make_buffers=my_buffers,
     )
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
@@ -54,12 +52,11 @@ def test_3d_ds(lt_ctx):
     def my_frame_fn(frame, pixelsum):
         pixelsum[:] = np.sum(frame)
 
-    res = map_frames(
-        ctx=lt_ctx,
+    res = lt_ctx.run_udf(
         dataset=dataset,
-        make_result_buffers=my_buffers,
-        init_fn=my_init,
-        frame_fn=my_frame_fn,
+        fn=my_frame_fn,
+        init=my_init,
+        make_buffers=my_buffers,
     )
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)

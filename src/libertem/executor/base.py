@@ -49,6 +49,12 @@ class AsyncJobExecutor(object):
         """
         raise NotImplementedError()
 
+    def run_tasks(self, tasks, cancel_id):
+        """
+        run a number of Tasks
+        """
+        raise NotImplementedError()
+
     async def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn`
@@ -60,9 +66,9 @@ class AsyncJobExecutor(object):
         cleanup resources used by this executor, if any
         """
 
-    async def cancel_job(self, job):
+    async def cancel(self, cancel_id):
         """
-        cancel execution of `job`
+        cancel execution identified by `cancel_id`
         """
         pass
 
@@ -118,6 +124,15 @@ class AsyncAdapter(AsyncJobExecutor):
         async for i in agen:
             yield i
 
+    async def run_tasks(self, tasks, cancel_id):
+        """
+        run a number of Tasks
+        """
+        gen = self._wrapped.run_tasks(tasks, cancel_id)
+        agen = async_generator(gen)
+        async for i in agen:
+            yield i
+
     async def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn`
@@ -131,8 +146,8 @@ class AsyncAdapter(AsyncJobExecutor):
         """
         return await sync_to_async(self._wrapped.close)
 
-    async def cancel_job(self, job):
+    async def cancel(self, cancel_id):
         """
-        cancel execution of `job`
+        cancel execution identified by cancel_id
         """
-        return await sync_to_async(functools.partial(self._wrapped.cancel_job, job=job))
+        return await sync_to_async(functools.partial(self._wrapped.cancel, cancel_id=cancel_id))

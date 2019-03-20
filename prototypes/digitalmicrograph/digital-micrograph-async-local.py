@@ -88,7 +88,7 @@ async def async_main(address):
     # For a remote cluster this has to be the path on the worker nodes, not the client
     ds = load(
         "raw",
-        path='/cachedata/users/weber/scan_11_x256_y256.raw',
+        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\scan_11_x256_y256.raw',
         dtype="float32",
         scan_size=(256, 256),
         detector_size_raw=(130, 128),
@@ -153,20 +153,21 @@ def main():
 
     # Code to start local cluster
 
-    # cores = psutil.cpu_count(logical=False)
+    cores = psutil.cpu_count(logical=False)
 
-    # if cores is None:
-    #     cores = 2
-    # cluster_kwargs = {
-    #     "threads_per_worker": 1,
-    #     "n_workers": cores
-    # }
-
-    # cluster = dd.LocalCluster(**cluster_kwargs)
-    # address = cluster.scheduler_address
-
+    if cores is None:
+        cores = 2
+    cluster_kwargs = {
+        "threads_per_worker": 1,
+        "n_workers": cores
+    }
+    print('starting local cluster...')
+    cluster = dd.LocalCluster(**cluster_kwargs)
+    print('local cluster started')
+    address = cluster.scheduler_address
+    print('address: ', address)
     # use external cluster
-    address = 'tcp://localhost:31313'
+    #address = 'tcp://localhost:8786'
 
     loop = asyncio.get_event_loop()
     try:

@@ -18,7 +18,6 @@ from libertem.job.masks import ApplyMasksJob
 if not hasattr(sys, 'argv'):
     sys.argv  = []
 
-
 # Since the interpreter is embedded, we have to set the Python executable.
 # Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
 multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
@@ -88,7 +87,7 @@ async def async_main(address):
     # For a remote cluster this has to be the path on the worker nodes, not the client
     ds = load(
         "raw",
-        path='/cachedata/users/weber/scan_11_x256_y256.raw',
+        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\scan_11_x256_y256.raw',
         dtype="float32",
         scan_size=(256, 256),
         detector_size_raw=(130, 128),
@@ -166,7 +165,7 @@ def main():
     # address = cluster.scheduler_address
 
     # use external cluster
-    address = 'tcp://localhost:31313'
+    address = 'tcp://localhost:8786'
 
     loop = asyncio.get_event_loop()
     try:

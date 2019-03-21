@@ -52,21 +52,6 @@ Or specify a specific environment you want to run:
 
     $ tox -e py36
 
-Long-running tests such as starting a real local dask cluster are only executed if the environment variable `LT_RUN_FUNCTIONAL` is set. This variable is set for continuous integration on GitHub.
-
-With bash:
-
-.. code-block:: shell
-
-    $ LT_RUN_FUNCTIONAL=1 tox
-
-With Windows cmd:
-
-.. code-block:: shell
-
-    > set LT_RUN_FUNCTIONAL=1
-    > tox
-
 For faster iteration, you can also run only a part of the test suite, without using tox.
 To make this work, first install the test requirements into your virtualenv:
 
@@ -82,6 +67,31 @@ Now you can run pytest on a subset of tests, for example:
 
 See the `pytest documentation <https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_ for details on how to select which tests to run. Before submitting a pull request, you should always run the whole test suite.
 
+Some tests are marked with `custom markers <https://docs.pytest.org/en/latest/example/markers.html>`_, for example we have some tests that take many seconds to complete.
+To select tests to run by these marks, you can use the `-m` switch. For example, to only run the slow tests:
+
+.. code-block:: shell
+
+   $ tox -- -m slow
+
+By default, these slow tests are not run. If you want to run both slow and all
+other tests, you can use a boolean expression like this:
+
+.. code-block:: shell
+
+   $ tox -- -m "slow or not slow"
+
+Another example, to exclude both slow and functional tests:
+
+.. code-block:: shell
+
+   $ tox -- -m "not functional and not slow"
+
+In these examples, ``--`` separates the the arguments of tox (left of ``--``) from the arguments for pytest on the right.
+List of marks used in our test suite:
+
+- `slow`: tests that take much more than 1 second to run
+- `functional`: tests that spin up a local dask cluster
 
 Code coverage
 -------------

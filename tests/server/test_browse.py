@@ -2,6 +2,9 @@ import os
 import pytest
 
 
+pytestmark = [pytest.mark.functional]
+
+
 @pytest.mark.asyncio
 async def test_browse_localfs(default_raw, base_url, http_client):
     conn_url = "{}/api/config/connection/".format(base_url)

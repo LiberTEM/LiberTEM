@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import pytest
 
@@ -7,7 +5,7 @@ from libertem import api
 from utils import _naive_mask_apply, _mk_random
 
 
-@pytest.mark.skipif('LT_RUN_FUNCTIONAL' not in os.environ, reason="Takes a long time")
+@pytest.mark.functional
 def test_start_local(hdf5_ds_1):
     mask = _mk_random(size=(16, 16))
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:

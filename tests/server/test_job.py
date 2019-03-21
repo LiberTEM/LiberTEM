@@ -5,6 +5,8 @@ import websockets
 
 from utils import assert_msg
 
+pytestmark = [pytest.mark.functional]
+
 
 def _get_raw_params(path):
     return {

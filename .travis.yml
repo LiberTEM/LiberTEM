@@ -13,10 +13,6 @@ script:
 after_success:
   - bash <(curl -s https://codecov.io/bash) -f coverage.xml -f client/coverage/coverage-final.json
 
-env:
-  global:
-    - LT_RUN_FUNCTIONAL=1
-
 jobs:
   include:
     - stage: test

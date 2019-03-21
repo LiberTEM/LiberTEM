@@ -5,6 +5,8 @@ import websockets
 
 from utils import assert_msg
 
+pytestmark = [pytest.mark.functional]
+
 
 @pytest.mark.asyncio
 async def test_detect_failed(default_raw, base_url, http_client, server_port):

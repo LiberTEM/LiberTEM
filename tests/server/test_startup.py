@@ -3,6 +3,8 @@ import json
 import pytest
 import websockets
 
+pytestmark = [pytest.mark.functional]
+
 
 @pytest.mark.asyncio
 async def test_start_server(base_url, http_client):

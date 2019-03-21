@@ -153,19 +153,25 @@ class H5Partition(Partition):
         self.reader = reader
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
         if crop_to is not None:
             if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
-        data = np.ndarray(self.tileshape, dtype=self.dtype)
+        if full_frames:
+            tileshape = (
+                tuple(self.tileshape[:self.meta.shape.nav.dims]) + tuple(self.meta.shape.sig)
+            )
+        else:
+            tileshape = self.tileshape
+        data = np.ndarray(tileshape, dtype=self.dtype)
         with self.reader.get_h5ds() as dataset:
-            subslices = list(self.slice.subslices(shape=self.tileshape))
+            subslices = list(self.slice.subslices(shape=tileshape))
             for tile_slice in subslices:
                 if crop_to is not None:
                     intersection = tile_slice.intersection_with(crop_to)
                     if intersection.is_null():
                         continue
-                if tile_slice.shape != self.tileshape:
+                if tile_slice.shape != tileshape:
                     # at the border, can't reuse buffer
                     # hmm. aren't there only like 3 different shapes at the border?
                     # FIXME: use buffer pool to reuse buffers of same shape

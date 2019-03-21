@@ -573,7 +573,7 @@ class K2ISDataSet(DataSet):
         res = max(1, size // (512*1024*1024))
         return res
 
-    def get_partitions(self, strat='READ_STACKED'):
+    def get_partitions(self):
         fs = self._fileset
         num_frames = self.shape.nav.size
         f_per_part = num_frames // self._get_num_partitions()
@@ -597,7 +597,6 @@ class K2ISDataSet(DataSet):
                 sectors=fs.sectors,
                 start_frame=start,
                 num_frames=stop - start,
-                strategy=strat,
             )
 
     def __repr__(self):
@@ -607,23 +606,17 @@ class K2ISDataSet(DataSet):
 
 
 class K2ISPartition(Partition):
-    def __init__(self, sectors, start_frame, num_frames,
-                 strategy='READ_STACKED', *args, **kwargs):
+    def __init__(self, sectors, start_frame, num_frames, *args, **kwargs):
         self._sectors = sectors
         self._start_frame = start_frame
         self._num_frames = num_frames
-        self._strategy = strategy
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None, strat=None):
-        if strat is None:
-            strat = self._strategy
-        if strat == 'READ_STACKED':
-            yield from self._read_stacked(crop_to=crop_to)
-        elif strat == 'READ_FULL_FRAMES':
+    def get_tiles(self, crop_to=None, full_frames=False):
+        if full_frames:
             yield from self._read_full_frames(crop_to=crop_to)
         else:
-            raise DataSetException("unknown strategy")
+            yield from self._read_stacked(crop_to=crop_to)
 
     def _read_full_frames(self, crop_to=None):
         with contextlib.ExitStack() as stack:
@@ -632,7 +625,7 @@ class K2ISPartition(Partition):
                 stack.enter_context(sector)
                 for sector in self._sectors
             ]
-            for frame in range(self._start_frame, self._start_frame + self._num_frames + 1):
+            for frame in range(self._start_frame, self._start_frame + self._num_frames):
                 tile_slice = Slice(
                     origin=(frame, 0, 0),
                     shape=Shape(frame_buf.shape, sig_dims=2),

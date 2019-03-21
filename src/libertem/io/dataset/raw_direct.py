@@ -146,7 +146,8 @@ class DirectRawFilePartition(Partition):
         self.num_frames = num_frames
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
+        # NOTE: full_frames ignored here because we currently only read full frames
         if crop_to is not None:
             if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException(

@@ -470,7 +470,8 @@ class FRMS6Partition(Partition):
         framesize = self.meta.shape.sig.size * self.meta.dtype.itemsize
         return max(1, math.floor(target_size / framesize))
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
+        # NOTE: full_frames is ignored, as we currently read whole frames only
         start_at_frame = self._start_frame
         num_frames = self._num_frames
         stackheight = self._get_stackheight()

@@ -141,7 +141,7 @@ class Partition(object):
         """
         return self.slice.shape
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -156,6 +156,9 @@ class Partition(object):
 
         crop_to : Slice or None
             crop to this slice. datasets may impose additional limits to the shape of the slice
+
+        full_frames : boolean, default False
+            always read full frames, not stacks of crops of frames
         """
         raise NotImplementedError()
 

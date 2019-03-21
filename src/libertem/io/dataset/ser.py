@@ -153,7 +153,7 @@ class SERPartition(Partition):
         framesize = self.meta.shape.sig.size * self.dtype.itemsize
         return min(1, math.floor(target_size / framesize))
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
         start_at_frame = self._start_frame
         num_frames = self._num_frames
         stackheight = self._get_stackheight()

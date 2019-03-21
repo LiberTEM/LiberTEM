@@ -29,7 +29,7 @@ class UDFTask(Task):
             buf.allocate()
         kwargs = self._init(self.partition)
         kwargs.update(result_buffers)
-        for tile in self.partition.get_tiles():
+        for tile in self.partition.get_tiles(full_frames=True):
             data = tile.flat_nav
             for frame_idx, frame in enumerate(data):
                 buffer_views = {}

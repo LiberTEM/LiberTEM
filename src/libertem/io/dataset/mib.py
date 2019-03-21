@@ -263,7 +263,7 @@ class MIBPartition(Partition):
         super().__init__(*args, **kwargs)
         assert all(s > 0 for s in self.shape), "invalid shape (%r)" % (self.shape,)
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
         stackheight = self.tileshape.nav.size
 
         num_tiles = self.partfile.fields['num_images'] // stackheight

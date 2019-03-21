@@ -9,6 +9,7 @@ from libertem.io.dataset.k2is import K2ISDataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
+from libertem.common.buffers import BufferWrapper
 
 K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..',
                                   'data', 'Capture52', 'Capture52_.gtg')
@@ -52,7 +53,7 @@ def test_sync(default_k2is):
 
 
 def test_read(default_k2is):
-    partitions = default_k2is.get_partitions(strat='READ_STACKED')
+    partitions = default_k2is.get_partitions()
     p = next(partitions)
     # NOTE: partition shape may change in the future
     assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
@@ -63,13 +64,17 @@ def test_read(default_k2is):
 
 
 def test_read_full_frames(default_k2is):
-    partitions = default_k2is.get_partitions(strat='READ_FULL_FRAMES')
+    partitions = default_k2is.get_partitions()
     p = next(partitions)
     # NOTE: partition shape may change in the future
     assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
-    tiles = p.get_tiles(strat='READ_FULL_FRAMES')
+    tiles = p.get_tiles(full_frames=True)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (1, 1860, 2048)
+    assert tuple(t.tile_slice.origin) == (0, 0, 0)
+
+    for t in tiles:
+        assert t.tile_slice.origin[0] < p.shape[0]
 
 
 @pytest.mark.slow
@@ -140,3 +145,29 @@ def test_get_diags(default_k2is):
 
     # diags are JSON-encodable:
     json.dumps(diags)
+
+
+@pytest.mark.slow
+def test_udf_on_k2is(lt_ctx, default_k2is):
+    def my_init(partition):
+        return {}
+
+    def my_buffers():
+        return {
+            'pixelsum': BufferWrapper(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def my_frame_fn(frame, pixelsum):
+        pixelsum[:] = np.sum(frame)
+
+    res = lt_ctx.run_udf(
+        dataset=default_k2is,
+        fn=my_frame_fn,
+        init=my_init,
+        make_buffers=my_buffers,
+    )
+    assert 'pixelsum' in res
+    # print(data.shape, res['pixelsum'].data.shape)
+    # assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))

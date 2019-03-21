@@ -99,12 +99,18 @@ class RawFilePartition(Partition):
         self.reader = reader
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None):
+    def get_tiles(self, crop_to=None, full_frames=False):
         if crop_to is not None:
             if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("RawFileDataSet only supports whole-frame crops for now")
+        if full_frames:
+            tileshape = (
+                tuple(self.tileshape[:self.meta.shape.nav.dims]) + tuple(self.meta.shape.sig)
+            )
+        else:
+            tileshape = self.tileshape
         f = self.reader.open_file()
-        subslices = list(self.slice.subslices(shape=self.tileshape))
+        subslices = list(self.slice.subslices(shape=tileshape))
         for tile_slice in subslices:
             if crop_to is not None:
                 intersection = tile_slice.intersection_with(crop_to)

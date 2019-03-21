@@ -387,7 +387,7 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset, fn, init, make_buffers, merge=merge_assign):
+    def run_udf(self, dataset, fn, make_buffers, init=None, merge=merge_assign):
         """
         Run `fn` on `dataset`.
 
@@ -420,9 +420,6 @@ class Context:
         This example creates a "sum image", where all pixels of each
         diffraction pattern are summed up:
 
-        >>> def my_init(partition):
-        >>>     return {}
-
         >>> def my_buffers():
         >>>     return {
         >>>         'pixelsum': BufferWrapper(
@@ -438,7 +435,6 @@ class Context:
         >>> res = ctx.run_udf(
         >>>     dataset=ds,
         >>>     fn=my_frame_fn,
-        >>>     init=my_init,
         >>>     make_buffers=my_buffers,
         >>> )
         """

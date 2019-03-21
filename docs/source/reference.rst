@@ -7,6 +7,11 @@ Python API
    :members:
    :special-members: __init__
 
+.. automodule:: libertem.common.buffers
+   :members:
+   :undoc-members:
+   :special-members: __init__
+
 Internal API
 ------------
 

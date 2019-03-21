@@ -103,10 +103,8 @@ Keyboard controls
 ~~~~~~~~~~~~~~~~~
 
 You can use arrow keys to change the coordinate parameters of any analysis. To do this, click on the
-image that contains the handle you want to modify, and then use the arrow keys to move the handle.
-Hold shift to move in larger steps. Currently, only one coordinate parameter can be changed with the
-keyboard, which is usually the center of the mask, or the pick coordinates.
-
+handle you want to modify, and then use the arrow keys to move the handle.
+Hold shift to move in larger steps.
 
 The Python API
 --------------
@@ -122,6 +120,52 @@ For a full API reference, please see :doc:`Reference <reference>`.
 
 .. include:: /../../examples/basic.py
     :code:
+
+User-defined functions
+~~~~~~~~~~~~~~~~~~~~~~
+
+A common case for analysing big EM data sets is running a reduction operation
+on each frame of the data set. The user-defined functions (UDF) interface
+of LiberTEM allows users to run their own reduction functions easily, without having
+to worry about parallelizing, I/O, the details of buffer management and so on. As an easy example, let's
+have a look at a function that simply sums up each frame to a single value:
+
+.. code-block:: python
+
+    def make_pixelsum_buffer():
+        """
+        Describe the buffers we need to store our results:
+        kind="nav" means we want to have a value for each coordinate
+        in the navigation dimensions. we name our buffer 'pixelsum'.
+        """
+        return {
+            'pixelsum': BufferWrapper(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def make_pixel_sum(frame, pixelsum):
+        """
+        Sum up all pixels in this frame and store the result in the pixelsum buffer.
+        `pixelsum` is a view into the result buffer we defined above, and corresponds to the
+        entry for the current frame we work on. We don't have to take care of finding the correct
+        index for the frame we are processing ourselves.
+        """
+        pixelsum[:] = np.sum(frame)
+
+    # run the UDF on a dataset:
+    ctx = Context()
+    dataset = ctx.load("...")
+    res = ctx.run_udf(
+        dataset=dataset,
+        fn=make_pixel_sum,
+        make_buffers=make_pixelsum_buffer,
+    )
+
+
+For a more complete example, please have a look at the functions implemented in `libertem.udf`,
+for example `blobfinder`.
+
 
 From an embedded interpreter
 ----------------------------

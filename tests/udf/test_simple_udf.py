@@ -10,9 +10,6 @@ def test_sum_frames(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
 
-    def my_init(partition):
-        return {}
-
     def my_buffers():
         return {
             'pixelsum': BufferWrapper(
@@ -26,7 +23,6 @@ def test_sum_frames(lt_ctx):
     res = lt_ctx.run_udf(
         dataset=dataset,
         fn=my_frame_fn,
-        init=my_init,
         make_buffers=my_buffers,
     )
     assert 'pixelsum' in res
@@ -39,9 +35,6 @@ def test_3d_ds(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)
 
-    def my_init(partition):
-        return {}
-
     def my_buffers():
         return {
             'pixelsum': BufferWrapper(
@@ -55,7 +48,6 @@ def test_3d_ds(lt_ctx):
     res = lt_ctx.run_udf(
         dataset=dataset,
         fn=my_frame_fn,
-        init=my_init,
         make_buffers=my_buffers,
     )
     assert 'pixelsum' in res

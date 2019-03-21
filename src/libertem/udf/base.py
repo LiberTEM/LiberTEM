@@ -27,7 +27,10 @@ class UDFTask(Task):
         for buf in result_buffers.values():
             buf.set_shape_partition(self.partition)
             buf.allocate()
-        kwargs = self._init(self.partition)
+        if self._init is not None:
+            kwargs = self._init(self.partition)
+        else:
+            kwargs = {}
         kwargs.update(result_buffers)
         for tile in self.partition.get_tiles(full_frames=True):
             data = tile.flat_nav

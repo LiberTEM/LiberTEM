@@ -8,8 +8,26 @@ class BufferWrapper(object):
 
     This is used as a helper to allow easy merging of results without needing
     to manually handle indexing.
+
+    Usually, as a user, you only need to instantiate this class, specifying `kind`,
+    `dtype` and sometimes `extra_shape` parameters. Most methods are meant to be called
+    from LiberTEM-internal code, for example the UDF functionality.
     """
     def __init__(self, kind, extra_shape=(), dtype="float32"):
+        """
+        Parameters
+        ----------
+        kind : "nav" or "sig"
+            The rough shape of the buffer, either corresponding to the navigation
+            or the signal dimensions of the dataset
+
+        extra_shape : optional, tuple of int
+            You can specify additional dimensions for your data. For example, if
+            you want to store 2D coords, you would specify (2,) here.
+
+        dtype : string or numpy dtype
+            The dtype of this buffer
+        """
         self._kind = kind
         self._extra_shape = extra_shape
         self._dtype = np.dtype(dtype)

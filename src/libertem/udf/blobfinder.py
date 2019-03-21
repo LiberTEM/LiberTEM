@@ -245,7 +245,7 @@ def pass_2(frame, template, crop_buf, peaks, mask,
         peak_elevations[disk_idx] = peak_elevation
 
 
-def run_analysis(ctx, dataset, parameters):
+def run_blobfinder(ctx, dataset, parameters):
     sum_job = SumFramesJob(dataset=dataset)
     sum_result = ctx.run(sum_job)
     sum_result = np.log(sum_result - np.min(sum_result) + 1)

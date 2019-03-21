@@ -1,6 +1,6 @@
 import numpy as np
 
-import libertem.analysis.karina1_udf as karina
+import libertem.udf.blobfinder as blobfinder
 
 from utils import MemoryDataSet, _mk_random
 
@@ -15,17 +15,17 @@ def test_refinenemt():
         (0, 2, 0, 0, 0, -10)
     ])
 
-    assert np.allclose(karina.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
-    assert np.allclose(karina.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
-    assert np.allclose(karina.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
+    assert np.allclose(blobfinder.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
 
     y, x = (4, 1)
-    ry, rx = karina.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry > y) and (ry < (y + 1))
     assert (rx < x) and (rx > (x - 1))
 
     y, x = (4, 4)
-    ry, rx = karina.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry < y) and (ry > (y - 1))
     assert (rx < x) and (rx > (x - 1))
 
@@ -37,7 +37,7 @@ def test_smoke(lt_ctx):
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)
-    karina.run_analysis(ctx=lt_ctx, dataset=dataset, parameters={
+    blobfinder.run_blobfinder(ctx=lt_ctx, dataset=dataset, parameters={
         'num_disks': 1,
         'radius': 4,
         'padding': 0,
@@ -46,7 +46,7 @@ def test_smoke(lt_ctx):
 
 
 def test_crop_disks_from_frame():
-    mask = karina.RadialGradient({
+    mask = blobfinder.RadialGradient({
         'radius': 2,
         'padding': 0,
     })
@@ -56,7 +56,7 @@ def test_crop_disks_from_frame():
         [5, 5],
     ]
     frame = _mk_random(size=(6, 6), dtype="float32")
-    crop_disks = list(karina.crop_disks_from_frame(
+    crop_disks = list(blobfinder.crop_disks_from_frame(
         peaks,
         frame,
         mask

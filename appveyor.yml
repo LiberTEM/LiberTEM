@@ -12,11 +12,6 @@ environment:
       PYTHON_ARCH: "64"
       TOXENV: "py37"
 
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.5"
-      PYTHON_ARCH: "64"
-      TOXENV: "flake8"
-
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 

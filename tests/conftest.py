@@ -97,7 +97,9 @@ async def http_client():
     # FIXME: maybe re-scope to module, but would also need
     # adjusted event_loop scope. if we have many API tests
     # maybe reconsider.
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=5)
+    ) as session:
         yield session
 
 

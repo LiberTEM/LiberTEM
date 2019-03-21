@@ -353,10 +353,9 @@ class Context:
         >>> ctx = Context()
         >>> ds = ctx.load("...")
         >>> origin = (7, 8, 9)
-        >>> job = create_pick_job(dataset=ds, origin=origin)
+        >>> job = create_pick_analysis(dataset=ds, x=9, y=8, z=7)
         >>> result = ctx.run(job)
-        >>> assert result.shape == ds.shape.sig
-
+        >>> assert result.intensity.raw_data.shape == ds.shape.sig
         """
         loc = locals()
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}

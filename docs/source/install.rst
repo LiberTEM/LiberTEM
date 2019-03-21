@@ -1,6 +1,13 @@
 Installation
 ============
 
+.. note::
+    Distinguish between installing a released version and installing the latest development version. Both `installing from PyPi`_ and `installing from a git clone`_ use pip, but they do fundamentally different things. :code:`pip install libertem` downloads the latest release from PyPi, which can be somewhat older. 
+    
+    Changing directory to a git clone and running :code:`pip install -e .` installs from the local directory in editable mode. "Editable mode" means that the source directory is linked into the current Python environment rather than copied. That means changes in the source directory are immediately active in the Python environment. 
+    
+    Installing from a git clone in editable mode is the correct setup for development work and currently the preferred setup to run LiberTEM until the code base has stabilized and we offer maintenance releases.
+
 .. include:: _single_node.rst
 
 Linux and Mac OS X
@@ -104,7 +111,7 @@ from a git clone:
 
     $ git clone https://github.com/LiberTEM/LiberTEM.git
 
-Activate the Python environment (conda or virtualenv) and change to the newly created directory with the clone of the LiberTEM repository. Now you can start the LiberTEM installation:
+Activate the Python environment (conda or virtualenv) and change to the newly created directory with the clone of the LiberTEM repository. Now you can start the LiberTEM installation. Please note the dot at the end, which indicates the current directory!
 
 .. code-block:: shell
     

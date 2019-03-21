@@ -164,7 +164,7 @@ have a look at a function that simply sums up each frame to a single value:
 
 
 For a more complete example, please have a look at the functions implemented in `libertem.udf`,
-for example `blobfinder`.
+for example `blobfinder`. Note that this is a quite new feature and the API is not stable yet!
 
 
 From an embedded interpreter

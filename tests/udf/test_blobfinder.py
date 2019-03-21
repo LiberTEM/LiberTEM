@@ -32,7 +32,7 @@ def test_refinenemt():
 
 def test_smoke(lt_ctx):
     """
-    just check if the analysis rnus without throwing exceptions:
+    just check if the analysis runs without throwing exceptions:
     """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),

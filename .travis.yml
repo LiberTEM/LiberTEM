@@ -24,14 +24,17 @@ jobs:
       dist: xenial
       sudo: true
     - stage: test
-      python: 3.6
+      python: 3.7
       env: TOXENV=flake8
+      sudo: true
     - stage: test
-      python: 3.6
+      python: 3.7
       env: TOXENV=qa
+      sudo: true
     - stage: test
-      python: 3.6
-      env: TOXENV=docs-deploy
+      python: 3.7
+      env: TOXENV=docs-check
+      sudo: true
     - stage: test
       language: node_js
       node_js:
@@ -41,6 +44,11 @@ jobs:
       script:
         - (cd client && npm run build)
         - (cd client && npm test -- --coverage)
+
+    - stage: packaging
+      python: 3.7
+      env: TOXENV=docs-deploy
+      sudo: true
 
     - stage: packaging
       sudo: require

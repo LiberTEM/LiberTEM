@@ -24,13 +24,13 @@ jobs:
       dist: xenial
       sudo: true
     - stage: test
-      python: 3.7
+      python: 3.6
       env: TOXENV=flake8
     - stage: test
-      python: 3.7
+      python: 3.6
       env: TOXENV=qa
     - stage: test
-      python: 3.7
+      python: 3.6
       env: TOXENV=docs-deploy
     - stage: test
       language: node_js

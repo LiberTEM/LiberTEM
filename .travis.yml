@@ -16,22 +16,28 @@ after_success:
 jobs:
   include:
     - stage: test
-      python: 3.6
       env: TOXENV=py36
+      python: 3.6
     - stage: test
-      python: 3.7
       env: TOXENV=py37
+      python: 3.7
       dist: xenial
       sudo: true
     - stage: test
-      python: 3.6
       env: TOXENV=flake8
+      python: 3.7
+      dist: xenial
+      sudo: true
     - stage: test
-      python: 3.6
       env: TOXENV=qa
+      dist: xenial
+      python: 3.7
+      sudo: true
     - stage: test
-      python: 3.6
-      env: TOXENV=docs-deploy
+      env: TOXENV=docs-check
+      python: 3.7
+      dist: xenial
+      sudo: true
     - stage: test
       language: node_js
       node_js:
@@ -41,6 +47,12 @@ jobs:
       script:
         - (cd client && npm run build)
         - (cd client && npm test -- --coverage)
+
+    - stage: packaging
+      env: TOXENV=docs-deploy
+      python: 3.7
+      dist: xenial
+      sudo: true
 
     - stage: packaging
       sudo: require

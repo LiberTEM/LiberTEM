@@ -388,6 +388,60 @@ class Context:
         return out
 
     def run_udf(self, dataset, fn, init, make_buffers, merge=merge_assign):
+        """
+        Run `fn` on `dataset`.
+
+        Parameters
+        ----------
+        dataset
+            The dataset to work on
+
+        init
+            Function to perform initialization. Should return a dict of variables that will
+            be shared between calls calls of your function. Note that these variables should
+            be considered read-only; they are not meant as a way to communicate between calls.
+
+        make_buffers
+            Function that returns a dict, mapping buffer names to BufferWrapper instances
+
+        fn
+            The function to run on the dataset. It needs to accept the frame as keyword argument.
+            Additionally, it needs to have a parameter for each buffer created in make_buffers,
+            and also for each variable returned from the init function.
+
+        merge
+            A function merging a partial result into the final result buffer. By default it just
+            performs assignment.
+
+
+        Example
+        -------
+
+        This example creates a "sum image", where all pixels of each
+        diffraction pattern are summed up:
+
+        >>> def my_init(partition):
+        >>>     return {}
+
+        >>> def my_buffers():
+        >>>     return {
+        >>>         'pixelsum': BufferWrapper(
+        >>>             kind="nav", dtype="float32"
+        >>>         )
+        >>>     }
+
+        >>> def my_frame_fn(frame, pixelsum):
+        >>>     pixelsum[:] = np.sum(frame)
+
+        >>> ctx = Context()
+        >>> ds = ctx.load(...)
+        >>> res = ctx.run_udf(
+        >>>     dataset=ds,
+        >>>     fn=my_frame_fn,
+        >>>     init=my_init,
+        >>>     make_buffers=my_buffers,
+        >>> )
+        """
         result_buffers = make_buffers()
         for buf in result_buffers.values():
             buf.set_shape_ds(dataset)

@@ -1,3 +1,9 @@
+// tslint:disable:ordered-imports
+import "core-js/fn/symbol/iterator.js";
+import "core-js/es6/symbol.js";
+import 'react-app-polyfill/ie11';
+// tslint:enable:ordered-imports
+
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -22,7 +28,7 @@ ReactDOM.render(
     <Provider store={store}>
         <App />
     </Provider>,
-  document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();
 

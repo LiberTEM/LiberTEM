@@ -62,7 +62,7 @@ export interface DraggableHandleProps {
     constraint?: (p: Point2D) => Point2D,
 }
 
-function getScalingFactor(elem: SVGElement): number {
+export function getScalingFactor(elem: SVGElement): number {
     const svg = elem.ownerSVGElement;
     if (svg === null) {
         throw new Error("no owner SVG element?");
@@ -80,8 +80,8 @@ function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
     const f = getScalingFactor(parent);
     const parentPos = parent.getBoundingClientRect();
     const res = {
-        x: (e.pageX - (parentPos.left + window.scrollX)) / f,
-        y: (e.pageY - (parentPos.top + window.scrollY)) / f,
+        x: (e.pageX - (parentPos.left + window.pageXOffset)) / f,
+        y: (e.pageY - (parentPos.top + window.pageYOffset)) / f,
     }
     return res;
 }
@@ -139,7 +139,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
             if (parentOnDragStart) {
                 parentOnDragStart(this);
             }
-            if (this.focusRef.current) {
+            if (this.focusRef.current && this.focusRef.current.focus) {
                 this.focusRef.current.focus();
             }
         } else {

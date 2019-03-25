@@ -12,6 +12,7 @@
     "formik": "^1.4.1",
     "lodash": "^4.17.11",
     "react": "^16.7.0",
+    "react-app-polyfill": "^0.2.2",
     "react-dom": "^16.7.0",
     "react-redux": "^6.0.0",
     "react-window": "^1.5.0",
@@ -48,7 +49,9 @@
   "browserslist": [
     ">0.2%",
     "not dead",
-    "not ie <= 11",
+    "not ie < 11",
+    "firefox esr",
+    "firefox 52",
     "not op_mini all"
   ]
 }

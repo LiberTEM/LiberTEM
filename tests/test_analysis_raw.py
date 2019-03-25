@@ -76,6 +76,32 @@ def test_get_multiple_frames_2():
     assert np.allclose(result[0, 0:2], data[5, 5:7])
 
 
+def test_get_multiple_frames_squeeze():
+    data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(1, 1, 16, 16),
+        partition_shape=(16, 16, 16, 16),
+        sig_dims=2
+    )
+
+    job = PickFrameJob(dataset=dataset, squeeze=True, slice_=Slice(
+        origin=(5, 5, 0, 0), shape=Shape((5, 5, 16, 16), sig_dims=2)
+    ))
+
+    executor = InlineJobExecutor()
+
+    result = np.zeros(job.get_result_shape())
+    for tiles in executor.run_job(job):
+        for tile in tiles:
+            tile.reduce_into_result(result)
+
+    assert result.shape == (5, 5, 16, 16)
+    assert not np.allclose(result[0, 0], result[0, 1])
+    assert np.allclose(result[0, 0], data[5, 5])
+    assert np.allclose(result[0, 0:2], data[5, 5:7])
+
+
 def test_get_multiple_frame_row():
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(

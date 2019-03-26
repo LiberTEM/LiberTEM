@@ -107,3 +107,18 @@ def test_merge(batchsize = 64):
     # check sum of variances 
     var = np.var(batch, axis = 0) * batchsize
     assert np.allclose([var], [sum_var])
+
+def test_part():
+    """
+    Test part function from libertem/udf/stddev.py
+    """
+    num_ims = 1024
+    data = [np.random.rand(16, 16, 16, 16) for i in range(num_ims)]
+
+    compute_part = part(data)
+    sum_var, sum_im, N = compute_part.sum_var, compute_part.sum_im, compute_part.N
+
+    assert N == num_ims
+    assert np.allclose([sum_var], [np.var(data, axis = 0) * num_ims])
+    assert np.allclose([sum_im], [sum(data)])
+

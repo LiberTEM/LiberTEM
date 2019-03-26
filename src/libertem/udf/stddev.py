@@ -1,20 +1,12 @@
 # import functools
 import collections
+
 import numba
 import numpy as np
+
 from libertem.common.buffers import BufferWrapper
 
 # from libertem.udf import ResultBuffer, map_frames
-
-try:
-    import pyfftw
-    fft = pyfftw.interfaces.numpy_fft
-    pyfftw.interfaces.cache.enable()
-    zeros = pyfftw.zeros_aligned
-except ImportError:
-    fft = np.fft
-    zeros = np.zeros
-
 
 VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
 

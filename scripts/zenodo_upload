@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+import os
+import json
+import pprint
+
+import click
+import requests
+
+ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
+
+BASE_URL = 'https://sandbox.zenodo.org/api/'
+
+CONF = 'zenodo-upload.json'
+
+config = json.load(open(CONF))
+
+
+def prettyprint(r):
+    print('Status code: ', r.status_code, "\n")
+    pprint.pprint(r.json())
+
+
+def zenodo_get(snippet='', extra_params={}):
+    params = {'access_token': ACCESS_TOKEN}
+    params.update(extra_params)
+    r = requests.get(BASE_URL + 'deposit/depositions' + snippet, params=params)
+    return r
+
+
+def zenodo_post(snippet='', json={}, extra_params={}, extra_headers={}):
+    headers = {"Content-Type": "application/json"}
+    headers.update(extra_headers)
+
+    params = {'access_token': ACCESS_TOKEN}
+    params.update(extra_params)
+
+    r = requests.post(BASE_URL + 'deposit/depositions' + snippet,
+        params=params,
+        json=json,
+        headers=headers)
+    return r
+
+
+def zenodo_put(snippet='', json={}, extra_params={}, extra_headers={}):
+    headers = {"Content-Type": "application/json"}
+    headers.update(extra_headers)
+
+    params = {'access_token': ACCESS_TOKEN}
+    params.update(extra_params)
+
+    r = requests.put(BASE_URL + 'deposit/depositions' + snippet,
+        params=params,
+        json=json,
+        headers=headers)
+    return r
+
+
+def list_depositions():
+    return zenodo_get()
+
+
+def create_deposition():
+    return zenodo_post()
+
+
+def get_deposition(id):
+    return zenodo_get(snippet='/%s' % id)
+
+
+def update_deposition(id, data):
+    return zenodo_put(snippet='/%s' % id, json=data)
+
+
+def new_version(parent_id):
+    snippet = '/%s/actions/newversion' % parent_id
+    r = zenodo_post(snippet=snippet)
+    return r
+
+
+def get_latest_draft(r):
+    data = r.json()
+    url = data['links']['latest_draft']
+    parts = url.split('/')
+    return parts[-1]
+
+
+def make_data():
+    data = config['template']
+    data['metadata']['creators'].append({"name": "McTestface, Testy", "affiliation": "Test U"})
+    return data
+
+
+@click.command()
+@click.option('--wheel', required=True, type=click.File())
+@click.option('--tarball', required=True, type=click.File())
+def main(wheel, tarball):
+    r = new_version(parent_id=config['parent']['id'])
+    # r = list_depositions()
+    prettyprint(r)
+    id = get_latest_draft(r)
+    r = update_deposition(id=id, data=make_data())
+    prettyprint(r)
+
+
+if __name__ == '__main__':
+    main()

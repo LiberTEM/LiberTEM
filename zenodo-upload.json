@@ -1,0 +1,15 @@
+{
+    "parent": {
+        "id": "264899"
+    },
+    "template": {
+        "metadata": {
+            "title": "LiberTEM/LiberTEM: ",
+            "upload_type": "software",
+            "description": "This is my first upload",
+            "creators": [
+                {"name": "Doe, John", "affiliation": "Zenodo"}
+            ]
+        }
+    }
+}

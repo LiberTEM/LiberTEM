@@ -244,7 +244,9 @@ Before
 ~~~~~~
 
 * Full documentation review and update
+* Update `packaging/README.html` with `rst2html.py README.rst packaging/README.html` and edit it in such a way that only the HTML body remains. This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
+* Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
@@ -290,6 +292,6 @@ After releasing on GitHub
 * Install release package
 * Confirm correct version info
 * Upload to PyPi
-* Upload to zenodo.org
+* Publish new version on zenodo.org
 * Update documentation with new links, if necessary
 * Send announcement message on mailing list

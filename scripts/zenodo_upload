@@ -12,9 +12,9 @@ import libertem
 
 ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 
-BASE_URL = 'https://sandbox.zenodo.org/api/'
+BASE_URL = ''
 
-CONF = 'zenodo-upload.json'
+CONF = 'packaging/zenodo-upload.json'
 
 config = json.load(open(CONF))
 
@@ -158,7 +158,7 @@ def upload_file(id, filename, remote_filename=None):
 
 
 def make_creators():
-    with open('creators.json', 'r', encoding='utf-8') as f:
+    with open('packaging/creators.json', 'r', encoding='utf-8') as f:
         raw_creators = json.load(f)
 
     result = []
@@ -176,7 +176,7 @@ def make_creators():
 
 
 def make_contributors():
-    with open('contributors.json', 'r', encoding='utf-8') as f:
+    with open('packaging/contributors.json', 'r', encoding='utf-8') as f:
         raw_contributors = json.load(f)
 
     result = []
@@ -217,8 +217,12 @@ def make_data():
 @click.command()
 @click.option('--wheel', required=True, type=click.File())
 @click.option('--tarball', required=True, type=click.File())
-def main(wheel, tarball):
-    r = new_version(parent_id=config['parent']['id'])
+@click.option('--parent', default="264899")
+@click.option('--url', default='https://sandbox.zenodo.org/api/')
+def main(wheel, tarball, parent, url):
+    global BASE_URL
+    BASE_URL = url
+    r = new_version(parent_id=parent)
     # r = list_depositions()
     # prettyprint(r)
     id = get_latest_draft(r)

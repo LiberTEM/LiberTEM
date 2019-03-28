@@ -16,7 +16,7 @@ information. You should also update the test suite and add test cases for your c
 
 To make sure our code base stays readable, we have follow a `Code Style`_.
 
-Please update ``docs/source/acknowledgments.rst`` and ``.zenodo.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited.
+Please update ``packaging/creators.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited.
 
 If you are changing parts of LiberTEM that are currently not covered by tests, please consider writing
 new tests! When changing example code, which is not run as part of the tests, make sure the example
@@ -244,7 +244,8 @@ Before
 ~~~~~~
 
 * Full documentation review and update
-* Update `packaging/README.html` with `rst2html.py README.rst packaging/README.html` and edit it in such a way that only the HTML body remains. This is used as a description on Zenodo.org
+* Update the JSON files in the ``packaging/`` folder with author and project information
+* Update ``packaging/README.html`` with ``rst2html.py README.rst packaging/README.html`` and edit it in such a way that only the HTML body remains. This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment

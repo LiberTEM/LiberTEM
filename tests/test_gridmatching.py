@@ -1,7 +1,10 @@
 import pytest
 import numpy as np
 
-import libertem.analysis.gridmatching as grm
+# import libertem.analysis.gridmatching as grm
+
+
+pytestmark = pytest.mark.xfail(reason="gridmatching is currently disabled")
 
 
 @pytest.fixture

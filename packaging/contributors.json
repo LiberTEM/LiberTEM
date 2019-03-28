@@ -30,28 +30,10 @@
         "contribution": "Discussions, sample files"
     },
     {
-        "displayname": "Jan Caron",
-        "authorname": "Caron, Jan",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "Discussions, advanced color wheel for vector field visualization"
-    },
-    {
         "displayname": "Wolfgang zu Castell",
         "authorname": "zu Castell, Wolfgang",
         "affiliation": "HZM",
         "contribution": "Discussions, funding applications"
-    },
-    {
-        "displayname": "Alexander Clausen",
-        "authorname": "Clausen, Alexander",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "System design, engineering, implementation, documentation, management, majority of the code"
-    },
-    {
-        "displayname": "Rafal Dunin-Borkowski",
-        "authorname": "Dunin-Borkowski, Rafal",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "Scientific advisory, resources, discussion"
     },
     {
         "displayname": "Peter Ercius",
@@ -210,12 +192,6 @@
         "contribution": "Discussions, sample files, documentation for implementing FRMS6 support"
     },
     {
-        "displayname": "Karina Ruzaeva",
-        "authorname": "Ruzaeva, Karina",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "Fast diffraction analysis"
-    },
-    {
         "displayname": "Kunt Sander",
         "authorname": "Sander, Kunt",
         "affiliation": "DESY",
@@ -262,12 +238,6 @@
         "authorname": "Voyles, Paul",
         "affiliation": "U Wisconsin",
         "contribution": "Discussions"
-    },
-    {
-        "displayname": "Dieter Weber",
-        "authorname": "Weber, Dieter",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "Management, requirements analysis, system design, testing, documentation, communication"
     },
     {
         "displayname": "Roger Wepf",

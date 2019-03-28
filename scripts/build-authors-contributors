@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+import json
+
+with open('packaging/contributors.json', 'rb') as f:
+    contributors = json.load(f)
+
+with open('packaging/creators.json', 'rb') as f:
+    creators = json.load(f)
+
+creators = sorted(creators, key=lambda c: c['authorname'])
+contributors = sorted(contributors, key=lambda c: c['authorname'])
+
+
+def format_entry(a):
+    if 'affiliation' in a:
+        return "**%s (%s)**\n    %s\n\n" % (a['displayname'], a['affiliation'], a['contribution'])
+    else:
+        return "**%s**\n    %s\n\n" % (a['displayname'], a['contribution'])
+
+
+with open('docs/source/creators.rst', 'w', encoding='utf-8') as f:
+    for c in creators:
+        f.write(format_entry(c))
+
+with open('docs/source/contributors.rst', 'w', encoding='utf-8') as f:
+    for c in contributors:
+        f.write(format_entry(c))

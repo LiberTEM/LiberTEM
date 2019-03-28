@@ -8,6 +8,8 @@ import pprint
 import click
 import requests
 
+import libertem
+
 ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 
 BASE_URL = 'https://sandbox.zenodo.org/api/'
@@ -16,66 +18,102 @@ CONF = 'zenodo-upload.json'
 
 config = json.load(open(CONF))
 
+default_params = {'access_token': ACCESS_TOKEN}
+default_headers = {"Content-Type": "application/json"}
+deposition_path = 'deposit/depositions'
+
+
+class ZenodoException(Exception):
+    pass
+
+
+def prettystring(r):
+    result = 'Status code: %s \n' % r.status_code
+    if r.text:
+        result += (pprint.pformat(r.json()))
+    return result
+
 
 def prettyprint(r):
-    print('Status code: ', r.status_code, "\n")
-    pprint.pprint(r.json())
+    print(prettystring(r))
 
 
-def zenodo_get(snippet='', extra_params={}):
-    params = {'access_token': ACCESS_TOKEN}
+def zenodo_deposition_get(snippet='', extra_params={}):
+    params = dict(default_params)
     params.update(extra_params)
-    r = requests.get(BASE_URL + 'deposit/depositions' + snippet, params=params)
+    r = requests.get(BASE_URL + deposition_path + snippet, params=params)
     return r
 
 
-def zenodo_post(snippet='', json={}, extra_params={}, extra_headers={}):
-    headers = {"Content-Type": "application/json"}
+def zenodo_deposition_post(snippet='', json=None, data=None, extra_params={}, extra_headers={}):
+    headers = dict(default_headers)
     headers.update(extra_headers)
 
-    params = {'access_token': ACCESS_TOKEN}
+    params = dict(default_params)
     params.update(extra_params)
 
-    r = requests.post(BASE_URL + 'deposit/depositions' + snippet,
+    r = requests.post(BASE_URL + deposition_path + snippet,
+        params=params,
+        json=json,
+        data=data,
+        headers=headers)
+    return r
+
+
+def zenodo_deposition_put(snippet='', json={}, extra_params={}, extra_headers={}):
+    headers = dict(default_headers)
+    headers.update(extra_headers)
+
+    params = dict(default_params)
+    params.update(extra_params)
+
+    r = requests.put(BASE_URL + deposition_path + snippet,
         params=params,
         json=json,
         headers=headers)
     return r
 
 
-def zenodo_put(snippet='', json={}, extra_params={}, extra_headers={}):
-    headers = {"Content-Type": "application/json"}
-    headers.update(extra_headers)
-
-    params = {'access_token': ACCESS_TOKEN}
+def zenodo_deposition_delete(snippet='', extra_params={}):
+    params = dict(default_params)
     params.update(extra_params)
-
-    r = requests.put(BASE_URL + 'deposit/depositions' + snippet,
-        params=params,
-        json=json,
-        headers=headers)
+    r = requests.delete(BASE_URL + deposition_path + snippet, params=params)
     return r
 
 
 def list_depositions():
-    return zenodo_get()
+    r = zenodo_deposition_get()
+    if r.status_code != 200:
+        raise ZenodoException(prettystring(r))
+    return r
 
 
 def create_deposition():
-    return zenodo_post()
+    r = zenodo_deposition_post()
+    if r.status_code != 201:
+        raise ZenodoException(prettystring(r))
+    return r
 
 
 def get_deposition(id):
-    return zenodo_get(snippet='/%s' % id)
+    r = zenodo_deposition_get(snippet='/%s' % id)
+    if r.status_code != 200:
+        raise ZenodoException(prettystring(r))
+    return r
 
 
 def update_deposition(id, data):
-    return zenodo_put(snippet='/%s' % id, json=data)
+    r = zenodo_deposition_put(snippet='/%s' % id, json=data)
+    if r.status_code != 200:
+        raise ZenodoException(prettystring(r))
+    return r
 
 
 def new_version(parent_id):
     snippet = '/%s/actions/newversion' % parent_id
-    r = zenodo_post(snippet=snippet)
+    r = zenodo_deposition_post(snippet=snippet)
+    if r.status_code != 201:
+        raise ZenodoException(prettystring(r))
     return r
 
 
@@ -83,12 +121,96 @@ def get_latest_draft(r):
     data = r.json()
     url = data['links']['latest_draft']
     parts = url.split('/')
+    # The last bit of the URL is the ID
     return parts[-1]
+
+
+def get_file_ids(r):
+    data = r.json()
+    return [f['id'] for f in data['files']]
+
+
+def delete_file(id, file_id):
+    snippet = '/%s/files/%s' % (id, file_id)
+    r = zenodo_deposition_delete(snippet=snippet)
+    if r.status_code != 204:
+        raise ZenodoException(prettystring(r))
+    return r
+
+
+def upload_file(id, filename, remote_filename=None):
+    if remote_filename is None:
+        remote_filename = os.path.basename(filename)
+
+    data = {'filename': remote_filename}
+    snippet = '/%s/files' % id
+
+    with open(filename, 'rb') as fh:
+
+        files = {'file': fh}
+        # We can't use zenodo_deposition_post() because the data is encoded as multipart/form-data
+        # for upload, different from the JSON of other actions.
+        r = requests.post(BASE_URL + deposition_path + snippet,
+            data=data, files=files, params=default_params)
+    if r.status_code != 201:
+        raise ZenodoException(prettystring(r))
+    return r
+
+
+def make_creators():
+    with open('creators.json', 'r', encoding='utf-8') as f:
+        raw_creators = json.load(f)
+
+    result = []
+    for c in raw_creators:
+        creator = {
+            'name': c['authorname']
+        }
+        for key in ['affiliation', 'orcid']:
+            try:
+                creator[key] = c[key]
+            except KeyError:
+                pass
+        result.append(creator)
+    return result
+
+
+def make_contributors():
+    with open('contributors.json', 'r', encoding='utf-8') as f:
+        raw_contributors = json.load(f)
+
+    result = []
+    for c in raw_contributors:
+        contributor = {
+            'name': c['authorname'],
+            'type': 'Other'
+        }
+
+        for key in ['affiliation', 'orcid']:
+            try:
+                contributor[key] = c[key]
+            except KeyError:
+                pass
+        result.append(contributor)
+    return result
+
+
+# Work in progress, see also https://github.com/zenodo/zenodo/issues/1736
+def make_description():
+
+    with open('packaging/README.html', 'r', encoding='utf-8') as f:
+        readme = f.read()
+    return readme
 
 
 def make_data():
     data = config['template']
-    data['metadata']['creators'].append({"name": "McTestface, Testy", "affiliation": "Test U"})
+    metadata = data['metadata']
+    metadata['creators'] = make_creators()
+    metadata['contributors'] = make_contributors()
+    metadata['description'] = make_description()
+    metadata['version'] = libertem.__version__
+    metadata['title'] += libertem.__version__
     return data
 
 
@@ -98,10 +220,20 @@ def make_data():
 def main(wheel, tarball):
     r = new_version(parent_id=config['parent']['id'])
     # r = list_depositions()
-    prettyprint(r)
+    # prettyprint(r)
     id = get_latest_draft(r)
     r = update_deposition(id=id, data=make_data())
-    prettyprint(r)
+    # prettyprint(r)
+
+    for file_id in get_file_ids(r):
+        r = delete_file(id, file_id)
+        # prettyprint(r)
+
+    wheel_upload = upload_file(id=id, filename=wheel.name)
+    # prettyprint(wheel_upload)
+
+    tar_upload = upload_file(id=id, filename=tarball.name)
+    # prettyprint(tar_upload)
 
 
 if __name__ == '__main__':

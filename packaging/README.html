@@ -1,0 +1,48 @@
+<p>LiberTEM is an open source platform for high-throughput distributed processing of <a class="reference external" href="https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors">pixelated</a> scanning transmission electron microscopy (<a class="reference external" href="https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy">STEM</a>) data.</p>
+<p>It is designed for high throughput and scalability on PCs, single server nodes, clusters and cloud services. On clusters it can use the Hadoop file system with fast distributed
+local storage on high-performance SSDs. That way it achieves very high collective IO performance on a compact and cost-efficient system built from stock components.
+With cached file system reads it can reach a throughput of up to 14 GB/s per processing node with a quad-core CPU.</p>
+<p>LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms
+that allow installation of Python 3 and the required packages will likely work as well. The GUI is running
+in a web browser.</p>
+<p>LiberTEM currently opens most file formats used for pixelated STEM:</p>
+<ul class="simple">
+<li>Raw binary files, for example for the Thermo Fisher EMPAD detector</li>
+<li>Quantum Detectors MIB format (currently alpha, more testing and sample files highly appreciated)</li>
+<li>Nanomegas .blo block files</li>
+<li>Gatan K2IS raw format (currently beta)</li>
+<li>FRMS6 from PNDetector pnCCD cameras (currently alpha, gain correction still needs UI changes)</li>
+<li>FEI SER files (via <a class="reference external" href="https://github.com/ercius/openNCEM">openNCEM</a>)</li>
+<li>HDF5-based formats such as Hyperspy files, NeXus and EMD</li>
+<li>Please contact us if you are interested in support for an additional format!</li>
+</ul>
+<p>The 0.1 release implements anything that can be done by applying masks to each detector frame,
+for example the numerous virtual detector methods (virtual bright field, virtual HAADF, ...) or center of mass.</p>
+<p>The GUI of the 0.1 release allows interactive analysis and data exploration with basic virtual
+detectors, center of mass and display of individual detector frames.</p>
+<p>The Python API can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/examples">examples directory</a>.
+If you are having trouble running the examples, please let us know, either by filing an issue
+or by <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">joining our Gitter chat</a>.</p>
+<p>LiberTEM is suitable as a high-performance processing backend for other applications, including live data streams. <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">Contact us</a> if you are interested!</p>
+<p>Deployment as a single-node system for a local user is thoroughly tested and can be considered stable in the 0.1 release. Deployment on a cluster is
+experimental and still requires some additional work, see <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/105">Issue #105</a>.</p>
+<p>LiberTEM is evolving rapidly and prioritizes features following user demand and contributions. In the future we'd like to implement live acquisition, and more analysis methods for all applications of pixelated STEM.
+If you like to influence the direction this
+project is taking, or if you'd like to contribute, please join our <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">gitter chat</a>,
+our <a class="reference external" href="https://groups.google.com/forum/#!forum/libertem-dev">development mailing list</a>,
+and our <a class="reference external" href="https://groups.google.com/forum/#!forum/libertem">general mailing list</a>.</p>
+<div class="section" id="installation">
+<h1>Installation</h1>
+<p>The short version:</p>
+<pre class="code shell literal-block">
+$ virtualenv -p python3.6 ~/libertem-venv/
+$ <span class="name builtin">source</span> ~/libertem-venv/bin/activate
+<span class="operator">(</span>libertem<span class="operator">)</span> $ pip install libertem<span class="operator">[</span>torch<span class="operator">]</span>
+</pre>
+<p>Please see <a class="reference external" href="https://libertem.github.io/LiberTEM/install.html">our documentation</a> for details!</p>
+</div>
+<div class="section" id="license">
+<h1>License</h1>
+<p>LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT license, please see LICENSE files in the subdirectories for details.</p>
+</div>
+

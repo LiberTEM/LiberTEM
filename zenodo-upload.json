@@ -6,10 +6,19 @@
         "metadata": {
             "title": "LiberTEM/LiberTEM: ",
             "upload_type": "software",
-            "description": "This is my first upload",
-            "creators": [
-                {"name": "Doe, John", "affiliation": "Zenodo"}
-            ]
+            "grants": [
+                {"id": "10.13039/501100000780::780487"}
+            ],
+            "keywords": ["STEM", "TEM", "pixelated STEM", "4D STEM", "high-throughput", "electron microscopy"],
+            "related_identifiers": [
+                {
+                    "identifier": "https://github.com/LiberTEM/LiberTEM/tree/continuous",
+                    "relation": "isSupplementTo"
+                }
+            ],
+            "access_right": "open",
+            "license": "GPL-3.0"
         }
+
     }
 }

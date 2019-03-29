@@ -1,3 +1,6 @@
+**@theassassin**
+    Help with setting up AppImage building and Continuous Integration
+
 **Juri Barthel (FZ Jülich)**
     Discussions, compatibility with Dr. Probe
 

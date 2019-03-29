@@ -10,22 +10,42 @@ from libertem.common.buffers import BufferWrapper
 
 VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
 
-def make_stddev_buffer():
-    """ 
-    Buffer to store the resulting standard deviation image 
-    """
+
+def my_buffer_batch():
     return {
-        'stddev' : BufferWrapper(
-            kind = 'sig', dtype = 'float32'
+        'batch' : BufferWrapper(
+            kind = 'sig', extra_shape = (3,), dtype = 'float32'
             )
     }
 
-def make_batch_buffer():
-        return {
-            'batch' : BufferWrapper(
-                kind ='sig', extra_shape = (3,), dtype = 'float32'
-            )
-        }
+def my_frame_fn_batch(frame, batch):
+
+    if batch[:, :, 2][0][0] == 0:
+        batch[:, :, 0] = 0
+
+    else:
+        
+        p0 = VariancePart(sum_var = batch[:, :, 0], sum_im = batch[:, :, 1], N = batch[:, :, 2][0][0])
+        p1 = VariancePart(sum_var = 0, sum_im = frame, N = 1)
+        compute_merge = merge(p0, p1)
+
+        sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
+
+        batch[:, :, 0] = sum_var
+
+    batch[:, :, 1] += frame
+    batch[:, :, 2] += 1
+
+def stddev_merge(dest, src):
+
+    p0 = VariancePart(sum_var = dest['batch'][:, :, 0], sum_im = dest['batch'][:, :, 1], N = dest['batch'][:, :, 2][0][0])
+    p1 = VariancePart(sum_var = src['batch'][:, :, 0], sum_im = src['batch'][:, :, 1], N = src['batch'][:, :, 2][0][0])
+    compute_merge = merge(p0, p1)
+
+    sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
+    dest['batch'][:, :, 0] = sum_var
+    dest['batch'][:, :, 1] = sum_im
+    dest['batch'][:, :, 2] = N
 
 def minibatch(partition):
     """

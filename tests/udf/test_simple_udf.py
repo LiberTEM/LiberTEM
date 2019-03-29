@@ -4,7 +4,7 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper
 from libertem.api import Context
-from libertem.udf.stddev import merge
+from libertem.udf.stddev import my_frame_fn_batch, my_buffer_batch, stddev_merge, merge
 from utils import MemoryDataSet, _mk_random
 
 def test_sum_frames(lt_ctx):
@@ -56,43 +56,6 @@ def test_3d_ds(lt_ctx):
     print(data.shape, res['pixelsum'].data.shape)
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(1, 2)))
 
-VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
-
-def my_buffers():
-    return {
-        'batch' : BufferWrapper(
-            kind = 'sig', extra_shape = (3,), dtype = 'float32'
-            )
-    }
-
-def my_frame_fn(frame, batch):
-
-    if batch[:, :, 2][0][0] == 0:
-        batch[:, :, 0] = 0
-
-    else:
-        
-        p0 = VariancePart(sum_var = batch[:, :, 0], sum_im = batch[:, :, 1], N = batch[:, :, 2][0][0])
-        p1 = VariancePart(sum_var = 0, sum_im = frame, N = 1)
-        compute_merge = merge(p0, p1)
-
-        sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
-
-        batch[:, :, 0] = sum_var
-
-    batch[:, :, 1] += frame
-    batch[:, :, 2] += 1
-
-def stddev_merge(dest, src):
-
-    p0 = VariancePart(sum_var = dest['batch'][:, :, 0], sum_im = dest['batch'][:, :, 1], N = dest['batch'][:, :, 2][0][0])
-    p1 = VariancePart(sum_var = src['batch'][:, :, 0], sum_im = src['batch'][:, :, 1], N = src['batch'][:, :, 2][0][0])
-    compute_merge = merge(p0, p1)
-
-    sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
-    dest['batch'][:, :, 0] = sum_var
-    dest['batch'][:, :, 1] = sum_im
-    dest['batch'][:, :, 2] = N
 
 def test_minibatch(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
@@ -101,8 +64,8 @@ def test_minibatch(lt_ctx):
 
     res = lt_ctx.run_udf(
         dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
+        fn=my_frame_fn_batch,
+        make_buffers=my_buffer_batch,
         merge=stddev_merge,
     )
 

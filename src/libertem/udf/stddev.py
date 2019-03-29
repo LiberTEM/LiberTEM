@@ -20,22 +20,59 @@ def make_stddev_buffer():
             )
     }
 
-def minibatch(batch):
+def make_batch_buffer():
+        return {
+            'batch' : BufferWrapper(
+                kind ='sig', extra_shape = (3,), dtype = 'float32'
+            )
+        }
+
+def minibatch(partition):
+    """
+    Given a partition/batch, compute the sum of pixels, the sum of variances, 
+    and the number of frames. Return as a collections.namedtuple object
+    """
+    sum_var = 0
+    sum_im = 0
+    N = 0
+
+    for frame in partition.get_tiles():
+        sum_im += frame.data
+        N += 1
+
+    mean = sum_im / N
+
+    for frame in partition.get_tiles():
+        sum_var += np.square(mean - frame.data)
+
+    return VariancePart(sum_var = sum_var, sum_im = sum_im, N = N)
+
+def whole(dataset, batchsize = 32):
     """
     Given a subset of images, compute mean and covariance for each pixels.
     """
-    size = len(batch)
-    sum_im = 0
+    #compute mean
+    batch = list()
 
-    #compute mean 
-    for im in batch:
-        sum_im += im
-    mean = sum_im / size
+    for partition in dataset.get_partitions():
+
+        minibatch = minibatch(partition)
+        batch.append(minibatch)
+
+
+    # for image in batch:
+    #     sum_im += im
+    sum_im = np.sum(frame)
+    # sum_im = np.sum(batch, axis=0)
+    # for im in batch:
+    #     sum_im += im
+    mean = np.mean(frame)
 
     #compute sum of variances
     sum_var = 0
+    sum_var = np.square(frame - mean)
     for im in batch:
-        sum_var += np.square(im - mean)
+        sum_var += np.square(im.data - mean)
 
     return VariancePart(sum_var = sum_var, sum_im = sum_im, N = size)
 
@@ -44,6 +81,8 @@ def merge(p0, p1):
     Given two sets of partitions, with mean and sum of variances, 
     compute joint mean and sum of variances using one pass algorithm
     """
+    if p0.N == 0:
+        return VariancePart(sum_var = p1.sum_var, sum_im = p1.sum_im, N = p1.N)
     N = p0.N + p1.N
 
     # compute mean for each partitions
@@ -63,26 +102,42 @@ def merge(p0, p1):
 
     return VariancePart(sum_var=sum_var_AB, sum_im=sum_im_AB, N=N)
 
-def part(data, batchsize = 32):
+# @numba.njit(parallel=True)
+def part(dataset):
     """
     Partition the data into given batchsize (default 32) and using minibatch and merge 
     functions, compute mean and standard deviation of images in parallel
     """
     current = None
-    N = len(data)
+    batch = list()
 
-    assert N % batchsize == 0 # number of images is divisible by batchsize
+    for partition in dataset.get_partitions():
 
-    for i in range(N // batchsize):
+        minib = minibatch(partition)
+        batch.append(minib)
 
-        batch = data[i * batchsize:(i + 1) * batchsize]
-        res = minibatch(batch)
+    for i in range(len(batch)):
 
-        if current is None:
-            current = res
+        if i == 0:
+            current = batch[i]
 
         else:
-            current = merge(current, res)
+            current = merge(current, batch[i])
+
+    # N = len(data)
+
+    # assert N % batchsize == 0 # number of images is divisible by batchsize
+
+    # for i in range(N // batchsize):
+
+    #     batch = data[i * batchsize:(i + 1) * batchsize]
+    #     res = minibatch(batch)
+
+    #     if current is None:
+    #         current = res
+
+    #     else:
+    #         current = merge(current, res)
 
     return current
 

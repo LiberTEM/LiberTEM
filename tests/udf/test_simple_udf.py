@@ -7,7 +7,6 @@ from libertem.api import Context
 from libertem.udf.stddev import merge
 from utils import MemoryDataSet, _mk_random
 
-
 def test_sum_frames(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
@@ -57,51 +56,48 @@ def test_3d_ds(lt_ctx):
     print(data.shape, res['pixelsum'].data.shape)
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(1, 2)))
 
+VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
+
+def my_buffers():
+    return {
+        'batch' : BufferWrapper(
+            kind = 'sig', extra_shape = (3,), dtype = 'float32'
+            )
+    }
+
+def my_frame_fn(frame, batch):
+
+    if batch[:, :, 2][0][0] == 0:
+        batch[:, :, 0] = 0
+
+    else:
+        
+        p0 = VariancePart(sum_var = batch[:, :, 0], sum_im = batch[:, :, 1], N = batch[:, :, 2][0][0])
+        p1 = VariancePart(sum_var = 0, sum_im = frame, N = 1)
+        compute_merge = merge(p0, p1)
+
+        sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
+
+        batch[:, :, 0] = sum_var
+
+    batch[:, :, 1] += frame
+    batch[:, :, 2] += 1
+
+def stddev_merge(dest, src):
+
+    p0 = VariancePart(sum_var = dest['batch'][:, :, 0], sum_im = dest['batch'][:, :, 1], N = dest['batch'][:, :, 2][0][0])
+    p1 = VariancePart(sum_var = src['batch'][:, :, 0], sum_im = src['batch'][:, :, 1], N = src['batch'][:, :, 2][0][0])
+    compute_merge = merge(p0, p1)
+
+    sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
+    dest['batch'][:, :, 0] = sum_var
+    dest['batch'][:, :, 1] = sum_im
+    dest['batch'][:, :, 2] = N
+
 def test_minibatch(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
-
-    def my_buffers():
-        return {
-            'batch' : BufferWrapper(
-                kind = 'sig', extra_shape = (3,), dtype = 'float32'
-                )
-        }
-
-    VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
-
-    def my_frame_fn(frame, batch):
-
-        var = np.square(frame - np.mean(frame))
-
-        if batch[:, :, 2][0][0] == 0:
-            batch[:, :, 0] = var
-
-        else:
-            
-            p0 = VariancePart(sum_var = batch[:, :, 0], sum_im = batch[:, :, 1], N = batch[:, :, 2][0][0])
-            p1 = VariancePart(sum_var = var, sum_im = frame, N = 1)
-            compute_merge = merge(p0, p1)
-
-            sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
-
-            batch[:, :, 0] = sum_var
-
-        batch[:, :, 1] += frame
-        batch[:, :, 2] += 1
-
-
-    def stddev_merge(dest, src):
-
-        p0 = VariancePart(sum_var = dest['batch'][:, :, 0], sum_im = dest['batch'][:, :, 1], N = dest['batch'][:, :, 2][0][0])
-        p1 = VariancePart(sum_var = src['batch'][:, :, 0], sum_im = src['batch'][:, :, 1], N = src['batch'][:, :, 2][0][0])
-        compute_merge = merge(p0, p1)
-
-        sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
-        dest['batch'][:, :, 0] = sum_var
-        dest['batch'][:, :, 1] = sum_im
-        dest['batch'][:, :, 2] = N
 
     res = lt_ctx.run_udf(
         dataset=dataset,
@@ -117,13 +113,5 @@ def test_minibatch(lt_ctx):
 
     assert np.allclose(res['batch'].data[:, :, 1], np.sum(data, axis = (0, 1))) # check sum of frames
 
-    # TO DO : at the moment, the below gives Assertion error
-    ims = [data[:, :, i, j] for i in range(data.shape[2]) for j in range(data.shape[3])]
-    mean = sum(ims)/N
-    sum_var = sum([np.square(i-mean) for i in ims])
-    assert np.allclose(sum_var, res['batch'].data[:, :, 0]) # check sum of variances 
-
-if __name__ == '__main__':
-    with Context() as ctx:
-        test_minibatch(ctx) 
-
+    sum_var = np.var(data, axis=(0, 1))
+    assert np.allclose(sum_var, res['batch'].data[:, :, 0]/N) # check sum of variances

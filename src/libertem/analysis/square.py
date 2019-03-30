@@ -8,7 +8,7 @@ class SquareMaskAnalysis(BaseMasksAnalysis):
         data=job_results[0]
         shape = tuple(self.dataset.shape.nav)
 
-        if data.dtype.kind==='c':
+        if data.dtype.kind=='c':
             return AnalysisResultSet(
                 self.get_complex_results(
                     data,

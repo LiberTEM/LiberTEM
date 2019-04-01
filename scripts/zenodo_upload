@@ -13,6 +13,7 @@ import libertem
 ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 
 BASE_URL = ''
+VERBOSE = False
 
 CONF = 'packaging/zenodo-upload.json'
 
@@ -34,8 +35,13 @@ def prettystring(r):
     return result
 
 
-def prettyprint(r):
-    print(prettystring(r))
+def prettylog(r):
+    log(prettystring(r))
+
+
+def log(s):
+    if VERBOSE:
+        print(s)
 
 
 def zenodo_deposition_get(snippet='', extra_params={}):
@@ -95,15 +101,15 @@ def create_deposition():
     return r
 
 
-def get_deposition(id):
-    r = zenodo_deposition_get(snippet='/%s' % id)
+def get_deposition(deposition_id):
+    r = zenodo_deposition_get(snippet='/%s' % deposition_id)
     if r.status_code != 200:
         raise ZenodoException(prettystring(r))
     return r
 
 
-def update_deposition(id, data):
-    r = zenodo_deposition_put(snippet='/%s' % id, json=data)
+def update_deposition(deposition_id, data):
+    r = zenodo_deposition_put(snippet='/%s' % deposition_id, json=data)
     if r.status_code != 200:
         raise ZenodoException(prettystring(r))
     return r
@@ -130,20 +136,20 @@ def get_file_ids(r):
     return [f['id'] for f in data['files']]
 
 
-def delete_file(id, file_id):
-    snippet = '/%s/files/%s' % (id, file_id)
+def delete_file(deposition_id, file_id):
+    snippet = '/%s/files/%s' % (deposition_id, file_id)
     r = zenodo_deposition_delete(snippet=snippet)
     if r.status_code != 204:
         raise ZenodoException(prettystring(r))
     return r
 
 
-def upload_file(id, filename, remote_filename=None):
+def upload_file(deposition_id, filename, remote_filename=None):
     if remote_filename is None:
         remote_filename = os.path.basename(filename)
 
     data = {'filename': remote_filename}
-    snippet = '/%s/files' % id
+    snippet = '/%s/files' % deposition_id
 
     with open(filename, 'rb') as fh:
 
@@ -197,7 +203,6 @@ def make_contributors():
 
 # Work in progress, see also https://github.com/zenodo/zenodo/issues/1736
 def make_description():
-
     with open('packaging/README.html', 'r', encoding='utf-8') as f:
         readme = f.read()
     return readme
@@ -219,25 +224,37 @@ def make_data():
 @click.option('--tarball', required=True, type=click.File())
 @click.option('--parent', default="264899")
 @click.option('--url', default='https://sandbox.zenodo.org/api/')
-def main(wheel, tarball, parent, url):
+@click.option('--verbose', '-v', is_flag=True)
+def main(wheel, tarball, parent, url, verbose):
     global BASE_URL
     BASE_URL = url
+
+    global VERBOSE
+    VERBOSE = verbose
+    
+    log("Creating new version of deposition %s..." % parent)
     r = new_version(parent_id=parent)
-    # r = list_depositions()
-    # prettyprint(r)
-    id = get_latest_draft(r)
-    r = update_deposition(id=id, data=make_data())
-    # prettyprint(r)
+    prettylog(r)
+
+    deposition_id = get_latest_draft(r)
+    log("Updating draft deposition %s..." % deposition_id)
+    r = update_deposition(deposition_id=deposition_id, data=make_data())
+    prettylog(r)
 
     for file_id in get_file_ids(r):
-        r = delete_file(id, file_id)
-        # prettyprint(r)
+        log("Deleting inherited file %s..." % file_id)
+        r = delete_file(deposition_id, file_id)
+        prettylog(r)
 
-    wheel_upload = upload_file(id=id, filename=wheel.name)
-    # prettyprint(wheel_upload)
+    log("Uploading wheel as new file...")
+    wheel_upload = upload_file(deposition_id=deposition_id, filename=wheel.name)
+    prettylog(wheel_upload)
 
-    tar_upload = upload_file(id=id, filename=tarball.name)
-    # prettyprint(tar_upload)
+    log("Uploading tarball as new file...")
+    tar_upload = upload_file(deposition_id=deposition_id, filename=tarball.name)
+    prettylog(tar_upload)
+
+    log("Finished!")
 
 
 if __name__ == '__main__':

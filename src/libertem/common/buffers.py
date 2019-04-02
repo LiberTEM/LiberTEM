@@ -45,6 +45,8 @@ class BufferWrapper(object):
             return tuple(orig_shape.nav) + self._extra_shape
         elif self._kind == "sig":
             return tuple(orig_shape.sig) + self._extra_shape
+        elif self._kind == "single":
+            return (1,)
         else:
             raise ValueError("unknown kind: %s" % kind)
 
@@ -82,6 +84,8 @@ class BufferWrapper(object):
             return self._data[partition.slice.get(nav_only=True)]
         elif self._kind == "sig":
             return self._data[partition.slice.get(sig_only=True)]
+        elif self._kind == "single":
+            return self._data
 
     def get_view_for_frame(self, partition, tile, frame_idx):
         if self._kind == "sig":
@@ -100,3 +104,5 @@ class BufferWrapper(object):
                 return self._data[result_idx]
             else:
                 return self._data[result_idx + (np.newaxis,)]
+        elif self._kind == "single":
+            return self._data

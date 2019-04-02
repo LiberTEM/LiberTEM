@@ -3,22 +3,21 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsBLO, DatasetTypes } from "../../messages";
+import { getInitial, parseNumList } from "../helpers";
+import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsBLOForForm = Omit<DatasetParamsBLO,
-    "type"
+    "path"
+    | "type"
     | "tileshape"> & {
-    tileshape: string,
-};
+        tileshape: string,
+    };
 
 type FormValues = DatasetParamsBLOForForm
 
-interface FormProps {
-    onSubmit: (params: DatasetParamsBLO) => void
-    onCancel: () => void,
-}
 
-type MergedProps = FormikProps<FormValues> & FormProps;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsBLO>;
 
 const BLOFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -42,11 +41,6 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="path">Path:</label>
-                <input type="text" name="path" value={values.path}
-                    onChange={handleChange} onBlur={handleBlur} />
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="tileshape">Tileshape:</label>
                 <input type="text" name="tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
@@ -58,23 +52,17 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-function parseNumList(nums: string) {
-    return nums.split(",").map(part => +part);
-}
-
-export default withFormik<FormProps, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        tileshape: "1, 8, 128, 128",
-        dtype: "float32",
-        path: "",
+export default withFormik<OpenFormProps<DatasetParamsBLO>, FormValues>({
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
     }),
     handleSubmit: (values, formikBag) => {
-        const { onSubmit } = formikBag.props;
+        const { onSubmit, path } = formikBag.props;
         onSubmit({
+            path,
             type: DatasetTypes.BLO,
             name: values.name,
-            path: values.path,
             tileshape: parseNumList(values.tileshape),
         });
     }

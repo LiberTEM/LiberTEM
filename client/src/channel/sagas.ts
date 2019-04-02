@@ -1,6 +1,6 @@
 import { Channel, delay, END, eventChannel } from "redux-saga";
 import { call, fork, put, take } from "redux-saga/effects";
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as datasetActions from '../dataset/actions';
 import * as channelActions from "./actions";
 import * as channelMessages from './messages';
@@ -103,8 +103,8 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, timestamp));
                     break;
                 }
-                case channelMessages.MessageTypes.START_JOB: {
-                    yield put(channelActions.Actions.startJob(msg.job, msg.details.dataset, timestamp));
+                case channelMessages.MessageTypes.JOB_STARTED: {
+                    yield put(channelActions.Actions.jobStarted(msg.job, msg.details.dataset, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.FINISH_JOB: {
@@ -118,6 +118,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                 case channelMessages.MessageTypes.DELETE_DATASET: {
                     yield put(datasetActions.Actions.deleted(msg.dataset));
                     break;
+                }
+                case channelMessages.MessageTypes.JOB_ERROR: {
+                    const id = uuid();
+                    yield put(channelActions.Actions.jobError(msg.job, msg.msg, id, timestamp));
                 }
             }
         }
@@ -137,12 +141,12 @@ export function* handleBinaryParts(numParts: number, socketChannel: SocketChanne
 
 export function* handleTaskResult(msg: ReturnType<typeof channelMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
     const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.taskResult(msg.job, images, timestamp));
 }
 
 export function* handleFinishJob(msg: ReturnType<typeof channelMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
     const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
-    const images = parts.map(part => ({ imageURL: part.objectURL }));
+    const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.finishJob(msg.job, images, timestamp));
 }

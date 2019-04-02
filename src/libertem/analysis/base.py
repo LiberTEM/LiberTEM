@@ -1,0 +1,128 @@
+import numpy as np
+
+from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
+
+
+class AnalysisResult(object):
+    """
+    this class represents a single 2D image result
+    """
+    def __init__(self, raw_data, visualized, title, desc, key):
+        self.raw_data = raw_data
+        self.visualized = visualized
+        self.title = title
+        self.desc = desc
+        self.key = key
+
+    def __str__(self):
+        result = ""
+        for k in ("title", "desc", "key", "raw_data", "visualized"):
+            result += "%s: %s\n" % (k, getattr(self, k))
+        return result
+
+    def __repr__(self):
+        return "<AnalysisResult: %s>" % self.key
+
+    def get_image(self, save_kwargs=None):
+        return encode_image(self.visualized, save_kwargs=save_kwargs)
+
+
+class AnalysisResultSet(object):
+    def __init__(self, results):
+        self.results = results
+
+    def __repr__(self):
+        return repr(self.results)
+
+    def __getattr__(self, k):
+        for result in self.results:
+            if result.key == k:
+                return result
+        raise AttributeError("result with key '%s' not found, have: %s" % (
+            k, ", ".join([r.key for r in self.results])
+        ))
+
+    def __getitem__(self, k):
+        return self.results[k]
+
+    def __len__(self):
+        return len(self.results)
+
+
+class BaseAnalysis(object):
+    def __init__(self, dataset, parameters):
+        self.dataset = dataset
+        self.parameters = self.get_parameters(parameters)
+        self.parameters.update(parameters)
+
+    def get_results(self, job_results):
+        """
+        Parameters
+        ----------
+        job_results : list of :class:`~numpy.ndarray`
+            raw results from the job
+
+        Returns
+        -------
+        list of AnalysisResult
+            one or more annotated results
+        """
+        raise NotImplementedError()
+
+    def get_job(self):
+        """
+        Returns
+        -------
+        Job
+            a Job instance
+        """
+        raise NotImplementedError()
+
+    def get_complex_results(self, job_result, key_prefix, title, desc):
+        magn = np.abs(job_result)
+        angle = np.angle(job_result)
+        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((job_result.imag, job_result.real))
+        return [
+            # for compatability, the magnitude has key=key_prefix
+            AnalysisResult(
+                raw_data=magn,
+                visualized=visualize_simple(magn),
+                key=key_prefix,
+                title="%s [magn]" % title,
+                desc="%s [magn]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result.real,
+                visualized=visualize_simple(job_result.real),
+                key="%s_real" % key_prefix,
+                title="%s [real]" % title,
+                desc="%s [real]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result.imag,
+                visualized=visualize_simple(job_result.imag),
+                key="%s_imag" % key_prefix,
+                title="%s [imag]" % title,
+                desc="%s [imag]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=angle,
+                visualized=visualize_simple(angle),
+                key="%s_angle" % key_prefix,
+                title="%s [angle]" % title,
+                desc="%s [angle]" % desc,
+            ),
+            AnalysisResult(
+                raw_data=job_result,
+                visualized=wheel,
+                key="%s_complex" % key_prefix,
+                title="%s [complex]" % title,
+                desc="%s [complex]" % desc,
+            ),
+        ]
+
+    def get_parameters(self, parameters):
+        """
+        Get analysis parameters. Override to set defaults
+        """
+        return parameters

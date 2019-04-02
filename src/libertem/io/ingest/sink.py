@@ -2,7 +2,7 @@ import os
 import json
 import hdfs3
 
-from libertem.common.slice import Slice
+from libertem.io.utils import get_partition_shape
 
 
 class HDFSBinarySink(object):
@@ -69,7 +69,7 @@ class HDFSBinarySink(object):
         create the json-serializable index structure. decides about the
         concrete partitioning, which will later be used to split the input data
         """
-        partition_shape = Slice.partition_shape(
+        partition_shape = get_partition_shape(
             datashape=data.shape,
             framesize=data[0][0].size,
             dtype=dtype,

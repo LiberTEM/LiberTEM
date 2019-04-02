@@ -1,4 +1,6 @@
 graft src
 include LICENSE
+include README.rst
 graft client
-prune client/node_modules/
+prune client/node_modules
+prune client/build

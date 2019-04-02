@@ -5,11 +5,11 @@ import { AnalysisTypes } from "../../messages";
 import { AnalysisMetadata } from "../types";
 
 
-const getMetadata = (t: any) => AnalysisMetadata[AnalysisTypes[t as any]];
+const getMetadata = (t: any) => AnalysisMetadata[AnalysisTypes[t]];
 const analysisTypeKeys = getEnumValues(AnalysisTypes);
 const analysisTypeOptions = analysisTypeKeys.filter(t => getMetadata(t).showInUI).map(t => ({
     text: getMetadata(t).short,
-    value: AnalysisTypes[t as any],
+    value: AnalysisTypes[t],
 }));
 
 interface AnalysisSelectProps {

@@ -1,4 +1,5 @@
 import click
+from libertem.cli_tweaks import console_tweaks
 from .hdf5 import H5Ingestor
 from .empad import EMPADIngestor
 
@@ -28,6 +29,7 @@ def hdf5(input_filename, input_dataset_path, output_path_hdfs,
     Ingest the dataset at INPUT_DATASET_PATH in INPUT_FILENAME and save
     it to HDFS at OUTPUT_PATH_HDFS (will be created as a directory)
     """
+    console_tweaks()
     i = H5Ingestor(
         namenode=namenode_host,
         namenode_port=namenode_port,
@@ -65,6 +67,7 @@ def empad(input_filename, output_path_hdfs, shape_in, src_dtype, crop_to,
     it to HDFS at OUTPUT_PATH_HDFS (will be created as a directory)
     """
     # TODO: maybe read the XML file to find scan dimensions etc.?
+    console_tweaks()
     i = EMPADIngestor(
         namenode=namenode_host,
         namenode_port=namenode_port,

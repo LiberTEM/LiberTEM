@@ -1,20 +1,30 @@
 import logging
-from .base import Job, Task
+
+import numpy as np
+
+from .base import Job, Task, ResultTile
 
 
 log = logging.getLogger(__name__)
 
 
 class PickFrameJob(Job):
-    def __init__(self, slice_, *args, **kwargs):
+    def __init__(self, slice_, squeeze=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._slice = slice_
+        self._squeeze = squeeze
 
     def get_tasks(self):
-        for partition in self.dataset.get_partitions():
+        for idx, partition in enumerate(self.dataset.get_partitions()):
             if self._slice.intersection_with(partition.slice).is_null():
                 continue
-            yield PickFrameTask(partition=partition, slice_=self._slice)
+            yield PickFrameTask(partition=partition, slice_=self._slice, idx=idx)
+
+    def get_result_shape(self):
+        if self._squeeze:
+            return tuple(part for part in self._slice.shape
+                         if part > 1)
+        return self._slice.shape
 
 
 class PickFrameTask(Task):
@@ -23,33 +33,26 @@ class PickFrameTask(Task):
         self._slice = slice_
 
     def __call__(self):
-        parts = []
-        for data_tile in self.partition.get_tiles():
+        result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
+        for data_tile in self.partition.get_tiles(crop_to=self._slice):
             intersection = data_tile.tile_slice.intersection_with(self._slice)
-            if intersection.is_null():
-                continue
-            parts.append(PickFrameResultTile(data_tile=data_tile, intersection=intersection))
-        return parts
+            # shift to data_tile relative coordinates:
+            shifted = intersection.shift(data_tile.tile_slice)
+            result[
+                intersection.shift(self._slice).get()
+            ] = data_tile.data[shifted.get()]
+        return [PickFrameResultTile(data=result)]
 
 
-class PickFrameResultTile(object):
-    def __init__(self, data_tile, intersection):
-        self.data_tile = data_tile
-        self.intersection = intersection
+class PickFrameResultTile(ResultTile):
+    def __init__(self, data):
+        self.data = data
 
     @property
     def dtype(self):
-        return self.data_tile.dtype
+        return self.data.dtype
 
-    def _get_dest_slice(self):
-        tile_slice = self.intersection.get()
-        return (
-            tile_slice[2],
-            tile_slice[3],
-        )
-
-    def copy_to_result(self, result):
-        dest_slice = self._get_dest_slice()
-        shifted = self.intersection.shift(self.data_tile.tile_slice)
-        result[dest_slice] = self.data_tile.data[shifted.get()]
+    def reduce_into_result(self, result):
+        out = result.reshape(self.data.shape)
+        out += self.data
         return result

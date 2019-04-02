@@ -1,0 +1,11 @@
+.default {
+    width: 100%;
+    height: auto;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+}
+
+.fallback {
+    display: block;
+    border: 1px solid black;
+}

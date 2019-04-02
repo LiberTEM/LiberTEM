@@ -5,11 +5,15 @@
 
 export interface FollowupPart {
     numMessages: number,
+    descriptions: Array<{ title: string, desc: string }>,
 }
 
 export interface MsgPartConfig {
     version: string,
+    revision: string,
     localCores: number,
+    cwd: string,
+    separator: string,
 }
 
 export interface GetConfigResponse {
@@ -43,7 +47,6 @@ export interface ConnectRequestLocalCluster {
 
 export interface ConnectRequestTCP {
     type: ClusterTypes.TCP,
-    isLocal: boolean,
     address: string,
 }
 
@@ -71,6 +74,9 @@ export enum DatasetTypes {
     RAW = "RAW",
     MIB = "MIB",
     BLO = "BLO",
+    K2IS = "K2IS",
+    SER = "SER",
+    FRMS6 = "FRMS6",
 }
 
 export interface DatasetParamsCommon {
@@ -86,7 +92,7 @@ export type DatasetParamsHDFS = {
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
-    dsPath: string,
+    ds_path: string,
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -94,16 +100,16 @@ export type DatasetParamsRaw = {
     type: DatasetTypes.RAW,
     path: string,
     dtype: string,
-    detectorSizeRaw: number[],
-    cropDetectorTo: number[],
-    scanSize: number[],
+    detector_size_raw: number[],
+    crop_detector_to: number[],
+    scan_size: number[],
     tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsMIB = {
     type: DatasetTypes.MIB,
-    filesPattern: string,
-    scanSize: number[],
+    path: string,
+    scan_size: number[],
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -113,7 +119,22 @@ export type DatasetParamsBLO = {
     tileshape: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO
+export type DatasetParamsK2IS = {
+    type: DatasetTypes.K2IS,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetParamsSER = {
+    type: DatasetTypes.SER,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetParamsFRMS6 = {
+    type: DatasetTypes.FRMS6,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6
 
 export interface DatasetCreateParams {
     id: string,
@@ -126,12 +147,33 @@ export enum DatasetStatus {
     DELETING = "DELETING",
 }
 
-export type Dataset = DatasetCreateParams & {
-    status: DatasetStatus,
+export interface DiagElemMsg {
+    name: string,
+    value: string | DiagElemMsg[],
+}
+
+interface DatasetCommon {
+    id: string,
+    params: DatasetFormParams,
+}
+
+export type DatasetOpening = DatasetCommon & {
+    status: DatasetStatus.OPENING,
+}
+
+export type DatasetDeleting = DatasetCommon & {
+    status: DatasetStatus.DELETING,
+}
+
+export type DatasetOpen = DatasetCommon & {
+    status: DatasetStatus.OPEN,
     params: {
         shape: number[],
     }
+    diagnostics: DiagElemMsg[],
 }
+
+export type Dataset = DatasetOpening | DatasetOpen | DatasetDeleting;
 
 export interface OpenDatasetRequest {
     dataset: DatasetCreateParams
@@ -156,12 +198,23 @@ export interface DeleteDatasetResponse {
     dataset: string,
 }
 
-export type MsgPartDataset = Dataset
+export interface DetectDatasetSuccessResponse {
+    status: "ok",
+    datasetParams: DatasetFormParams,
+}
+
+export interface DetectDatasetErrorResponse {
+    status: "error",
+    path: string,
+    msg: string,
+}
+
+export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
+
+export type MsgPartInitialDataset = DatasetOpen
 
 // type alias to add client-side state to datasets
-export type DatasetState = Dataset & {
-    // previewJob?: string,
-}
+export type DatasetState = Dataset & {}
 
 /*
  * Job
@@ -200,12 +253,18 @@ export interface CenterOfMassParams {
     r: number,
 }
 
+export interface PickFrameParams {
+    x: number,
+    y: number,
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    PICK_FRAME = "PICK_FRAME",
 }
 
 export interface RingMaskDetails {
@@ -233,8 +292,13 @@ export interface SumFramesDetails {
     parameters: {},
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails;
+export interface PickFrameDetails {
+    type: AnalysisTypes.PICK_FRAME,
+    parameters: PickFrameParams,
+}
+
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails;
 
 export interface StartJobRequest {
     job: {
@@ -253,3 +317,42 @@ export interface CancelJobResponse {
     status: "ok",
     job: string,
 }
+
+
+/*
+ * fs browser 
+ */
+
+// some named place, i.e. "Documents", "Home", ...
+export interface FSPlace {
+    title: string,
+    path: string,
+    key: string,
+}
+
+export interface DirectoryListingDetails {
+    name: string,
+    size: number,
+    ctime: number,
+    mtime: number,
+    owner: string,
+}
+
+export interface DirectoryListingResponseOK {
+    status: "ok",
+    path: string,
+    files: DirectoryListingDetails[],
+    dirs: DirectoryListingDetails[],
+    drives: string[],
+    places: FSPlace[],
+}
+
+export interface DirectoryListingResponseError {
+    status: "error",
+    path: string,
+    code: string,
+    msg: string,
+    alternative?: string,
+}
+
+export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;

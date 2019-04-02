@@ -1,7 +1,0 @@
-h5py
-numpy
-scipy
-distributed
-
-pytest
-pytest-cov

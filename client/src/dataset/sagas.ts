@@ -1,8 +1,12 @@
-import { call, put, takeEvery } from 'redux-saga/effects';
-import * as uuid from 'uuid/v4';
-import { OpenDatasetResponse } from '../messages';
+import { call, put, select, takeEvery } from 'redux-saga/effects';
+import uuid from 'uuid/v4';
+import * as browserActions from '../browser/actions';
+import { joinPaths } from '../config/helpers';
+import { ConfigState } from '../config/reducers';
+import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
+import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
-import { deleteDataset, openDataset } from './api';
+import { deleteDataset, detectDataset, openDataset } from './api';
 
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {
@@ -32,7 +36,40 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     }
 }
 
+export function* doOpenDataset(fullPath: string) {
+    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    let prefillParams = config.lastOpened[fullPath];
+    if (!prefillParams) {
+        try {
+            yield put(datasetActions.Actions.detect(fullPath));
+            const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
+            if (detectResult.status === "ok") {
+                prefillParams = detectResult.datasetParams;
+                yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            } else {
+                yield put(datasetActions.Actions.detectFailed(fullPath));
+            }
+        } catch (e) {
+            yield put(datasetActions.Actions.detectFailed(fullPath));
+        }
+    }
+    yield put(datasetActions.Actions.open(fullPath, prefillParams));
+}
+
+export function* openDatasetSagaFullPath(action: ReturnType<typeof browserActions.Actions.selectFullPath>) {
+    const fullPath = action.payload.path;
+    yield call(doOpenDataset, fullPath);
+}
+
+export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
+    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    const fullPath = joinPaths(config, action.payload.path, action.payload.name);
+    yield call(doOpenDataset, fullPath);
+}
+
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
     yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT, openDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT_FULL_PATH, openDatasetSagaFullPath);
 }

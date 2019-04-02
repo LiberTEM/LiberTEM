@@ -14,3 +14,7 @@ build
 dist
 *.AppImage
 dask-worker-space
+AppDir
+Miniconda3-latest-Linux-x86_64.sh
+MANIFEST
+.vscode

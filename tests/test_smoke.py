@@ -13,6 +13,10 @@ import libertem.job.masks
 import libertem.job.sum
 import libertem.web.server
 import libertem.web.cli
+import libertem.api
+import libertem.preload
+import libertem.udf
+import libertem.udf.blobfinder
 
 
 def test_stuff():

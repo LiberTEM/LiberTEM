@@ -1,86 +1,52 @@
 import os
-import sys
-import datetime
+import time
 import logging
 import asyncio
 import signal
 import psutil
-from functools import partial, reduce
-from io import BytesIO
+from functools import partial
 
-import numpy as np
-from matplotlib import cm
-from dask import distributed as dd
-from distributed.asyncio import AioClient
 import tornado.web
 import tornado.gen
 import tornado.websocket
 import tornado.ioloop
 import tornado.escape
-from PIL import Image
 
 import libertem
+from libertem.io.fs import get_fs_listing, FSError
 from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.base import JobCancelledError, AsyncAdapter, sync_to_async
 from libertem.io.dataset.base import DataSetException
 from libertem.io import dataset
-from libertem.job.masks import ApplyMasksJob
-from libertem.job.sum import SumFramesJob
-from libertem.job.raw import PickFrameJob
-from libertem.common.slice import Slice
-from libertem import masks
+from libertem.analysis import (
+    DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
+    COMAnalysis, SumAnalysis, PickFrameAnalysis
+)
 
 
 log = logging.getLogger(__name__)
 
 
-def log_message(message):
+def log_message(message, exception=False):
+    log_fn = log.info
+    if exception:
+        log_fn = log.exception
     if "job" in message:
-        log.info("message: %s (job=%s)" % (message["messageType"], message["job"]))
+        log_fn("message: %s (job=%s)" % (message["messageType"], message["job"]))
+    elif "dataset" in message:
+        log_fn("message: %s (dataset=%s)" % (message["messageType"], message["dataset"]))
     else:
-        log.info("message: %s" % message["messageType"])
+        log_fn("message: %s" % message["messageType"])
 
 
-def _encode_image(result, colormap, save_kwargs):
-    # TODO: only normalize across the area where we already have values
-    # can be accomplished by calculating min/max over are that was
-    # affected by the result tiles. for now, ignoring 0 works fine
-    result = result.astype(np.float32)
-    max_ = np.max(result)
-    result_gt_zero = result[result > 0]
-    if len(result_gt_zero) == 0:
-        min_ = 0
-    else:
-        min_ = np.min(result_gt_zero)
-
-    normalized = result - min_
-    if max_ > 0:
-        normalized = normalized / max_
-    # see also: https://stackoverflow.com/a/10967471/540644
-    im = Image.fromarray(colormap(normalized, bytes=True))
-    buf = BytesIO()
-    im = im.convert(mode="RGB")
-    im.save(buf, **save_kwargs)
-    buf.seek(0)
-    return buf
-
-
-async def result_images(full_result, save_kwargs=None):
-    colormap = cm.gist_earth
-    # colormap = cm.viridis
-    save_kwargs = save_kwargs or {}
-
+async def result_images(results, save_kwargs=None):
     futures = [
-        run_blocking(_encode_image, full_result[idx], colormap, save_kwargs)
-        for idx in range(full_result.shape[0])
+        run_blocking(result.get_image, save_kwargs)
+        for result in results
     ]
 
-    results = await asyncio.gather(*futures)
-    return results
-
-
-def divergence(arr):
-    return reduce(np.add, [np.gradient(arr[i], axis=i)
-                           for i in range(len(arr))])
+    images = await asyncio.gather(*futures)
+    return images
 
 
 async def run_blocking(fn, *args, **kwargs):
@@ -113,12 +79,12 @@ class Message(object):
             "config": config,
         }
 
-    def create_dataset(self, dataset):
+    def create_dataset(self, dataset, details):
         return {
             "status": "ok",
             "messageType": "CREATE_DATASET",
             "dataset": dataset,
-            "details": self.data.serialize_dataset(dataset),
+            "details": details,
         }
 
     def create_dataset_error(self, dataset, msg):
@@ -136,15 +102,38 @@ class Message(object):
             "dataset": dataset,
         }
 
+    def dataset_detect(self, params):
+        return {
+            "status": "ok",
+            "messageType": "DATASET_DETECTED",
+            "datasetParams": params,
+        }
+
+    def dataset_detect_failed(self, path):
+        return {
+            "status": "error",
+            "messageType": "DATASET_DETECTION_FAILED",
+            "path": path,
+            "msg": "could not automatically determine dataset format",
+        }
+
     def start_job(self, job_id):
         return {
             "status": "ok",
-            "messageType": "START_JOB",
+            "messageType": "JOB_STARTED",
             "job": job_id,
             "details": self.data.serialize_job(job_id),
         }
 
-    def finish_job(self, job_id, num_images):
+    def job_error(self, job_id, msg):
+        return {
+            "status": "error",
+            "messageType": "JOB_ERROR",
+            "job": job_id,
+            "msg": msg,
+        }
+
+    def finish_job(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
             "messageType": "FINISH_JOB",
@@ -152,17 +141,69 @@ class Message(object):
             "details": self.data.serialize_job(job_id),
             "followup": {
                 "numMessages": num_images,
+                "descriptions": image_descriptions,
             },
         }
 
-    def task_result(self, job_id, num_images):
+    def cancel_job(self, job_id):
+        return {
+            "status": "ok",
+            "messageType": "CANCEL_JOB",
+            "job": job_id,
+        }
+
+    def cancel_failed(self, job_id):
+        return {
+            "status": "error",
+            "messageType": "CANCEL_JOB_FAILED",
+            "job": job_id,
+        }
+
+    def task_result(self, job_id, num_images, image_descriptions):
         return {
             "status": "ok",
             "messageType": "TASK_RESULT",
             "job": job_id,
             "followup": {
                 "numMessages": num_images,
+                "descriptions": image_descriptions,
             },
+        }
+
+    def directory_listing(self, path, files, dirs, drives, places):
+        def _details(item):
+            return {
+                "name":  item["name"],
+                "size":  item["stat"].st_size,
+                "ctime": item["stat"].st_ctime,
+                "mtime": item["stat"].st_mtime,
+                "owner": item["owner"],
+            }
+
+        return {
+            "status": "ok",
+            "messageType": "DIRECTORY_LISTING",
+            "drives": drives,
+            "places": places,
+            "path": path,
+            "files": [
+                _details(f)
+                for f in files
+            ],
+            "dirs": [
+                _details(d)
+                for d in dirs
+            ],
+        }
+
+    def browse_failed(self, path, code, msg, alternative=None):
+        return {
+            "status": "error",
+            "messageType": "DIRECTORY_LISTING_FAILED",
+            "path": path,
+            "code": code,
+            "msg": msg,
+            "alternative": alternative,
         }
 
 
@@ -170,55 +211,57 @@ class RunJobMixin(object):
     async def run_job(self, uuid, ds, job, full_result):
         self.data.register_job(uuid=uuid, job=job)
         executor = self.data.get_executor()
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-        self.write(Message(self.data).start_job(
-            job_id=uuid
-        ))
-        self.finish()
         msg = Message(self.data).start_job(
             job_id=uuid,
         )
         log_message(msg)
+        self.write(msg)
+        self.finish()
         self.event_registry.broadcast_event(msg)
 
-        async for future, result in dd.as_completed(futures, with_results=True):
-            # TODO:
-            # + only send PNG of area that has changed (bounding box of all result tiles!)
-            # + normalize each channel (per channel: keep running min/max, map data to [0, 1])
-            # + if min/max changes, send whole channel (all results up to this point re-normalized)
-            # + maybe saturate up to some point (20% over current max => keep current max) and send
-            #   whole result image once finished
-            # + maybe use visualization framework in-browser (example: GR)
+        t = time.time()
+        try:
+            async for result in executor.run_job(job):
+                for tile in result:
+                    tile.reduce_into_result(full_result)
+                if time.time() - t < 0.3:
+                    continue
+                t = time.time()
+                results = yield full_result
+                images = await result_images(results)
 
-            # TODO: update task_result message:
-            # + send bbox for blitting
+                # NOTE: make sure the following broadcast_event messages are sent atomically!
+                # (that is: keep the code below synchronous, and only send the messages
+                # once the images have finished encoding, and then send all at once)
+                msg = Message(self.data).task_result(
+                    job_id=uuid,
+                    num_images=len(results),
+                    image_descriptions=[
+                        {"title": result.title, "desc": result.desc}
+                        for result in results
+                    ],
+                )
+                log_message(msg)
+                self.event_registry.broadcast_event(msg)
+                for image in images:
+                    raw_bytes = image.read()
+                    self.event_registry.broadcast_event(raw_bytes, binary=True)
+        except JobCancelledError:
+            return  # TODO: maybe write a message on the websocket?
 
-            for tile in result:
-                tile.copy_to_result(full_result)
-            images = yield full_result
-
-            # NOTE: make sure the following broadcast_event messages are sent atomically!
-            # (that is: keep the code below synchronous, and only send the messages
-            # once the images have finished encoding, and then send all at once)
-            msg = Message(self.data).task_result(
-                job_id=uuid,
-                num_images=len(images),
-            )
-            log_message(msg)
-            self.event_registry.broadcast_event(msg)
-            for image in images:
-                raw_bytes = image.read()
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
-        images = yield full_result
+        results = yield full_result
+        if self.data.job_is_cancelled(uuid):
+            return
+        images = await result_images(results)
+        if self.data.job_is_cancelled(uuid):
+            return
         msg = Message(self.data).finish_job(
             job_id=uuid,
-            num_images=len(images),
+            num_images=len(results),
+            image_descriptions=[
+                {"title": result.title, "desc": result.desc}
+                for result in results
+            ],
         )
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -238,11 +281,12 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     async def open(self):
         self.registry.add_handler(self)
-        self.data.verify_datasets()
         if self.data.have_executor():
+            await self.data.verify_datasets()
+            datasets = await self.data.serialize_datasets()
             msg = Message(self.data).initial_state(
                 jobs=self.data.serialize_jobs(),
-                datasets=self.data.serialize_datasets(),
+                datasets=datasets,
             )
             log_message(msg)
             self.registry.broadcast_event(msg)
@@ -292,87 +336,27 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         self.data = data
         self.event_registry = event_registry
 
-    def make_mask_factories(self, analysis, dtype, frame_size):
-        def _make_ring(cx, cy, ri, ro, shape):
-            def _ring_inner():
-                return masks.ring(
-                    centerX=cx, centerY=cy,
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    radius=ro,
-                    radius_inner=ri
-                )
-            return [_ring_inner]
-
-        def _make_disk(cx, cy, r, shape):
-            def _disk_inner():
-                return masks.circular(
-                    centerX=cx, centerY=cy,
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    radius=r,
-                )
-            return [_disk_inner]
-
-        def _make_point(cx, cy, shape):
-            def _point_inner():
-                a = np.zeros(frame_size)
-                a[int(cy), int(cx)] = 1
-                return a.astype(dtype)
-            return [_point_inner]
-
-        def _make_com(cx, cy, r, shape):
-            disk_mask = masks.circular(
-                centerX=cx, centerY=cy,
-                imageSizeX=frame_size[1],
-                imageSizeY=frame_size[0],
-                radius=r,
-            )
-            return [
-                lambda: disk_mask,
-                lambda: masks.gradient_x(
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    dtype=dtype,
-                ) * (np.ones(frame_size) * disk_mask),
-                lambda: masks.gradient_y(
-                    imageSizeX=frame_size[1],
-                    imageSizeY=frame_size[0],
-                    dtype=dtype,
-                ) * (np.ones(frame_size) * disk_mask),
-            ]
-
-        fn_by_type = {
-            "APPLY_DISK_MASK": _make_disk,
-            "APPLY_RING_MASK": _make_ring,
-            "APPLY_POINT_SELECTOR": _make_point,
-            "CENTER_OF_MASS": _make_com,
+    def get_analysis_by_type(self, type_):
+        analysis_by_type = {
+            "APPLY_DISK_MASK": DiskMaskAnalysis,
+            "APPLY_RING_MASK": RingMaskAnalysis,
+            "APPLY_POINT_SELECTOR": PointMaskAnalysis,
+            "CENTER_OF_MASS": COMAnalysis,
+            "SUM_FRAMES": SumAnalysis,
+            "PICK_FRAME": PickFrameAnalysis,
         }
-        return fn_by_type[analysis['type']](**analysis['parameters'])
+        return analysis_by_type[type_]
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['job']
         ds = self.data.get_dataset(params['dataset'])
-        analysis = params['analysis']
-        if analysis['type'] == "SUM_FRAMES":
-            return await self.start_sum_frames_job(
-                uuid=uuid,
-                params=params,
-                analysis=analysis,
-                ds=ds,
-            )
-        else:
-            return await self.start_mask_job(
-                uuid=uuid,
-                params=params,
-                analysis=analysis,
-                ds=ds,
-            )
-
-    async def start_sum_frames_job(self, uuid, params, analysis, ds):
-        job = SumFramesJob(dataset=ds)
-        full_result = np.zeros(shape=tuple(ds.shape[:2]))
+        analysis = self.get_analysis_by_type(params['analysis']['type'])(
+            dataset=ds,
+            parameters=params['analysis']['parameters']
+        )
+        job = analysis.get_job()
+        full_result = job.get_result_buffer()
         job_runner = self.run_job(
             full_result=full_result,
             uuid=uuid, ds=ds, job=job,
@@ -380,57 +364,32 @@ class JobDetailHandler(CORSMixin, RunJobMixin, tornado.web.RequestHandler):
         try:
             await job_runner.asend(None)
             while True:
-                images = await self.visualize(
-                    full_result,
-                    analysis,
-                    save_kwargs={'format': 'png'},
+                results = await run_blocking(
+                    analysis.get_results,
+                    job_results=full_result,
                 )
-                await job_runner.asend(images)
+                await job_runner.asend(results)
         except StopAsyncIteration:
             pass
-
-    async def start_mask_job(self, uuid, params, analysis, ds):
-        dtype = np.dtype(ds.dtype).kind == 'f' and ds.dtype or "float32"
-        mask_factories = self.make_mask_factories(analysis, dtype, frame_size=ds.shape[2:])
-        job = ApplyMasksJob(dataset=ds, mask_factories=mask_factories)
-        full_result = np.zeros(shape=(len(mask_factories),) + tuple(ds.shape[:2]))
-        job_runner = self.run_job(
-            full_result=full_result,
-            uuid=uuid, ds=ds, job=job,
-        )
-        try:
-            await job_runner.asend(None)
-            while True:
-                images = await self.visualize(
-                    full_result,
-                    analysis,
-                    save_kwargs={'format': 'png'},
-                )
-                await job_runner.asend(images)
-        except StopAsyncIteration:
-            pass
-
-    async def visualize_com(self, full_result, analysis, save_kwargs=None):
-        img_sum, img_x, img_y = full_result[0], full_result[1], full_result[2]
-        ref_x = analysis["parameters"]["cx"]
-        ref_y = analysis["parameters"]["cy"]
-        x_centers = np.divide(img_x, img_sum) - ref_x
-        y_centers = np.divide(img_y, img_sum) - ref_y
-        d = divergence([x_centers, y_centers])
-        centers = np.stack((x_centers, y_centers, d), axis=0)
-        return await result_images(centers, save_kwargs)
-
-    async def visualize(self, full_result, analysis, save_kwargs=None):
-        if analysis['type'] in {'SUM_FRAMES', 'APPLY_DISK_MASK',
-                                'APPLY_RING_MASK', 'APPLY_POINT_SELECTOR'}:
-            return await result_images(full_result, save_kwargs)
-        elif analysis['type'] in {'CENTER_OF_MASS'}:
-            return await self.visualize_com(full_result, analysis, save_kwargs)
+        except Exception as e:
+            log.exception("error running job, params=%r", params)
+            msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
+            self.event_registry.broadcast_event(msg)
+            await self.data.remove_job(uuid)
 
     async def delete(self, uuid):
-        # TODO: implement this. maybe by setting a flag, or by having all the futures in a list
-        # in shared data and calling cancel on them
-        raise NotImplementedError()
+        result = await self.data.remove_job(uuid)
+        if result:
+            msg = Message(self.data).cancel_job(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
+        else:
+            log.warning("tried to remove unknown job %s", uuid)
+            msg = Message(self.data).cancel_failed(uuid)
+            log_message(msg)
+            self.event_registry.broadcast_event(msg)
+            self.write(msg)
 
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -444,7 +403,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         except KeyError:
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return
-        self.data.remove_dataset(uuid)
+        await self.data.remove_dataset(uuid)
         msg = Message(self.data).delete_dataset(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -455,7 +414,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo"]
+        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser",
+                                          "frms6"]
         if params["type"].lower() == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
@@ -466,155 +426,83 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         elif params["type"].lower() == "hdf5":
             dataset_params = {
                 "path": params["path"],
-                "ds_path": params["dsPath"],
+                "ds_path": params["ds_path"],
                 "tileshape": params["tileshape"],
             }
         elif params["type"].lower() == "raw":
             dataset_params = {
                 "path": params["path"],
                 "dtype": params["dtype"],
-                "detector_size_raw": params["detectorSizeRaw"],
-                "crop_detector_to": params["cropDetectorTo"],
+                "detector_size_raw": params["detector_size_raw"],
+                "crop_detector_to": params["crop_detector_to"],
                 "tileshape": params["tileshape"],
-                "scan_size": params["scanSize"],
+                "scan_size": params["scan_size"],
             }
         elif params["type"].lower() == "mib":
             dataset_params = {
-                "files_pattern": params["filesPattern"],
+                "path": params["path"],
                 "tileshape": params["tileshape"],
-                "scan_size": params["scanSize"],
+                "scan_size": params["scan_size"],
             }
         elif params["type"].lower() == "blo":
             dataset_params = {
                 "path": params["path"],
                 "tileshape": params["tileshape"],
             }
+        elif params["type"].lower() == "k2is":
+            dataset_params = {
+                "path": params["path"],
+            }
+        elif params["type"].lower() == "ser":
+            dataset_params = {
+                "path": params["path"],
+            }
+        elif params["type"].lower() == "frms6":
+            dataset_params = {
+                "path": params["path"],
+            }
         try:
-            ds = dataset.load(filetype=params["type"], **dataset_params)
-            ds.check_valid()
-        except DataSetException as e:
+            executor = self.data.get_executor()
+            ds = await executor.run_function(dataset.load,
+                                             filetype=params["type"], **dataset_params)
+            ds = await executor.run_function(ds.initialize)
+            await executor.run_function(ds.check_valid)
+            self.data.register_dataset(
+                uuid=uuid,
+                dataset=ds,
+                params=request_data['dataset'],
+            )
+            details = await self.data.serialize_dataset(dataset_id=uuid)
+            msg = Message(self.data).create_dataset(dataset=uuid, details=details)
+            log_message(msg)
+            self.write(msg)
+            self.event_registry.broadcast_event(msg)
+        except Exception as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
+            log_message(msg, exception=True)
+            self.write(msg)
+            return
+
+
+class DataSetDetectHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get(self):
+        path = self.request.arguments['path'][0].decode("utf8")
+        executor = self.data.get_executor()
+
+        params = await executor.run_function(dataset.detect, path=path)
+        if not params:
+            msg = Message(self.data).dataset_detect_failed(path=path)
             log_message(msg)
             self.write(msg)
             return
-        self.data.register_dataset(
-            uuid=uuid,
-            dataset=ds,
-            params=request_data['dataset'],
-        )
-        msg = Message(self.data).create_dataset(dataset=uuid)
+        params['type'] = params['type'].upper()
+        msg = Message(self.data).dataset_detect(params=params)
         log_message(msg)
         self.write(msg)
-        self.event_registry.broadcast_event(msg)
-
-
-class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def get_preview_image(self, dataset_uuid):
-        ds = self.data.get_dataset(dataset_uuid)
-        job = SumFramesJob(dataset=ds)
-
-        executor = self.data.get_executor()
-
-        log.info("creating preview for dataset %s" % dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-        log.info("preview futures created")
-
-        full_result = np.zeros(shape=ds.shape[2:])
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("preview done, encoding image (dtype=%s)", full_result.dtype)
-        image = await run_blocking(
-            _encode_image,
-            full_result,
-            colormap=cm.gist_earth,
-            save_kwargs={'format': 'png'},
-        )
-        log.info("image encoded, sending response")
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid):
-        """
-        make a preview and return it as HTTP response
-        """
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.get_preview_image(uuid)
-        self.write(image)
-
-
-class DataSetPickHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
-        self.event_registry = event_registry
-
-    async def pick_frame(self, dataset_uuid, x, y):
-        ds = self.data.get_dataset(dataset_uuid)
-        x = int(x)
-        y = int(y)
-        slice_ = Slice(
-            origin=(y, x, 0, 0),
-            shape=(1, 1, ds.shape[2], ds.shape[3])
-        )
-        job = PickFrameJob(dataset=ds, slice_=slice_)
-
-        executor = self.data.get_executor()
-
-        log.info("picking %d/%d from %s", x, y, dataset_uuid)
-
-        futures = []
-        for task in job.get_tasks():
-            submit_kwargs = {}
-            futures.append(
-                executor.client.submit(task, **submit_kwargs)
-            )
-
-        full_result = np.zeros(shape=ds.shape[2:])
-        async for future, result in dd.as_completed(futures, with_results=True):
-            for tile in result:
-                tile.copy_to_result(full_result)
-        log.info("picking done, encoding image (dtype=%s)", full_result.dtype)
-        image = await run_blocking(
-            _encode_image,
-            full_result,
-            colormap=cm.gist_earth,
-            save_kwargs={'format': 'png'},
-        )
-        log.info("image encoded, sending response")
-        return image.read()
-
-    def set_max_expires(self):
-        cache_time = 86400 * 365 * 10
-        self.set_header("Expires", datetime.datetime.utcnow() +
-                        datetime.timedelta(seconds=cache_time))
-        self.set_header("Cache-Control", "max-age=" + str(cache_time))
-
-    async def get(self, uuid, x, y):
-        """
-        pick a raw frame and return it as HTTP response
-        """
-        x = int(x)
-        y = int(y)
-        self.set_header('Content-Type', 'image/png')
-        self.set_max_expires()
-        image = await self.pick_frame(uuid, x, y)
-        self.write(image)
 
 
 class SharedData(object):
@@ -635,7 +523,11 @@ class SharedData(object):
     def get_config(self):
         return {
             "version": libertem.__version__,
+            "revision": libertem.revision,
             "localCores": self.get_local_cores(),
+            "cwd": os.getcwd(),
+            # '/' works on Windows, too.
+            "separator": '/'
         }
 
     def get_executor(self):
@@ -650,9 +542,9 @@ class SharedData(object):
     def get_cluster_params(self):
         return self.cluster_params
 
-    def set_executor(self, executor, params):
+    async def set_executor(self, executor, params):
         if self.executor is not None:
-            self.executor.close()
+            await self.executor.close()
         self.executor = executor
         self.cluster_params = params
 
@@ -668,15 +560,16 @@ class SharedData(object):
     def get_dataset(self, uuid):
         return self.datasets[uuid]["dataset"]
 
-    def verify_datasets(self):
+    async def verify_datasets(self):
+        executor = self.get_executor()
         for uuid, params in self.datasets.items():
             dataset = params["dataset"]
             try:
-                dataset.check_valid()
+                await executor.run_function(dataset.check_valid)
             except DataSetException:
-                self.remove_dataset(uuid)
+                await self.remove_dataset(uuid)
 
-    def remove_dataset(self, uuid):
+    async def remove_dataset(self, uuid):
         ds = self.datasets[uuid]["dataset"]
         jobs_to_remove = [
             job
@@ -688,9 +581,7 @@ class SharedData(object):
         del self.datasets[uuid]
         del self.dataset_to_id[ds]
         for job_id in job_ids:
-            del self.jobs[job_id]
-        for job in jobs_to_remove:
-            del self.job_to_id[job]
+            await self.remove_job(job_id)
 
     def register_job(self, uuid, job):
         assert uuid not in self.jobs
@@ -698,8 +589,22 @@ class SharedData(object):
         self.job_to_id[job] = uuid
         return self
 
+    async def remove_job(self, uuid):
+        try:
+            job = self.jobs[uuid]
+            executor = self.get_executor()
+            await executor.cancel(job)
+            del self.jobs[uuid]
+            del self.job_to_id[job]
+            return True
+        except KeyError:
+            return False
+
     def get_job(self, uuid):
         return self.jobs[uuid]
+
+    def job_is_cancelled(self, uuid):
+        return uuid not in self.jobs
 
     def serialize_job(self, job_id):
         job = self.jobs[job_id]
@@ -714,19 +619,22 @@ class SharedData(object):
             for job_id in self.jobs.keys()
         ]
 
-    def serialize_dataset(self, dataset_id):
+    async def serialize_dataset(self, dataset_id):
+        executor = self.get_executor()
         dataset = self.datasets[dataset_id]
+        diag = await executor.run_function(lambda: dataset["dataset"].diagnostics)
         return {
             "id": dataset_id,
             "params": {
                 **dataset["params"]["params"],
-                "shape": dataset["dataset"].shape,
-            }
+                "shape": tuple(dataset["dataset"].shape),
+            },
+            "diagnostics": diag,
         }
 
-    def serialize_datasets(self):
+    async def serialize_datasets(self):
         return [
-            self.serialize_dataset(dataset_id)
+            await self.serialize_dataset(dataset_id)
             for dataset_id in self.datasets.keys()
         ]
 
@@ -770,27 +678,27 @@ class ConnectHandler(tornado.web.RequestHandler):
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         if connection["type"].lower() == "tcp":
-            dask_client = await AioClient(address=connection['address'])
-            executor = DaskJobExecutor(client=dask_client, is_local=connection['isLocal'])
+            sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
+                scheduler_uri=connection['address'],
+            ))
         elif connection["type"].lower() == "local":
-            # NOTE: we can't use DaskJobExecutor.make_local as it doesn't use AioClient
-            # which then conflicts with LocalCluster(asynchronous=True)
-            # error message: "RuntimeError: Non-thread-safe operation invoked on an event loop
-            # other than the current one"
-            # related: debugging via env var PYTHONASYNCIODEBUG=1
             cluster_kwargs = {
                 "threads_per_worker": 1,
-                "asynchronous": True,
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
-            cluster = dd.LocalCluster(**cluster_kwargs)
-            dask_client = await AioClient(address=cluster)
-            executor = DaskJobExecutor(client=dask_client, is_local=True)
-        self.data.set_executor(executor, request_data)
+            sync_executor = await sync_to_async(
+                partial(DaskJobExecutor.make_local, cluster_kwargs=cluster_kwargs)
+            )
+        else:
+            raise ValueError("unknown connection type")
+        executor = AsyncAdapter(wrapped=sync_executor)
+        await self.data.set_executor(executor, request_data)
+        await self.data.verify_datasets()
+        datasets = await self.data.serialize_datasets()
         msg = Message(self.data).initial_state(
             jobs=self.data.serialize_jobs(),
-            datasets=self.data.serialize_datasets(),
+            datasets=datasets,
         )
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -809,72 +717,107 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("client/index.html")
 
 
-# shared state:
-event_registry = EventRegistry()
-data = SharedData()
+class LocalFSBrowseHandler(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    async def get(self):
+        executor = self.data.get_executor()
+        path = self.request.arguments['path']
+        assert len(path) == 1
+        path = path[0].decode("utf8")
+        try:
+            listing = await executor.run_function(get_fs_listing, path)
+            msg = Message(self.data).directory_listing(
+                **listing
+            )
+            self.write(msg)
+        except FSError as e:
+            msg = Message(self.data).browse_failed(
+                path=path,
+                code=e.code,
+                msg=str(e),
+                alternative=e.alternative,
+            )
+            self.write(msg)
 
 
-def make_app():
+def make_app(event_registry, shared_data):
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
     return tornado.web.Application([
-        (r"/", IndexHandler, {"data": data, "event_registry": event_registry}),
+        (r"/", IndexHandler, {"data": shared_data, "event_registry": event_registry}),
+        (r"/api/datasets/detect/", DataSetDetectHandler, {
+            "data": shared_data,
+            "event_registry": event_registry
+        }),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
-        (r"/api/datasets/([^/]+)/preview/", DataSetPreviewHandler, {
-            "data": data,
-            "event_registry": event_registry
-        }),
-        (r"/api/datasets/([^/]+)/pick/([0-9]+)/([0-9]+)/", DataSetPickHandler, {
-            "data": data,
+        (r"/api/browse/localfs/", LocalFSBrowseHandler, {
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/jobs/([^/]+)/", JobDetailHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
-        (r"/api/events/", ResultEventHandler, {"data": data, "event_registry": event_registry}),
+        (r"/api/events/", ResultEventHandler, {
+            "data": shared_data,
+            "event_registry": event_registry
+        }),
         (r"/api/config/", ConfigHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry
         }),
         (r"/api/config/connection/", ConnectHandler, {
-            "data": data,
+            "data": shared_data,
             "event_registry": event_registry,
         }),
     ], **settings)
 
 
-def sig_exit(signum, frame):
-    tornado.ioloop.IOLoop.instance().add_callback_from_signal(do_stop)
-
-
-def do_stop():
+async def do_stop(shared_data):
     log.warning("Exiting...")
-    try:
-        data.get_executor().close()
-        tornado.ioloop.IOLoop.instance().stop()
-    finally:
-        sys.exit(0)
+    log.debug("closing executor")
+    if shared_data.executor is not None:
+        await shared_data.executor.close()
+    loop = asyncio.get_event_loop()
+    log.debug("shutting down async generators")
+    await loop.shutdown_asyncgens()
+    log.debug("stopping event loop")
+    loop.stop()
 
 
-def main(host, port):
+def sig_exit(signum, frame, shared_data):
+    loop = tornado.ioloop.IOLoop.instance()
+    loop.add_callback_from_signal(
+        lambda: asyncio.ensure_future(do_stop(shared_data))
+    )
+
+
+def main(host, port, event_registry, shared_data):
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
-    app = make_app()
+    app = make_app(event_registry, shared_data)
     app.listen(address=host, port=port)
+    return app
 
 
 def run(host, port):
-    main(host, port)
+    # shared state:
+    event_registry = EventRegistry()
+    shared_data = SharedData()
+
+    main(host, port, event_registry, shared_data)
     loop = asyncio.get_event_loop()
-    signal.signal(signal.SIGINT, sig_exit)
+    signal.signal(signal.SIGINT, partial(sig_exit, shared_data=shared_data))
     loop.run_forever()
 
 

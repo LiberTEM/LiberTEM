@@ -1,24 +1,30 @@
-import { AnalysisDetails, AnalysisTypes } from "../messages";
+import { AnalysisDetails, AnalysisTypes, PickFrameDetails, SumFramesDetails } from "../messages";
 
-export type PreviewMode = "AVERAGE" | "PICK";
+export type FrameMode = AnalysisTypes.PICK_FRAME | AnalysisTypes.SUM_FRAMES;
 
-export interface FramePreview {
-    mode: PreviewMode,
-    pick: {
-        x: number,
-        y: number,
-    }
-}
+export type JobKind = "FRAME" | "RESULT";
+
+export type AnalysisStatus = "busy" | "idle";
+
+export type JobList = Partial<{ [K in JobKind]: string }>;
+
+export type JobHistory = {
+    [K in JobKind]: string[]
+};
+
+export type FrameAnalysisDetails = PickFrameDetails | SumFramesDetails;
 
 export interface Analysis {
     id: string,
     dataset: string,
-    currentJob: string | "",
-    preview: FramePreview,
-    details: AnalysisDetails,
+    jobs: JobList,
+    jobHistory: JobHistory,
+    frameDetails: FrameAnalysisDetails,
+    resultDetails: AnalysisDetails,
 }
 
-export type AnalysisState = Analysis;
+export type AnalysisState = Analysis & {
+};
 
 interface AnalysisMetadataItem {
     long: string,
@@ -50,6 +56,11 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
     [AnalysisTypes.SUM_FRAMES]: {
         long: "Create a sum of all detector frames",
         short: "Sum all frames",
+        showInUI: false,
+    },
+    [AnalysisTypes.PICK_FRAME]: {
+        long: "Pick a single frame",
+        short: "Pick frame",
         showInUI: false,
     },
 }

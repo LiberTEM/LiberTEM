@@ -1,11 +1,11 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { DatasetTypes } from "../../messages";
+import BrowserWrapper from "../../browser/components/BrowserWrapper";
 import { RootReducer } from "../../store";
 import { DatasetsState } from "../types";
 import Dataset from "./Dataset";
 import DatasetOpen from "./DatasetOpen";
-import DatasetTypeSelect from "./DatasetTypeSelect";
+import DatasetOpenSpinner from "./DatasetOpenSpinner";
 
 interface DatasetListProps {
     datasets: DatasetsState
@@ -13,45 +13,24 @@ interface DatasetListProps {
 
 const mapStateToProps = (state: RootReducer) => {
     return {
-        datasets: state.dataset,
+        datasets: state.datasets,
+        formVisible: state.openDataset.formVisible,
+        formPath: state.openDataset.formPath,
     };
 }
 
-type MergedProps = DatasetListProps;
+type MergedProps = DatasetListProps & ReturnType<typeof mapStateToProps>;
 
-interface DatasetListState {
-    datasetFormOpen: boolean,
-    datasetType?: DatasetTypes
-}
-
-class DatasetList extends React.Component<MergedProps, DatasetListState> {
-    public state = {
-        datasetFormOpen: false,
-        datasetType: undefined,
-    }
-
-    public openDatasetForm = (type: DatasetTypes) => {
-        this.setState({
-            datasetFormOpen: true,
-            datasetType: type,
-        })
-    };
-
-    public closeForm = () => {
-        this.setState({
-            datasetFormOpen: false,
-        })
-    }
-
+class DatasetList extends React.Component<MergedProps> {
     public render() {
-        const { datasets } = this.props;
-        const { datasetFormOpen, datasetType } = this.state;
+        const { formVisible, datasets } = this.props;
 
         return (
             <>
-                {datasets.ids.map(dsId => <Dataset dataset={datasets.byId[dsId]} key={dsId} />)}
-                <DatasetTypeSelect onClick={this.openDatasetForm} label='Add Dataset' />
-                {datasetFormOpen && datasetType !== undefined && <DatasetOpen type={datasetType} onCancel={this.closeForm} onSubmit={this.closeForm} />}
+                {datasets.ids.map((dsId: string) => <Dataset dataset={datasets.byId[dsId]} key={dsId} />)}
+                <DatasetOpenSpinner />
+                {formVisible && <DatasetOpen />}
+                <BrowserWrapper />
             </>
         );
     }

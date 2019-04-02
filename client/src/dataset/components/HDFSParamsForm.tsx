@@ -3,17 +3,16 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDFS, DatasetTypes } from "../../messages";
+import { getInitial } from "../helpers";
+import { OpenFormProps } from "../types";
 
-type RawDatasetParamsHDFS = Omit<DatasetParamsHDFS, "type" | "tileshape"> & { tileshape: string };
+type RawDatasetParamsHDFS = Omit<DatasetParamsHDFS, "path" | "type" | "tileshape"> & {
+    tileshape: string,
+};
 
 type FormValues = RawDatasetParamsHDFS
 
-interface FormProps {
-    onSubmit: (params: DatasetParamsHDFS) => void
-    onCancel: () => void,
-}
-
-type MergedProps = FormikProps<FormValues> & FormProps;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsHDFS>;
 
 const HDFSParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -37,11 +36,6 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="path">Path:</label>
-                <input type="text" name="path" value={values.path}
-                    onChange={handleChange} onBlur={handleBlur} />
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="tileshape">Tileshape:</label>
                 <input type="text" name="tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
@@ -52,18 +46,17 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<FormProps, FormValues>({
-    mapPropsToValues: () => ({
-        name: "",
-        tileshape: "1, 8, 128, 128",
-        path: "",
+export default withFormik<OpenFormProps<DatasetParamsHDFS>, FormValues>({
+    mapPropsToValues: ({ initial }) => ({
+        name: getInitial("name", "", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
     }),
     handleSubmit: (values, formikBag) => {
-        const { onSubmit } = formikBag.props;
+        const { onSubmit, path } = formikBag.props;
         onSubmit({
+            path,
             type: DatasetTypes.HDFS,
             name: values.name,
-            path: values.path,
             tileshape: values.tileshape.split(",").map(part => +part),
         });
     }

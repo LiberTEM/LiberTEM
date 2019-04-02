@@ -19,10 +19,16 @@ Documentation
    :caption: Contents:
    
 
+   install
+   usage
    architecture
-   why_python
    contributing
-
+   acknowledgments
+   citing
+   debugging
+   why_python
+   reference
+   gsoc
 
 Indices and tables
 ------------------

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as sp
 
 
 def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
@@ -81,6 +82,21 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     return bool_mask
 
 
+def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
+    x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
+    mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
+    return mask
+
+
+def background_substraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
+    mask_1 = circular(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
+    sum_1 = np.sum(mask_1)
+    mask_2 = ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner)
+    sum_2 = np.sum(mask_2)
+    mask = mask_1 - mask_2*sum_1/sum_2
+    return mask
+
+
 # TODO: dtype parameter? consistency with ring/circular above
 def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(
@@ -90,3 +106,17 @@ def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
 
 def gradient_y(imageSizeX, imageSizeY, dtype=np.float32):
     return gradient_x(imageSizeY, imageSizeX, dtype).transpose()
+
+
+def to_dense(a):
+    if sp.issparse(a):
+        return a.toarray()
+    else:
+        return a
+
+
+def to_sparse(a):
+    if sp.issparse(a):
+        return a
+    else:
+        return sp.csr_matrix(a)

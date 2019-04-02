@@ -1,9 +1,9 @@
 import { CSSProperties } from "react";
 
-export const defaultMaskStyles: CSSProperties = {
+export const defaultMaskStyles = (imageWidth: number): CSSProperties => ({
     fillOpacity: 0.3,
     fill: "red",
     strokeOpacity: 0.7,
     stroke: "red",
-    strokeWidth: 0.4,
-}
+    strokeWidth: imageWidth / 128 / 3,
+});

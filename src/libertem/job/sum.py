@@ -1,52 +1,50 @@
-from .base import Job, Task
+import numpy as np
+
+from .base import Job, Task, ResultTile
 
 
 class SumFramesJob(Job):
     def get_tasks(self):
-        for partition in self.dataset.get_partitions():
-            yield SumFramesTask(partition=partition)
+        for idx, partition in enumerate(self.dataset.get_partitions()):
+            yield SumFramesTask(partition=partition, idx=idx)
+
+    def get_result_shape(self):
+        return self.dataset.shape.sig
 
 
 class SumFramesTask(Task):
     def __call__(self):
         """
-        sum frames
+        sum frames over navigation axes
         """
-        parts = []
+        dest_dtype = np.dtype(self.partition.dtype)
+        if dest_dtype.kind not in ('c', 'f'):
+            dest_dtype = 'float32'
+        part = np.zeros(self.partition.meta.shape.sig, dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
-            data = data_tile.data
-            if data.dtype.kind == 'u':
-                data = data.astype("float32")
-            result = data_tile.data.sum(axis=(0, 1))
-            parts.append(
-                SumResultTile(
-                    data=result,
-                    tile_slice=data_tile.tile_slice,
-                )
+            if data_tile.data.dtype != dest_dtype:
+                data = data_tile.data.astype(dest_dtype)
+            else:
+                data = data_tile.data
+            # sum over all navigation axes; for 2d this would be (0, 1), for 1d (0,) etc.:
+            axis = tuple(range(data_tile.tile_slice.shape.nav.dims))
+            result = data.sum(axis=axis)
+            part[data_tile.tile_slice.get(sig_only=True)] += result
+        return [
+            SumResultTile(
+                data=part,
             )
-        return parts
+        ]
 
 
-class SumResultTile(object):
-    def __init__(self, data, tile_slice):
+class SumResultTile(ResultTile):
+    def __init__(self, data):
         self.data = data
-        self.tile_slice = tile_slice
 
     @property
     def dtype(self):
         return self.data.dtype
 
-    def _get_dest_slice(self):
-        tile_slice = self.tile_slice.get()
-        return (
-            tile_slice[2],
-            tile_slice[3],
-        )
-
-    def copy_to_result(self, result):
-        # FIXME: assumes tile size is less than or equal one row of frames. is this true?
-        # let's assert it for now:
-        assert self.tile_slice.shape[0] == 1
-
-        result[self._get_dest_slice()] += self.data
+    def reduce_into_result(self, result):
+        result += self.data
         return result

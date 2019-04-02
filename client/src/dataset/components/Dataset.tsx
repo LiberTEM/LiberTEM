@@ -1,13 +1,13 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Header, Icon, Message, Popup, Segment } from 'semantic-ui-react';
+import { Header, Icon, Message, Modal, Popup, Segment } from 'semantic-ui-react';
 import AnalysisList from "../../analysis/components/AnalysisList";
 import { AnalysisState } from "../../analysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
 import { DatasetState, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 import AddAnalysis from "./AddAnalysis";
-import DatasetParams from "./DatasetParams";
+import DatasetInfo from "./DatasetInfo";
 import DatasetToolbar from "./DatasetToolbar";
 
 interface DatasetProps {
@@ -48,16 +48,18 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
                 <Segment>
                     <Header as="h2">
                         <Icon name="database" />
-                        <Popup trigger={
+                        <Modal trigger={
                             <Header.Content>
                                 {dataset.params.name}
+                                {' '}
+                                <Icon name="info circle" size="small" link={true} />
                             </Header.Content>
                         }>
-                            <Popup.Header>{dataset.params.type} Dataset</Popup.Header>
+                            <Popup.Header>{dataset.params.type} Dataset {dataset.params.name}</Popup.Header>
                             <Popup.Content>
-                                <DatasetParams dataset={dataset} />
+                                <DatasetInfo dataset={dataset} />
                             </Popup.Content>
-                        </Popup>
+                        </Modal>
                     </Header>
                 </Segment>
                 <Segment style={{ flexShrink: 1, flexGrow: 0 }}>

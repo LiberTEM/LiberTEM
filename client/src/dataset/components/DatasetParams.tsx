@@ -39,7 +39,6 @@ const DatasetParams: React.SFC<DatasetProps> = ({ dataset }) => {
                 {renderParams(dataset.params)}
             </Table.Body>
         </Table>
-
     );
 }
 

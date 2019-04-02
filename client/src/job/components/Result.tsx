@@ -1,12 +1,14 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import styled from 'styled-components';
 import * as analysisActions from '../../analysis/actions';
-import { AnalysisState } from "../../analysis/types";
+import { AnalysisState, JobKind } from "../../analysis/types";
 import { DatasetState } from "../../messages";
-import { inRectConstraint } from "../../widgets/constraints";
-import DraggableHandle from "../../widgets/DraggableHandle";
+import BusyWrapper from "../../widgets/BusyWrapper";
 import HandleParent from "../../widgets/HandleParent";
-import { JobState } from "../types";
+import { HandleRenderFunction } from "../../widgets/types";
+import { JobRunning, JobState } from "../types";
+import ResultImage from "./ResultImage";
 
 interface ResultProps {
     width: number,
@@ -14,42 +16,50 @@ interface ResultProps {
     job: JobState,
     dataset: DatasetState,
     analysis: AnalysisState,
+    extraHandles?: HandleRenderFunction,
+    extraWidgets?: React.ReactElement<SVGElement>,
     idx: number,
+    kind: JobKind,
 }
 
+const ResultWrapper = styled.svg`
+    display: block;
+    border: 1px solid black;
+    width: 100%;
+    height: auto;
+`;
 
 const mapDispatchToProps = {
-    setPreview: analysisActions.Actions.setPreview
+    updateParameters: analysisActions.Actions.updateParameters,
 };
 
 type MergedProps = ResultProps & DispatchProps<typeof mapDispatchToProps>;
 
 class Result extends React.Component<MergedProps> {
-    public onCenterChange = (x: number, y: number) => {
-        this.props.setPreview(this.props.analysis.id, {
-            mode: "PICK",
-            pick: {
-                x: Math.round(x),
-                y: Math.round(y)
-            }
-        })
+    public renderHandles() {
+        const { width, height, extraHandles } = this.props;
+        let handles: HandleRenderFunction[] = [];
+        if (extraHandles) {
+            handles = [...handles, extraHandles];
+        }
+
+        return (
+            <HandleParent width={width} height={height} handles={handles} />
+        )
     }
 
     public render() {
-        const { analysis, job, idx, width, height } = this.props;
-        const { x, y } = analysis.preview.pick;
-        const result = job.results[idx];
+        const { job, idx, width, height, extraWidgets } = this.props;
+        const busy = job.running !== JobRunning.DONE;
 
         return (
-            <svg style={{ border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-                <image style={{ width: "100%", height: "auto", imageRendering: "pixelated" }} xlinkHref={result.imageURL} width={width} height={height} />
-                {analysis.preview.mode === "PICK" ?
-                    <HandleParent width={width} height={height}>
-                        <DraggableHandle x={x} y={y} withCross={true}
-                            onDragMove={this.onCenterChange}
-                            constraint={inRectConstraint(width, height)} />
-                    </HandleParent> : null}
-            </svg>
+            <BusyWrapper busy={busy}>
+                <ResultWrapper width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+                    <ResultImage job={job} idx={idx} width={width} height={height} />
+                    {extraWidgets}
+                    {this.renderHandles()}
+                </ResultWrapper>
+            </BusyWrapper>
         );
     }
 };

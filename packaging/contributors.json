@@ -1,0 +1,278 @@
+[
+    {
+        "displayname": "Juri Barthel",
+        "authorname": "Barthel, Juri",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Discussions, compatibility with Dr. Probe"
+    },
+    {
+        "displayname": "Reimar Bauer",
+        "authorname": "Bauer, Reimar",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Help with Google Summer of Code 2019"
+    },
+    {
+        "displayname": "Julian Becker",
+        "authorname": "Becker, Julian",
+        "affiliation": "X-Spectrum",
+        "contribution": "Discussions, system design, funding applications"
+    },
+    {
+        "displayname": "Andreas Beckmann",
+        "authorname": "Beckmann, Andreas",
+        "affiliation": "X-Spectrum",
+        "contribution": "Discussions, system design, funding applications"
+    },
+    {
+        "displayname": "Robert B\u00fccker",
+        "authorname": "B\u00fccker, Robert",
+        "affiliation": "MPSD",
+        "contribution": "Discussions, sample files"
+    },
+    {
+        "displayname": "Wolfgang zu Castell",
+        "authorname": "zu Castell, Wolfgang",
+        "affiliation": "HZM",
+        "contribution": "Discussions, funding applications"
+    },
+    {
+        "displayname": "Peter Ercius",
+        "authorname": "Ercius, Peter",
+        "affiliation": "Berkeley Lab",
+        "contribution": "Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file and SER support."
+    },
+    {
+        "displayname": "Caroline Fuery",
+        "authorname": "Fuery, Caroline",
+        "affiliation": "Microscopy Australia",
+        "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
+    },
+    {
+        "displayname": "Patrick Furhmann",
+        "authorname": "Furhmann, Patrick",
+        "affiliation": "DESY",
+        "contribution": "Discussions, system architecture"
+    },
+    {
+        "displayname": "Wojtek James Goscinski",
+        "authorname": "Goscinski, Wojtek James",
+        "affiliation": "Monash",
+        "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
+    },
+    {
+        "displayname": "Chris Hines",
+        "authorname": "Hines, Chris",
+        "affiliation": "Monash",
+        "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
+    },
+    {
+        "displayname": "Lothar Houben",
+        "authorname": "Houben, Lothar",
+        "affiliation": "Weizmann",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Martin Huth",
+        "authorname": "Huth, Martin",
+        "affiliation": "PNDetector",
+        "contribution": "Discussions, sample files, documentation for implementing FRMS6 support"
+    },
+    {
+        "displayname": "Pete Jemian",
+        "authorname": "Jemian, Pete",
+        "affiliation": "NeXus project",
+        "contribution": "Discussions and support regarding NeXus file format"
+    },
+    {
+        "displayname": "Christoph Koch",
+        "authorname": "Koch, Christoph",
+        "affiliation": "HU Berlin",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Alexander Krings",
+        "authorname": "Krings, Alexander",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Discussions, requirements description"
+    },
+    {
+        "displayname": "Weng I Lei",
+        "authorname": "Lei, Weng I",
+        "affiliation": "Gatan",
+        "contribution": "Discussions, Python support in GMS"
+    },
+    {
+        "displayname": "Penghan Lu",
+        "authorname": "Lu, Penghan",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Scientific advisory, discussion, sample data"
+    },
+    {
+        "displayname": "Ian MacLaren",
+        "authorname": "MacLaren, Ian",
+        "affiliation": "U Glasgow",
+        "contribution": "Sample data for peak selector example, discussions, advisory"
+    },
+    {
+        "displayname": "Shane McCartan",
+        "authorname": "McCartan, Shane",
+        "affiliation": "U Glasgow",
+        "contribution": "Sample data for peak selector example"
+    },
+    {
+        "displayname": "Heide Meissner",
+        "authorname": "Meissner, Heide",
+        "affiliation": "HZDR",
+        "contribution": "Discussions, funding applications "
+    },
+    {
+        "displayname": "Vadim Migunov",
+        "authorname": "Migunov, Vadim",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Scientific advisory, discussion, sample data"
+    },
+    {
+        "displayname": "Grigore Moldovan",
+        "authorname": "Moldovan, Grigore",
+        "affiliation": "Point Electronic",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Knut M\u00fcller-Caspary",
+        "authorname": "M\u00fcller-Caspary, Knut",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader"
+    },
+    {
+        "displayname": "Eduardo Nebot",
+        "authorname": "Nebot, Eduardo",
+        "affiliation": "Quantum Detectors",
+        "contribution": "Support, discussions, sample files, funding applications"
+    },
+    {
+        "displayname": "Magnus Nord",
+        "authorname": "Nord, Magnus",
+        "affiliation": "U Antwerp",
+        "contribution": "Discussions, tests, code in related projects"
+    },
+    {
+        "displayname": "Liam O'Ryan",
+        "authorname": "O'Ryan, Liam",
+        "affiliation": "Quantum Detectors",
+        "contribution": "Support, discussions, sample files, funding applications"
+    },
+    {
+        "displayname": "Colin Ophus",
+        "authorname": "Ophus, Colin",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "contribution": "Discussions, sample code for K2 reader, overview of related projects"
+    },
+    {
+        "displayname": "Ana Pakzad",
+        "authorname": "Pakzad, Ana",
+        "affiliation": "Gatan",
+        "contribution": "Discussions, support for implementing K2 raw file format"
+    },
+    {
+        "displayname": "Francisco de la Pe\u00f1a",
+        "authorname": "Pe\u00f1a, Francisco de la",
+        "affiliation": "Lille",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Tobias Richter",
+        "authorname": "Richter, Tobias",
+        "affiliation": "NeXus project",
+        "contribution": "Discussions and support regarding NeXus file format"
+    },
+    {
+        "displayname": "Robert Ritz",
+        "authorname": "Ritz, Robert",
+        "affiliation": "PNDetector",
+        "contribution": "Discussions, sample files, documentation for implementing FRMS6 support"
+    },
+    {
+        "displayname": "Kunt Sander",
+        "authorname": "Sander, Kunt",
+        "affiliation": "DESY",
+        "contribution": "Discussions, system architecture"
+    },
+    {
+        "displayname": "Michael Schuh",
+        "authorname": "Schuh, Michael",
+        "affiliation": "DESY",
+        "contribution": "Discussions, system architecture"
+    },
+    {
+        "displayname": "Martin Simson",
+        "authorname": "Simson, Martin",
+        "affiliation": "PNDetector",
+        "contribution": "Discussions, sample files, documentation for implementing FRMS6 support"
+    },
+    {
+        "displayname": "Andy Stewart",
+        "authorname": "Stewart, Andy",
+        "affiliation": "U Limerick",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Murali Sukumaran",
+        "authorname": "Sukumaran, Murali",
+        "affiliation": "HZM",
+        "contribution": "Discussions, funding applications"
+    },
+    {
+        "displayname": "Eugene Sweeney",
+        "authorname": "Sweeney, Eugene",
+        "affiliation": "Iambic Innovation",
+        "contribution": "Discussions, proposal review"
+    },
+    {
+        "displayname": "Jo Verbeeck",
+        "authorname": "Verbeeck, Jo",
+        "affiliation": "U Antwerp",
+        "contribution": "Open data https://zenodo.org/record/2566137"
+    },
+    {
+        "displayname": "Paul Voyles",
+        "authorname": "Voyles, Paul",
+        "affiliation": "U Wisconsin",
+        "contribution": "Discussions"
+    },
+    {
+        "displayname": "Roger Wepf",
+        "authorname": "Wepf, Roger",
+        "affiliation": "U Queensland",
+        "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
+    },
+    {
+        "displayname": "Jacob Wilbrink",
+        "authorname": "Wilbrink, Jacob",
+        "affiliation": "Gatan",
+        "contribution": "Discussions, support for implementing K2 raw file format"
+    },
+    {
+        "displayname": "Lance Wilson",
+        "authorname": "Wilson, Lance",
+        "affiliation": "Monash",
+        "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
+    },
+    {
+        "displayname": "Florian Winkler",
+        "authorname": "Winkler, Florian",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Discussions, requirements description"
+    },
+    {
+        "displayname": "Markus Wollgarten",
+        "authorname": "Wollgarten, Markus",
+        "affiliation": "HZB",
+        "contribution": "Discussions, funding applications"
+    },
+    {
+        "displayname": "@theassassin",
+        "github": "@theassassin",
+        "authorname": "@theassassin",
+        "contribution": "Help with setting up AppImage building and Continuous Integration"
+    }
+]

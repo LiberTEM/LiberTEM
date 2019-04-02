@@ -1,23 +1,25 @@
 import * as React from "react";
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
 import { defaultDebounce } from "../../helpers";
-import { DatasetState, PointDef } from "../../messages";
-import Point from "../../widgets/Point";
+import { DatasetOpen, PointDef } from "../../messages";
+import { inRectConstraint } from "../../widgets/constraints";
+import DraggableHandle from "../../widgets/DraggableHandle";
+import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 import { AnalysisState } from "../types";
 import AnalysisItem from "./AnalysisItem";
-import Preview from "./Preview";
 
 interface AnalysisProps {
     parameters: PointDef,
     analysis: AnalysisState,
-    dataset: DatasetState,
+    dataset: DatasetOpen,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
     return {
         handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }));
+            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
         }),
     }
 }
@@ -30,17 +32,27 @@ const PointSelectionAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, 
     const imageWidth = shape[3];
     const imageHeight = shape[2];
 
-    const image = <Preview dataset={dataset} analysis={analysis} />
+    const { cx, cy } = parameters;
+
+    const frameViewHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
+        <DraggableHandle x={cx} y={cy} withCross={true}
+            onDragMove={handleCenterChange}
+            imageWidth={imageWidth}
+            parentOnDragStart={handleDragStart}
+            parentOnDrop={handleDrop}
+            constraint={inRectConstraint(imageWidth, imageHeight)} />
+    </>);
+
+    const subtitle = (
+        <>Point: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)})</>
+    )
 
     return (
-        <AnalysisItem analysis={analysis} dataset={dataset} title="Point analysis" subtitle={
-            <>Point: center=({parameters.cx.toFixed(2)},{parameters.cy.toFixed(2)})</>
-        }>
-            <Point cx={parameters.cx} cy={parameters.cy}
-                image={image}
-                imageWidth={imageWidth} imageHeight={imageHeight} onCenterChange={handleCenterChange} />
-        </AnalysisItem>
+        <AnalysisItem analysis={analysis} dataset={dataset}
+            title="Point analysis" subtitle={subtitle}
+            frameViewHandles={frameViewHandles}
+        />
     );
 }
 
-export default connect<{}, {}, AnalysisProps>(state => ({}), mapDispatchToProps)(PointSelectionAnalysis);
+export default connect(null, mapDispatchToProps)(PointSelectionAnalysis);

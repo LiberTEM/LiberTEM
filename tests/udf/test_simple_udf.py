@@ -143,6 +143,9 @@ def test_kind_single(lt_ctx):
 
 
 def test_bad_merge(lt_ctx):
+    """
+    Test bad example of updating buffer
+    """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)

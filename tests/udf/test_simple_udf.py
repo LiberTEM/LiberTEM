@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from libertem.common.buffers import BufferWrapper
 
@@ -71,7 +72,7 @@ def test_kind_single(lt_ctx):
         counter += 1
 
     def merge_counters(dest, src):
-        dest['counter'] += src['counter']
+        dest['counter'][:] += src['counter']
 
     res = lt_ctx.run_udf(
         dataset=dataset,
@@ -82,3 +83,31 @@ def test_kind_single(lt_ctx):
     assert 'counter' in res
     assert res['counter'].data.shape == (1,)
     assert res['counter'].data == 16 * 16
+
+
+def test_bad_merge(lt_ctx):
+    data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            partition_shape=(4, 16, 16), sig_dims=2)
+
+    def my_buffers():
+        return {
+            'pixelsum': BufferWrapper(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def my_frame_fn(frame, pixelsum):
+        pixelsum[:] = np.sum(frame)
+
+    def bad_merge(dest, src):
+        # bad, because it just sets a key in dest, it doesn't copy over the data to dest
+        dest['pixelsum'] = src['pixelsum']
+
+    with pytest.raises(TypeError):
+        lt_ctx.run_udf(
+            dataset=dataset,
+            fn=my_frame_fn,
+            merge=bad_merge,
+            make_buffers=my_buffers,
+        )

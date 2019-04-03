@@ -1,4 +1,5 @@
 from typing import Union, Tuple
+from types import MappingProxyType
 import uuid
 
 import psutil
@@ -452,7 +453,7 @@ class Context:
                 buffer_views[k] = buf.get_view_for_partition(partition=partition)
             buffers = {k: b.data
                        for k, b in partition_result_buffers.items()}
-            merge(dest=buffer_views, src=buffers)
+            merge(dest=MappingProxyType(buffer_views), src=MappingProxyType(buffers))
         return result_buffers
 
     def _create_local_executor(self):

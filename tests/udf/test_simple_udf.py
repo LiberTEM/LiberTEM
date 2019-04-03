@@ -5,10 +5,20 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper
 from libertem.api import Context
-from libertem.udf.stddev import merge, batch_merge, compute_batch, batch_buffer
+from libertem.udf.stddev import merge, batch_merge, compute_batch, batch_buffer, run_analysis
 from utils import MemoryDataSet, _mk_random
 
+
 def test_sum_frames(lt_ctx):
+    """
+    Test sum over the pixels for 2-dimensional dataset
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+
+    """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
@@ -34,6 +44,14 @@ def test_sum_frames(lt_ctx):
 
 
 def test_3d_ds(lt_ctx):
+    """
+    Test sum over the pixels for 3-dimensional dataset 
+
+    Parameters 
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+    """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)
@@ -59,37 +77,65 @@ def test_3d_ds(lt_ctx):
 
 
 def test_minibatch(lt_ctx):
+    """
+    Test sum of variances and sum of frames computation 
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+    """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
 
-    # res = lt_ctx.run_udf(
-    #     dataset=dataset,
-    #     fn=my_frame_fn_batch,
-    #     make_buffers=my_buffer_batch,
-    #     merge=stddev_merge,
-    # )
+    res = run_analysis(lt_ctx, dataset)
 
-    # assert 'batch' in res
+    assert 'sum_frame' in res
+    assert 'num_frame' in res
+    assert 'stddev' in res
 
-    # N = data.shape[2] * data.shape[3]
-    # assert res['batch'].data[:, :, 2][0][0] == N # check the total number of frames 
+    N = data.shape[2] * data.shape[3]
+    assert res['num_frame'].data == N # check the total number of frames
 
-    # assert np.allclose(res['batch'].data[:, :, 1], np.sum(data, axis=(0, 1))) # check sum of frames
+    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0, 1))) # check sum of frames
 
-    # sum_var = np.var(data, axis=(0, 1))
-    # assert np.allclose(sum_var, res['batch'].data[:, :, 0]/N) # check sum of variances
+    sum_var = np.var(data, axis=(0, 1))
+    assert np.allclose(sum_var, res['stddev'].data/N) # check sum of variances
 
-    bts = lt_ctx.run_udf(
+
+def test_kind_single(lt_ctx):
+    """
+    Test buffer type kind='single'
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+    """
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 2, 16, 16),
+                            partition_shape=(4, 4, 16, 16), sig_dims=2)
+
+    def counter_buffers():
+        return {
+            'counter': BufferWrapper(
+                kind="single", dtype="uint32"
+            )
+        }
+
+    def count_frames(frame, counter):
+        counter += 1
+
+    def merge_counters(dest, src):
+        dest['counter'] += src['counter']
+
+    res = lt_ctx.run_udf(
         dataset=dataset,
-        fn=compute_batch, 
-        make_buffers=functools.partial(
-            batch_buffer,
-        ),
-        merge=batch_merge,
+        fn=count_frames,
+        make_buffers=counter_buffers,
+        merge=merge_counters,
     )
-
-    # assert 'batch_buffer' in bts
-    # assert 'sum_frame' in bts
-    # assert 'num_frame' in bts
-
+    assert 'counter' in res
+    assert res['counter'].data.shape == (1,)
+    assert res['counter'].data == 16 * 16

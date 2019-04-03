@@ -17,7 +17,6 @@ import libertem.api
 import libertem.preload
 import libertem.udf
 import libertem.udf.blobfinder
-import libertem.analysis.gridmatching
 
 
 def test_stuff():

@@ -1,26 +1,29 @@
 import collections
 
+import numpy as np 
+
 from libertem.common.buffers import BufferWrapper
 
 
 VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N'])
 
 
-# def my_buffer_batch():
-#     return {
-#         'batch': BufferWrapper(
-#             kind='sig', extra_shape=(3,), dtype='float32'
-#             )
-#     }
-    
-
 def batch_buffer():
+    """
+    Initializes BufferWrapper objects for sum of variances,
+    sum of frames, and the number of frames 
+
+    Returns 
+    -------
+    A dictionary that maps 'stddev', 'num_frame', 'sum_frame' to 
+    corresponding BufferWrapper object 
+    """
     return {
         'stddev': BufferWrapper(
             kind='sig', dtype='float32'
             ),
         'num_frame': BufferWrapper(
-            kind='nav', dtype='float32'
+            kind='single', dtype='float32'
             ),
         'sum_frame': BufferWrapper(
             kind='sig', dtype='float32'
@@ -28,65 +31,64 @@ def batch_buffer():
     }
 
 
-def compute_batch(frame, stddev, sum_frame, num_frame): 
+def compute_batch(frame, stddev, sum_frame, num_frame):
+    """
+    Given a frame, update sum of variances, sum of frames, 
+    and the number of total frames
+
+    Parameters 
+    ----------
+    frame
+        single frame of the data
+
+    stddev
+        Buffer that stores sum of variances of the previous set of frames 
+
+    sum_frame
+        Buffer that sores sum of frames of the previous set of frames 
+
+    num_frame
+        Buffer that stores the number of frames used for computation 
+
+    """
     if num_frame == 0:
-        stddev = 0
+        stddev[:] = 0
 
     else:
         p0 = VariancePart(sum_var=stddev, sum_im=sum_frame, N=num_frame)
         p1 = VariancePart(sum_var=0, sum_im=frame, N=1)
         compute_merge = merge(p0, p1)
 
-        sum_var = compute_merge.sum_var
-        stddev = sum_var
+        stddev[:] = compute_merge.sum_var
 
-    sum_frame += frame
-    num_frame += 1  
-
-
-# def my_frame_fn_batch(frame, batch):
-#     if batch[:, :, 2][0][0] == 0:
-#         batch[:, :, 0] = 0
-
-#     else:
-#         p0 = VariancePart(sum_var=batch[:, :, 0], sum_im=batch[:, :, 1], N=batch[:, :, 2][0][0])
-#         p1 = VariancePart(sum_var=0, sum_im=frame, N=1)
-#         compute_merge = merge(p0, p1)
-
-#         sum_var = compute_merge.sum_var
-
-#         batch[:, :, 0] = sum_var
-
-#     batch[:, :, 1] += frame
-#     batch[:, :, 2] += 1
+    sum_frame[:] += frame
+    num_frame[:] += 1  
 
 
 def batch_merge(dest, src):
-    p0 = VariancePart(sum_var=dest['stddev'], sum_im=dest['sum_frame'], N=dest['num_frame'])
-    p1 = VariancePart(sum_var=src['stddev'], sum_im=src['sum_frame'], N=src['num_frame'])
+    """
+    Given two buffers that contain sum of variances, sum of frames, 
+    and the number of frames used in each of the partitions, merge the 
+    partitions and compute the joint sum of variances and sum of frames
+    over all frames used 
+
+    Parameters 
+    ----------
+    dest 
+        A buffer that contains sum of variances, sum of frames, and the
+        number of frames used over all the frames used 
+
+    src
+        A buffer that contains sum of variances, sum of frames, and the 
+        number of frames used over current iteration of partition
+    """
+    p0 = VariancePart(sum_var=dest['stddev'][:], sum_im=dest['sum_frame'][:], N=dest['num_frame'][:])
+    p1 = VariancePart(sum_var=src['stddev'][:], sum_im=src['sum_frame'][:], N=src['num_frame'][:])
     compute_merge = merge(p0, p1)
 
-    dest['stddev'] = compute_merge.sum_var
-    dest['sum_frame'] = compute_merge.sum_frame
-    dest['num_frame'] = compute_merge.num_frame
-
-
-# def stddev_merge(dest, src):
-#     sum_var1 = dest['batch'][:, :, 0]
-#     sum_var2 = src['batch'][:, :, 0]
-#     sum_im1 = dest['batch'][:, :, 1]
-#     sum_im2 = src['batch'][:, :, 1]
-#     obs1 = dest['batch'][:, :, 2][0][0]
-#     obs2 = src['batch'][:, :, 2][0][0]
-
-#     p0 = VariancePart(sum_var=sum_var1, sum_im=sum_im1, N=obs1)
-#     p1 = VariancePart(sum_var=sum_var2, sum_im=sum_im2, N=obs2)
-#     compute_merge = merge(p0, p1)
-
-#     sum_var, sum_im, N = compute_merge.sum_var, compute_merge.sum_im, compute_merge.N
-#     dest['batch'][:, :, 0] = sum_var
-#     dest['batch'][:, :, 1] = sum_im
-#     dest['batch'][:, :, 2] = N
+    dest['stddev'][:] = compute_merge.sum_var
+    dest['sum_frame'][:] = compute_merge.sum_im
+    dest['num_frame'][:] = compute_merge.N
 
 
 def merge(p0, p1):
@@ -97,11 +99,11 @@ def merge(p0, p1):
 
     Parameters 
     ----------
-    p0 : collections.namedtuple object 
+    p0
         Contains information about the first partition, including 
         sum of variances, sum of pixels, and number of frames used
 
-    p1 : collections.namedtuple object
+    p1
         Contains information about the second partition, including 
         sum of variances, sum of pixels, and number of frames used
 
@@ -120,7 +122,7 @@ def merge(p0, p1):
     mean_B = (p1.sum_im / p1.N)
 
     # compute mean for joint samples
-    delta = mean_B - mean_A
+    delta = mean_B - mean_A 
     mean = mean_A + (p1.N * delta) / (p0.N + p1.N)
 
     # compute sum of images for joint samples
@@ -135,18 +137,24 @@ def merge(p0, p1):
 
 def run_analysis(ctx, dataset):
     """
-    Extended description of the function
+    Compute sum of variances and sum of pixels from the given dataset
 
     Parameters  
     ----------
-    ctx : Context class
-    dataset : STEM data (filetype : raw, hd5f)
+    ctx
+        Context class that contains methods for loading datasets, creating jobs on them 
+        and running them
+
+    dataset
+        dataset to work on
 
     Returns
     -------
-    bts 
+    pass_results  
         A buffer that contains sum of variances, sum of pixels, and 
-        number of frames used to compute these statistic
+        number of frames used to compute the above statistic
+        sum of variances : pass_results['stddev']
+        sum of pixels : pass_results['sum_frame']
 
     """
     pass_results = ctx.run_udf(
@@ -157,3 +165,4 @@ def run_analysis(ctx, dataset):
     )
 
     return (pass_results)
+

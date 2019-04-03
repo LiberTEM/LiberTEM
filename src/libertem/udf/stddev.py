@@ -1,7 +1,5 @@
 import collections
 
-import numpy as np 
-
 from libertem.common.buffers import BufferWrapper
 
 
@@ -11,12 +9,12 @@ VariancePart = collections.namedtuple('VariancePart', ['sum_var', 'sum_im', 'N']
 def batch_buffer():
     """
     Initializes BufferWrapper objects for sum of variances,
-    sum of frames, and the number of frames 
+    sum of frames, and the number of frames
 
-    Returns 
+    Returns
     -------
-    A dictionary that maps 'stddev', 'num_frame', 'sum_frame' to 
-    corresponding BufferWrapper object 
+    A dictionary that maps 'stddev', 'num_frame', 'sum_frame' to
+    corresponding BufferWrapper object
     """
     return {
         'stddev': BufferWrapper(
@@ -33,22 +31,22 @@ def batch_buffer():
 
 def compute_batch(frame, stddev, sum_frame, num_frame):
     """
-    Given a frame, update sum of variances, sum of frames, 
+    Given a frame, update sum of variances, sum of frames,
     and the number of total frames
 
-    Parameters 
+    Parameters
     ----------
     frame
         single frame of the data
 
     stddev
-        Buffer that stores sum of variances of the previous set of frames 
+        Buffer that stores sum of variances of the previous set of frames
 
     sum_frame
-        Buffer that sores sum of frames of the previous set of frames 
+        Buffer that sores sum of frames of the previous set of frames
 
     num_frame
-        Buffer that stores the number of frames used for computation 
+        Buffer that stores the number of frames used for computation
 
     """
     if num_frame == 0:
@@ -62,28 +60,32 @@ def compute_batch(frame, stddev, sum_frame, num_frame):
         stddev[:] = compute_merge.sum_var
 
     sum_frame[:] += frame
-    num_frame[:] += 1  
+    num_frame[:] += 1
 
 
 def batch_merge(dest, src):
     """
-    Given two buffers that contain sum of variances, sum of frames, 
-    and the number of frames used in each of the partitions, merge the 
+    Given two buffers that contain sum of variances, sum of frames,
+    and the number of frames used in each of the partitions, merge the
     partitions and compute the joint sum of variances and sum of frames
-    over all frames used 
+    over all frames used
 
-    Parameters 
+    Parameters
     ----------
-    dest 
+    dest
         A buffer that contains sum of variances, sum of frames, and the
-        number of frames used over all the frames used 
+        number of frames used over all the frames used
 
     src
-        A buffer that contains sum of variances, sum of frames, and the 
+        A buffer that contains sum of variances, sum of frames, and the
         number of frames used over current iteration of partition
     """
-    p0 = VariancePart(sum_var=dest['stddev'][:], sum_im=dest['sum_frame'][:], N=dest['num_frame'][:])
-    p1 = VariancePart(sum_var=src['stddev'][:], sum_im=src['sum_frame'][:], N=src['num_frame'][:])
+    p0 = VariancePart(sum_var=dest['stddev'][:],
+                    sum_im=dest['sum_frame'][:],
+                    N=dest['num_frame'][:])
+    p1 = VariancePart(sum_var=src['stddev'][:],
+                    sum_im=src['sum_frame'][:],
+                    N=src['num_frame'][:])
     compute_merge = merge(p0, p1)
 
     dest['stddev'][:] = compute_merge.sum_var
@@ -97,17 +99,17 @@ def merge(p0, p1):
     and sum of variances, compute joint sum of frames
     and sum of variances using one pass algorithm
 
-    Parameters 
+    Parameters
     ----------
     p0
-        Contains information about the first partition, including 
+        Contains information about the first partition, including
         sum of variances, sum of pixels, and number of frames used
 
     p1
-        Contains information about the second partition, including 
+        Contains information about the second partition, including
         sum of variances, sum of pixels, and number of frames used
 
-    Returns 
+    Returns
     -------
     collections.namedtuple object
         Contains information about the merged partitions, including
@@ -122,7 +124,7 @@ def merge(p0, p1):
     mean_B = (p1.sum_im / p1.N)
 
     # compute mean for joint samples
-    delta = mean_B - mean_A 
+    delta = mean_B - mean_A
     mean = mean_A + (p1.N * delta) / (p0.N + p1.N)
 
     # compute sum of images for joint samples
@@ -139,10 +141,10 @@ def run_analysis(ctx, dataset):
     """
     Compute sum of variances and sum of pixels from the given dataset
 
-    Parameters  
+    Parameters
     ----------
     ctx
-        Context class that contains methods for loading datasets, creating jobs on them 
+        Context class that contains methods for loading datasets, creating jobs on them
         and running them
 
     dataset
@@ -150,8 +152,8 @@ def run_analysis(ctx, dataset):
 
     Returns
     -------
-    pass_results  
-        A buffer that contains sum of variances, sum of pixels, and 
+    pass_results
+        A buffer that contains sum of variances, sum of pixels, and
         number of frames used to compute the above statistic
         sum of variances : pass_results['stddev']
         sum of pixels : pass_results['sum_frame']
@@ -159,10 +161,9 @@ def run_analysis(ctx, dataset):
     """
     pass_results = ctx.run_udf(
         dataset=dataset,
-        fn=compute_batch, 
+        fn=compute_batch,
         make_buffers=batch_buffer,
         merge=batch_merge,
     )
 
     return (pass_results)
-

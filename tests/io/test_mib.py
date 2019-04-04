@@ -107,3 +107,17 @@ def test_crop_to(default_mib, lt_ctx):
     res = lt_ctx.run(job)
     assert res.shape == (1024, 64, 64)
     # TODO: check contents
+
+
+def test_read_at_boundaries(default_mib, lt_ctx):
+    scan_size = (32, 32)
+    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 7, 256, 256), scan_size=scan_size)
+    ds_odd = ds_odd.initialize()
+
+    sumjob_odd = lt_ctx.create_sum_analysis(dataset=ds_odd)
+    res_odd = lt_ctx.run(sumjob_odd)
+
+    sumjob = lt_ctx.create_sum_analysis(dataset=default_mib)
+    res = lt_ctx.run(sumjob)
+
+    assert np.allclose(res[0].raw_data, res_odd[0].raw_data)

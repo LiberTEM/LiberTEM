@@ -2,11 +2,19 @@ import numpy as np
 import pytest
 
 from libertem.common.buffers import BufferWrapper
-
 from utils import MemoryDataSet, _mk_random
 
 
 def test_sum_frames(lt_ctx):
+    """
+    Test sum over the pixels for 2-dimensional dataset
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+
+    """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
@@ -32,6 +40,14 @@ def test_sum_frames(lt_ctx):
 
 
 def test_3d_ds(lt_ctx):
+    """
+    Test sum over the pixels for 3-dimensional dataset 
+
+    Parameters 
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+    """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)
@@ -57,6 +73,14 @@ def test_3d_ds(lt_ctx):
 
 
 def test_kind_single(lt_ctx):
+    """
+    Test buffer type kind='single'
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+    """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 2, 16, 16),
                             partition_shape=(4, 4, 16, 16), sig_dims=2)
@@ -86,6 +110,9 @@ def test_kind_single(lt_ctx):
 
 
 def test_bad_merge(lt_ctx):
+    """
+    Test bad example of updating buffer
+    """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             partition_shape=(4, 16, 16), sig_dims=2)

@@ -1,13 +1,13 @@
 import os
 import math
 import logging
-import itertools
 import contextlib
 
 import numpy as np
 from ncempy.io.ser import fileSER
 
 from libertem.common import Slice, Shape
+from libertem.io.partitioner import Partitioner3D
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 log = logging.getLogger(__name__)
@@ -113,22 +113,10 @@ class SERDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        num_frames = self.shape.nav.size
-        f_per_part = num_frames // self._get_num_partitions()
-
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
-            part_slice = Slice(
-                origin=(
-                    start, 0, 0,
-                ),
-                shape=Shape(((stop - start),) + tuple(self.shape.sig),
-                            sig_dims=self.shape.sig.dims)
-            )
+        partitioner = Partitioner3D()
+        for part_slice, start, stop in partitioner.get_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
             yield SERPartition(
                 meta=self._meta,
                 partition_slice=part_slice,

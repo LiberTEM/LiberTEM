@@ -3,17 +3,20 @@ import io
 import os
 import glob
 import logging
-import functools
 
 import numpy as np
 
-from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from libertem.common import Shape
+from libertem.io.partitioner import Partitioner3D
+from .base import (
+    DataSet, DataSetException, DataSetMeta,
+    Partition3D, File3D, FileSet3D,
+)
 
 log = logging.getLogger(__name__)
 
 
-class MIBFile(object):
+class MIBFile(File3D):
     def __init__(self, path, fields=None):
         self.path = path
         if fields is None:
@@ -50,12 +53,20 @@ class MIBFile(object):
         return self._fields
 
     @property
+    def num_frames(self):
+        return self.fields['num_images']
+
+    @property
+    def start_idx(self):
+        return self.fields['sequence_first_image'] - 1
+
+    @property
     def fields(self):
         if not self._fields:
             self.read_header()
         return self._fields
 
-    def _frames(self, num, offset):
+    def _frames(self, num, start):
         """
         read frames as views into the memmapped file
 
@@ -64,7 +75,7 @@ class MIBFile(object):
 
         num : int
             number of frames to read
-        offset : int
+        start : int
             index of first frame to read (number of frames to skip)
         """
         bpp = self.fields['bytes_per_pixel']
@@ -74,7 +85,7 @@ class MIBFile(object):
         size = size_px * bpp  # bytes
         imagesize_incl_header = size + hsize  # bytes
         mapped = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
-                           offset=offset * imagesize_incl_header)
+                           offset=start * imagesize_incl_header)
 
         # limit to number of frames to read
         mapped = mapped[:num * (size_px + hsize // bpp)]
@@ -85,34 +96,40 @@ class MIBFile(object):
         # reshape to (num_frames, pixels_y, pixels_x)
         return mapped.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
 
-    def read_frames(self, num, offset, out, crop_to):
+    def readinto(self, start, stop, out, crop_to=None):
         """
         Read a number of frames into an existing buffer, skipping the headers
 
         Parameters
         ----------
 
-        num : int
-            number of frames to read
-        offset : int
+        stop : int
+            end index
+        start : int
             index of first frame to read
         out : buffer
-            output buffer that should fit `num` frames
+            output buffer that should fit `stop - start` frames
         crop_to : Slice
             crop to the signal part of this Slice
         """
-        frames = self._frames(num=num, offset=offset)
+        num = stop - start
+        frames = self._frames(num=num, start=start)
         if crop_to is not None:
             frames = frames[(...,) + crop_to.get(sig_only=True)]
         out[:] = frames
         return out
 
 
+class MIBFileSet(FileSet3D):
+    pass
+
+
 class MIBDataSet(DataSet):
-    def __init__(self, path, tileshape, scan_size):
+    def __init__(self, path, tileshape, scan_size, dest_dtype="float32"):
         self._sig_dims = 2
         self._path = path
         self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
+        self._dest_dtype = np.dtype(dest_dtype)
         self._scan_size = tuple(scan_size)
         self._filename_cache = None
         self._files_sorted = None
@@ -121,6 +138,7 @@ class MIBDataSet(DataSet):
         # before calling _preread_headers!
         self._headers = {}
         self._meta = None
+        self._total_filesize = None
 
     def initialize(self):
         self._headers = self._preread_headers()
@@ -137,8 +155,13 @@ class MIBDataSet(DataSet):
         )
         raw_shape = shape.flatten_nav()
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_shape=raw_shape, dtype=dtype)
+        meta = DataSetMeta(shape=shape, raw_shape=raw_shape,
+                           raw_dtype=dtype, dtype=self._dest_dtype)
         self._meta = meta
+        self._total_filesize = sum(
+            os.stat(path).st_size
+            for path in self._filenames()
+        )
         return self
 
     @classmethod
@@ -175,7 +198,8 @@ class MIBDataSet(DataSet):
 
     def _files(self):
         for path in self._filenames():
-            yield MIBFile(path, self._headers.get(path))
+            f = MIBFile(path, fields=self._headers.get(path))
+            yield f
 
     def _num_images(self):
         return sum(f.fields['num_images'] for f in self._files())
@@ -202,6 +226,7 @@ class MIBDataSet(DataSet):
         try:
             s = self._scan_size
             num_images = self._num_images()
+            # FIXME: read hdr file and check if num images matches the number there
             if s[0] * s[1] != num_images:
                 raise DataSetException(
                     "scan_size (%r) does not match number of images (%d)" % (
@@ -229,67 +254,30 @@ class MIBDataSet(DataSet):
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
+    def _get_fileset(self):
+        return MIBFileSet(files=self._files_sorted)
+
+    def _get_num_partitions(self):
+        """
+        returns the number of partitions the dataset should be split into
+        """
+        # let's try to aim for 512MB per partition
+        res = max(1, self._total_filesize // (512*1024*1024))
+        return res
+
     def get_partitions(self):
-        """
-        we keep it simple: one MIB file == one partition
-        """
-
-        @functools.lru_cache(maxsize=None)
-        def pshape_for_length(length):
-            return Shape((length,) + tuple(self.raw_shape.sig), sig_dims=self._sig_dims)
-
-        for f in self._files_sorted:
-            idx = f.fields['sequence_first_image'] - 1
-            length = f.fields['num_images']
-
-            pshape = pshape_for_length(length)
-            pslice = Slice(origin=(idx, 0, 0), shape=pshape)
-
-            yield MIBPartition(
-                tileshape=self._tileshape,
+        partitioner = Partitioner3D()
+        for part_slice, start, stop in partitioner.get_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
+            yield Partition3D(
                 meta=self._meta,
-                partfile=f,
-                partition_slice=pslice,
+                partition_slice=part_slice,
+                fileset=self._get_fileset(),
+                start_frame=start,
+                num_frames=stop - start,
+                stackheight=self._tileshape[0] * self._tileshape[1],
             )
 
     def __repr__(self):
         return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.raw_shape)
-
-
-class MIBPartition(Partition):
-    def __init__(self, tileshape, partfile, *args, **kwargs):
-        self.tileshape = tileshape
-        self.partfile = partfile
-        super().__init__(*args, **kwargs)
-        assert all(s > 0 for s in self.shape), "invalid shape (%r)" % (self.shape,)
-
-    def get_tiles(self, crop_to=None, full_frames=False):
-        stackheight = self.tileshape.nav.size
-
-        num_tiles = self.partfile.fields['num_images'] // stackheight
-
-        tshape = self.tileshape.flatten_nav()
-        sig_origin = (0, 0)
-        if crop_to is not None and tshape.sig != crop_to.shape.sig:
-            tshape = Shape(tuple(tshape.nav) + tuple(crop_to.shape.sig), sig_dims=tshape.sig.dims)
-            sig_origin = crop_to.origin[1:]
-        data = np.ndarray(tshape, dtype=self.dtype)
-        for t in range(num_tiles):
-            tile_slice = Slice(origin=(t * stackheight + self.slice.origin[0],) + sig_origin,
-                               shape=tshape)
-            if crop_to is not None:
-                intersection = tile_slice.intersection_with(crop_to)
-                if intersection.is_null():
-                    continue
-            self.partfile.read_frames(num=stackheight, offset=t * stackheight, out=data,
-                                      crop_to=crop_to)
-            assert all([
-                item > 0
-                for item in tile_slice.shift(self.slice).shape
-            ])
-            assert all([
-                item >= 0
-                for item in tile_slice.shift(self.slice).origin
-            ])
-
-            yield DataTile(data=data, tile_slice=tile_slice)

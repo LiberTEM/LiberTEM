@@ -30,14 +30,14 @@ def test_stddev(lt_ctx):
     assert 'std' in res 
 
     N = data.shape[2] * data.shape[3]
-    assert res['num_frame'].data == N # check the total number of frames
+    assert res['num_frame'] == N # check the total number of frames
 
-    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0, 1))) # check sum of frames
+    assert np.allclose(res['sum_frame'], np.sum(data, axis=(0, 1))) # check sum of frames
 
-    assert np.allclose(res['mean'].data, np.mean(data, axis=(0, 1))) # check mean
+    assert np.allclose(res['mean'], np.mean(data, axis=(0, 1))) # check mean
 
     var = np.var(data, axis=(0, 1))
-    assert np.allclose(var, res['var'].data) # check variance
+    assert np.allclose(var, res['var']) # check variance
 
     std = np.std(data, axis=(0, 1))
-    assert np.allclose(std, res['std'].data) # check standard deviation
+    assert np.allclose(std, res['std']) # check standard deviation

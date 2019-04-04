@@ -22,12 +22,6 @@ def batch_buffer():
         'var': BufferWrapper(
             kind='sig', dtype='float32'
             ),
-        'std': BufferWrapper(
-            kind='sig', dtype='float32'
-            ),
-        'mean': BufferWrapper(
-            kind='sig', dtype='float32'
-            ),
         'num_frame': BufferWrapper(
             kind='single', dtype='float32'
             ),
@@ -37,7 +31,7 @@ def batch_buffer():
     }
 
 
-def compute_batch(frame, var, std, mean, sum_frame, num_frame):
+def compute_batch(frame, var, sum_frame, num_frame):
     """
     Given a frame, update sum of variances, sum of frames,
     and the number of total frames
@@ -81,11 +75,11 @@ def batch_merge(dest, src):
     Parameters
     ----------
     dest
-        A buffer that contains sum of variances, sum of frames, and the
+        Partial results that contains sum of variances, sum of frames, and the
         number of frames used over all the frames used
 
     src
-        A buffer that contains sum of variances, sum of frames, and the
+        Partial results that contains sum of variances, sum of frames, and the
         number of frames used over current iteration of partition
     """
     p0 = VariancePart(var=dest['var'][:],
@@ -119,12 +113,13 @@ def merge(p0, p1):
 
     Returns
     -------
-    collections.namedtuple object
-        Contains information about the merged partitions, including
-        sum of variances, sum of pixels, and number of frames used
+    VariancePart
+        colletions.namedtuple object that contains information about
+        the merged partitions, including sum of variances,
+        sum of pixels, and number of frames used
     """
     if p0.N == 0:
-        return VariancePart(var=p1.var, sum_im=p1.sum_im, N=p1.N)
+        return p1
     N = p0.N + p1.N
 
     # compute mean for each partitions
@@ -149,6 +144,10 @@ def run_stddev(ctx, dataset):
     """
     Compute sum of variances and sum of pixels from the given dataset
 
+    One-pass algorithm used in this code is taken from the following paper:
+    "Numerically Stable Parallel Computation of (Co-) Variance"
+    DOI : https://doi.org/10.1145/3221269.3223036
+
     Parameters
     ----------
     ctx
@@ -161,19 +160,15 @@ def run_stddev(ctx, dataset):
     Returns
     -------
     pass_results
-        A buffer that contains sum of variances, sum of pixels, and
-        number of frames used to compute the above statistic
+        A dictionary of narrays that contains sum of variances, sum of pixels,
+        and number of frames used to compute the above statistic
 
-    Example
-    -------
     To retrieve statistic, using the following commands:
-    variance : pass_results['stddev']
+    variance : pass_results['var']
     standard deviation : pass_results['std']
     sum of pixels : pass_results['sum_frame']
     mean : pass_results['mean']
     number of frames : pass_results['num_frame']
-
-
     """
     pass_results = ctx.run_udf(
         dataset=dataset,
@@ -185,5 +180,7 @@ def run_stddev(ctx, dataset):
     pass_results['var'] = pass_results['var'].data/pass_results['num_frame'].data
     pass_results['std'] = np.sqrt(pass_results['var'].data)
     pass_results['mean'] = pass_results['sum_frame'].data/pass_results['num_frame'].data
+    pass_results['num_frame'] = pass_results['num_frame'].data
+    pass_results['sum_frame'] = pass_results['sum_frame'].data
 
-    return (pass_results)
+    return pass_results

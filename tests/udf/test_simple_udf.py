@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from libertem.common.buffers import BufferWrapper
-from libertem.api import Context
 from utils import MemoryDataSet, _mk_random
 
 

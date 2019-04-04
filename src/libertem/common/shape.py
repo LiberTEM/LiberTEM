@@ -82,7 +82,7 @@ class Shape(object):
 
     def flatten_nav(self):
         """
-        Flatten in the navigation dimensions
+        Returns a new Shape that is flat in the navigation dimensions
 
         Examples
         --------

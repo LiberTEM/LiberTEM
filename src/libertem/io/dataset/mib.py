@@ -220,7 +220,7 @@ class MIBDataSet(DataSet):
         if path.endswith(".mib"):
             return {
                 "path": path,
-                "tileshape": (1, 8, 256, 256),
+                "tileshape": (1, 3, 256, 256),
             }
         return False
 

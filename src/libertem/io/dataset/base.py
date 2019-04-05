@@ -1,13 +1,59 @@
 import math
+import collections
 
 import numpy as np
+import numba
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
+from libertem.common.buffers import bytes_aligned
 
 
 class DataSetException(Exception):
     pass
+
+
+class FileTree(object):
+    def __init__(self, low, high, v, idx, l, r):
+        self.low = low
+        self.high = high
+        self.v = v
+        self.idx = idx
+        self.l = l
+        self.r = r
+
+    @classmethod
+    def make(cls, files):
+        """
+        build a balanced binary tree by bisecting the files list
+        """
+
+        def _make(files):
+            if len(files) == 0:
+                return None
+            mid = len(files) // 2
+            idx, v = files[mid]
+
+            return FileTree(
+                low=v.start_idx,
+                high=v.end_idx,
+                v=v,
+                idx=idx,
+                l=_make(files[:mid]),
+                r=_make(files[mid + 1:]),
+            )
+        return _make(list(enumerate(files)))
+
+    def search_start(self, value):
+        """
+        search a node that has start_idx <= value && end_idx > value
+        """
+        if self.low <= value and self.high > value:
+            return self.idx, self.v
+        elif self.low > value:
+            return self.l.search_start(value)
+        else:
+            return self.r.search_start(value)
 
 
 class DataSet(object):
@@ -233,6 +279,9 @@ class DataTile(object):
 
 
 class File3D(object):
+    def __init__(self):
+        self._buffers = {}
+
     @property
     def num_frames(self):
         raise NotImplementedError()
@@ -248,6 +297,28 @@ class File3D(object):
     def end_idx(self):
         return self.start_idx + self.num_frames
 
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def get_buffer(self, name, size):
+        k = (name, size)
+        b = self._buffers.get(k, None)
+        if b is None:
+            b = bytes_aligned(size)
+            self._buffers[k] = b
+        return b
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.close()
+        return self
+
 
 class FileSet3D(object):
     def __init__(self, files):
@@ -258,31 +329,46 @@ class FileSet3D(object):
             files that are part of a partition or dataset
         """
         self._files = files
+        self._tree = FileTree.make(files)
+        if self._tree is None:
+            raise ValueError(str(files))
+
+    def get_for_range(self, start, stop):
+        """
+        return new FileSet3D filtered for files having frames in the [start, stop) range
+        """
+        files = []
+        for f in self.files_from(start):
+            if f.start_idx > stop:
+                break
+            files.append(f)
+        assert len(files) > 0
+        return self.__class__(files=files)
+
+    def files_from(self, start):
+        lower_bound, f = self._tree.search_start(start)
+        for idx in range(lower_bound, len(self._files)):
+            yield self._files[idx]
 
     def read_images_multifile(self, start, stop, out, crop_to=None):
         """
         read frames starting at index `start` up to but not including index `stop`
         from multiple files into the buffer `out`.
-
-        FIXME: Optimize for larger number of files
         """
         frames_read = 0
-        for f in self._files:
-            # this file is before our range of interest:
-            if f.end_idx <= start:
-                continue
-
+        for f in self.files_from(start):
+            # after the range of interest
             if f.start_idx > stop:
                 break
+            with f:
+                f_start = max(0, start - f.start_idx)
+                f_stop = min(stop, f.end_idx) - f.start_idx
 
-            f_start = max(0, start - f.start_idx)
-            f_stop = min(stop, f.end_idx) - f.start_idx
-
-            # slice output buffer to the part that is contained in the current file
-            buf = out[
-                frames_read:frames_read + (f_stop - f_start)
-            ]
-            f.readinto(start=f_start, stop=f_stop, out=buf)
+                # slice output buffer to the part that is contained in the current file
+                buf = out[
+                    frames_read:frames_read + (f_stop - f_start)
+                ]
+                f.readinto(start=f_start, stop=f_stop, out=buf, crop_to=crop_to)
 
             frames_read += f_stop - f_start
         assert frames_read == out.shape[0]
@@ -327,8 +413,10 @@ class Partition3D(Partition):
         stackheight = self._get_stackheight(sig_shape=sig_shape, target_dtype=self.meta.dtype)
         tile_buf_full = np.zeros((stackheight,) + tuple(sig_shape), dtype=dtype)
 
-        if crop_to is not None and tuple(crop_to.shape.sig) != tuple(sig_shape):
-            raise NotImplementedError("TODO: implement frame cropping")
+        if (crop_to is not None
+                and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
+                and full_frames):
+            raise ValueError("cannot crop and request full frames at the same time")
 
         tileshape = (
             stackheight,

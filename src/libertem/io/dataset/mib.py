@@ -23,6 +23,7 @@ class MIBFile(File3D):
             self._fields = {}
         else:
             self._fields = fields
+        super().__init__()
 
     def _get_np_dtype(self, dtype):
         dtype = dtype.lower()
@@ -66,7 +67,13 @@ class MIBFile(File3D):
             self.read_header()
         return self._fields
 
-    def _frames(self, num, start):
+    def open(self):
+        self._fh = open(self.path, "rb")
+
+    def close(self):
+        self._fh.close()
+
+    def _frames_mmap(self, start, num):
         """
         read frames as views into the memmapped file
 
@@ -96,6 +103,31 @@ class MIBFile(File3D):
         # reshape to (num_frames, pixels_y, pixels_x)
         return mapped.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
 
+    def _frames_read(self, start, num):
+        bpp = self.fields['bytes_per_pixel']
+        hsize = self.fields['header_size_bytes']
+        hsize_px = hsize // bpp
+        assert hsize % bpp == 0
+        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
+        size = size_px * bpp  # bytes
+        imagesize_incl_header = size + hsize  # bytes
+        readsize = imagesize_incl_header * num
+        buf = self.get_buffer("_frame_read", readsize)
+
+        self._fh.seek(start * imagesize_incl_header)
+        bytes_read = self._fh.readinto(buf)
+        assert bytes_read == readsize
+        arr = np.frombuffer(buf, dtype=self.fields['dtype'])
+
+        # limit to number of frames to read
+        arr = arr[:num * (size_px + hsize_px)]
+        # reshape (num_frames, pixels) incl. header
+        arr = arr.reshape((num, size_px + hsize_px))
+        # cut off headers
+        arr = arr[:, hsize_px:]
+        # reshape to (num_frames, pixels_y, pixels_x)
+        return arr.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
+
     def readinto(self, start, stop, out, crop_to=None):
         """
         Read a number of frames into an existing buffer, skipping the headers
@@ -113,7 +145,7 @@ class MIBFile(File3D):
             crop to the signal part of this Slice
         """
         num = stop - start
-        frames = self._frames(num=num, start=start)
+        frames = self._frames_read(num=num, start=start)
         if crop_to is not None:
             frames = frames[(...,) + crop_to.get(sig_only=True)]
         out[:] = frames
@@ -163,6 +195,12 @@ class MIBDataSet(DataSet):
             for path in self._filenames()
         )
         return self
+
+    def get_diagnostics(self):
+        return [
+            {"name": "Data type",
+             "value": str(self._meta.raw_dtype)},
+        ]
 
     @classmethod
     def detect_params(cls, path):
@@ -243,14 +281,6 @@ class MIBDataSet(DataSet):
                 raise DataSetException(
                     "MIB only supports tileshapes that don't cross rows"
                 )
-            # FIXME: this should not generally be required!
-            """
-            for f in self._files():
-                if f.fields['num_images'] % self._scan_size[0] != 0:
-                    raise DataSetException(
-                        "only supporting rectangular shapes per file for now"
-                    )
-            """
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
@@ -267,13 +297,14 @@ class MIBDataSet(DataSet):
 
     def get_partitions(self):
         partitioner = Partitioner3D()
+        fileset = self._get_fileset()
         for part_slice, start, stop in partitioner.get_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
             yield Partition3D(
                 meta=self._meta,
                 partition_slice=part_slice,
-                fileset=self._get_fileset(),
+                fileset=fileset.get_for_range(start, stop),
                 start_frame=start,
                 num_frames=stop - start,
                 stackheight=self._tileshape[0] * self._tileshape[1],

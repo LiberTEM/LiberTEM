@@ -5,8 +5,9 @@ import os
 import numpy as np
 
 from libertem.common import Slice, Shape
+from libertem.common.buffers import empty_aligned
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
-from libertem.io.direct import open_direct, empty_aligned, readinto_direct
+from libertem.io.direct import open_direct, readinto_direct
 
 
 class DirectRawFileReader(object):

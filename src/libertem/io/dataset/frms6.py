@@ -68,6 +68,7 @@ class FRMS6File(File3D):
         self._header = None
         self._hdr_info = hdr_info
         self._start_idx = start_idx
+        super().__init__()
 
     @property
     def dtype(self):

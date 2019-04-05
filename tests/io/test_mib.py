@@ -57,7 +57,7 @@ def test_pickle_is_small(default_mib):
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 1 * 1024
+    assert len(pickled) < 2 * 1024
 
 
 def test_apply_mask_on_mib_job(default_mib, lt_ctx):
@@ -121,3 +121,14 @@ def test_read_at_boundaries(default_mib, lt_ctx):
     res = lt_ctx.run(sumjob)
 
     assert np.allclose(res[0].raw_data, res_odd[0].raw_data)
+
+
+def test_invalid_crop_full_frames_combo(default_mib, lt_ctx):
+    slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
+    p = next(default_mib.get_partitions())
+    with pytest.raises(ValueError):
+        next(p.get_tiles(crop_to=slice_, full_frames=True))
+
+
+def test_diagnostics(default_mib):
+    print(default_mib.diagnostics)

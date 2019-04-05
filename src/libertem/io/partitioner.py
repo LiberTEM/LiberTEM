@@ -30,9 +30,3 @@ class Partitioner3D(object):
                             sig_dims=shape.sig.dims)
             )
             yield part_slice, start, stop
-
-    def get_num_partitions(self, executor):
-        num_workers = len(executor.get_available_workers())
-        # FIXME: see libertem.io.utils.get_partition_shape
-        # FIXME: see also: frms6 _get_num_partitions
-        raise NotImplementedError()

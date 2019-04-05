@@ -1,8 +1,6 @@
 import math
-import collections
 
 import numpy as np
-import numba
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
@@ -14,13 +12,13 @@ class DataSetException(Exception):
 
 
 class FileTree(object):
-    def __init__(self, low, high, v, idx, l, r):
+    def __init__(self, low, high, value, idx, left, right):
         self.low = low
         self.high = high
-        self.v = v
+        self.value = value
         self.idx = idx
-        self.l = l
-        self.r = r
+        self.left = left
+        self.right = right
 
     @classmethod
     def make(cls, files):
@@ -32,15 +30,15 @@ class FileTree(object):
             if len(files) == 0:
                 return None
             mid = len(files) // 2
-            idx, v = files[mid]
+            idx, value = files[mid]
 
             return FileTree(
-                low=v.start_idx,
-                high=v.end_idx,
-                v=v,
+                low=value.start_idx,
+                high=value.end_idx,
+                value=value,
                 idx=idx,
-                l=_make(files[:mid]),
-                r=_make(files[mid + 1:]),
+                left=_make(files[:mid]),
+                right=_make(files[mid + 1:]),
             )
         return _make(list(enumerate(files)))
 
@@ -49,11 +47,11 @@ class FileTree(object):
         search a node that has start_idx <= value && end_idx > value
         """
         if self.low <= value and self.high > value:
-            return self.idx, self.v
+            return self.idx, self.value
         elif self.low > value:
-            return self.l.search_start(value)
+            return self.left.search_start(value)
         else:
-            return self.r.search_start(value)
+            return self.right.search_start(value)
 
 
 class DataSet(object):

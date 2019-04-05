@@ -16,6 +16,19 @@ from .base import (
 log = logging.getLogger(__name__)
 
 
+def read_hdr_file(path):
+    result = {}
+    with open(path, "r", encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            if line.startswith("HDR") or line.startswith("End\t"):
+                continue
+            k, v = line.split("\t", 1)
+            k = k.rstrip(':')
+            v = v.rstrip("\n")
+            result[k] = v
+    return result
+
+
 class MIBFile(File3D):
     def __init__(self, path, fields=None):
         self.path = path

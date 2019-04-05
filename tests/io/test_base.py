@@ -7,11 +7,11 @@ from libertem.io.dataset.base import FileTree
 FakeFile = namedtuple('FakeFile', ['start_idx', 'end_idx'])
 
 
-def mock_files(num): 
-    return [ 
+def mock_files(num):
+    return [
         FakeFile(start_idx=x, end_idx=x + 8)
-        for x in range(0, num*8, 8) 
-    ] 
+        for x in range(0, num*8, 8)
+    ]
 
 
 def print_tree(tree, indent=0):
@@ -19,8 +19,8 @@ def print_tree(tree, indent=0):
         return "-"
     ret_us = f"([{tree.low}, {tree.high}] "
     our_len = len(ret_us)
-    l = print_tree(tree.l, indent + our_len)
-    r = print_tree(tree.r, indent + our_len)
+    l = print_tree(tree.left, indent + our_len)
+    r = print_tree(tree.right, indent + our_len)
     s = " " * (indent + our_len)
     ret = f"\n{s}{l}\n{s}{r})"
     return ret_us + ret

@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 @pytest.fixture
 def default_mib():
     scan_size = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 8, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
     ds = ds.initialize()
     return ds
 
@@ -29,7 +29,7 @@ def test_detect():
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH)
     assert params == {
         "path": MIB_TESTDATA_PATH,
-        "tileshape": (1, 8, 256, 256)
+        "tileshape": (1, 3, 256, 256)
     }
 
 
@@ -49,7 +49,7 @@ def test_read(default_mib):
     tiles = p.get_tiles()
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
-    assert tuple(t.tile_slice.shape) == (8, 256, 256)
+    assert tuple(t.tile_slice.shape) == (3, 256, 256)
 
 
 def test_pickle_is_small(default_mib):

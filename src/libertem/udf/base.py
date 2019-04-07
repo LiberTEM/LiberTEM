@@ -33,8 +33,7 @@ class UDFTask(Task):
             kwargs = {}
         kwargs.update(result_buffers)
         for tile in self.partition.get_tiles(full_frames=True):
-            data = tile.flat_nav
-            for frame_idx, frame in enumerate(data):
+            for frame_idx, frame in enumerate(tile.data):
                 buffer_views = {}
                 for k, buf in result_buffers.items():
                     buffer_views[k] = buf.get_view_for_frame(

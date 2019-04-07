@@ -236,8 +236,8 @@ class Context:
         """
         Select the pixel with coords (y, x) from each frame
         """
-        if dataset.shape.nav.dims != 2:
-            raise ValueError("incompatible dataset: need two navigation dimensions")
+        if dataset.shape.nav.dims > 2:
+            raise ValueError("incompatible dataset: need at most two navigation dimensions")
         parameters = {
             'cx': x,
             'cy': y,
@@ -297,30 +297,29 @@ class Context:
         """
         # FIXME: this method works well if we can flatten to 3D
         # need vectorized I/O for general case
-        raw_shape = dataset.raw_shape
         if len(origin) == dataset.shape.nav.dims:
-            if raw_shape.dims != len(origin) and raw_shape.nav.dims == 1:
-                origin = (np.ravel_multi_index(origin, dataset.shape.nav),)
-            origin = origin + tuple([0] * dataset.shape.sig.dims)
+            origin = (np.ravel_multi_index(origin, dataset.shape.nav),)\
+                + tuple([0] * dataset.shape.sig.dims)
         elif len(origin) == dataset.shape.dims:
-            if raw_shape.dims != len(origin) and raw_shape.nav.dims == 1:
-                origin = (np.ravel_multi_index(origin, dataset.shape),)
+            origin = (np.ravel_multi_index(origin, dataset.shape),)
+        elif len(origin) == 1:
+            origin = origin + tuple([0] * dataset.shape.sig.dims)
+            pass  # keep as-is
         else:
             raise ValueError(
-                "incompatible dataset: origin needs to match dataset shape (%r)" % dataset.shape
+                "incompatible origin: can only read in flattened form"
             )
+
         if shape is None:
-            shape = tuple([1] * raw_shape.nav.dims) + tuple(raw_shape.sig)
+            shape = (1,) + tuple(dataset.shape.sig)
         else:
-            if len(shape) != dataset.shape.dims:
+            if len(shape) != dataset.shape.flatten_nav().dims:
                 raise ValueError(
                     "incompatible: shape needs to match the dataset shape"
                 )
-        shape = Shape(shape, sig_dims=raw_shape.sig.dims)
-        if raw_shape.dims != len(shape) and raw_shape.nav.dims == 1:
-            shape = shape.flatten_nav()
+        shape = Shape(shape, sig_dims=dataset.shape.sig.dims).flatten_nav()
         slice_ = Slice(origin=origin,
-                       shape=Shape(shape, sig_dims=raw_shape.sig.dims))
+                       shape=Shape(shape, sig_dims=dataset.shape.sig.dims))
         return PickFrameJob(
             dataset=dataset,
             slice_=slice_,
@@ -451,7 +450,7 @@ class Context:
             buffer_views = {}
             for k, buf in result_buffers.items():
                 buffer_views[k] = buf.get_view_for_partition(partition=partition)
-            buffers = {k: b.data
+            buffers = {k: b.raw_data
                        for k, b in partition_result_buffers.items()}
             merge(dest=MappingProxyType(buffer_views), src=MappingProxyType(buffers))
         return result_buffers

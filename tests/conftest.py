@@ -55,7 +55,7 @@ def empty_hdf5(tmpdir_factory):
 @pytest.fixture
 def hdf5_ds_1(hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16), target_size=512*1024*1024
+        path=hdf5.filename, ds_path="data", tileshape=(5, 16, 16)
     )
     ds.initialize()
     return ds
@@ -68,8 +68,9 @@ def ds_complex():
     ).astype('complex64')
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16)
+        tileshape=(1, 16, 16),
+        num_partitions=2,
+        sig_dims=2,
     )
     return dataset
 

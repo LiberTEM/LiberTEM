@@ -47,7 +47,7 @@ class MasksAnalysis(BaseMasksAnalysis):
             for idx, job_result in enumerate(job_results):
                 results.extend(
                     self.get_complex_results(
-                        job_result,
+                        job_result.reshape(shape),
                         key_prefix="mask_%d" % idx,
                         title="mask %d" % idx,
                         desc="integrated intensity for mask %d" % idx,

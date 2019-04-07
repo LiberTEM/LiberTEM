@@ -7,7 +7,6 @@ import logging
 import numpy as np
 
 from libertem.common import Shape
-from libertem.io.partitioner import Partitioner3D
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D,
@@ -86,37 +85,7 @@ class MIBFile(File3D):
     def close(self):
         self._fh.close()
 
-    def _frames_mmap(self, start, num):
-        """
-        read frames as views into the memmapped file
-
-        Parameters
-        ----------
-
-        num : int
-            number of frames to read
-        start : int
-            index of first frame to read (number of frames to skip)
-        """
-        bpp = self.fields['bytes_per_pixel']
-        hsize = self.fields['header_size_bytes']
-        assert hsize % bpp == 0
-        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
-        size = size_px * bpp  # bytes
-        imagesize_incl_header = size + hsize  # bytes
-        mapped = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
-                           offset=start * imagesize_incl_header)
-
-        # limit to number of frames to read
-        mapped = mapped[:num * (size_px + hsize // bpp)]
-        # reshape (num_frames, pixels) incl. header
-        mapped = mapped.reshape((num, size_px + hsize // bpp))
-        # cut off headers
-        mapped = mapped[:, (hsize // bpp):]
-        # reshape to (num_frames, pixels_y, pixels_x)
-        return mapped.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
-
-    def _frames_read(self, start, num):
+    def _frames_read(self, start, num, method="read"):
         bpp = self.fields['bytes_per_pixel']
         hsize = self.fields['header_size_bytes']
         hsize_px = hsize // bpp
@@ -124,16 +93,23 @@ class MIBFile(File3D):
         size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
         size = size_px * bpp  # bytes
         imagesize_incl_header = size + hsize  # bytes
-        readsize = imagesize_incl_header * num
-        buf = self.get_buffer("_frame_read", readsize)
 
-        self._fh.seek(start * imagesize_incl_header)
-        bytes_read = self._fh.readinto(buf)
-        assert bytes_read == readsize
-        arr = np.frombuffer(buf, dtype=self.fields['dtype'])
+        if method == "read":
+            readsize = imagesize_incl_header * num
+            buf = self.get_buffer("_frames_read", readsize)
 
-        # limit to number of frames to read
-        arr = arr[:num * (size_px + hsize_px)]
+            self._fh.seek(start * imagesize_incl_header)
+            bytes_read = self._fh.readinto(buf)
+            assert bytes_read == readsize
+            arr = np.frombuffer(buf, dtype=self.fields['dtype'])
+        elif method == "mmap":
+            arr = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
+                            offset=start * imagesize_incl_header)
+            # limit to number of frames to read
+            arr = arr[:num * (size_px + hsize_px)]
+        else:
+            raise ValueError("unknown method: %d" % method)
+
         # reshape (num_frames, pixels) incl. header
         arr = arr.reshape((num, size_px + hsize_px))
         # cut off headers
@@ -158,7 +134,7 @@ class MIBFile(File3D):
             crop to the signal part of this Slice
         """
         num = stop - start
-        frames = self._frames_read(num=num, start=start)
+        frames = self._frames_read(num=num, start=start, method="read")
         if crop_to is not None:
             frames = frames[(...,) + crop_to.get(sig_only=True)]
         out[:] = frames
@@ -198,10 +174,8 @@ class MIBDataSet(DataSet):
             self._scan_size + first_file.fields['image_size'],
             sig_dims=self._sig_dims
         )
-        raw_shape = shape.flatten_nav()
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_shape=raw_shape,
-                           raw_dtype=dtype, dtype=self._dest_dtype)
+        meta = DataSetMeta(shape=shape, raw_dtype=dtype, dtype=self._dest_dtype)
         self._meta = meta
         self._total_filesize = sum(
             os.stat(path).st_size
@@ -266,13 +240,6 @@ class MIBDataSet(DataSet):
         """
         return self._meta.shape
 
-    @property
-    def raw_shape(self):
-        """
-        the original 3D shape
-        """
-        return self._meta.raw_shape
-
     def check_valid(self):
         try:
             s = self._scan_size
@@ -284,10 +251,10 @@ class MIBDataSet(DataSet):
                         s, num_images
                     )
                 )
-            if self._tileshape.sig != self.raw_shape.sig:
+            if self._tileshape.sig != self.shape.sig:
                 raise DataSetException(
                     "MIB only supports tileshapes that match whole frames, %r != %r" % (
-                        self._tileshape.sig, self.raw_shape.sig
+                        self._tileshape.sig, self.shape.sig
                     )
                 )
             if self._tileshape[0] != 1:
@@ -309,9 +276,8 @@ class MIBDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        partitioner = Partitioner3D()
         fileset = self._get_fileset()
-        for part_slice, start, stop in partitioner.get_slices(
+        for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
             yield Partition3D(
@@ -324,4 +290,4 @@ class MIBDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.raw_shape)
+        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.shape)

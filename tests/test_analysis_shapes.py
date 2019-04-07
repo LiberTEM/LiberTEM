@@ -8,8 +8,9 @@ def ds_random():
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16)
+        tileshape=(1, 16, 16),
+        num_partitions=2,
+        sig_dims=2,
     )
     return dataset
 
@@ -57,17 +58,16 @@ def test_ring_3d_ds(lt_ctx):
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),
-        effective_shape=(16, 16, 16, 16),
-        partition_shape=(16, 16, 16),
+        num_partitions=2,
         sig_dims=2,
     )
     analysis = lt_ctx.create_ring_analysis(dataset=dataset, cx=8, cy=8, ri=5, ro=8)
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
-    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.shape))
-    assert results.intensity.raw_data.shape == (16, 16)
+    expected = _naive_mask_apply([mask], dataset.data.reshape((16, 16, 16, 16)))
+    assert results.intensity.raw_data.shape == (16 * 16,)
     assert np.allclose(
-        results.intensity.raw_data,
+        results.intensity.raw_data.reshape((16, 16)),
         expected,
     )
 
@@ -100,18 +100,17 @@ def test_point_3d_ds(lt_ctx):
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
         tileshape=(1, 16, 16),
-        effective_shape=(16, 16, 16, 16),
-        partition_shape=(16, 16, 16),
+        num_partitions=2,
         sig_dims=2,
     )
     analysis = lt_ctx.create_point_analysis(dataset=dataset, x=8, y=8)
     results = lt_ctx.run(analysis)
     mask = np.zeros((16, 16))
     mask[8, 8] = 1
-    expected = _naive_mask_apply([mask], dataset.data.reshape(dataset.shape))
-    assert results.intensity.raw_data.shape == (16, 16)
+    expected = _naive_mask_apply([mask], dataset.data.reshape((16, 16, 16, 16)))
+    assert results.intensity.raw_data.shape == (16 * 16,)
     assert np.allclose(
-        results.intensity.raw_data,
+        results.intensity.raw_data.reshape((16, 16)),
         expected,
     )
 

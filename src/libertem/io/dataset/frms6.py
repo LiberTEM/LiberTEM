@@ -10,7 +10,6 @@ import scipy.io as sio
 import numpy as np
 
 from libertem.common import Shape
-from libertem.io.partitioner import Partitioner3D
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     File3D, FileSet3D, Partition3D
@@ -194,7 +193,7 @@ class FRMS6FileSet(FileSet3D):
         """
 
         # 1) conversion to float: happens as we write to this buffer
-        raw_buffer = np.zeros((out.shape[0],) + tuple(self._meta.raw_shape.sig),
+        raw_buffer = np.zeros((out.shape[0],) + tuple(self._meta['raw_frame_size']),
                               dtype=self._meta.dtype)
 
         super().read_images_multifile(
@@ -269,28 +268,23 @@ class FRMS6DataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
-    @property
-    def raw_shape(self):
-        return self._meta.raw_shape
-
     def initialize(self):
         first_file = next(self._get_signal_files())
         header = first_file.header
         raw_frame_size = header['height'], header['width']
+        # frms6 frames are folded in a specific way, this is the shape after unfolding:
         frame_size = 2 * header['height'], header['width'] // 2
         assert header['width'] % 2 == 0
         hdr = self._get_hdr_info()
         bin_factor = hdr['readoutmode']['bin']
         if bin_factor > 1:
             frame_size = (frame_size[0] * bin_factor, frame_size[1])
-        # TODO: sanity check of num_frames vs the info in .hdr file
-        num_frames = sum(sf.num_frames for sf in self._get_signal_files())
 
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
         self._meta = DataSetMeta(
             raw_dtype=np.dtype("u2"),
             dtype=self._dest_dtype,
-            raw_shape=Shape((num_frames,) + raw_frame_size, sig_dims=sig_dims),
+            metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
         )
         self._dark_frame = self._get_dark_frame()
@@ -299,7 +293,6 @@ class FRMS6DataSet(DataSet):
             os.stat(path).st_size
             for path in self._files()
         )
-        # TODO: sanity check: scan_size vs. num_frames
         return self
 
     def _get_hdr_info(self):
@@ -435,8 +428,7 @@ class FRMS6DataSet(DataSet):
         return res
 
     def get_partitions(self):
-        partitioner = Partitioner3D()
-        for part_slice, start, stop in partitioner.get_slices(
+        for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
             yield Partition3D(

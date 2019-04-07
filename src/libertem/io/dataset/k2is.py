@@ -445,12 +445,9 @@ class K2ISDataSet(DataSet):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
         self._scan_size = self._get_scansize()
-        ss = self._scan_size
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
-            raw_shape=Shape((ss[0] * ss[1], SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                            sig_dims=2),
             dtype=self.dtype,
         )
         return self
@@ -475,10 +472,6 @@ class K2ISDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
-
-    @property
-    def raw_shape(self):
-        return self._meta.raw_shape
 
     @classmethod
     def detect_params(cls, path):

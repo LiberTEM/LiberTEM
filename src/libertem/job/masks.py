@@ -12,6 +12,7 @@ from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task, ResultTile
 from libertem.masks import to_dense, to_sparse
 from libertem.common import Slice
+from libertem.common.buffers import zeros_aligned
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class ApplyMasksJob(Job):
             )
 
     def get_result_shape(self):
-        return (len(self.masks),) + tuple(self.dataset.raw_shape.nav)
+        return (len(self.masks),) + tuple(self.dataset.shape.flatten_nav().nav)
 
 
 class MaskContainer(object):
@@ -191,7 +192,7 @@ class ApplyMasksTask(Task):
         dest_dtype = np.dtype(self.partition.dtype)
         if dest_dtype.kind not in ('c', 'f'):
             dest_dtype = 'float32'
-        part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
+        part = zeros_aligned((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
         for data_tile in self.partition.get_tiles():
             flat_data = data_tile.flat_data
             if flat_data.dtype != dest_dtype:
@@ -213,7 +214,7 @@ class ApplyMasksTask(Task):
             dest_slice = data_tile.tile_slice.shift(self.partition.slice)
             reshaped = self.reshaped_data(data=result, dest_slice=dest_slice)
             # Ellipsis to match the "number of masks" part of the result
-            part[(Ellipsis,) + dest_slice.get(nav_only=True)] += reshaped
+            part[(...,) + dest_slice.get(nav_only=True)] += reshaped
         return [
             MaskResultTile(
                 data=part,

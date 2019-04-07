@@ -1,55 +1,50 @@
-import contextlib
-import itertools
 import os
 
 import numpy as np
 
-from libertem.common import Slice, Shape
-from libertem.common.buffers import empty_aligned
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
-from libertem.io.direct import open_direct, readinto_direct
+from libertem.common import Shape
+from .base import (
+    DataSet, DataSetException, DataSetMeta,
+    Partition3D, File3D, FileSet3D,
+)
 
 
-class DirectRawFileReader(object):
+class DirectRawFile(File3D):
     def __init__(self, meta, path, enable_direct):
         self._path = path
         self._meta = meta
         self._file = None
         self._enable_direct = enable_direct
+        self._frame_size = self._meta.shape.sig.size * self._meta.raw_dtype.itemsize
 
-    @contextlib.contextmanager
-    def open_file(self):
+    @property
+    def num_frames(self):
+        return self._meta.shape.flatten_nav()[0]
+
+    @property
+    def start_idx(self):
+        return 0
+
+    def open(self):
         if self._enable_direct:
-            with open_direct(self._path) as f:
-                self._file = f
-                yield self
-            self._file = None
+            fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
+            f = open(fh, "rb", buffering=0)
         else:
-            with open(self._path, "rb") as f:
-                self._file = f
-                yield self
-            self._file = None
+            f = open(self._path, "rb")
+        self._file = f
 
-    def _calc_offset(self, idx):
-        frame_size_px = self._meta.shape.sig.size
-        frame_size = frame_size_px * self._meta.dtype.itemsize
-        offset = idx * frame_size
-        return offset
+    def close(self):
+        self._file.close()
 
-    def get_buffer(self, stackheight):
-        frame_size_px = self._meta.shape.sig.size
-        size = frame_size_px * stackheight
-        return empty_aligned(size, dtype=self._meta.dtype)
-
-    def readinto(self, out):
-        return readinto_direct(self._file, out)
-
-    def seek_frame(self, idx):
-        offset = self._calc_offset(idx)
+    def readinto(self, start, stop, out, crop_to=None):
+        offset = start * self._frame_size
         try:
             self._file.seek(offset)
         except OSError as e:
             raise DataSetException("could not seek to offset {}: {}".format(offset, e)) from e
+        readsize = (stop - start) * self._frame_size
+        bytes_read = self._file.readinto(out)
+        assert bytes_read == readsize
 
 
 class DirectRawFileDataSet(DataSet):
@@ -62,7 +57,6 @@ class DirectRawFileDataSet(DataSet):
         shape = Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(
             shape=shape,
-            raw_shape=Shape((shape.nav.size,) + self._detector_size, sig_dims=self._sig_dims),
             dtype=np.dtype(dtype)
         )
         self._filesize = None
@@ -80,24 +74,20 @@ class DirectRawFileDataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
-    @property
-    def raw_shape(self):
-        return self._meta.raw_shape
-
-    def get_reader(self):
-        return DirectRawFileReader(
-            meta=self._meta,
-            path=self._path,
-            enable_direct=self._enable_direct,
-        )
+    def _get_fileset(self):
+        return FileSet3D([
+            DirectRawFile(
+                meta=self._meta,
+                path=self._path,
+                enable_direct=self._enable_direct,
+            )
+        ])
 
     def check_valid(self):
         try:
-            reader = self.get_reader()
-            reader.open_file()
-            # TODO: check file size match
-            # TODO: try to read from file?
-            return True
+            fileset = self._get_fileset()
+            with fileset:
+                return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
@@ -110,26 +100,14 @@ class DirectRawFileDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        num_frames = self.shape.nav.size
-        f_per_part = num_frames // self._get_num_partitions()
-
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
-            part_slice = Slice(
-                origin=(
-                    start, 0, 0,
-                ),
-                shape=Shape(((stop - start),) + tuple(self.shape.sig),
-                            sig_dims=self.shape.sig.dims)
-            )
-            yield DirectRawFilePartition(
+        fileset = self._get_fileset()
+        for part_slice, start, stop in Partition3D.make_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
+            yield Partition3D(
                 stackheight=self._stackheight,
                 meta=self._meta,
-                reader=self.get_reader(),
+                fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
@@ -137,55 +115,3 @@ class DirectRawFileDataSet(DataSet):
 
     def __repr__(self):
         return "<DirectRawFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
-
-
-class DirectRawFilePartition(Partition):
-    def __init__(self, stackheight, start_frame, num_frames, reader, *args, **kwargs):
-        self.stackheight = stackheight
-        self.reader = reader
-        self.start_frame = start_frame
-        self.num_frames = num_frames
-        super().__init__(*args, **kwargs)
-
-    def get_tiles(self, crop_to=None, full_frames=False):
-        # NOTE: full_frames ignored here because we currently only read full frames
-        if crop_to is not None:
-            if crop_to.shape.sig != self.meta.shape.sig:
-                raise DataSetException(
-                    "DirectRawFileDataSet only supports whole-frame crops for now"
-                )
-        stackheight = self.stackheight
-        start_frame = self.start_frame
-        num_frames = self.num_frames
-        shape_sig = tuple(self.shape.sig)
-        sig_dims = self.shape.sig.dims
-        sig_size = self.shape.sig.size
-        stop = start_frame + num_frames
-        with self.reader.open_file() as reader:
-            buf = reader.get_buffer(stackheight)
-            c0 = itertools.count(start=start_frame, step=stackheight)
-            for tile_start in c0:
-                if tile_start >= stop:
-                    break
-                # tile_height is the real height, which may be smaller than stackheight
-                # at the end
-                tile_height = min(stackheight, stop - tile_start)
-                tileslice = Slice(
-                    origin=(
-                        tile_start, 0, 0,
-                    ),
-                    shape=Shape((tile_height,) + shape_sig,
-                                sig_dims=sig_dims)
-                )
-                if crop_to is not None:
-                    intersection = tileslice.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                reader.seek_frame(tile_start)
-                data = reader.readinto(buf)
-                # at partition boundary we may read more than requested, cut it off:
-                data = data[:tile_height * sig_size]
-                yield DataTile(
-                    data=data.reshape((tile_height,) + shape_sig),
-                    tile_slice=tileslice
-                )

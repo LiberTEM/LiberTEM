@@ -9,7 +9,6 @@ from libertem.analysis.raw import PickFrameAnalysis
 
 def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
-    assert tuple(default_raw.raw_shape) == (16, 16, 128, 128)
 
 
 def test_check_valid(default_raw):

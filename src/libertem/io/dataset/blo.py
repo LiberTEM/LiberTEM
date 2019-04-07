@@ -1,9 +1,13 @@
+import os
 import contextlib
 
 import numpy as np
 
-from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from libertem.common import Shape
+from .base import (
+    DataSet, DataSetException, DataSetMeta,
+    Partition3D, File3D, FileSet3D
+)
 
 MAGIC_EXPECT = 258
 
@@ -38,12 +42,21 @@ def get_header_dtype_list(endianess='<'):
     return dtype_list
 
 
-class BloReader(object):
+class BloFile(File3D):
     def __init__(self, path, endianess, meta, offset_2):
         self._path = path
         self._offset_2 = offset_2
         self._endianess = endianess
         self._meta = meta
+        self._num_frames = meta.shape.nav.nav.size
+
+    @property
+    def num_frames(self):
+        return self._num_frames
+
+    @property
+    def start_idx(self):
+        return 0
 
     @contextlib.contextmanager
     def get_data(self):
@@ -51,10 +64,17 @@ class BloReader(object):
             data = np.memmap(f, mode='r', offset=self._offset_2,
                              dtype=self._endianess + 'u1')
             NY, NX, DP_SZ, _ = self._meta.shape
-            data = data.reshape((NY, NX, DP_SZ * DP_SZ + 6))
-            data = data[:, :, 6:]
-            data = data.reshape(self._meta.shape)
+            data = data.reshape((NY * NX, DP_SZ * DP_SZ + 6))
+            data = data[:, 6:]
+            data = data.reshape((NY * NX, DP_SZ, DP_SZ))
             yield data
+
+    def readinto(self, start, stop, out, crop_to=None):
+        slice_ = (...,)
+        if crop_to is not None:
+            slice_ = crop_to.get(sig_only=True)
+        with self.get_data() as data:
+            out[:] = data[(slice(start, stop),) + slice_]
 
 
 class BloDataSet(DataSet):
@@ -64,6 +84,7 @@ class BloDataSet(DataSet):
         self._header = None
         self._endianess = endianess
         self._shape = None
+        self._filesize = None
 
     def initialize(self):
         self._read_header()
@@ -74,18 +95,10 @@ class BloDataSet(DataSet):
         self._shape = Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
         self._meta = DataSetMeta(
             shape=self._shape,
-            raw_shape=self._shape,
             dtype=self.dtype,
         )
+        self._filesize = os.stat(self._path).st_size
         return self
-
-    def get_reader(self):
-        return BloReader(
-            path=self._path,
-            offset_2=int(self.header['Data_offset_2']),
-            endianess=self._endianess,
-            meta=self._meta,
-        )
 
     @classmethod
     def detect_params(cls, path):
@@ -106,7 +119,7 @@ class BloDataSet(DataSet):
         return np.dtype("u1")
 
     @property
-    def raw_shape(self):
+    def shape(self):
         if self._shape is None:
             raise RuntimeError("please call initialize() before using the dataset")
         return self._shape
@@ -131,48 +144,35 @@ class BloDataSet(DataSet):
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e) from e
 
-    def get_partitions(self):
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
-        partition_shape = self.partition_shape(
-            datashape=self.shape,
-            framesize=self.shape[2] * self.shape[3],
-            dtype=self.dtype,
-            target_size=256*1024*1024,
+    def _get_num_partitions(self):
+        """
+        returns the number of partitions the dataset should be split into
+        """
+        # let's try to aim for 512MB per partition
+        res = max(1, self._filesize // (512*1024*1024))
+        return res
+
+    def _get_blo_file(self):
+        return BloFile(
+            path=self._path,
+            offset_2=int(self.header['Data_offset_2']),
+            endianess=self._endianess,
+            meta=self._meta,
         )
-        for pslice in ds_slice.subslices(partition_shape):
-            yield BloPartition(
-                tileshape=self._tileshape,
+
+    def get_partitions(self):
+        fileset = FileSet3D([
+            self._get_blo_file()
+        ])
+
+        for part_slice, start, stop in Partition3D.make_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
+            yield Partition3D(
                 meta=self._meta,
-                reader=self.get_reader(),
-                partition_slice=pslice,
+                partition_slice=part_slice,
+                fileset=fileset.get_for_range(start, stop),
+                start_frame=start,
+                num_frames=stop - start,
+                stackheight=self._tileshape[0] * self._tileshape[1],
             )
-
-
-class BloPartition(Partition):
-    def __init__(self, tileshape, reader, *args, **kwargs):
-        self.tileshape = tileshape
-        self.reader = reader
-        super().__init__(*args, **kwargs)
-
-    def get_tiles(self, crop_to=None, full_frames=False):
-        if crop_to is not None:
-            if crop_to.shape.sig != self.meta.shape.sig:
-                raise DataSetException("BloDataSet only supports whole-frame crops for now")
-        if full_frames:
-            tileshape = (
-                tuple(self.tileshape[:self.meta.shape.nav.dims]) + tuple(self.meta.shape.sig)
-            )
-        else:
-            tileshape = self.tileshape
-        with self.reader.get_data() as data:
-            subslices = list(self.slice.subslices(shape=tileshape))
-            for tile_slice in subslices:
-                if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                # NOTE: no need to re-use buffer, as there is none (mmap!)
-                yield DataTile(
-                    data=data[tile_slice.get()],
-                    tile_slice=tile_slice
-                )

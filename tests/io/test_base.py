@@ -2,7 +2,7 @@ from collections import namedtuple
 
 
 from libertem.io.dataset.base import FileTree
-
+from utils import MemoryDataSet, _mk_random
 
 FakeFile = namedtuple('FakeFile', ['start_idx', 'end_idx'])
 
@@ -19,10 +19,10 @@ def print_tree(tree, indent=0):
         return "-"
     ret_us = f"([{tree.low}, {tree.high}] "
     our_len = len(ret_us)
-    l = print_tree(tree.left, indent + our_len)
+    leh = print_tree(tree.left, indent + our_len)
     r = print_tree(tree.right, indent + our_len)
     s = " " * (indent + our_len)
-    ret = f"\n{s}{l}\n{s}{r})"
+    ret = f"\n{s}{leh}\n{s}{r})"
     return ret_us + ret
 
 
@@ -64,3 +64,17 @@ def test_search():
 
     for i in range(32, 40):
         assert tree.search_start(i)[1].start_idx == 32
+
+
+def test_sweep_stackheight():
+    data = _mk_random(size=(16, 16, 16, 16))
+    for stackheight in range(1, 256):
+        print("testing with stackheight", stackheight)
+        dataset = MemoryDataSet(
+            data=data.astype("<u2"),
+            tileshape=(stackheight, 16, 16),
+            num_partitions=2,
+        )
+        for p in dataset.get_partitions():
+            for tile in p.get_tiles():
+                pass

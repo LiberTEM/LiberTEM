@@ -1,10 +1,11 @@
+import itertools
 import math
 
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
-from libertem.common.buffers import bytes_aligned
+from libertem.common.buffers import bytes_aligned, zeros_aligned
 
 
 class DataSetException(Exception):
@@ -84,14 +85,8 @@ class DataSet(object):
     @property
     def shape(self):
         """
-        the effective shape, for example imprinted by the scan_size parameter of some dataset impls
-        """
-        return self.raw_shape
-
-    @property
-    def raw_shape(self):
-        """
-        the "real" shape of the dataset, as it makes sense for the format
+        The shape of the DataSet, as it makes sense for the application domain
+        (for example, 4D for pixelated STEM)
         """
         raise NotImplementedError()
 
@@ -159,19 +154,23 @@ class DataSet(object):
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, raw_shape, dtype, raw_dtype=None):
+    def __init__(self, shape, dtype, raw_dtype=None, metadata=None):
         self.shape = shape
-        self.raw_shape = raw_shape
         self.dtype = np.dtype(dtype)
         if raw_dtype is None:
             raw_dtype = dtype
         self.raw_dtype = np.dtype(raw_dtype)
+        self.metadata = metadata
+
+    def __getitem__(self, key):
+        return self.metadata[key]
 
 
 class Partition(object):
     def __init__(self, meta, partition_slice):
         self.meta = meta
         self.slice = partition_slice
+        assert partition_slice.shape.nav.dims == 1
 
     @property
     def dtype(self):
@@ -182,7 +181,7 @@ class Partition(object):
         """
         the shape of the partition; dimensionality depends on format
         """
-        return self.slice.shape
+        return self.slice.shape.flatten_nav()
 
     def get_tiles(self, crop_to=None, full_frames=False):
         """
@@ -230,21 +229,9 @@ class DataTile(object):
         self.data = data
         self.tile_slice = tile_slice
         assert hasattr(tile_slice.shape, "to_tuple")
-        # FIXME: the world isn't ready for awesomeness yet, saving this for the future:
-        # assert tile_slice.shape.nav.dims == 1, "DataTile should have flat nav"
+        assert tile_slice.shape.nav.dims == 1, "DataTile should have flat nav"
         assert data.shape == tuple(tile_slice.shape),\
             "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
-
-    @property
-    def flat_nav(self):
-        """
-        Flatten the nav axis of the data.
-        """
-        shape = self.tile_slice.shape
-        tileshape = (
-            shape.nav.size,    # stackheight, number of frames we process at once
-        ) + tuple(shape.sig)
-        return self.data.reshape(tileshape)
 
     @property
     def flat_data(self):
@@ -291,6 +278,9 @@ class File3D(object):
     def readinto(self, start, stop, out, crop_to=None):
         raise NotImplementedError()
 
+    def mmap(self, crop_to):
+        raise NotImplementedError()
+
     @property
     def end_idx(self):
         return self.start_idx + self.num_frames
@@ -302,6 +292,9 @@ class File3D(object):
         pass
 
     def get_buffer(self, name, size):
+        """
+        Get a buffer of `size` bytes. cache buffers by key (`size`, `name`) for efficient re-use.
+        """
         k = (name, size)
         b = self._buffers.get(k, None)
         if b is None:
@@ -315,7 +308,6 @@ class File3D(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self.close()
-        return self
 
 
 class FileSet3D(object):
@@ -327,9 +319,11 @@ class FileSet3D(object):
             files that are part of a partition or dataset
         """
         self._files = files
+        assert len(files) > 0
         self._tree = FileTree.make(files)
         if self._tree is None:
             raise ValueError(str(files))
+        self._files_open = False
 
     def get_for_range(self, start, stop):
         """
@@ -353,23 +347,38 @@ class FileSet3D(object):
         read frames starting at index `start` up to but not including index `stop`
         from multiple files into the buffer `out`.
         """
+        if not self._files_open:
+            raise RuntimeError(
+                "only call read_images_multifile when having the "
+                "fileset opened via with-statement"
+            )
         frames_read = 0
         for f in self.files_from(start):
             # after the range of interest
             if f.start_idx > stop:
                 break
-            with f:
-                f_start = max(0, start - f.start_idx)
-                f_stop = min(stop, f.end_idx) - f.start_idx
+            f_start = max(0, start - f.start_idx)
+            f_stop = min(stop, f.end_idx) - f.start_idx
 
-                # slice output buffer to the part that is contained in the current file
-                buf = out[
-                    frames_read:frames_read + (f_stop - f_start)
-                ]
-                f.readinto(start=f_start, stop=f_stop, out=buf, crop_to=crop_to)
+            # slice output buffer to the part that is contained in the current file
+            buf = out[
+                frames_read:frames_read + (f_stop - f_start)
+            ]
+            f.readinto(start=f_start, stop=f_stop, out=buf, crop_to=crop_to)
 
             frames_read += f_stop - f_start
         assert frames_read == out.shape[0]
+
+    def __enter__(self):
+        for f in self._files:
+            f.open()
+        self._files_open = True
+        return self
+
+    def __exit__(self, *exc):
+        for f in self._files:
+            f.close()
+        self._files_open = False
 
 
 class Partition3D(Partition):
@@ -399,54 +408,79 @@ class Partition3D(Partition):
         framesize = sig_shape.size * target_dtype.itemsize
         return max(1, math.floor(target_size / framesize))
 
+    @classmethod
+    def make_slices(cls, shape, num_partitions):
+        """
+        partition a 3D dataset ("list of frames") along the first axis,
+        yielding the partition slice, and additionally start and stop frame
+        indices for each partition.
+        """
+        num_frames = shape.nav.size
+        f_per_part = num_frames // num_partitions
+
+        c0 = itertools.count(start=0, step=f_per_part)
+        c1 = itertools.count(start=f_per_part, step=f_per_part)
+        for (start, stop) in zip(c0, c1):
+            if start >= num_frames:
+                break
+            stop = min(stop, num_frames)
+            part_slice = Slice(
+                origin=(start,) + tuple([0] * shape.sig.dims),
+                shape=Shape(((stop - start),) + tuple(shape.sig),
+                            sig_dims=shape.sig.dims)
+            )
+            yield part_slice, start, stop
+
     def get_tiles(self, crop_to=None, full_frames=False):
         start_at_frame = self._start_frame
         num_frames = self._num_frames
         dtype = self.meta.dtype
         sig_shape = self.meta.shape.sig
         sig_origin = tuple([0] * len(sig_shape))
-        if crop_to is not None:
-            sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
-            sig_shape = crop_to.shape.sig
-        stackheight = self._get_stackheight(sig_shape=sig_shape, target_dtype=self.meta.dtype)
-        tile_buf_full = np.zeros((stackheight,) + tuple(sig_shape), dtype=dtype)
-
         if (crop_to is not None
                 and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
                 and full_frames):
             raise ValueError("cannot crop and request full frames at the same time")
+        if crop_to is not None:
+            sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
+            sig_shape = crop_to.shape.sig
+        if full_frames:
+            sig_shape = self.meta.shape.sig
+        stackheight = self._get_stackheight(sig_shape=sig_shape, target_dtype=self.meta.dtype)
+        tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dtype)
 
         tileshape = (
             stackheight,
         ) + tuple(sig_shape)
 
-        for outer_frame in range(start_at_frame, start_at_frame + num_frames, stackheight):
-            if start_at_frame + num_frames - outer_frame < stackheight:
-                end_frame = start_at_frame + num_frames
-                current_stackheight = end_frame - outer_frame
-                current_tileshape = (
-                    current_stackheight,
-                ) + tuple(sig_shape)
-                tile_buf = np.zeros(current_tileshape, dtype=dtype)
-            else:
-                current_stackheight = stackheight
-                current_tileshape = tileshape
-                tile_buf = tile_buf_full
-            tile_slice = Slice(
-                origin=(outer_frame,) + sig_origin,
-                shape=Shape(current_tileshape, sig_dims=sig_shape.dims)
-            )
-            if crop_to is not None:
-                intersection = tile_slice.intersection_with(crop_to)
-                if intersection.is_null():
-                    continue
-            self._fileset.read_images_multifile(
-                start=outer_frame,
-                stop=outer_frame + current_stackheight,
-                out=tile_buf,
-                crop_to=crop_to,
-            )
-            yield DataTile(
-                data=tile_buf,
-                tile_slice=tile_slice
-            )
+        with self._fileset as fileset:
+            for outer_frame in range(start_at_frame, start_at_frame + num_frames, stackheight):
+                if start_at_frame + num_frames - outer_frame < stackheight:
+                    end_frame = start_at_frame + num_frames
+                    current_stackheight = end_frame - outer_frame
+                    current_tileshape = (
+                        current_stackheight,
+                    ) + tuple(sig_shape)
+                    tile_buf = zeros_aligned(current_tileshape, dtype=dtype)
+                else:
+                    current_stackheight = stackheight
+                    current_tileshape = tileshape
+                    tile_buf = tile_buf_full
+                tile_slice = Slice(
+                    origin=(outer_frame,) + sig_origin,
+                    shape=Shape(current_tileshape, sig_dims=sig_shape.dims)
+                )
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
+                fileset.read_images_multifile(
+                    start=outer_frame,
+                    stop=outer_frame + current_stackheight,
+                    out=tile_buf,
+                    crop_to=crop_to,
+                )
+                yield DataTile(
+                    data=tile_buf,
+                    tile_slice=tile_slice
+                )

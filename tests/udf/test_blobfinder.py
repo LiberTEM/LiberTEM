@@ -36,7 +36,7 @@ def test_smoke(lt_ctx):
     """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
-                            partition_shape=(4, 16, 16), sig_dims=2)
+                            num_partitions=2, sig_dims=2)
     blobfinder.run_blobfinder(ctx=lt_ctx, dataset=dataset, parameters={
         'num_disks': 1,
         'radius': 4,

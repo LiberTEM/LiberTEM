@@ -19,11 +19,18 @@ def bytes_aligned(size):
 
 
 def empty_aligned(size, dtype):
+    size_flat = np.product(size)
     dtype = np.dtype(dtype)
-    buf = _alloc_aligned(dtype.itemsize * size)
+    buf = _alloc_aligned(dtype.itemsize * size_flat)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
-    npbuf = np.frombuffer(buf, dtype=dtype)[:size]
-    return npbuf
+    npbuf = np.frombuffer(buf, dtype=dtype)[:size_flat]
+    return npbuf.reshape(size)
+
+
+def zeros_aligned(size, dtype):
+    res = empty_aligned(size, dtype)
+    res[:] = 0
+    return res
 
 
 class BufferWrapper(object):
@@ -58,12 +65,14 @@ class BufferWrapper(object):
         self._dtype = np.dtype(dtype)
         self._data = None
         self._shape = None
+        self._ds_shape = None
 
     def set_shape_partition(self, partition):
         self._shape = self._shape_for_kind(self._kind, partition.shape)
 
     def set_shape_ds(self, dataset):
-        self._shape = self._shape_for_kind(self._kind, dataset.raw_shape)
+        self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav())
+        self._ds_shape = dataset.shape
 
     def _shape_for_kind(self, kind, orig_shape):
         if self._kind == "nav":
@@ -77,6 +86,21 @@ class BufferWrapper(object):
 
     @property
     def data(self):
+        """
+        get the buffer contents in shape that corresponds to the
+        original dataset shape
+        """
+        if self._kind == "nav":
+            return self._data.reshape(self._ds_shape.nav)
+        else:
+            return self._data
+
+    @property
+    def raw_data(self):
+        """
+        get the raw data underlying this buffer, which is flattened and
+        may be even filtered to a ROI
+        """
         return self._data
 
     def allocate(self):
@@ -84,10 +108,9 @@ class BufferWrapper(object):
         allocate a new buffer, in the shape previously set
         via one of the `set_shape_*` methods.
         """
-        # TODO: alignment?
         assert self._shape is not None
         assert self._data is None
-        self._data = np.zeros(self._shape, dtype=self._dtype)
+        self._data = zeros_aligned(self._shape, dtype=self._dtype)
 
     def set_buffer(self, buf):
         """
@@ -105,6 +128,11 @@ class BufferWrapper(object):
         return self._data is not None
 
     def get_view_for_partition(self, partition):
+        """
+        get a view for a single partition in a dataset-sized buffer
+        (dataset-sized here means the reduced result for a whole dataset,
+        not the dataset itself!)
+        """
         if self._kind == "nav":
             return self._data[partition.slice.get(nav_only=True)]
         elif self._kind == "sig":
@@ -113,17 +141,16 @@ class BufferWrapper(object):
             return self._data
 
     def get_view_for_frame(self, partition, tile, frame_idx):
+        """
+        get a view for a single frame in a partition-sized buffer
+        (partition-sized here means the reduced result for a whole partition,
+        not the partition itself!)
+        """
+        assert partition.shape.dims == partition.shape.sig.dims + 1
         if self._kind == "sig":
             return self._data[partition.slice.get(sig_only=True)]
         elif self._kind == "nav":
-            ref_slice = partition.slice
-            tile_slice = tile.tile_slice.shift(ref_slice)
-            start_of_tile = np.ravel_multi_index(
-                tile_slice.origin[:-tile_slice.shape.sig.dims],
-                tuple(partition.shape.nav),
-            )
-            result_idx = np.unravel_index(start_of_tile + frame_idx,
-                                          partition.shape.nav)
+            result_idx = (tile.tile_slice.origin[0] + frame_idx - partition.slice.origin[0],)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) > 0:
                 return self._data[result_idx]

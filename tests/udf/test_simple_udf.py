@@ -16,8 +16,8 @@ def test_sum_frames(lt_ctx):
 
     """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16),
-                            partition_shape=(4, 4, 16, 16), sig_dims=2)
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
 
     def my_buffers():
         return {
@@ -41,16 +41,16 @@ def test_sum_frames(lt_ctx):
 
 def test_3d_ds(lt_ctx):
     """
-    Test sum over the pixels for 3-dimensional dataset 
+    Test sum over the pixels for 3-dimensional dataset
 
-    Parameters 
+    Parameters
     ----------
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
-                            partition_shape=(4, 16, 16), sig_dims=2)
+                            num_partitions=2, sig_dims=2)
 
     def my_buffers():
         return {
@@ -82,8 +82,8 @@ def test_kind_single(lt_ctx):
         Context class for loading dataset and creating jobs on them
     """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(1, 2, 16, 16),
-                            partition_shape=(4, 4, 16, 16), sig_dims=2)
+    dataset = MemoryDataSet(data=data, tileshape=(2, 16, 16),
+                            num_partitions=2, sig_dims=2)
 
     def counter_buffers():
         return {
@@ -115,7 +115,7 @@ def test_bad_merge(lt_ctx):
     """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
-                            partition_shape=(4, 16, 16), sig_dims=2)
+                            num_partitions=2, sig_dims=2)
 
     def my_buffers():
         return {

@@ -48,7 +48,6 @@ class BinaryHDFSDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=self.shape,
             dtype=self.dtype,
-            raw_shape=self.raw_shape,
         )
         return self
 
@@ -61,11 +60,6 @@ class BinaryHDFSDataSet(DataSet):
 
     @property
     def shape(self):
-        return Shape(self._index['shape'], sig_dims=self._sig_dims)
-
-    @property
-    def raw_shape(self):
-        # FIXME: need to distinguish shape/raw_shape in json metadata
         return Shape(self._index['shape'], sig_dims=self._sig_dims)
 
     def check_valid(self):

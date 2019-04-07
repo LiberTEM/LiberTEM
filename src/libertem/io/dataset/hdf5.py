@@ -45,7 +45,6 @@ class H5DataSet(DataSet):
         self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
-        self._raw_shape = None
 
     def get_reader(self):
         return H5Reader(
@@ -56,10 +55,9 @@ class H5DataSet(DataSet):
     def initialize(self):
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
-            self._raw_shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+            self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
             self._meta = DataSetMeta(
                 shape=self.shape,
-                raw_shape=self._raw_shape,
                 dtype=self._dtype,
             )
         return self
@@ -101,10 +99,10 @@ class H5DataSet(DataSet):
         return self._dtype
 
     @property
-    def raw_shape(self):
-        if self._raw_shape is None:
+    def shape(self):
+        if self._shape is None:
             raise RuntimeError("please call initialize")
-        return self._raw_shape
+        return self._shape
 
     def check_valid(self):
         try:
@@ -124,12 +122,12 @@ class H5DataSet(DataSet):
             ]
 
     def get_partitions(self):
-        ds_shape = Shape(self.raw_shape, sig_dims=self.sig_dims)
+        ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=ds_shape)
         dtype = self.dtype
         partition_shape = self.partition_shape(
-            datashape=self.raw_shape,
-            framesize=self.raw_shape.sig.size,
+            datashape=self.shape,
+            framesize=self.shape.sig.size,
             dtype=dtype,
             target_size=self.target_size,
             min_num_partitions=self.min_num_partitions,
@@ -144,7 +142,7 @@ class H5DataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<H5DataSet of %s raw_shape=%s>" % (self._dtype, self._raw_shape)
+        return "<H5DataSet of %s shape=%s>" % (self._dtype, self._shape)
 
 
 class H5Partition(Partition):

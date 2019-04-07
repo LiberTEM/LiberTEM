@@ -27,7 +27,6 @@ def test_pickle_ds(lt_ctx, hdf5_ds_1):
     loaded = pickle.loads(pickled)
 
     assert loaded._dtype is not None
-    assert loaded._raw_shape is not None
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 1 * 1024
@@ -42,7 +41,7 @@ def test_cloudpickle(lt_ctx, hdf5):
     loaded = cloudpickle.loads(pickled)
 
     assert loaded._dtype is None
-    assert loaded._raw_shape is None
+    assert loaded._shape is None
     repr(loaded)
 
     ds.initialize()
@@ -51,7 +50,7 @@ def test_cloudpickle(lt_ctx, hdf5):
     loaded = cloudpickle.loads(pickled)
 
     assert loaded._dtype is not None
-    assert loaded._raw_shape is not None
+    assert loaded._shape is not None
     loaded.shape
     loaded.dtype
     repr(loaded)

@@ -15,7 +15,7 @@ class RawFileReader(object):
         f = np.memmap(self._path, dtype=self._meta.dtype, mode='r',
                       shape=self._scan_size + self._detector_size_raw)
         ds_slice = Slice(origin=(0, 0, 0, 0), shape=self._meta.shape)
-        return f[ds_slice.get()]  # crop off the two extra rows
+        return f[ds_slice.get()]  # crop off any superfluous data
 
 
 class RawFileDataSet(DataSet):
@@ -34,7 +34,6 @@ class RawFileDataSet(DataSet):
         self._sig_dims = len(self._detector_size)
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims),
-            raw_shape=Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims),
             dtype=np.dtype(dtype)
         )
 
@@ -48,10 +47,6 @@ class RawFileDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
-
-    @property
-    def raw_shape(self):
-        return self._meta.raw_shape
 
     def get_reader(self):
         return RawFileReader(

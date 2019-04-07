@@ -27,7 +27,6 @@ def default_blo():
 
 def test_simple_open(default_blo):
     assert tuple(default_blo.shape) == (90, 121, 144, 144)
-    assert tuple(default_blo.raw_shape) == (90, 121, 144, 144)
 
 
 def test_check_valid(default_blo):
@@ -41,7 +40,7 @@ def test_read(default_blo):
     # assert tuple(p.shape) == (11, 121, 144, 144)
     tiles = p.get_tiles()
     t = next(tiles)
-    assert tuple(t.tile_slice.shape) == (1, 8, 144, 144)
+    assert tuple(t.tile_slice.shape) == (8, 144, 144)
 
 
 def test_pickle_meta_is_small(default_blo):
@@ -50,8 +49,8 @@ def test_pickle_meta_is_small(default_blo):
     assert len(pickled) < 512
 
 
-def test_pickle_reader_is_small(default_blo):
-    pickled = pickle.dumps(default_blo.get_reader())
+def test_pickle_blofile_is_small(default_blo):
+    pickled = pickle.dumps(default_blo._get_blo_file())
     pickle.loads(pickled)
     assert len(pickled) < 512
 
@@ -69,7 +68,7 @@ def test_apply_mask_on_raw_job(default_blo, lt_ctx):
             tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
-    assert results[0].shape == (90, 121)
+    assert results[0].shape == (90 * 121,)
 
 
 def test_apply_mask_analysis(default_blo, lt_ctx):
@@ -86,7 +85,7 @@ def test_sum_analysis(default_blo, lt_ctx):
 
 
 def test_pick_job(default_blo, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_blo, origin=(16, 16))
+    analysis = lt_ctx.create_pick_job(dataset=default_blo, origin=(16,))
     results = lt_ctx.run(analysis)
     assert results.shape == (144, 144)
 

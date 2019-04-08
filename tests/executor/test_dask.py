@@ -40,7 +40,7 @@ def test_task_affinity_1():
 @pytest.mark.asyncio
 async def test_run_job(aexecutor):
     data = _mk_random(size=(16, 16, 16, 16), dtype='<u2')
-    dataset = MemoryDataSet(data=data, tileshape=(1, 1, 16, 16), partition_shape=(1, 8, 16, 16))
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
     expected = data.sum(axis=(0, 1))
 
     job = SumFramesJob(dataset=dataset)

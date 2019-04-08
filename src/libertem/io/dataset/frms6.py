@@ -10,9 +10,10 @@ import scipy.io as sio
 import numpy as np
 
 from libertem.common import Shape
+from libertem.common.buffers import zeros_aligned
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    File3D, FileSet3D, Partition3D
+    File3D, FileSet3D, Partition3D, IOCaps
 )
 
 log = logging.getLogger(__name__)
@@ -154,6 +155,7 @@ class FRMS6File(File3D):
         return self._get_mmapped_array()
 
 
+@IOCaps({IOCaps.FULL_FRAMES})
 class FRMS6FileSet(FileSet3D):
     def __init__(self, files, meta, dark_frame, gain_map):
         """
@@ -170,10 +172,10 @@ class FRMS6FileSet(FileSet3D):
         gain_map : ndarray or None
             gain map (2D, folded)
         """
-        self._files = files
         self._meta = meta
         self._dark_frame = dark_frame
         self._gain_map = gain_map
+        super().__init__(files)
 
     def read_images_multifile(self, start, stop, out, crop_to=None):
         """
@@ -193,8 +195,8 @@ class FRMS6FileSet(FileSet3D):
         """
 
         # 1) conversion to float: happens as we write to this buffer
-        raw_buffer = np.zeros((out.shape[0],) + tuple(self._meta['raw_frame_size']),
-                              dtype=self._meta.dtype)
+        raw_buffer = zeros_aligned((out.shape[0],) + tuple(self._meta['raw_frame_size']),
+                                   dtype=out.dtype)
 
         super().read_images_multifile(
             start=start,
@@ -332,7 +334,7 @@ class FRMS6DataSet(DataSet):
         dark_file = self._get_dark_file()
         # FIXME: currently doing two passes here: dtype conversion and summation
         return (
-            dark_file.data.astype(self._meta.dtype).sum(axis=0) / dark_file.data.shape[0]
+            dark_file.data.astype("float32").sum(axis=0) / dark_file.data.shape[0]
         )
 
     def _get_dark_file(self):
@@ -413,7 +415,7 @@ class FRMS6DataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.dtype
+        return self._meta.raw_dtype
 
     @property
     def raw_dtype(self):

@@ -348,7 +348,6 @@ def test_masks_complex_mask(lt_ctx, ds_complex):
     _run_mask_test_program(lt_ctx, ds_complex, mask0, np.abs(expected))
 
 
-@pytest.mark.xfail
 def test_numerics(lt_ctx):
     dtype = 'float32'
     # Highest expected detector resolution

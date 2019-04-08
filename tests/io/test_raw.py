@@ -22,8 +22,9 @@ def test_read(default_raw):
     # assert tuple(p.shape) == (2, 16, 128, 128)
     tiles = p.get_tiles()
     t = next(tiles)
-    # default tileshape -> whole partition
-    assert tuple(t.tile_slice.shape) == tuple(p.shape)
+
+    # ~1MB
+    assert tuple(t.tile_slice.shape) == (16, 128, 128)
 
 
 def test_pickle_is_small(default_raw):
@@ -47,10 +48,7 @@ def test_apply_mask_on_raw_job(default_raw, lt_ctx):
             tile.reduce_into_result(out)
 
     results = lt_ctx.run(job)
-    # FIXME: should the result here be 1D or 2D?
-    # currently, for inherently 4D datasets it is 2D, and for 3D datasets
-    # it is 1D. make this consistent?
-    assert results[0].shape == (16, 16)
+    assert results[0].shape == (16 * 16,)
 
 
 def test_apply_mask_analysis(default_raw, lt_ctx):
@@ -67,12 +65,13 @@ def test_sum_analysis(default_raw, lt_ctx):
 
 
 def test_pick_job(default_raw, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_raw, origin=(16, 16))
+    analysis = lt_ctx.create_pick_job(dataset=default_raw, origin=(16,))
     results = lt_ctx.run(analysis)
     assert results.shape == (128, 128)
 
 
 def test_pick_analysis(default_raw, lt_ctx):
-    analysis = PickFrameAnalysis(dataset=default_raw, parameters={"x": 16, "y": 16})
+    analysis = PickFrameAnalysis(dataset=default_raw, parameters={"x": 15, "y": 15})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
+    assert np.count_nonzero(results[0].raw_data) > 0

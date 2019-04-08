@@ -34,7 +34,7 @@ class PickFrameTask(Task):
 
     def __call__(self):
         result = zeros_aligned(self._slice.shape, dtype=self.partition.dtype)
-        for data_tile in self.partition.get_tiles(crop_to=self._slice):
+        for data_tile in self.partition.get_tiles(crop_to=self._slice, mmap=True):
             intersection = data_tile.tile_slice.intersection_with(self._slice)
             # shift to data_tile relative coordinates:
             shifted = intersection.shift(data_tile.tile_slice)

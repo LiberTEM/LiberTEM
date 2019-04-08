@@ -27,8 +27,8 @@ def test_mask_caching_1():
     ]
     mask_container = MaskContainer(mask_factories=input_masks, dtype="float32")
 
-    shape = Shape((16, 16, 128, 128), sig_dims=2)
-    slice_ = Slice(origin=(0, 0, 0, 0), shape=shape)
+    shape = Shape((16 * 16, 128, 128), sig_dims=2)
+    slice_ = Slice(origin=(0, 0, 0), shape=shape)
     mask_container[slice_]
 
     cache_info = mask_container._get_masks_for_slice.cache_info()
@@ -41,7 +41,7 @@ def test_mask_caching_1():
     assert cache_info.hits == 1
     assert cache_info.misses == 1
 
-    slice_ = Slice(origin=(0, 1, 0, 0), shape=shape)
+    slice_ = Slice(origin=(1, 0, 0), shape=shape)
 
     mask_container[slice_]
 
@@ -57,9 +57,9 @@ def test_mask_caching_2():
     ]
     mask_container = MaskContainer(mask_factories=input_masks, dtype="float32")
 
-    shape1 = Shape((16, 16, 128, 128), sig_dims=2)
-    shape2 = Shape((8, 16, 128, 128), sig_dims=2)
-    slice_ = Slice(origin=(0, 0, 0, 0), shape=shape1)
+    shape1 = Shape((16 * 16, 128, 128), sig_dims=2)
+    shape2 = Shape((8 * 16, 128, 128), sig_dims=2)
+    slice_ = Slice(origin=(0, 0, 0), shape=shape1)
     mask_container[slice_]
 
     cache_info = mask_container._get_masks_for_slice.cache_info()
@@ -72,7 +72,7 @@ def test_mask_caching_2():
     assert cache_info.hits == 1
     assert cache_info.misses == 1
 
-    slice_ = Slice(origin=(0, 1, 0, 0), shape=shape2)
+    slice_ = Slice(origin=(1, 0, 0), shape=shape2)
 
     mask_container[slice_]
 
@@ -83,8 +83,8 @@ def test_mask_caching_2():
 
 def test_for_datatile_1(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(0, 0, 0, 0), shape=Shape((1, 1, 1, 1), sig_dims=2)),
-        data=np.ones((1, 1, 1, 1))
+        tile_slice=Slice(origin=(0, 0, 0), shape=Shape((1, 1, 1), sig_dims=2)),
+        data=np.ones((1, 1, 1))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (1, 5)
@@ -92,8 +92,8 @@ def test_for_datatile_1(masks):
 
 def test_for_datatile_2(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(0, 0, 0, 0), shape=Shape((2, 2, 10, 10), sig_dims=2)),
-        data=np.ones((2, 2, 10, 10))
+        tile_slice=Slice(origin=(0, 0, 0), shape=Shape((2 * 2, 10, 10), sig_dims=2)),
+        data=np.ones((2 * 2, 10, 10))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (100, 5)
@@ -101,8 +101,8 @@ def test_for_datatile_2(masks):
 
 def test_for_datatile_with_scan_origin(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(10, 10, 0, 0), shape=Shape((2, 2, 10, 10), sig_dims=2)),
-        data=np.ones((2, 2, 10, 10))
+        tile_slice=Slice(origin=(110, 0, 0), shape=Shape((2 * 2, 10, 10), sig_dims=2)),
+        data=np.ones((2 * 2, 10, 10))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (100, 5)
@@ -110,8 +110,8 @@ def test_for_datatile_with_scan_origin(masks):
 
 def test_for_datatile_with_frame_origin(masks):
     tile = DataTile(
-        tile_slice=Slice(origin=(10, 10, 10, 10), shape=Shape((2, 2, 1, 5), sig_dims=2)),
-        data=np.ones((2, 2, 1, 5))
+        tile_slice=Slice(origin=(110, 10, 10), shape=Shape((2 * 2, 1, 5), sig_dims=2)),
+        data=np.ones((2 * 2, 1, 5))
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     print(slice_)

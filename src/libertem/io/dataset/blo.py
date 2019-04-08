@@ -1,12 +1,11 @@
 import os
-import contextlib
 
 import numpy as np
 
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D
+    Partition3D, File3D, FileSet3D, IOCaps
 )
 
 MAGIC_EXPECT = 258
@@ -58,23 +57,34 @@ class BloFile(File3D):
     def start_idx(self):
         return 0
 
-    @contextlib.contextmanager
-    def get_data(self):
-        with open(self._path, 'rb') as f:
-            data = np.memmap(f, mode='r', offset=self._offset_2,
-                             dtype=self._endianess + 'u1')
-            NY, NX, DP_SZ, _ = self._meta.shape
-            data = data.reshape((NY * NX, DP_SZ * DP_SZ + 6))
-            data = data[:, 6:]
-            data = data.reshape((NY * NX, DP_SZ, DP_SZ))
-            yield data
+    def open(self):
+        self._file = open(self._path, 'rb')
+        data = np.memmap(self._file, mode='r', offset=self._offset_2,
+                         dtype=self._endianess + 'u1')
+        NY, NX, DP_SZ, _ = self._meta.shape
+        data = data.reshape((NY * NX, DP_SZ * DP_SZ + 6))
+        data = data[:, 6:]
+        data = data.reshape((NY * NX, DP_SZ, DP_SZ))
+        self._mmap = data
+
+    def close(self):
+        self._file.close()
+        self._mmap = None
+
+    def mmap(self):
+        return self._mmap
 
     def readinto(self, start, stop, out, crop_to=None):
         slice_ = (...,)
         if crop_to is not None:
             slice_ = crop_to.get(sig_only=True)
-        with self.get_data() as data:
-            out[:] = data[(slice(start, stop),) + slice_]
+        data = self.mmap()
+        out[:] = data[(slice(start, stop),) + slice_]
+
+
+@IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.FRAME_CROPS})
+class BloFileSet(FileSet3D):
+    pass
 
 
 class BloDataSet(DataSet):
@@ -95,7 +105,7 @@ class BloDataSet(DataSet):
         self._shape = Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
         self._meta = DataSetMeta(
             shape=self._shape,
-            dtype=self.dtype,
+            raw_dtype=np.dtype("u1"),
         )
         self._filesize = os.stat(self._path).st_size
         return self
@@ -116,7 +126,7 @@ class BloDataSet(DataSet):
 
     @property
     def dtype(self):
-        return np.dtype("u1")
+        return self._meta.raw_dtype
 
     @property
     def shape(self):
@@ -161,7 +171,7 @@ class BloDataSet(DataSet):
         )
 
     def get_partitions(self):
-        fileset = FileSet3D([
+        fileset = BloFileSet([
             self._get_blo_file()
         ])
 

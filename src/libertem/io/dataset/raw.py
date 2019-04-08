@@ -1,118 +1,160 @@
+import os
+import mmap
+import warnings
+
 import numpy as np
 
-from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from libertem.common import Shape
+from .base import (
+    DataSet, DataSetException, DataSetMeta,
+    Partition3D, File3D, FileSet3D, IOCaps,
+)
 
 
-class RawFileReader(object):
-    def __init__(self, meta, path, scan_size, detector_size_raw):
+class RawFile(File3D):
+    def __init__(self, meta, path, enable_direct, enable_mmap):
+        super().__init__()
         self._path = path
         self._meta = meta
-        self._scan_size = scan_size
-        self._detector_size_raw = detector_size_raw
+        self._file = None
+        self._enable_direct = enable_direct
+        self._enable_mmap = enable_mmap
+        self._frame_size = self._meta.shape.sig.size * self._meta.raw_dtype.itemsize
 
-    def open_file(self):
-        f = np.memmap(self._path, dtype=self._meta.dtype, mode='r',
-                      shape=self._scan_size + self._detector_size_raw)
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=self._meta.shape)
-        return f[ds_slice.get()]  # crop off any superfluous data
+    @property
+    def num_frames(self):
+        return self._meta.shape.flatten_nav()[0]
+
+    @property
+    def start_idx(self):
+        return 0
+
+    def open(self):
+        if self._enable_direct:
+            fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
+            f = open(fh, "rb", buffering=0)
+        else:
+            f = open(self._path, "rb")
+        self._file = f
+        if self._enable_mmap:
+            raw_data = mmap.mmap(
+                fileno=f.fileno(),
+                length=self.num_frames * self._frame_size,
+                offset=self.start_idx * self.num_frames,
+                access=mmap.ACCESS_READ,
+            )
+            self._mmap = np.frombuffer(raw_data, dtype=self._meta.raw_dtype).reshape(
+                (self.num_frames,) + tuple(self._meta.shape.sig)
+            )
+
+    def mmap(self):
+        return self._mmap
+
+    def close(self):
+        self._file.close()
+
+    def readinto(self, start, stop, out, crop_to=None):
+        offset = start * self._frame_size
+        try:
+            self._file.seek(offset)
+        except OSError as e:
+            raise DataSetException("could not seek to offset {}: {}".format(offset, e)) from e
+        readsize = (stop - start) * self._frame_size
+        bytes_read = self._file.readinto(out)
+        assert bytes_read == readsize
+
+
+@IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.DIRECT})
+class RawFileSet(FileSet3D):
+    pass
 
 
 class RawFileDataSet(DataSet):
-    def __init__(self, path, scan_size, dtype, detector_size_raw, crop_detector_to, tileshape=None):
+    def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=True,
+                 detector_size_raw=None, crop_detector_to=None, tileshape=None):
+        # handle backwards-compatability:
+        if tileshape is not None:
+            warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
+
+        if crop_detector_to is not None:
+            warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
+                          "please specify detecros_size instead or use EMPAD DataSet",
+                          DeprecationWarning)
+            if detector_size is not None:
+                raise ValueError("cannot specify both detector_size and crop_detector_to")
+            if detector_size_raw != crop_detector_to:
+                raise ValueError("RawFileDataSet can't crop detector anymore, "
+                                 "please use EMPAD DataSet")
+            detector_size = crop_detector_to
+
         self._path = path
         self._scan_size = tuple(scan_size)
-        assert len(detector_size_raw) == 2
-        self._detector_size_raw = tuple(detector_size_raw)  # example: (130, 128)
-        self._detector_size = tuple(crop_detector_to)                # example: (128, 128)
-        self._min_num_partitions = None  # FIXME
-        if tileshape is None:
-            # raw files are memory mapped -> works well with large tiles
-            # (actual tiles are then as large as the partitions)
-            tileshape = self._scan_size + self._detector_size
-        self._tileshape = tuple(tileshape)
+        self._detector_size = tuple(detector_size)
+
+        # FIXME: should we allow tuning this in some way? I don't like tuning it per-dataset;
+        # maybe we can come up with something better. for now, set automatically.
+        self._stackheight = None
+
         self._sig_dims = len(self._detector_size)
+        shape = Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(
-            shape=Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims),
-            dtype=np.dtype(dtype)
+            shape=shape,
+            raw_dtype=np.dtype(dtype)
         )
+        self._filesize = None
+        self._enable_direct = enable_direct
 
     def initialize(self):
+        self._filesize = os.stat(self._path).st_size
         return self
 
     @property
     def dtype(self):
-        return self._meta.dtype
+        return self._meta.raw_dtype
 
     @property
     def shape(self):
         return self._meta.shape
 
-    def get_reader(self):
-        return RawFileReader(
-            meta=self._meta,
-            path=self._path,
-            scan_size=self._scan_size,
-            detector_size_raw=self._detector_size_raw,
-        )
+    def _get_fileset(self):
+        return RawFileSet([
+            RawFile(
+                meta=self._meta,
+                path=self._path,
+                enable_direct=self._enable_direct,
+                enable_mmap=True,  # FIXME: disable mmap if not needed (has some overhead)
+            )
+        ])
 
     def check_valid(self):
         try:
-            reader = self.get_reader()
-            reader.open_file()
-            # TODO: check file size match
-            # TODO: try to read from file?
-            return True
+            fileset = self._get_fileset()
+            with fileset:
+                return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
+    def _get_num_partitions(self):
+        """
+        returns the number of partitions the dataset should be split into
+        """
+        # let's try to aim for 1024MB per partition
+        res = max(1, self._filesize // (1024*1024*1024))
+        return res
+
     def get_partitions(self):
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=self.shape)
-        partition_shape = self.partition_shape(
-            datashape=self.shape,
-            framesize=self._detector_size[0] * self._detector_size[1],
-            dtype=self.dtype,
-            target_size=256*1024*1024,
-            min_num_partitions=self._min_num_partitions,
-        )
-        for pslice in ds_slice.subslices(partition_shape):
-            # TODO: where should the tileshape be set? let the user choose for now
-            yield RawFilePartition(
-                tileshape=self._tileshape,
+        fileset = self._get_fileset()
+        for part_slice, start, stop in Partition3D.make_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
+            yield Partition3D(
+                stackheight=self._stackheight,
                 meta=self._meta,
-                reader=self.get_reader(),
-                partition_slice=pslice,
+                fileset=fileset,
+                partition_slice=part_slice,
+                start_frame=start,
+                num_frames=stop - start,
             )
 
     def __repr__(self):
         return "<RawFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
-
-
-class RawFilePartition(Partition):
-    def __init__(self, tileshape, reader, *args, **kwargs):
-        self.tileshape = tileshape
-        self.reader = reader
-        super().__init__(*args, **kwargs)
-
-    def get_tiles(self, crop_to=None, full_frames=False):
-        if crop_to is not None:
-            if crop_to.shape.sig != self.meta.shape.sig:
-                raise DataSetException("RawFileDataSet only supports whole-frame crops for now")
-        if full_frames:
-            tileshape = (
-                tuple(self.tileshape[:self.meta.shape.nav.dims]) + tuple(self.meta.shape.sig)
-            )
-        else:
-            tileshape = self.tileshape
-        f = self.reader.open_file()
-        subslices = list(self.slice.subslices(shape=tileshape))
-        for tile_slice in subslices:
-            if crop_to is not None:
-                intersection = tile_slice.intersection_with(crop_to)
-                if intersection.is_null():
-                    continue
-            # NOTE: no need to re-use buffer, as there is none (mmap!)
-            yield DataTile(
-                data=f[tile_slice.get()],
-                tile_slice=tile_slice
-            )

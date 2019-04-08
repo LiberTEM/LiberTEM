@@ -58,7 +58,7 @@ class H5DataSet(DataSet):
             self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
             self._meta = DataSetMeta(
                 shape=self.shape,
-                dtype=self._dtype,
+                raw_dtype=self._dtype,
             )
         return self
 

@@ -9,7 +9,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D,
+    Partition3D, File3D, FileSet3D, IOCaps
 )
 
 log = logging.getLogger(__name__)
@@ -141,16 +141,16 @@ class MIBFile(File3D):
         return out
 
 
+@IOCaps({IOCaps.FRAME_CROPS, IOCaps.MMAP, IOCaps.FULL_FRAMES})
 class MIBFileSet(FileSet3D):
     pass
 
 
 class MIBDataSet(DataSet):
-    def __init__(self, path, tileshape, scan_size, dest_dtype="float32"):
+    def __init__(self, path, tileshape, scan_size):
         self._sig_dims = 2
         self._path = path
         self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
-        self._dest_dtype = np.dtype(dest_dtype)
         self._scan_size = tuple(scan_size)
         self._filename_cache = None
         self._files_sorted = None
@@ -175,7 +175,7 @@ class MIBDataSet(DataSet):
             sig_dims=self._sig_dims
         )
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_dtype=dtype, dtype=self._dest_dtype)
+        meta = DataSetMeta(shape=shape, raw_dtype=dtype)
         self._meta = meta
         self._total_filesize = sum(
             os.stat(path).st_size
@@ -231,7 +231,7 @@ class MIBDataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.dtype
+        return self._meta.raw_dtype
 
     @property
     def shape(self):

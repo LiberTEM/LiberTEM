@@ -86,8 +86,7 @@ def default_raw(tmpdir_factory):
         path=str(filename),
         scan_size=(16, 16),
         dtype="float32",
-        detector_size_raw=(128, 128),
-        crop_detector_to=(128, 128),
+        detector_size=(128, 128),
     )
     ds = ds.initialize()
     yield ds

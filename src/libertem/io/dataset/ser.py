@@ -1,18 +1,20 @@
 import os
-import math
 import logging
 import contextlib
 
 from ncempy.io.ser import fileSER
 
 from libertem.common import Shape
-from .base import DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta
+from .base import (
+    DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta, IOCaps
+)
 
 log = logging.getLogger(__name__)
 
 
 class SERFile(File3D):
     def __init__(self, path, emipath=None):
+        super().__init__()
         self._path = path
         self._emipath = emipath
 
@@ -50,6 +52,11 @@ class SERFile(File3D):
                 out[ii - start, ...] = data0
 
 
+@IOCaps({IOCaps.FULL_FRAMES})
+class SERFileSet(FileSet3D):
+    pass
+
+
 class SERDataSet(DataSet):
     def __init__(self, path, emipath=None):
         self._path = path
@@ -58,7 +65,7 @@ class SERDataSet(DataSet):
         self._filesize = None
 
     def _get_fileset(self):
-        return FileSet3D([
+        return SERFileSet([
             SERFile(path=self._path, emipath=self._emipath)
         ])
 
@@ -94,7 +101,7 @@ class SERDataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.dtype
+        return self._meta.raw_dtype
 
     @property
     def shape(self):
@@ -119,11 +126,6 @@ class SERDataSet(DataSet):
         res = max(1, self._filesize // (512*1024*1024))
         return res
 
-    def _get_stackheight(self, target_size=1 * 1024 * 1024):
-        # FIXME: centralize this decision and make it tunable
-        framesize = self._meta.shape.sig.size * self.dtype.itemsize
-        return min(1, math.floor(target_size / framesize))
-
     def get_partitions(self):
         fileset = self._get_fileset()
         for part_slice, start, stop in Partition3D.make_slices(
@@ -135,7 +137,6 @@ class SERDataSet(DataSet):
                 fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
-                stackheight=self._get_stackheight(),
             )
 
     def __repr__(self):

@@ -34,10 +34,15 @@ class JobExecutor(object):
 
     def get_available_workers(self):
         """
-        returns a list of dicts with available workers
+        Returns a list of dicts with available workers
+
         keys of the dictionary:
-            name : the identifying name of the worker
+            name : an identifying name of the worker
             host : ip address or hostname where the worker is running
+
+        Each worker should correspond to a "worker process", so if the executor
+        is using multiple processes or threads, each process/thread should be
+        included in this list.
         """
         raise NotImplementedError()
 

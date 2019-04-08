@@ -6,6 +6,18 @@ import numpy as np
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
 from libertem.common.buffers import bytes_aligned, zeros_aligned
+from libertem.common.caps import make_caps
+
+
+# I/O capabilities, typically used for annotating the FileSet3D subclass
+IOCaps = make_caps(
+    "MMAP",             # .mmap is implemented on the file subclass
+    "DIRECT",           # supports direct reading
+    "FULL_FRAMES",      # can read full frames
+    "SUBFRAME_TILES",   # can read tiles that slice frames into pieces
+    "FRAME_CROPS",      # can efficiently crop on signal dimension without needing mmap
+    name="IOCaps"
+)
 
 
 class DataSetException(Exception):
@@ -154,11 +166,8 @@ class DataSet(object):
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, dtype, raw_dtype=None, metadata=None):
+    def __init__(self, shape, raw_dtype=None, metadata=None):
         self.shape = shape
-        self.dtype = np.dtype(dtype)
-        if raw_dtype is None:
-            raw_dtype = dtype
         self.raw_dtype = np.dtype(raw_dtype)
         self.metadata = metadata
 
@@ -174,7 +183,7 @@ class Partition(object):
 
     @property
     def dtype(self):
-        return self.meta.dtype
+        return self.meta.raw_dtype
 
     @property
     def shape(self):
@@ -269,16 +278,40 @@ class File3D(object):
 
     @property
     def num_frames(self):
+        """
+        number of frames contained in this file
+        """
         raise NotImplementedError()
 
     @property
     def start_idx(self):
+        """
+        global start index of frames contained in this file
+        """
         raise NotImplementedError()
 
     def readinto(self, start, stop, out, crop_to=None):
+        """
+        Read a number of frames into an existing buffer
+
+        Parameters
+        ----------
+
+        start : int
+            file-local index of first frame to read
+        stop : int
+            file-local end index
+        out : buffer
+            output buffer that should fit `stop - start` frames
+        crop_to : Slice
+            crop to the signal part of this Slice
+        """
         raise NotImplementedError()
 
-    def mmap(self, crop_to):
+    def mmap(self):
+        """
+        return a memory mapped array of this file
+        """
         raise NotImplementedError()
 
     @property
@@ -355,7 +388,7 @@ class FileSet3D(object):
         frames_read = 0
         for f in self.files_from(start):
             # after the range of interest
-            if f.start_idx > stop:
+            if f.start_idx > stop or frames_read == stop - start:
                 break
             f_start = max(0, start - f.start_idx)
             f_stop = min(stop, f.end_idx) - f.start_idx
@@ -380,14 +413,27 @@ class FileSet3D(object):
             f.close()
         self._files_open = False
 
+    def __iter__(self):
+        return iter(self._files)
+
 
 class Partition3D(Partition):
     def __init__(self, fileset, start_frame, num_frames, stackheight=None, *args, **kwargs):
         """
         Parameters
         ----------
-
         fileset : FileSet3D
+            The files that are part of this partition (the FileSet3D may also contain files
+            from the dataset which are not part of this partition, but that may harm performance)
+
+        start_frame : int
+            the index of the first frame of this partition (global coords)
+
+        num_frames : int
+            how many frames this partition should contain
+
+        stackheight : int
+            how many frames per tile?
         """
         self._fileset = fileset
         self._start_frame = start_frame
@@ -395,17 +441,17 @@ class Partition3D(Partition):
         self._stackheight = stackheight
         super().__init__(*args, **kwargs)
 
-    def _get_stackheight(self, sig_shape, target_dtype, target_size=1 * 1024 * 1024):
+    def _get_stackheight(self, sig_shape, dest_dtype, target_size=1 * 1024 * 1024):
         """
         Compute target stackheight
 
         The cropped tile of size `sig_shape` should fit into `target_size`,
-        once converted to `target_dtype`.
+        once converted to `dest_dtype`.
         """
         # FIXME: centralize this decision and make target_size tunable
         if self._stackheight is not None:
             return self._stackheight
-        framesize = sig_shape.size * target_dtype.itemsize
+        framesize = sig_shape.size * dest_dtype.itemsize
         return max(1, math.floor(target_size / framesize))
 
     @classmethod
@@ -431,12 +477,41 @@ class Partition3D(Partition):
             )
             yield part_slice, start, stop
 
-    def get_tiles(self, crop_to=None, full_frames=False):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
+        # TODO: implement reading tiles that contain parts of frames (and more depth)
+        # the same notes as below in _get_tiles_normal apply; takes some work to make it efficient
+        dest_dtype = np.dtype(dest_dtype)
+        # disable mmap if type conversion takes place:
+        if dest_dtype != self.meta.raw_dtype:
+            mmap = False
+        if mmap and IOCaps.has_cap(self._fileset, IOCaps.MMAP):
+            yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
+        else:
+            yield from self._get_tiles_normal(crop_to, full_frames, dest_dtype)
+
+    def _get_tiles_normal(self, crop_to, full_frames, dest_dtype):
         start_at_frame = self._start_frame
         num_frames = self._num_frames
-        dtype = self.meta.dtype
         sig_shape = self.meta.shape.sig
         sig_origin = tuple([0] * len(sig_shape))
+        if (crop_to is not None and not IOCaps.has_cap(self._fileset, IOCaps.FRAME_CROPS)
+                and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)):
+            # FIXME: not fully implemented; see _get_tiles_mmap
+            # efficient impl:
+            #  - read only as much as we need
+            #    (hard, because that means strided reads → many syscalls! io_uring?)
+            #  - no copying (except if dtype conversion is needed)
+            # compromise:
+            #  - only read full rows
+            #  - only needs 1 read per frame
+            #  - return view of cropped area into buffer that contains full rows
+            # bad first impl possible:
+            #  - read stackheight full frames
+            #  - crop out the region we are interested in
+            #  - can be implemented right here in this function actually!
+            #  - stackheight needs to be limited, otherwise we thrash the CPU cache
+            #    (we can't set stackheight to something that would fit the crop into the caches...)
+            raise ValueError("cannot crop in signal dimensions yet")
         if (crop_to is not None
                 and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
                 and full_frames):
@@ -446,8 +521,8 @@ class Partition3D(Partition):
             sig_shape = crop_to.shape.sig
         if full_frames:
             sig_shape = self.meta.shape.sig
-        stackheight = self._get_stackheight(sig_shape=sig_shape, target_dtype=self.meta.dtype)
-        tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dtype)
+        stackheight = self._get_stackheight(sig_shape=sig_shape, dest_dtype=dest_dtype)
+        tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         tileshape = (
             stackheight,
@@ -461,7 +536,7 @@ class Partition3D(Partition):
                     current_tileshape = (
                         current_stackheight,
                     ) + tuple(sig_shape)
-                    tile_buf = zeros_aligned(current_tileshape, dtype=dtype)
+                    tile_buf = zeros_aligned(current_tileshape, dtype=dest_dtype)
                 else:
                     current_stackheight = stackheight
                     current_tileshape = tileshape
@@ -482,5 +557,52 @@ class Partition3D(Partition):
                 )
                 yield DataTile(
                     data=tile_buf,
+                    tile_slice=tile_slice
+                )
+
+    def _get_tiles_mmap(self, crop_to, full_frames, dest_dtype):
+        start_at_frame = self._start_frame
+        num_frames = self._num_frames
+        sig_shape = self.meta.shape.sig
+        sig_origin = tuple([0] * len(sig_shape))
+        if (crop_to is not None
+                and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
+                and full_frames):
+            raise ValueError("cannot crop and request full frames at the same time")
+        if dest_dtype != self.meta.raw_dtype:
+            raise ValueError("using mmap with dtype conversion is not efficient")
+        if crop_to is not None:
+            sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
+            sig_shape = crop_to.shape.sig
+        if full_frames:
+            sig_shape = self.meta.shape.sig
+
+        fileset = self._fileset.get_for_range(
+            start=start_at_frame,
+            stop=start_at_frame + num_frames,
+        )
+
+        with self._fileset as fileset:
+            for f in fileset:
+                # global start/stop indices:
+                start = max(f.start_idx, self._start_frame)
+                stop = min(f.end_idx, self._start_frame + num_frames)
+
+                tile_slice = Slice(
+                    origin=(start,) + sig_origin,
+                    shape=Shape((stop - start,) + tuple(sig_shape), sig_dims=sig_shape.dims)
+                )
+                arr = f.mmap()
+                # limit to this partition (translate to file-local coords)
+                arr = arr[start - f.start_idx:stop - f.start_idx]
+
+                if crop_to is not None:
+                    intersection = tile_slice.intersection_with(crop_to)
+                    if intersection.is_null():
+                        continue
+                    # crop to, signal part:
+                    arr = arr[(...,) + tile_slice.get(sig_only=True)]
+                yield DataTile(
+                    data=arr,
                     tile_slice=tile_slice
                 )

@@ -41,7 +41,7 @@ class MemoryDataSet(DataSet):
         self.sig_dims = sig_dims
         self._meta = DataSetMeta(
             shape=self.shape,
-            dtype=self.data.dtype,
+            raw_dtype=self.data.dtype,
         )
 
     @property

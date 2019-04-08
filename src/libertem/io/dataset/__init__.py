@@ -11,6 +11,7 @@ filetypes = {
     "k2is": "libertem.io.dataset.k2is.K2ISDataSet",
     "ser": "libertem.io.dataset.ser.SERDataSet",
     "frms6": "libertem.io.dataset.frms6.FRMS6DataSet",
+    "empad": "libertem.io.dataset.empad.EMPADDataSet",
 }
 
 

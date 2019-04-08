@@ -12,6 +12,7 @@ import numpy as np
 import numba
 from ncempy.io import dm
 
+from libertem.common.buffers import zeros_aligned
 from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
@@ -193,13 +194,15 @@ class Sector:
             offset += BLOCK_SIZE
 
     def read_full_frame(self, frame, buf, dtype="float32", crop_to=None):
+        # TODO: mmapping the whole file may confuse dask.distributed,
+        # if the file is large in compraison to RAM.
         raw_data = mmap.mmap(
             fileno=self.f.fileno(),
             length=0,   # whole file
             access=mmap.ACCESS_READ,
         )
         # FIXME: can we somehow get rid of this buffer?
-        block_buf = np.zeros(BLOCK_SHAPE, dtype=dtype).reshape((-1,))
+        block_buf = zeros_aligned(BLOCK_SHAPE, dtype=dtype).reshape((-1,))
         for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
             offset = (
                 self.first_block_offset
@@ -238,7 +241,7 @@ class Sector:
             access=mmap.ACCESS_READ,
         )
 
-        tile_buf_full = np.zeros(tileshape, dtype=dtype)
+        tile_buf_full = zeros_aligned(tileshape, dtype=dtype)
         assert DATA_SIZE % 3 == 0
         log.debug("starting read_stacked with start_at_frame=%d, num_frames=%d, stackheight=%d",
                   start_at_frame, num_frames, stackheight)
@@ -251,7 +254,7 @@ class Sector:
                 current_tileshape = (
                     current_stackheight,
                 ) + BLOCK_SHAPE
-                tile_buf = np.zeros(current_tileshape, dtype=dtype)
+                tile_buf = zeros_aligned(current_tileshape, dtype=dtype)
             else:
                 current_stackheight = stackheight
                 current_tileshape = tileshape
@@ -407,7 +410,7 @@ class DataBlock:
     def pixel_data(self):
         if not self.is_valid:
             raise ValueError("invalid block: %r" % self)
-        arr = np.zeros((930 * 16), dtype="uint16")
+        arr = zeros_aligned((930 * 16), dtype="uint16")
         self.readinto(arr)
         return arr.reshape(930, 16)
 
@@ -448,7 +451,7 @@ class K2ISDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
-            dtype=self.dtype,
+            raw_dtype=np.dtype("uint16"),
         )
         return self
 
@@ -467,7 +470,7 @@ class K2ISDataSet(DataSet):
 
     @property
     def dtype(self):
-        return np.dtype("uint16")
+        return self._meta.raw_dtype
 
     @property
     def shape(self):
@@ -605,15 +608,15 @@ class K2ISPartition(Partition):
         self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None, full_frames=False):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
         if full_frames:
-            yield from self._read_full_frames(crop_to=crop_to)
+            yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype)
         else:
-            yield from self._read_stacked(crop_to=crop_to)
+            yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype)
 
-    def _read_full_frames(self, crop_to=None):
+    def _read_full_frames(self, crop_to=None, dest_dtype="float32"):
         with contextlib.ExitStack() as stack:
-            frame_buf = np.zeros((1, 1860, 2048), dtype="float32")
+            frame_buf = zeros_aligned((1, 1860, 2048), dtype=dest_dtype)
             open_sectors = [
                 stack.enter_context(sector)
                 for sector in self._sectors
@@ -637,13 +640,14 @@ class K2ISPartition(Partition):
                     tile_slice=tile_slice
                 )
 
-    def _read_stacked(self, crop_to=None):
+    def _read_stacked(self, crop_to=None, dtype="float32"):
         for sector in self._sectors:
             with sector as s:
                 yield from s.read_stacked(
                     start_at_frame=self._start_frame,
                     num_frames=self._num_frames,
                     crop_to=crop_to,
+                    dtype=dtype,
                 )
 
     def __repr__(self):

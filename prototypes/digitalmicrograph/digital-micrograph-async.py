@@ -70,30 +70,12 @@ def mask_factory_from_rect(rect, mask_shape):
     return mask
 
 
-async def async_main(address):
-
+async def async_main(ds_kwargs, address):
     GUI_events = asyncio.ensure_future(background_task())
 
     executor = await AsyncDaskJobExecutor.connect(address)
 
-    # Just an alternative dataset that works better on a slower machine
-
-    # ds = load(
-    #     "blo",
-    #     path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-    #     "Data/3rd-Party Datasets/Glasgow/10 um 110.blo"),
-    #     tileshape=(1,8,144,144)
-    # )
-
-    # For a remote cluster this has to be the path on the worker nodes, not the client
-    ds = load(
-        "raw",
-        path='/cachedata/users/weber/scan_11_x256_y256.raw',
-        dtype="float32",
-        scan_size=(256, 256),
-        detector_size_raw=(130, 128),
-        crop_detector_to=(128, 128)
-    )
+    ds = load(**ds_kwargs)
 
     sum_job = SumFramesJob(dataset=ds)
     (y, x) = sum_job.get_result_shape()
@@ -149,38 +131,62 @@ async def async_main(address):
     GUI_events.cancel()
 
 
-def main():
+def main(ds_kwargs, address=None):
 
-    # Code to start local cluster
+    if address is None:
+        # Start local cluster
+        cores = psutil.cpu_count(logical=False)
 
-    # cores = psutil.cpu_count(logical=False)
-
-    # if cores is None:
-    #     cores = 2
-    # cluster_kwargs = {
-    #     "threads_per_worker": 1,
-    #     "n_workers": cores
-    # }
-
-    # cluster = dd.LocalCluster(**cluster_kwargs)
-    # address = cluster.scheduler_address
-
-    # use external cluster
-    address = 'tcp://localhost:31313'
+        if cores is None:
+            cores = 2
+        cluster_kwargs = {
+            "threads_per_worker": 1,
+            "n_workers": cores
+        }
+        print('starting local cluster...')
+        cluster = dd.LocalCluster(**cluster_kwargs)
+        print('local cluster started')
+        address = cluster.scheduler_address
+        print('address: ', address)
+    else:
+        cluster = None
 
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(async_main(address))
+        loop.run_until_complete(async_main(ds_kwargs, address))
     finally:
         # We CAN'T close the loop here because the interpreter
         # has to continue running in DM
         # Do NOT call loop.close()!
 
         # Required for local cluster
-        # cluster.close()
+        if cluster is not None:
+            cluster.close()
 
         print("Exit processing loop")
 
 
 if __name__ == "__main__":
-    main()
+    address = None
+    remote_address = 'tcp://localhost:31313'
+
+    ds_kwargs = dict(
+        filetype="raw",
+        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\scan_11_x256_y256.raw',
+        dtype="float32",
+        scan_size=(256, 256),
+        detector_size_raw=(130, 128),
+        crop_detector_to=(128, 128)
+    )
+
+    ds_remote_kwargs = dict(
+        filetype="raw",
+        # For a remote cluster this has to be the path on the worker nodes, not the client
+        path='/cachedata/users/weber/scan_11_x256_y256.raw',
+        dtype="float32",
+        scan_size=(256, 256),
+        detector_size_raw=(130, 128),
+        crop_detector_to=(128, 128)
+    )
+
+    main(ds_kwargs, address)

@@ -69,6 +69,7 @@ class BloFile(File3D):
 
     def close(self):
         self._file.close()
+        self._file = None
         self._mmap = None
 
     def mmap(self):

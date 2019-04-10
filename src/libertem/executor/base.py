@@ -76,13 +76,12 @@ class AsyncJobExecutor(object):
         raise NotImplementedError()
 
 
-async def sync_to_async(fn):
+async def sync_to_async(fn, pool=None):
     loop = asyncio.get_event_loop()
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, fn)
+    return await loop.run_in_executor(pool, fn)
 
 
-async def async_generator(gen):
+async def async_generator(gen, pool=None):
     def inner_next(gen):
         try:
             return next(gen)
@@ -90,13 +89,12 @@ async def async_generator(gen):
             raise MyStopIteration()
 
     loop = asyncio.get_event_loop()
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        while True:
-            try:
-                item = await loop.run_in_executor(pool, inner_next, gen)
-                yield item
-            except MyStopIteration:
-                break
+    while True:
+        try:
+            item = await loop.run_in_executor(pool, inner_next, gen)
+            yield item
+        except MyStopIteration:
+            break
 
 
 class MyStopIteration(Exception):
@@ -114,13 +112,14 @@ class AsyncAdapter(AsyncJobExecutor):
         converted to async and executed in a separate thread.
         """
         self._wrapped = wrapped
+        self._pool = concurrent.futures.ThreadPoolExecutor(4)
 
     async def run_job(self, job):
         """
         run a Job
         """
         gen = self._wrapped.run_job(job)
-        agen = async_generator(gen)
+        agen = async_generator(gen, self._pool)
         async for i in agen:
             yield i
 
@@ -129,7 +128,7 @@ class AsyncAdapter(AsyncJobExecutor):
         run a number of Tasks
         """
         gen = self._wrapped.run_tasks(tasks, cancel_id)
-        agen = async_generator(gen)
+        agen = async_generator(gen, self._pool)
         async for i in agen:
             yield i
 
@@ -138,16 +137,22 @@ class AsyncAdapter(AsyncJobExecutor):
         run a callable `fn`
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
-        return await sync_to_async(fn_with_args)
+        return await sync_to_async(fn_with_args, self._pool)
 
     async def close(self):
         """
         cleanup resources used by this executor, if any
         """
-        return await sync_to_async(self._wrapped.close)
+        res = await sync_to_async(self._wrapped.close, self._pool)
+        if self._pool:
+            self._pool.shutdown()
+        return res
 
     async def cancel(self, cancel_id):
         """
         cancel execution identified by cancel_id
         """
-        return await sync_to_async(functools.partial(self._wrapped.cancel, cancel_id=cancel_id))
+        return await sync_to_async(
+            functools.partial(self._wrapped.cancel, cancel_id=cancel_id),
+            self._pool
+        )

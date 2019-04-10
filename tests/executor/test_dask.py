@@ -1,4 +1,4 @@
-import resource
+import os
 
 import numpy as np
 import pytest
@@ -58,8 +58,11 @@ async def test_run_job(aexecutor):
     assert np.allclose(out, expected)
 
 
+@pytest.mark.skipif(os.name == 'nt',
+                    reason="doesnt run on windows")
 @pytest.mark.asyncio
 async def test_fd_limit(aexecutor):
+    import resource
     # set soft limit, throws errors but allows to raise it
     # again afterwards:
     oldlimit = resource.getrlimit(resource.RLIMIT_NOFILE)

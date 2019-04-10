@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem.common import Shape
 from .base import DataSet, DataSetException, DataSetMeta, Partition3D, IOCaps
-from .raw_direct import RawFile, RawFileSet
+from .raw import RawFile, RawFileSet
 
 
 EMPAD_DETECTOR_SIZE = (128, 128)
@@ -52,6 +52,11 @@ class EMPADFile(RawFile):
             (self.num_frames,) + EMPAD_DETECTOR_SIZE_RAW
         )[..., :128, :]
 
+    def close(self):
+        self._file.close()
+        self._file = None
+        self._mmap = None
+
 
 @IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.FRAME_CROPS})
 class EMPADFileSet(RawFileSet):
@@ -59,14 +64,15 @@ class EMPADFileSet(RawFileSet):
 
 
 class EMPADDataSet(DataSet):
-    def __init__(self, path):
+    def __init__(self, path, scan_size=None):
         self._path = path
+        self._scan_size = scan_size
         self._path_raw = None
         self._meta = None
 
-    def initialize(self):
+    def _init_from_xml(self, path):
         try:
-            dom = minidom.parse(self._path)
+            dom = minidom.parse(path)
             root = dom.getElementsByTagName("root")[0]
             raw_filename = root.getElementsByTagName("raw_file")[0].getAttribute('filename')
             # because these XML files contain the full path, they are not relocatable.
@@ -74,22 +80,30 @@ class EMPADDataSet(DataSet):
             # be in the same directory as the XML file:
             filename = os.path.basename(raw_filename)
             self._path_raw = os.path.join(
-                os.path.dirname(self._path),
+                os.path.dirname(path),
                 filename
             )
             scan_y = int(xml_get_text(root.getElementsByTagName("pix_y")[0].childNodes))
             scan_x = int(xml_get_text(root.getElementsByTagName("pix_x")[0].childNodes))
-            scan_size = (scan_y, scan_x)
-            self._filesize = os.stat(self._path_raw).st_size
+            self._scan_size = (scan_y, scan_x)
             # TODO: read more metadata
         except Exception as e:
             raise DataSetException(
-                "could not initialize EMPAD file (hint: select the .xml file!); error: %s" % (
+                "could not initialize EMPAD file; error: %s" % (
                     str(e))
             )
 
+    def initialize(self):
+        if self._path.lower().endswith(".xml"):
+            self._init_from_xml(self._path)
+        else:
+            assert self._path.lower().endswith(".raw")
+            assert self._scan_size is not None
+            self._path_raw = self._path
+
+        self._filesize = os.stat(self._path_raw).st_size
         self._meta = DataSetMeta(
-            shape=Shape(scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
+            shape=Shape(self._scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
             raw_dtype=np.dtype("float32")
         )
         return self

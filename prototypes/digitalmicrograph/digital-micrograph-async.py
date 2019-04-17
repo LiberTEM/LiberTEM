@@ -24,13 +24,6 @@ if not hasattr(sys, 'argv'):
 multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
 
 
-async def background_task():
-    # this loop exits when Task.cancel() is called
-    while True:
-        DM.DoEvents()
-        await asyncio.sleep(0.1)
-
-
 def get_result_image(job):
     empty = np.zeros(job.get_result_shape())
     image = DM.CreateImage(empty)
@@ -71,8 +64,6 @@ def mask_factory_from_rect(rect, mask_shape):
 
 
 async def async_main(ds_kwargs, address):
-    GUI_events = asyncio.ensure_future(background_task())
-
     executor = await AsyncDaskJobExecutor.connect(address)
 
     ds = load(**ds_kwargs)
@@ -127,8 +118,6 @@ async def async_main(ds_kwargs, address):
                 rect_job = ApplyMasksJob(dataset=ds, mask_factories=[mask])
                 break
             await asyncio.sleep(1)
-
-    GUI_events.cancel()
 
 
 def main(ds_kwargs, address=None):

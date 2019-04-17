@@ -26,20 +26,14 @@ if __name__ == "__main__":
             crop_detector_to=(128, 128),
         )
 
-        DM.DoEvents()
         sum_analysis = ctx.create_sum_analysis(dataset=ds)
         sum_result = ctx.run(sum_analysis)
 
-        DM.DoEvents()
-
         sum_image = DM.CreateImage(sum_result.intensity.raw_data)
         sum_image.ShowImage()
-        DM.DoEvents()
 
         haadf_analysis = ctx.create_ring_analysis(dataset=ds)
         haadf_result = ctx.run(haadf_analysis)
 
-        DM.DoEvents()
         haadf_image = DM.CreateImage(haadf_result.intensity.raw_data)
         haadf_image.ShowImage()
-        DM.DoEvents()

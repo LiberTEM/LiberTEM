@@ -23,11 +23,11 @@ The following people in alphabetical order contributed to the LiberTEM project i
 Notable Upstream Projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Python, PyData universe, Dask.distributed, PyTorch, Numpy, OpenBLAS, Click, Tornado web, Matplotlib, Pillow, H5Py, Numba, Psutil, Hdfs3, Ncempy
+`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `Numpy <https://www.numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <http://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
 
-Typescript, React, React Window, Redux, Redux-saga, Semantic UI
+`TypeScript <https://www.typescriptlang.org/>`_, `React <https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic UI <https://semantic-ui.com/>`_
 
-Not dependencies, but notable related projects: Hyperspy, NeXus, Apache Spark, Hadoop FS
+Not dependencies, but notable related projects or useful tools: `Hyperspy <http://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, 
 
 Funding
 ~~~~~~~
@@ -54,7 +54,7 @@ This project has received funding from the European Research Council (ERC) under
     :alt: European Union flag
 
 This project has received funding from the European Union's Horizon 2020 
-research and innovation programme under grant agreement No 823717 – ESTEEM3. 
+research and innovation programme under grant agreement No 823717 – `ESTEEM3 <https://cordis.europa.eu/project/rcn/220936/factsheet/en>`_.
 
 
 **Forschungszentrum Jülich, Ernst-Ruska Centrum**

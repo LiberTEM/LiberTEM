@@ -61,6 +61,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -197,4 +198,6 @@ intersphinx_mapping = {
 linkcheck_ignore = [
     # Local URLs:
     r'^http://localhost.*',
+    # Some kind of user agent filtering
+    r'^https://pydata.org.*',
 ]

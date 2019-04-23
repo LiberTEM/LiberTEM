@@ -39,6 +39,20 @@ def hdf5(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
+def random_hdf5(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/hdf5-test-random.h5'
+    try:
+        with h5py.File(filename, 'r') as f:
+            yield f
+    except OSError:
+        with h5py.File(filename, "w") as f:
+            f.create_dataset("data", data=_mk_random(size=(5, 5, 16, 16), dtype="float32"))
+        with h5py.File(filename, 'r') as f:
+            yield f
+
+
+@pytest.fixture(scope='session')
 def empty_hdf5(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/hdf5-empty.h5'
@@ -55,9 +69,18 @@ def empty_hdf5(tmpdir_factory):
 @pytest.fixture
 def hdf5_ds_1(hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(5, 16, 16)
+        path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
     )
-    ds.initialize()
+    ds = ds.initialize()
+    return ds
+
+
+@pytest.fixture
+def hdf5_ds_2(random_hdf5):
+    ds = H5DataSet(
+        path=random_hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
+    )
+    ds = ds.initialize()
     return ds
 
 

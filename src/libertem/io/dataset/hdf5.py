@@ -7,6 +7,26 @@ from libertem.common import Slice, Shape
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
+def unravel_nav(slice_, containing_shape):
+    """
+    inverse of flatten_nav, currently limited to 1d -> 2d nav
+    """
+    sig_dims = slice_.shape.sig.dims
+    nav_dims = slice_.shape.dims - sig_dims
+    nav_origin = np.unravel_index(
+        slice_.origin[0],
+        tuple(containing_shape)[:-sig_dims]
+    )
+    assert nav_dims == 1, "unravel_nav only works if nav.dims is currently 1"
+    assert (len(containing_shape) - len(slice_.shape)) == 1,\
+        "currently only works for 1d -> 2d case"
+    nav_shape = (slice_.shape[0] // containing_shape[1], containing_shape[1])
+    return Slice(
+        origin=nav_origin + slice_.origin[-sig_dims:],
+        shape=Shape(nav_shape + tuple(slice_.shape.sig), sig_dims=sig_dims)
+    )
+
+
 def _get_datasets(path):
     datasets = []
 
@@ -45,6 +65,7 @@ class H5DataSet(DataSet):
         self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
+        self._shape = None
 
     def get_reader(self):
         return H5Reader(
@@ -88,8 +109,8 @@ class H5DataSet(DataSet):
         return {
             "path": path,
             "ds_path": name,
-            # FIXME: shape may not be 4D, number of frames may not match L3 size
-            "tileshape": (1, 8) + shape[2:],
+            # FIXME: number of frames may not match L3 size
+            "tileshape": (1, 8,) + shape[2:],
         }
 
     @property
@@ -138,7 +159,7 @@ class H5DataSet(DataSet):
                 tileshape=self.tileshape,
                 meta=self._meta,
                 reader=self.get_reader(),
-                partition_slice=pslice,
+                partition_slice=pslice.flatten_nav(self.shape),
             )
 
     def __repr__(self):
@@ -151,32 +172,38 @@ class H5Partition(Partition):
         self.reader = reader
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None, full_frames=False):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
         if crop_to is not None:
             if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
         if full_frames:
             tileshape = (
-                tuple(self.tileshape[:self.meta.shape.nav.dims]) + tuple(self.meta.shape.sig)
+                tuple(self.tileshape.nav) + tuple(self.meta.shape.sig)
             )
         else:
             tileshape = self.tileshape
-        data = np.ndarray(tileshape, dtype=self.dtype)
+        data = np.ndarray(tileshape, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:
-            subslices = list(self.slice.subslices(shape=tileshape))
+            # FIXME: we currently transform back and forth between 3D and 4D
+            # this should be possible to improve upon!
+            slice_4d = unravel_nav(self.slice, self.meta.shape)
+            subslices = list(slice_4d.subslices(shape=tileshape))
             for tile_slice in subslices:
+                assert tile_slice.shape.dims == 4
                 if crop_to is not None:
                     intersection = tile_slice.intersection_with(crop_to)
                     if intersection.is_null():
                         continue
-                if tile_slice.shape != tileshape:
+                if tuple(tile_slice.shape) != tuple(tileshape):
                     # at the border, can't reuse buffer
                     # hmm. aren't there only like 3 different shapes at the border?
                     # FIXME: use buffer pool to reuse buffers of same shape
-                    border_data = np.ndarray(tile_slice.shape, dtype=self.dtype)
-                    dataset.read_direct(border_data, source_sel=tile_slice.get())
-                    yield DataTile(data=border_data, tile_slice=tile_slice)
+                    border_data = np.ndarray(tile_slice.shape, dtype=dest_dtype)
+                    buf = border_data
                 else:
                     # reuse buffer
-                    dataset.read_direct(data, source_sel=tile_slice.get())
-                    yield DataTile(data=data, tile_slice=tile_slice)
+                    buf = data
+                dataset.read_direct(buf, source_sel=tile_slice.get())
+                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
+                assert tile_slice_flat.shape.dims == 3
+                yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)

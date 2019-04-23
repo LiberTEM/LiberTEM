@@ -15,8 +15,8 @@ def _get_raw_params(path):
                 "type": "raw",
                 "path": path,
                 "dtype": "float32",
-                "detector_size_raw": [128, 128],
-                "crop_detector_to": [128, 128],
+                "detector_size": [128, 128],
+                "enable_direct": False,
                 "tileshape": [1, 1, 128, 128],
                 "scan_size": [16, 16]
             }

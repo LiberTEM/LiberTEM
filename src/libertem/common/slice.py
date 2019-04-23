@@ -225,6 +225,48 @@ class Slice(object):
             for indexes in np.ndindex(ni)
         )
 
+    def flatten_nav(self, containing_shape):
+        sig_dims = self.shape.sig.dims
+        nav_dims = self.shape.dims - sig_dims
+        containing_shape = tuple(containing_shape)[:nav_dims]
+        origin = self.origin[:nav_dims]
+
+        # validation for the nav_shape:
+        # what are the preconditions that allow flattening?
+        #
+        # - nav part of the shape: must be in the form of:
+        #
+        #   (1,  1,  ...,  N, M, M, ...)
+        #
+        #   where N<=M and M is the corresponding part of
+        #   the shape of the dataset.
+        #
+        # - the origin must match the shape in the following way:
+        #
+        #   (o1, o2, ..., oi, 0, 0, ...)
+        #
+        #   where all oj are arbitraty (but in bounds)
+        #
+        state = 0
+        for cs, s, o in zip(containing_shape, self.shape.nav, origin):
+            if state == 0:
+                if s != 1:
+                    state = 1
+                    assert s <= cs, "invalid nav_shape #1"
+            elif state == 1:
+                assert s == cs, "invalid nav_shape #2"
+                assert o == 0, "invalid origin"
+
+        nav_origin = np.ravel_multi_index(
+            origin,
+            containing_shape
+        )
+        nav_shape = np.product(tuple(self.shape.nav))
+        return Slice(
+            origin=(nav_origin,) + self.origin[nav_dims:],
+            shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)
+        )
+
     def __getstate__(self):
         return {
             k: getattr(self, k)

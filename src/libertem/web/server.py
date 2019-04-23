@@ -414,50 +414,56 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         # TODO: validate request_data
         # let's start simple:
-        assert params['type'].lower() in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser",
-                                          "frms6"]
-        if params["type"].lower() == "hdfs":
+        ds_type = params["type"].lower()
+        assert ds_type in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser",
+                           "frms6", "empad"]
+        if ds_type == "hdfs":
             dataset_params = {
                 "index_path": params["path"],
                 "tileshape": params["tileshape"],
                 "host": "localhost",  # FIXME: config param
                 "port": 8020,  # FIXME: config param
             }
-        elif params["type"].lower() == "hdf5":
+        elif ds_type == "hdf5":
             dataset_params = {
                 "path": params["path"],
                 "ds_path": params["ds_path"],
                 "tileshape": params["tileshape"],
             }
-        elif params["type"].lower() == "raw":
+        elif ds_type == "raw":
             dataset_params = {
                 "path": params["path"],
                 "dtype": params["dtype"],
-                "detector_size_raw": params["detector_size_raw"],
-                "crop_detector_to": params["crop_detector_to"],
+                "detector_size": params["detector_size"],
+                "enable_direct": params["enable_direct"],
                 "tileshape": params["tileshape"],
                 "scan_size": params["scan_size"],
             }
-        elif params["type"].lower() == "mib":
+        elif ds_type == "empad":
+            dataset_params = {
+                "path": params["path"],
+                "scan_size": params["scan_size"],
+            }
+        elif ds_type == "mib":
             dataset_params = {
                 "path": params["path"],
                 "tileshape": params["tileshape"],
                 "scan_size": params["scan_size"],
             }
-        elif params["type"].lower() == "blo":
+        elif ds_type == "blo":
             dataset_params = {
                 "path": params["path"],
                 "tileshape": params["tileshape"],
             }
-        elif params["type"].lower() == "k2is":
+        elif ds_type == "k2is":
             dataset_params = {
                 "path": params["path"],
             }
-        elif params["type"].lower() == "ser":
+        elif ds_type == "ser":
             dataset_params = {
                 "path": params["path"],
             }
-        elif params["type"].lower() == "frms6":
+        elif ds_type == "frms6":
             dataset_params = {
                 "path": params["path"],
             }

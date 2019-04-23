@@ -36,20 +36,20 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="name">Name:</label>
-                <input type="text" name="name" value={values.name}
+                <label htmlFor="id_name">Name:</label>
+                <input type="text" name="name" id="id_name" value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" value={values.tileshape}
+                <label htmlFor="id_tileshape">Tileshape:</label>
+                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="scan_size">Scan Size:</label>
-                <input type="text" name="scan_size" value={values.scan_size}
+                <label htmlFor="id_scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" id="id_scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -61,8 +61,8 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsMIB>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        tileshape: getInitial("tileshape", "1, 8, 256, 256", initial),
-        scan_size: getInitial("scan_size", "256, 256", initial),
+        tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
+        scan_size: getInitial("scan_size", "256, 256", initial).toString(),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

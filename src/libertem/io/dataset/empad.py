@@ -66,7 +66,7 @@ class EMPADFileSet(RawFileSet):
 class EMPADDataSet(DataSet):
     def __init__(self, path, scan_size=None):
         self._path = path
-        self._scan_size = scan_size
+        self._scan_size = tuple(scan_size)
         self._path_raw = None
         self._meta = None
 
@@ -94,10 +94,11 @@ class EMPADDataSet(DataSet):
             )
 
     def initialize(self):
-        if self._path.lower().endswith(".xml"):
+        lowpath = self._path.lower()
+        if lowpath.endswith(".xml"):
             self._init_from_xml(self._path)
         else:
-            assert self._path.lower().endswith(".raw")
+            assert lowpath.endswith(".raw")
             assert self._scan_size is not None
             self._path_raw = self._path
 
@@ -110,6 +111,11 @@ class EMPADDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path):
+        """
+        Detect parameters. If an `path` is an xml file, we try to automatically
+        set the scan_size, otherwise we can't really detect if this is a EMPAD
+        file or something else (maybe from the "trailer" after each frame?)
+        """
         try:
             ds = cls(path)
             ds = ds.initialize()
@@ -117,6 +123,7 @@ class EMPADDataSet(DataSet):
                 return False
             return {
                 "path": path,
+                "scan_size": ds._scan_size,
             }
         except Exception:
             return False
@@ -141,11 +148,17 @@ class EMPADDataSet(DataSet):
 
     def check_valid(self):
         try:
-            fileset = self._get_fileset()
-            with fileset:
-                pass
-            # TODO: check file size match
-            # TODO: try to read from file?
+            # try to read from the file:
+            p = next(self.get_partitions())
+            next(p.get_tiles())
+            # check filesize:
+            framesize = np.product(EMPAD_DETECTOR_SIZE_RAW)
+            num_frames = np.product(self._scan_size)
+            expected_filesize = num_frames * framesize * np.dtype("float32").itemsize
+            if expected_filesize != self._filesize:
+                raise DataSetException("invalid filesize; expected %d, got %d" % (
+                    expected_filesize, self._filesize
+                ))
             return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

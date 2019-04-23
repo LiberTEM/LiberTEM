@@ -418,7 +418,8 @@ class FileSet3D(object):
 
 
 class Partition3D(Partition):
-    def __init__(self, fileset, start_frame, num_frames, stackheight=None, *args, **kwargs):
+    def __init__(self, fileset, start_frame, num_frames, stackheight=None, allow_mmap=True,
+                 *args, **kwargs):
         """
         Parameters
         ----------
@@ -427,18 +428,23 @@ class Partition3D(Partition):
             from the dataset which are not part of this partition, but that may harm performance)
 
         start_frame : int
-            the index of the first frame of this partition (global coords)
+            The index of the first frame of this partition (global coords)
 
         num_frames : int
-            how many frames this partition should contain
+            How many frames this partition should contain
 
         stackheight : int
-            how many frames per tile?
+            How many frames per tile?
+
+        allow_mmap : bool
+            Set this to False to disallow memory-mapped reading (for example, if it
+            conflicts with other settings, like direct I/O)
         """
         self._fileset = fileset
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
+        self._allow_mmap = allow_mmap
         super().__init__(*args, **kwargs)
 
     def _get_stackheight(self, sig_shape, dest_dtype, target_size=1 * 1024 * 1024):
@@ -484,7 +490,9 @@ class Partition3D(Partition):
         # disable mmap if type conversion takes place:
         if dest_dtype != self.meta.raw_dtype:
             mmap = False
-        if mmap and IOCaps.has_cap(self._fileset, IOCaps.MMAP):
+        mmap = mmap and IOCaps.has_cap(self._fileset, IOCaps.MMAP)
+        mmap = mmap and self._allow_mmap
+        if mmap:
             yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
         else:
             yield from self._get_tiles_normal(crop_to, full_frames, dest_dtype)

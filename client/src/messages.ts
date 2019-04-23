@@ -77,6 +77,7 @@ export enum DatasetTypes {
     K2IS = "K2IS",
     SER = "SER",
     FRMS6 = "FRMS6",
+    EMPAD = "EMPAD",
 }
 
 export interface DatasetParamsCommon {
@@ -100,8 +101,8 @@ export type DatasetParamsRaw = {
     type: DatasetTypes.RAW,
     path: string,
     dtype: string,
-    detector_size_raw: number[],
-    crop_detector_to: number[],
+    detector_size: number[],
+    enable_direct: boolean,
     scan_size: number[],
     tileshape: number[],
 } & DatasetParamsCommon
@@ -134,7 +135,13 @@ export type DatasetParamsFRMS6 = {
     path: string,
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6
+export type DatasetParamsEMPAD = {
+    type: DatasetTypes.EMPAD,
+    path: string,
+    scan_size: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD
 
 export interface DatasetCreateParams {
     id: string,

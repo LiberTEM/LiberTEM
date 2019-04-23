@@ -17,6 +17,7 @@ class RawFile(File3D):
         self._path = path
         self._meta = meta
         self._file = None
+        self._mmap = None
         self._enable_direct = enable_direct
         self._enable_mmap = enable_mmap
         self._frame_size = self._meta.shape.sig.size * self._meta.raw_dtype.itemsize
@@ -70,7 +71,7 @@ class RawFileSet(FileSet3D):
 
 
 class RawFileDataSet(DataSet):
-    def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=True,
+    def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None):
         # handle backwards-compatability:
         if tileshape is not None:
@@ -122,7 +123,7 @@ class RawFileDataSet(DataSet):
                 meta=self._meta,
                 path=self._path,
                 enable_direct=self._enable_direct,
-                enable_mmap=True,  # FIXME: disable mmap if not needed (has some overhead)
+                enable_mmap=not self._enable_direct,
             )
         ])
 
@@ -154,6 +155,7 @@ class RawFileDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
+                allow_mmap=not self._enable_direct,
             )
 
     def __repr__(self):

@@ -9,15 +9,13 @@ import { OpenFormProps } from "../types";
 // some fields have different types in the form vs. in messages
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     "type"
-    | "tileshape"
     | "path"
+    | "tileshape"
     | "scan_size"
-    | "detector_size_raw"
-    | "crop_detector_to"> & {
+    | "detector_size"> & {
         tileshape: string,
         scan_size: string
-        detector_size_raw: string,
-        crop_detector_to: string,
+        detector_size: string,
     };
 
 type FormValues = DatasetParamsRawForForm
@@ -39,36 +37,36 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="name">Name:</label>
-                <input type="text" name="name" value={values.name}
+                <label htmlFor="id_name">Name:</label>
+                <input type="text" name="name" id="id_name" value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" value={values.tileshape}
+                <label htmlFor="id_tileshape">Tileshape:</label>
+                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="scan_size">Scan Size:</label>
-                <input type="text" name="scan_size" value={values.scan_size}
+                <label htmlFor="id_scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" id="id_scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
-                <input type="text" name="dtype" value={values.dtype}
+                <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
+                <input type="text" name="dtype" id="id_dtype" value={values.dtype}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
 
             <Form.Field>
-                <label htmlFor="detector_size_raw">Detector Size (as in the file):</label>
-                <input type="text" name="detector_size_raw" value={values.detector_size_raw}
+                <label htmlFor="id_detector_size">Detector Size (as in the file):</label>
+                <input type="text" name="detector_size" id="id_detector_size" value={values.detector_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="crop_detector_to">Detector Size Crop:</label>
-                <input type="text" name="crop_detector_to" value={values.crop_detector_to}
+                <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
+                <input type="checkbox" name="enable_direct" id="id_enable_direct" checked={values.enable_direct}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -80,10 +78,10 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
-        detector_size_raw: getInitial("detector_size_raw", "130, 128", initial),
-        crop_detector_to: getInitial("crop_detector_to", "128, 128", initial),
-        scan_size: getInitial("scan_size", "256, 256", initial),
+        enable_direct: getInitial("enable_direct", false, initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
+        detector_size: getInitial("detector_size", "", initial).toString(),
+        scan_size: getInitial("scan_size", "", initial).toString(),
         dtype: getInitial("dtype", "float32", initial),
     }),
     handleSubmit: (values, formikBag) => {
@@ -93,10 +91,10 @@ export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
             type: DatasetTypes.RAW,
             name: values.name,
             dtype: values.dtype,
+            enable_direct: values.enable_direct,
             tileshape: parseNumList(values.tileshape),
             scan_size: parseNumList(values.scan_size),
-            detector_size_raw: parseNumList(values.detector_size_raw),
-            crop_detector_to: parseNumList(values.crop_detector_to),
+            detector_size: parseNumList(values.detector_size),
         });
     }
 })(RawFileParamsForm);

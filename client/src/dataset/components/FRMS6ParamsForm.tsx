@@ -31,8 +31,8 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="name">Name:</label>
-                <input type="text" name="name" value={values.name}
+                <label htmlFor="id_name">Name:</label>
+                <input type="text" name="name" id="id_name" value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}

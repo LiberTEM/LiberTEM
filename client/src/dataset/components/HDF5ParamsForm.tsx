@@ -27,20 +27,20 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="name">Name:</label>
-                <input type="text" name="name" value={values.name}
+                <label htmlFor="id_name">Name:</label>
+                <input type="text" name="name" id="id_name" value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="ds_path">HDF5 Dataset Path:</label>
-                <input type="text" name="ds_path" value={values.ds_path}
+                <label htmlFor="id_ds_path">HDF5 Dataset Path:</label>
+                <input type="text" name="ds_path" id="id_ds_path" value={values.ds_path}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" value={values.tileshape}
+                <label htmlFor="id_tileshape">Tileshape:</label>
+                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -52,7 +52,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         ds_path: getInitial("ds_path", "", initial),
     }),
     handleSubmit: (values, formikBag) => {

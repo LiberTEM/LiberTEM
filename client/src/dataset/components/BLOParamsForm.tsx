@@ -34,15 +34,15 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
-                <label htmlFor="name">Name:</label>
-                <input type="text" name="name" value={values.name}
+                <label htmlFor="id_name">Name:</label>
+                <input type="text" name="name" id="id_name" value={values.name}
                     onChange={handleChange}
                     onBlur={handleBlur} />
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" value={values.tileshape}
+                <label htmlFor="id_tileshape">Tileshape:</label>
+                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
 
@@ -55,7 +55,7 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
 export default withFormik<OpenFormProps<DatasetParamsBLO>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial),
+        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

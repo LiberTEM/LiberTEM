@@ -8,8 +8,11 @@ def _alloc_aligned(size):
     blocksize = 4096
     blocks = math.ceil(size / blocksize)
 
-    # MAP_SHARED to prevent possible corruption (see open(2))
-    return mmap.mmap(-1, blocksize * blocks, mmap.MAP_SHARED)
+    # flags are by default MAP_SHARED, which has to be set
+    # to prevent possible corruption (see open(2)). If you
+    # are adding flags here, make sure to include MAP_SHARED
+    # (and check for windows compat)
+    return mmap.mmap(-1, blocksize * blocks)
 
 
 def bytes_aligned(size):

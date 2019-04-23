@@ -50,6 +50,9 @@ def test_weird_partition_shapes_1_slow(lt_ctx):
 
 @pytest.mark.xfail
 def test_weird_partition_shapes_1_fast(lt_ctx):
+    # XXX MemoryDataSet is now using Partition3D and so on, so we can't create
+    # partitions with weird shapes so easily anymore (in this case, partitioned in
+    # the signal dimensions). maybe fix this with a custom DataSet impl that simulates this?
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)

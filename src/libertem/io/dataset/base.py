@@ -179,7 +179,7 @@ class Partition(object):
     def __init__(self, meta, partition_slice):
         self.meta = meta
         self.slice = partition_slice
-        assert partition_slice.shape.nav.dims == 1
+        assert partition_slice.shape.nav.dims == 1, "nav dims should be flat"
 
     @property
     def dtype(self):
@@ -192,7 +192,7 @@ class Partition(object):
         """
         return self.slice.shape.flatten_nav()
 
-    def get_tiles(self, crop_to=None, full_frames=False):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -210,6 +210,12 @@ class Partition(object):
 
         full_frames : boolean, default False
             always read full frames, not stacks of crops of frames
+
+        mmap : boolean, default False
+            enable mmap if possible (not guaranteed to be supported by dataset)
+
+        dest_dtype : numpy dtype
+            convert data to this dtype when reading
         """
         raise NotImplementedError()
 

@@ -66,7 +66,7 @@ class EMPADFileSet(RawFileSet):
 class EMPADDataSet(DataSet):
     def __init__(self, path, scan_size=None):
         self._path = path
-        self._scan_size = tuple(scan_size)
+        self._scan_size = scan_size and tuple(scan_size) or None
         self._path_raw = None
         self._meta = None
 
@@ -102,7 +102,10 @@ class EMPADDataSet(DataSet):
             assert self._scan_size is not None
             self._path_raw = self._path
 
-        self._filesize = os.stat(self._path_raw).st_size
+        try:
+            self._filesize = os.stat(self._path_raw).st_size
+        except OSError as e:
+            raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
             raw_dtype=np.dtype("float32")
@@ -148,9 +151,6 @@ class EMPADDataSet(DataSet):
 
     def check_valid(self):
         try:
-            # try to read from the file:
-            p = next(self.get_partitions())
-            next(p.get_tiles())
             # check filesize:
             framesize = np.product(EMPAD_DETECTOR_SIZE_RAW)
             num_frames = np.product(self._scan_size)
@@ -159,6 +159,9 @@ class EMPADDataSet(DataSet):
                 raise DataSetException("invalid filesize; expected %d, got %d" % (
                     expected_filesize, self._filesize
                 ))
+            # try to read from the file:
+            p = next(self.get_partitions())
+            next(p.get_tiles())
             return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

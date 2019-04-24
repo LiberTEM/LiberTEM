@@ -7,6 +7,7 @@ import pprint
 
 import click
 import requests
+import bibtexparser
 
 import libertem
 
@@ -16,6 +17,8 @@ BASE_URL = ''
 VERBOSE = False
 
 CONF = 'packaging/zenodo-upload.json'
+bibtexfile = 'docs/source/references-libertem.bib'
+idkeys = ['doi', 'eprint', 'url']
 
 config = json.load(open(CONF))
 
@@ -42,6 +45,13 @@ def prettylog(r):
 def log(s):
     if VERBOSE:
         print(s)
+
+
+def load_bibtex():
+    parser = bibtexparser.bparser.BibTexParser(common_strings=True)
+    with open(bibtexfile, 'r', encoding='utf-8') as f:
+        db = bibtexparser.load(f, parser)
+    return db
 
 
 def zenodo_deposition_get(snippet='', extra_params={}):
@@ -208,12 +218,71 @@ def make_description():
     return readme
 
 
+def make_related(db):
+    related = []
+    for e in db.entries:
+        identifier = None
+        for k in idkeys:
+            if k in e:
+                identifier = e[k]
+                break
+        if identifier is None:
+            continue
+        related.append(dict(identifier=identifier, relation='cites'))
+    return related
+
+
+def make_references(db):
+    def format_reference(e):
+        key = e['ID']
+        authors = e.get('author', None)
+        year = e.get('year', None)
+        title = e.get('title', None)
+        publisher = e.get('publisher', None)
+        identifier = None
+        for k in idkeys:
+            if k in e:
+                identifier = e[k]
+                break
+        result = "[%s]" % key
+        if authors is not None:
+            result += " %s" % authors
+        if year is not None:
+            result += " (%s):" % year
+        else:
+            result += ':'
+
+        if title is not None:
+            result += " %s." % title
+        if publisher is not None:
+            result += " %s." % publisher
+        if identifier is not None:
+            result += " %s" % identifier
+        return result
+
+    references = []
+
+    for e in db.entries:
+        # We may encounter unexpected things, although
+        # the format function should be safe.
+        try:
+            references.append(format_reference(e))
+        except Exception as ex:
+            log(ex)
+            log(e)
+
+    return references
+
+
 def make_data():
+    db = load_bibtex()
     data = config['template']
     metadata = data['metadata']
     metadata['creators'] = make_creators()
     metadata['contributors'] = make_contributors()
     metadata['description'] = make_description()
+    metadata['related_identifiers'] = make_related(db)
+    metadata['references'] = make_references(db)
     metadata['version'] = libertem.__version__
     metadata['title'] += libertem.__version__
     return data

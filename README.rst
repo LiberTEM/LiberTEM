@@ -14,9 +14,9 @@
 
 
 
-LiberTEM is an open source platform for high-throughput distributed processing of `pixelated <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_ scanning transmission electron microscopy (`STEM <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_) data.
+LiberTEM is an open source platform for high-throughput distributed processing of `pixelated <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_ scanning transmission electron microscopy (`STEM <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_) data :cite:`doi:10.1002/9783527808465.EMC2016.6284`.
 
-It is designed for high throughput and scalability on PCs, single server nodes, clusters and cloud services. On clusters it can use the Hadoop file system with fast distributed
+It is designed for high throughput and scalability on PCs, single server nodes, clusters and cloud services. On clusters it can use the `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_ with fast distributed
 local storage on high-performance SSDs. That way it achieves very high collective IO performance on a compact and cost-efficient system built from stock components.
 With cached file system reads it can reach a throughput of up to 14 GB/s per processing node with a quad-core CPU.
 
@@ -26,11 +26,11 @@ in a web browser.
 
 LiberTEM currently opens most file formats used for pixelated STEM:
 
-- Raw binary files, for example for the Thermo Fisher EMPAD detector
-- Quantum Detectors MIB format (currently alpha, more testing and sample files highly appreciated)
+- Raw binary files, for example for the Thermo Fisher EMPAD detector :cite:`Tate2016`
+- `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_ (currently alpha, more testing and sample files highly appreciated)
 - Nanomegas .blo block files
-- Gatan K2IS raw format (currently beta)
-- FRMS6 from PNDetector pnCCD cameras (currently alpha, gain correction still needs UI changes)
+- `Gatan K2 IS <http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format (currently beta)
+- FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD
 - Please contact us if you are interested in support for an additional format!
@@ -39,7 +39,7 @@ The 0.1 release implements anything that can be done by applying masks to each d
 for example the numerous virtual detector methods (virtual bright field, virtual HAADF, ...) or center of mass. 
 
 The GUI of the 0.1 release allows interactive analysis and data exploration with basic virtual
-detectors, center of mass and display of individual detector frames.
+detectors, center of mass :cite:`Krajnak2016` and display of individual detector frames.
 
 The Python API can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory <https://github.com/LiberTEM/LiberTEM/blob/master/examples>`_.
 If you are having trouble running the examples, please let us know, either by filing an issue

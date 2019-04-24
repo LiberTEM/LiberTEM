@@ -44,7 +44,8 @@ def test_check_valid(default_mib):
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
     p = next(partitions)
-    assert tuple(p.shape) == (32 * 32, 256, 256)
+    assert len(p.shape) == 3
+    assert tuple(p.shape[1:]) == (256, 256)
     tiles = p.get_tiles()
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D

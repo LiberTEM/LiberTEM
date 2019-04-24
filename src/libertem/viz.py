@@ -346,7 +346,7 @@ def _get_norm(result, norm_cls=colors.Normalize):
     if len(result_ne_zero) > 0:
         min_ = np.min(result_ne_zero)
     if min_ == max_:
-        min_ = 0
+        min_ = min(0, max_)
     return norm_cls(vmin=min_, vmax=max_)
 
 

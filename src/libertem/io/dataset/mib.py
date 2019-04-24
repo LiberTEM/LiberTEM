@@ -107,6 +107,7 @@ class MIBFile(File3D):
 
     def close(self):
         self._fh.close()
+        self._fh = None
 
     def _frames_read_int(self, start, num, method):
         bpp = self.fields['bytes_per_pixel']

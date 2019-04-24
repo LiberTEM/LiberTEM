@@ -62,7 +62,7 @@ export default withFormik<OpenFormProps<DatasetParamsMIB>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
-        scan_size: getInitial("scan_size", "256, 256", initial).toString(),
+        scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;

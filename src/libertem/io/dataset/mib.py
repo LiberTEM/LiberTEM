@@ -28,35 +28,58 @@ def read_hdr_file(path):
     return result
 
 
+def is_valid_hdr(path):
+    with open(path, "r", encoding='utf-8', errors='ignore') as f:
+        line = next(f)
+        return line.startswith("HDR")
+
+
 class MIBFile(File3D):
-    def __init__(self, path, fields=None):
+    def __init__(self, path, fields=None, sequence_start=None):
         self.path = path
         if fields is None:
             self._fields = {}
         else:
             self._fields = fields
+        self._sequence_start = sequence_start
         super().__init__()
 
     def _get_np_dtype(self, dtype):
         dtype = dtype.lower()
-        assert dtype[0] == "u"
-        num_bytes = int(dtype[1:]) // 8
-        return ">u%d" % num_bytes
+        num_bits = int(dtype[1:])
+        if dtype[0] == "u":
+            num_bytes = num_bits // 8
+            return np.dtype(">u%d" % num_bytes)
+        elif dtype[0] == "r":
+            assert num_bits == 64
+            return np.dtype("uint8")  # the dtype after np.unpackbits
 
     def read_header(self):
-        with io.open(file=self.path, mode="r", encoding="ascii") as f:
+        with io.open(file=self.path, mode="r", encoding="ascii", errors='ignore') as f:
             header = f.read(100)
             filesize = os.fstat(f.fileno()).st_size
         parts = header.split(",")
+        dtype = parts[6].lower()
+        mib_kind = dtype[0]
         image_size = (int(parts[5]), int(parts[4]))
         header_size_bytes = int(parts[2])
-        bytes_per_pixel = int(parts[6][1:]) // 8
+        if mib_kind == "u":
+            bytes_per_pixel = int(parts[6][1:]) // 8
+            image_size_bytes = image_size[0] * image_size[1] * bytes_per_pixel
+        elif mib_kind == "r":
+            bytes_per_pixel = 1  # after np.unpackbits
+            image_size_bytes = image_size[0] * image_size[1] // 8
+        else:
+            raise ValueError("unknown kind: %s" % mib_kind)
+
         num_images = filesize // (
-            image_size[0] * image_size[1] * bytes_per_pixel + header_size_bytes
+            image_size_bytes + header_size_bytes
         )
         self._fields = {
             'header_size_bytes': header_size_bytes,
             'dtype': self._get_np_dtype(parts[6]),
+            'mib_dtype': dtype,
+            'mib_kind': mib_kind,
             'bytes_per_pixel': bytes_per_pixel,
             'image_size': image_size,
             'sequence_first_image': int(parts[1]),
@@ -71,7 +94,7 @@ class MIBFile(File3D):
 
     @property
     def start_idx(self):
-        return self.fields['sequence_first_image'] - 1
+        return self.fields['sequence_first_image'] - self._sequence_start
 
     @property
     def fields(self):
@@ -85,7 +108,7 @@ class MIBFile(File3D):
     def close(self):
         self._fh.close()
 
-    def _frames_read(self, start, num, method="read"):
+    def _frames_read_int(self, start, num, method):
         bpp = self.fields['bytes_per_pixel']
         hsize = self.fields['header_size_bytes']
         hsize_px = hsize // bpp
@@ -96,7 +119,7 @@ class MIBFile(File3D):
 
         if method == "read":
             readsize = imagesize_incl_header * num
-            buf = self.get_buffer("_frames_read", readsize)
+            buf = self.get_buffer("_frames_read_int", readsize)
 
             self._fh.seek(start * imagesize_incl_header)
             bytes_read = self._fh.readinto(buf)
@@ -114,12 +137,51 @@ class MIBFile(File3D):
         arr = arr.reshape((num, size_px + hsize_px))
         # cut off headers
         arr = arr[:, hsize_px:]
+        return arr
+
+    def _frames_read_bits(self, start, num):
+        """
+        read frames for type r64, that is, pixels are bit-packed into big-endian
+        64bit integers
+        """
+        hsize_px = 8 * self.fields['header_size_bytes']  # unpacked header size
+        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
+        size = size_px // 8
+        hsize = self.fields['header_size_bytes']
+        imagesize_incl_header = size + hsize
+        readsize = imagesize_incl_header * num
+        buf = self.get_buffer("_frames_read_bits", readsize)
+
+        self._fh.seek(start * imagesize_incl_header)
+        bytes_read = self._fh.readinto(buf)
+        assert bytes_read == readsize
+        raw_data = np.frombuffer(buf, dtype="u1")
+        unpacked = np.unpackbits(raw_data)
+
+        # reshape (num_frames, pixels) incl. header
+        unpacked = unpacked.reshape((num, size_px + hsize_px))
+        # cut off headers
+        unpacked = unpacked[:, hsize_px:]
+
+        arr = unpacked.reshape((num * 4 * 256, 64))[:, ::-1].reshape((num, 256, 256))
+        return arr
+
+    def _frames_read(self, start, num, method="read"):
+        mib_kind = self.fields['mib_kind']
+
+        if mib_kind == "r":
+            arr = self._frames_read_bits(start, num)
+        elif mib_kind == "u":
+            arr = self._frames_read_int(start, num, method)
+
         # reshape to (num_frames, pixels_y, pixels_x)
         return arr.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
 
     def readinto(self, start, stop, out, crop_to=None):
         """
-        Read a number of frames into an existing buffer, skipping the headers
+        Read a number of frames into an existing buffer, skipping the headers.
+
+        Note: this method is not thread safe!
 
         Parameters
         ----------
@@ -160,6 +222,7 @@ class MIBDataSet(DataSet):
         self._headers = {}
         self._meta = None
         self._total_filesize = None
+        self._sequence_start = None
 
     def initialize(self):
         self._headers = self._preread_headers()
@@ -181,20 +244,37 @@ class MIBDataSet(DataSet):
             os.stat(path).st_size
             for path in self._filenames()
         )
+        self._sequence_start = first_file.fields['sequence_first_image']
+        self._files_sorted = list(sorted(self._files(),
+                                         key=lambda f: f.fields['sequence_first_image']))
         return self
 
     def get_diagnostics(self):
+        first_file = self._files_sorted[0]
         return [
             {"name": "Data type",
-             "value": str(self._meta.raw_dtype)},
+             "value": str(first_file.fields['mib_dtype'])},
         ]
 
     @classmethod
     def detect_params(cls, path):
-        if path.endswith(".mib"):
+        pathlow = path.lower()
+        if pathlow.endswith(".mib"):
             return {
                 "path": path,
                 "tileshape": (1, 3, 256, 256),
+            }
+        elif pathlow.endswith(".hdr") and is_valid_hdr(path):
+            hdr = read_hdr_file(path)
+            num_frames, scan_x = (
+                int(hdr['Frames in Acquisition (Number)']),
+                int(hdr['Frames per Trigger (Number)'])
+            )
+            scan_size = (num_frames // scan_x, scan_x)
+            return {
+                "path": path,
+                "tileshape": (1, 3, 256, 256),
+                "scan_size": scan_size,
             }
         return False
 
@@ -223,7 +303,8 @@ class MIBDataSet(DataSet):
 
     def _files(self):
         for path in self._filenames():
-            f = MIBFile(path, fields=self._headers.get(path))
+            f = MIBFile(path, fields=self._headers.get(path),
+                        sequence_start=self._sequence_start)
             yield f
 
     def _num_images(self):
@@ -265,14 +346,22 @@ class MIBDataSet(DataSet):
             raise DataSetException("invalid dataset: %s" % e)
 
     def _get_fileset(self):
+        assert self._sequence_start is not None
         return MIBFileSet(files=self._files_sorted)
 
     def _get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 512MB per partition
-        res = max(1, self._total_filesize // (512*1024*1024))
+        # let's try to aim for 512MB (converted float data) per partition
+        partition_size = 512 * 1024 * 1024 / 4
+        first_file = self._files_sorted[0]
+        if first_file.fields['mib_kind'] == "r":
+            partition_size /= 4
+        else:
+            bpp = first_file.fields['bytes_per_pixel']
+            partition_size /= bpp
+        res = max(1, self._total_filesize // int(partition_size))
         return res
 
     def get_partitions(self):

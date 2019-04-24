@@ -300,6 +300,8 @@ class File3D(object):
         """
         Read a number of frames into an existing buffer
 
+        Note: this method is not thread safe!
+
         Parameters
         ----------
 

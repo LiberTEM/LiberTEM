@@ -89,7 +89,7 @@ class SERDataSet(DataSet):
             sig_dims = len(data.shape)
             self._meta = DataSetMeta(
                 shape=Shape(shape, sig_dims=sig_dims),
-                dtype=dtype
+                raw_dtype=dtype
             )
         return self
 

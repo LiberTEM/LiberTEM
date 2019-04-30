@@ -15,7 +15,7 @@ class InlineJobExecutor(JobExecutor):
 
     def run_function(self, fn, *args, **kwargs):
         return fn(*args, **kwargs)
-        
+
     def get_available_workers(self):
         return dict(
             name='inline',

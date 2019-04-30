@@ -65,6 +65,7 @@ class EMPADFileSet(RawFileSet):
 
 class EMPADDataSet(DataSet):
     def __init__(self, path, scan_size=None):
+        super().__init__()
         self._path = path
         self._scan_size = scan_size and tuple(scan_size) or None
         self._path_raw = None
@@ -171,7 +172,7 @@ class EMPADDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 1024MB per partition
-        res = max(1, self._filesize // (1024*1024*1024))
+        res = max(self._cores, self._filesize // (1024*1024*1024))
         return res
 
     def get_partitions(self):

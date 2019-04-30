@@ -363,7 +363,7 @@ class MIBDataSet(DataSet):
         else:
             bpp = first_file.fields['bytes_per_pixel']
             partition_size /= bpp
-        res = max(1, self._total_filesize // int(partition_size))
+        res = max(self._cores, self._total_filesize // int(partition_size))
         return res
 
     def get_partitions(self):

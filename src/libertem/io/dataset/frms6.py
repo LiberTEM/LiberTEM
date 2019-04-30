@@ -256,6 +256,7 @@ class FRMS6DataSet(DataSet):
         gain_map_path : string
             path to a gain map to apply (.mat format)
         """
+        super().__init__()
         self._path = path
         self._gain_map_path = gain_map_path
         self._dark_frame = None
@@ -429,7 +430,7 @@ class FRMS6DataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB per partition
-        res = max(1, self._total_filesize // (512*1024*1024))
+        res = max(self._cores, self._total_filesize // (512*1024*1024))
         return res
 
     def get_partitions(self):

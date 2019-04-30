@@ -45,6 +45,7 @@ class SERReader(object):
 
 class SERDataSet(DataSet):
     def __init__(self, path, emipath=None):
+        super().__init__()
         self._path = path
         self._emipath = emipath
         self._meta = None
@@ -109,7 +110,7 @@ class SERDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB per partition
-        res = max(1, self._filesize // (512*1024*1024))
+        res = max(self._cores, self._filesize // (512*1024*1024))
         return res
 
     def get_partitions(self):

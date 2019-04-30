@@ -1,5 +1,3 @@
-import multiprocessing
-
 import numpy as np
 
 try:
@@ -27,13 +25,12 @@ def get_partition_shape(datashape, framesize, dtype, target_size, min_num_partit
     target_size : int
         target size in bytes - how large should each partition be?
     min_num_partitions : int
-        minimum number of partitions desired, defaults to twice the number of CPU cores
+        minimum number of partitions desired.
     Returns
     -------
     (int, int, int, int)
         the shape calculated from the given parameters
     """
-    min_num_partitions = min_num_partitions or multiprocessing.cpu_count()
     # FIXME: allow for partitions smaller than one scan row
     # FIXME: allow specifying the "aspect ratio" for a partition?
     num_frames = datashape[0] * datashape[1]

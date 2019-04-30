@@ -161,3 +161,6 @@ class AsyncAdapter(AsyncJobExecutor):
             functools.partial(self._wrapped.cancel, cancel_id=cancel_id),
             self._pool
         )
+
+    async def get_available_workers(self):
+        return await sync_to_async(self._wrapped.get_available_workers)

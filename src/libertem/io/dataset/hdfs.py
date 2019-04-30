@@ -33,6 +33,7 @@ class HDFSReader(object):
 
 class BinaryHDFSDataSet(DataSet):
     def __init__(self, index_path, host, port, tileshape, worker_map=None):
+        super().__init__()
         self.index_path = index_path
         self.dirname = os.path.dirname(index_path)
         self.host = host

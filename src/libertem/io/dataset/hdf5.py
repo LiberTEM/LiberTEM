@@ -58,6 +58,7 @@ class H5Reader(object):
 class H5DataSet(DataSet):
     def __init__(self, path, ds_path, tileshape,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
+        super().__init__()
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size

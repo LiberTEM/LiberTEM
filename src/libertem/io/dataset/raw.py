@@ -73,6 +73,7 @@ class RawFileSet(FileSet3D):
 class RawFileDataSet(DataSet):
     def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None):
+        super().__init__()
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
@@ -140,7 +141,7 @@ class RawFileDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 1024MB per partition
-        res = max(1, self._filesize // (1024*1024*1024))
+        res = max(self._cores, self._filesize // (1024*1024*1024))
         return res
 
     def get_partitions(self):

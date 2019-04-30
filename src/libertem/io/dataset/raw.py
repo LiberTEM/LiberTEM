@@ -20,12 +20,12 @@ class RawFileReader(object):
 
 class RawFileDataSet(DataSet):
     def __init__(self, path, scan_size, dtype, detector_size_raw, crop_detector_to, tileshape=None):
+        super().__init__()
         self._path = path
         self._scan_size = tuple(scan_size)
         assert len(detector_size_raw) == 2
         self._detector_size_raw = tuple(detector_size_raw)  # example: (130, 128)
         self._detector_size = tuple(crop_detector_to)                # example: (128, 128)
-        self._min_num_partitions = None  # FIXME
         if tileshape is None:
             # raw files are memory mapped -> works well with large tiles
             # (actual tiles are then as large as the partitions)
@@ -78,7 +78,6 @@ class RawFileDataSet(DataSet):
             framesize=self._detector_size[0] * self._detector_size[1],
             dtype=self.dtype,
             target_size=256*1024*1024,
-            min_num_partitions=self._min_num_partitions,
         )
         for pslice in ds_slice.subslices(partition_shape):
             # TODO: where should the tileshape be set? let the user choose for now

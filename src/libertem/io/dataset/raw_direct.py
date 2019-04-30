@@ -53,6 +53,7 @@ class DirectRawFileReader(object):
 
 class DirectRawFileDataSet(DataSet):
     def __init__(self, path, scan_size, dtype, detector_size, stackheight, enable_direct=True):
+        super().__init__()
         self._path = path
         self._scan_size = tuple(scan_size)
         self._detector_size = detector_size
@@ -105,7 +106,7 @@ class DirectRawFileDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 1024MB per partition
-        res = max(1, self._filesize // (1024*1024*1024))
+        res = max(self._cores, self._filesize // (1024*1024*1024))
         return res
 
     def get_partitions(self):

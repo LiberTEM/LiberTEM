@@ -432,6 +432,7 @@ class DataBlock:
 
 class K2ISDataSet(DataSet):
     def __init__(self, path):
+        super().__init__()
         self._path = path
         self._start_offsets = None
         # NOTE: the sync flag appears to be set one frame too late, so
@@ -570,7 +571,7 @@ class K2ISDataSet(DataSet):
         size = sum(sector.filesize
                    for sector in self._fileset.sectors)
         # let's try to aim for 512MB per partition
-        res = max(1, size // (512*1024*1024))
+        res = max(self._cores, size // (512*1024*1024))
         return res
 
     def get_partitions(self):

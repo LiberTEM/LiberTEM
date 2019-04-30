@@ -59,6 +59,7 @@ class BloReader(object):
 
 class BloDataSet(DataSet):
     def __init__(self, path, tileshape, endianess='<'):
+        super().__init__()
         self._tileshape = tileshape
         self._path = path
         self._header = None

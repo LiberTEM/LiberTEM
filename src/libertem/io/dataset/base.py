@@ -8,11 +8,17 @@ class DataSetException(Exception):
 
 
 class DataSet(object):
+    def __init__(self):
+        self._cores = 1
+
     def initialize(self):
         """
         pre-load metadata. this will be executed on a worker node. should return self.
         """
         raise NotImplementedError()
+
+    def set_num_cores(self, cores):
+        self._cores = cores
 
     def get_partitions(self):
         """
@@ -107,6 +113,8 @@ class DataSet(object):
         (int, int, int, int)
             the shape calculated from the given parameters
         """
+        if min_num_partitions is None:
+            min_num_partitions = self._cores
         return get_partition_shape(datashape, framesize, dtype, target_size,
                                    min_num_partitions)
 

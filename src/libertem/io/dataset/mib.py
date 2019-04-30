@@ -110,6 +110,7 @@ class MIBFile(object):
 
 class MIBDataSet(DataSet):
     def __init__(self, path, tileshape, scan_size):
+        super().__init__()
         self._sig_dims = 2
         self._path = path
         self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)

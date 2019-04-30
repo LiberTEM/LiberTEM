@@ -107,7 +107,7 @@ class DataSet(object):
         target_size : int
             target size in bytes - how large should each partition be?
         min_num_partitions : int
-            minimum number of partitions desired, defaults to twice the number of CPU cores
+            minimum number of partitions desired. Defaults to the number of workers in the cluster.
         Returns
         -------
         (int, int, int, int)

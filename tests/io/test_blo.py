@@ -52,7 +52,7 @@ def test_pickle_meta_is_small(default_blo):
 def test_pickle_blofile_is_small(default_blo):
     pickled = pickle.dumps(default_blo._get_blo_file())
     pickle.loads(pickled)
-    assert len(pickled) < 512
+    assert len(pickled) < 1024
 
 
 def test_apply_mask_on_raw_job(default_blo, lt_ctx):

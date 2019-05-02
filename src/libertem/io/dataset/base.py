@@ -6,18 +6,51 @@ import numpy as np
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
 from libertem.common.buffers import bytes_aligned, zeros_aligned
-from libertem.common.caps import make_caps
 
 
-# I/O capabilities, typically used for annotating the FileSet3D subclass
-IOCaps = make_caps(
-    "MMAP",             # .mmap is implemented on the file subclass
-    "DIRECT",           # supports direct reading
-    "FULL_FRAMES",      # can read full frames
-    "SUBFRAME_TILES",   # can read tiles that slice frames into pieces
-    "FRAME_CROPS",      # can efficiently crop on signal dimension without needing mmap
-    name="IOCaps"
-)
+class IOCaps:
+    """
+    I/O capabilities for a dataset (may depend on dataset parameters and concrete format)
+    """
+    ALL_CAPS = {
+        "MMAP",             # .mmap is implemented on the file subclass
+        "DIRECT",           # supports direct reading
+        "FULL_FRAMES",      # can read full frames
+        "SUBFRAME_TILES",   # can read tiles that slice frames into pieces
+        "FRAME_CROPS",      # can efficiently crop on signal dimension without needing mmap
+    }
+
+    def __init__(self, caps):
+        """
+        create new capability set
+        """
+        caps = set(caps)
+        for cap in caps:
+            self._validate_cap(cap)
+        self._caps = caps
+
+    def _validate_cap(self, cap):
+        if cap not in self.ALL_CAPS:
+            raise ValueError("invalid I/O capability: %s" % cap)
+
+    def __contains__(self, cap):
+        return cap in self._caps
+
+    def __getstate__(self):
+        return {"caps": self._caps}
+
+    def __setstate__(self, state):
+        self._caps = state["caps"]
+
+    def add(self, *caps):
+        for cap in caps:
+            self._validate_cap(cap)
+        self._caps = self._caps.union(caps)
+
+    def remove(self, *caps):
+        for cap in caps:
+            self._validate_cap(cap)
+        self._caps = self._caps.difference(caps)
 
 
 class DataSetException(Exception):
@@ -174,10 +207,13 @@ class DataSet(object):
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, raw_dtype=None, metadata=None):
+    def __init__(self, shape, raw_dtype=None, metadata=None, iocaps=None):
         self.shape = shape
         self.raw_dtype = np.dtype(raw_dtype)
         self.metadata = metadata
+        if iocaps is None:
+            iocaps = {}
+        self.iocaps = IOCaps(iocaps)
 
     def __getitem__(self, key):
         return self.metadata[key]
@@ -434,7 +470,7 @@ class FileSet3D(object):
 
 
 class Partition3D(Partition):
-    def __init__(self, fileset, start_frame, num_frames, stackheight=None, allow_mmap=True,
+    def __init__(self, fileset, start_frame, num_frames, stackheight=None,
                  *args, **kwargs):
         """
         Parameters
@@ -451,16 +487,11 @@ class Partition3D(Partition):
 
         stackheight : int
             How many frames per tile?
-
-        allow_mmap : bool
-            Set this to False to disallow memory-mapped reading (for example, if it
-            conflicts with other settings, like direct I/O)
         """
         self._fileset = fileset
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
-        self._allow_mmap = allow_mmap
         super().__init__(*args, **kwargs)
 
     def _get_stackheight(self, sig_shape, dest_dtype, target_size=1 * 1024 * 1024):
@@ -506,8 +537,7 @@ class Partition3D(Partition):
         # disable mmap if type conversion takes place:
         if dest_dtype != self.meta.raw_dtype:
             mmap = False
-        mmap = mmap and IOCaps.has_cap(self._fileset, IOCaps.MMAP)
-        mmap = mmap and self._allow_mmap
+        mmap = mmap and "MMAP" in self.meta.iocaps
         if mmap:
             yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
         else:
@@ -518,7 +548,7 @@ class Partition3D(Partition):
         num_frames = self._num_frames
         sig_shape = self.meta.shape.sig
         sig_origin = tuple([0] * len(sig_shape))
-        if (crop_to is not None and not IOCaps.has_cap(self._fileset, IOCaps.FRAME_CROPS)
+        if (crop_to is not None and "FRAME_CROPS" not in self.meta.iocaps
                 and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)):
             # FIXME: not fully implemented; see _get_tiles_mmap
             # efficient impl:

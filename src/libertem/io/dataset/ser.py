@@ -6,7 +6,7 @@ from ncempy.io.ser import fileSER
 
 from libertem.common import Shape
 from .base import (
-    DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta, IOCaps
+    DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta,
 )
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,6 @@ class SERFile(File3D):
                 out[ii - start, ...] = data0
 
 
-@IOCaps({IOCaps.FULL_FRAMES})
 class SERFileSet(FileSet3D):
     pass
 
@@ -90,7 +89,8 @@ class SERDataSet(DataSet):
             sig_dims = len(data.shape)
             self._meta = DataSetMeta(
                 shape=Shape(shape, sig_dims=sig_dims),
-                raw_dtype=dtype
+                raw_dtype=dtype,
+                iocaps={"FULL_FRAMES"},
             )
         return self
 

@@ -7,7 +7,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D, IOCaps,
+    Partition3D, File3D, FileSet3D,
 )
 
 
@@ -65,7 +65,6 @@ class RawFile(File3D):
         assert bytes_read == readsize
 
 
-@IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.DIRECT})
 class RawFileSet(FileSet3D):
     pass
 
@@ -101,8 +100,11 @@ class RawFileDataSet(DataSet):
         shape = Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(
             shape=shape,
-            raw_dtype=np.dtype(dtype)
+            raw_dtype=np.dtype(dtype),
+            iocaps={"DIRECT", "MMAP", "FULL_FRAMES"},
         )
+        if enable_direct:
+            self._meta.iocaps.remove("MMAP")
         self._filesize = None
         self._enable_direct = enable_direct
 
@@ -156,7 +158,6 @@ class RawFileDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
-                allow_mmap=not self._enable_direct,
             )
 
     def __repr__(self):

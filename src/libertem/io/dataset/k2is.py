@@ -453,6 +453,7 @@ class K2ISDataSet(DataSet):
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
             raw_dtype=np.dtype("uint16"),
+            iocaps={"FULL_FRAMES", "SUBFRAME_TILES"},
         )
         return self
 

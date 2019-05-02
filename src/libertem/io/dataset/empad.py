@@ -5,7 +5,7 @@ from xml.dom import minidom
 import numpy as np
 
 from libertem.common import Shape
-from .base import DataSet, DataSetException, DataSetMeta, Partition3D, IOCaps
+from .base import DataSet, DataSetException, DataSetMeta, Partition3D
 from .raw import RawFile, RawFileSet
 
 
@@ -58,7 +58,6 @@ class EMPADFile(RawFile):
         self._mmap = None
 
 
-@IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.FRAME_CROPS})
 class EMPADFileSet(RawFileSet):
     pass
 
@@ -109,7 +108,8 @@ class EMPADDataSet(DataSet):
             raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
-            raw_dtype=np.dtype("float32")
+            raw_dtype=np.dtype("float32"),
+            iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         return self
 

@@ -13,7 +13,7 @@ from libertem.common import Shape
 from libertem.common.buffers import zeros_aligned
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    File3D, FileSet3D, Partition3D, IOCaps
+    File3D, FileSet3D, Partition3D
 )
 
 log = logging.getLogger(__name__)
@@ -155,7 +155,6 @@ class FRMS6File(File3D):
         return self._get_mmapped_array()
 
 
-@IOCaps({IOCaps.FULL_FRAMES})
 class FRMS6FileSet(FileSet3D):
     def __init__(self, files, meta, dark_frame, gain_map):
         """
@@ -289,6 +288,7 @@ class FRMS6DataSet(DataSet):
             dtype=self._dest_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
+            iocaps={"FULL_FRAMES"},
         )
         self._dark_frame = self._get_dark_frame()
         self._gain_map = self._get_gain_map()

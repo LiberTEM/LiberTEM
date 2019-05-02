@@ -5,7 +5,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D, IOCaps
+    Partition3D, File3D, FileSet3D
 )
 
 MAGIC_EXPECT = 258
@@ -83,7 +83,6 @@ class BloFile(File3D):
         out[:] = data[(slice(start, stop),) + slice_]
 
 
-@IOCaps({IOCaps.MMAP, IOCaps.FULL_FRAMES, IOCaps.FRAME_CROPS})
 class BloFileSet(FileSet3D):
     pass
 
@@ -108,6 +107,7 @@ class BloDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=self._shape,
             raw_dtype=np.dtype("u1"),
+            iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         self._filesize = os.stat(self._path).st_size
         return self

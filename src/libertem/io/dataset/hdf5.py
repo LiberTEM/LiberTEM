@@ -81,6 +81,7 @@ class H5DataSet(DataSet):
             self._meta = DataSetMeta(
                 shape=self.shape,
                 raw_dtype=self._dtype,
+                iocaps={"FULL_FRAMES"},
             )
         return self
 

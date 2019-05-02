@@ -9,7 +9,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D, IOCaps
+    Partition3D, File3D, FileSet3D
 )
 
 log = logging.getLogger(__name__)
@@ -213,7 +213,6 @@ class MIBFile(File3D):
         return out
 
 
-@IOCaps({IOCaps.FRAME_CROPS, IOCaps.MMAP, IOCaps.FULL_FRAMES})
 class MIBFileSet(FileSet3D):
     pass
 
@@ -262,7 +261,11 @@ class MIBDataSet(DataSet):
             sig_dims=self._sig_dims
         )
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_dtype=dtype)
+        meta = DataSetMeta(shape=shape, raw_dtype=dtype, iocaps={
+            "FRAME_CROPS", "MMAP", "FULL_FRAMES"
+        })
+        if first_file.fields['mib_dtype'] == "r64":
+            meta.iocaps.remove("MMAP")
         self._meta = meta
         self._total_filesize = sum(
             os.stat(path).st_size

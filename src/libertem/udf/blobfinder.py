@@ -290,25 +290,28 @@ def get_result_buffers_refine(num_disks):
             kind="nav", extra_shape=(num_disks, 2), dtype="float32"
         ),
         'peak_values': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32",
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
         ),
         'peak_elevations': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32",
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
         ),
         'zero': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32",
+            kind="nav", extra_shape=(2,), dtype="float32"
         ),
         'a': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32",
+            kind="nav", extra_shape=(2,), dtype="float32"
         ),
         'b': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32",
+            kind="nav", extra_shape=(2,), dtype="float32"
+        ),
+        'selector': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="bool"
         ),
     }
 
 
 def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations, zero, a, b, match_params):
+           centers, refineds, peak_values, peak_elevations, zero, a, b, selector, match_params):
     pass_2(
         frame=frame,
         template=template,
@@ -330,11 +333,12 @@ def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
         b=start_b,
         parameters=match_params
     )
-    # We don't check the cast
-    # since we cast from float64 to float32 here
+    # We don't check the cast since we cast from float64 to float32 here
+    # and avoid a lot of boilerplate
     zero[:] = match.zero
     a[:] = match.a
     b[:] = match.b
+    selector[:] = match.selector
 
 
 def run_refine(ctx, dataset, zero, a, b, indices, corr_params, match_params):

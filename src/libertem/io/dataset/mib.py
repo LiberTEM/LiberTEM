@@ -34,6 +34,15 @@ def is_valid_hdr(path):
         return line.startswith("HDR")
 
 
+def scan_size_from_hdr(hdr):
+    num_frames, scan_x = (
+        int(hdr['Frames in Acquisition (Number)']),
+        int(hdr['Frames per Trigger (Number)'])
+    )
+    scan_size = (num_frames // scan_x, scan_x)
+    return scan_size
+
+
 class MIBFile(File3D):
     def __init__(self, path, fields=None, sequence_start=None):
         self.path = path
@@ -210,12 +219,22 @@ class MIBFileSet(FileSet3D):
 
 
 class MIBDataSet(DataSet):
-    def __init__(self, path, tileshape, scan_size):
+    def __init__(self, path, tileshape=None, scan_size=None):
         super().__init__()
         self._sig_dims = 2
         self._path = path
-        self._tileshape = Shape(tileshape, sig_dims=self._sig_dims)
-        self._scan_size = tuple(scan_size)
+        if tileshape is None:
+            tileshape = (1, 3, 256, 256)
+        tileshape = Shape(tileshape, sig_dims=self._sig_dims)
+        self._tileshape = tileshape
+        if scan_size is not None:
+            scan_size = tuple(scan_size)
+        else:
+            if not path.lower().endswith(".hdr"):
+                raise ValueError(
+                    "either scan_size needs to be passed, or path needs to point to a .hdr file"
+                )
+        self._scan_size = scan_size
         self._filename_cache = None
         self._files_sorted = None
         # ._preread_headers() calls ._files() which passes the cached headers down to MIBFile,
@@ -235,6 +254,9 @@ class MIBDataSet(DataSet):
             first_file = self._files_sorted[0]
         except IndexError:
             raise DataSetException("no files found")
+        if self._scan_size is None:
+            hdr = read_hdr_file(self._path)
+            self._scan_size = scan_size_from_hdr(hdr)
         shape = Shape(
             self._scan_size + first_file.fields['image_size'],
             sig_dims=self._sig_dims
@@ -268,11 +290,7 @@ class MIBDataSet(DataSet):
             }
         elif pathlow.endswith(".hdr") and is_valid_hdr(path):
             hdr = read_hdr_file(path)
-            num_frames, scan_x = (
-                int(hdr['Frames in Acquisition (Number)']),
-                int(hdr['Frames per Trigger (Number)'])
-            )
-            scan_size = (num_frames // scan_x, scan_x)
+            scan_size = scan_size_from_hdr(hdr)
             return {
                 "path": path,
                 "tileshape": (1, 3, 256, 256),

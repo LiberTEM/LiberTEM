@@ -232,10 +232,13 @@ class Match(PointSelection):
         except np.linalg.LinAlgError:
             return cls.invalid(correlation_result)
 
-    # Find points that can be generated from the lattice vectors with near integer indices
-    # Return match
     @classmethod
     def _match_all(cls, point_selection: PointSelection, zero, a, b, parameters):
+        '''
+        Find points that can be generated from the lattice vectors with near integer indices
+
+        Return match
+        '''
         # If we have a properly set max_delta, we scale the tolerance so that
         # it can stay at a default value
         # Otherwise we just assume a scaling factor 1, for better or for worse
@@ -257,9 +260,11 @@ class Match(PointSelection):
         return cls.from_point_selection(
             point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices)
 
-    # Return a matrix with matches of all pairwise combinations of polar_vectors
     @classmethod
     def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
+        '''
+        Return a matrix with matches of all pairwise combinations of polar_vectors
+        '''
         match_matrix = {}
         # we test all pairs of candidate vectors
         # and populate match_matrix
@@ -279,9 +284,11 @@ class Match(PointSelection):
                     match_matrix[(i, j)] = match
         return match_matrix
 
-    # Return the match that matches most points
     @classmethod
     def _find_best_vector_match(cls, point_selection: PointSelection, zero, candidates, parameters):
+        '''
+        Return the match that matches most points
+        '''
         match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
         if match_matrix:
             # we select the entry with highest number of matches
@@ -290,26 +297,30 @@ class Match(PointSelection):
             )[0]
             return match
         else:
-            # FIXME proper error handling
             raise NotFoundException
 
 
-# Calculate coordinates from lattice vectors a, b and indices
-# This might be uselful without a full Match class, so we keep it as function
 def calc_coords(zero, a, b, indices):
+    '''
+    Calculate coordinates from lattice vectors a, b and indices
+    '''
     coefficients = np.array((a, b))
     return zero + np.dot(indices, coefficients)
 
 
-# accept list of polar vectors, return list of cartesian vectors
 def make_cartesian(polar):
+    '''
+    Accept list of polar vectors, return list of cartesian vectors
+    '''
     xes = np.cos(polar[:, 1]) * polar[:, 0]
     yes = np.sin(polar[:, 1]) * polar[:, 0]
     return np.array((yes, xes)).T
 
 
-# accept list of cartesian vectors, return list of polar vectors
 def make_polar(cartesian):
+    '''
+    Accept list of cartesian vectors, return list of polar vectors
+    '''
     ds = np.linalg.norm(cartesian, axis=1)
     # (y, x)
     alphas = np.arctan2(cartesian[:, 0], cartesian[:, 1])
@@ -317,20 +328,30 @@ def make_polar(cartesian):
 
 
 def size_filter(polar, min_delta, max_delta):
+    '''
+    Accept a list of polar vectors
+    Return a list of polar vectors with length between min_delta and max_delta
+    '''
     select = (polar[:, 0] >= min_delta) * (polar[:, 0] <= max_delta)
     return polar[select]
 
 
-# Make sure p1 and p2 have an angle difference of at least limit,
-# both parallel or antiparallel
 def angle_check(p1, p2, limit):
+    '''
+    Check if p1 and p2 have an angle difference of at least limit,
+    both parallel or antiparallel
+    '''
     diff = np.absolute(p1[:, 1] - p2[:, 1]) % np.pi
     return (diff > limit) * (diff < (np.pi - limit))
 
 
-# The size filter only retains vectors with absolute values between min_delta
-# and max_delta to avoid calculating for unwanted higher order or random smaller vectors
 def make_polar_vectors(coords, parameters):
+    '''
+    Calculate all unique pairwise connecting vectors between points in coords.
+
+    The vectors are filtered with parameters["min_delta"] and parameters["max_delta"]
+    to avoid calculating for unwanted higher order or random smaller vectors
+    '''
     # sort by x coordinate so that we have always positive x difference vectors
     sort_indices = np.argsort(coords[:, 1])
     coords = coords[sort_indices]
@@ -341,22 +362,13 @@ def make_polar_vectors(coords, parameters):
     return size_filter(polar, parameters["min_delta"], parameters["max_delta"])
 
 
-def make_hdbscan_config(points, parameters):
-    result = {}
-    # This is handled here because the defaults depend on the number of points
-    defaults = {
-        "min_cluster_size": max(len(points) // parameters["min_cluster_size_fraction"], 2),
-        "min_samples": max(len(points) // parameters["min_samples_fraction"], 1),
-    }
-    for (key, default) in defaults.items():
-        result[key] = parameters.get(key, default)
-    return result
-
-
-# Find indices to express each point as sum of lattice vectors from zero point
-# This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame
-# With that the algorithm could actually match entire frame collections at once
 def vector_solver(points, zero, a, b):
+    '''
+    Find indices to express each point as sum of lattice vectors from zero point
+
+    This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame
+    With that the algorithm could actually match entire frame collections at once.
+    '''
     coefficients = np.array((a, b)).T
     target = points - zero
     result = np.linalg.solve(coefficients, target.T).T

@@ -1,8 +1,7 @@
 import logging
 
-import numpy as np
-
 from .base import Job, Task, ResultTile
+from libertem.common.buffers import zeros_aligned
 
 
 log = logging.getLogger(__name__)
@@ -13,6 +12,7 @@ class PickFrameJob(Job):
         super().__init__(*args, **kwargs)
         self._slice = slice_
         self._squeeze = squeeze
+        assert slice_.shape.nav.dims == 1, "slice must have flat nav"
 
     def get_tasks(self):
         for idx, partition in enumerate(self.dataset.get_partitions()):
@@ -33,8 +33,8 @@ class PickFrameTask(Task):
         self._slice = slice_
 
     def __call__(self):
-        result = np.zeros(self._slice.shape, dtype=self.partition.dtype)
-        for data_tile in self.partition.get_tiles(crop_to=self._slice):
+        result = zeros_aligned(self._slice.shape, dtype=self.partition.dtype)
+        for data_tile in self.partition.get_tiles(crop_to=self._slice, mmap=True):
             intersection = data_tile.tile_slice.intersection_with(self._slice)
             # shift to data_tile relative coordinates:
             shifted = intersection.shift(data_tile.tile_slice)

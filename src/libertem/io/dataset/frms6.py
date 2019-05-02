@@ -3,16 +3,18 @@ import os
 import re
 import csv
 import glob
-import math
 import logging
-import itertools
 import configparser
 
 import scipy.io as sio
 import numpy as np
 
-from libertem.common import Slice, Shape
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from libertem.common import Shape
+from libertem.common.buffers import zeros_aligned
+from .base import (
+    DataSet, DataSetException, DataSetMeta,
+    File3D, FileSet3D, Partition3D
+)
 
 log = logging.getLogger(__name__)
 READOUT_MODE_PAT = re.compile(
@@ -60,12 +62,13 @@ def _unbin(tile_data, factor):
     return unbinned.reshape((s[0], factor * s[1], s[2]))
 
 
-class FRMS6File(object):
+class FRMS6File(File3D):
     def __init__(self, path, start_idx=None, hdr_info=None):
         self._path = path
         self._header = None
         self._hdr_info = hdr_info
-        self.start_idx = start_idx
+        self._start_idx = start_idx
+        super().__init__()
 
     @property
     def dtype(self):
@@ -116,6 +119,22 @@ class FRMS6File(object):
             raise DataSetException("could not determine number of frames")
         return res
 
+    @property
+    def start_idx(self):
+        return self._start_idx
+
+    def readinto(self, start, stop, out, crop_to=None):
+        if crop_to is not None:
+            slice_ = (
+                slice(start, stop),
+                crop_to.get(sig_only=True),
+            )
+        else:
+            slice_ = (
+                slice(start, stop),
+            )
+        out[:] = self.data[slice_]
+
     def _get_mmapped_array(self):
         raw_data = np.memmap(self._path, dtype=self.dtype)
         # cut off the file header:
@@ -136,7 +155,7 @@ class FRMS6File(object):
         return self._get_mmapped_array()
 
 
-class FRMS6FileSet(object):
+class FRMS6FileSet(FileSet3D):
     def __init__(self, files, meta, dark_frame, gain_map):
         """
         Represents all files belonging to a measurement.
@@ -152,12 +171,12 @@ class FRMS6FileSet(object):
         gain_map : ndarray or None
             gain map (2D, folded)
         """
-        self._files = files
         self._meta = meta
         self._dark_frame = dark_frame
         self._gain_map = gain_map
+        super().__init__(files)
 
-    def read_images(self, start, stop, out, crop_to=None):
+    def read_images_multifile(self, start, stop, out, crop_to=None):
         """
         Read [`start`, `stop`) images from the dataset into `out`
 
@@ -174,33 +193,16 @@ class FRMS6FileSet(object):
         5) un-binning
         """
 
-        frames_read = 0
-
         # 1) conversion to float: happens as we write to this buffer
-        raw_buffer = np.zeros((out.shape[0],) + tuple(self._meta.raw_shape.sig),
-                              dtype=self._meta.dtype)
-        for f in self._files:
-            # this file comes before the overlapping region, and has no overlap
-            # with the requested range, go to next file:
-            f_end_idx = f.start_idx + f.num_frames
-            if f_end_idx < start:
-                continue
+        raw_buffer = zeros_aligned((out.shape[0],) + tuple(self._meta['raw_frame_size']),
+                                   dtype=out.dtype)
 
-            # this file comes after the the overlapping range, stop here:
-            if f.start_idx > stop:
-                assert frames_read == out.shape[0]
-                break
-
-            # file-local indices:
-            f_start = max(0, start - f.start_idx)
-            f_stop = min(stop, f_end_idx) - f.start_idx
-
-            raw_buffer[
-                frames_read:frames_read + (f_stop - f_start)
-            ] = f.data[f_start:f_stop, ...]
-
-            frames_read += f_stop - f_start
-        assert frames_read == out.shape[0]
+        super().read_images_multifile(
+            start=start,
+            stop=stop,
+            out=raw_buffer,
+            crop_to=crop_to
+        )
 
         # 2) offset correction:
         if self._dark_frame is not None:
@@ -268,29 +270,25 @@ class FRMS6DataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
-    @property
-    def raw_shape(self):
-        return self._meta.raw_shape
-
     def initialize(self):
         first_file = next(self._get_signal_files())
         header = first_file.header
         raw_frame_size = header['height'], header['width']
+        # frms6 frames are folded in a specific way, this is the shape after unfolding:
         frame_size = 2 * header['height'], header['width'] // 2
         assert header['width'] % 2 == 0
         hdr = self._get_hdr_info()
         bin_factor = hdr['readoutmode']['bin']
         if bin_factor > 1:
             frame_size = (frame_size[0] * bin_factor, frame_size[1])
-        # TODO: sanity check of num_frames vs the info in .hdr file
-        num_frames = sum(sf.num_frames for sf in self._get_signal_files())
 
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
         self._meta = DataSetMeta(
             raw_dtype=np.dtype("u2"),
             dtype=self._dest_dtype,
-            raw_shape=Shape((num_frames,) + raw_frame_size, sig_dims=sig_dims),
+            metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
+            iocaps={"FULL_FRAMES"},
         )
         self._dark_frame = self._get_dark_frame()
         self._gain_map = self._get_gain_map()
@@ -298,7 +296,6 @@ class FRMS6DataSet(DataSet):
             os.stat(path).st_size
             for path in self._files()
         )
-        # TODO: sanity check: scan_size vs. num_frames
         return self
 
     def _get_hdr_info(self):
@@ -338,7 +335,7 @@ class FRMS6DataSet(DataSet):
         dark_file = self._get_dark_file()
         # FIXME: currently doing two passes here: dtype conversion and summation
         return (
-            dark_file.data.astype(self._meta.dtype).sum(axis=0) / dark_file.data.shape[0]
+            dark_file.data.astype("float32").sum(axis=0) / dark_file.data.shape[0]
         )
 
     def _get_dark_file(self):
@@ -419,7 +416,7 @@ class FRMS6DataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.dtype
+        return self._meta.raw_dtype
 
     @property
     def raw_dtype(self):
@@ -434,87 +431,13 @@ class FRMS6DataSet(DataSet):
         return res
 
     def get_partitions(self):
-        num_frames = self.shape.nav.size
-        f_per_part = num_frames // self._get_num_partitions()
-
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
-            part_slice = Slice(
-                origin=(
-                    start, 0, 0,
-                ),
-                shape=Shape(((stop - start),) + tuple(self.shape.sig),
-                            sig_dims=self.shape.sig.dims)
-            )
-            yield FRMS6Partition(
+        for part_slice, start, stop in Partition3D.make_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
+            yield Partition3D(
                 meta=self._meta,
                 partition_slice=part_slice,
                 fileset=self._get_fileset(),
                 start_frame=start,
                 num_frames=stop - start,
-            )
-
-
-class FRMS6Partition(Partition):
-    def __init__(self, fileset, start_frame, num_frames, *args, **kwargs):
-        self._fileset = fileset
-        self._start_frame = start_frame
-        self._num_frames = num_frames
-        super().__init__(*args, **kwargs)
-
-    def _get_stackheight(self, target_size=1 * 1024 * 1024):
-        # FIXME: centralize this decision and make it tunable
-        framesize = self.meta.shape.sig.size * self.meta.dtype.itemsize
-        return max(1, math.floor(target_size / framesize))
-
-    def get_tiles(self, crop_to=None, full_frames=False):
-        # NOTE: full_frames is ignored, as we currently read whole frames only
-        start_at_frame = self._start_frame
-        num_frames = self._num_frames
-        stackheight = self._get_stackheight()
-        dtype = self.meta.dtype
-        sig_shape = self.meta.shape.sig
-        sig_origin = tuple([0] * len(sig_shape))
-        if crop_to is not None:
-            sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
-            sig_shape = crop_to.shape.sig
-        tile_buf_full = np.zeros((stackheight,) + tuple(sig_shape), dtype=dtype)
-
-        tileshape = (
-            stackheight,
-        ) + tuple(sig_shape)
-
-        for outer_frame in range(start_at_frame, start_at_frame + num_frames, stackheight):
-            if start_at_frame + num_frames - outer_frame < stackheight:
-                end_frame = start_at_frame + num_frames
-                current_stackheight = end_frame - outer_frame
-                current_tileshape = (
-                    current_stackheight,
-                ) + tuple(sig_shape)
-                tile_buf = np.zeros(current_tileshape, dtype=dtype)
-            else:
-                current_stackheight = stackheight
-                current_tileshape = tileshape
-                tile_buf = tile_buf_full
-            tile_slice = Slice(
-                origin=(outer_frame,) + sig_origin,
-                shape=Shape(current_tileshape, sig_dims=sig_shape.dims)
-            )
-            if crop_to is not None:
-                intersection = tile_slice.intersection_with(crop_to)
-                if intersection.is_null():
-                    continue
-            self._fileset.read_images(
-                start=outer_frame,
-                stop=outer_frame + current_stackheight,
-                out=tile_buf,
-                crop_to=crop_to,
-            )
-            yield DataTile(
-                data=tile_buf,
-                tile_slice=tile_slice
             )

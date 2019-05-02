@@ -11,7 +11,7 @@ class RingMaskAnalysis(BaseMasksAnalysis):
         if data.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(
-                    data,
+                    data.reshape(shape),
                     key_prefix='intensity',
                     title='intensity',
                     desc="intensity of the integration over the selected ring",
@@ -19,7 +19,7 @@ class RingMaskAnalysis(BaseMasksAnalysis):
             )
         return AnalysisResultSet([
             AnalysisResult(
-                raw_data=data,
+                raw_data=data.reshape(shape),
                 visualized=visualize_simple(data),
                 key="intensity",
                 title="intensity",

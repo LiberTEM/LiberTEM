@@ -15,8 +15,8 @@ def _get_raw_params(path):
                 "type": "raw",
                 "path": path,
                 "dtype": "float32",
-                "detector_size_raw": [128, 128],
-                "crop_detector_to": [128, 128],
+                "detector_size": [128, 128],
+                "enable_direct": False,
                 "tileshape": [1, 1, 128, 128],
                 "scan_size": [16, 16]
             }
@@ -79,6 +79,7 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
         assert msg['details']['dataset'] == ds_uuid
         assert msg['details']['id'] == job_uuid
 
+        num_followup = 0
         done = False
         while not done:
             msg = json.loads(await ws.recv())
@@ -97,6 +98,8 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
                     msg = await ws.recv()
                     # followups should be PNG encoded:
                     assert msg[:8] == b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A'
+                    num_followup += 1
+        assert num_followup > 0
 
         # we are done with this job, clean up:
         async with http_client.delete(job_url) as resp:

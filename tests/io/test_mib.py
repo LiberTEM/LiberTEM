@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 @pytest.fixture
 def default_mib():
     scan_size = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 8, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
     ds = ds.initialize()
     return ds
 
@@ -29,13 +29,12 @@ def test_detect():
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH)
     assert params == {
         "path": MIB_TESTDATA_PATH,
-        "tileshape": (1, 8, 256, 256)
+        "tileshape": (1, 3, 256, 256)
     }
 
 
 def test_simple_open(default_mib):
     assert tuple(default_mib.shape) == (32, 32, 256, 256)
-    assert tuple(default_mib.raw_shape) == (32 * 32, 256, 256)
 
 
 def test_check_valid(default_mib):
@@ -45,11 +44,12 @@ def test_check_valid(default_mib):
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
     p = next(partitions)
-    assert tuple(p.shape) == (32 * 32, 256, 256)
+    assert len(p.shape) == 3
+    assert tuple(p.shape[1:]) == (256, 256)
     tiles = p.get_tiles()
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
-    assert tuple(t.tile_slice.shape) == (8, 256, 256)
+    assert tuple(t.tile_slice.shape) == (3, 256, 256)
 
 
 def test_pickle_is_small(default_mib):
@@ -57,7 +57,7 @@ def test_pickle_is_small(default_mib):
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 1 * 1024
+    assert len(pickled) < 2 * 1024
 
 
 def test_apply_mask_on_mib_job(default_mib, lt_ctx):
@@ -107,3 +107,28 @@ def test_crop_to(default_mib, lt_ctx):
     res = lt_ctx.run(job)
     assert res.shape == (1024, 64, 64)
     # TODO: check contents
+
+
+def test_read_at_boundaries(default_mib, lt_ctx):
+    scan_size = (32, 32)
+    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 7, 256, 256), scan_size=scan_size)
+    ds_odd = ds_odd.initialize()
+
+    sumjob_odd = lt_ctx.create_sum_analysis(dataset=ds_odd)
+    res_odd = lt_ctx.run(sumjob_odd)
+
+    sumjob = lt_ctx.create_sum_analysis(dataset=default_mib)
+    res = lt_ctx.run(sumjob)
+
+    assert np.allclose(res[0].raw_data, res_odd[0].raw_data)
+
+
+def test_invalid_crop_full_frames_combo(default_mib, lt_ctx):
+    slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
+    p = next(default_mib.get_partitions())
+    with pytest.raises(ValueError):
+        next(p.get_tiles(crop_to=slice_, full_frames=True))
+
+
+def test_diagnostics(default_mib):
+    print(default_mib.diagnostics)

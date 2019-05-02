@@ -12,8 +12,8 @@ def test_get_single_frame(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -28,13 +28,13 @@ def test_get_multiple_frames(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
     job = PickFrameJob(dataset=dataset, slice_=Slice(
-        origin=(0, 0, 0, 0), shape=Shape((1, 2, 16, 16), sig_dims=2)
+        origin=(0, 0, 0), shape=Shape((2, 16, 16), sig_dims=2)
     ))
 
     result = lt_ctx.run(job)
@@ -44,49 +44,22 @@ def test_get_multiple_frames(lt_ctx):
     print(result[0, 1].astype("uint32"))
     print(data[0, 1])
 
-    assert result.shape == (1, 2, 16, 16)
+    assert result.shape == (2, 16, 16)
     assert not np.allclose(result[0, 0], result[0, 1])
-    assert np.allclose(result[0, 0], data[0, 0])
-    assert np.allclose(result[0, 0:2], data[0, 0:2])
-
-
-def test_get_multiple_frames_2():
-    data = _mk_random(size=(16, 16, 16, 16))
-    dataset = MemoryDataSet(
-        data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
-        sig_dims=2
-    )
-
-    job = PickFrameJob(dataset=dataset, slice_=Slice(
-        origin=(5, 5, 0, 0), shape=Shape((5, 5, 16, 16), sig_dims=2)
-    ))
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros(job.get_result_shape())
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(result)
-
-    assert result.shape == (5, 5, 16, 16)
-    assert not np.allclose(result[0, 0], result[0, 1])
-    assert np.allclose(result[0, 0], data[5, 5])
-    assert np.allclose(result[0, 0:2], data[5, 5:7])
+    assert np.allclose(result[0], data[0, 0])
 
 
 def test_get_multiple_frames_squeeze():
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
     job = PickFrameJob(dataset=dataset, squeeze=True, slice_=Slice(
-        origin=(5, 5, 0, 0), shape=Shape((5, 5, 16, 16), sig_dims=2)
+        origin=(5, 0, 0), shape=Shape((5, 16, 16), sig_dims=2)
     ))
 
     executor = InlineJobExecutor()
@@ -96,35 +69,10 @@ def test_get_multiple_frames_squeeze():
         for tile in tiles:
             tile.reduce_into_result(result)
 
-    assert result.shape == (5, 5, 16, 16)
-    assert not np.allclose(result[0, 0], result[0, 1])
-    assert np.allclose(result[0, 0], data[5, 5])
-    assert np.allclose(result[0, 0:2], data[5, 5:7])
-
-
-def test_get_multiple_frame_row():
-    data = _mk_random(size=(16, 16, 16, 16))
-    dataset = MemoryDataSet(
-        data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
-        sig_dims=2
-    )
-
-    job = PickFrameJob(dataset=dataset, slice_=Slice(
-        origin=(5, 0, 0, 0), shape=Shape((1, 16, 16, 16), sig_dims=2)
-    ))
-
-    executor = InlineJobExecutor()
-
-    result = np.zeros(job.get_result_shape())
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(result)
-
-    assert result.shape == (1, 16, 16, 16)
-    assert not np.allclose(result[0, 0], result[0, 1])
-    assert np.allclose(result[0, 0:16], data[5, 0:16])
+    assert result.shape == (5, 16, 16)
+    assert not np.allclose(result[0], result[1])
+    assert np.allclose(result[0], data[0, 5])
+    assert np.allclose(result[0:2], data[0, 5:7])
 
 
 def test_pick_analysis(lt_ctx):
@@ -134,8 +82,8 @@ def test_pick_analysis(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -151,16 +99,15 @@ def test_pick_from_3d_ds(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
-    analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 5, "y": 5})
+    analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 5})
     result = lt_ctx.run(analysis)
 
     assert result.intensity.raw_data.shape == (16, 16)
-    assert np.allclose(result.intensity.raw_data, data.reshape(dataset._effective_shape)[5, 5])
+    assert np.allclose(result.intensity.raw_data, data[5])
 
 
 def test_pick_from_3d_ds_job(lt_ctx):
@@ -168,16 +115,15 @@ def test_pick_from_3d_ds_job(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
-    job = lt_ctx.create_pick_job(dataset=dataset, origin=(7, 8))
+    job = lt_ctx.create_pick_job(dataset=dataset, origin=(8,))
     result = lt_ctx.run(job)
 
     assert result.shape == (16, 16)
-    assert np.allclose(result, data.reshape(dataset._effective_shape)[7, 8])
+    assert np.allclose(result, data[8])
 
 
 def test_pick_from_3d_ds_job_w_shape(lt_ctx):
@@ -185,25 +131,23 @@ def test_pick_from_3d_ds_job_w_shape(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
-    job = lt_ctx.create_pick_job(dataset=dataset, origin=(7, 8), shape=(1, 1, 16, 16))
+    job = lt_ctx.create_pick_job(dataset=dataset, origin=(8,), shape=(1, 16, 16))
     result = lt_ctx.run(job)
 
     assert result.shape == (16, 16)
-    assert np.allclose(result, data.reshape(dataset._effective_shape)[7, 8])
+    assert np.allclose(result, data[8])
 
 
-def test_pick_analysis_via_api_1_3d_ds(lt_ctx):
-    data = _mk_random(size=(16 * 16, 16, 16))
+def test_pick_analysis_via_api_1(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -211,7 +155,7 @@ def test_pick_analysis_via_api_1_3d_ds(lt_ctx):
     result = lt_ctx.run(analysis)
 
     assert result.intensity.raw_data.shape == (16, 16)
-    assert np.allclose(result.intensity.raw_data, data.reshape(dataset._effective_shape)[7, 8])
+    assert np.allclose(result.intensity.raw_data, data[7, 8])
 
 
 def test_pick_analysis_via_api_2_3d_ds(lt_ctx):
@@ -219,8 +163,7 @@ def test_pick_analysis_via_api_2_3d_ds(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16 * 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -228,7 +171,7 @@ def test_pick_analysis_via_api_2_3d_ds(lt_ctx):
     result = lt_ctx.run(analysis)
 
     assert result.intensity.raw_data.shape == (16, 16)
-    assert np.allclose(result.intensity.raw_data, data.reshape(dataset._effective_shape)[8])
+    assert np.allclose(result.intensity.raw_data, data[8])
 
 
 def test_pick_analysis_via_api_3_3d_ds_fail_1(lt_ctx):
@@ -236,8 +179,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_1(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16 * 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -259,8 +201,7 @@ def test_pick_analysis_via_api_3_3d_ds_fail_2(lt_ctx):
     dataset = MemoryDataSet(
         data=data,
         tileshape=(1, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -277,9 +218,8 @@ def test_pick_analysis_via_api_3_3d_ds_fail_3(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 16, 16, 16),
-        partition_shape=(16, 16, 16),
-        effective_shape=(16, 16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -296,9 +236,8 @@ def test_pick_analysis_via_api_3_3d_ds_fail_4(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16, 16),
-        partition_shape=(16, 16, 16, 16),
-        effective_shape=(16, 16, 16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
@@ -323,13 +262,11 @@ def test_pick_analysis_via_api_3_3d_ds_fail_5(lt_ctx):
     data = _mk_random(size=(16, 256, 16, 16))
     dataset = MemoryDataSet(
         data=data,
-        tileshape=(1, 1, 16, 16),
-        partition_shape=(16, 16, 16, 16),
-        effective_shape=(16, 16, 16, 16, 16),
+        tileshape=(1, 16, 16),
+        num_partitions=2,
         sig_dims=2
     )
 
     analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 7, "y": 8, "z": 11})
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         lt_ctx.run(analysis)
-    assert "can only reduce origin from N dims to 1D" in str(e)

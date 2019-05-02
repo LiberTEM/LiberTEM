@@ -12,6 +12,7 @@ from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task, ResultTile
 from libertem.masks import to_dense, to_sparse
 from libertem.common import Slice
+from libertem.common.buffers import zeros_aligned
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class ApplyMasksJob(Job):
             )
 
     def get_result_shape(self):
-        return (len(self.masks),) + tuple(self.dataset.raw_shape.nav)
+        return (len(self.masks),) + tuple(self.dataset.shape.flatten_nav().nav)
 
 
 class MaskContainer(object):
@@ -191,29 +192,25 @@ class ApplyMasksTask(Task):
         dest_dtype = np.dtype(self.partition.dtype)
         if dest_dtype.kind not in ('c', 'f'):
             dest_dtype = 'float32'
-        part = np.zeros((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
-        for data_tile in self.partition.get_tiles():
+        part = zeros_aligned((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
+        for data_tile in self.partition.get_tiles(mmap=True, dest_dtype=dest_dtype):
             flat_data = data_tile.flat_data
-            if flat_data.dtype != dest_dtype:
-                data = flat_data.astype(dest_dtype)
-            else:
-                data = flat_data
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
                 # The sparse matrix has to be the left-hand side, for that
                 # reason we transpose before and after multiplication.
-                result = masks.T.dot(data.T).T
+                result = masks.T.dot(flat_data.T).T
             elif self.use_torch:
                 result = torch.mm(
-                    torch.from_numpy(data),
+                    torch.from_numpy(flat_data),
                     torch.from_numpy(masks),
                 ).numpy()
             else:
-                result = data.dot(masks)
+                result = flat_data.dot(masks)
             dest_slice = data_tile.tile_slice.shift(self.partition.slice)
             reshaped = self.reshaped_data(data=result, dest_slice=dest_slice)
             # Ellipsis to match the "number of masks" part of the result
-            part[(Ellipsis,) + dest_slice.get(nav_only=True)] += reshaped
+            part[(...,) + dest_slice.get(nav_only=True)] += reshaped
         return [
             MaskResultTile(
                 data=part,

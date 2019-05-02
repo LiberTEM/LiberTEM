@@ -240,3 +240,27 @@ def test_get():
         slice(0, 1),
         slice(0, 1),
     )
+
+
+def test_flatten_nav():
+    s = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((1, 1, 1, 1), sig_dims=2)
+    )
+    sflat = Slice(
+        origin=(0, 0, 0),
+        shape=Shape((1, 1, 1), sig_dims=2)
+    )
+    assert s.flatten_nav((1, 1, 1, 1)) == sflat
+
+
+def test_flatten_nav_2():
+    s = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((2, 16, 16, 16), sig_dims=2)
+    )
+    sflat = Slice(
+        origin=(0, 0, 0),
+        shape=Shape((32, 16, 16), sig_dims=2)
+    )
+    assert s.flatten_nav((16, 16, 16, 16)) == sflat

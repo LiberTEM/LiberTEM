@@ -2,19 +2,24 @@ import { FormikProps, withFormik } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsHDFS, DatasetTypes } from "../../messages";
-import { getInitial } from "../helpers";
+import { DatasetParamsEMPAD, DatasetTypes } from "../../messages";
+import { getInitial, parseNumList } from "../helpers";
 import { OpenFormProps } from "../types";
 
-type RawDatasetParamsHDFS = Omit<DatasetParamsHDFS, "path" | "type" | "tileshape"> & {
-    tileshape: string,
+// some fields have different types in the form vs. in messages
+type DatasetParamsEMPADForForm = Omit<DatasetParamsEMPAD,
+    "path"
+    | "type"
+    | "scan_size"
+> & {
+    scan_size: string,
 };
 
-type FormValues = RawDatasetParamsHDFS
+type FormValues = DatasetParamsEMPADForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsHDFS>;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsEMPAD>;
 
-const HDFSParamsForm: React.SFC<MergedProps> = ({
+const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,
     touched,
     errors,
@@ -36,8 +41,8 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
                 {errors.name && touched.name && errors.name}
             </Form.Field>
             <Form.Field>
-                <label htmlFor="id_tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
+                <label htmlFor="id_scan_size">Scan Size:</label>
+                <input type="text" name="scan_size" id="id_scan_size" value={values.scan_size}
                     onChange={handleChange} onBlur={handleBlur} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -46,18 +51,19 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<OpenFormProps<DatasetParamsHDFS>, FormValues>({
+export default withFormik<OpenFormProps<DatasetParamsEMPAD>, FormValues>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
-        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
+        scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit, path } = formikBag.props;
         onSubmit({
             path,
-            type: DatasetTypes.HDFS,
+            type: DatasetTypes.EMPAD,
             name: values.name,
-            tileshape: values.tileshape.split(",").map(part => +part),
+            scan_size: parseNumList(values.scan_size),
         });
     }
-})(HDFSParamsForm);
+})(RawFileParamsForm);
+

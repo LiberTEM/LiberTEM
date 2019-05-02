@@ -9,6 +9,8 @@ from libertem.common.buffers import BufferWrapper
 from libertem.masks import radial_gradient, background_substraction
 from libertem.job.sum import SumFramesJob
 
+import libertem.analysis.gridmatching as grm
+
 try:
     import pyfftw
     fft = pyfftw.interfaces.numpy_fft
@@ -223,6 +225,10 @@ def init_pass_2(partition, peaks, parameters):
     return kwargs
 
 
+def _shift(relative_center, anchor, crop_size):
+    return relative_center + anchor - [crop_size, crop_size]
+
+
 def pass_2(frame, template, crop_buf, peaks, mask,
            centers, refineds, peak_values, peak_elevations):
     crop_size = mask.get_crop_size()
@@ -232,9 +238,8 @@ def pass_2(frame, template, crop_buf, peaks, mask,
         crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
         log_scale(crop_part, out=crop_buf[crop_buf_slice])
         center, refined, peak_value, peak_elevation = do_correlation(template, crop_buf)
-        crop_origin = np.array(peaks[disk_idx] - [crop_size, crop_size], dtype='u2')
-        abs_center = np.array(center + crop_origin, dtype='u2')
-        abs_refined = np.array(refined + crop_origin, dtype='float32')
+        abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
+        abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
         check_cast(abs_center, centers)
         check_cast(abs_refined, refineds)
         check_cast(peak_value, peak_values)
@@ -243,6 +248,19 @@ def pass_2(frame, template, crop_buf, peaks, mask,
         refineds[disk_idx] = abs_refined
         peak_values[disk_idx] = peak_value
         peak_elevations[disk_idx] = peak_elevation
+
+
+def run_blobcorrelation(ctx, dataset, peaks, parameters):
+    peaks = peaks.astype(np.int)
+    return ctx.run_udf(
+        dataset=dataset,
+        fn=pass_2,
+        init=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
+        make_buffers=functools.partial(
+            get_result_buffers_pass_2,
+            num_disks=len(peaks),
+        ),
+    )
 
 
 def run_blobfinder(ctx, dataset, parameters):
@@ -256,16 +274,88 @@ def run_blobfinder(ctx, dataset, parameters):
         sum_result=sum_result,
     )
 
-    pass_2_results = ctx.run_udf(
-        dataset=dataset,
-        fn=pass_2,
-        init=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
-        make_buffers=functools.partial(
-            get_result_buffers_pass_2,
-            num_disks=parameters['num_disks'],
-        ),
-    )
+    pass_2_results = run_blobcorrelation(ctx, dataset, peaks, parameters)
 
     return (sum_result, pass_2_results['centers'],
         pass_2_results['refineds'], pass_2_results['peak_values'],
         pass_2_results['peak_elevations'], peaks)
+
+
+def get_result_buffers_refine(num_disks):
+    return {
+        'centers': BufferWrapper(
+            kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+        ),
+        'refineds': BufferWrapper(
+            kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+        ),
+        'peak_values': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
+        ),
+        'peak_elevations': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
+        ),
+        'zero': BufferWrapper(
+            kind="nav", extra_shape=(2,), dtype="float32"
+        ),
+        'a': BufferWrapper(
+            kind="nav", extra_shape=(2,), dtype="float32"
+        ),
+        'b': BufferWrapper(
+            kind="nav", extra_shape=(2,), dtype="float32"
+        ),
+        'selector': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="bool"
+        ),
+    }
+
+
+def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
+           centers, refineds, peak_values, peak_elevations, zero, a, b, selector, match_params):
+    pass_2(
+        frame=frame,
+        template=template,
+        crop_buf=crop_buf,
+        peaks=peaks,
+        mask=mask,
+        centers=centers,
+        refineds=refineds,
+        peak_values=peak_values,
+        peak_elevations=peak_elevations
+    )
+    match = grm.fastmatch(
+        centers=centers,
+        refineds=refineds,
+        peak_values=peak_values,
+        peak_elevations=peak_elevations,
+        zero=start_zero,
+        a=start_a,
+        b=start_b,
+        parameters=match_params
+    )
+    # We don't check the cast since we cast from float64 to float32 here
+    # and avoid a lot of boilerplate
+    zero[:] = match.zero
+    a[:] = match.a
+    b[:] = match.b
+    selector[:] = match.selector
+
+
+def run_refine(ctx, dataset, zero, a, b, indices, corr_params, match_params):
+    peaks = grm.calc_coords(zero, a, b, indices).astype('int')
+
+    return ctx.run_udf(
+        dataset=dataset,
+        fn=functools.partial(
+            refine,
+            start_zero=zero,
+            start_a=a,
+            start_b=b,
+            match_params=match_params
+        ),
+        init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
+        make_buffers=functools.partial(
+            get_result_buffers_refine,
+            num_disks=len(peaks),
+        ),
+    )

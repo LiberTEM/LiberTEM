@@ -1,5 +1,9 @@
 import numpy as np
-import hdbscan
+
+
+def fastmatch(centers, refineds, peak_values, peak_elevations, zero, a, b, parameters):
+    corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
+    return Match.fastmatch(corr, zero, a, b, parameters)
 
 
 class CorrelationResult:
@@ -9,7 +13,6 @@ class CorrelationResult:
         self.refineds = refineds
         self.peak_values = peak_values
         self.peak_elevations = peak_elevations
-        assert all(len(centers) == len(other) for other in [refineds, peak_values, peak_elevations])
 
     def __len__(self):
         return len(self.centers)
@@ -84,7 +87,23 @@ class Match(PointSelection):
         return np.linalg.norm(diff)
 
     @classmethod
-    def _make_parameters(cls, p):
+    def _make_parameters(cls, p, a=None, b=None):
+        if a is None:
+            upper_a = np.float('inf')
+            lower_a = 0
+        else:
+            upper_a = np.linalg.norm(a)
+            lower_a = upper_a
+        if b is None:
+            upper_b = np.float('inf')
+            lower_b = 0
+        else:
+            upper_b = np.linalg.norm(a)
+            lower_b = upper_b
+
+        min_delta = min(upper_a, upper_b)
+        max_delta = max(lower_a, lower_b)
+
         parameters = {
             "min_angle": np.pi / 5,
             "tolerance": 0.02,
@@ -93,10 +112,9 @@ class Match(PointSelection):
             "min_cluster_size_fraction": 4,
             "min_samples_fraction": 20,
             "num_candidates": 7,
-            "min_delta": 0,
-            "max_delta": np.float('inf'),
+            "min_delta": min_delta / 2,
+            "max_delta": max_delta * 2,
             "min_weight": 0.1
-
         }
         parameters.update(p)
         return parameters
@@ -195,7 +213,7 @@ class Match(PointSelection):
         returns:
             Match
         '''
-        p = cls._make_parameters(parameters)
+        p = cls._make_parameters(parameters, a, b)
 
         filt = correlation_result.peak_elevations >= p['min_weight']
 
@@ -215,101 +233,19 @@ class Match(PointSelection):
             return cls.invalid(correlation_result)
 
     @classmethod
-    def full_match(cls, correlation_result: CorrelationResult, zero, cand=[], parameters={}):
-        # FIXME check formatting when included in documentation
-        '''
-        This function extracts a list of Match objects as well two PointCollection objects
-        for unmatched and weak points from correlation_result and zero point.
-
-        The zero point is included in each of the matches because it is shared between all grids.
-
-        Parameters
-        ----------
-        correlation_result
-            A CorrelationResult object with coordinates and weights
-        zero
-            Zero point as numpy array (y, x).
-        cand
-            Optional list of candidate vectors to use in a first matching round before guessing.
-        parameters
-            Parameters for the matching.
-            min_angle: Minimum angle between two vectors to be considered candidates
-            tolerance: Relative position tolerance for peaks to be considered matches
-            min_points: Minimum points to try clustering matching. Otherwise match directly
-            min_match: Minimum matched clusters from clustering matching to be considered successful
-            min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
-                smaller or fuzzier clusters.
-            min_samples_fraction: Tuning parameter for clustering matching. Larger values allow
-                smaller or fuzzier clusters.
-            num_candidates: Maximum number of candidates to return from clustering matching
-            min_delta: Minimum length of a potential grid vector
-            max_delta: Maximum length of a potential grid vector
-
-        returns:
-            (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
-        '''
-        matches = []
-        p = cls._make_parameters(parameters)
-
-        filt = correlation_result.peak_elevations >= p['min_weight']
-
-        working_set = PointSelection(correlation_result, selector=filt)
-
-        zero_selector = np.array([
-            np.allclose(correlation_result.centers[i], zero)
-            + np.allclose(correlation_result.refineds[i], zero)
-            for i in range(len(correlation_result))
-        ], dtype=np.bool)
-
-        while True:
-            # First, find good candidate
-            # Expensive operation, should be done on smaller sample
-            # or sum frame result, at least for first passes to match majority
-            # of peaks
-            if cand:
-                polar_candidate_vectors = make_polar(np.array(cand))
-                cand = []
-            else:
-                polar_candidate_vectors = candidates(working_set.refineds, p)
-
-            try:
-                match = cls._find_best_vector_match(
-                    point_selection=working_set, zero=zero,
-                    candidates=polar_candidate_vectors, parameters=p)
-                match = match.weighted_optimize()
-            except NotFoundException:
-                # print("no match found:\n", points)
-                break
-            # We redo the match with optimized parameters
-            match = cls._match_all(
-                point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
-            if len(match) == 0:
-                # print("no endless loop")
-                break
-
-            match = match.weighted_optimize()
-
-            matches.append(match)
-            new_selector = np.copy(working_set.selector)
-            # remove the ones that have been matched
-            new_selector[match.selector] = False
-            # Test if it spans a lattice
-            if sum(new_selector) >= 3:
-                # Add zero point that is shared by all patterns
-                new_selector[zero_selector] = True
-                working_set = working_set.derive(selector=new_selector)
-            else:
-                # print("doesn't span a lattice")
-                unmatched = working_set.derive(selector=new_selector)
-                break
-        weak = PointSelection(correlation_result, selector=np.logical_not(filt))
-        return (matches, unmatched, weak)
-
-    # Find points that can be generated from the lattice vectors with near integer indices
-    # Return match
-    @classmethod
     def _match_all(cls, point_selection: PointSelection, zero, a, b, parameters):
-        cutoff = parameters['max_delta'] * parameters["tolerance"]
+        '''
+        Find points that can be generated from the lattice vectors with near integer indices
+
+        Return match
+        '''
+        # If we have a properly set max_delta, we scale the tolerance so that
+        # it can stay at a default value
+        # Otherwise we just assume a scaling factor 1, for better or for worse
+        if parameters['max_delta'] < np.float('inf'):
+            cutoff = parameters['max_delta'] * parameters["tolerance"]
+        else:
+            cutoff = parameters["tolerance"]
         try:
             indices = vector_solver(point_selection.refineds, zero, a, b)
         # FIXME proper error handling strategy
@@ -324,9 +260,11 @@ class Match(PointSelection):
         return cls.from_point_selection(
             point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices)
 
-    # Return a matrix with matches of all pairwise combinations of polar_vectors
     @classmethod
     def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
+        '''
+        Return a matrix with matches of all pairwise combinations of polar_vectors
+        '''
         match_matrix = {}
         # we test all pairs of candidate vectors
         # and populate match_matrix
@@ -346,9 +284,11 @@ class Match(PointSelection):
                     match_matrix[(i, j)] = match
         return match_matrix
 
-    # Return the match that matches most points
     @classmethod
     def _find_best_vector_match(cls, point_selection: PointSelection, zero, candidates, parameters):
+        '''
+        Return the match that matches most points
+        '''
         match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
         if match_matrix:
             # we select the entry with highest number of matches
@@ -357,26 +297,30 @@ class Match(PointSelection):
             )[0]
             return match
         else:
-            # FIXME proper error handling
             raise NotFoundException
 
 
-# Calculate coordinates from lattice vectors a, b and indices
-# This might be uselful without a full Match class, so we keep it as function
 def calc_coords(zero, a, b, indices):
+    '''
+    Calculate coordinates from lattice vectors a, b and indices
+    '''
     coefficients = np.array((a, b))
     return zero + np.dot(indices, coefficients)
 
 
-# accept list of polar vectors, return list of cartesian vectors
 def make_cartesian(polar):
+    '''
+    Accept list of polar vectors, return list of cartesian vectors
+    '''
     xes = np.cos(polar[:, 1]) * polar[:, 0]
     yes = np.sin(polar[:, 1]) * polar[:, 0]
     return np.array((yes, xes)).T
 
 
-# accept list of cartesian vectors, return list of polar vectors
 def make_polar(cartesian):
+    '''
+    Accept list of cartesian vectors, return list of polar vectors
+    '''
     ds = np.linalg.norm(cartesian, axis=1)
     # (y, x)
     alphas = np.arctan2(cartesian[:, 0], cartesian[:, 1])
@@ -384,20 +328,30 @@ def make_polar(cartesian):
 
 
 def size_filter(polar, min_delta, max_delta):
+    '''
+    Accept a list of polar vectors
+    Return a list of polar vectors with length between min_delta and max_delta
+    '''
     select = (polar[:, 0] >= min_delta) * (polar[:, 0] <= max_delta)
     return polar[select]
 
 
-# Make sure p1 and p2 have an angle difference of at least limit,
-# both parallel or antiparallel
 def angle_check(p1, p2, limit):
+    '''
+    Check if p1 and p2 have an angle difference of at least limit,
+    both parallel or antiparallel
+    '''
     diff = np.absolute(p1[:, 1] - p2[:, 1]) % np.pi
     return (diff > limit) * (diff < (np.pi - limit))
 
 
-# The size filter only retains vectors with absolute values between min_delta
-# and max_delta to avoid calculating for unwanted higher order or random smaller vectors
 def make_polar_vectors(coords, parameters):
+    '''
+    Calculate all unique pairwise connecting vectors between points in coords.
+
+    The vectors are filtered with parameters["min_delta"] and parameters["max_delta"]
+    to avoid calculating for unwanted higher order or random smaller vectors
+    '''
     # sort by x coordinate so that we have always positive x difference vectors
     sort_indices = np.argsort(coords[:, 1])
     coords = coords[sort_indices]
@@ -408,68 +362,13 @@ def make_polar_vectors(coords, parameters):
     return size_filter(polar, parameters["min_delta"], parameters["max_delta"])
 
 
-def make_hdbscan_config(points, parameters):
-    result = {}
-    # This is handled here because the defaults depend on the number of points
-    defaults = {
-        "min_cluster_size": max(len(points) // parameters["min_cluster_size_fraction"], 2),
-        "min_samples": max(len(points) // parameters["min_samples_fraction"], 1),
-    }
-    for (key, default) in defaults.items():
-        result[key] = parameters.get(key, default)
-    return result
-
-
-# Use hdbscan clustering to find potential candidates for lattice vectors.
-# We rely on the clusterer and its settings to give us tight and well-populated clusters.
-# Then we calculate mean and standard deviation for each cluster
-# and then filter again for tightness.
-# In the end we return the shortest matches.
-def hdbscan_candidates(points, parameters):
-    cutoff = parameters["tolerance"] * parameters["max_delta"]
-    clusterer = hdbscan.HDBSCAN(**make_hdbscan_config(points, parameters))
-    vectors = make_polar_vectors(points, parameters)
-    clusterer.fit(vectors)
-    labels = clusterer.labels_
-    cand = []
-    for cluster in range(max(labels) + 1):
-        selector = labels == cluster
-        v = vectors[selector]
-        weights = clusterer.probabilities_[selector]
-        std = v.std(axis=0)
-        mean = np.average(v, axis=0, weights=weights)
-        fom = np.linalg.norm(std)
-        if fom > cutoff:
-            # print("too fuzzy")
-            continue
-
-        cand.append(mean)
-    # return the shortest candidate vectors
-    return np.array(sorted(cand, key=lambda d: d[0])[:parameters['num_candidates']])
-
-
-def candidates(points, parameters):
-    polar_vectors = []
-    # Enough "flesh" to cluster
-    if len(points) > parameters["min_points"]:
-        # Get some candidates
-        polar_vectors = hdbscan_candidates(points, parameters)
-    # Not enough candidates found, use all pairwise vectors as candidates
-    # Tighter vector limits mean less candidates from clustering
-    # Adjust as needed because the full match is slow for too many points
-    if len(polar_vectors) < parameters["min_match"]:
-        if len(points) > parameters["min_points"]:
-            print("WARNING matching many points directly: ", len(points))
-        polar_vectors = make_polar_vectors(points, parameters)
-        # Brute force is too slow
-        # polar_vectors = all_bruteforce(points, min_delta, max_delta, 2)
-    return polar_vectors
-
-
-# Find indices to express each point as sum of lattice vectors from zero point
-# This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame
-# With that the algorithm could actually match entire frame collections at once
 def vector_solver(points, zero, a, b):
+    '''
+    Find indices to express each point as sum of lattice vectors from zero point
+
+    This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame
+    With that the algorithm could actually match entire frame collections at once.
+    '''
     coefficients = np.array((a, b)).T
     target = points - zero
     result = np.linalg.solve(coefficients, target.T).T

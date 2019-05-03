@@ -47,6 +47,7 @@ class FullMatch(Match):
                 smaller or fuzzier clusters.
             min_samples_fraction: Tuning parameter for clustering matching. Larger values allow
                 smaller or fuzzier clusters.
+            min_weight: Minimum weight for a point to be included in the fit
             num_candidates: Maximum number of candidates to return from clustering matching
             min_delta: Minimum length of a potential grid vector
             max_delta: Maximum length of a potential grid vector
@@ -84,13 +85,17 @@ class FullMatch(Match):
                 match = match.weighted_optimize()
             except NotFoundException:
                 # print("no match found:\n", working_set)
-                unmatched = working_set
+                new_selector = np.copy(working_set.selector)
+                new_selector[zero_selector] = False
+                unmatched = working_set.derive(selector=new_selector)
                 break
             # We redo the match with optimized parameters
             match = cls._match_all(
                 point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
             if len(match) == 0:
-                unmatched = working_set
+                new_selector = np.copy(working_set.selector)
+                new_selector[zero_selector] = False
+                unmatched = working_set.derive(selector=new_selector)
                 # print("no endless loop")
                 break
 
@@ -107,6 +112,7 @@ class FullMatch(Match):
                 working_set = working_set.derive(selector=new_selector)
             else:
                 # print("doesn't span a lattice")
+                new_selector[zero_selector] = False
                 unmatched = working_set.derive(selector=new_selector)
                 break
         weak = PointSelection(correlation_result, selector=np.logical_not(filt))

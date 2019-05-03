@@ -142,7 +142,7 @@ def test_fastmatch(zero, a, b):
     assert(np.allclose(match.calculated_refineds, grid))
 
 
-def test_fullmatch(zero, a, b):
+def test_fullmatch_three_residual(zero, a, b):
     if fm is None:
         pytest.skip("Failed to load optional dependency %s." % missing)
     aa = np.array([1.27, 1.2])
@@ -151,7 +151,13 @@ def test_fullmatch(zero, a, b):
     grid_1 = _fullgrid(zero, a, b, 7)
     grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
 
-    grid = np.vstack((grid_1, grid_2))
+    random = np.array([
+        (0.3, 0.5),
+        (-0.3, 12.5),
+        (-0.3, -17.5),
+    ])
+
+    grid = np.vstack((grid_1, grid_2, random))
 
     parameters = {
         'min_delta': 0.3,
@@ -162,7 +168,7 @@ def test_fullmatch(zero, a, b):
 
     assert(len(matches) == 2)
 
-    assert(len(unmatched) == 0)
+    assert(len(unmatched) == len(random))
     assert(len(weak) == 0)
 
     match1 = matches[0]
@@ -191,3 +197,100 @@ def test_fullmatch(zero, a, b):
     # We calculate by hand because the built-in method can't skip the zero point
     assert(np.allclose(grm.calc_coords(
         match2.zero, match2.a, match2.b, match2.indices[skip_zero]), grid_2))
+
+
+def test_fullmatch_one_residual(zero, a, b):
+    if fm is None:
+        pytest.skip("Failed to load optional dependency %s." % missing)
+    aa = np.array([1.27, 1.2])
+    bb = np.array([1.27, -1.2])
+
+    grid_1 = _fullgrid(zero, a, b, 7)
+    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
+
+    random = np.array([
+        (0.3, 0.5),
+    ])
+
+    grid = np.vstack((grid_1, grid_2, random))
+
+    parameters = {
+        'min_delta': 0.3,
+        'max_delta': 3,
+    }
+    (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
+
+    assert(len(matches) == 2)
+
+    assert(len(unmatched) == len(random))
+    assert(len(weak) == 0)
+
+
+def test_fullmatch_no_residual(zero, a, b):
+    if fm is None:
+        pytest.skip("Failed to load optional dependency %s." % missing)
+    aa = np.array([1.27, 1.2])
+    bb = np.array([1.27, -1.2])
+
+    grid_1 = _fullgrid(zero, a, b, 7)
+    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
+
+    grid = np.vstack((grid_1, grid_2))
+
+    parameters = {
+        'min_delta': 0.3,
+        'max_delta': 3,
+    }
+    (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
+
+    assert(len(matches) == 2)
+
+    assert(len(unmatched) == 0)
+    assert(len(weak) == 0)
+
+
+def test_fullmatch_weak(zero, a, b):
+    if fm is None:
+        pytest.skip("Failed to load optional dependency %s." % missing)
+    aa = np.array([1.27, 1.2])
+    bb = np.array([1.27, -1.2])
+
+    grid_1 = _fullgrid(zero, a, b, 7)
+    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
+    
+    random = np.array([
+        (0.3, 0.5),
+    ])
+    
+    grid = np.vstack((grid_1, grid_2, random))
+
+    parameters = {
+        'min_delta': 0.3,
+        'max_delta': 3,
+    }
+
+    values = np.ones(len(grid))
+    elevations = np.ones(len(grid))
+
+    # The default minimum weight is 0.1
+    elevations[0] = 0.01
+
+    correlation_result = grm.CorrelationResult(
+        centers=grid,
+        refineds=grid,
+        peak_values=values,
+        peak_elevations=elevations
+    )
+
+    (matches, unmatched, weak) = fm.FullMatch.full_match(
+        correlation_result=correlation_result, zero=zero, parameters=parameters)
+
+    assert(len(matches) == 2)
+
+    assert(len(unmatched) == len(random))
+    assert(len(weak) == 1)
+
+    # We have kicked out the first point with a low weight
+    # so we make sure it is gone from the match although it
+    # would be at the right position
+    assert(len(matches[0]) == len(grid_1) - 1)

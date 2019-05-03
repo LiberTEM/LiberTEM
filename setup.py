@@ -149,6 +149,7 @@ setup(
     extras_require={
         'hdfs': 'hfds3',
         'torch': 'torch',
+        'hdbscan': 'hdbscan',
     },
     package_dir={"": "src"},
     packages=[

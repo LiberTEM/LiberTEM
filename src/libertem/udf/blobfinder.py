@@ -82,7 +82,7 @@ def mask_maker(parameters):
         raise ValueError("unknown mask type: %s" % parameters['mask_type'])
 
 
-def get_peaks(parameters, framesize, sum_result):
+def get_peaks(parameters, sum_result):
     """
     executed on master node, calculate crop rects from average image
 
@@ -92,7 +92,7 @@ def get_peaks(parameters, framesize, sum_result):
     """
     mask = mask_maker(parameters)
     num_disks = parameters['num_disks']
-    spec_mask = mask.get_template(sig_shape=framesize)
+    spec_mask = mask.get_template(sig_shape=sum_result.shape)
     spec_sum = fft.rfft2(sum_result)
     corrspec = spec_mask * spec_sum
     corr = fft.fftshift(fft.irfft2(corrspec))
@@ -270,7 +270,6 @@ def run_blobfinder(ctx, dataset, parameters):
 
     peaks = get_peaks(
         parameters=parameters,
-        framesize=tuple(dataset.shape.sig),
         sum_result=sum_result,
     )
 

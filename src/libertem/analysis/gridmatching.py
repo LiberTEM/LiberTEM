@@ -88,21 +88,28 @@ class Match(PointSelection):
 
     @classmethod
     def _make_parameters(cls, p, a=None, b=None):
+        use_default = True
         if a is None:
             upper_a = np.float('inf')
             lower_a = 0
         else:
+            use_default = False
             upper_a = np.linalg.norm(a)
             lower_a = upper_a
         if b is None:
             upper_b = np.float('inf')
             lower_b = 0
         else:
+            use_default = False
             upper_b = np.linalg.norm(a)
             lower_b = upper_b
 
-        min_delta = min(upper_a, upper_b)
-        max_delta = max(lower_a, lower_b)
+        if use_default:
+            min_delta = 0
+            max_delta = np.float('inf')
+        else:
+            min_delta = min(upper_a, upper_b)
+            max_delta = max(lower_a, lower_b)
 
         parameters = {
             "min_angle": np.pi / 5,
@@ -306,6 +313,14 @@ def calc_coords(zero, a, b, indices):
     '''
     coefficients = np.array((a, b))
     return zero + np.dot(indices, coefficients)
+
+
+def within_frame(peaks, r, fy, fx):
+    '''
+    Return a boolean vector indicating peaks that are within (r, r) and (fy - r, fx - r)
+    '''
+    selector = (peaks > (r, r)) * (peaks < (fy - r, fx - r))
+    return selector.all(axis=-1)
 
 
 def make_cartesian(polar):

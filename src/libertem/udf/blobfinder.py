@@ -340,10 +340,69 @@ def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
     selector[:] = match.selector
 
 
-def run_refine(ctx, dataset, zero, a, b, indices, corr_params, match_params):
+def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None):
+    '''
+    Refine the given lattice for each frame by calculating approximate peak positions and refining
+    them for each frame by using the blobcorrelation and gridmatching.fastmatch().
+
+    indices:
+        Indices to refine. This is trimmed down to positions within the frame.
+        As a convenience, for the indices parameter this function accepts both shape
+        (n, 2) and (2, n, m) so that numpy.mgrid[h:k, i:j] works directly to specify indices.
+        This saves boilerplate code when using this function. Default: numpy.mgrid[-10:10, -10:10].
+
+    returns:
+        (result, used_indices) where result is
+        {
+            'centers': BufferWrapper(
+                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+            ),
+            'refineds': BufferWrapper(
+                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+            ),
+            'peak_values': BufferWrapper(
+                kind="nav", extra_shape=(num_disks,), dtype="float32"
+            ),
+            'peak_elevations': BufferWrapper(
+                kind="nav", extra_shape=(num_disks,), dtype="float32"
+            ),
+            'zero': BufferWrapper(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'a': BufferWrapper(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'b': BufferWrapper(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'selector': BufferWrapper(
+                kind="nav", extra_shape=(num_disks,), dtype="bool"
+            ),
+        }
+        and used_indices are the indices that were within the frame.
+    '''
+    if indices is None:
+        indices = np.mgrid[-10:10, -10:10]
+    s = indices.shape
+    # Output of mgrid
+    if (len(s) == 3) and (s[0] == 2):
+        indices = np.concatenate(indices.T)
+    # List of (i, j) pairs
+    elif (len(s) == 1) and (s[1] == 2):
+        pass
+    else:
+        raise ValueError("Shape of indices is %s, expected (n, 2) or (2, n, m)")
+
+    (y, x, fy, fx) = tuple(dataset.shape)
+
     peaks = grm.calc_coords(zero, a, b, indices).astype('int')
 
-    return ctx.run_udf(
+    selector = grm.within_frame(peaks, corr_params['radius'], fy, fx)
+
+    peaks = peaks[selector]
+    indices = indices[selector]
+
+    result = ctx.run_udf(
         dataset=dataset,
         fn=functools.partial(
             refine,
@@ -358,3 +417,4 @@ def run_refine(ctx, dataset, zero, a, b, indices, corr_params, match_params):
             num_disks=len(peaks),
         ),
     )
+    return (result, indices)

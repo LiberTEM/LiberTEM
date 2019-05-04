@@ -319,7 +319,7 @@ def within_frame(peaks, r, fy, fx):
     '''
     Return a boolean vector indicating peaks that are within (r, r) and (fy - r, fx - r)
     '''
-    selector = (peaks > (r, r)) * (peaks < (fy - r, fx - r))
+    selector = (peaks >= (r, r)) * (peaks < (fy - r, fx - r))
     return selector.all(axis=-1)
 
 
@@ -327,19 +327,19 @@ def make_cartesian(polar):
     '''
     Accept list of polar vectors, return list of cartesian vectors
     '''
-    xes = np.cos(polar[:, 1]) * polar[:, 0]
-    yes = np.sin(polar[:, 1]) * polar[:, 0]
-    return np.array((yes, xes)).T
+    xes = np.cos(polar[..., 1]) * polar[..., 0]
+    yes = np.sin(polar[..., 1]) * polar[..., 0]
+    return np.array((yes.T, xes.T)).T
 
 
 def make_polar(cartesian):
     '''
     Accept list of cartesian vectors, return list of polar vectors
     '''
-    ds = np.linalg.norm(cartesian, axis=1)
+    ds = np.linalg.norm(cartesian, axis=-1)
     # (y, x)
-    alphas = np.arctan2(cartesian[:, 0], cartesian[:, 1])
-    return np.array((ds, alphas)).T
+    alphas = np.arctan2(cartesian[..., 0], cartesian[..., 1])
+    return np.array((ds.T, alphas.T)).T
 
 
 def size_filter(polar, min_delta, max_delta):

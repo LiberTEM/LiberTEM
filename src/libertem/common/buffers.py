@@ -93,10 +93,7 @@ class BufferWrapper(object):
         get the buffer contents in shape that corresponds to the
         original dataset shape
         """
-        if self._kind == "nav":
-            return self._data.reshape(self._ds_shape.nav)
-        else:
-            return self._data
+        return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
 
     @property
     def raw_data(self):

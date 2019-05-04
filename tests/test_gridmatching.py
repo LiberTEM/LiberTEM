@@ -73,17 +73,19 @@ def test_calc_coords(zero, a, b, points, indices):
 
 def test_polar():
     data = np.array([
-        (0, 1),
-        (1, 0),
-        (-2, 0)
+        [(0, 1), (0, 1)],
+        [(1, 0), (2, 0)],
+        [(-2, 0), (0, 1)],
     ])
     expected = np.array([
-        (1, 0),
-        (1, np.pi/2),
-        (2, -np.pi/2)
+        [(1, 0), (1, 0)],
+        [(1, np.pi/2), (2, np.pi/2)],
+        [(2, -np.pi/2), (1, 0)],
     ])
 
     result = grm.make_polar(data)
+    assert(data.shape == expected.shape)
+    assert(result.shape == expected.shape)
     assert(np.allclose(expected, result))
 
 
@@ -123,6 +125,31 @@ def test_angle_ckeck():
     check_2 = grm.angle_check(polar_2, polar_1, np.pi/5)
     assert(not check_2[:-1].any())
     assert(check_2[-1])
+
+
+def test_within_frame():
+    points = np.array([
+        (0, 0),
+        (1, 1),
+        (9, 19),
+        (19, 9),
+        (8, 19),
+        (8, 18),
+        (9, 18),
+        (18, 8)
+    ])
+    expected = np.array([
+        False,
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False
+    ])
+    result = grm.within_frame(points, r=1, fy=10, fx=20)
+    assert(np.all(result == expected))
 
 
 def test_fastmatch(zero, a, b):
@@ -257,11 +284,11 @@ def test_fullmatch_weak(zero, a, b):
 
     grid_1 = _fullgrid(zero, a, b, 7)
     grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
-    
+
     random = np.array([
         (0.3, 0.5),
     ])
-    
+
     grid = np.vstack((grid_1, grid_2, random))
 
     parameters = {

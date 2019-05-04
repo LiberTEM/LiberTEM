@@ -138,3 +138,38 @@ def test_bad_merge(lt_ctx):
             merge=bad_merge,
             make_buffers=my_buffers,
         )
+
+
+def test_extra_dimension_shape(lt_ctx):
+    """
+    Test sum over the pixels for 2-dimensional dataset
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+
+    """
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    def my_buffers():
+        return {
+            'test': BufferWrapper(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            )
+        }
+
+    def my_frame_fn(frame, test):
+        test[:] = (1, 2)
+
+    res = lt_ctx.run_udf(
+        dataset=dataset,
+        fn=my_frame_fn,
+        make_buffers=my_buffers,
+    )
+
+    print(data.shape, res['test'].data.shape)
+    assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
+    assert np.allclose(res['test'].data[0, 0], (1, 2))

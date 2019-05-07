@@ -411,10 +411,12 @@ def get_transformation(ref, peaks, weighs=None):
     return fit
 
 
-def do_transformation(matrix, peaks):
-    A = np.hstack((peaks, np.ones((len(peaks), 1))))
+def do_transformation(matrix, peaks, center=None):
+    if center is None:
+        center = np.array((0, 0))
+    A = np.hstack((peaks - center, np.ones((len(peaks), 1))))
     B = np.dot(A, matrix)
-    return B[:, 0:2]
+    return B[:, 0:2] + center
 
 
 class NotFoundException(Exception):

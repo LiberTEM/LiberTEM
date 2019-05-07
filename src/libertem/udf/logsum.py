@@ -2,26 +2,6 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper
 
-'''
-Sum up logscaled frames
-
-In comparison to log-scaling the sum, this highlights regions with slightly higher
-intensity that appear in may frames in relation to very high intensity in a few frames.
-
-Example:
-
-f1 = (11, 101)
-f2 = (11, 1)
-f2 = (11, 1)
-...
-f10 = (11, 1)
-
-log10(sum(f1 ... f10)) == (2.04, 2.04)
-
-sum(log10(f1) ... log10(f10)) == (10.4, 2.04)
-
-'''
-
 
 def logsum_buffer():
     return {
@@ -40,6 +20,25 @@ def compute_logsum(frame, logsum):
 
 
 def run_logsum(ctx, dataset):
+    '''
+    Sum up logscaled frames
+
+    In comparison to log-scaling the sum, this highlights regions with slightly higher
+    intensity that appear in may frames in relation to very high intensity in a few frames.
+
+    Example:
+
+    f1 = (11, 101)
+    f2 = (11, 1)
+    f2 = (11, 1)
+    ...
+    f10 = (11, 1)
+
+    log10(sum(f1 ... f10)) == (2.04, 2.04)
+
+    sum(log10(f1) ... log10(f10)) == (10.4, 2.04)
+
+    '''
     return ctx.run_udf(
         dataset=dataset,
         fn=compute_logsum,

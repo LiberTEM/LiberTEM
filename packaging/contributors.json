@@ -60,6 +60,12 @@
         "contribution": "Discussions, supporting deployment on Australian eResearch infrastructure"
     },
     {
+        "displayname": "Giulio Guzzinati",
+        "authorname": "Guzzinati, Giulio ",
+        "affiliation": "U Antwerp",
+        "contribution": "Discussions and publication https://arxiv.org/abs/1902.06979 leading to the affine transformation strain map"
+    },
+    {
         "displayname": "Chris Hines",
         "authorname": "Hines, Chris",
         "affiliation": "Monash",
@@ -112,6 +118,12 @@
         "authorname": "MacLaren, Ian",
         "affiliation": "U Glasgow",
         "contribution": "Sample data for peak selector example, discussions, advisory"
+    },
+    {
+        "displayname": "Christoph Mahr",
+        "authorname": "Mahr, Christoph",
+        "affiliation": "U Bremen",
+        "contribution": "Discussions leading to the full frame refinement code"
     },
     {
         "displayname": "Shane McCartan",

@@ -388,10 +388,11 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
     if (len(s) == 3) and (s[0] == 2):
         indices = np.concatenate(indices.T)
     # List of (i, j) pairs
-    elif (len(s) == 1) and (s[1] == 2):
+    elif (len(s) == 2) and (s[1] == 2):
         pass
     else:
-        raise ValueError("Shape of indices is %s, expected (n, 2) or (2, n, m)")
+        raise ValueError(
+            "Shape of indices is %s, expected (n, 2) or (2, n, m)" % str(indices.shape))
 
     (y, x, fy, fx) = tuple(dataset.shape)
 

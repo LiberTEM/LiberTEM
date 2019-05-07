@@ -418,3 +418,98 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
         ),
     )
     return (result, indices)
+
+
+def get_result_buffers_affine(num_disks):
+    return {
+        'centers': BufferWrapper(
+            kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+        ),
+        'refineds': BufferWrapper(
+            kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+        ),
+        'peak_values': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
+        ),
+        'peak_elevations': BufferWrapper(
+            kind="nav", extra_shape=(num_disks,), dtype="float32"
+        ),
+        'matrix': BufferWrapper(
+            kind="nav", extra_shape=(3, 3), dtype="float32"
+        ),
+    }
+
+
+def affine(frame, template, reference, crop_buf, peaks, mask,
+           centers, refineds, peak_values, peak_elevations, matrix):
+    pass_2(
+        frame=frame,
+        template=template,
+        crop_buf=crop_buf,
+        peaks=peaks,
+        mask=mask,
+        centers=centers,
+        refineds=refineds,
+        peak_values=peak_values,
+        peak_elevations=peak_elevations
+    )
+    m = grm.get_transformation(
+        ref=reference,
+        peaks=refineds,
+        weighs=peak_elevations
+    )
+    # We don't check the cast since we cast from float64 to float32 here
+    # and avoid a lot of boilerplate
+    matrix[:] = m
+
+
+def run_affine(ctx, dataset, peaks, corr_params, reference=None):
+    '''
+    Refine the given peaks for each frame by using the blobcorrelation, and calculate
+    an affine transformation that maps the refined positions on the reference.
+
+    This method is more robust against distortions of the field of view than matching a rectangular
+    grid, provided the reference peak positions have the same distortions as the frames.
+
+    Inspired by Giulio Guzzinati
+    https://arxiv.org/abs/1902.06979
+
+    reference:
+        Reference peak positions to calculate affine transformation.
+        Default: peaks
+
+    returns:
+        {
+            'centers': BufferWrapper(
+                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+            ),
+            'refineds': BufferWrapper(
+                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+            ),
+            'peak_values': BufferWrapper(
+                kind="nav", extra_shape=(num_disks,), dtype="float32"
+            ),
+            'peak_elevations': BufferWrapper(
+                kind="nav", extra_shape=(num_disks,), dtype="float32"
+            ),
+            'matrix': BufferWrapper(
+                kind="nav", extra_shape=(3, 3), dtype="float32"
+            ),
+        }
+    '''
+    if reference is None:
+        reference = peaks
+
+    result = ctx.run_udf(
+        dataset=dataset,
+        fn=functools.partial(
+            affine,
+            reference=reference
+        ),
+        init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
+        make_buffers=functools.partial(
+            get_result_buffers_affine,
+            num_disks=len(peaks),
+        ),
+    )
+    return result

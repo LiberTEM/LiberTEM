@@ -390,5 +390,32 @@ def vector_solver(points, zero, a, b):
     return result
 
 
+def get_transformation(ref, peaks, weighs=None):
+    '''
+    Inspired by Giulio Guzzinati
+    https://arxiv.org/abs/1902.06979
+    ''' 
+    assert ref.shape == peaks.shape
+    assert len(ref) == len(weighs)
+    A = np.hstack((ref, np.ones((len(ref), 1))))
+    B = np.hstack((peaks, np.ones((len(peaks), 1))))
+
+    if weighs is None:
+        pass
+    else:
+        W = np.vstack((weighs, weighs, weighs)).T
+        A *= W
+        B *= W
+
+    (fit, res, rank, s) = np.linalg.lstsq(A, B, rcond=None)
+    return fit
+
+
+def do_transformation(matrix, peaks):
+    A = np.hstack((peaks, np.ones((len(peaks), 1))))
+    B = np.dot(A, matrix)
+    return B[:, 0:2]
+
+
 class NotFoundException(Exception):
     pass

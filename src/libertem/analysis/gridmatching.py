@@ -394,7 +394,7 @@ def get_transformation(ref, peaks, weighs=None):
     '''
     Inspired by Giulio Guzzinati
     https://arxiv.org/abs/1902.06979
-    ''' 
+    '''
     assert ref.shape == peaks.shape
     assert len(ref) == len(weighs)
     A = np.hstack((ref, np.ones((len(ref), 1))))

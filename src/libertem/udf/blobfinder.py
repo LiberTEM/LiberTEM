@@ -488,8 +488,8 @@ def paint_markers(axes, r, refined, normalized_elevations, calculated, selector,
             'b': 'g',
         }
 
-    plt.arrow(*np.flip(zero), *(np.flip(a)), color=colors['a'])
-    plt.arrow(*np.flip(zero), *(np.flip(b)), color=colors['b'])
+    axes.arrow(*np.flip(zero), *(np.flip(a)), color=colors['a'])
+    axes.arrow(*np.flip(zero), *(np.flip(b)), color=colors['b'])
 
     # Plot markers for the individual peak positions.
     # The alpha channel represents the peak elevation, which is used as a weight in the fit.

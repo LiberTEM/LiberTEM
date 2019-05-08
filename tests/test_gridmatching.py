@@ -169,6 +169,59 @@ def test_fastmatch(zero, a, b):
     assert(np.allclose(match.calculated_refineds, grid))
 
 
+def test_affinematch(zero, a, b):
+    grid = _fullgrid(zero, a, b, 5)
+    indices = grm.get_indices(grid, zero, a, b)
+    match = grm.affinematch(
+        centers=grid,
+        refineds=grid,
+        peak_values=np.ones(len(grid)),
+        peak_elevations=np.ones(len(grid)),
+        indices=indices
+    )
+    assert(np.allclose(zero, match.zero))
+    assert(np.allclose(a, match.a))
+    assert(np.allclose(b, match.b))
+    assert(len(match) == len(grid))
+    assert(np.allclose(match.calculated_refineds, grid))
+
+
+def test_get_transformation(points):
+    points2 = points * np.array((3, 7)) + np.array((-2, -3))
+    trans = grm.get_transformation(points, points2)
+    target = np.array([
+        (3, 0, 0),
+        (0, 7, 0),
+        (-2, -3, 1)
+    ])
+    assert(np.allclose(trans, target))
+
+
+def test_do_transformation(points):
+    m = np.array([
+        (3, 0, 0),
+        (0, 7, 0),
+        (-2, -3, 1)
+    ])
+    points2 = grm.do_transformation(m, points)
+    target = points * np.array((3, 7)) + np.array((-2, -3))
+    assert(np.allclose(points2, target))
+
+
+def test_find_center(points):
+    m = np.array([
+        (3, 0, 0),
+        (0, 7, 0),
+        (0, 0, 1)
+    ])
+    target_center = np.array((2., 3.))
+    points2 = grm.do_transformation(m, points, center=target_center)
+    trans = grm.get_transformation(points, points2)
+    center = grm.find_center(trans)
+
+    assert np.allclose(center, target_center)
+
+
 def test_fullmatch_three_residual(zero, a, b):
     if fm is None:
         pytest.skip("Failed to load optional dependency %s." % missing)

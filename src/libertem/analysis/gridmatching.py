@@ -435,14 +435,15 @@ def get_transformation(ref, peaks, center=None, weighs=None):
     '''
     if center is None:
         center = np.array((0., 0.))
+
     assert ref.shape == peaks.shape
-    assert len(ref) == len(weighs)
     A = np.hstack((ref - center, np.ones((len(ref), 1))))
     B = np.hstack((peaks - center, np.ones((len(peaks), 1))))
 
     if weighs is None:
         pass
     else:
+        assert len(ref) == len(weighs)
         W = np.vstack((weighs, weighs, weighs)).T
         A *= W
         B *= W

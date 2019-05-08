@@ -6,6 +6,11 @@ def fastmatch(centers, refineds, peak_values, peak_elevations, zero, a, b, param
     return Match.fastmatch(corr, zero, a, b, parameters)
 
 
+def affinematch(centers, refineds, peak_values, peak_elevations, indices):
+    corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
+    return Match.affinematch(corr, indices)
+
+
 class CorrelationResult:
     def __init__(self, centers, refineds, peak_values, peak_elevations):
         assert all(len(centers) == len(other) for other in [refineds, peak_values, peak_elevations])
@@ -235,6 +240,39 @@ class Match(PointSelection):
             match2 = cls._match_all(
                 point_selection=selection, zero=match1.zero, a=match1.a, b=match1.b, parameters=p)
             return match2.weighted_optimize()
+        # FIXME proper error handling strategy
+        except np.linalg.LinAlgError:
+            return cls.invalid(correlation_result)
+
+    @classmethod
+    def affinematch(cls, correlation_result: CorrelationResult, indices):
+        # FIXME check formatting when included in documentation
+        '''
+        This function creates a Match object from correlation_result and
+        indices for all points. The indices can be non-integer and relative to any
+        base vectors zero, a, b, including virtual ones like zero=(0, 0), a=(1, 0), b=(0, 1).
+
+        Refined values for zero, a and b that match the correlated peaks are then derived.
+
+        This match method is very fast, can be robust against a distorted field of view and
+        works without determining a lattice. It is mathematically equivalent to calculating
+        an affine transformation, as inspired by Giulio Guzzinati
+        https://arxiv.org/abs/1902.06979
+
+        Parameters
+        ----------
+        correlation_result
+            CorrelationResult object with coordinates and weights
+        indices
+            The indices assigned to each point of the CorrelationResult.
+
+        returns:
+            Match
+        '''
+
+        match = Match(correlation_result, selector=None, zero=None, a=None, b=None, indices=indices)
+        try:
+            return match.weighted_optimize()
         # FIXME proper error handling strategy
         except np.linalg.LinAlgError:
             return cls.invalid(correlation_result)

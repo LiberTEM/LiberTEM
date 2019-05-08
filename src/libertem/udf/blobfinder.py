@@ -310,7 +310,8 @@ def get_result_buffers_refine(num_disks):
 
 
 def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations, zero, a, b, selector, match_params):
+           centers, refineds, peak_values, peak_elevations, zero, a, b, selector,
+           match_params, indices):
     pass_2(
         frame=frame,
         template=template,
@@ -322,16 +323,25 @@ def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
         peak_values=peak_values,
         peak_elevations=peak_elevations
     )
-    match = grm.fastmatch(
-        centers=centers,
-        refineds=refineds,
-        peak_values=peak_values,
-        peak_elevations=peak_elevations,
-        zero=start_zero,
-        a=start_a,
-        b=start_b,
-        parameters=match_params
-    )
+    if match_params.get('affine', False):
+        match = grm.affinematch(
+            centers=centers,
+            refineds=refineds,
+            peak_values=peak_values,
+            peak_elevations=peak_elevations,
+            indices=indices,
+        )
+    else:
+        match = grm.fastmatch(
+            centers=centers,
+            refineds=refineds,
+            peak_values=peak_values,
+            peak_elevations=peak_elevations,
+            zero=start_zero,
+            a=start_a,
+            b=start_b,
+            parameters=match_params
+        )
     # We don't check the cast since we cast from float64 to float32 here
     # and avoid a lot of boilerplate
     zero[:] = match.zero
@@ -350,6 +360,9 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
         As a convenience, for the indices parameter this function accepts both shape
         (n, 2) and (2, n, m) so that numpy.mgrid[h:k, i:j] works directly to specify indices.
         This saves boilerplate code when using this function. Default: numpy.mgrid[-10:10, -10:10].
+    match_params['affine']: If True, use affine transformation matching. This is very fast and
+        robust against a distorted field of view, but doesn't exclude outliers.
+
 
     returns:
         (result, used_indices) where result is
@@ -394,7 +407,7 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
         raise ValueError(
             "Shape of indices is %s, expected (n, 2) or (2, n, m)" % str(indices.shape))
 
-    (y, x, fy, fx) = tuple(dataset.shape)
+    (fy, fx) = tuple(dataset.shape.sig)
 
     peaks = grm.calc_coords(zero, a, b, indices).astype('int')
 
@@ -410,7 +423,8 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
             start_zero=zero,
             start_a=a,
             start_b=b,
-            match_params=match_params
+            match_params=match_params,
+            indices=indices,
         ),
         init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
         make_buffers=functools.partial(
@@ -419,105 +433,3 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
         ),
     )
     return (result, indices)
-
-
-def get_result_buffers_affine(num_disks):
-    return {
-        'centers': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-        ),
-        'refineds': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-        ),
-        'peak_values': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32"
-        ),
-        'peak_elevations': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32"
-        ),
-        'matrix': BufferWrapper(
-            kind="nav", extra_shape=(3, 3), dtype="float32"
-        ),
-    }
-
-
-def affine(frame, template, reference, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations, matrix, center):
-    pass_2(
-        frame=frame,
-        template=template,
-        crop_buf=crop_buf,
-        peaks=peaks,
-        mask=mask,
-        centers=centers,
-        refineds=refineds,
-        peak_values=peak_values,
-        peak_elevations=peak_elevations
-    )
-    m = grm.get_transformation(
-        ref=reference,
-        peaks=refineds,
-        center=center,
-        weighs=peak_elevations
-    )
-    # We don't check the cast since we cast from float64 to float32 here
-    # and avoid a lot of boilerplate
-    matrix[:] = m
-
-
-def run_affine(ctx, dataset, peaks, corr_params, reference=None, center=None):
-    '''
-    Refine the given peaks for each frame by using the blobcorrelation, and calculate
-    an affine transformation that maps the refined positions on the reference.
-
-    This method is more robust against distortions of the field of view than matching a rectangular
-    grid, provided the reference peak positions have the same distortions as the frames.
-
-    Inspired by Giulio Guzzinati
-    https://arxiv.org/abs/1902.06979
-
-    reference:
-        Reference peak positions to calculate affine transformation.
-        Default: peaks
-
-    returns:
-        {
-            'centers': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-            ),
-            'refineds': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-            ),
-            'peak_values': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'peak_elevations': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'matrix': BufferWrapper(
-                kind="nav", extra_shape=(3, 3), dtype="float32"
-            ),
-        }
-    '''
-    if reference is None:
-        reference = peaks
-
-    # We assume what is usually the zero order peak as reference since
-    # rotating around the corner of a frame hardly makes sense.
-    if center is None:
-        center = reference[0]
-
-    result = ctx.run_udf(
-        dataset=dataset,
-        fn=functools.partial(
-            affine,
-            reference=reference,
-            center=center
-        ),
-        init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
-        make_buffers=functools.partial(
-            get_result_buffers_affine,
-            num_disks=len(peaks),
-        ),
-    )
-    return (result, center)

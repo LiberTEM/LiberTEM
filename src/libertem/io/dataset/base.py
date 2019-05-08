@@ -493,11 +493,6 @@ class FileSet3D(object):
         read frames starting at index `start` up to but not including index `stop`
         from multiple files into the buffer `out`.
         """
-        if not self._files_open:
-            raise RuntimeError(
-                "only call read_images_multifile when having the "
-                "fileset opened via with-statement"
-            )
         frames_read = 0
         for f in self.files_from(start):
             # after the range of interest
@@ -510,7 +505,13 @@ class FileSet3D(object):
             buf = out[
                 frames_read:frames_read + (f_stop - f_start)
             ]
-            f.readinto(start=f_start, stop=f_stop, out=buf, crop_to=crop_to)
+            try:
+                if not self._files_open:
+                    f.open()
+                f.readinto(start=f_start, stop=f_stop, out=buf, crop_to=crop_to)
+            finally:
+                if not self._files_open:
+                    f.close()
 
             frames_read += f_stop - f_start
         assert frames_read == out.shape[0]
@@ -554,6 +555,7 @@ class Partition3D(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
+        assert num_frames > 0, "invalid number of frames: %d" % num_frames
         super().__init__(*args, **kwargs)
 
     def _get_stackheight(self, sig_shape, dest_dtype, target_size=None):

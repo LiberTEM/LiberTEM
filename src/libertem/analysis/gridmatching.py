@@ -254,7 +254,7 @@ class Match(PointSelection):
         else:
             cutoff = parameters["tolerance"]
         try:
-            indices = vector_solver(point_selection.refineds, zero, a, b)
+            indices = get_indices(point_selection.refineds, zero, a, b)
         # FIXME proper error handling strategy
         except np.linalg.LinAlgError:
             raise
@@ -377,7 +377,7 @@ def make_polar_vectors(coords, parameters):
     return size_filter(polar, parameters["min_delta"], parameters["max_delta"])
 
 
-def vector_solver(points, zero, a, b):
+def get_indices(points, zero, a, b):
     '''
     Find indices to express each point as sum of lattice vectors from zero point
 
@@ -390,15 +390,17 @@ def vector_solver(points, zero, a, b):
     return result
 
 
-def get_transformation(ref, peaks, weighs=None):
+def get_transformation(ref, peaks, center=None, weighs=None):
     '''
     Inspired by Giulio Guzzinati
     https://arxiv.org/abs/1902.06979
     '''
+    if center is None:
+        center = np.array((0., 0.))
     assert ref.shape == peaks.shape
     assert len(ref) == len(weighs)
-    A = np.hstack((ref, np.ones((len(ref), 1))))
-    B = np.hstack((peaks, np.ones((len(peaks), 1))))
+    A = np.hstack((ref - center, np.ones((len(ref), 1))))
+    B = np.hstack((peaks - center, np.ones((len(peaks), 1))))
 
     if weighs is None:
         pass
@@ -417,6 +419,15 @@ def do_transformation(matrix, peaks, center=None):
     A = np.hstack((peaks - center, np.ones((len(peaks), 1))))
     B = np.dot(A, matrix)
     return B[:, 0:2] + center
+
+
+def find_center(matrix):
+    target = np.array((0, 0, 1)).T
+    diff = np.identity(3)
+    diff[2, 2] = 0
+    # Find neutral point: solve a*m = a
+    result = np.linalg.solve((matrix - diff).T, target)
+    return result[0:2]
 
 
 class NotFoundException(Exception):

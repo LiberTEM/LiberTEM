@@ -442,7 +442,7 @@ def get_result_buffers_affine(num_disks):
 
 
 def affine(frame, template, reference, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations, matrix):
+           centers, refineds, peak_values, peak_elevations, matrix, center):
     pass_2(
         frame=frame,
         template=template,
@@ -457,6 +457,7 @@ def affine(frame, template, reference, crop_buf, peaks, mask,
     m = grm.get_transformation(
         ref=reference,
         peaks=refineds,
+        center=center,
         weighs=peak_elevations
     )
     # We don't check the cast since we cast from float64 to float32 here
@@ -464,7 +465,7 @@ def affine(frame, template, reference, crop_buf, peaks, mask,
     matrix[:] = m
 
 
-def run_affine(ctx, dataset, peaks, corr_params, reference=None):
+def run_affine(ctx, dataset, peaks, corr_params, reference=None, center=None):
     '''
     Refine the given peaks for each frame by using the blobcorrelation, and calculate
     an affine transformation that maps the refined positions on the reference.
@@ -501,11 +502,17 @@ def run_affine(ctx, dataset, peaks, corr_params, reference=None):
     if reference is None:
         reference = peaks
 
+    # We assume what is usually the zero order peak as reference since
+    # rotating around the corner of a frame hardly makes sense.
+    if center is None:
+        center = reference[0]
+
     result = ctx.run_udf(
         dataset=dataset,
         fn=functools.partial(
             affine,
-            reference=reference
+            reference=reference,
+            center=center
         ),
         init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
         make_buffers=functools.partial(
@@ -513,4 +520,4 @@ def run_affine(ctx, dataset, peaks, corr_params, reference=None):
             num_disks=len(peaks),
         ),
     )
-    return result
+    return (result, center)

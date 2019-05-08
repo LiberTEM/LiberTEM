@@ -217,7 +217,9 @@ def affine(frame, parameters, center, reference, intensity, matrix):
         (0, 0)
     ])
 
-    extra_params = (frame, parameters['radius'], parameters['padding'], center, reference)
+    logframe = np.log(frame - np.min(frame) + 1)
+
+    extra_params = (logframe, parameters['radius'], parameters['padding'], center, reference)
 
     res = scipy.optimize.minimize(correlate_fullframe_affine, x0, args=extra_params)
 

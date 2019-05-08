@@ -206,7 +206,9 @@ class Match(PointSelection):
         This function is much, much faster than the full match.
         It works well to match a large number of point sets
         that share the same lattice vectors, for example from a
-        larger grain or monocrystalline material
+        larger grain or monocrystalline material. It rejects
+        random points or other lattices in the CorrelationResult,
+        provided they are not on near-integer positions of zero, a, b.
 
         Parameters
         ----------
@@ -255,7 +257,10 @@ class Match(PointSelection):
         Refined values for zero, a and b that match the correlated peaks are then derived.
 
         This match method is very fast, can be robust against a distorted field of view and
-        works without determining a lattice. It is mathematically equivalent to calculating
+        works without determining a lattice. It matches the full CorrelationResult and does
+        not reject random points or other outliers.
+
+        It is mathematically equivalent to calculating
         an affine transformation, as inspired by Giulio Guzzinati
         https://arxiv.org/abs/1902.06979
 

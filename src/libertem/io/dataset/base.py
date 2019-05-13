@@ -515,7 +515,7 @@ class Partition3D(Partition):
         indices for each partition.
         """
         num_frames = shape.nav.size
-        f_per_part = num_frames // num_partitions
+        f_per_part = max(1, num_frames // num_partitions)
 
         c0 = itertools.count(start=0, step=f_per_part)
         c1 = itertools.count(start=f_per_part, step=f_per_part)

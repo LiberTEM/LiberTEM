@@ -1,7 +1,9 @@
 from collections import namedtuple
 
+import pytest
 
-from libertem.io.dataset.base import FileTree
+from libertem.io.dataset.base import FileTree, Partition3D
+from libertem.common import Shape
 from utils import MemoryDataSet, _mk_random
 
 FakeFile = namedtuple('FakeFile', ['start_idx', 'end_idx'])
@@ -78,3 +80,11 @@ def test_sweep_stackheight():
         for p in dataset.get_partitions():
             for tile in p.get_tiles():
                 pass
+
+
+def test_num_part_larger_than_num_frames():
+    shape = Shape((1, 1, 256, 256), sig_dims=2)
+    slice_iter = Partition3D.make_slices(shape=shape, num_partitions=2)
+    next(slice_iter)
+    with pytest.raises(StopIteration):
+        next(slice_iter)

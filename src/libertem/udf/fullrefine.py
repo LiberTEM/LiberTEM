@@ -65,12 +65,13 @@ def get_result_buffers_refine():
     }
 
 
-def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity, zero, a, b):
+def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity,
+        zero, a, b, bounds):
     x0 = np.hstack((start_zero, start_a, start_b))
     logframe = np.log(frame - np.min(frame) + 1)
     extra_params = (logframe, parameters['radius'], parameters['padding'], indices)
 
-    res = scipy.optimize.minimize(correlate_fullframe, x0, args=extra_params)
+    res = scipy.optimize.minimize(correlate_fullframe, x0, args=extra_params, bounds=bounds)
 
     intensity[:] = res['fun']
     zero[:] = res['x'][0:2]
@@ -78,7 +79,7 @@ def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity, 
     b[:] = res['x'][4:6]
 
 
-def run_refine(ctx, dataset, zero, a, b, parameters, indices=None):
+def run_refine(ctx, dataset, zero, a, b, parameters, indices=None, bounds=None):
     '''
     Refine the given lattice for each frame by optimizing the correlation
     with full rendered frames.
@@ -139,8 +140,30 @@ def run_refine(ctx, dataset, zero, a, b, parameters, indices=None):
             start_a=a,
             start_b=b,
             indices=indices,
-            parameters=parameters
+            parameters=parameters,
+            bounds=bounds
         ),
         make_buffers=get_result_buffers_refine,
     )
     return (result, indices)
+
+
+def auto_bounds(zero, a, b, percent=0.05, absolute=5):
+    '''
+    Helper function to calculate bounds for scipy.optimize.minimize()
+
+    For zero, only use absolute delta
+
+    For a, b, use percentage and absolute.
+    '''
+
+    result = np.array([
+        (zero[0] - absolute, zero[0] + absolute),
+        (zero[1] - absolute, zero[1] + absolute),
+        (a[0] - absolute - a[0] * percent, a[0] + absolute + a[0] * percent),
+        (a[1] - absolute - a[1] * percent, a[1] + absolute + a[1] * percent),
+        (b[0] - absolute - b[0] * percent, b[0] + absolute + b[0] * percent),
+        (b[1] - absolute - b[1] * percent, b[1] + absolute + b[1] * percent),
+    ])
+
+    return result

@@ -9,14 +9,17 @@ from libertem.common.buffers import BufferWrapper
 
 
 @numba.njit
-def correlate_fullframe(params, frame, r0, padding, indices):
+def correlate_fullframe(params, frame, r0, radius_outer, padding, indices):
     zero = params[0:2]
     a = params[2:4]
     b = params[4:6]
     result = 0
     r02 = r0 ** 2
+    grad = min(6, radius_outer - r0)
+    r_inter2 = (r0 + grad)**2
+    r_out2 = radius_outer ** 2
     (fy, fx) = frame.shape
-    bounding = np.ceil(r0 * (1 + padding))
+    bounding = np.ceil(max(r0, radius_outer) * (1 + padding))
 
     def radial_gradient(r2):
         if r2 <= r02:
@@ -25,8 +28,10 @@ def correlate_fullframe(params, frame, r0, padding, indices):
         # so that the optimizer sees a gradient to converge towards
         # and that small shifts of the position lead to a change of the result
         # Magic number 3 gave best results in practical tests, TBD if optimal in all cases
-        elif r2 <= (r0 + 3)**2:
-            return 1 + r0/3 - np.sqrt(r2)/3
+        elif r2 <= r_inter2:
+            return 1 + 0.5*r0/grad - 0.5*np.sqrt(r2)/grad
+        elif r2 <= r_out2:
+            return -1
         else:
             return 0
 
@@ -69,7 +74,12 @@ def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity,
         zero, a, b, bounds):
     x0 = np.hstack((start_zero, start_a, start_b))
     logframe = np.log(frame - np.min(frame) + 1)
-    extra_params = (logframe, parameters['radius'], parameters['padding'], indices)
+    extra_params = (
+        logframe,
+        parameters['radius'],
+        parameters['radius_outer'],
+        parameters['padding'],
+        indices)
 
     res = scipy.optimize.minimize(correlate_fullframe, x0, args=extra_params, bounds=bounds)
 

@@ -1,4 +1,6 @@
-import scipy.sparse as sp
+import numpy as np
+import sparse
+
 from libertem.viz import visualize_simple
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
@@ -39,8 +41,11 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         dtype = self.dtype
 
         def _point_inner():
-            a = sp.csr_matrix(([1], ([int(cy)], [int(cx)])),
-                    dtype=dtype, shape=sig_shape)
+            a = sparse.COO(
+                data=np.array([1], dtype=dtype),
+                coords=([int(cy)], [int(cx)]),
+                shape=sig_shape
+            )
             return a
         return [_point_inner]
 

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
+import sparse
 import pytest
 
 from libertem.job.masks import MaskContainer
@@ -12,7 +13,7 @@ from libertem.masks import gradient_x
 def masks():
     input_masks = [
         lambda: np.ones((128, 128)),
-        lambda: np.zeros((128, 128)),
+        lambda: sparse.zeros((128, 128)),
         lambda: np.ones((128, 128)),
         lambda: sp.csr_matrix(((1,), ((64,), (64,))), shape=(128, 128), dtype=np.float32),
         lambda: gradient_x(128, 128, dtype=np.float32),

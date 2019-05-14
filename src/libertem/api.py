@@ -81,9 +81,9 @@ class Context:
         ----------
         factories
             list of functions that take no arguments and create masks. The returned masks can be
-            numpy arrays or scipy.sparse matrices. The mask factories should not reference large
-            objects because they can create significant overheads when they are pickled and
-            unpickled.
+            numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
+            factories should not reference large objects because they can create significant
+            overheads when they are pickled and unpickled.
         dataset
             dataset to work on
         use_sparse
@@ -124,9 +124,9 @@ class Context:
         ----------
         factories
             list of functions that take no arguments and create masks. The returned masks can be
-            numpy arrays or scipy.sparse matrices. The mask factories should not reference large
-            objects because they can create significant overheads when they are pickled and
-            unpickled.
+            numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
+            factories should not reference large objects because they can create significant
+            overheads when they are pickled and unpickled.
         dataset
             dataset to work on
         use_sparse

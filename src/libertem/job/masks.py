@@ -5,12 +5,12 @@ try:
     import torch
 except ImportError:
     torch = None
-import scipy.sparse as sp
+import sparse
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task, ResultTile
-from libertem.masks import to_dense, to_sparse
+from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
 from libertem.common.buffers import zeros_aligned
 
@@ -21,18 +21,16 @@ def _make_mask_slicer(computed_masks):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
         sliced_masks = [
-            # .reshape((-1, 1)) -> like flatten, but compatible with sparse
-            # matrices and no copies
-            # should save us one copy as we np.hstack() immediately afterwards
-            # https://stackoverflow.com/a/28930580/540644
-            slice_.get(mask, sig_only=True).reshape((-1, 1))
+            slice_.get(mask, sig_only=True).reshape(-1)
             for mask in computed_masks
         ]
         # MaskContainer assures that all or none of the masks are sparse
-        if sp.issparse(sliced_masks[0]):
-            return sp.hstack(sliced_masks)
+        # and that only sparse.COO or numpy.ndarray compatible matrices
+        # are returned
+        if isinstance(sliced_masks[0], sparse.COO):
+            return sparse.stack(sliced_masks, axis=1)
         else:
-            return np.hstack(sliced_masks)
+            return np.stack(sliced_masks, axis=1)
     return _get_masks_for_slice
 
 
@@ -132,11 +130,15 @@ class MaskContainer(object):
             ]
         else:
             sparse = [
-                sp.issparse(m) for m in raw_masks
+                is_sparse(m) for m in raw_masks
             ]
             if all(sparse):
                 self.use_sparse = True
-                masks = raw_masks
+                # This performs the conversion of supported sparse types
+                # to sparse.COO, the only sparse type supported for downstream computation
+                masks = [
+                    to_sparse(m) for m in raw_masks
+                ]
             else:
                 self.use_sparse = False
                 masks = [
@@ -197,9 +199,7 @@ class ApplyMasksTask(Task):
             flat_data = data_tile.flat_data
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
-                # The sparse matrix has to be the left-hand side, for that
-                # reason we transpose before and after multiplication.
-                result = masks.T.dot(flat_data.T).T
+                result = sparse.dot(flat_data, masks)
             elif self.use_torch:
                 result = torch.mm(
                     torch.from_numpy(flat_data),

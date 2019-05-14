@@ -8,7 +8,7 @@
 # flake8: noqa
 
 import numpy
-import scipy.sparse
+import sparse
 from matplotlib import colors, cm
 
 try:

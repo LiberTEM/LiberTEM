@@ -30,15 +30,12 @@ class BaseMasksAnalysis(BaseAnalysis):
         raise NotImplementedError()
 
     def get_use_sparse(self):
-        return False
+        return self.parameters.get('use_sparse', None)
 
 
 class MasksAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         return self.parameters['factories']
-
-    def get_use_sparse(self):
-        return self.parameters['use_sparse']
 
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)

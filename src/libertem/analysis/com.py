@@ -105,8 +105,13 @@ class COMAnalysis(BaseMasksAnalysis):
         cx = parameters.get('cx', detector_x / 2)
         cy = parameters.get('cy', detector_y / 2)
         r = parameters.get('r', float('inf'))
+        use_sparse = parameters.get('use_sparse', None)
+        if use_sparse is None:
+            use_sparse = masks.use_sparse(np.pi * r**2, detector_y * detector_x)
+
         return {
             'cx': cx,
             'cy': cy,
             'r': r,
+            'use_sparse': use_sparse,
         }

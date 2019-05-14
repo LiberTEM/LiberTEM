@@ -268,7 +268,7 @@ class Context:
         NOTE: if you just want to read single frames, it is easier to use `create_pick_analysis`.
 
         NOTE: It is not efficient to use this method on large parts of datasets, please consider
-        implementing an analysis instead.
+        implementing a UDF instead.
 
         Parameters
         ----------
@@ -301,11 +301,10 @@ class Context:
         if len(origin) == dataset.shape.nav.dims:
             origin = (np.ravel_multi_index(origin, dataset.shape.nav),)\
                 + tuple([0] * dataset.shape.sig.dims)
-        elif len(origin) == dataset.shape.dims:
-            origin = (np.ravel_multi_index(origin, dataset.shape),)
+        elif len(origin) == dataset.shape.sig.dims + 1:
+            pass  # keep as-is
         elif len(origin) == 1:
             origin = origin + tuple([0] * dataset.shape.sig.dims)
-            pass  # keep as-is
         else:
             raise ValueError(
                 "incompatible origin: can only read in flattened form"

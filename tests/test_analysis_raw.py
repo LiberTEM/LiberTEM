@@ -142,6 +142,22 @@ def test_pick_from_3d_ds_job_w_shape(lt_ctx):
     assert np.allclose(result, data[8])
 
 
+def test_pick_from_3d_ds_job_w_shape_2(lt_ctx):
+    data = _mk_random(size=(16 * 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(1, 16, 16),
+        num_partitions=2,
+        sig_dims=2
+    )
+
+    job = lt_ctx.create_pick_job(dataset=dataset, origin=(8, 0, 0), shape=(1, 16, 16))
+    result = lt_ctx.run(job)
+
+    assert result.shape == (16, 16)
+    assert np.allclose(result, data[8])
+
+
 def test_pick_analysis_via_api_1(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(

@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 import scipy.sparse as sp
-from libertem.masks import to_dense, to_sparse
+import sparse
+from libertem.masks import to_dense, to_sparse, is_sparse
 from utils import MemoryDataSet, _naive_mask_apply, _mk_random
 
 
@@ -141,11 +142,12 @@ def test_multi_masks(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))
     mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
-    expected = _naive_mask_apply([mask0, mask1], data)
+    mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+    expected = _naive_mask_apply([mask0, mask1, mask2], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2]
     )
     results = lt_ctx.run(analysis)
 
@@ -157,30 +159,55 @@ def test_multi_masks(lt_ctx):
         results.mask_1.raw_data,
         expected[1],
     )
+    assert np.allclose(
+        results.mask_2.raw_data,
+        expected[2],
+    )
 
 
 def test_mask_job(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))
     mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
-    expected = _naive_mask_apply([mask0, mask1], data)
+    mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+    expected = _naive_mask_apply([mask0, mask1, mask2], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     job = lt_ctx.create_mask_job(
-        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2]
     )
     results = lt_ctx.run(job)
 
     assert np.allclose(
-        results.reshape((2,) + tuple(dataset.shape.nav)),
+        results.reshape((3,) + tuple(dataset.shape.nav)),
         expected,
     )
+
+
+def test_numpy_is_sparse():
+    mask = _mk_random(size=(16, 16))
+    assert not is_sparse(mask)
+
+
+def test_scipy_is_sparse():
+    mask = sp.csr_matrix(_mk_random(size=(16, 16)))
+    assert is_sparse(mask)
+
+
+def test_sparse_is_sparse():
+    mask = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+    assert is_sparse(mask)
+
+
+def test_sparse_dok_is_sparse():
+    mask = sparse.DOK.from_numpy(_mk_random(size=(16, 16)))
+    assert is_sparse(mask)
 
 
 def test_all_sparse_analysis(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
-    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
     expected = _naive_mask_apply([mask0, mask1], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
@@ -202,7 +229,7 @@ def test_all_sparse_analysis(lt_ctx):
 def test_uses_sparse_all_default(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
-    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask1 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     job = lt_ctx.create_mask_job(
@@ -212,7 +239,7 @@ def test_uses_sparse_all_default(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert sp.issparse(job.masks[tile])
+    assert is_sparse(job.masks[tile])
 
 
 def test_uses_sparse_mixed_default(lt_ctx):
@@ -227,7 +254,7 @@ def test_uses_sparse_mixed_default(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert not sp.issparse(job.masks[tile])
+    assert not is_sparse(job.masks[tile])
 
 
 def test_uses_sparse_true(lt_ctx):
@@ -243,10 +270,10 @@ def test_uses_sparse_true(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert sp.issparse(job.masks[tile])
+    assert is_sparse(job.masks[tile])
 
 
-def test_uses_sparse_false(lt_ctx):
+def test_uses_scipy_sparse_false(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
     mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
@@ -258,7 +285,22 @@ def test_uses_sparse_false(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert not sp.issparse(job.masks[tile])
+    assert not is_sparse(job.masks[tile])
+
+
+def test_uses_sparse_sparse_false(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+    mask1 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1], use_sparse=False
+    )
+    tiles = job.dataset.get_partitions()
+    tile = next(tiles)
+
+    assert not is_sparse(job.masks[tile])
 
 
 def test_masks_timeseries_2d_frames(lt_ctx):

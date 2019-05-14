@@ -174,16 +174,10 @@ class H5Partition(Partition):
         self.reader = reader
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
+    def _get_tiles_normal(self, tileshape, crop_to=None, dest_dtype="float32"):
         if crop_to is not None:
             if crop_to.shape.sig != self.meta.shape.sig:
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
-        if full_frames:
-            tileshape = (
-                tuple(self.tileshape.nav) + tuple(self.meta.shape.sig)
-            )
-        else:
-            tileshape = self.tileshape
         data = np.ndarray(tileshape, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:
             # FIXME: we currently transform back and forth between 3D and 4D
@@ -209,3 +203,38 @@ class H5Partition(Partition):
                 tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
                 assert tile_slice_flat.shape.dims == 3
                 yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
+
+    def _get_tiles_with_roi(self, roi, dest_dtype):
+        # FIXME: this is not performance optimized, at all
+        roi = roi.reshape((-1,))
+        one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
+        sig_origin = tuple([0] * self.meta.shape.sig.dims)
+        frames_read = 0
+        for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
+            roi_idx = tile.tile_slice.origin[0] - self.slice.origin[0]
+            if roi[roi_idx]:
+                tile_slice = Slice(
+                    origin=(frames_read,) + sig_origin,
+                    shape=tile.tile_slice.shape,
+                )
+                yield DataTile(
+                    data=tile.data,
+                    tile_slice=tile_slice,
+                )
+                frames_read += 1
+
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
+                  roi=None):
+        if crop_to is not None and roi is not None:
+            if crop_to.shape.nav.size != self._num_frames:
+                raise ValueError("don't use crop_to with roi")
+        if full_frames:
+            tileshape = (
+                tuple(self.tileshape.nav) + tuple(self.meta.shape.sig)
+            )
+        else:
+            tileshape = self.tileshape
+        if roi is not None:
+            yield from self._get_tiles_with_roi(roi, dest_dtype)
+        else:
+            yield from self._get_tiles_normal(tileshape, crop_to, dest_dtype)

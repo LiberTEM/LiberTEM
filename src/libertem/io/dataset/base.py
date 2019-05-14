@@ -8,6 +8,32 @@ from libertem.common import Slice, Shape
 from libertem.common.buffers import bytes_aligned, zeros_aligned
 
 
+def _roi_to_indices(roi, start, stop):
+    """
+    helper function to calculate indices from roi mask
+
+    roi : np.ndarray of type bool
+
+    start : int
+        start frame index, relative to dataset start
+        can for example be the start frame index of a partition
+
+    stop : int
+        stop frame index, relative to dataset start
+        can for example be the stop frame index of a partition
+    """
+    roi = roi.reshape((-1,))
+    frames_in_roi = np.count_nonzero(roi)
+    total = 0
+    for flag, idx in zip(roi, range(start, stop)):
+        if flag:
+            yield idx
+            # early exit: we know we don't have more frames in the roi
+            total += 1
+            if total == frames_in_roi:
+                break
+
+
 class IOCaps:
     """
     I/O capabilities for a dataset (may depend on dataset parameters and concrete format)
@@ -236,7 +262,8 @@ class Partition(object):
         """
         return self.slice.shape.flatten_nav()
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
+                  roi=None):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -260,6 +287,9 @@ class Partition(object):
 
         dest_dtype : numpy dtype
             convert data to this dtype when reading
+
+        roi : np.ndarray
+            1d mask that matches the partition shape to limit the region to work on
         """
         raise NotImplementedError()
 
@@ -530,7 +560,11 @@ class Partition3D(Partition):
             )
             yield part_slice, start, stop
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
+                  roi=None):
+        """
+        roi should be a 1d bitmask with the same shape as the partition
+        """
         # TODO: implement reading tiles that contain parts of frames (and more depth)
         # the same notes as below in _get_tiles_normal apply; takes some work to make it efficient
         dest_dtype = np.dtype(dest_dtype)
@@ -538,18 +572,10 @@ class Partition3D(Partition):
         if dest_dtype != self.meta.raw_dtype:
             mmap = False
         mmap = mmap and "MMAP" in self.meta.iocaps
-        if mmap:
-            yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
-        else:
-            yield from self._get_tiles_normal(crop_to, full_frames, dest_dtype)
 
-    def _get_tiles_normal(self, crop_to, full_frames, dest_dtype):
-        start_at_frame = self._start_frame
-        num_frames = self._num_frames
-        sig_shape = self.meta.shape.sig
-        sig_origin = tuple([0] * len(sig_shape))
         if (crop_to is not None and "FRAME_CROPS" not in self.meta.iocaps
                 and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)):
+            raise ValueError("cannot crop in signal dimensions yet")
             # FIXME: not fully implemented; see _get_tiles_mmap
             # efficient impl:
             #  - read only as much as we need
@@ -565,11 +591,26 @@ class Partition3D(Partition):
             #  - can be implemented right here in this function actually!
             #  - stackheight needs to be limited, otherwise we thrash the CPU cache
             #    (we can't set stackheight to something that would fit the crop into the caches...)
-            raise ValueError("cannot crop in signal dimensions yet")
         if (crop_to is not None
                 and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
                 and full_frames):
             raise ValueError("cannot crop and request full frames at the same time")
+        if crop_to is not None and roi is not None:
+            if crop_to.shape.nav.size != self._num_frames:
+                raise ValueError("don't use crop_to with roi")
+
+        if roi is not None:
+            yield from self._get_tiles_with_roi(crop_to, full_frames, dest_dtype, roi)
+        elif mmap:
+            yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
+        else:
+            yield from self._get_tiles_normal(crop_to, full_frames, dest_dtype)
+
+    def _get_tiles_normal(self, crop_to, full_frames, dest_dtype):
+        start_at_frame = self._start_frame
+        num_frames = self._num_frames
+        sig_shape = self.meta.shape.sig
+        sig_origin = tuple([0] * len(sig_shape))
         if crop_to is not None:
             sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
             sig_shape = crop_to.shape.sig
@@ -614,15 +655,69 @@ class Partition3D(Partition):
                     tile_slice=tile_slice
                 )
 
+    def _get_tiles_with_roi(self, crop_to, full_frames, dest_dtype, roi):
+        """
+        With a ROI, we yield tiles from a "compressed" navigation axis, relative to
+        the beginning of the partition. Compressed means, only frames that have a 1
+        in the ROI are considered, and the resulting tile slices are from a coordinate
+        system that has the shape `(np.count_nonzero(roi),)`.
+        """
+        start_at_frame = self._start_frame
+        sig_shape = self.meta.shape.sig
+        sig_origin = tuple([0] * len(sig_shape))
+        if crop_to is not None:
+            sig_origin = tuple(crop_to.origin[-sig_shape.dims:])
+            sig_shape = crop_to.shape.sig
+        if full_frames:
+            sig_shape = self.meta.shape.sig
+        stackheight = self._get_stackheight(sig_shape=sig_shape, dest_dtype=dest_dtype)
+        tile_buf = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+
+        frames_read = 0
+        tile_idx = 0
+        frame_idx = start_at_frame
+        indices = _roi_to_indices(roi, self._start_frame, self._start_frame + self._num_frames)
+
+        with self._fileset as fileset:
+            outer_frame = 0
+            for frame_idx in indices:
+                fileset.read_images_multifile(
+                    start=frame_idx,
+                    stop=frame_idx + 1,
+                    out=tile_buf[tile_idx].reshape((1,) + tuple(sig_shape)),
+                    crop_to=crop_to,
+                )
+
+                tile_idx += 1
+                frames_read += 1
+
+                if tile_idx == stackheight:
+                    tile_slice = Slice(
+                        origin=(outer_frame,) + sig_origin,
+                        shape=Shape((tile_idx,) + tuple(sig_shape), sig_dims=sig_shape.dims)
+                    )
+                    yield DataTile(
+                        data=tile_buf[:tile_idx, ...],
+                        tile_slice=tile_slice
+                    )
+                    tile_idx = 0
+                    outer_frame = frames_read
+        if tile_idx != 0:
+            # last frame, size != stackheight
+            tile_slice = Slice(
+                origin=(outer_frame,) + sig_origin,
+                shape=Shape((tile_idx,) + tuple(sig_shape), sig_dims=sig_shape.dims)
+            )
+            yield DataTile(
+                data=tile_buf[:tile_idx, ...],
+                tile_slice=tile_slice
+            )
+
     def _get_tiles_mmap(self, crop_to, full_frames, dest_dtype):
         start_at_frame = self._start_frame
         num_frames = self._num_frames
         sig_shape = self.meta.shape.sig
         sig_origin = tuple([0] * len(sig_shape))
-        if (crop_to is not None
-                and tuple(crop_to.shape.sig) != tuple(self.meta.shape.sig)
-                and full_frames):
-            raise ValueError("cannot crop and request full frames at the same time")
         if dest_dtype != self.meta.raw_dtype:
             raise ValueError("using mmap with dtype conversion is not efficient")
         if crop_to is not None:

@@ -610,22 +610,33 @@ class K2ISPartition(Partition):
         self._num_frames = num_frames
         super().__init__(*args, **kwargs)
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32"):
+    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
+                  roi=None):
+        if roi is not None:
+            # FIXME: implement roi for _read_stacked; forcing full_frames=True is suboptimal
+            # for performance reasons.
+            full_frames = True
         if full_frames:
-            yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype)
+            yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype, roi=roi)
         else:
-            yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype)
+            yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype, roi=roi)
 
-    def _read_full_frames(self, crop_to=None, dest_dtype="float32"):
+    def _read_full_frames(self, crop_to=None, dest_dtype="float32", roi=None):
         with contextlib.ExitStack() as stack:
             frame_buf = zeros_aligned((1, 1860, 2048), dtype=dest_dtype)
             open_sectors = [
                 stack.enter_context(sector)
                 for sector in self._sectors
             ]
+            frames_read = 0
             for frame in range(self._start_frame, self._start_frame + self._num_frames):
+                if roi is not None and not roi[frame - self._start_frame]:
+                    continue
+                origin = frame
+                if roi is not None:
+                    origin = frames_read
                 tile_slice = Slice(
-                    origin=(frame, 0, 0),
+                    origin=(origin, 0, 0),
                     shape=Shape(frame_buf.shape, sig_dims=2),
                 )
                 if crop_to is not None:
@@ -641,8 +652,9 @@ class K2ISPartition(Partition):
                     data=frame_buf,
                     tile_slice=tile_slice
                 )
+                frames_read += 1
 
-    def _read_stacked(self, crop_to=None, dtype="float32"):
+    def _read_stacked(self, crop_to=None, dtype="float32", roi=None):
         for sector in self._sectors:
             with sector as s:
                 yield from s.read_stacked(

@@ -116,3 +116,21 @@ def test_flatten_roundtrip_2():
     )
     assert s.flatten_nav((8, 16, 36, 64)) == sflat
     assert unravel_nav(sflat, (8, 16, 32, 64)) == s
+
+
+def test_roi_1(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+    )
+    ds = ds.initialize()
+    p = next(ds.get_partitions())
+    roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
+    roi[0] = 1
+    tiles = []
+    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+        print("tile:", tile)
+        tiles.append(tile)
+    assert len(tiles) == 1
+    assert tiles[0].tile_slice.shape.nav.size == 1
+    assert tuple(tiles[0].tile_slice.shape.sig) == (16, 16)
+    assert tiles[0].tile_slice.origin == (0, 0, 0)

@@ -75,3 +75,22 @@ def test_pick_analysis(default_raw, lt_ctx):
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0
+
+
+def test_roi_1(default_raw, lt_ctx):
+    p = next(default_raw.get_partitions())
+    roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
+    roi[0] = 1
+    tiles = []
+    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+        print("tile:", tile)
+        tiles.append(tile)
+    assert len(tiles) == 1
+
+
+def test_roi_2(default_raw, lt_ctx):
+    p = next(default_raw.get_partitions())
+    roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
+    stackheight = p._get_stackheight(sig_shape=p.meta.shape.sig, dest_dtype=np.dtype("float32"))
+    roi[0:stackheight + 2] = 1
+    tiles = list(p.get_tiles(dest_dtype="float32", roi=roi))

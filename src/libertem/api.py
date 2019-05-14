@@ -387,7 +387,7 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset, fn, make_buffers, init=None, merge=merge_assign):
+    def run_udf(self, dataset, fn, make_buffers, init=None, merge=merge_assign, roi=None):
         """
         Run `fn` on `dataset`.
 
@@ -413,6 +413,8 @@ class Context:
             A function merging a partial result into the final result buffer. By default it just
             performs assignment.
 
+        roi : np.ndarray
+            region of interest as bool mask over the navigation axes of the dataset
 
         Example
         -------
@@ -440,11 +442,11 @@ class Context:
         """
         result_buffers = make_buffers()
         for buf in result_buffers.values():
-            buf.set_shape_ds(dataset)
+            buf.set_shape_ds(dataset, roi=roi)
             buf.allocate()
         cancel_id = str(uuid.uuid4())
 
-        tasks = make_udf_tasks(dataset, fn, init, make_buffers)
+        tasks = make_udf_tasks(dataset, fn, init, make_buffers, roi)
 
         for partition_result_buffers, partition in self.executor.run_tasks(tasks, cancel_id):
             buffer_views = {}

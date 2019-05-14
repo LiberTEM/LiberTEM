@@ -16,23 +16,32 @@ def merge_assign(dest, src):
 
 
 class UDFTask(Task):
-    def __init__(self, partition, idx, make_buffers, init, fn):
+    def __init__(self, partition, idx, make_buffers, init, roi, fn):
         super().__init__(partition=partition, idx=idx)
         self._make_buffers = make_buffers
         self._init = init
         self._fn = fn
+        self._roi = roi
+
+    def _roi_for_partition(self):
+        if self._roi is None:
+            return
+        roi = self._roi.reshape((-1,))
+        roi = roi[self.partition.slice.get(nav_only=True)]
+        return roi
 
     def __call__(self):
+        roi = self._roi_for_partition()
         result_buffers = self._make_buffers()
         for buf in result_buffers.values():
-            buf.set_shape_partition(self.partition)
+            buf.set_shape_partition(self.partition, roi=roi)
             buf.allocate()
         if self._init is not None:
             kwargs = self._init(self.partition)
         else:
             kwargs = {}
         kwargs.update(result_buffers)
-        for tile in self.partition.get_tiles(full_frames=True):
+        for tile in self.partition.get_tiles(full_frames=True, roi=roi):
             for frame_idx, frame in enumerate(tile.data):
                 buffer_views = {}
                 for k, buf in result_buffers.items():
@@ -46,8 +55,8 @@ class UDFTask(Task):
         return result_buffers, self.partition
 
 
-def make_udf_tasks(dataset, fn, init, make_buffers):
+def make_udf_tasks(dataset, fn, init, make_buffers, roi):
     return (
-        UDFTask(partition=partition, idx=idx, fn=fn, init=init, make_buffers=make_buffers)
+        UDFTask(partition=partition, idx=idx, fn=fn, init=init, make_buffers=make_buffers, roi=roi)
         for idx, partition in enumerate(dataset.get_partitions())
     )

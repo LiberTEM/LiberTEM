@@ -145,27 +145,54 @@ def test_get_diags(default_k2is):
     json.dumps(diags)
 
 
+def pixelsum_init(partition):
+    return {}
+
+
+def pixelsum_buffers():
+    return {
+        'pixelsum': BufferWrapper(
+            kind="nav", dtype="float32"
+        )
+    }
+
+
+def pixelsum_frame_fn(frame, pixelsum):
+    pixelsum[:] = np.sum(frame)
+
+
 @pytest.mark.slow
 def test_udf_on_k2is(lt_ctx, default_k2is):
-    def my_init(partition):
-        return {}
-
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
     res = lt_ctx.run_udf(
         dataset=default_k2is,
-        fn=my_frame_fn,
-        init=my_init,
-        make_buffers=my_buffers,
+        fn=pixelsum_frame_fn,
+        init=pixelsum_init,
+        make_buffers=pixelsum_buffers,
     )
     assert 'pixelsum' in res
     # print(data.shape, res['pixelsum'].data.shape)
     # assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
+
+
+def test_udf_roi(lt_ctx, default_k2is):
+    roi = np.zeros(default_k2is.shape.flatten_nav().nav, dtype=bool)
+    roi[0] = 1
+    res = lt_ctx.run_udf(
+        dataset=default_k2is,
+        fn=pixelsum_frame_fn,
+        init=pixelsum_init,
+        make_buffers=pixelsum_buffers,
+        roi=roi,
+    )
+    assert 'pixelsum' in res
+
+
+def test_roi(lt_ctx, default_k2is):
+    p = next(default_k2is.get_partitions())
+    roi = np.zeros(p.shape.flatten_nav().nav, dtype=bool)
+    roi[0] = 1
+    tiles = []
+    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+        print("tile:", tile)
+        tiles.append(tile)
+    assert len(tiles) == 1

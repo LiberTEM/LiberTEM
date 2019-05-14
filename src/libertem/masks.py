@@ -35,9 +35,18 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
     return(mask)
 
 
+def use_sparse(mask_area, detector_area):
+    '''
+    Empirical tests have shown that sparse.pydata.org is competitive
+    compared to dense matrices with pytorch up to about 20 % occupancy
+    See Issue #197
+    '''
+    return mask_area < 0.2 * detector_area
+
+
 def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
     """
-    Make a circular mask as a double array.
+    Make a circular mask as a 2D array of bool.
 
     Parameters
     ----------

@@ -68,7 +68,7 @@ async def test_fd_limit(aexecutor):
     # again afterwards:
     proc = psutil.Process()
     oldlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (proc.num_fds() + 16, oldlimit[1]))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (proc.num_fds() + 24, oldlimit[1]))
 
     print("fds", proc.num_fds())
 

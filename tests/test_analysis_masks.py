@@ -165,6 +165,90 @@ def test_multi_masks(lt_ctx):
     )
 
 
+def test_multi_mask_stack_dense(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, length=2
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_stack_sparse(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, length=2
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_stack_force_sparse(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, use_sparse=True, length=2
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_stack_force_dense(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, use_sparse=False, length=2
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
 def test_mask_job(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))

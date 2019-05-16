@@ -1,5 +1,6 @@
 import functools
 import logging
+from collections.abc import Iterable
 
 try:
     import torch
@@ -20,17 +21,23 @@ log = logging.getLogger(__name__)
 def _make_mask_slicer(computed_masks):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
-        sliced_masks = [
-            slice_.get(mask, sig_only=True).reshape(-1)
-            for mask in computed_masks
-        ]
-        # MaskContainer assures that all or none of the masks are sparse
-        # and that only sparse.COO or numpy.ndarray compatible matrices
-        # are returned
-        if isinstance(sliced_masks[0], sparse.COO):
-            return sparse.stack(sliced_masks, axis=1)
+        if isinstance(computed_masks, (np.ndarray, sparse.SparseArray)):
+            # Assume single stack dimension
+            stack_height = computed_masks.shape[0]
+            # The stacking for a list of masks performs a transpose, so we do that here
+            return slice_.get(computed_masks, sig_only=True).reshape((stack_height, -1)).T
         else:
-            return np.stack(sliced_masks, axis=1)
+            sliced_masks = [
+                slice_.get(mask, sig_only=True).reshape(-1)
+                for mask in computed_masks
+            ]
+            # MaskContainer assures that all or none of the masks are sparse
+            # and that only sparse.COO or numpy.ndarray compatible matrices
+            # are returned
+            if isinstance(sliced_masks[0], sparse.SparseArray):
+                return sparse.stack(sliced_masks, axis=1)
+            else:
+                return np.stack(sliced_masks, axis=1)
     return _get_masks_for_slice
 
 
@@ -38,12 +45,14 @@ class ApplyMasksJob(Job):
     """
     Apply masks to signals/frames in the dataset.
     """
-    def __init__(self, mask_factories, use_torch=True, use_sparse=None, *args, **kwargs):
+    def __init__(self, mask_factories, use_torch=True, use_sparse=None, length=None,
+                *args, **kwargs):
         super().__init__(*args, **kwargs)
         mask_dtype = np.dtype(self.dataset.dtype)
         if mask_dtype.kind in ('u', 'i'):
             mask_dtype = np.dtype("float32")
-        self.masks = MaskContainer(mask_factories, dtype=mask_dtype, use_sparse=use_sparse)
+        self.masks = MaskContainer(mask_factories, dtype=mask_dtype,
+            use_sparse=use_sparse, length=length)
         self.use_torch = use_torch
 
     def get_tasks(self):
@@ -60,8 +69,13 @@ class ApplyMasksJob(Job):
 
 
 class MaskContainer(object):
-    def __init__(self, mask_factories, dtype, use_sparse=None):
+    def __init__(self, mask_factories, dtype, use_sparse=None, length=None):
         self.mask_factories = mask_factories
+        # If we generate a whole mask stack with one function call,
+        # we should know the length without generating the mask stack
+        self.length = length
+        if not isinstance(mask_factories, Iterable) and length is None:
+            raise TypeError("The length parameter has to be set if mask_factories is not iterable.")
         self.dtype = dtype
         self.use_sparse = use_sparse
         self._mask_cache = {}
@@ -71,7 +85,10 @@ class MaskContainer(object):
         self.validate_mask_functions()
 
     def validate_mask_functions(self):
-        for fn in self.mask_factories:
+        fns = self.mask_factories
+        if not isinstance(fns, Iterable):
+            fns = [fns]
+        for fn in fns:
             try:
                 if 'self' in fn.__code__.co_freevars:
                     log.warning('mask factory closes over self, may be inefficient')
@@ -79,7 +96,10 @@ class MaskContainer(object):
                 raise
 
     def __len__(self):
-        return len(self.mask_factories)
+        if isinstance(self.mask_factories, Iterable):
+            return len(self.mask_factories)
+        else:
+            return self.length
 
     def __getitem__(self, key):
         if isinstance(key, Partition):
@@ -115,6 +135,16 @@ class MaskContainer(object):
         # it takes precedence.
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
+
+        if not isinstance(self.mask_factories, Iterable):
+            raw_masks = self.mask_factories()
+            if self.use_sparse is True:
+                return to_sparse(raw_masks)
+            elif self.use_sparse is False:
+                return to_dense(raw_masks)
+            else:
+                self.use_sparse = is_sparse(raw_masks)
+                return raw_masks
 
         raw_masks = [
             f().astype(self.dtype)

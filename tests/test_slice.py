@@ -126,6 +126,28 @@ def test_get_slice_2():
     ]]]))
 
 
+def test_get_slice_stack_signal_only():
+    slice_ = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((1, 1, 1, 1), sig_dims=2)
+    )
+
+    data = np.arange(4 * 4 * 4 * 4).reshape(4, 4, 4, 4)
+    assert slice_.get(data, sig_only=True).shape[2:4] == tuple(slice_.shape.sig)
+    assert np.all(slice_.get(data, sig_only=True) == data[..., 0:1, 0:1])
+
+
+def test_get_slice_stack_nav_only():
+    slice_ = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((1, 1, 1, 1), sig_dims=2)
+    )
+
+    data = np.arange(4 * 4 * 4 * 4).reshape(4, 4, 4, 4)
+    assert slice_.get(data, nav_only=True).shape[0:2] == tuple(slice_.shape.nav)
+    assert np.all(slice_.get(data, nav_only=True) == data[0:1, 0:1])
+
+
 def test_slice_intersect_0():
     s1 = Slice(
         origin=(0, 0, 0, 0),

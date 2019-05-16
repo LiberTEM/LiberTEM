@@ -20,10 +20,12 @@ class BaseMasksAnalysis(BaseAnalysis):
     def get_job(self):
         mask_factories = self.get_mask_factories()
         use_sparse = self.get_use_sparse()
+        length = self.get_preset_length()
         job = ApplyMasksJob(
             dataset=self.dataset,
             mask_factories=mask_factories,
-            use_sparse=use_sparse)
+            use_sparse=use_sparse,
+            length=length)
         return job
 
     def get_mask_factories(self):
@@ -31,6 +33,9 @@ class BaseMasksAnalysis(BaseAnalysis):
 
     def get_use_sparse(self):
         return self.parameters.get('use_sparse', None)
+
+    def get_preset_length(self):
+        return self.parameters.get('length', None)
 
 
 class MasksAnalysis(BaseMasksAnalysis):

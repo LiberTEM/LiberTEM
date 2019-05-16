@@ -137,7 +137,7 @@ class MaskContainer(object):
         # and set the use_sparse property accordingly
 
         if not isinstance(self.mask_factories, Iterable):
-            raw_masks = self.mask_factories()
+            raw_masks = self.mask_factories().astype(self.dtype)
             if self.use_sparse is True:
                 return to_sparse(raw_masks)
             elif self.use_sparse is False:

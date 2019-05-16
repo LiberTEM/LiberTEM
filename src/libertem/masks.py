@@ -44,6 +44,59 @@ def use_sparse(mask_area, detector_area):
     return mask_area < 0.2 * detector_area
 
 
+def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSizeX, imageSizeY):
+    '''
+    Stamp the template in a multi-mask 3D stack at the positions indicated by
+    mask_index, offsetY, offsetX. The function clips the bounding box as necessary.
+    '''
+    num_templates = len(mask_index)
+    fy, fx = template.shape
+    area = fy * fx
+    total_index_size = num_templates * area
+    y, x = np.mgrid[0:fy, 0:fx]
+
+    data = np.zeros(total_index_size, dtype=bool)
+    coord_mask = np.zeros(total_index_size, dtype=int)
+    coord_y = np.zeros(total_index_size, dtype=int)
+    coord_x = np.zeros(total_index_size, dtype=int)
+
+    for i in range(len(mask_index)):
+        start = i * area
+        stop = (i + 1) * area
+        data[start:stop] = template.flatten()
+        coord_mask[start:stop] = mask_index[i]
+        coord_y[start:stop] = y.flatten() + offsetY[i]
+        coord_x[start:stop] = x.flatten() + offsetX[i]
+
+    selector = (coord_y >= 0) * (coord_y < imageSizeY) * (coord_x >= 0) * (coord_x < imageSizeX)
+
+    return sparse.COO(
+        data=data[selector],
+        coords=(coord_mask[selector], coord_y[selector], coord_x[selector]),
+        shape=(max(mask_index) + 1, imageSizeY, imageSizeX)
+    )
+
+
+def sparse_circular_multi_stack(mask_index, centerX, centerY, imageSizeX, imageSizeY, radius):
+    # we make sure it is odd
+    bbox = int(2*np.ceil(radius) + 1)
+    bbox_center = int((bbox - 1) // 2)
+    template = circular(
+        centerX=bbox_center,
+        centerY=bbox_center,
+        imageSizeX=bbox,
+        imageSizeY=bbox,
+        radius=radius)
+    return sparse_template_multi_stack(
+        mask_index=mask_index,
+        offsetX=np.array(centerX, dtype=np.int) - bbox_center,
+        offsetY=np.array(centerY, dtype=np.int) - bbox_center,
+        template=template,
+        imageSizeX=imageSizeX,
+        imageSizeY=imageSizeY,
+    )
+
+
 def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
     """
     Make a circular mask as a 2D array of bool.

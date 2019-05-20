@@ -55,7 +55,7 @@ def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSiz
     total_index_size = num_templates * area
     y, x = np.mgrid[0:fy, 0:fx]
 
-    data = np.zeros(total_index_size, dtype=bool)
+    data = np.zeros(total_index_size, dtype=template.dtype)
     coord_mask = np.zeros(total_index_size, dtype=int)
     coord_y = np.zeros(total_index_size, dtype=int)
     coord_x = np.zeros(total_index_size, dtype=int)

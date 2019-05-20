@@ -12,6 +12,12 @@ from libertem.job.sum import SumFramesJob
 
 import libertem.analysis.gridmatching as grm
 
+# FIXME There's work on flexible FFT backends in scipy
+# https://github.com/scipy/scipy/wiki/GSoC-2019-project-ideas#revamp-scipyfftpack
+# and discussions about pyfftw performance vs other implementations
+# https://github.com/pyFFTW/pyFFTW/issues/264
+# For that reason we shoud review the state of Python FFT implementations
+# regularly and adapt our choices accordingly
 try:
     import pyfftw
     fft = pyfftw.interfaces.numpy_fft

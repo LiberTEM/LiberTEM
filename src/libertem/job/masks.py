@@ -63,7 +63,7 @@ class MaskContainer(object):
         # we should know the length without generating the mask stack
         self.length = length
         if callable(mask_factories) and length is None:
-            raise TypeError("The length parameter has to be set if mask_factories is not iterable.")
+            raise TypeError("The length parameter has to be set if mask_factories is callable.")
         self.dtype = dtype
         self.use_sparse = use_sparse
         self._mask_cache = {}

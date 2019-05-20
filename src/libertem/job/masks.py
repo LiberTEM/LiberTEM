@@ -7,6 +7,7 @@ try:
 except ImportError:
     torch = None
 import sparse
+import scipy.sparse
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
@@ -21,23 +22,11 @@ log = logging.getLogger(__name__)
 def _make_mask_slicer(computed_masks):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
-        if isinstance(computed_masks, (np.ndarray, sparse.SparseArray)):
-            # Assume single stack dimension
-            stack_height = computed_masks.shape[0]
-            # The stacking for a list of masks performs a transpose, so we do that here
-            return slice_.get(computed_masks, sig_only=True).reshape((stack_height, -1)).T
-        else:
-            sliced_masks = [
-                slice_.get(mask, sig_only=True).reshape(-1)
-                for mask in computed_masks
-            ]
-            # MaskContainer assures that all or none of the masks are sparse
-            # and that only sparse.COO or numpy.ndarray compatible matrices
-            # are returned
-            if isinstance(sliced_masks[0], sparse.SparseArray):
-                return sparse.stack(sliced_masks, axis=1)
-            else:
-                return np.stack(sliced_masks, axis=1)
+        stack_height = computed_masks.shape[0]
+        m = slice_.get(computed_masks, sig_only=True)
+        # We need the mask's signal dimension flattened and the stack transposed in the next step
+        # For that reason we flatten and transpose here so that we use the cache of this function.
+        return m.reshape((stack_height, -1)).T
     return _get_masks_for_slice
 
 
@@ -74,7 +63,7 @@ class MaskContainer(object):
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack
         self.length = length
-        if not isinstance(mask_factories, Iterable) and length is None:
+        if callable(mask_factories) and length is None:
             raise TypeError("The length parameter has to be set if mask_factories is not iterable.")
         self.dtype = dtype
         self.use_sparse = use_sparse
@@ -136,44 +125,35 @@ class MaskContainer(object):
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
 
-        if not isinstance(self.mask_factories, Iterable):
+        if callable(self.mask_factories):
             raw_masks = self.mask_factories().astype(self.dtype)
-            if self.use_sparse is True:
-                return to_sparse(raw_masks)
-            elif self.use_sparse is False:
-                return to_dense(raw_masks)
-            else:
-                self.use_sparse = is_sparse(raw_masks)
-                return raw_masks
-
-        raw_masks = [
-            f().astype(self.dtype)
-            for f in self.mask_factories
-        ]
-        if self.use_sparse is True:
-            masks = [
-                to_sparse(m) for m in raw_masks
-            ]
-        elif self.use_sparse is False:
-            masks = [
-                to_dense(m) for m in raw_masks
-            ]
+            default_sparse = is_sparse(raw_masks)
+            mask_slices = [raw_masks]
         else:
-            sparse = [
-                is_sparse(m) for m in raw_masks
-            ]
-            if all(sparse):
-                self.use_sparse = True
-                # This performs the conversion of supported sparse types
-                # to sparse.COO, the only sparse type supported for downstream computation
-                masks = [
-                    to_sparse(m) for m in raw_masks
-                ]
-            else:
-                self.use_sparse = False
-                masks = [
-                    to_dense(m) for m in raw_masks
-                ]
+            mask_slices = []
+            default_sparse = True
+            for f in self.mask_factories:
+                m = f().astype(self.dtype)
+                # Scipy.sparse is always 2D, so we have to convert here
+                # before reshaping
+                if scipy.sparse.issparse(m):
+                    m = sparse.COO.from_scipy_sparse(m)
+                # We reshape to be a stack of 1 so that we can unify code below
+                m = m.reshape((1, ) + m.shape)
+                default_sparse = default_sparse and is_sparse(m)
+                mask_slices.append(m)
+
+        if self.use_sparse is None:
+            self.use_sparse = default_sparse
+
+        if self.use_sparse:
+            masks = sparse.concatenate(
+                [to_sparse(m) for m in mask_slices]
+            )
+        else:
+            masks = np.concatenate(
+                [to_dense(m) for m in mask_slices]
+            )
         return masks
 
     def get_masks_for_slice(self, slice_):

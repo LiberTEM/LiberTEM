@@ -1,6 +1,5 @@
 import functools
 import logging
-from collections.abc import Iterable
 
 try:
     import torch
@@ -75,7 +74,7 @@ class MaskContainer(object):
 
     def validate_mask_functions(self):
         fns = self.mask_factories
-        if not isinstance(fns, Iterable):
+        if callable(fns):
             fns = [fns]
         for fn in fns:
             try:
@@ -85,10 +84,10 @@ class MaskContainer(object):
                 raise
 
     def __len__(self):
-        if isinstance(self.mask_factories, Iterable):
-            return len(self.mask_factories)
-        else:
+        if callable(self.mask_factories):
             return self.length
+        else:
+            return len(self.mask_factories)
 
     def __getitem__(self, key):
         if isinstance(key, Partition):

@@ -71,17 +71,42 @@ class BufferWrapper(object):
         self._dtype = np.dtype(dtype)
         self._data = None
         self._shape = None
-        self._ds_shape = None
+        self._full_shape = None
         self._roi = None
 
-    def set_shape_partition(self, partition, roi=None):
-        self._roi = roi
-        self._shape = self._shape_for_kind(self._kind, partition.shape, roi)
+    def set_shape_part(self, slice_, roi=None):
+        """
+        Set shape and roi for representing a part of the dataset. roi will be cropped
+        to this part.
 
-    def set_shape_ds(self, dataset, roi=None):
+        Parameters
+        ----------
+        slice_ : Slice
+
+        roi : ndarray or None
+            full region of interest, matching the shape of the navigation axis of the dataset
+        """
+        if roi is not None:
+            roi = roi.reshape((-1,))
+            roi = roi[slice_.get(nav_only=True)]
         self._roi = roi
-        self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav(), roi)
-        self._ds_shape = dataset.shape
+        self._shape = self._shape_for_kind(self._kind, slice_.shape, roi)
+
+    def set_shape_full(self, shape, roi=None):
+        """
+        Parameters
+        ----------
+        shape : Shape
+            shape of the full result, e.g. DataSet.shape
+
+        roi : ndarray or None
+            full region of interest, matching the shape of the navigation axis of the dataset
+        """
+        if roi is not None:
+            roi = roi.reshape((-1,))
+        self._roi = roi
+        self._shape = self._shape_for_kind(self._kind, shape.flatten_nav(), roi)
+        self._full_shape = shape
 
     def _shape_for_kind(self, kind, orig_shape, roi=None):
         if self._kind == "nav":
@@ -105,8 +130,8 @@ class BufferWrapper(object):
         array; unset values have nan value.
         """
         if self._roi is None:
-            return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
-        shape = self._shape_for_kind(self._kind, self._ds_shape)
+            return self._data.reshape(self._shape_for_kind(self._kind, self._full_shape))
+        shape = self._shape_for_kind(self._kind, self._full_shape)
         wrapper = np.full(shape, np.nan, dtype=self._dtype)
         wrapper[self._roi] = self._data
         return wrapper
@@ -150,45 +175,52 @@ class BufferWrapper(object):
     def roi_is_zero(self):
         return np.product(self._shape) == 0
 
-    def _slice_for_partition(self, partition):
+    def _adjust_slice_for_roi(self, slice_):
         """
-        Get a Slice into self._data for `partition`, taking the current ROI into account.
-
-        Because _data is "compressed" if a ROI is set, we can't directly index and must
-        calculate a new slice from the ROI.
+        Return a new slice into the index space defined by `self._roi`.
         """
         if self._roi is None:
-            return partition.slice
-        else:
-            roi = self._roi.reshape((-1,))
-            slice_ = partition.slice
-            s_o = slice_.origin[0]
-            s_s = slice_.shape[0]
-            # We need to find how many 1s there are for all previous partitions, to know
-            # the origin; then we count how many 1s there are in our partition
-            # to find our shape.
-            origin = np.count_nonzero(roi[:s_o])
-            shape = np.count_nonzero(roi[s_o:s_o + s_s])
-            sig_dims = slice_.shape.sig.dims
-            slice_ = Slice(
-                origin=(origin,) + slice_.origin[-sig_dims:],
-                shape=Shape((shape,) + tuple(slice_.shape.sig), sig_dims=sig_dims),
-            )
             return slice_
+        # NOTE: roi here may already be cropped to a partition.
+        roi = self._roi.reshape((-1,))
+        s_o = slice_.origin[0]
+        s_s = slice_.shape[0]
+        # We need to find how many 1s there are in the roi before `slice_`
+        # to know the origin; then we count how many 1s there are in our `slice_`
+        # to find our shape.
+        # FIXME: optimization potential
+        origin = np.count_nonzero(roi[:s_o])
+        shape = np.count_nonzero(roi[s_o:s_o + s_s])
+        sig_dims = slice_.shape.sig.dims
+        slice_ = Slice(
+            origin=(origin,) + slice_.origin[-sig_dims:],
+            shape=Shape((shape,) + tuple(slice_.shape.sig), sig_dims=sig_dims),
+        )
+        return slice_
+
+    def _get_view_for_slice(self, slice_):
+        if self._kind == "nav":
+            slice_ = self._adjust_slice_for_roi(slice_)
+            return self._data[slice_.get(nav_only=True)]
+        elif self._kind == "sig":
+            return self._data[slice_.get(sig_only=True)]
+        elif self._kind == "single":
+            return self._data
+
+    def get_view_into_full(self, slice_):
+        raise NotImplementedError()
+
+    def get_view_into_part(self, slice_):
+        return self._get_view_for_slice(slice_=slice_)
 
     def get_view_for_partition(self, partition):
         """
-        get a view for a single partition in a dataset-sized buffer
+        get a view for a partition in a dataset-sized buffer
         (dataset-sized here means the reduced result for a whole dataset,
         not the dataset itself!)
         """
-        if self._kind == "nav":
-            slice_ = self._slice_for_partition(partition)
-            return self._data[slice_.get(nav_only=True)]
-        elif self._kind == "sig":
-            return self._data[partition.slice.get(sig_only=True)]
-        elif self._kind == "single":
-            return self._data
+        raise NotImplementedError()
+        return self._get_view_for_slice(slice_=partition.slice)
 
     def get_view_for_frame(self, partition, tile, frame_idx):
         """
@@ -200,7 +232,7 @@ class BufferWrapper(object):
         if self._kind == "sig":
             return self._data[partition.slice.get(sig_only=True)]
         elif self._kind == "nav":
-            partition_slice = self._slice_for_partition(partition)
+            partition_slice = self._adjust_slice_for_roi(partition.slice)
             result_idx = (tile.tile_slice.origin[0] + frame_idx - partition_slice.origin[0],)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) > 0:

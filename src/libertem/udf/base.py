@@ -4,6 +4,7 @@ import uuid
 import numpy as np
 
 from libertem.job.base import Task
+from libertem.common.buffers import BufferWrapper
 
 
 class UDFNamespace:
@@ -17,7 +18,10 @@ class UDFNamespace:
         try:
             if k in self._views:
                 return self._views[k]
-            return self._data[k].raw_data
+            res = self._data[k]
+            if hasattr(res, 'raw_data'):
+                return res.raw_data
+            return res
         except KeyError as e:
             raise AttributeError(str(e))
 
@@ -78,7 +82,107 @@ class UDFNamespace:
         self._views = {}
 
 
-class UDF:
+class UDFFrameMixin:
+    def process_frame(self, frame):
+        """
+        Implement this method to process the data on a frame-by-frame manner.
+
+        Data available in this method:
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
+
+        Parameters
+        ----------
+        frame : ndarray
+            A single frame or signal element from the dataset.
+            The shape is the same as `dataset.shape.sig`. In case of pixelated
+            STEM / scanning diffraction data this is 2D, for spectra 1D etc.
+        """
+        raise NotImplementedError()
+
+
+class UDFTileMixin:
+    def process_tile(self, tile):
+        """
+        Implement this method to process the data in a tiled manner.
+
+        Data available in this method:
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
+
+        Parameters
+        ----------
+        tile : ndarray
+            A small number N of frames or signal elements from the dataset.
+            The shape is (N,) + `dataset.shape.sig`. In case of pixelated
+            STEM / scanning diffraction data this is 3D, for spectra 2D etc.
+        """
+        raise NotImplementedError()
+
+
+class UDFPartitionMixin:
+    def process_partition(self, partition):
+        """
+        Implement this method to process the data partitioned into large
+        (100s of MiB) partitions.
+
+        Data available in this method:
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
+
+        Note
+        ----
+        Only use this method if you know what you are doing; especially if
+        you are running a processing pipeline with multiple steps, or multiple
+        processing pipelines at the same time, performance may be adversely
+        impacted.
+
+        Parameters
+        ----------
+        partition : ndarray
+            A large number N of frames or signal elements from the dataset.
+            The shape is (N,) + `dataset.shape.sig`. In case of pixelated
+            STEM / scanning diffraction data this is 3D, for spectra 2D etc.
+        """
+        raise NotImplementedError()
+
+
+class UDFBase:
+    def allocate_for_part(self, partition, roi):
+        for ns in [self.results]:
+            ns.allocate_for_part(partition, roi)
+
+    def allocate_for_full(self, dataset, roi):
+        for ns in [self.results]:
+            ns.allocate_for_full(dataset, roi)
+
+    def set_views_for_partition(self, partition):
+        for ns in [self.params, self.results]:
+            ns.set_view_for_partition(partition)
+
+    def set_views_for_tile(self, partition, tile):
+        for ns in [self.params, self.results]:
+            ns.set_view_for_tile(partition, tile)
+
+    def set_views_for_frame(self, partition, tile, frame_idx):
+        for ns in [self.params, self.results]:
+            ns.set_view_for_frame(partition, tile, frame_idx)
+
+    def clear_views(self):
+        for ns in [self.params, self.results]:
+            ns.clear_views()
+
+    def init_task_data(self, partition):
+        self.task_data = UDFNamespace(self.get_task_data(partition))
+
+    def init_result_buffers(self):
+        self.results = UDFNamespace(self.get_result_buffers())
+
+
+class UDF(UDFBase):
     def __init__(self, **kwargs):
         """
         Parameters
@@ -99,7 +203,7 @@ class UDF:
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def get_task_data(self):
+    def get_task_data(self, partition):
         """
         Initialize per-task data.
 
@@ -145,68 +249,6 @@ class UDF:
         """
         raise NotImplementedError()
 
-    def process_partition(self, partition):
-        """
-        Implement this method to process the data partitioned into large
-        (100s of MiB) partitions.
-
-        Data available in this method:
-        - `self.params`    - the parameters of this UDF
-        - `self.task_data` - task data created by `get_task_data`
-        - `self.results`   - the result buffer instances
-
-        Note
-        ----
-        Only use this method if you know what you are doing; especially if
-        you are running a processing pipeline with multiple steps, or multiple
-        processing pipelines at the same time, performance may be adversely
-        impacted.
-
-        Parameters
-        ----------
-        partition : ndarray
-            A large number N of frames or signal elements from the dataset.
-            The shape is (N,) + `dataset.shape.sig`. In case of pixelated
-            STEM / scanning diffraction data this is 3D, for spectra 2D etc.
-        """
-        raise NotImplementedError()
-
-    def process_tile(self, tile):
-        """
-        Implement this method to process the data in a tiled manner.
-
-        Data available in this method:
-        - `self.params`    - the parameters of this UDF
-        - `self.task_data` - task data created by `get_task_data`
-        - `self.results`   - the result buffer instances
-
-        Parameters
-        ----------
-        tile : ndarray
-            A small number N of frames or signal elements from the dataset.
-            The shape is (N,) + `dataset.shape.sig`. In case of pixelated
-            STEM / scanning diffraction data this is 3D, for spectra 2D etc.
-        """
-        raise NotImplementedError()
-
-    def process_frame(self, frame):
-        """
-        Implement this method to process the data on a frame-by-frame manner.
-
-        Data available in this method:
-        - `self.params`    - the parameters of this UDF
-        - `self.task_data` - task data created by `get_task_data`
-        - `self.results`   - the result buffer instances
-
-        Parameters
-        ----------
-        frame : ndarray
-            A single frame or signal element from the dataset.
-            The shape is the same as `dataset.shape.sig`. In case of pixelated
-            STEM / scanning diffraction data this is 2D, for spectra 1D etc.
-        """
-        raise NotImplementedError()
-
     def merge(self, dest, src):
         """
         Merge a partial result `src` into the current global result `dest`.
@@ -226,35 +268,8 @@ class UDF:
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def allocate_for_part(self, partition, roi):
-        for ns in [self.results]:
-            ns.allocate_for_part(partition, roi)
-
-    def allocate_for_full(self, dataset, roi):
-        for ns in [self.results]:
-            ns.allocate_for_full(dataset, roi)
-
-    def set_views_for_partition(self, partition):
-        for ns in [self.params, self.results]:
-            ns.set_view_for_partition(partition)
-
-    def set_views_for_tile(self, partition, tile):
-        for ns in [self.params, self.results]:
-            ns.set_view_for_tile(partition, tile)
-
-    def set_views_for_frame(self, partition, tile, frame_idx):
-        for ns in [self.params, self.results]:
-            ns.set_view_for_frame(partition, tile, frame_idx)
-
-    def clear_views(self):
-        for ns in [self.params, self.results]:
-            ns.clear_views()
-
-    def init_task_data(self):
-        self.task_data = UDFNamespace(self.get_task_data())
-
-    def init_result_buffers(self):
-        self.results = UDFNamespace(self.get_result_buffers())
+    def buffer(self, kind, extra_shape=(), dtype="float32"):
+        return BufferWrapper(kind, extra_shape, dtype)
 
 
 def check_cast(fromvar, tovar):
@@ -280,11 +295,16 @@ class UDFRunner:
     def run_for_partition(self, partition, roi):
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
-        self._udf.init_task_data()
-        for tile in partition.get_tiles(full_frames=True, roi=roi):
-            for frame_idx, frame in enumerate(tile.data):
-                self._udf.set_views_for_frame(partition, tile, frame_idx)
-                self._udf.process_frame(frame)
+        self._udf.init_task_data(partition)
+        if hasattr(self._udf, 'process_frame'):
+            for tile in partition.get_tiles(full_frames=True, roi=roi):
+                for frame_idx, frame in enumerate(tile.data):
+                    self._udf.set_views_for_frame(partition, tile, frame_idx)
+                    self._udf.process_frame(frame)
+        elif hasattr(self._udf, 'process_tile'):
+            for tile in partition.get_tiles(full_frames=True, roi=roi):
+                self._udf.set_views_for_tile(partition, tile)
+                self._udf.process_frame(tile)
         self._udf.cleanup()
         self._udf.clear_views()
         return self._udf.results, partition

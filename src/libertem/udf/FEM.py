@@ -1,44 +1,42 @@
-import functools
-
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
 from libertem.masks import _make_circular_mask
+from libertem.udf import UDF
 
 
-def make_result_buffers():
-    return {
-        'intensity': BufferWrapper(
-            kind="nav", dtype="float32"
-        ),
-    }
+class FEMUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'intensity': self.buffer(
+                kind="nav", dtype="float32"
+            ),
+        }
+
+    def get_task_data(self, partition):
+        center = self.params.center
+        rad_out, rad_in = self.params.rad_out, self.params.rad_in
+        mask_out = 1*_make_circular_mask(
+            center[1], center[0],
+            partition.shape.sig[1], partition.shape.sig[0],
+            rad_out
+        )
+        mask_in = 1*_make_circular_mask(
+            center[1], center[0],
+            partition.shape.sig[1], partition.shape.sig[0],
+            rad_in
+        )
+        mask = mask_out - mask_in
+
+        kwargs = {
+            'mask': mask,
+        }
+        return kwargs
+
+    def process_frame(self, frame):
+        self.results.intensity[:] = np.std(frame[self.task_data.mask == 1])
 
 
-def init(partition, center, rad_in, rad_out):
-    mask_out = 1*_make_circular_mask(
-        center[1], center[0],
-        partition.shape.sig[1], partition.shape.sig[0],
-        rad_out
-    )
-    mask_in = 1*_make_circular_mask(
-        center[1], center[0],
-        partition.shape.sig[1], partition.shape.sig[0],
-        rad_in
-    )
-    mask = mask_out - mask_in
-
-    kwargs = {
-        'mask': mask,
-    }
-    return kwargs
-
-
-def masked_std(frame, mask, intensity):
-    intensity[:] = np.std(frame[mask == 1])
-    return
-
-
-def run_fem(ctx, dataset, center, rad_in, rad_out):
+def run_fem(ctx, dataset, center, rad_in, rad_out, roi=None):
     """
     Return a standard deviation(SD) value for each frame of pixels which belong to ring mask.
     Parameters
@@ -66,12 +64,6 @@ def run_fem(ctx, dataset, center, rad_in, rad_out):
         To return 2-D array use pass_results['intensity'].data
 
     """
-
-    pass_results = ctx.run_udf(
-        dataset=dataset,
-        make_buffers=make_result_buffers,
-        init=functools.partial(init, center=center, rad_in=rad_in, rad_out=rad_out),
-        fn=masked_std,
-    )
-
-    return (pass_results)
+    udf = FEMUDF(center=center, rad_in=rad_in, rad_out=rad_out)
+    pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    return pass_results

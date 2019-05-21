@@ -395,8 +395,7 @@ class Context:
             The dataset to work on
 
         udf
-            A function merging a partial result into the final result buffer. By default it just
-            performs assignment.
+            UDF instance you want to run
 
         roi : np.ndarray
             region of interest as bool mask over the navigation axes of the dataset

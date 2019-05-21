@@ -210,11 +210,12 @@ class H5Partition(Partition):
         one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
+        frame_offset = 0  # FIXME! countzero of roi up to this partition
         for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
             roi_idx = tile.tile_slice.origin[0] - self.slice.origin[0]
             if roi[roi_idx]:
                 tile_slice = Slice(
-                    origin=(frames_read,) + sig_origin,
+                    origin=(frames_read + frame_offset,) + sig_origin,
                     shape=tile.tile_slice.shape,
                 )
                 yield DataTile(

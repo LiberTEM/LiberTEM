@@ -12,12 +12,14 @@ class UDFNamespace:
         self._views = {}
 
     def __getattr__(self, k):
-        assert not k.startswith("_")
-        # TODO: return a view into the current unit of data
-        # (partition, tile, frame) instead, if it is a BufferWrapper instance
-        if k in self._views:
-            return self._views[k]
-        return self._data[k]
+        if k.startswith("_"):
+            raise AttributeError("no such attribute: %s" % k)
+        try:
+            if k in self._views:
+                return self._views[k]
+            return self._data[k].raw_data
+        except KeyError as e:
+            raise AttributeError(str(e))
 
     def __getitem__(self, k):
         return self._data[k]
@@ -25,48 +27,55 @@ class UDFNamespace:
     def __contains__(self, k):
         return k in self._data
 
+    def items(self):
+        return self._data.items()
+
+    def keys(self):
+        return self._data.keys()
+
+    def get_proxy(self):
+        return MappingProxyType({
+            k: (self._views[k] if k in self._views else self._data[k].raw_data)
+            for k, v in self._data.items()
+        })
+
     def _get_buffers(self, filter_allocated=False):
         for k, buf in self._data.items():
             if not hasattr(buf, 'has_data') or (buf.has_data() and filter_allocated):
                 continue
             yield k, buf
 
-    def allocate_for_part(self, slice_, roi):
+    def allocate_for_part(self, partition, roi):
         """
         allocate all BufferWrapper instances in this namespace
         """
         for k, buf in self._get_buffers(filter_allocated=True):
-            buf.set_shape_part(slice_, roi)
+            buf.set_shape_partition(partition, roi)
             buf.allocate()
+            assert buf._shape[0] <= partition.shape[0]
 
-    def allocate_for_full(self, shape, roi):
+    def allocate_for_full(self, dataset, roi):
         for k, buf in self._get_buffers(filter_allocated=True):
-            buf.set_shape_full(shape, roi)
+            buf.set_shape_ds(dataset, roi)
             buf.allocate()
 
     def set_view_for_partition(self, partition):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_into_part(partition.slice)
+            self._views[k] = buf.get_view_for_partition(partition)
 
     def set_view_for_tile(self, partition, tile):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_into_part(tile.tile_slice)
+            self._views[k] = buf.get_view_for_tile(tile)
 
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
+            if buf.roi_is_zero:
+                raise ValueError("should not happen")
+            else:
+                self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
     def clear_views(self):
         self._views = {}
-
-    def items(self):
-        return self._data.items()
-
-    def get_proxy(self):
-        return MappingProxyType({
-            k: (self._views[k] if k in self._views else self._data[k])
-            for k, v in self._data.items()
-        })
 
 
 class UDF:
@@ -82,7 +91,13 @@ class UDF:
             `self.params.the_key_here`, will automatically return a view corresponding
             to the current unit of data (frame, tile, partition).
         """
+        self._kwargs = kwargs
         self.params = UDFNamespace(kwargs)
+        self.task_data = None
+        self.results = None
+
+    def copy(self):
+        return self.__class__(**self._kwargs)
 
     def get_task_data(self):
         """
@@ -208,16 +223,16 @@ class UDF:
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]
 
-    def cleanup(self):  # FIXME: name?
+    def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def allocate_for_part(self, slice_, roi):
+    def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
-            ns.allocate_for_part(slice_, roi)
+            ns.allocate_for_part(partition, roi)
 
-    def allocate_for_full(self, shape, roi):
+    def allocate_for_full(self, dataset, roi):
         for ns in [self.results]:
-            ns.allocate_for_full(shape, roi)
+            ns.allocate_for_full(dataset, roi)
 
     def set_views_for_partition(self, partition):
         for ns in [self.params, self.results]:
@@ -231,6 +246,10 @@ class UDF:
         for ns in [self.params, self.results]:
             ns.set_view_for_frame(partition, tile, frame_idx)
 
+    def clear_views(self):
+        for ns in [self.params, self.results]:
+            ns.clear_views()
+
     def init_task_data(self):
         self.task_data = UDFNamespace(self.get_task_data())
 
@@ -242,12 +261,6 @@ def check_cast(fromvar, tovar):
     if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
         # FIXME exception or warning?
         raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
-
-
-def merge_assign(dest, src):
-    for k in dest:
-        check_cast(dest[k], src[k])
-        dest[k][:] = src[k]
 
 
 class UDFTask(Task):
@@ -266,20 +279,19 @@ class UDFRunner:
 
     def run_for_partition(self, partition, roi):
         self._udf.init_result_buffers()
-        self._udf.allocate_for_part(partition.slice, roi)
+        self._udf.allocate_for_part(partition, roi)
         self._udf.init_task_data()
         for tile in partition.get_tiles(full_frames=True, roi=roi):
             for frame_idx, frame in enumerate(tile.data):
                 self._udf.set_views_for_frame(partition, tile, frame_idx)
                 self._udf.process_frame(frame)
         self._udf.cleanup()
+        self._udf.clear_views()
         return self._udf.results, partition
 
     def run_for_dataset(self, dataset, executor, roi):
         self._udf.init_result_buffers()
-        self._udf.allocate_for_full(dataset.shape, roi)
-        for k, v in self._udf.results.items():
-            assert self._udf.results[k]._full_shape is not None
+        self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)
         cancel_id = str(uuid.uuid4())
@@ -290,10 +302,20 @@ class UDFRunner:
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()
             )
+
+        self._udf.clear_views()
+
         return self._udf.results
 
+    def _roi_for_partition(self, roi, partition):
+        return roi.reshape(-1)[partition.slice.get(nav_only=True)]
+
     def _make_udf_tasks(self, dataset, roi):
-        return (
-            UDFTask(partition=partition, idx=idx, udf=self._udf, roi=roi)
-            for idx, partition in enumerate(dataset.get_partitions())
-        )
+        for idx, partition in enumerate(dataset.get_partitions()):
+            udf = self._udf.copy()
+            if roi is not None:
+                roi_for_part = self._roi_for_partition(roi, partition)
+                if np.count_nonzero(roi_for_part) == 0:
+                    # roi is empty for this partition, ignore
+                    continue
+            yield UDFTask(partition=partition, idx=idx, udf=udf, roi=roi)

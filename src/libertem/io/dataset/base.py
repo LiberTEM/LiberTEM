@@ -25,7 +25,7 @@ def _roi_to_indices(roi, start, stop):
     roi = roi.reshape((-1,))
     frames_in_roi = np.count_nonzero(roi)
     total = 0
-    for flag, idx in zip(roi, range(start, stop)):
+    for flag, idx in zip(roi[start:stop], range(start, stop)):
         if flag:
             yield idx
             # early exit: we know we don't have more frames in the roi
@@ -289,7 +289,11 @@ class Partition(object):
             convert data to this dtype when reading
 
         roi : np.ndarray
-            1d mask that matches the partition shape to limit the region to work on
+            1d mask that matches the dataset navigation shape to limit the region to work on.
+            With a ROI, we yield tiles from a "compressed" navigation axis, relative to
+            the beginning of the partition. Compressed means, only frames that have a 1
+            in the ROI are considered, and the resulting tile slices are from a coordinate
+            system that has the shape `(np.count_nonzero(roi),)`.
         """
         raise NotImplementedError()
 
@@ -563,7 +567,7 @@ class Partition3D(Partition):
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
                   roi=None):
         """
-        roi should be a 1d bitmask with the same shape as the partition
+        roi should be a 1d bitmask with the same shape as the navigation axis of the dataset
         """
         # TODO: implement reading tiles that contain parts of frames (and more depth)
         # the same notes as below in _get_tiles_normal apply; takes some work to make it efficient
@@ -676,10 +680,12 @@ class Partition3D(Partition):
         frames_read = 0
         tile_idx = 0
         frame_idx = start_at_frame
-        indices = _roi_to_indices(roi, self._start_frame, self._start_frame + self._num_frames)
+        indices = _roi_to_indices(roi, start_at_frame, start_at_frame + self._num_frames)
 
+        roi = roi.reshape((-1,))
         with self._fileset as fileset:
             outer_frame = 0
+            frame_offset = np.count_nonzero(roi[:start_at_frame])
             for frame_idx in indices:
                 fileset.read_images_multifile(
                     start=frame_idx,
@@ -693,7 +699,7 @@ class Partition3D(Partition):
 
                 if tile_idx == stackheight:
                     tile_slice = Slice(
-                        origin=(outer_frame,) + sig_origin,
+                        origin=(outer_frame + frame_offset,) + sig_origin,
                         shape=Shape((tile_idx,) + tuple(sig_shape), sig_dims=sig_shape.dims)
                     )
                     yield DataTile(
@@ -705,7 +711,7 @@ class Partition3D(Partition):
         if tile_idx != 0:
             # last frame, size != stackheight
             tile_slice = Slice(
-                origin=(outer_frame,) + sig_origin,
+                origin=(outer_frame + frame_offset,) + sig_origin,
                 shape=Shape((tile_idx,) + tuple(sig_shape), sig_dims=sig_shape.dims)
             )
             yield DataTile(

@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import pytest
 
@@ -15,6 +17,8 @@ class PixelsumUDF(UDF):
         }
 
     def process_frame(self, frame):
+        assert frame.shape == (16, 16)
+        assert self.results.pixelsum.shape == (1,)
         self.results.pixelsum[:] = np.sum(frame)
 
 
@@ -160,16 +164,6 @@ def test_roi_1(lt_ctx):
                             num_partitions=4, sig_dims=2)
     mask = np.random.choice([True, False], size=(16, 16))
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
     pixelsum = PixelsumUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
     assert 'pixelsum' in res
@@ -192,6 +186,20 @@ def test_roi_all_zeros(lt_ctx):
     assert np.allclose(res['pixelsum'].raw_data, expected)
 
 
+def test_roi_all_ones(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
+                            num_partitions=16, sig_dims=2)
+    mask = np.ones(data.shape[:2], dtype=bool)
+
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
+    assert 'pixelsum' in res
+    print(data.shape, res['pixelsum'].data.shape)
+    expected = np.sum(data[mask, ...], axis=(-1, -2))
+    assert np.allclose(res['pixelsum'].raw_data, expected)
+
+
 def test_roi_some_zeros(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
@@ -205,3 +213,15 @@ def test_roi_some_zeros(lt_ctx):
     print(data.shape, res['pixelsum'].data.shape)
     expected = np.sum(data[mask, ...], axis=(-1, -2))
     assert np.allclose(res['pixelsum'].raw_data, expected)
+
+
+def test_udf_pickle(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
+                            num_partitions=16, sig_dims=2)
+
+    partition = next(dataset.get_partitions())
+    pixelsum = PixelsumUDF()
+    pixelsum.init_result_buffers()
+    pixelsum.allocate_for_part(partition, None)
+    pickle.loads(pickle.dumps(pixelsum))

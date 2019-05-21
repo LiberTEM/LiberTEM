@@ -89,14 +89,19 @@ def test_kind_single(lt_ctx):
         return {
             'counter': BufferWrapper(
                 kind="single", dtype="uint32"
+            ),
+            'sum_frame': BufferWrapper(
+                kind="single", extra_shape=(16,), dtype="float32"
             )
         }
 
-    def count_frames(frame, counter):
+    def count_frames(frame, counter, sum_frame):
         counter += 1
+        sum_frame += np.sum(frame, axis=1)
 
     def merge_counters(dest, src):
         dest['counter'][:] += src['counter']
+        dest['sum_frame'][:] += src['sum_frame']
 
     res = lt_ctx.run_udf(
         dataset=dataset,
@@ -105,9 +110,11 @@ def test_kind_single(lt_ctx):
         merge=merge_counters,
     )
     assert 'counter' in res
+    assert 'sum_frame' in res
     assert res['counter'].data.shape == (1,)
     assert res['counter'].data == 16 * 16
-
+    assert res['sum_frame'].data.shape == (16,)
+    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0,1,3)))
 
 def test_bad_merge(lt_ctx):
     """

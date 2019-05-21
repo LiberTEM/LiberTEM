@@ -93,7 +93,10 @@ class BufferWrapper(object):
         elif self._kind == "sig":
             return tuple(orig_shape.sig) + self._extra_shape
         elif self._kind == "single":
-            return (1,)
+            if len(self._extra_shape) > 0:
+                return self._extra_shape
+            else:
+                return (1, )
         else:
             raise ValueError("unknown kind: %s" % kind)
 

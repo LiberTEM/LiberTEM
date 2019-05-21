@@ -27,7 +27,7 @@ Notable Upstream Projects
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React <https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic UI <https://semantic-ui.com/>`_
 
-Not dependencies, but notable related projects or useful tools: `Hyperspy <http://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, 
+Not dependencies, but notable related projects or useful tools: `Hyperspy <http://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, `pyXem <https://pyxem.github.io/pyxem/>`_
 
 Funding
 ~~~~~~~
@@ -45,6 +45,15 @@ LiberTEM kindly acknowledges funding and support from the following sources:
 This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 
 2020 research and innovation programme 
 (`grant agreement No 780487 <https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics>`_).
+
+**CritCat**
+
+.. image:: ./images/EU.jpg
+    :align: left
+    :width: 100px
+    :alt: European Union flag
+
+This project has received funding from the European Union's Horizon 2020 research and innovation programme under `grant agreement No 686053 <http://www.critcat.eu/>`_.
 
 **ESTEEM3**
 

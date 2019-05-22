@@ -117,7 +117,7 @@ class AsyncAdapter(AsyncJobExecutor):
         converted to async and executed in a separate thread.
         """
         self._wrapped = wrapped
-        self._pool = concurrent.futures.ThreadPoolExecutor(4)
+        self._pool = concurrent.futures.ThreadPoolExecutor(1)
 
     async def run_job(self, job):
         """

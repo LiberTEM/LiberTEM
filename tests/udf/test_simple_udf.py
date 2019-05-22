@@ -80,20 +80,28 @@ def test_kind_single(lt_ctx):
             return {
                 'counter': self.buffer(
                     kind="single", dtype="uint32"
+                ),
+                'sum_frame': self.buffer(
+                    kind="single", extra_shape=(16,), dtype="float32"
                 )
             }
 
         def process_frame(self, frame):
             self.results.counter += 1
+            self.results.sum_frame += np.sum(frame, axis=1)
 
         def merge(self, dest, src):
             dest['counter'][:] += src['counter']
+            dest['sum_frame'][:] += src['sum_frame']
 
     counter = CounterUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=counter)
     assert 'counter' in res
+    assert 'sum_frame' in res
     assert res['counter'].data.shape == (1,)
     assert res['counter'].data == 16 * 16
+    assert res['sum_frame'].data.shape == (16,)
+    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0, 1, 3)))
 
 
 def test_bad_merge(lt_ctx):

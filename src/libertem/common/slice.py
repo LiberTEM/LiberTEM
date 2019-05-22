@@ -157,7 +157,13 @@ class Slice(object):
                 for (o, s) in zip(self.origin, self.shape)
             ])
         if arr is not None:
-            return arr[slice_]
+            if sig_only:
+                # Skip the supposed nav dimensions of the data
+                return arr[(Ellipsis, ) + slice_]
+            else:
+                # for nav_only, we return the full remaining dimensions anyway
+                # if arr has more dimensions than the slice
+                return arr[slice_]
         else:
             return slice_
 

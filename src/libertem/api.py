@@ -70,7 +70,7 @@ class Context:
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
-    def create_mask_job(self, factories, dataset, use_sparse=None):
+    def create_mask_job(self, factories, dataset, use_sparse=None, length=None):
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -78,7 +78,8 @@ class Context:
         Parameters
         ----------
         factories
-            list of functions that take no arguments and create masks. The returned masks can be
+            Function or list of functions that take no arguments and create masks. The returned
+            masks can be
             numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
             factories should not reference large objects because they can create significant
             overheads when they are pickled and unpickled.
@@ -90,6 +91,9 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
+        length
+            Specify the number of masks if a single function is used so that the number of masks
+            can be determined without calling the function.
 
         Examples
         --------
@@ -106,10 +110,10 @@ class Context:
         >>> result = ctx.run(job)
         """
         return ApplyMasksJob(
-            dataset=dataset, mask_factories=factories, use_sparse=use_sparse
+            dataset=dataset, mask_factories=factories, use_sparse=use_sparse, length=length
         )
 
-    def create_mask_analysis(self, factories, dataset, use_sparse=None):
+    def create_mask_analysis(self, factories, dataset, use_sparse=None, length=None):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -121,10 +125,11 @@ class Context:
         Parameters
         ----------
         factories
-            list of functions that take no arguments and create masks. The returned masks can be
-            numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
-            factories should not reference large objects because they can create significant
-            overheads when they are pickled and unpickled.
+            Function or list of functions that take no arguments and create masks. The returned
+            masks can be numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices.
+            The mask factories should not reference large objects because they can create
+            significant overheads when they are pickled and unpickled.
+            If a single function is specified, the first dimension is interpreted as the mask index.
         dataset
             dataset to work on
         use_sparse
@@ -133,6 +138,9 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
+        length
+            Specify the number of masks if a single function is used so that the number of masks
+            can be determined without calling the function.
 
         Examples
         --------
@@ -151,7 +159,7 @@ class Context:
         """
         return MasksAnalysis(
             dataset=dataset,
-            parameters={"factories": factories, "use_sparse": use_sparse},
+            parameters={"factories": factories, "use_sparse": use_sparse, "length": length},
         )
 
     def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):

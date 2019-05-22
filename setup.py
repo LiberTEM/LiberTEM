@@ -151,6 +151,7 @@ setup(
         'hdfs': 'hfds3',
         'torch': 'torch',
         'hdbscan': 'hdbscan',
+        'pyfftw': 'pyfftw',
     },
     package_dir={"": "src"},
     packages=[

@@ -67,6 +67,8 @@ class BufferWrapper(object):
         self._extra_shape = extra_shape
         self._dtype = np.dtype(dtype)
         self._data = None
+        # set to True if the data coords are global ds coords
+        self._data_coords_global = False
         self._shape = None
         self._ds_shape = None
         self._roi = None
@@ -154,7 +156,12 @@ class BufferWrapper(object):
         """
         assert self._data is None
         assert buf.dtype == self._dtype
-        self._data = buf
+        extra = self._extra_shape
+        if not extra:
+            extra = (1,)
+        shape = (buf.size // np.product(extra),) + extra
+        self._data = buf.reshape(shape).squeeze()
+        self._data_coords_global = True
 
     def has_data(self):
         return self._data is not None
@@ -188,7 +195,7 @@ class BufferWrapper(object):
 
     def get_view_for_frame(self, partition, tile, frame_idx):
         """
-        get a view for a single frame in a partition-sized buffer
+        get a view for a single frame in a partition- or dataset-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
         """
@@ -199,7 +206,11 @@ class BufferWrapper(object):
             return self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
-            result_idx = (tile.tile_slice.origin[0] + frame_idx - partition_slice.origin[0],)
+            if self._data_coords_global:
+                offset = 0
+            else:
+                offset = partition_slice.origin[0]
+            result_idx = (tile.tile_slice.origin[0] + frame_idx - offset,)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) > 0:
                 return self._data[result_idx]
@@ -222,7 +233,11 @@ class BufferWrapper(object):
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
             tile_slice = tile.tile_slice
-            result_start = tile_slice.origin[0] - partition_slice.origin[0]
+            if self._data_coords_global:
+                offset = 0
+            else:
+                offset = partition_slice.origin[0]
+            result_start = tile_slice.origin[0] - offset
             result_stop = result_start + tile_slice.shape[0]
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) + tile_slice.shape[0] > 1:

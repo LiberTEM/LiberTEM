@@ -240,6 +240,9 @@ class UDF(UDFBase):
         some pre-conditioning of parameters, but you also have to accept the results
         as input again.
 
+        Arguments passed as **kwargs will be automatically available on `self.params`
+        when running the UDF.
+
         Example
         -------
 
@@ -336,6 +339,29 @@ class UDF(UDFBase):
     def buffer(self, kind, extra_shape=(), dtype="float32"):
         return BufferWrapper(kind, extra_shape, dtype)
 
+    @classmethod
+    def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):
+        """
+        Use this method to create auxiliary data. Auxiliary data should
+        have a shape like `(dataset.shape.nav, extra_shape)` and on access,
+        an appropriate view will be created. For example, if you access
+        aux data in `process_frame`, you will get the auxiliary data for
+        the current frame you are processing.
+
+        Example
+        -------
+        >>> # for each frame, provide 7 random values:
+        >>> aux1 = MyUDF.aux_data(
+        >>>     data=np.random.randn(*(tuple(dataset.shape.nav) + (7,))).astype("float32"),
+        >>>     kind="nav", extra_shape=(7,), dtype="float32"
+        >>> )
+        >>> udf = MyUDF(random_data=aux1)
+        >>> ctx.run_udf(dataset=dataset, udf=udf)
+        """
+        buf = BufferWrapper(kind, extra_shape, dtype)
+        buf.set_buffer(data)
+        return buf
+
 
 def check_cast(fromvar, tovar):
     if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
@@ -367,7 +393,8 @@ class UDFRunner:
         )
         self._udf.init_task_data(meta)
         if hasattr(self._udf, 'process_tile'):
-            for tile in partition.get_tiles(full_frames=True, roi=roi):
+            # FIXME: allow full_frames=True for `process_tile`?
+            for tile in partition.get_tiles(full_frames=False, roi=roi):
                 self._udf.set_views_for_tile(partition, tile)
                 self._udf.process_tile(tile.data)
         elif hasattr(self._udf, 'process_frame'):

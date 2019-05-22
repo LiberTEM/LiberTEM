@@ -267,6 +267,26 @@ class Slice(object):
             shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)
         )
 
+    def adjust_for_roi(self, roi):
+        """
+        Make a new slice that has origin and shape modified according to `roi`.
+        """
+        if roi is None:
+            return self
+        assert self.shape.nav.dims == 1
+        s_o = self.origin[0]
+        s_s = self.shape[0]
+        # We need to find how many 1s there are for all previous partitions, to know
+        # the origin; then we count how many 1s there are in our partition
+        # to find our shape.
+        origin = np.count_nonzero(roi[:s_o])
+        shape = np.count_nonzero(roi[s_o:s_o + s_s])
+        sig_dims = self.shape.sig.dims
+        return Slice(
+            origin=(origin,) + self.origin[-sig_dims:],
+            shape=Shape((shape,) + tuple(self.shape.sig), sig_dims=sig_dims),
+        )
+
     def __getstate__(self):
         return {
             k: getattr(self, k)

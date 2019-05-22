@@ -2,9 +2,6 @@ import mmap
 import math
 import numpy as np
 
-from libertem.common.shape import Shape
-from libertem.common.slice import Slice
-
 
 def _alloc_aligned(size):
     # round up to 4k blocks:
@@ -156,7 +153,6 @@ class BufferWrapper(object):
         constructor arguments.
         """
         assert self._data is None
-        assert buf.shape == self._shape
         assert buf.dtype == self._dtype
         self._data = buf
 
@@ -174,24 +170,7 @@ class BufferWrapper(object):
         Because _data is "compressed" if a ROI is set, we can't directly index and must
         calculate a new slice from the ROI.
         """
-        if self._roi is None:
-            return partition.slice
-        else:
-            roi = self._roi
-            slice_ = partition.slice
-            s_o = slice_.origin[0]
-            s_s = slice_.shape[0]
-            # We need to find how many 1s there are for all previous partitions, to know
-            # the origin; then we count how many 1s there are in our partition
-            # to find our shape.
-            origin = np.count_nonzero(roi[:s_o])
-            shape = np.count_nonzero(roi[s_o:s_o + s_s])
-            sig_dims = slice_.shape.sig.dims
-            slice_ = Slice(
-                origin=(origin,) + slice_.origin[-sig_dims:],
-                shape=Shape((shape,) + tuple(slice_.shape.sig), sig_dims=sig_dims),
-            )
-            return slice_
+        return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_partition(self, partition):
         """
@@ -215,7 +194,7 @@ class BufferWrapper(object):
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
         if self.roi_is_zero:
-            raise ValueError("wat")
+            raise ValueError("cannot get view for frame with zero ROI")
         if self._kind == "sig":
             return self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
@@ -226,5 +205,29 @@ class BufferWrapper(object):
                 return self._data[result_idx]
             else:
                 return self._data[result_idx + (np.newaxis,)]
+        elif self._kind == "single":
+            return self._data
+
+    def get_view_for_tile(self, partition, tile):
+        """
+        get a view for a single tile in a partition-sized buffer
+        (partition-sized here means the reduced result for a whole partition,
+        not the partition itself!)
+        """
+        assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self.roi_is_zero:
+            raise ValueError("cannot get view for tile with zero ROI")
+        if self._kind == "sig":
+            return self._data[tile.tile_slice.get(sig_only=True)]
+        elif self._kind == "nav":
+            partition_slice = self._slice_for_partition(partition)
+            tile_slice = tile.tile_slice
+            result_start = tile_slice.origin[0] - partition_slice.origin[0]
+            result_stop = result_start + tile_slice.shape[0]
+            # shape: (1,) + self._extra_shape
+            if len(self._extra_shape) + tile_slice.shape[0] > 1:
+                return self._data[result_start:result_stop]
+            else:
+                return self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
             return self._data

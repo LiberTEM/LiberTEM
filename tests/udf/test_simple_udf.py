@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 import pytest
 
-from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
 from utils import MemoryDataSet, _mk_random
 
@@ -11,7 +10,7 @@ from utils import MemoryDataSet, _mk_random
 class PixelsumUDF(UDF):
     def get_result_buffers(self):
         return {
-            'pixelsum': BufferWrapper(
+            'pixelsum': self.buffer(
                 kind="nav", dtype="float32"
             )
         }
@@ -79,7 +78,7 @@ def test_kind_single(lt_ctx):
     class CounterUDF(UDF):
         def get_result_buffers(self):
             return {
-                'counter': BufferWrapper(
+                'counter': self.buffer(
                     kind="single", dtype="uint32"
                 )
             }
@@ -108,7 +107,7 @@ def test_bad_merge(lt_ctx):
     class BadmergeUDF(UDF):
         def get_result_buffers(self):
             return {
-                'pixelsum': BufferWrapper(
+                'pixelsum': self.buffer(
                     kind="nav", dtype="float32"
                 )
             }
@@ -142,7 +141,7 @@ def test_extra_dimension_shape(lt_ctx):
     class ExtraShapeUDF(UDF):
         def get_result_buffers(self):
             return {
-                'test': BufferWrapper(
+                'test': self.buffer(
                     kind="nav", extra_shape=(2,), dtype="float32"
                 )
             }

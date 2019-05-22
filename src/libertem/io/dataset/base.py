@@ -12,7 +12,7 @@ def _roi_to_indices(roi, start, stop):
     """
     helper function to calculate indices from roi mask
 
-    roi : np.ndarray of type bool
+    roi : np.ndarray of type bool, matching the navigation shape of the dataset
 
     start : int
         start frame index, relative to dataset start
@@ -291,7 +291,7 @@ class Partition(object):
         roi : np.ndarray
             1d mask that matches the dataset navigation shape to limit the region to work on.
             With a ROI, we yield tiles from a "compressed" navigation axis, relative to
-            the beginning of the partition. Compressed means, only frames that have a 1
+            the beginning of the dataset. Compressed means, only frames that have a 1
             in the ROI are considered, and the resulting tile slices are from a coordinate
             system that has the shape `(np.count_nonzero(roi),)`.
         """

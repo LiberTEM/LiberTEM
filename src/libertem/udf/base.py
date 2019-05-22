@@ -7,7 +7,52 @@ from libertem.job.base import Task
 from libertem.common.buffers import BufferWrapper
 
 
-class UDFNamespace:
+class UDFMeta:
+    """
+    UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
+    for each task/partition.
+    """
+    def __init__(self, partition_shape, dataset_shape, roi):
+        self._partition_shape = partition_shape
+        self._dataset_shape = dataset_shape
+        if roi is not None:
+            roi = roi.reshape(dataset_shape.nav)
+        self._roi = roi
+
+    @property
+    def partition_shape(self):
+        """
+        Returns
+        -------
+        Shape
+            The shape of the partition this UDF currently works on. If a ROI
+            was applied, the shape will be modified accordingly.
+        """
+        return self._partition_shape
+
+    @property
+    def dataset_shape(self):
+        """
+        Returns
+        -------
+        Shape
+            The original shape of the whole dataset, not influenced by ROI.
+        """
+        return self._dataset_shape
+
+    @property
+    def roi(self):
+        """
+        Returns
+        -------
+        np.ndarray
+            boolean array which limits the elements the UDF is working on. Has a shape
+            of `dataset_shape.nav`.
+        """
+        return self._roi
+
+
+class UDFData:
     def __init__(self, data):
         self._data = data
         self._views = {}
@@ -59,8 +104,9 @@ class UDFNamespace:
             assert buf._shape[0] <= partition.shape[0]
 
     def allocate_for_full(self, dataset, roi):
-        for k, buf in self._get_buffers(filter_allocated=True):
+        for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset, roi)
+        for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
     def set_view_for_partition(self, partition):
@@ -69,7 +115,7 @@ class UDFNamespace:
 
     def set_view_for_tile(self, partition, tile):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_tile(tile)
+            self._views[k] = buf.get_view_for_tile(partition, tile)
 
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
@@ -175,16 +221,35 @@ class UDFBase:
         for ns in [self.params, self.results]:
             ns.clear_views()
 
-    def init_task_data(self, partition):
-        self.task_data = UDFNamespace(self.get_task_data(partition))
+    def init_task_data(self, meta):
+        self.task_data = UDFData(self.get_task_data(meta))
 
     def init_result_buffers(self):
-        self.results = UDFNamespace(self.get_result_buffers())
+        self.results = UDFData(self.get_result_buffers())
 
 
 class UDF(UDFBase):
+    """
+    The main user-defined functions interface. You can implement your functionality
+    by overriding methods on this class.
+    """
     def __init__(self, **kwargs):
         """
+        Create a new UDF instance. If you override `__init__`, please take care,
+        as it is called multiple times during evaluation of a UDF. You can handle
+        some pre-conditioning of parameters, but you also have to accept the results
+        as input again.
+
+        Example
+        -------
+
+        >>> class MyUDF(UDF):
+        >>>     def __init__(self, param1, param2="def2", **kwargs):
+        >>>         param1 = int(param1)
+        >>>         if "param3" not in kwargs:
+        >>>             raise TypeError("missing argument param3")
+        >>>         super().__init__(param1=param1, param2=param2, **kwargs)
+
         Parameters
         ----------
         kwargs
@@ -196,14 +261,14 @@ class UDF(UDFBase):
             to the current unit of data (frame, tile, partition).
         """
         self._kwargs = kwargs
-        self.params = UDFNamespace(kwargs)
+        self.params = UDFData(kwargs)
         self.task_data = None
         self.results = None
 
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def get_task_data(self, partition):
+    def get_task_data(self, meta):
         """
         Initialize per-task data.
 
@@ -295,16 +360,21 @@ class UDFRunner:
     def run_for_partition(self, partition, roi):
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
-        self._udf.init_task_data(partition)
-        if hasattr(self._udf, 'process_frame'):
+        meta = UDFMeta(
+            partition_shape=partition.slice.adjust_for_roi(roi).shape,
+            dataset_shape=partition.meta.shape,
+            roi=roi,
+        )
+        self._udf.init_task_data(meta)
+        if hasattr(self._udf, 'process_tile'):
+            for tile in partition.get_tiles(full_frames=True, roi=roi):
+                self._udf.set_views_for_tile(partition, tile)
+                self._udf.process_tile(tile.data)
+        elif hasattr(self._udf, 'process_frame'):
             for tile in partition.get_tiles(full_frames=True, roi=roi):
                 for frame_idx, frame in enumerate(tile.data):
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
-        elif hasattr(self._udf, 'process_tile'):
-            for tile in partition.get_tiles(full_frames=True, roi=roi):
-                self._udf.set_views_for_tile(partition, tile)
-                self._udf.process_frame(tile)
         self._udf.cleanup()
         self._udf.clear_views()
         return self._udf.results, partition

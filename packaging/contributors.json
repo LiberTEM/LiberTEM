@@ -36,6 +36,12 @@
         "contribution": "Discussions, funding applications"
     },
     {
+        "displayname": "Phillip Crout",
+        "authorname": "Crout, Phillip",
+        "affiliation": "pyXem",
+        "contribution": "Discussions, work towards mutual compatibility."
+    },
+    {
         "displayname": "Peter Ercius",
         "authorname": "Ercius, Peter",
         "affiliation": "Berkeley Lab",
@@ -88,6 +94,12 @@
         "authorname": "Jemian, Pete",
         "affiliation": "NeXus project",
         "contribution": "Discussions and support regarding NeXus file format"
+    },
+    {
+        "displayname": "Duncan N. Johnstone",
+        "authorname": "Johnstone, Duncan N.",
+        "affiliation": "pyXem",
+        "contribution": "Discussions, work towards mutual compatibility."
     },
     {
         "displayname": "Christoph Koch",
@@ -250,6 +262,12 @@
         "authorname": "Voyles, Paul",
         "affiliation": "U Wisconsin",
         "contribution": "Discussions"
+    },
+    {
+        "displayname": "Benjamin Watts",
+        "authorname": "Watts, Benjamin",
+        "affiliation": "PSI",
+        "contribution": "Help and sample files towards a NeXus Application Definition for pixelated STEM."
     },
     {
         "displayname": "Roger Wepf",

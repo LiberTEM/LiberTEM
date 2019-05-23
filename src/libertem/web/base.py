@@ -135,12 +135,20 @@ class SharedData(object):
         self.dataset_to_id = {}
         self.executor = None
         self.cluster_params = {}
+        self.local_directory = "dask-worker-space"
 
     def get_local_cores(self, default=2):
         cores = psutil.cpu_count(logical=False)
         if cores is None:
             cores = default
         return cores
+
+    def set_local_directory(self, local_directory):
+        if local_directory is not None:
+            self.local_directory = local_directory
+
+    def get_local_directory(self):
+        return self.local_directory
 
     def get_config(self):
         return {

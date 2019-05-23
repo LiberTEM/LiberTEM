@@ -5,6 +5,7 @@ import numpy as np
 
 from libertem.job.base import Task
 from libertem.common.buffers import BufferWrapper
+from libertem.common import Shape
 
 
 class UDFMeta:
@@ -20,7 +21,7 @@ class UDFMeta:
         self._roi = roi
 
     @property
-    def partition_shape(self):
+    def partition_shape(self) -> Shape:
         """
         Returns
         -------
@@ -31,17 +32,17 @@ class UDFMeta:
         return self._partition_shape
 
     @property
-    def dataset_shape(self):
+    def dataset_shape(self) -> Shape:
         """
         Returns
         -------
         Shape
-            The original shape of the whole dataset, not influenced by ROI.
+            The original shape of the whole dataset, not influenced by the ROI
         """
         return self._dataset_shape
 
     @property
-    def roi(self):
+    def roi(self) -> np.ndarray:
         """
         Returns
         -------

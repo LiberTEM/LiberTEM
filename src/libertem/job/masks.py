@@ -25,7 +25,16 @@ def _make_mask_slicer(computed_masks):
         m = slice_.get(computed_masks, sig_only=True)
         # We need the mask's signal dimension flattened and the stack transposed in the next step
         # For that reason we flatten and transpose here so that we use the cache of this function.
-        return m.reshape((stack_height, -1)).T
+        m = m.reshape((stack_height, -1)).T
+        if is_sparse(m):
+            iis, jjs = m.coords
+            values = m.data
+            # Just for calculation: scipy.sparse.csr_matrix is
+            # the fastest for dot product
+            return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape)
+        else:
+            # We copy to make sure it is in row major, dense layout
+            return m.copy()
     return _get_masks_for_slice
 
 
@@ -208,7 +217,9 @@ class ApplyMasksTask(Task):
             flat_data = data_tile.flat_data
             masks = self.masks[data_tile]
             if self.masks.use_sparse:
-                result = sparse.dot(flat_data, masks)
+                # This is scipy.sparse using the old matrix interface
+                # where "*" is the dot product
+                result = flat_data * masks
             elif self.use_torch:
                 result = torch.mm(
                     torch.from_numpy(flat_data),

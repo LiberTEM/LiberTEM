@@ -5,7 +5,7 @@ import os
 @click.command()
 @click.option('--port', help='port on which the server should listen on',
               default=9000, type=int)
-@click.option('--local_directory', help='local directory to manage dask-worker-space files',
+@click.option('--local-directory', help='local directory to manage dask-worker-space files',
               default='dask-worker-space', type=str)
 # FIXME: the host parameter is currently disabled, as it poses a security risk
 # as long as there is no authentication

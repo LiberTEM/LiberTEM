@@ -66,4 +66,6 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
             'cy': cy,
             'r': r,
             'use_sparse': use_sparse,
+            'mask_count': 1,
+            'mask_dtype': np.float32,
         }

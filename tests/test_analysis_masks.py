@@ -172,7 +172,7 @@ def test_multi_mask_stack_dense(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, length=2
+        dataset=dataset, factories=lambda: masks, mask_count=2
     )
     results = lt_ctx.run(analysis)
 
@@ -193,7 +193,7 @@ def test_multi_mask_stack_sparse(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, length=2
+        dataset=dataset, factories=lambda: masks, mask_count=2
     )
     results = lt_ctx.run(analysis)
 
@@ -214,7 +214,7 @@ def test_multi_mask_stack_force_sparse(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=True, length=2
+        dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2
     )
     results = lt_ctx.run(analysis)
 
@@ -235,7 +235,7 @@ def test_multi_mask_stack_force_dense(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=False, length=2
+        dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2
     )
     results = lt_ctx.run(analysis)
 
@@ -248,6 +248,186 @@ def test_multi_mask_stack_force_dense(lt_ctx):
         expected[1],
     )
 
+
+def test_multi_mask_autodtype(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0.raw_data.dtype == np.result_type(np.float32, data.dtype, masks.dtype)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_autodtype_wide(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="int64")
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0.raw_data.dtype == np.result_type(np.float64, data.dtype, masks.dtype)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_autodtype_complex(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0_complex.raw_data.dtype.kind == 'c'
+    assert results.mask_0_complex.raw_data.dtype == np.complex64
+
+    assert np.allclose(
+        results.mask_0_complex.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1_complex.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_autodtype_complex_wide(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16))
+    masks = _mk_random(size=(2, 16, 16), dtype="complex128")
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0_complex.raw_data.dtype.kind == 'c'
+    assert results.mask_0_complex.raw_data.dtype == np.complex128
+
+    assert np.allclose(
+        results.mask_0_complex.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1_complex.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_force_dtype(lt_ctx):
+    force_dtype = np.dtype(np.int32)
+    data = _mk_random(size=(16, 16, 16, 16), dtype="int16")
+    masks = _mk_random(size=(2, 16, 16), dtype="bool")
+    expected = _naive_mask_apply(masks.astype(force_dtype), data.astype(force_dtype))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, dtype=force_dtype
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0.raw_data.dtype.kind == force_dtype.kind
+    assert results.mask_0.raw_data.dtype == force_dtype
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_multi_mask_force_dtype_bad(lt_ctx):
+    force_dtype = np.dtype(np.int32)
+    data = _mk_random(size=(16, 16, 16, 16), dtype="int16")
+    masks = _mk_random(size=(2, 16, 16), dtype="float32")
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, dtype=force_dtype
+    )
+    with pytest.raises(TypeError):
+        lt_ctx.run(analysis)
+
+
+def test_avoid_calculating_masks_on_client(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16))
+    masks = _mk_random(size=(2, 16, 16))
+    expected = _naive_mask_apply(masks, data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, mask_dtype=masks.dtype, mask_count=len(masks)
+    )
+    results = lt_ctx.run(analysis)
+
+    job = analysis.get_job()
+
+    assert job.masks._computed_masks is None
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
+
+
+def test_override_mask_dtype(lt_ctx):
+    mask_dtype = np.float32
+    data = _mk_random(size=(16, 16, 16, 16), dtype=mask_dtype)
+    masks = _mk_random(size=(2, 16, 16), dtype=np.float64)
+    expected = _naive_mask_apply(masks.astype(mask_dtype), data)
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: masks, mask_dtype=mask_dtype, mask_count=len(masks)
+    )
+    results = lt_ctx.run(analysis)
+
+    assert results.mask_0.raw_data.dtype == mask_dtype
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected[0],
+    )
+    assert np.allclose(
+        results.mask_1.raw_data,
+        expected[1],
+    )
 
 def test_mask_job(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
@@ -323,7 +503,7 @@ def test_uses_sparse_all_default(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert is_sparse(job.masks[tile])
+    assert is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_uses_sparse_mixed_default(lt_ctx):
@@ -338,7 +518,7 @@ def test_uses_sparse_mixed_default(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert not is_sparse(job.masks[tile])
+    assert not is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_uses_sparse_true(lt_ctx):
@@ -354,7 +534,7 @@ def test_uses_sparse_true(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert is_sparse(job.masks[tile])
+    assert is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_uses_scipy_sparse_false(lt_ctx):
@@ -369,7 +549,7 @@ def test_uses_scipy_sparse_false(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert not is_sparse(job.masks[tile])
+    assert not is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_uses_sparse_sparse_false(lt_ctx):
@@ -384,7 +564,7 @@ def test_uses_sparse_sparse_false(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert not is_sparse(job.masks[tile])
+    assert not is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_masks_timeseries_2d_frames(lt_ctx):

@@ -385,6 +385,7 @@ class UDFRunner:
         self._udf = udf
 
     def run_for_partition(self, partition, roi):
+        # dtype = np.dtype("float32")  # FIXME: parameter
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
         meta = UDFMeta(
@@ -394,15 +395,40 @@ class UDFRunner:
         )
         self._udf.init_task_data(meta)
         if hasattr(self._udf, 'process_tile'):
-            # FIXME: allow full_frames=True for `process_tile`?
-            for tile in partition.get_tiles(full_frames=False, roi=roi):
+            method = 'tile'
+            tiles = partition.get_tiles(full_frames=False, roi=roi)
+        elif hasattr(self._udf, 'process_frame'):
+            method = 'frame'
+            tiles = partition.get_tiles(full_frames=True, roi=roi)
+        elif hasattr(self._udf, 'process_partition'):
+            method = 'partition'
+            tiles = partition.get_tiles(full_frames=False, roi=roi)
+            raise NotImplementedError("process_partition is not implemented yet")
+        else:
+            raise TypeError("UDF should implement one of the `process_*` methods")
+
+        partition_data = None
+        if method == 'partition':
+            # FIXME: allocate a buffer the size of the partition (nav+sig)
+            # (or more correct: the size of the part of the partition that is
+            # selected by the `roi`; see meta.partition_shape)
+            # partition_data = ...
+            pass
+
+        for tile in tiles:
+            if method == 'tile':
                 self._udf.set_views_for_tile(partition, tile)
                 self._udf.process_tile(tile.data)
-        elif hasattr(self._udf, 'process_frame'):
-            for tile in partition.get_tiles(full_frames=True, roi=roi):
+            elif method == 'frame':
                 for frame_idx, frame in enumerate(tile.data):
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
+            elif method == 'partition':
+                raise NotImplementedError("TODO: copy tiles into partition_data")
+
+        if method == 'partition':
+            self._udf.process_partition(partition_data)
+
         self._udf.cleanup()
         self._udf.clear_views()
         return self._udf.results, partition

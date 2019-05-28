@@ -52,9 +52,9 @@ class BufferWrapper(object):
         """
         Parameters
         ----------
-        kind : "nav" or "sig"
-            The rough shape of the buffer, either corresponding to the navigation
-            or the signal dimensions of the dataset
+        kind : "nav", "sig" or "single"
+            The abstract shape of the buffer, corresponding either to the navigation
+            or the signal dimensions of the dataset, or a single value.
 
         extra_shape : optional, tuple of int
             You can specify additional dimensions for your data. For example, if

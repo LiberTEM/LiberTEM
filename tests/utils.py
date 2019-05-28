@@ -88,10 +88,8 @@ def _naive_mask_apply(masks, data):
     assert len(data.shape) == 4
     for mask in masks:
         assert mask.shape == data.shape[2:], "mask doesn't fit frame size"
-    if data.dtype.kind in ('c', 'f'):
-        dtype = data.dtype
-    else:
-        dtype = None
+
+    dtype = np.result_type(*masks, data)
     res = np.zeros((len(masks),) + tuple(data.shape[:2]), dtype=dtype)
     for n in range(len(masks)):
         mask = to_dense(masks[n])

@@ -66,4 +66,6 @@ class RingMaskAnalysis(BaseMasksAnalysis):
             'ri': ri,
             'ro': ro,
             'use_sparse': use_sparse,
+            'mask_count': 1,
+            'mask_dtype': np.float32,
         }

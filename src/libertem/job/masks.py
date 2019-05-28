@@ -18,7 +18,7 @@ from libertem.common.buffers import zeros_aligned
 log = logging.getLogger(__name__)
 
 
-def _make_mask_slicer(computed_masks):
+def _make_mask_slicer(computed_masks, dtype):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
         stack_height = computed_masks.shape[0]
@@ -31,10 +31,11 @@ def _make_mask_slicer(computed_masks):
             values = m.data
             # Just for calculation: scipy.sparse.csr_matrix is
             # the fastest for dot product
-            return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape)
+            return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
         else:
-            # We copy to make sure it is in row major, dense layout
-            return m.copy()
+            # We convert to the desired type.
+            # This makes sure it is in row major, dense layout as well
+            return m.astype(dtype)
     return _get_masks_for_slice
 
 
@@ -42,14 +43,13 @@ class ApplyMasksJob(Job):
     """
     Apply masks to signals/frames in the dataset.
     """
-    def __init__(self, mask_factories, use_torch=True, use_sparse=None, length=None,
-                *args, **kwargs):
+    def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
+                mask_dtype=None, dtype=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        mask_dtype = np.dtype(self.dataset.dtype)
-        if mask_dtype.kind in ('u', 'i'):
-            mask_dtype = np.dtype("float32")
         self.masks = MaskContainer(mask_factories, dtype=mask_dtype,
-            use_sparse=use_sparse, length=length)
+            use_sparse=use_sparse, count=mask_count)
+
+        self.dtype = dtype
         self.use_torch = use_torch
 
     def get_tasks(self):
@@ -59,26 +59,43 @@ class ApplyMasksJob(Job):
                 masks=self.masks,
                 use_torch=self.use_torch,
                 idx=idx,
+                dtype=self.get_result_dtype()
             )
 
     def get_result_shape(self):
         return (len(self.masks),) + tuple(self.dataset.shape.flatten_nav().nav)
 
+    def get_result_dtype(self):
+        def is_wide(dtype):
+            dtype = np.dtype(dtype)
+            result = False
+            if dtype.kind != 'c' and dtype.itemsize > 4:
+                result = True
+            if dtype.kind == 'c' and dtype.itemsize > 8:
+                result = True
+            return result
+
+        if self.dtype is None:
+            default_dtype = np.float32
+            if is_wide(self.dataset.dtype) or is_wide(self.masks.dtype):
+                default_dtype = np.float64
+            return np.result_type(default_dtype, self.dataset.dtype, self.masks.dtype)
+        else:
+            return self.dtype
+
 
 class MaskContainer(object):
-    def __init__(self, mask_factories, dtype, use_sparse=None, length=None):
+    def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None):
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack
-        self.length = length
-        if callable(mask_factories) and length is None:
-            raise TypeError("The length parameter has to be set if mask_factories is callable.")
-        self.dtype = dtype
+        self._length = count
+        self._dtype = dtype
         self.use_sparse = use_sparse
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
-        self._get_masks_for_slice = None
+        self._get_masks_for_slice = {}
         self.validate_mask_functions()
 
     def validate_mask_functions(self):
@@ -87,18 +104,28 @@ class MaskContainer(object):
             fns = [fns]
         for fn in fns:
             try:
-                if 'self' in fn.__code__.co_freevars:
-                    log.warning('mask factory closes over self, may be inefficient')
+                # functools.partial doesn't have a __code__ attribute
+                # use fn.func.c__code__
+                # FIXME check the args and kwargs of fn for inefficiencies?
+                if isinstance(fn, functools.partial):
+                    if 'self' in fn.func.__code__.co_freevars:
+                        log.warning('mask factory closes over self, may be inefficient')
+                else:
+
+                    if 'self' in fn.__code__.co_freevars:
+                        log.warning('mask factory closes over self, may be inefficient')
             except Exception:
                 raise
 
     def __len__(self):
-        if callable(self.mask_factories):
-            return self.length
-        else:
+        if self._length is not None:
+            return self._length
+        elif not callable(self.mask_factories):
             return len(self.mask_factories)
+        else:
+            return len(self.computed_masks)
 
-    def __getitem__(self, key):
+    def get(self, key, dtype=None):
         if isinstance(key, Partition):
             slice_ = key.slice
         elif isinstance(key, DataTile):
@@ -110,12 +137,14 @@ class MaskContainer(object):
                 "MaskContainer[k] can only be called with "
                 "DataTile/Slice/Partition instances"
             )
-        return self.get_masks_for_slice(slice_.discard_nav())
+        return self.get_masks_for_slice(slice_.discard_nav(), dtype=dtype)
 
     @property
-    def shape(self):
-        m0 = self.computed_masks[0]
-        return (m0.size, len(self.computed_masks))
+    def dtype(self):
+        if self._dtype is None:
+            return self.computed_masks.dtype
+        else:
+            return self._dtype
 
     def _compute_masks(self):
         """
@@ -134,14 +163,14 @@ class MaskContainer(object):
         # and set the use_sparse property accordingly
 
         if callable(self.mask_factories):
-            raw_masks = self.mask_factories().astype(self.dtype)
+            raw_masks = self.mask_factories()
             default_sparse = is_sparse(raw_masks)
             mask_slices = [raw_masks]
         else:
             mask_slices = []
             default_sparse = True
             for f in self.mask_factories:
-                m = f().astype(self.dtype)
+                m = f()
                 # Scipy.sparse is always 2D, so we have to convert here
                 # before reshaping
                 if scipy.sparse.issparse(m):
@@ -164,10 +193,12 @@ class MaskContainer(object):
             )
         return masks
 
-    def get_masks_for_slice(self, slice_):
-        if self._get_masks_for_slice is None:
-            self._get_masks_for_slice = _make_mask_slicer(self.computed_masks)
-        return self._get_masks_for_slice(slice_)
+    def get_masks_for_slice(self, slice_, dtype=None):
+        if dtype is None:
+            dtype = self.dtype
+        if dtype not in self._get_masks_for_slice:
+            self._get_masks_for_slice[dtype] = _make_mask_slicer(self.computed_masks, dtype=dtype)
+        return self._get_masks_for_slice[dtype](slice_)
 
     @property
     def computed_masks(self):
@@ -177,7 +208,7 @@ class MaskContainer(object):
 
 
 class ApplyMasksTask(Task):
-    def __init__(self, masks, use_torch, *args, **kwargs):
+    def __init__(self, masks, use_torch, dtype, *args, **kwargs):
         """
         Parameters
         ----------
@@ -189,8 +220,26 @@ class ApplyMasksTask(Task):
         super().__init__(*args, **kwargs)
         self.masks = masks
         self.use_torch = use_torch
-        if torch is None or np.dtype(self.partition.dtype).kind == 'c':
+        self.dtype = np.dtype(dtype)
+        # FIXME check the performance impact of mixing 32 bit and 64 bit,
+        # real and complex types in dot product. It might be advantageous to
+        # adjust the read and mask dtypes here so that the operations in __call__() use
+        # the most convenient dtype for mask and dataset.
+        self.read_dtype = self._input_dtype(self.partition.dtype)
+        self.mask_dtype = self._input_dtype(self.masks.dtype)
+        if torch is None or self.dtype.kind != 'f' or self.read_dtype != self.mask_dtype:
             self.use_torch = False
+
+    def _input_dtype(self, dtype):
+        dtype = np.dtype(dtype)
+        # Convert integer data to floats if we want to produce floats or complex
+        if dtype.kind in ('u', 'i', 'b') and self.dtype.kind in ('f', 'c'):
+            # We have int64 or similar, use float64 to fit as much information as possible.
+            if dtype.itemsize > 4:
+                dtype = np.float64
+            else:
+                dtype = np.float32
+        return dtype
 
     def reshaped_data(self, data, dest_slice):
         """
@@ -209,13 +258,10 @@ class ApplyMasksTask(Task):
 
     def __call__(self):
         num_masks = len(self.masks)
-        dest_dtype = np.dtype(self.partition.dtype)
-        if dest_dtype.kind not in ('c', 'f'):
-            dest_dtype = 'float32'
-        part = zeros_aligned((num_masks,) + tuple(self.partition.shape.nav), dtype=dest_dtype)
-        for data_tile in self.partition.get_tiles(mmap=True, dest_dtype=dest_dtype):
+        part = zeros_aligned((num_masks,) + tuple(self.partition.shape.nav), dtype=self.dtype)
+        for data_tile in self.partition.get_tiles(mmap=True, dest_dtype=self.read_dtype):
             flat_data = data_tile.flat_data
-            masks = self.masks[data_tile]
+            masks = self.masks.get(data_tile, self.mask_dtype)
             if self.masks.use_sparse:
                 # This is scipy.sparse using the old matrix interface
                 # where "*" is the dot product

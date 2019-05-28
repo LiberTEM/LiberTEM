@@ -5,6 +5,8 @@ import sparse
 from libertem.masks import to_dense, to_sparse, is_sparse
 from utils import MemoryDataSet, _naive_mask_apply, _mk_random
 
+import libertem.api as api
+
 
 def _run_mask_test_program(lt_ctx, dataset, mask, expected):
     analysis_default = lt_ctx.create_mask_analysis(
@@ -381,17 +383,17 @@ def test_multi_mask_force_dtype_bad(lt_ctx):
         lt_ctx.run(analysis)
 
 
-@pytest.mark.xfail(reason="FIXME this would have to be executed on a multiprocessing executor to avoid setting computed_masks on the object on the client.")
-def test_avoid_calculating_masks_on_client(lt_ctx):
-    data = _mk_random(size=(16, 16, 16, 16))
-    masks = _mk_random(size=(2, 16, 16))
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_dtype=masks.dtype, mask_count=len(masks)
-    )
-    job = analysis.get_job()
-    lt_ctx.run(job)
-    assert job.masks._computed_masks is None
+@pytest.mark.functional
+def test_avoid_calculating_masks_on_client(hdf5_ds_1):
+    mask = _mk_random(size=(16, 16))
+
+    with api.Context() as ctx:
+        analysis = ctx.create_mask_analysis(
+            dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
+        )
+        job = analysis.get_job()
+        ctx.run(job)
+        assert job.masks._computed_masks is None
 
 
 def test_override_mask_dtype(lt_ctx):
@@ -416,6 +418,7 @@ def test_override_mask_dtype(lt_ctx):
         results.mask_1.raw_data,
         expected[1],
     )
+
 
 def test_mask_job(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")

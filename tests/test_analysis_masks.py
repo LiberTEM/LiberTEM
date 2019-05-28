@@ -381,29 +381,17 @@ def test_multi_mask_force_dtype_bad(lt_ctx):
         lt_ctx.run(analysis)
 
 
+@pytest.mark.xfail(reason="FIXME this would have to be executed on a multiprocessing executor to avoid setting computed_masks on the object on the client.")
 def test_avoid_calculating_masks_on_client(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
-
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=lambda: masks, mask_dtype=masks.dtype, mask_count=len(masks)
     )
-    results = lt_ctx.run(analysis)
-
     job = analysis.get_job()
-
+    lt_ctx.run(job)
     assert job.masks._computed_masks is None
-
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
 
 
 def test_override_mask_dtype(lt_ctx):

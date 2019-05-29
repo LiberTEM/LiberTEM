@@ -648,17 +648,16 @@ def test_masks_complex_mask(lt_ctx, ds_complex):
     _run_mask_test_program(lt_ctx, ds_complex, mask0, np.abs(expected))
 
 
-def test_numerics(lt_ctx):
+def test_numerics_fail(lt_ctx):
     dtype = 'float32'
     # Highest expected detector resolution
     RESOLUTION = 4096
     # Highest expected detector dynamic range
     RANGE = 1e6
     # default value for all cells
-    # The test fails for 1.1 using float32!
-    VAL = 1.0
+    VAL = 1.1
 
-    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=dtype)
+    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
     data[0, 0, 0, 0] += VAL * RANGE
     dataset = MemoryDataSet(
         data=data,
@@ -666,9 +665,9 @@ def test_numerics(lt_ctx):
         num_partitions=2,
         sig_dims=2,
     )
-    mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=dtype)
+    mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float64)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0]
+        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype
     )
 
     results = lt_ctx.run(analysis)
@@ -677,10 +676,45 @@ def test_numerics(lt_ctx):
         [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
     ]])
     naive = _naive_mask_apply([mask0], data)
+    naive_32 = _naive_mask_apply([mask0.astype(dtype)], data)
+    # The masks are float64, that means the calculation is performed with high resolution
+    # and the naive result should be correct
+    assert np.allclose(expected, naive)
+    # We make sure LiberTEM calculated this with the lower-precision dtype we set
+    assert np.allclose(results.mask_0.raw_data, expected[0]) == np.allclose(naive_32, expected)
+    # Confirm that the numerical precision is actually insufficient.
+    # If this succeeds, we have to rethink the premise of this test.
+    assert not np.allclose(results.mask_0.raw_data, expected[0])
 
-    # print(expected)
-    # print(naive)
-    # print(results.mask_0.raw_data)
+
+def test_numerics_succeed(lt_ctx):
+    dtype = 'float64'
+    # Highest expected detector resolution
+    RESOLUTION = 4096
+    # Highest expected detector dynamic range
+    RANGE = 1e6
+    # default value for all cells
+    VAL = 1.1
+
+    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
+    data[0, 0, 0, 0] += VAL * RANGE
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(2, RESOLUTION, RESOLUTION),
+        num_partitions=2,
+        sig_dims=2,
+    )
+    mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float32)
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype
+    )
+
+    results = lt_ctx.run(analysis)
+    expected = np.array([[
+        [VAL*RESOLUTION**2 + VAL*RANGE, VAL*RESOLUTION**2],
+        [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
+    ]])
+    naive = _naive_mask_apply([mask0.astype(dtype)], data.astype(dtype))
 
     assert np.allclose(expected, naive)
     assert np.allclose(expected[0], results.mask_0.raw_data)

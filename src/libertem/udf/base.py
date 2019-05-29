@@ -1,4 +1,5 @@
 from types import MappingProxyType
+from typing import Dict
 import uuid
 
 import numpy as np
@@ -62,14 +63,17 @@ class UDFData:
         if k.startswith("_"):
             raise AttributeError("no such attribute: %s" % k)
         try:
-            if k in self._views:
-                return self._views[k]
-            res = self._data[k]
-            if hasattr(res, 'raw_data'):
-                return res.raw_data
-            return res
+            return self._get_view_or_data(k)
         except KeyError as e:
             raise AttributeError(str(e))
+
+    def _get_view_or_data(self, k):
+        if k in self._views:
+            return self._views[k]
+        res = self._data[k]
+        if hasattr(res, 'raw_data'):
+            return res.raw_data
+        return res
 
     def __getitem__(self, k):
         return self._data[k]
@@ -135,6 +139,7 @@ class UDFFrameMixin:
         Implement this method to process the data on a frame-by-frame manner.
 
         Data available in this method:
+
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
@@ -155,6 +160,7 @@ class UDFTileMixin:
         Implement this method to process the data in a tiled manner.
 
         Data available in this method:
+
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
@@ -176,6 +182,7 @@ class UDFPartitionMixin:
         (100s of MiB) partitions.
 
         Data available in this method:
+
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
@@ -272,11 +279,11 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def get_task_data(self, meta):
+    def get_task_data(self, meta: UDFMeta):
         """
         Initialize per-task data.
 
-        Per-task data can be mutable. Use this function
+        Per-task data can be mutable. Override this function
         to allocate temporary buffers, or to initialize
         system resources.
 
@@ -284,7 +291,14 @@ class UDF(UDFBase):
         parameters instead.
 
         Data available in this method:
+
         - `self.params` - the input parameters of this UDF
+
+        Parameters
+        ----------
+
+        meta
+            relevant metadata, see :class:`UDFMeta` documentation.
 
         Returns
         -------
@@ -307,6 +321,7 @@ class UDF(UDFBase):
         The values also need to be serializable via pickle.
 
         Data available in this method:
+
         - `self.params` - the parameters of this UDF
 
         Returns
@@ -318,12 +333,24 @@ class UDF(UDFBase):
         """
         raise NotImplementedError()
 
-    def merge(self, dest, src):
+    def merge(self, dest: Dict[str, np.array], src: Dict[str, np.array]):
         """
         Merge a partial result `src` into the current global result `dest`.
 
         Data available in this method:
+
         - `self.params` - the parameters of this UDF
+
+        Parameters
+        ----------
+
+        dest
+            global results; dictionary mapping the buffer name (from `get_result_buffers`)
+            to a numpy array
+
+        src
+            results for a partition; dictionary mapping the buffer name (from `get_result_buffers`)
+            to a numpy array
 
         Note
         ----

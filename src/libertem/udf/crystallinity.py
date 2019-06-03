@@ -41,7 +41,7 @@ def fft(frame, real_mask, fourier_mask, intensity):
     if real_mask is not None:
         maskedframe = frame*real_mask
     else:
-        maskedframe = 1*frame
+        maskedframe = frame
     intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(maskedframe)))*fourier_mask)
     return
 

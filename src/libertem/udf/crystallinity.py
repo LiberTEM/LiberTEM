@@ -15,17 +15,18 @@ def make_result_buffers():
 
 
 def init_fft(partition, rad_in, rad_out, real_center, real_rad):
-    real_mask = 1-1*_make_circular_mask(
-        real_center[1], real_center[0], partition.shape.sig[1],
-        partition.shape.sig[0], real_rad
-    )
+    sigshape = partition.shape.sig
+    if not (real_center is None or real_rad is None):
+        real_mask = 1-1*_make_circular_mask(
+            real_center[1], real_center[0], sigshape[1], sigshape[0], real_rad
+        )
+    else:
+        real_mask = None
     fourier_mask_out = 1*_make_circular_mask(
-        partition.shape.sig[1]*0.5, partition.shape.sig[0]*0.5,
-        partition.shape.sig[1], partition.shape.sig[0], rad_out
+        sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_out
     )
     fourier_mask_in = 1*_make_circular_mask(
-        partition.shape.sig[1]*0.5, partition.shape.sig[0]*0.5,
-        partition.shape.sig[1], partition.shape.sig[0], rad_in
+        sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_in
     )
     fourier_mask = fourier_mask_out - fourier_mask_in
 
@@ -37,7 +38,10 @@ def init_fft(partition, rad_in, rad_out, real_center, real_rad):
 
 
 def fft(frame, real_mask, fourier_mask, intensity):
-    intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(frame*real_mask)))*fourier_mask)
+    if not (real_mask is None):
+        intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(frame*real_mask)))*fourier_mask)
+    else:
+        intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(frame)))*fourier_mask)
     return
 
 
@@ -62,7 +66,7 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
         (x,y) - coordinates of a center of a circle for a masking out zero-order peak in real space
 
     real_rad: int
-        (x,y) - radius of circle for a masking out zero-order peak in real space
+        Radius of circle for a masking out zero-order peak in real space
 
     Returns
     -------
@@ -76,8 +80,7 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
         dataset=dataset,
         make_buffers=make_result_buffers,
         init=functools.partial(
-            init_fft, rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad
-        ),
+            init_fft, rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad),
         fn=fft,
     )
 

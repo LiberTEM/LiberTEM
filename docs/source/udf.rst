@@ -110,32 +110,38 @@ for example `blobfinder`.
 Tiled processing
 ----------------
 
+Motivation
+~~~~~~~~~~
+
 Many operations operations can be optimized by working on stacks of frames. For
 example, let's imagine you want to do an elementwise multiplication, which arises
-when doing gain correction. An implementation in pseudo-Python could look like this:
+when doing gain correction.  An implementation in pseudo-Python could look like this
+(for simplicity, we flatten the frame, weights and result to a 1D array here):
 
 .. code-block:: python
 
-   for idx in indices:
+   for idx in range(number_of_pixels):
       result[idx] = frame[idx] * weights[idx]
 
 
 If you look closely, you may notice that for each frame, all elements from `weights` are accessed.
-This is not cache efficient, because you could instead hold on to a single weight value and apply
-it to pixels from multiple frames:
+This is not cache efficient, because you could instead hold on to a single weight value and re-use
+it for multiple frames:
 
 
 .. code-block:: python
 
-   for idx in indices:
-      for frame in frames:
-         result[idx] = frame[idx] * weights[idx]
+   for idx in range(number_of_pixels):
+      weight = weights[idx]
+      for frame_idx, frame in enumerate(frames):
+         result[idx, frame_idx] = frame[idx] * weight
 
 For details, see for example the Wikipedia articles on `Loop nest optimization <https://en.wikipedia.org/wiki/Loop_nest_optimization>`_ and `Locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_.
 
    
 In a real Python implementation, you would of course use numpy with broadcasting,
-which takes care of applying the multiplication in an efficient way:
+which takes care of applying the multiplication in an efficient way. But it can only
+benefit from the above mentioned re-use if it has data from multiple frames available:
 
 .. code-block:: python
    
@@ -144,11 +150,12 @@ which takes care of applying the multiplication in an efficient way:
    corrected_tile = tile * gain_map
 
 
-These optimizations are only possible if you have access to data from more than one frame. But for
+These optimizations are only possible if you have access to data from more than one frame. For
 very large frames, another problem arises: a stack of frames would be too large to efficiently handle,
 as it would no longer fit into even the L3 cache, which is the largest cache in most CPUs. For these
-cases, we support a tiled reading and processing strategy. Tiled means we split the frame into
-disjoint rectangles. A tile then is the data from a single rectangle for multiple frames.
+cases, we support a tiled reading and processing strategy. Tiled means we slice the frame into
+disjoint rectangular regions. A tile then is the data from a single rectangular region
+for multiple frames.
 
 For example, in case of K2IS data, frames have a shape of `(1860, 2048)`. When reading them
 with the tiled strategy, a single tile will contain data from 16 subsequent frames, and each
@@ -166,7 +173,6 @@ but many CPUs have larger L3 caches. As the L3 cache is shared between cores, an
 to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
 
 TODO: documentation on implementing `process_tile`
-
 
 API Reference
 -------------

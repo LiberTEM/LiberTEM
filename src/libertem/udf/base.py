@@ -248,7 +248,7 @@ class UDF(UDFBase):
         some pre-conditioning of parameters, but you also have to accept the results
         as input again.
 
-        Arguments passed as **kwargs will be automatically available on `self.params`
+        Arguments passed as `**kwargs` will be automatically available on `self.params`
         when running the UDF.
 
         Example

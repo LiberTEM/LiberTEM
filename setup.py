@@ -133,7 +133,7 @@ setup(
         "numpy",
         "scipy",
         "sparse",
-        "distributed>=1.23.3",
+        "distributed>=1.23.3,<1.28",
         "click",
         "tornado>=5",
         "matplotlib",
@@ -146,6 +146,7 @@ setup(
         # FIXME pull request #259
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
         'scikit-image',
+        'cloudpickle',
     ],
     extras_require={
         'hdfs': 'hfds3',

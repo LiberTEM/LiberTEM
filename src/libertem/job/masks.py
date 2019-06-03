@@ -8,6 +8,7 @@ except ImportError:
 import sparse
 import scipy.sparse
 import numpy as np
+import cloudpickle
 
 from libertem.io.dataset.base import DataTile, Partition
 from .base import Job, Task, ResultTile
@@ -100,22 +101,17 @@ class MaskContainer(object):
 
     def validate_mask_functions(self):
         fns = self.mask_factories
+        # 1 MB, magic number L3 cache
+        limit = 2**20
         if callable(fns):
             fns = [fns]
         for fn in fns:
-            try:
-                # functools.partial doesn't have a __code__ attribute
-                # use fn.func.c__code__
-                # FIXME check the args and kwargs of fn for inefficiencies?
-                if isinstance(fn, functools.partial):
-                    if 'self' in fn.func.__code__.co_freevars:
-                        log.warning('mask factory closes over self, may be inefficient')
-                else:
-
-                    if 'self' in fn.__code__.co_freevars:
-                        log.warning('mask factory closes over self, may be inefficient')
-            except Exception:
-                raise
+            s = len(cloudpickle.dumps(fn))
+            if s > limit:
+                log.warning(
+                    'Mask factory size %s larger than warning limit %s, may be inefficient'
+                    % (s, limit)
+                )
 
     def __len__(self):
         if self._length is not None:
@@ -134,7 +130,7 @@ class MaskContainer(object):
             slice_ = key
         else:
             raise TypeError(
-                "MaskContainer[k] can only be called with "
+                "MaskContainer.get() can only be called with "
                 "DataTile/Slice/Partition instances"
             )
         return self.get_masks_for_slice(slice_.discard_nav(), dtype=dtype)
@@ -148,7 +144,7 @@ class MaskContainer(object):
 
     def _compute_masks(self):
         """
-        Call mask factories and convert to the dataset dtype
+        Call mask factories and combine to mask stack
 
         Returns
         -------
@@ -216,21 +212,51 @@ class ApplyMasksTask(Task):
             the partition to work on
         masks : MaskContainer
             the masks to apply to the partition
+        use_torch :
+            Setting to False disables torch. Setting to True doesn't enforce
+            torch. Torch will be disabled if it is not installed
+            or if the dtypes are unsuitable. It works only for float32 or float64,
+            and only if both mask and data have the same dtype.
+        dtype :
+            dtype to use for the calculation and the result.
         """
         super().__init__(*args, **kwargs)
         self.masks = masks
         self.use_torch = use_torch
         self.dtype = np.dtype(dtype)
-        # FIXME check the performance impact of mixing 32 bit and 64 bit,
-        # real and complex types in dot product. It might be advantageous to
-        # adjust the read and mask dtypes here so that the operations in __call__() use
-        # the most convenient dtype for mask and dataset.
         self.read_dtype = self._input_dtype(self.partition.dtype)
         self.mask_dtype = self._input_dtype(self.masks.dtype)
         if torch is None or self.dtype.kind != 'f' or self.read_dtype != self.mask_dtype:
             self.use_torch = False
 
     def _input_dtype(self, dtype):
+        '''
+        Determine which dtype to request for masks or input data based on their native
+        dtype and self.dtype.
+
+        A dot product with floats is significantly faster than doing the same processing with
+        integer data types, because Numpy uses its internal implementation of the dot product
+        for integers, while it uses optimized libraries like OpenBLAS for floats. Furthermore,
+        floats allow using torch.
+
+        For that reason, we use floats by default. If floats are used, we request native integer
+        mask data and native integer input data to be converted to floats already at the source.
+        That helps to avoid an additional conversion step. As an example, the mask container can
+        cache a float version with get_mask_for_slice(), and the K2IS reader can convert its 12 bit
+        packed uints to floats directly.
+
+        In case a conversion is requested, we decide if float32 or float64 is best suited based on
+        the itemsize of the source data. In particular, float64 will be used for int64 data.
+
+        In case the native dtype is not integer or in case the processing is not done with floating
+        point numbers, return the native dtype.
+
+        FIXME It should be tested in more detail which dtype combinations (32 bit vs 64 bit, complex
+        vs real) are ideal for the dot product and what impact the conversion has on overall
+        performance. In particular, the impact of size vs conversion overhead is not trivial to
+        predict and might depend on the CPU type and load.
+        The decision logic in this function should be adapted accordingly.
+        '''
         dtype = np.dtype(dtype)
         # Convert integer data to floats if we want to produce floats or complex
         if dtype.kind in ('u', 'i', 'b') and self.dtype.kind in ('f', 'c'):

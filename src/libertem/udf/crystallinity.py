@@ -57,16 +57,19 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
     dataset: DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
     rad_in: int
-        Inner radius of a ring mask for the integration in Fourier space
+        Inner radius in pixels of a ring mask for the integration in Fourier space
 
     rad_out: int
-        Outer radius of a ring mask for the integration in Fourier space
+        Outer radius in pixels of a ring mask for the integration in Fourier space
 
-    real_center: tuple
-        (x,y) - coordinates of a center of a circle for a masking out zero-order peak in real space
+    real_center: tuple, optional
+        (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
+        in real space.
 
-    real_rad: int
-        Radius of circle for a masking out zero-order peak in real space
+    real_rad: int, optional
+        Radius in pixels of circle for a masking out zero-order peak in real space.
+        If one from real_center or real_rad is missing: the integration will be done without
+        masking zero-order peak out.
 
     Returns
     -------

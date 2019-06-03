@@ -96,10 +96,12 @@ def main(host, port, event_registry, shared_data):
     return app
 
 
-def run(host, port):
+def run(host, port, local_directory):
     # shared state:
     event_registry = EventRegistry()
     shared_data = SharedData()
+
+    shared_data.set_local_directory(local_directory)
 
     main(host, port, event_registry, shared_data)
     loop = asyncio.get_event_loop()

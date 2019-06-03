@@ -73,5 +73,12 @@
         "affiliation": "ETH Zürich" ,
         "github": "@jaewshin",
         "contribution": "Single pass numerically stable standard deviation"
+    },
+    {
+        "displayname": "Jay van Schyndel",
+        "authorname": "van Schyndel, Jay",
+        "affiliation": "Monash University eResearch Centre" ,
+        "github": "@ozej8y",
+        "contribution": "Fix issue 80 to allow container deployment"
     }
 ]

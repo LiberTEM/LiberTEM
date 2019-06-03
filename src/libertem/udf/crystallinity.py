@@ -38,10 +38,11 @@ def init_fft(partition, rad_in, rad_out, real_center, real_rad):
 
 
 def fft(frame, real_mask, fourier_mask, intensity):
-    if not (real_mask is None):
-        intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(frame*real_mask)))*fourier_mask)
+    if real_mask is not None:
+        maskedframe = frame*real_mask
     else:
-        intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(frame)))*fourier_mask)
+        maskedframe = 1*frame
+    intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(maskedframe)))*fourier_mask)
     return
 
 

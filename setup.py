@@ -133,7 +133,7 @@ setup(
         "numpy",
         "scipy",
         "sparse",
-        "distributed>=1.23.3",
+        "distributed>=1.23.3,<1.28",
         "click",
         "tornado>=5",
         "matplotlib",

@@ -2,18 +2,18 @@ import collections
 
 import numpy as np
 
-from libertem.udf import UDF
-from libertem.udf.stddev import merge
+from libertem.udf.base import UDF
+from libertem.udf.stddev import merge as merge_stddev
 
 
-pca = collections.namedtuple('PCA', ['sum_im', 'var', 'N',  'n_components', 'singular_vals'])
+PCA = collections.namedtuple('PCA', ['sum_im', 'var', 'N',  'n_components', 'singular_vals'])
 
 
 def flip_svd(U, V):
     """
     Adjust the columns of u and the loadings of v such that the
     loadings in the columns in u that are largest in absolute value
-    are always positive
+    are always positive. This ensures deterministic output from SVD
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ def flip_svd(U, V):
     return U, V
 
 
-def IncrementalPCA(prev_result, data):
+def incremental_pca(prev_result, data):
     """
     Given previous PCA results, characterized by,
     perform Incremental PCA by adding additional data
@@ -58,9 +58,9 @@ def IncrementalPCA(prev_result, data):
     -------
     pca
         pca collections namedtuple object that contains
-        information about merged PCA
+        information about merged PCAx
     """
-    updated = merge(prev_result, data)
+    updated = merge_stddev(prev_result, data)
 
     total_mean, total_var, n_total = updated.sum_im/updated.N, updated.var, updated.N
 
@@ -93,11 +93,11 @@ def IncrementalPCA(prev_result, data):
         )
 
 
-class PCA(UDF):
+class Pca(UDF):
 
     def get_result_buffers(self):
         """
-        Initialize BufferWrapper object for covariance,
+        Initialize BufferWrapper object for PCA,
 
         Returns
         -------
@@ -141,25 +141,20 @@ class PCA(UDF):
             Contains information about the second partition, including
             sum of variances, sum of pixels, and number of frames used
 
-        pca
-            colletions.namedtuple object that contains information about
-            the merged partitions, including mean, variances,
-            number of frames used, singular values for partitions, and
-            the number of components
         """
         prev = pca(
                     var=dest['var'][:],
                     mean=dest['mean'][:],
                     num_frame=dest['num_frame'][:],
                     singular_val=dest['singular_vals'][:],
-                    n_components=dest['n_compoennts'][:]
+                    n_components=dest['n_components'][:]
                     )
         new = pca(
                     var=src['var'][:],
                     mean=src['mean'][:],
                     num_frame=src['num_frame'][:],
                     singular_val=src['singular_vals'][:],
-                    n_components=src['n_compoennts'][:]
+                    n_components=src['n_components'][:]
                     )
 
         compute_merge = IncrementalPCA(prev, new)
@@ -191,8 +186,8 @@ class PCA(UDF):
         num_frame = tile.shape[0]
 
         new = pca(
-            sum_im=np.sum(tile),
-            var=np.var(tile),
+            sum_im=np.sum(tile, axis=0),
+            var=np.var(tile, axis=0),
             N=num_frame,
             n_components=self.results.n_components,
             singular_values=np.zeros(sig_dim)

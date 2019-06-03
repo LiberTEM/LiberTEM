@@ -9,14 +9,17 @@ from libertem.common.buffers import BufferWrapper
 
 
 @numba.njit
-def correlate_fullframe(params, frame, r0, padding, indices):
+def correlate_fullframe(params, frame, r0, radius_outer, padding, indices):
     zero = params[0:2]
     a = params[2:4]
     b = params[4:6]
     result = 0
     r02 = r0 ** 2
+    grad = min(6, radius_outer - r0)
+    r_inter2 = (r0 + grad)**2
+    r_out2 = radius_outer ** 2
     (fy, fx) = frame.shape
-    bounding = np.ceil(r0 * (1 + padding))
+    bounding = np.ceil(max(r0, radius_outer) * (1 + padding))
 
     def radial_gradient(r2):
         if r2 <= r02:
@@ -25,8 +28,10 @@ def correlate_fullframe(params, frame, r0, padding, indices):
         # so that the optimizer sees a gradient to converge towards
         # and that small shifts of the position lead to a change of the result
         # Magic number 3 gave best results in practical tests, TBD if optimal in all cases
-        elif r2 <= (r0 + 3)**2:
-            return 1 + r0/3 - np.sqrt(r2)/3
+        elif r2 <= r_inter2:
+            return 1 + 0.5*r0/grad - 0.5*np.sqrt(r2)/grad
+        elif r2 <= r_out2:
+            return -1
         else:
             return 0
 
@@ -65,12 +70,18 @@ def get_result_buffers_refine():
     }
 
 
-def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity, zero, a, b):
+def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity,
+        zero, a, b, bounds):
     x0 = np.hstack((start_zero, start_a, start_b))
     logframe = np.log(frame - np.min(frame) + 1)
-    extra_params = (logframe, parameters['radius'], parameters['padding'], indices)
+    extra_params = (
+        logframe,
+        parameters['radius'],
+        parameters['radius_outer'],
+        parameters['padding'],
+        indices)
 
-    res = scipy.optimize.minimize(correlate_fullframe, x0, args=extra_params)
+    res = scipy.optimize.minimize(correlate_fullframe, x0, args=extra_params, bounds=bounds)
 
     intensity[:] = res['fun']
     zero[:] = res['x'][0:2]
@@ -78,7 +89,7 @@ def refine(frame, start_zero, start_a, start_b, parameters, indices, intensity, 
     b[:] = res['x'][4:6]
 
 
-def run_refine(ctx, dataset, zero, a, b, parameters, indices=None):
+def run_refine(ctx, dataset, zero, a, b, parameters, indices=None, bounds=None):
     '''
     Refine the given lattice for each frame by optimizing the correlation
     with full rendered frames.
@@ -139,8 +150,30 @@ def run_refine(ctx, dataset, zero, a, b, parameters, indices=None):
             start_a=a,
             start_b=b,
             indices=indices,
-            parameters=parameters
+            parameters=parameters,
+            bounds=bounds
         ),
         make_buffers=get_result_buffers_refine,
     )
     return (result, indices)
+
+
+def auto_bounds(zero, a, b, percent=0.05, absolute=5):
+    '''
+    Helper function to calculate bounds for scipy.optimize.minimize()
+
+    For zero, only use absolute delta
+
+    For a, b, use percentage and absolute.
+    '''
+
+    result = np.array([
+        (zero[0] - absolute, zero[0] + absolute),
+        (zero[1] - absolute, zero[1] + absolute),
+        (a[0] - absolute - a[0] * percent, a[0] + absolute + a[0] * percent),
+        (a[1] - absolute - a[1] * percent, a[1] + absolute + a[1] * percent),
+        (b[0] - absolute - b[0] * percent, b[0] + absolute + b[0] * percent),
+        (b[1] - absolute - b[1] * percent, b[1] + absolute + b[1] * percent),
+    ])
+
+    return result

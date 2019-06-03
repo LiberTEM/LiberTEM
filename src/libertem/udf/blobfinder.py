@@ -450,7 +450,7 @@ def visualize_frame(ctx, ds, result, indices, r, y, x, axes, colors=None, stretc
 
     d = sample_frame[0].raw_data
 
-    axes.imshow(np.log(d - np.min(d) + 1))
+    pcm = axes.imshow(np.log(d - np.min(d) + 1))
 
     refined = result['refineds'].data[y, x]
     elevations = result['peak_elevations'].data[y, x]
@@ -481,6 +481,7 @@ def visualize_frame(ctx, ds, result, indices, r, y, x, axes, colors=None, stretc
         colors=colors,
         stretch=stretch,
     )
+    return pcm
 
 
 def paint_markers(axes, r, refined, normalized_elevations, calculated, selector, zero, a, b,

@@ -12,95 +12,16 @@ By-frame processing
 As an easy example, let's have a look at a function that simply sums up each frame
 to a single value:
 
-.. code-block:: python
 
-   # TODO: rewrite for current API
-   from libertem.api import Context
-   from libertem.common.buffers import BufferWrapper
-
-    def make_pixelsum_buffer():
-        """
-        Describe the buffers we need to store our results:
-        kind="nav" means we want to have a value for each coordinate
-        in the navigation dimensions. We name our buffer 'pixelsum'.
-        """
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def make_pixel_sum(frame, pixelsum):
-        """
-        Sum up all pixels in this frame and store the result in the pixelsum buffer.
-        `pixelsum` is a view into the result buffer we defined above, and corresponds to the
-        entry for the current frame we work on. We don't have to take care of finding the correct
-        index for the frame we are processing ourselves.
-        """
-        pixelsum[:] = np.sum(frame)
-
-    # run the UDF on a dataset:
-    ctx = Context()
-    dataset = ctx.load("...")
-    res = ctx.run_udf(
-        dataset=dataset,
-        fn=make_pixel_sum,
-        make_buffers=make_pixelsum_buffer,
-    )
+.. include:: udf/sumsig.py
+   :code:
 
 
 Here is another example, demonstrating `kind="sig"` buffers and the merge function:
 
-.. code-block:: python
 
-   # TODO: rewrite for current API
-   from libertem.api import Context
-   from libertem.common.buffers import BufferWrapper
-
-   def make_buffer():
-       """
-       Describe the buffers we need to store our results:
-       kind="sig" means we want to have a value for each coordinate
-       in the signal dimensions (i.e. a value for each pixel of the diffraction patterns).
-       We name our buffer 'maxbuf'.
-       """
-       return {
-           'maxbuf': BufferWrapper(
-               kind="sig", dtype="float32"
-           )
-       }
-
-   def make_max(frame, maxbuf):
-       """
-       In this function, we have a frame and the buffer `maxbuf` available, which we declared above.
-       This function is called for all frames / diffraction patterns in the data set. The maxbuf is
-       a partial result, and all partial results will later be merged (see below).
-
-       In this case, we determine the maximum from the current maximum and the current frame, for each
-       pixel in the diffraction pattern.
-
-       Notes:
-
-        - You cannot rely on any particular order of frames this function is called in.
-        - Your function should be pure, that is, it should not have side effects and should
-          only depend on it's input parameters.
-       """
-       maxbuf[:] = np.maximum(frame, maxbuf)
-
-   def max_merge(dest, src):
-       """
-       merge two partial results, from src into dest
-       """
-       dest['maxbuf'][:] = np.maximum(dest['maxbuf'], src['maxbuf'])
-
-   ctx = Context()
-   ds = ctx.load("...")
-   res = ctx.run_udf(
-       dataset=ds,
-       fn=make_max,
-       make_buffers=make_buffer,
-       merge=max_merge,
-   )
+.. include:: udf/max.py
+   :code:
 
 
 For a more complete example, please have a look at the functions implemented in `libertem.udf`,
@@ -173,6 +94,12 @@ but many CPUs have larger L3 caches. As the L3 cache is shared between cores, an
 to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
 
 TODO: documentation on implementing `process_tile`
+
+Debugging
+---------
+
+TODO: `InlineJobExecutor`, `%pdb on`, common pitfalls, ...
+
 
 API Reference
 -------------

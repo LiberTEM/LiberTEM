@@ -6,7 +6,7 @@ from libertem.udf.base import UDF
 from libertem.udf.stddev import merge as merge_stddev
 
 
-PCA = collections.namedtuple('PCA', ['sum_im', 'var', 'N',  'n_components', 'singular_vals'])
+PCA = collections.namedtuple('PCA', ['sum_im', 'var', 'N', 'singular_vals', 'components'])
 
 
 def flip_svd(U, V):
@@ -37,6 +37,54 @@ def flip_svd(U, V):
     V *= signs[:, np.newaxis]
 
     return U, V
+
+
+def johnson_lindenstrauss(num_frames, epsilon=0.1):
+    """
+    Compute the lower bound on the dmension
+    needed for the random projection to work within
+    reasonable error bound
+    
+    Parameters
+    ----------
+    num_frames : int
+        Number of diffraction frames
+        (i.e., number of rows in the data)
+
+    Returns
+    -------
+    lower_bound : int
+        Lower bound on the needed number of features
+    """
+    return (4 * np.log(num_frames) /
+        ((epsilon ** 2) / 2 - (epsilon ** 3) / 2)).astype(np.int)
+
+
+def random_projection(X):
+    """
+    Perform random projection on the data matrix X
+    to obtain a matrix X' in the smaller embedding dimension
+    
+    Parameters
+    ----------
+    X : numpy.array
+        Data matrix 
+
+    desired_dim : int
+        Desired number of features (dimension of the columns of X)
+        to which the dimension of X gets reduced
+
+    Returns
+    -------
+    X : numpy.array
+        Projected data matrix
+    """
+    n_frames, n_features = X.shape
+    reduced_dim = johnson_lindenstrauss(n_frames) # minimum number of dimensions
+
+    gaussian_projection = np.random.normal(size=(n_features, reduced_dim))
+
+    return X.dot(gaussian_projection)
 
 
 def incremental_pca(prev_result, data):
@@ -83,17 +131,26 @@ def incremental_pca(prev_result, data):
 
     n_components = prev_result.n_components
     singular_vals = D[:n_components]
+    components = V[:n_components]
 
     return pca(
             N=n_total,
             sum_im=total_mean * n_total,
             var=total_var,
-            n_components=n_components,
-            singular_vals=singular_vals
+            singular_vals=singular_vals,
+            components=components
         )
 
 
-class Pca(UDF):
+def run_pca(ctx, dataset):
+    """
+    """
+    pass_results = ctx.run_udf(
+        dataset=dataset,
+        fn=)
+class Pca(UDF, n_components):
+
+    self.n_components = n_components
 
     def get_result_buffers(self):
         """
@@ -101,14 +158,11 @@ class Pca(UDF):
 
         Returns
         -------
-        A dictionary that maps number of components, mean, variance,
-        number of frames, and singular values matrix to the corresponding
+        A dictionary that maps mean, variance, number of frames, 
+        singular values, and Principal Component matrix to the corresponding
         BufferWrapper objects
         """
         return {
-            'n_components': self.buffer(
-                kind='single', dtype='int32'
-                ),
             'mean': self.buffer(
                 kind='sig', dtype='float32'
                 ),
@@ -119,6 +173,9 @@ class Pca(UDF):
                 kind='single', dtype='float32'
                 ),
             'singular_vals': self.buffer(
+                kind='sig', extra_shape=(n_components,), dtype='float32'
+                ),
+            'components': self.buffer(
                 kind='sig', dtype='float32'
                 )
             }
@@ -147,25 +204,26 @@ class Pca(UDF):
                     mean=dest['mean'][:],
                     num_frame=dest['num_frame'][:],
                     singular_val=dest['singular_vals'][:],
-                    n_components=dest['n_components'][:]
+                    components=dest['components'][:]
                     )
+
         new = pca(
                     var=src['var'][:],
                     mean=src['mean'][:],
                     num_frame=src['num_frame'][:],
                     singular_val=src['singular_vals'][:],
-                    n_components=src['n_components'][:]
+                    components=src['components'][:]
                     )
 
-        compute_merge = IncrementalPCA(prev, new)
+        compute_merge = incremental_pca(prev, new)
 
         dest['var'][:] = compute_merge.var
         dest['mean'][:] = compute_merge.sum_im / compute_merge.N
         dest['num_frame'][:] = compute_merge.N
         dest['singular_vals'][:] = compute_merge.singular_vals
-        dest['n_components'][:] = compute_merge.n_components
+        dest['components'][:][:self.n_components] = compute_merge.components
 
-    def process_tile(self, tile):
+    def process_frame(self, frame):
         """
         Given a tile, update parameters related to PCA
 
@@ -178,31 +236,31 @@ class Pca(UDF):
             sum_im=self.results.mean * self.results.N,
             var=self.results.var,
             N=self.results.num_frame,
-            n_components=self.results.n_components,
-            singular_values=self.results.singular_vals
+            singular_values=self.results.singular_vals,
+            components=self.results.components
             )
 
         sig_dim = self.results.singular_vals.shape
-        num_frame = tile.shape[0]
+        num_frame = frame.shape[0]
 
         new = pca(
-            sum_im=np.sum(tile, axis=0),
-            var=np.var(tile, axis=0),
+            sum_im=np.sum(frame, axis=0),
+            var=np.var(frame, axis=0),
             N=num_frame,
-            n_components=self.results.n_components,
-            singular_values=np.zeros(sig_dim)
+            singular_values=np.zeros(sig_dim),
+            components=np.zeros(sig_dim)
             )
 
         compute_merge = IncrementalPCA(prev, new)
-
+        n_components = 
         self.results.var[:] = compute_merge.var
         self.results.mean[:] = compute_merge.sum_im / compute_merge.N
         self.results.num_frame[:] = compute_merge.N
         self.results.singular_vals[:] = compute_merge.singular_vals
+        self.results.components[:][:self.n_components] = compute_merge.components
 
-
-def run_pca(ctx, dataset, roi=None):
-    pcajob = PCA()
+def run_pca(ctx, dataset, n_components, roi=None):
+    pcajob = PCA(n_components)
     pass_results = ctx.run_udf(dataset=dataset,
                             udf=pcajob,
                             roi=roi)

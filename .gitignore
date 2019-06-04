@@ -18,3 +18,4 @@ AppDir
 Miniconda3-latest-Linux-x86_64.sh
 MANIFEST
 .vscode
+pip-wheel-metadata

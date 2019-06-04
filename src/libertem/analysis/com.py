@@ -75,7 +75,6 @@ class COMAnalysis(BaseMasksAnalysis):
         cx = self.parameters['cx']
         cy = self.parameters['cy']
         r = self.parameters['r']
-        dtype = self.dtype
 
         def disk_mask():
             return masks.circular(
@@ -90,12 +89,10 @@ class COMAnalysis(BaseMasksAnalysis):
             lambda: masks.gradient_x(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
-                dtype=dtype,
             ) * disk_mask(),
             lambda: masks.gradient_y(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
-                dtype=dtype,
             ) * disk_mask(),
         ]
 
@@ -114,4 +111,6 @@ class COMAnalysis(BaseMasksAnalysis):
             'cy': cy,
             'r': r,
             'use_sparse': use_sparse,
+            'mask_count': 3,
+            'mask_dtype': np.float32,
         }

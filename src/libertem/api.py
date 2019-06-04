@@ -72,7 +72,8 @@ class Context:
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
-    def create_mask_job(self, factories, dataset, use_sparse=None, length=None):
+    def create_mask_job(self, factories, dataset, use_sparse=None,
+                        mask_count=None, mask_dtype=None, dtype=None):
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -93,9 +94,18 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        length
-            Specify the number of masks if a single function is used so that the number of masks
-            can be determined without calling the function.
+        mask_count (optional)
+            Specify the number of masks if a single factory function is used so that the number of
+            masks can be determined without calling the factory function.
+        mask_dtype (optional)
+            Specify the dtype of the masks so that mask dtype
+            can be determined without calling the mask factory functions. This can be used to
+            override the mask dtype in the result dtype determination. As an example, setting
+            this to np.float32 means that masks of type float64 will not switch the calculation
+            and result dtype to float64 or complex128.
+        dtype (optional)
+            Specify the dtype to do the calculation in. Integer dtypes are possible if the numpy
+            casting rules allow this for source and mask data.
 
         Examples
         --------
@@ -112,10 +122,16 @@ class Context:
         >>> result = ctx.run(job)
         """
         return ApplyMasksJob(
-            dataset=dataset, mask_factories=factories, use_sparse=use_sparse, length=length
+            dataset=dataset,
+            mask_factories=factories,
+            use_sparse=use_sparse,
+            mask_count=mask_count,
+            mask_dtype=mask_dtype,
+            dtype=dtype,
         )
 
-    def create_mask_analysis(self, factories, dataset, use_sparse=None, length=None):
+    def create_mask_analysis(self, factories, dataset, use_sparse=None,
+                             mask_count=None, mask_dtype=None, dtype=None):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -140,9 +156,18 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        length
-            Specify the number of masks if a single function is used so that the number of masks
-            can be determined without calling the function.
+        mask_count (optional)
+            Specify the number of masks if a single factory function is used so that the number of
+            masks can be determined without calling the factory function.
+        mask_dtype (optional)
+            Specify the dtype of the masks so that mask dtype
+            can be determined without calling the mask factory functions. This can be used to
+            override the mask dtype in the result dtype determination. As an example, setting
+            this to np.float32 means that masks of type float64 will not switch the calculation
+            and result dtype to float64 or complex128.
+        dtype (optional)
+            Specify the dtype to do the calculation in. Integer dtypes are possible if the numpy
+            casting rules allow this for source and mask data.
 
         Examples
         --------
@@ -161,7 +186,12 @@ class Context:
         """
         return MasksAnalysis(
             dataset=dataset,
-            parameters={"factories": factories, "use_sparse": use_sparse, "length": length},
+            parameters={
+                "factories": factories,
+                "use_sparse": use_sparse,
+                "mask_count": mask_count,
+                "mask_dtype": mask_dtype,
+                "dtype": dtype},
         )
 
     def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):

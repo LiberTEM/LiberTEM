@@ -1,4 +1,3 @@
-import numpy as np
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
 from libertem.job.masks import ApplyMasksJob
@@ -11,21 +10,19 @@ class BaseMasksAnalysis(BaseAnalysis):
     Overwrite  ``get_use_sparse`` to return True to calculate with sparse mask matrices.
     """
 
-    @property
-    def dtype(self):
-        if np.dtype(self.dataset.dtype).kind in ('f', 'c'):
-            return self.dataset.dtype
-        return np.dtype("float32")
-
     def get_job(self):
         mask_factories = self.get_mask_factories()
         use_sparse = self.get_use_sparse()
-        length = self.get_preset_length()
+        mask_count = self.get_preset_mask_count()
+        mask_dtype = self.get_preset_mask_dtype()
+        dtype = self.get_preset_dtype()
         job = ApplyMasksJob(
             dataset=self.dataset,
             mask_factories=mask_factories,
             use_sparse=use_sparse,
-            length=length)
+            mask_count=mask_count,
+            mask_dtype=mask_dtype,
+            dtype=dtype)
         return job
 
     def get_mask_factories(self):
@@ -34,8 +31,14 @@ class BaseMasksAnalysis(BaseAnalysis):
     def get_use_sparse(self):
         return self.parameters.get('use_sparse', None)
 
-    def get_preset_length(self):
-        return self.parameters.get('length', None)
+    def get_preset_mask_count(self):
+        return self.parameters.get('mask_count', None)
+
+    def get_preset_mask_dtype(self):
+        return self.parameters.get('mask_dtype', None)
+
+    def get_preset_dtype(self):
+        return self.parameters.get('dtype', None)
 
 
 class MasksAnalysis(BaseMasksAnalysis):

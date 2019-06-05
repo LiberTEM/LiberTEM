@@ -11,7 +11,7 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
 
     Parameters
     ----------
-    centreX, centreY : float
+    centerX, centerY : float
         Centre point of the mask.
     imageSizeX, imageSizeY : int
         Size of the image to be masked.
@@ -75,7 +75,7 @@ def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSiz
     return sparse.COO(
         data=data[selector],
         coords=(coord_mask[selector], coord_y[selector], coord_x[selector]),
-        shape=(max(mask_index) + 1, imageSizeY, imageSizeX)
+        shape=(int(max(mask_index) + 1), imageSizeY, imageSizeX)
     )
 
 

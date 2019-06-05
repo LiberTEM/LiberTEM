@@ -56,9 +56,7 @@ class RingMaskAnalysis(BaseMasksAnalysis):
         cy = parameters.get('cy', detector_y / 2)
         ro = parameters.get('ro', min(detector_y, detector_x) / 2)
         ri = parameters.get('ri', ro * 0.8)
-        use_sparse = parameters.get('use_sparse', None)
-        if use_sparse is None:
-            use_sparse = masks.use_sparse(np.pi * (ro**2 - ri**2), detector_y * detector_x)
+        use_sparse = parameters.get('use_sparse', False)
 
         return {
             'cx': cx,

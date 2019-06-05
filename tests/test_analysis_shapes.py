@@ -41,13 +41,6 @@ def test_disk_defaults(lt_ctx, ds_random):
     )
 
 
-def test_disk_sparse(lt_ctx, ds_random):
-    analysis = lt_ctx.create_disk_analysis(dataset=ds_random, cx=8, cy=8, r=1)
-    job = analysis.get_job()
-    assert analysis.get_use_sparse()
-    assert job.masks.use_sparse
-
-
 def test_ring_1(lt_ctx, ds_random):
     analysis = lt_ctx.create_ring_analysis(dataset=ds_random, cx=8, cy=8, ri=5, ro=8)
     results = lt_ctx.run(analysis)
@@ -58,13 +51,6 @@ def test_ring_1(lt_ctx, ds_random):
         results.intensity.raw_data,
         expected,
     )
-
-
-def test_ring_sparse(lt_ctx, ds_random):
-    analysis = lt_ctx.create_ring_analysis(dataset=ds_random, cx=8, cy=8, ri=1, ro=2)
-    job = analysis.get_job()
-    assert analysis.get_use_sparse()
-    assert job.masks.use_sparse
 
 
 def test_ring_3d_ds(lt_ctx):
@@ -140,13 +126,6 @@ def test_point_defaults(lt_ctx, ds_random):
         results.intensity.raw_data,
         expected,
     )
-
-
-def test_point_sparse(lt_ctx, ds_random):
-    analysis = lt_ctx.create_point_analysis(dataset=ds_random)
-    job = analysis.get_job()
-    assert analysis.get_use_sparse()
-    assert job.masks.use_sparse
 
 
 def test_disk_complex(lt_ctx, ds_complex):

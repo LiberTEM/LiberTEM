@@ -225,18 +225,3 @@ def test_com_default_params(lt_ctx):
         dataset=dataset,
     )
     lt_ctx.run(analysis)
-
-
-def test_com_sparse(lt_ctx):
-    data = _mk_random(size=(16, 16, 16, 16))
-    dataset = MemoryDataSet(
-        data=data.astype("<u2"),
-        tileshape=(1, 16, 16),
-        num_partitions=16,
-        sig_dims=2,
-    )
-
-    analysis = lt_ctx.create_com_analysis(dataset=dataset, cx=8, cy=8, mask_radius=1)
-    job = analysis.get_job()
-    assert analysis.get_use_sparse()
-    assert job.masks.use_sparse

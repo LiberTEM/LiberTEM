@@ -106,7 +106,6 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.set_shape_partition(partition, roi)
             buf.allocate()
-            assert buf._shape[0] <= partition.shape[0]
 
     def allocate_for_full(self, dataset, roi):
         for k, buf in self._get_buffers():

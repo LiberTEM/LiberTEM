@@ -50,7 +50,7 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
         Outer radius in pixels of a ring to mask region of interest of SD image to delete outliers
         for peak finding
 
-    real_center: tuple, optional
+    center: tuple, optional
         (y,x) - pixels, coordinates of a ring to mask region of interest of SD image 
         to delete outliers for peak finding
 

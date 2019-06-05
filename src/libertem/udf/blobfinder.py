@@ -288,7 +288,7 @@ def run_blobfinder(ctx, dataset, parameters, roi=None):
     sum_job = SumFramesJob(dataset=dataset)
     sum_result = ctx.run(sum_job)
 
-    sum_result = log_scale(sum_result)
+    sum_result = log_scale(sum_result, out=None)
 
     peaks = get_peaks(
         parameters=parameters,

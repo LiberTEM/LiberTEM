@@ -116,7 +116,7 @@ class MaskContainer(object):
         # we should know the length without generating the mask stack
         self._length = count
         self._dtype = dtype
-        self.use_sparse = use_sparse
+        self._use_sparse = use_sparse
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
@@ -177,6 +177,13 @@ class MaskContainer(object):
         else:
             return self._dtype
 
+    @property
+    def use_sparse(self):
+        if self._use_sparse is None:
+            # Computing the masks sets _use_sparse
+            self.computed_masks
+        return self._use_sparse
+
     def _compute_masks(self):
         """
         Call mask factories and combine to mask stack
@@ -214,8 +221,8 @@ class MaskContainer(object):
                     default_sparse = False
                 mask_slices.append(m)
 
-        if self.use_sparse is None:
-            self.use_sparse = default_sparse
+        if self._use_sparse is None:
+            self._use_sparse = default_sparse
 
         if self.use_sparse:
             # Conversion to correct back-end will happen later

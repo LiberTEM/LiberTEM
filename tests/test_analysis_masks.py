@@ -609,7 +609,7 @@ def test_uses_scipy_sparse(lt_ctx):
     tiles = job.dataset.get_partitions()
     tile = next(tiles)
 
-    assert sp.is_sparse(job.masks.get(tile, job.masks.dtype))
+    assert sp.issparse(job.masks.get(tile, job.masks.dtype))
 
 
 def test_uses_sparse_pydata(lt_ctx):

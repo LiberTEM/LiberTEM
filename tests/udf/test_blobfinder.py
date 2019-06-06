@@ -119,7 +119,7 @@ def test_run_refine_fastmatch(lt_ctx):
 
     params = {
         'radius': 10,
-        'padding': 0.2,
+        'padding': 0.5,
         'mask_type': 'radial_gradient',
     }
 
@@ -159,7 +159,7 @@ def test_run_refine_affinematch(lt_ctx):
 
     params = {
         'radius': 10,
-        'padding': 0.2,
+        'padding': 0.5,
         'mask_type': 'radial_gradient',
         'affine': True,
     }
@@ -182,8 +182,8 @@ def test_run_refine_affinematch(lt_ctx):
     )
 
     assert np.allclose(res['zero'].data[0], zero, atol=0.5)
-    assert np.allclose(res['a'].data[0], [1, 0], atol=0.01)
-    assert np.allclose(res['b'].data[0], [0, 1], atol=0.01)
+    assert np.allclose(res['a'].data[0], [1, 0], atol=0.05)
+    assert np.allclose(res['b'].data[0], [0, 1], atol=0.05)
 
 
 def test_run_refine_sparse(lt_ctx):
@@ -196,10 +196,10 @@ def test_run_refine_sparse(lt_ctx):
 
     params = {
         'radius': 10,
-        'padding': 0.2,
+        'padding': 0.5,
         'mask_type': 'radial_gradient',
         'method': 'sparse',
-        'steps': 3
+        'steps': 7
     }
 
     data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])

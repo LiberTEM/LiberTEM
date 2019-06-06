@@ -496,10 +496,7 @@ class FastmatchMixin(RefinementMixin):
         super().__init__(*args, **kwargs)
 
     def postprocess(self):
-<<<<<<< HEAD
         super().postprocess()
-=======
->>>>>>> Postprocessing interface for UDFs
         p = self.params
         r = self.results
         for index in range(len(self.results.centers)):
@@ -513,11 +510,7 @@ class FastmatchMixin(RefinementMixin):
                 b=p.start_b,
                 parameters=p,
             )
-<<<<<<< HEAD
             self.apply_match(index, match)
-=======
-            self.apply_match(index, match)        
->>>>>>> Postprocessing interface for UDFs
 
 
 class AffineMixin(RefinementMixin):
@@ -536,10 +529,7 @@ class AffineMixin(RefinementMixin):
         super().__init__(*args, **kwargs)
 
     def postprocess(self):
-<<<<<<< HEAD
         super().postprocess()
-=======
->>>>>>> Postprocessing interface for UDFs
         p = self.params
         r = self.results
         for index in range(len(self.results.centers)):

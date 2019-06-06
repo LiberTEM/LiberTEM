@@ -54,13 +54,13 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
         for peak finding
 
     center: tuple, optional
-        (y,x) - pixels, coordinates of a ring to mask region of interest of SD image 
+        (y,x) - pixels, coordinates of a ring to mask region of interest of SD image
         to delete outliers for peak finding
 
     Returns
     -------
     pass_results: dict
-        Returns a feature vector for each frame. 
+        Returns a feature vector for each frame.
         "1" - denotes presence of peak for current frame for given possible peak position,
         "0" - absence of peak for current frame for given possible peak position,
         To return 2-D array use pass_results['feature_vec'].data
@@ -82,7 +82,7 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
         masked_sstd = sstd
     coordinates = peak_local_max(masked_sstd, num_peaks=num, min_distance=0)
     udf = FeatureVecMakerUDF(
-        num=num, delta=delta, center=center, rad_in=rad_in, rad_out=rad_out, 
+        num=num, delta=delta, center=center, rad_in=rad_in, rad_out=rad_out,
         savg=savg, coordinates=coordinates
         )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

@@ -209,6 +209,23 @@ class UDFPartitionMixin:
         raise NotImplementedError()
 
 
+class UDFPostprocessMixin:
+    def postprocess(self):
+        """
+        Implement this method to postprocess the result data for a partition.
+        
+        This can be useful in combination with process_tile() to implement
+        a postprocessing step that requires the reduced results for whole frames.
+
+        Data available in this method:
+
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
+        """
+        raise NotImplementedError()
+
+
 class UDFBase:
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
@@ -467,6 +484,10 @@ class UDFRunner:
 
         if method == 'partition':
             self._udf.process_partition(partition_data)
+
+        if hasattr(self._udf, 'postprocess'):
+            self._udf.set_views_for_partition(partition)
+            self._udf.postprocess()
 
         self._udf.cleanup()
         self._udf.clear_views()

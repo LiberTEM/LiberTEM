@@ -272,10 +272,17 @@ export enum AnalysisTypes {
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
     PICK_FRAME = "PICK_FRAME",
+    APPLY_FFT_MASK="APPLY_FFT_MASK",
+    FFTSUM_FRAMES="FFTSUM_FRAMES"
 }
 
 export interface RingMaskDetails {
     type: AnalysisTypes.APPLY_RING_MASK,
+    parameters: MaskDefRing,
+}
+
+export interface FFTDetails {
+    type: AnalysisTypes.APPLY_FFT_MASK,
     parameters: MaskDefRing,
 }
 
@@ -305,7 +312,7 @@ export interface PickFrameDetails {
 }
 
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | FFTDetails;
 
 export interface StartJobRequest {
     job: {

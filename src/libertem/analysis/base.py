@@ -50,6 +50,7 @@ class AnalysisResultSet(object):
 
 
 class BaseAnalysis(object):
+    TYPE = 'JOB'
     def __init__(self, dataset, parameters):
         self.dataset = dataset
         self.parameters = self.get_parameters(parameters)

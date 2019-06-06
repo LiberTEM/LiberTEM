@@ -14,7 +14,11 @@ const frameViewModeOptions = [
     {
         text: "Pick",
         value: AnalysisTypes.PICK_FRAME,
-    }
+    },
+    {
+        text: "FFT Average",
+        value: AnalysisTypes.FFTSUM_FRAMES,
+    },
 ]
 
 const mapDispatchToProps = {

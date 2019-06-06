@@ -45,6 +45,18 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetOpen): 
                 }
             }
         }
+        case AnalysisTypes.APPLY_FFT_MASK: {
+            return {
+                type: analysisType,
+                parameters: {
+                    shape: "ring",
+                    cx: width / 2,
+                    cy: height / 2,
+                    ri: minLength / 4,
+                    ro: minLength / 2,
+                }
+            }
+        }
         case AnalysisTypes.CENTER_OF_MASS: {
             return {
                 type: analysisType,

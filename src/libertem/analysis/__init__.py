@@ -5,7 +5,7 @@ from .ring import RingMaskAnalysis
 from .point import PointMaskAnalysis
 from .masks import MasksAnalysis
 from .raw import PickFrameAnalysis
-
+from .sumfft import SumfftAnalysis
 __all__ = [
     'SumAnalysis',
     'COMAnalysis',
@@ -14,4 +14,5 @@ __all__ = [
     'PointMaskAnalysis',
     'MasksAnalysis',
     'PickFrameAnalysis',
+    'SumfftAnalysis'
 ]

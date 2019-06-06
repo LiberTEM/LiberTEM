@@ -63,4 +63,16 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         short: "Pick frame",
         showInUI: false,
     },
+
+    [AnalysisTypes.APPLY_FFT_MASK]: {
+        long: "Pick a single frame",
+        short: "FFT",
+        showInUI: true,
+    },
+    
+    [AnalysisTypes.FFTSUM_FRAMES]: {
+        long: "Create a sum of all detector frames",
+        short: "Sum all frames",
+        showInUI: false,
+    }
 }

@@ -1,28 +1,31 @@
-import functools
-
-from libertem.common.buffers import BufferWrapper
+from libertem.udf import UDF
 from libertem.masks import _make_circular_mask
 from libertem.udf.stddev import run_stddev
+
 from skimage.feature import peak_local_max
 
 
-def make_result_buffers(coordinates):
-    return {
-        'feature_vec': BufferWrapper(
-            kind="nav", extra_shape=(coordinates.shape[0],), dtype="float32"
-        ),
-    }
+class FeatureVecMakerUDF(UDF):
+    def get_result_buffers(self):
+        coordinates = self.params.coordinates
+        return {
+            'feature_vec': self.buffer(
+                kind="nav", extra_shape=(coordinates.shape[0],), dtype="bool"
+            ),
+        }
+
+    def process_frame(self, frame):
+        delta = self.params.delta
+        savg = self.params.savg
+        coordinates = self.params.coordinates
+        ref = savg[coordinates[:, 0], coordinates[:, 1]]
+        for j in range(0, coordinates.shape[0]):
+            if frame[coordinates[j, 0], coordinates[j, 1]]-ref[j] > delta:
+                self.results.feature_vec[j] = 1
+        return
 
 
-def vec_form(frame, coordinates, savg, delta, feature_vec):
-    ref = savg[coordinates[:, 0], coordinates[:, 1]]
-    for j in range(0, coordinates.shape[0]):
-        if frame[coordinates[j, 0], coordinates[j, 1]]-ref[j] > delta:
-            feature_vec[j] = 1
-    return
-
-
-def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out=None):
+def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out=None, roi=None):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.
     Parameters
@@ -78,11 +81,10 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
     else:
         masked_sstd = sstd
     coordinates = peak_local_max(masked_sstd, num_peaks=num, min_distance=0)
-    vec_form_ = functools.partial(vec_form, coordinates=coordinates, delta=delta, savg=savg)
-    pass_results = ctx.run_udf(
-        dataset=dataset,
-        make_buffers=functools.partial(make_result_buffers, coordinates=coordinates),
-        fn=vec_form_,
-    )
+    udf = FeatureVecMakerUDF(
+        num=num, delta=delta, center=center, rad_in=rad_in, rad_out=rad_out, 
+        savg=savg, coordinates=coordinates
+        )
+    pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     return (pass_results, coordinates)

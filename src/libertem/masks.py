@@ -2,6 +2,8 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 
+from libertem.utils import make_polar
+
 
 def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
     """
@@ -9,7 +11,7 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
 
     Parameters
     ----------
-    centreX, centreY : float
+    centerX, centerY : float
         Centre point of the mask.
     imageSizeX, imageSizeY : int
         Size of the image to be masked.
@@ -73,7 +75,7 @@ def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSiz
     return sparse.COO(
         data=data[selector],
         coords=(coord_mask[selector], coord_y[selector], coord_x[selector]),
-        shape=(max(mask_index) + 1, imageSizeY, imageSizeX)
+        shape=(int(max(mask_index) + 1), imageSizeY, imageSizeX)
     )
 
 
@@ -149,6 +151,59 @@ def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
     x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
     mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
     return mask
+
+
+def polar_map(centerX, centerY, imageSizeX, imageSizeY):
+    y, x = np.mgrid[0:imageSizeY, 0:imageSizeX]
+    dy = y - centerY
+    dx = x - centerX
+    dy = dy.flatten()
+    dx = dx.flatten()
+    cartesians = np.stack((dy, dx)).T
+    polars = make_polar(cartesians)
+    return (
+        polars[:, 0].reshape((imageSizeY, imageSizeX)),
+        polars[:, 1].reshape((imageSizeY, imageSizeX))
+    )
+
+
+def radial_bins(centerX, centerY, imageSizeX, imageSizeY, radius=None, radius_inner=0, n_bins=None):
+    '''
+    Generate antialiased rings
+    '''
+    if radius is None:
+        dy = max(centerY, imageSizeY - centerY)
+        dx = max(centerX, imageSizeX - centerX)
+        radius = int(np.ceil(np.sqrt(dy**2 + dx**2))) + 1
+
+    if n_bins is None:
+        n_bins = int(np.round(radius - radius_inner))
+
+    y, x = np.ogrid[0:imageSizeY, 0:imageSizeX]
+    r, phi = polar_map(centerX, centerY, imageSizeX, imageSizeY)
+    r = r.flatten()
+
+    slices = []
+
+    jjs = np.arange(len(r), dtype=np.int64)
+
+    width = (radius - radius_inner) / n_bins
+
+    for r0 in np.linspace(radius_inner, radius - width, n_bins) + width/2:
+        diff = np.abs(r - r0)
+        # The "0.5" ensures that the bins overlap and sum up to exactly 1
+        vals = np.maximum(0, np.minimum(1, width/2 + 0.5 - diff))
+        select = vals != 0
+        slices.append(sparse.COO(shape=len(r), data=vals[select], coords=(jjs[select],)))
+    # Patch a singularity at the center
+    if radius_inner < 0.5:
+        yy = int(np.round(centerY))
+        xx = int(np.round(centerX))
+        index = yy * imageSizeX + xx
+        diff = 1 - slices[0][index] - radius_inner
+        patch = sparse.COO(shape=len(r), data=[diff], coords=[index])
+        slices[0] += patch
+    return sparse.stack(slices).reshape((-1, imageSizeY, imageSizeX))
 
 
 def background_substraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):

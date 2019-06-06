@@ -1,25 +1,25 @@
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
+from libertem.udf import UDF
 
 
-def logsum_buffer():
-    return {
-        'logsum': BufferWrapper(
-            kind='sig', dtype='float32'
-            ),
-    }
+class LogsumUDF(UDF):
+    # FIXME dummy __init__ for docstring
+    def get_result_buffers(self):
+        return {
+            'logsum': self.buffer(
+                kind='sig', dtype='float32'
+                ),
+        }
+
+    def merge(self, dest, src):
+        dest['logsum'][:] += src['logsum'][:]
+
+    def process_frame(self, frame):
+        self.results.logsum += np.log(frame - np.min(frame) + 1)
 
 
-def logsum_merge(dest, src):
-    dest['logsum'][:] += src['logsum'][:]
-
-
-def compute_logsum(frame, logsum):
-    logsum += np.log(frame - np.min(frame) + 1)
-
-
-def run_logsum(ctx, dataset):
+def run_logsum(ctx, dataset, roi=None):
     '''
     Sum up logscaled frames
 
@@ -39,9 +39,5 @@ def run_logsum(ctx, dataset):
     sum(log10(f1) ... log10(f10)) == (10.4, 2.04)
 
     '''
-    return ctx.run_udf(
-        dataset=dataset,
-        fn=compute_logsum,
-        make_buffers=logsum_buffer,
-        merge=logsum_merge,
-    )
+    udf = LogsumUDF(dataset=dataset)
+    return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

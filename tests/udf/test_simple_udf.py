@@ -1,8 +1,24 @@
+import pickle
+
 import numpy as np
 import pytest
 
-from libertem.common.buffers import BufferWrapper
+from libertem.udf import UDF
 from utils import MemoryDataSet, _mk_random
+
+
+class PixelsumUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'pixelsum': self.buffer(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def process_frame(self, frame):
+        assert frame.shape == (16, 16)
+        assert self.results.pixelsum.shape == (1,)
+        self.results.pixelsum[:] = np.sum(frame)
 
 
 def test_sum_frames(lt_ctx):
@@ -19,21 +35,8 @@ def test_sum_frames(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-    )
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum)
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
@@ -52,21 +55,8 @@ def test_3d_ds(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-    )
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum)
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(1, 2)))
@@ -85,36 +75,34 @@ def test_kind_single(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(2, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    def counter_buffers():
-        return {
-            'counter': BufferWrapper(
-                kind="single", dtype="uint32"
-            ),
-            'sum_frame': BufferWrapper(
-                kind="single", extra_shape=(16,), dtype="float32"
-            )
-        }
+    class CounterUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'counter': self.buffer(
+                    kind="single", dtype="uint32"
+                ),
+                'sum_frame': self.buffer(
+                    kind="single", extra_shape=(16,), dtype="float32"
+                )
+            }
 
-    def count_frames(frame, counter, sum_frame):
-        counter += 1
-        sum_frame += np.sum(frame, axis=1)
+        def process_frame(self, frame):
+            self.results.counter += 1
+            self.results.sum_frame += np.sum(frame, axis=1)
 
-    def merge_counters(dest, src):
-        dest['counter'][:] += src['counter']
-        dest['sum_frame'][:] += src['sum_frame']
+        def merge(self, dest, src):
+            dest['counter'][:] += src['counter']
+            dest['sum_frame'][:] += src['sum_frame']
 
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=count_frames,
-        make_buffers=counter_buffers,
-        merge=merge_counters,
-    )
+    counter = CounterUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=counter)
     assert 'counter' in res
     assert 'sum_frame' in res
     assert res['counter'].data.shape == (1,)
     assert res['counter'].data == 16 * 16
     assert res['sum_frame'].data.shape == (16,)
-    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0,1,3)))
+    assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0, 1, 3)))
+
 
 def test_bad_merge(lt_ctx):
     """
@@ -124,27 +112,24 @@ def test_bad_merge(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
+    class BadmergeUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'pixelsum': self.buffer(
+                    kind="nav", dtype="float32"
+                )
+            }
 
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
+        def process_frame(self, frame):
+            self.results.pixelsum[:] = np.sum(frame)
 
-    def bad_merge(dest, src):
-        # bad, because it just sets a key in dest, it doesn't copy over the data to dest
-        dest['pixelsum'] = src['pixelsum']
+        def merge(self, dest, src):
+            # bad, because it just sets a key in dest, it doesn't copy over the data to dest
+            dest['pixelsum'] = src['pixelsum']
 
     with pytest.raises(TypeError):
-        lt_ctx.run_udf(
-            dataset=dataset,
-            fn=my_frame_fn,
-            merge=bad_merge,
-            make_buffers=my_buffers,
-        )
+        bm = BadmergeUDF()
+        lt_ctx.run_udf(dataset=dataset, udf=bm)
 
 
 def test_extra_dimension_shape(lt_ctx):
@@ -161,21 +146,19 @@ def test_extra_dimension_shape(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    def my_buffers():
-        return {
-            'test': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            )
-        }
+    class ExtraShapeUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'test': self.buffer(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                )
+            }
 
-    def my_frame_fn(frame, test):
-        test[:] = (1, 2)
+        def process_frame(self, frame):
+            self.results.test[:] = (1, 2)
 
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-    )
+    extra = ExtraShapeUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=extra)
 
     print(data.shape, res['test'].data.shape)
     assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
@@ -188,22 +171,8 @@ def test_roi_1(lt_ctx):
                             num_partitions=4, sig_dims=2)
     mask = np.random.choice([True, False], size=(16, 16))
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-        roi=mask,
-    )
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     expected = np.sum(data[mask, ...], axis=(-1, -2))
@@ -216,22 +185,22 @@ def test_roi_all_zeros(lt_ctx):
                             num_partitions=16, sig_dims=2)
     mask = np.zeros(data.shape[:2], dtype=bool)
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
+    assert 'pixelsum' in res
+    print(data.shape, res['pixelsum'].data.shape)
+    expected = np.sum(data[mask, ...], axis=(-1, -2))
+    assert np.allclose(res['pixelsum'].raw_data, expected)
 
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
 
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-        roi=mask,
-    )
+def test_roi_all_ones(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
+                            num_partitions=16, sig_dims=2)
+    mask = np.ones(data.shape[:2], dtype=bool)
+
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     expected = np.sum(data[mask, ...], axis=(-1, -2))
@@ -245,23 +214,21 @@ def test_roi_some_zeros(lt_ctx):
     mask = np.zeros(data.shape[:2], dtype=bool)
     mask[0] = True
 
-    def my_buffers():
-        return {
-            'pixelsum': BufferWrapper(
-                kind="nav", dtype="float32"
-            )
-        }
-
-    def my_frame_fn(frame, pixelsum):
-        pixelsum[:] = np.sum(frame)
-
-    res = lt_ctx.run_udf(
-        dataset=dataset,
-        fn=my_frame_fn,
-        make_buffers=my_buffers,
-        roi=mask,
-    )
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, roi=mask)
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     expected = np.sum(data[mask, ...], axis=(-1, -2))
     assert np.allclose(res['pixelsum'].raw_data, expected)
+
+
+def test_udf_pickle(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
+                            num_partitions=16, sig_dims=2)
+
+    partition = next(dataset.get_partitions())
+    pixelsum = PixelsumUDF()
+    pixelsum.init_result_buffers()
+    pixelsum.allocate_for_part(partition, None)
+    pickle.loads(pickle.dumps(pixelsum))

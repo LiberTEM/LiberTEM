@@ -16,7 +16,7 @@ from utils import MemoryDataSet, _mk_random
 
 @pytest.fixture
 def inline_executor():
-    return InlineJobExecutor()
+    return InlineJobExecutor(debug=True)
 
 
 @pytest.fixture

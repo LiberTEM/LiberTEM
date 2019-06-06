@@ -13,11 +13,12 @@ class MemoryReader(object):
 
 
 class MemoryFile3D(object):
-    def __init__(self, data):
+    def __init__(self, data, check_cast=True):
         self.num_frames = data.shape[0]
         self.start_idx = 0
         self.end_idx = self.num_frames
         self._data = data
+        self._check_cast = check_cast
 
     def open(self):
         pass
@@ -29,11 +30,14 @@ class MemoryFile3D(object):
         slice_ = (...,)
         if crop_to is not None:
             slice_ = crop_to.get(sig_only=True)
+        if self._check_cast:
+            assert np.can_cast(self._data.dtype, out.dtype, casting='safe'),\
+                "cannot cast safely between %s and %s" % (self._data.dtype, out.dtype)
         out[:] = self._data[(slice(start, stop),) + slice_]
 
 
 class MemoryDataSet(DataSet):
-    def __init__(self, data, tileshape, num_partitions, sig_dims=2):
+    def __init__(self, data, tileshape, num_partitions, sig_dims=2, check_cast=True):
         assert len(tileshape) == sig_dims + 1
         self.data = data
         self.tileshape = Shape(tileshape, sig_dims=sig_dims)
@@ -43,6 +47,7 @@ class MemoryDataSet(DataSet):
             shape=self.shape,
             raw_dtype=self.data.dtype,
         )
+        self._check_cast = check_cast
 
     @property
     def dtype(self):
@@ -60,7 +65,8 @@ class MemoryDataSet(DataSet):
 
     def get_partitions(self):
         fileset = FileSet3D([
-            MemoryFile3D(self.data.reshape(self.shape.flatten_nav()))
+            MemoryFile3D(self.data.reshape(self.shape.flatten_nav()),
+                         check_cast=self._check_cast)
         ])
 
         stackheight = int(np.product(self.tileshape[:-self.sig_dims]))
@@ -117,6 +123,7 @@ def _mk_random(size, dtype='float32'):
 
 
 def assert_msg(msg, msg_type, status='ok'):
+    print(msg, msg_type, status)
     assert msg['status'] == status
     assert msg['messageType'] == msg_type,\
         "expected: {}, is: {}".format(msg_type, msg['messageType'])

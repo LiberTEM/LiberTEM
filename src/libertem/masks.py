@@ -11,7 +11,7 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
 
     Parameters
     ----------
-    centreX, centreY : float
+    centerX, centerY : float
         Centre point of the mask.
     imageSizeX, imageSizeY : int
         Size of the image to be masked.
@@ -35,15 +35,6 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
     x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
     mask = x*x + y*y <= radius*radius
     return(mask)
-
-
-def use_sparse(mask_area, detector_area):
-    '''
-    Empirical tests have shown that sparse.pydata.org is competitive
-    compared to dense matrices with pytorch up to about 20 % occupancy
-    See Issue #197
-    '''
-    return mask_area < 0.2 * detector_area
 
 
 def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSizeX, imageSizeY):
@@ -75,7 +66,7 @@ def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSiz
     return sparse.COO(
         data=data[selector],
         coords=(coord_mask[selector], coord_y[selector], coord_x[selector]),
-        shape=(max(mask_index) + 1, imageSizeY, imageSizeX)
+        shape=(int(max(mask_index) + 1), imageSizeY, imageSizeX)
     )
 
 

@@ -345,13 +345,13 @@ class RefinementMixin():
         super_buffers.update(my_buffers)
         return super_buffers
 
-    def apply_match(self, match):
+    def apply_match(self, index,  match):
         r = self.results
         # We cast from float64 to float32 here
-        r.zero[:] = match.zero
-        r.a[:] = match.a
-        r.b[:] = match.b
-        r.selector[:] = match.selector
+        r.zero[index] = match.zero
+        r.a[index] = match.a
+        r.b[index] = match.b
+        r.selector[index] = match.selector
 
 
 class FastmatchMixin(RefinementMixin):
@@ -377,22 +377,21 @@ class FastmatchMixin(RefinementMixin):
         '''
         super().__init__(*args, **kwargs)
 
-    def process_frame(self, frame):
-        super().process_frame(frame)
-        r = self.results
+    def postprocess(self):
         p = self.params
-        # TODO include parameter in dummy __init__ docstring
-        match = grm.fastmatch(
-            centers=r.centers,
-            refineds=r.refineds,
-            peak_values=r.peak_values,
-            peak_elevations=r.peak_elevations,
-            zero=p.start_zero,
-            a=p.start_a,
-            b=p.start_b,
-            parameters=p  # TODO include fastmatch parameters in dummy init
-        )
-        self.apply_match(match)
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.fastmatch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                zero=p.start_zero,
+                a=p.start_a,
+                b=p.start_b,
+                parameters=p,
+            )
+            self.apply_match(index, match)        
 
 
 class AffineMixin(RefinementMixin):
@@ -410,19 +409,18 @@ class AffineMixin(RefinementMixin):
         '''
         super().__init__(*args, **kwargs)
 
-    def process_frame(self, frame):
-        super().process_frame(frame)
-        r = self.results
+    def postprocess(self):
         p = self.params
-        # TODO include parameter in dummy __init__ docstring
-        match = grm.affinematch(
-            centers=r.centers,
-            refineds=r.refineds,
-            peak_values=r.peak_values,
-            peak_elevations=r.peak_elevations,
-            indices=p.indices,
-        )
-        self.apply_match(match)
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.affinematch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                indices=p.indices,
+            )
+            self.apply_match(index, match)   
 
 
 def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):

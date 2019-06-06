@@ -2,9 +2,6 @@ import mmap
 import math
 import numpy as np
 
-from libertem.common.shape import Shape
-from libertem.common.slice import Slice
-
 
 def _alloc_aligned(size):
     # round up to 4k blocks:
@@ -55,9 +52,9 @@ class BufferWrapper(object):
         """
         Parameters
         ----------
-        kind : "nav" or "sig"
-            The rough shape of the buffer, either corresponding to the navigation
-            or the signal dimensions of the dataset
+        kind : "nav", "sig" or "single"
+            The abstract shape of the buffer, corresponding either to the navigation
+            or the signal dimensions of the dataset, or a single value.
 
         extra_shape : optional, tuple of int
             You can specify additional dimensions for your data. For example, if
@@ -70,25 +67,41 @@ class BufferWrapper(object):
         self._extra_shape = extra_shape
         self._dtype = np.dtype(dtype)
         self._data = None
+        # set to True if the data coords are global ds coords
+        self._data_coords_global = False
         self._shape = None
         self._ds_shape = None
         self._roi = None
 
-    def set_shape_partition(self, partition, roi=None):
+    def set_roi(self, roi):
+        if roi is not None:
+            roi = roi.reshape((-1,))
         self._roi = roi
-        self._shape = self._shape_for_kind(self._kind, partition.shape, roi)
+
+    def set_shape_partition(self, partition, roi=None):
+        self.set_roi(roi)
+        roi_count = None
+        if roi is not None:
+            roi_part = self._roi[partition.slice.get(nav_only=True)]
+            roi_count = np.count_nonzero(roi_part)
+            assert roi_count <= partition.shape[0]
+            assert roi_part.shape[0] == partition.shape[0]
+        self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
 
     def set_shape_ds(self, dataset, roi=None):
-        self._roi = roi
-        self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav(), roi)
+        self.set_roi(roi)
+        roi_count = None
+        if roi is not None:
+            roi_count = np.count_nonzero(self._roi)
+        self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav(), roi_count)
         self._ds_shape = dataset.shape
 
-    def _shape_for_kind(self, kind, orig_shape, roi=None):
+    def _shape_for_kind(self, kind, orig_shape, roi_count=None):
         if self._kind == "nav":
-            if roi is None:
+            if roi_count is None:
                 nav_shape = tuple(orig_shape.nav)
             else:
-                nav_shape = (np.count_nonzero(self._roi),)
+                nav_shape = (roi_count,)
             return nav_shape + self._extra_shape
         elif self._kind == "sig":
             return tuple(orig_shape.sig) + self._extra_shape
@@ -111,7 +124,7 @@ class BufferWrapper(object):
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
         wrapper = np.full(shape, np.nan, dtype=self._dtype)
-        wrapper[self._roi] = self._data
+        wrapper[self._roi.reshape(shape)] = self._data
         return wrapper
 
     @property
@@ -142,9 +155,13 @@ class BufferWrapper(object):
         constructor arguments.
         """
         assert self._data is None
-        assert buf.shape == self._shape
         assert buf.dtype == self._dtype
-        self._data = buf
+        extra = self._extra_shape
+        if not extra:
+            extra = (1,)
+        shape = (buf.size // np.product(extra),) + extra
+        self._data = buf.reshape(shape).squeeze()
+        self._data_coords_global = True
 
     def has_data(self):
         return self._data is not None
@@ -160,24 +177,7 @@ class BufferWrapper(object):
         Because _data is "compressed" if a ROI is set, we can't directly index and must
         calculate a new slice from the ROI.
         """
-        if self._roi is None:
-            return partition.slice
-        else:
-            roi = self._roi.reshape((-1,))
-            slice_ = partition.slice
-            s_o = slice_.origin[0]
-            s_s = slice_.shape[0]
-            # We need to find how many 1s there are for all previous partitions, to know
-            # the origin; then we count how many 1s there are in our partition
-            # to find our shape.
-            origin = np.count_nonzero(roi[:s_o])
-            shape = np.count_nonzero(roi[s_o:s_o + s_s])
-            sig_dims = slice_.shape.sig.dims
-            slice_ = Slice(
-                origin=(origin,) + slice_.origin[-sig_dims:],
-                shape=Shape((shape,) + tuple(slice_.shape.sig), sig_dims=sig_dims),
-            )
-            return slice_
+        return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_partition(self, partition):
         """
@@ -195,20 +195,54 @@ class BufferWrapper(object):
 
     def get_view_for_frame(self, partition, tile, frame_idx):
         """
-        get a view for a single frame in a partition-sized buffer
+        get a view for a single frame in a partition- or dataset-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self.roi_is_zero:
+            raise ValueError("cannot get view for frame with zero ROI")
         if self._kind == "sig":
-            return self._data[partition.slice.get(sig_only=True)]
+            return self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
-            result_idx = (tile.tile_slice.origin[0] + frame_idx - partition_slice.origin[0],)
+            if self._data_coords_global:
+                offset = 0
+            else:
+                offset = partition_slice.origin[0]
+            result_idx = (tile.tile_slice.origin[0] + frame_idx - offset,)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) > 0:
                 return self._data[result_idx]
             else:
                 return self._data[result_idx + (np.newaxis,)]
+        elif self._kind == "single":
+            return self._data
+
+    def get_view_for_tile(self, partition, tile):
+        """
+        get a view for a single tile in a partition-sized buffer
+        (partition-sized here means the reduced result for a whole partition,
+        not the partition itself!)
+        """
+        assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self.roi_is_zero:
+            raise ValueError("cannot get view for tile with zero ROI")
+        if self._kind == "sig":
+            return self._data[tile.tile_slice.get(sig_only=True)]
+        elif self._kind == "nav":
+            partition_slice = self._slice_for_partition(partition)
+            tile_slice = tile.tile_slice
+            if self._data_coords_global:
+                offset = 0
+            else:
+                offset = partition_slice.origin[0]
+            result_start = tile_slice.origin[0] - offset
+            result_stop = result_start + tile_slice.shape[0]
+            # shape: (1,) + self._extra_shape
+            if len(self._extra_shape) + tile_slice.shape[0] > 1:
+                return self._data[result_start:result_stop]
+            else:
+                return self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
             return self._data

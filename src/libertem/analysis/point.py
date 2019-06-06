@@ -26,7 +26,7 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         ])
 
     def get_use_sparse(self):
-        return True
+        return False
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:
@@ -38,11 +38,10 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         cy = self.parameters['cy']
 
         sig_shape = self.dataset.shape.sig
-        dtype = self.dtype
 
         def _point_inner():
             a = sparse.COO(
-                data=np.array([1], dtype=dtype),
+                data=np.array([1]),
                 coords=([int(cy)], [int(cx)]),
                 shape=sig_shape
             )
@@ -57,4 +56,6 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         return {
             'cx': cx,
             'cy': cy,
+            'mask_count': 1,
+            'mask_dtype': np.float32,
         }

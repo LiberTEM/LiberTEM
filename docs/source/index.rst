@@ -21,6 +21,7 @@ Documentation
 
    install
    usage
+   udf
    architecture
    contributing
    acknowledgments

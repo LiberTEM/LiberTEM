@@ -86,6 +86,8 @@ def test_roi_1(default_raw, lt_ctx):
         print("tile:", tile)
         tiles.append(tile)
     assert len(tiles) == 1
+    assert tiles[0].tile_slice.origin == (0, 0, 0)
+    assert tuple(tiles[0].tile_slice.shape) == (1, 128, 128)
 
 
 def test_roi_2(default_raw, lt_ctx):

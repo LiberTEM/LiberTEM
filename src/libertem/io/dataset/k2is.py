@@ -628,13 +628,17 @@ class K2ISPartition(Partition):
                 stack.enter_context(sector)
                 for sector in self._sectors
             ]
+            frame_offset = 0
+            if roi is not None:
+                roi = roi.reshape((-1,))
+                frame_offset = np.count_nonzero(roi[:self._start_frame])
             frames_read = 0
             for frame in range(self._start_frame, self._start_frame + self._num_frames):
-                if roi is not None and not roi[frame - self._start_frame]:
+                if roi is not None and not roi[frame]:
                     continue
                 origin = frame
                 if roi is not None:
-                    origin = frames_read
+                    origin = frame_offset + frames_read
                 tile_slice = Slice(
                     origin=(origin, 0, 0),
                     shape=Shape(frame_buf.shape, sig_dims=2),

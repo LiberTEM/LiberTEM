@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import Dict
 import uuid
 
+import cloudpickle
 import numpy as np
 
 from libertem.job.base import Task
@@ -58,6 +59,11 @@ class UDFData:
     def __init__(self, data):
         self._data = data
         self._views = {}
+
+    def __repr__(self):
+        return "<UDFData: %r>" % (
+            self._data
+        )
 
     def __getattr__(self, k):
         if k.startswith("_"):
@@ -407,11 +413,18 @@ class UDFTask(Task):
 
 
 class UDFRunner:
-    def __init__(self, udf):
+    def __init__(self, udf, debug=False):
         self._udf = udf
+        self._debug = debug
 
     def run_for_partition(self, partition, roi):
-        # dtype = np.dtype("float32")  # FIXME: parameter
+        # simple dtype logic for now: if data is complex or float, keep data dtype,
+        # otherwise convert to float32
+        if partition.dtype.kind in ('c', 'f'):
+            dtype = partition.dtype
+        else:
+            # integer data, convert to float for now:
+            dtype = np.dtype("float32")
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
         meta = UDFMeta(
@@ -422,13 +435,13 @@ class UDFRunner:
         self._udf.init_task_data(meta)
         if hasattr(self._udf, 'process_tile'):
             method = 'tile'
-            tiles = partition.get_tiles(full_frames=False, roi=roi)
+            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
         elif hasattr(self._udf, 'process_frame'):
             method = 'frame'
-            tiles = partition.get_tiles(full_frames=True, roi=roi)
+            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
         elif hasattr(self._udf, 'process_partition'):
             method = 'partition'
-            tiles = partition.get_tiles(full_frames=False, roi=roi)
+            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
             raise NotImplementedError("process_partition is not implemented yet")
         else:
             raise TypeError("UDF should implement one of the `process_*` methods")
@@ -457,9 +470,20 @@ class UDFRunner:
 
         self._udf.cleanup()
         self._udf.clear_views()
+
+        if self._debug:
+            try:
+                cloudpickle.loads(cloudpickle.dumps(partition))
+            except TypeError:
+                raise TypeError("could not pickle partition")
+            try:
+                cloudpickle.loads(cloudpickle.dumps(self._udf.results))
+            except TypeError:
+                raise TypeError("could not pickle results")
+
         return self._udf.results, partition
 
-    def run_for_dataset(self, dataset, executor, roi):
+    def run_for_dataset(self, dataset, executor, roi=None):
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
@@ -476,6 +500,24 @@ class UDFRunner:
         self._udf.clear_views()
 
         return self._udf.results
+
+    async def run_for_dataset_async(self, dataset, executor, roi=None):
+        # FIXME: code duplication?
+        self._udf.init_result_buffers()
+        self._udf.allocate_for_full(dataset, roi)
+
+        tasks = self._make_udf_tasks(dataset, roi)
+
+        cancel_id = str(uuid.uuid4())
+
+        async for part_results, partition in executor.run_tasks(tasks, cancel_id):
+            self._udf.set_views_for_partition(partition)
+            self._udf.merge(
+                dest=self._udf.results.get_proxy(),
+                src=part_results.get_proxy()
+            )
+            self._udf.clear_views()
+            yield self._udf.results
 
     def _roi_for_partition(self, roi, partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

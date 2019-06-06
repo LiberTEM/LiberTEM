@@ -135,7 +135,12 @@ def test_signed(lt_ctx):
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    # NOTE: we allow casting from int32 to float32 here, and may lose some
+    # precision in case of data with large dynamic range
+    dataset = MemoryDataSet(
+        data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+        check_cast=False,
+    )
 
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 

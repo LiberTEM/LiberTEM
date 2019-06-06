@@ -1,5 +1,4 @@
 import os
-import time
 import logging
 import asyncio
 from functools import partial
@@ -12,8 +11,6 @@ import tornado.escape
 import psutil
 
 import libertem
-from .messages import Message
-from libertem.executor.base import JobCancelledError
 from libertem.io.dataset.base import DataSetException
 
 log = logging.getLogger(__name__)
@@ -48,69 +45,6 @@ async def run_blocking(fn, *args, **kwargs):
     return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
 
-class RunJobMixin(object):
-    async def run_job(self, uuid, ds, job, full_result):
-        self.data.register_job(uuid=uuid, job=job)
-        executor = self.data.get_executor()
-        msg = Message(self.data).start_job(
-            job_id=uuid,
-        )
-        log_message(msg)
-        self.write(msg)
-        self.finish()
-        self.event_registry.broadcast_event(msg)
-
-        t = time.time()
-        try:
-            async for result in executor.run_job(job):
-                for tile in result:
-                    tile.reduce_into_result(full_result)
-                if time.time() - t < 0.3:
-                    continue
-                t = time.time()
-                results = yield full_result
-                images = await result_images(results)
-
-                # NOTE: make sure the following broadcast_event messages are sent atomically!
-                # (that is: keep the code below synchronous, and only send the messages
-                # once the images have finished encoding, and then send all at once)
-                msg = Message(self.data).task_result(
-                    job_id=uuid,
-                    num_images=len(results),
-                    image_descriptions=[
-                        {"title": result.title, "desc": result.desc}
-                        for result in results
-                    ],
-                )
-                log_message(msg)
-                self.event_registry.broadcast_event(msg)
-                for image in images:
-                    raw_bytes = image.read()
-                    self.event_registry.broadcast_event(raw_bytes, binary=True)
-        except JobCancelledError:
-            return  # TODO: maybe write a message on the websocket?
-
-        results = yield full_result
-        if self.data.job_is_cancelled(uuid):
-            return
-        images = await result_images(results)
-        if self.data.job_is_cancelled(uuid):
-            return
-        msg = Message(self.data).finish_job(
-            job_id=uuid,
-            num_images=len(results),
-            image_descriptions=[
-                {"title": result.title, "desc": result.desc}
-                for result in results
-            ],
-        )
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-        for image in images:
-            raw_bytes = image.read()
-            self.event_registry.broadcast_event(raw_bytes, binary=True)
-
-
 class CORSMixin(object):
     pass
     # FIXME: implement these when we want to support CORS later
@@ -133,6 +67,7 @@ class SharedData(object):
         self.jobs = {}
         self.job_to_id = {}
         self.dataset_to_id = {}
+        self.dataset_for_job = {}
         self.executor = None
         self.cluster_params = {}
         self.local_directory = "dask-worker-space"
@@ -204,7 +139,7 @@ class SharedData(object):
         jobs_to_remove = [
             job
             for job in self.jobs.values()
-            if self.dataset_to_id[job.dataset] == uuid
+            if self.dataset_to_id[self.dataset_for_job[job]] == uuid
         ]
         job_ids = {self.job_to_id[job]
                    for job in jobs_to_remove}
@@ -213,10 +148,11 @@ class SharedData(object):
         for job_id in job_ids:
             await self.remove_job(job_id)
 
-    def register_job(self, uuid, job):
+    def register_job(self, uuid, job, dataset):
         assert uuid not in self.jobs
         self.jobs[uuid] = job
         self.job_to_id[job] = uuid
+        self.dataset_for_job[job] = dataset
         return self
 
     async def remove_job(self, uuid):
@@ -238,9 +174,10 @@ class SharedData(object):
 
     def serialize_job(self, job_id):
         job = self.jobs[job_id]
+        dataset = self.dataset_to_id[self.dataset_for_job[job]]
         return {
             "id": job_id,
-            "dataset": self.dataset_to_id[job.dataset],
+            "dataset": dataset,
         }
 
     def serialize_jobs(self):

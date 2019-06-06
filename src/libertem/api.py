@@ -399,7 +399,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, BaseAnalysis]):
+    def run(self, job: Union[Job, BaseAnalysis], roi=None):
         """
         Run the given `Job` or `Analysis` and return the result data.
 
@@ -411,7 +411,13 @@ class Context:
         analysis = None
         if hasattr(job, "get_job"):
             analysis = job
-            job_to_run = analysis.get_job()
+            if analysis.TYPE == 'JOB':
+                job_to_run = analysis.get_job()
+            else:
+                udf_results = self.run_udf(
+                    dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
+                )
+                return analysis.get_udf_results(udf_results)
         else:
             job_to_run = job
 

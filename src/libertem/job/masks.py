@@ -99,6 +99,12 @@ class MaskContainer(object):
         self._get_masks_for_slice = {}
         self.validate_mask_functions()
 
+    def __getstate__(self):
+        # don't even try to pickle mask cache
+        state = self.__dict__
+        state['_get_masks_for_slice'] = {}
+        return state
+
     def validate_mask_functions(self):
         fns = self.mask_factories
         # 1 MB, magic number L3 cache

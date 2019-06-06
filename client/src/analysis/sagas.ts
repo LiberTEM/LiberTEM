@@ -81,6 +81,20 @@ function getAnalysisDetails(analysisType: AnalysisTypes, dataset: DatasetOpen): 
                 }
             }
         }
+        case AnalysisTypes.RADIAL_FOURIER: {
+            return {
+                type: analysisType,
+                parameters: {
+                    shape: "radial_fourier",
+                    cx: width / 2,
+                    cy: height / 2,
+                    ri: minLength / 4,
+                    ro: minLength / 2,
+                    n_bins: 1,
+                    max_order: 8
+                }
+            }
+        }
     }
     return assertNotReached("unhandeled analysis type");
 }

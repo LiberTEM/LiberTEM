@@ -63,4 +63,9 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         short: "Pick frame",
         showInUI: false,
     },
+    [AnalysisTypes.RADIAL_FOURIER]: {
+        long: "Compute a radial Fourier analysis",
+        short: "Radial Fourier",
+        showInUI: true,
+    },
 }

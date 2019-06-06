@@ -1,52 +1,53 @@
-import functools
-
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
 from libertem.masks import _make_circular_mask
+from libertem.udf import UDF
 
 
-def make_result_buffers():
-    return {
-        'intensity': BufferWrapper(
-            kind="nav", dtype="float32"
-        ),
-    }
+class CRYSTALLINITYUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'intensity': self.buffer(
+                kind="nav", dtype="float32"
+            ),
+        }
 
-
-def init_fft(partition, rad_in, rad_out, real_center, real_rad):
-    sigshape = partition.shape.sig
-    if not (real_center is None or real_rad is None):
-        real_mask = 1-1*_make_circular_mask(
-            real_center[1], real_center[0], sigshape[1], sigshape[0], real_rad
+    def get_task_data(self, meta):
+        sigshape = tuple(meta.partition_shape.sig)
+        rad_in = self.params.rad_in
+        rad_out = self.params.rad_out
+        real_center = self.params.real_center
+        real_rad = self.params.real_rad
+        if not (real_center is None or real_rad is None):
+            real_mask = 1-1*_make_circular_mask(
+                real_center[1], real_center[0], sigshape[1], sigshape[0], real_rad
+            )
+        else:
+            real_mask = None
+        fourier_mask_out = 1*_make_circular_mask(
+            sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_out
         )
-    else:
-        real_mask = None
-    fourier_mask_out = 1*_make_circular_mask(
-        sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_out
-    )
-    fourier_mask_in = 1*_make_circular_mask(
-        sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_in
-    )
-    fourier_mask = fourier_mask_out - fourier_mask_in
+        fourier_mask_in = 1*_make_circular_mask(
+            sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_in
+        )
+        fourier_mask = fourier_mask_out - fourier_mask_in
 
-    kwargs = {
-        'real_mask': real_mask,
-        'fourier_mask': fourier_mask,
-    }
-    return kwargs
+        kwargs = {
+            'real_mask': real_mask,
+            'fourier_mask': fourier_mask,
+        }
+        return kwargs
 
-
-def fft(frame, real_mask, fourier_mask, intensity):
-    if real_mask is not None:
-        maskedframe = frame*real_mask
-    else:
-        maskedframe = frame
-    intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(maskedframe)))*fourier_mask)
-    return
+    def process_frame(self, frame):
+        f_mask = self.task_data.fourier_mask
+        if self.task_data.real_mask is not None:
+            maskedframe = frame*self.task_data.real_mask
+        else:
+            maskedframe = frame
+        self.results.intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(maskedframe)))*f_mask)
 
 
-def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None):
+def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None, roi=None):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.
     Parameters
@@ -79,13 +80,9 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
         To return 2-D array use pass_results['intensity'].data
 
     """
+    udf = CRYSTALLINITYUDF(
+        rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad
+        )
+    pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
-    results = ctx.run_udf(
-        dataset=dataset,
-        make_buffers=make_result_buffers,
-        init=functools.partial(
-            init_fft, rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad),
-        fn=fft,
-    )
-
-    return results
+    return pass_results

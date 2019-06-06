@@ -276,6 +276,7 @@ def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx):
         expected[1],
     )
 
+
 def test_multi_mask_stack_force_sparse_pydata(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
@@ -611,7 +612,7 @@ def test_uses_scipy_sparse(lt_ctx):
     assert sp.is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
-def test_uses_scipy_sparse(lt_ctx):
+def test_uses_sparse_pydata(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))
     mask1 = _mk_random(size=(16, 16))

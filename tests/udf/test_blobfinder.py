@@ -210,9 +210,9 @@ def test_run_refine_sparse(lt_ctx):
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
         dataset=dataset,
-        zero=zero + np.random.normal(size=2),
-        a=a + np.random.normal(size=2),
-        b=b + np.random.normal(size=2),
+        zero=zero + np.random.normal(scale=0.5, size=2),
+        a=a + np.random.normal(scale=0.5, size=2),
+        b=b + np.random.normal(scale=0.5, size=2),
         params=params
     )
 

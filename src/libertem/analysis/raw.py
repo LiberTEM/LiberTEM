@@ -68,7 +68,7 @@ class PickFrameAnalysis(BaseAnalysis):
                     desc="the frame at %s" % (coords,),
                 )
             )
-        visualized = visualize_simple(data)
+        visualized = visualize_simple(data, logarithmic=True)
         return AnalysisResultSet([
             AnalysisResult(raw_data=data, visualized=visualized,
                            key="intensity", title="intensity",

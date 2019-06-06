@@ -40,6 +40,6 @@ class SumAnalysis(BaseAnalysis):
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.intensity,
-                           visualized=visualize_simple(udf_results.intensity),
+                           visualized=visualize_simple(udf_results.intensity, logarithmic=True),
                            key="intensity", title="intensity", desc="sum of all frames"),
         ])

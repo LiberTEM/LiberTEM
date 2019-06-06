@@ -16,31 +16,63 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         shape = tuple(self.dataset.shape.nav)
         sets = []
         orders = self.parameters['max_order'] + 1
+        n_bins = self.parameters['n_bins']
+        job_results = job_results.reshape((n_bins, orders, *shape))
+        absolute = np.absolute(job_results)
+        normal = absolute[:, 0]
+        min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
+        max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
+        angle = np.angle(job_results)
         for b in range(self.parameters['n_bins']):
-            for o in range(orders):
-                index = b * orders + 0
-                data = job_results[index].reshape(shape)
-                absolute = np.absolute(data)
-                angle = np.angle(data)
+            sets.append(
+                AnalysisResult(
+                    raw_data=absolute[b, 0],
+                    visualized=visualize_simple(absolute[b, 0]),
+                    key="absolute_%s_%s" % (b, 0),
+                    title="absolute of bin %s order %s" % (b, 0),
+                    desc="Absolute value of Fourier component",
+                )
+            )
+            for o in range(1, orders):
                 sets.append(
                     AnalysisResult(
-                        raw_data=absolute,
-                        visualized=visualize_simple(absolute),
+                        raw_data=absolute[b, o],
+                        visualized=visualize_simple(
+                            absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute
+                        ),
                         key="absolute_%s_%s" % (b, o),
                         title="absolute of bin %s order %s" % (b, o),
                         desc="Absolute value of Fourier component",
                     )
                 )
+        for b in range(self.parameters['n_bins']):
+            for o in range(orders):
                 sets.append(
                     AnalysisResult(
-                        raw_data=angle,
-                        visualized=visualize_simple(angle, colormap=cmaps['perception_circular']),
+                        raw_data=angle[b, o],
+                        visualized=visualize_simple(
+                            angle[b, o], colormap=cmaps['perception_circular']
+                        ),
                         key="phase_%s_%s" % (b, o),
                         title="phase of bin %s order %s" % (b, o),
                         desc="Phase of Fourier component",
                     )
                 )
-                f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data.imag, data.real))
+        for b in range(self.parameters['n_bins']):
+            data = job_results[b, 0]
+            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data.imag, data.real))
+            sets.append(
+                AnalysisResult(
+                    raw_data=data,
+                    visualized=f,
+                    key="complex_%s_%s" % (b, 0),
+                    title="bin %s order %s" % (b, 0),
+                    desc="Fourier component",
+                )
+            )
+            for o in range(1, orders):
+                data = job_results[b, o] / normal[b]
+                f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data.imag, data.real), vmax=max_absolute)
                 sets.append(
                     AnalysisResult(
                         raw_data=data,

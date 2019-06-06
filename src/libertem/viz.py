@@ -30,7 +30,7 @@ class Colormap2D(colors.Colormap, metaclass=abc.ABCMeta):
 
     _log = logging.getLogger(__name__ + '.Colormap3D')
 
-    def rgb_from_vector(self, vector):
+    def rgb_from_vector(self, vector, vmax=None):
         """Construct a hls tuple from three coordinates representing a 3D direction.
 
         Parameters
@@ -53,7 +53,9 @@ class Colormap2D(colors.Colormap, metaclass=abc.ABCMeta):
         phi[phi < 0] += 2 * np.pi
         # Calculate color deterministics:
         hue = phi / (2 * np.pi)
-        sat = rho / (rho.max() + 1E-30)
+        if vmax is None:
+            vmax = rho.max()
+        sat = rho / (vmax + 1E-30)
         # Calculate RGB from hue with colormap:
         rgba = np.asarray(self(hue))
         r, g, b = rgba[..., 0], rgba[..., 1], rgba[..., 2]
@@ -335,19 +337,21 @@ def interpolate_color(fraction, start, end):
     return r1, r2, r3
 
 
-def _get_norm(result, norm_cls=colors.Normalize):
+def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
     # TODO: only normalize across the area where we already have values
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
     result = result.astype(np.float32)
-    max_ = np.max(result)
-    min_ = 0
-    result_ne_zero = result[result != 0]
-    if len(result_ne_zero) > 0:
-        min_ = np.min(result_ne_zero)
-    if min_ == max_:
-        min_ = min(0, max_)
-    return norm_cls(vmin=min_, vmax=max_)
+    if vmin is None:
+        vmin = 0
+        result_ne_zero = result[result != 0]
+        if len(result_ne_zero) > 0:
+            vmin = np.min(result_ne_zero)
+    if vmax is None:
+        vmax = np.max(result)
+    if vmin == vmax:
+        vmin = min(0, vmax)
+    return norm_cls(vmin=vmin, vmax=vmax)
 
 
 def encode_image(result, save_kwargs=None):
@@ -362,7 +366,7 @@ def encode_image(result, save_kwargs=None):
     return buf
 
 
-def visualize_simple(result, colormap=None):
+def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=None):
     """
     Normalize and visualize ``result`` with ``colormap`` and save it to an image
     with parameters ``save_kwargs``.
@@ -385,9 +389,14 @@ def visualize_simple(result, colormap=None):
     BytesIO
         a buffer containing the result image (as PNG/JPG/... depending on save_kwargs)
     """
+    if logarithmic:
+        cnorm = colors.LogNorm
+        result = result - np.min(result) + 1
+    else:
+        cnorm = colors.Normalize
     if colormap is None:
         colormap = cm.gist_earth
-    norm = _get_norm(result)
+    norm = _get_norm(result, norm_cls=cnorm, vmin=vmin, vmax=vmax)
     normalized = norm(result)
     colored = colormap(normalized, bytes=True)
     return colored

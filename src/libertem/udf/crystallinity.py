@@ -4,7 +4,7 @@ from libertem.masks import _make_circular_mask
 from libertem.udf import UDF
 
 
-class CRYSTALLINITYUDF(UDF):
+class CrystallinityUDF(UDF):
     def get_result_buffers(self):
         return {
             'intensity': self.buffer(
@@ -80,7 +80,7 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
         To return 2-D array use pass_results['intensity'].data
 
     """
-    udf = CRYSTALLINITYUDF(
+    udf = CrystallinityUDF(
         rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad
         )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

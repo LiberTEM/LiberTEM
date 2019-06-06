@@ -117,6 +117,7 @@ def _mk_random(size, dtype='float32'):
 
 
 def assert_msg(msg, msg_type, status='ok'):
+    print(msg, msg_type, status)
     assert msg['status'] == status
     assert msg['messageType'] == msg_type,\
         "expected: {}, is: {}".format(msg_type, msg['messageType'])

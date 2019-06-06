@@ -33,13 +33,17 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
             'numWorkers': 2,
         }
     }
+    print("checkpoint 0")
     async with http_client.put(conn_url, json=conn_details) as response:
         assert response.status == 200
         assert (await response.json())['status'] == 'ok'
 
+    print("checkpoint 1")
+
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:
+        print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
@@ -69,6 +73,7 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
             }
         }
         async with http_client.put(job_url, json=job_data) as resp:
+            print(await resp.text())
             assert resp.status == 200
             resp_json = await resp.json()
             assert resp_json['status'] == "ok"

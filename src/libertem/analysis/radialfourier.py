@@ -137,10 +137,16 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
 
         mask_count = n_bins * (max_order + 1)
 
+        bin_width = ro - ri
+        bin_area = np.pi * ro**2 - np.pi * (ro - bin_width)**2
+
         default = 'scipy.sparse'
         # If the mask stack fits the L3 cache
         # FIXME more testing for optimum backend
         if mask_count * detector_y * detector_x < 2**19:
+            default = False
+        # Masks are actually dense
+        elif bin_area / (detector_x * detector_y) > 0.05:
             default = False
         # sparse.pydata.org is good with masks that don't cover much area
         # FIXME more testing for optimum

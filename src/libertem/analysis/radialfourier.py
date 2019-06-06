@@ -122,12 +122,16 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
             # Actually dense
             if bin_area / (detector_x * detector_y) > 0.05:
-                ring_stack = rings.todense()
+                if isinstance(rings, sparse.SparseArray):
+                    ring_stack = rings.todense()
+                else:
+                    ring_stack = rings
                 ring_stack = ring_stack[:, np.newaxis, ...] * modulator
             else:
-                rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64)
+                rings = sparse.COO(
+                    rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64))
                 ring_stack = [rings] * len(orders)
-                ring_stack = sparse.concatenate(ring_stack, axis=1)        
+                ring_stack = sparse.concatenate(ring_stack, axis=1)
                 ring_stack *= modulator
             return ring_stack.reshape((-1, detector_y, detector_x))
 

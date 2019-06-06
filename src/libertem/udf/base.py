@@ -160,7 +160,7 @@ class UDFFrameMixin:
 
 
 class UDFTileMixin:
-    def process_tile(self, tile):
+    def process_tile(self, tile, tile_slice):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -176,6 +176,10 @@ class UDFTileMixin:
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
+
+        tile_slice : Slice
+            A libertem.common.Slice instance that describes the location within the
+            dataset with navigation dimension flattened and reduced to the ROI.
         """
         raise NotImplementedError()
 
@@ -474,7 +478,7 @@ class UDFRunner:
         for tile in tiles:
             if method == 'tile':
                 self._udf.set_views_for_tile(partition, tile)
-                self._udf.process_tile(tile.data)
+                self._udf.process_tile(tile.data, tile.tile_slice)
             elif method == 'frame':
                 for frame_idx, frame in enumerate(tile.data):
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
@@ -486,7 +490,7 @@ class UDFRunner:
             self._udf.process_partition(partition_data)
 
         if hasattr(self._udf, 'postprocess'):
-            self._udf.set_views_for_partition(partition)
+            self._udf.clear_views()
             self._udf.postprocess()
 
         self._udf.cleanup()

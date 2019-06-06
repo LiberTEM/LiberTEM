@@ -46,7 +46,8 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
                     return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
             else:
                 raise ValueError(
-                    "sparse_backend %s not implemented, can be 'scipy.sparse' or 'sparse.pydata'" % sparse_backend)
+                    "sparse_backend %s not implemented, can be 'scipy.sparse' "
+                    "or 'sparse.pydata'" % sparse_backend)
         else:
             # We convert to the desired type.
             # This makes sure it is in row major, dense layout as well
@@ -62,7 +63,7 @@ class ApplyMasksJob(Job):
                 mask_dtype=None, dtype=None, *args, **kwargs):
         '''
         use_sparse can be None, True, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
-        '''        
+        '''
         super().__init__(*args, **kwargs)
         # Choose default back-end
         # If None, decide in the mask container
@@ -201,7 +202,7 @@ class MaskContainer(object):
         # and set the use_sparse property accordingly
 
         default_sparse = 'scipy.sparse'
-        
+
         if callable(self.mask_factories):
             raw_masks = self.mask_factories()
             if not is_sparse(raw_masks):
@@ -245,7 +246,7 @@ class MaskContainer(object):
         key = (dtype, sparse_backend, transpose)
         if key not in self._get_masks_for_slice:
             self._get_masks_for_slice[key] = _make_mask_slicer(
-                self.computed_masks, 
+                self.computed_masks,
                 dtype=dtype,
                 sparse_backend=sparse_backend,
                 transpose=transpose

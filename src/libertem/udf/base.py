@@ -217,7 +217,7 @@ class UDFPostprocessMixin:
     def postprocess(self):
         """
         Implement this method to postprocess the result data for a partition.
-        
+
         This can be useful in combination with process_tile() to implement
         a postprocessing step that requires the reduced results for whole frames.
 

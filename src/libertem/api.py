@@ -11,6 +11,7 @@ from libertem.common import Slice, Shape
 from libertem.executor.dask import DaskJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
+from libertem.analysis.radialfourier import RadialFourierAnalysis
 from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
@@ -216,6 +217,41 @@ class Context:
         if mask_radius is not None:
             parameters['r'] = mask_radius
         analysis = COMAnalysis(
+            dataset=dataset, parameters=parameters
+        )
+        return analysis
+
+    def create_radial_fourier_analysis(self, dataset, cx: float = None, cy: float = None,
+            ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None):
+        """
+        Calculate the Fourier transform of rings around the center.
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        cx
+            center x value
+        cy
+            center y value
+        ri
+            inner radius
+        ro
+            outer radius
+        n_bins
+            number of bins
+        max_order
+            maximum order of calculated Fourier component
+        """
+        if dataset.shape.sig.dims != 2:
+            raise ValueError("incompatible dataset: need two signal dimensions")
+        loc = locals()
+        parameters = {
+            name: loc[name]
+            for name in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']
+            if loc[name] is not None
+        }
+        analysis = RadialFourierAnalysis(
             dataset=dataset, parameters=parameters
         )
         return analysis

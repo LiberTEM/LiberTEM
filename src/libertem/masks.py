@@ -174,27 +174,38 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY, radius=None, radius_in
     r, phi = polar_map(centerX, centerY, imageSizeX, imageSizeY)
     r = r.flatten()
 
-    slices = []
-
-    jjs = np.arange(len(r), dtype=np.int64)
-
     width = (radius - radius_inner) / n_bins
+    bin_area = np.pi * (radius**2 - (radius - width)**2)
 
+    use_sparse = bin_area / (imageSizeX * imageSizeY) < 0.1
+    if use_sparse:
+        jjs = np.arange(len(r), dtype=np.int64)
+
+    slices = []
     for r0 in np.linspace(radius_inner, radius - width, n_bins) + width/2:
         diff = np.abs(r - r0)
         # The "0.5" ensures that the bins overlap and sum up to exactly 1
         vals = np.maximum(0, np.minimum(1, width/2 + 0.5 - diff))
-        select = vals != 0
-        slices.append(sparse.COO(shape=len(r), data=vals[select], coords=(jjs[select],)))
+        if use_sparse:
+            select = vals != 0
+            slices.append(sparse.COO(shape=len(r), data=vals[select], coords=(jjs[select],)))
+        else:
+            slices.append(vals.reshape((imageSizeY, imageSizeX)))
     # Patch a singularity at the center
     if radius_inner < 0.5:
         yy = int(np.round(centerY))
         xx = int(np.round(centerX))
-        index = yy * imageSizeX + xx
-        diff = 1 - slices[0][index] - radius_inner
-        patch = sparse.COO(shape=len(r), data=[diff], coords=[index])
-        slices[0] += patch
-    return sparse.stack(slices).reshape((-1, imageSizeY, imageSizeX))
+        if use_sparse:
+            index = yy * imageSizeX + xx
+            diff = 1 - slices[0][index] - radius_inner
+            patch = sparse.COO(shape=len(r), data=[diff], coords=[index])
+            slices[0] += patch
+        else:
+            slices[0][yy, xx] = 1 - radius_inner
+    if use_sparse:
+        return sparse.stack(slices).reshape((-1, imageSizeY, imageSizeX))
+    else:
+        return np.stack(slices)
 
 
 def background_substraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):

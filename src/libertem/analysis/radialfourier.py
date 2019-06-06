@@ -135,7 +135,18 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         n_bins = parameters.get('n_bins', 1)
         max_order = parameters.get('max_order', 24)
 
-        use_sparse = parameters.get('use_sparse', 'scipy.sparse')
+        mask_count = n_bins * (max_order + 1)
+
+        default = 'scipy.sparse'
+        # If the mask stack fits the L3 cache
+        # FIXME more testing for optimum backend
+        if mask_count * detector_y * detector_x < 2**19:
+            default = False
+        # sparse.pydata.org is good with masks that don't cover much area
+        # FIXME more testing for optimum
+        elif mask_count < 16:
+            default = 'sparse.pydata'
+        use_sparse = parameters.get('use_sparse', default)
 
         return {
             'cx': cx,
@@ -145,6 +156,6 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             'n_bins': n_bins,
             'max_order': max_order,
             'use_sparse': use_sparse,
-            'mask_count': n_bins * (max_order + 1),
+            'mask_count': mask_count,
             'mask_dtype': np.complex64,
         }

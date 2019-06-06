@@ -19,7 +19,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         n_bins = self.parameters['n_bins']
         job_results = job_results.reshape((n_bins, orders, *shape))
         absolute = np.absolute(job_results)
-        normal = absolute[:, 0]
+        normal = np.maximum(1, absolute[:, 0])
         min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
         max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
         angle = np.angle(job_results)

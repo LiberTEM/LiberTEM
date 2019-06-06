@@ -24,7 +24,8 @@ def xml_get_text(nodelist):
 class EMPADFile(RawFile):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._frame_size = np.product(EMPAD_DETECTOR_SIZE_RAW) * self._meta.raw_dtype.itemsize
+        self._frame_size = int(np.product(EMPAD_DETECTOR_SIZE_RAW)) * int(
+            self._meta.raw_dtype.itemsize)
 
     def readinto(self, start, stop, out, crop_to=None):
         """
@@ -153,9 +154,9 @@ class EMPADDataSet(DataSet):
     def check_valid(self):
         try:
             # check filesize:
-            framesize = np.product(EMPAD_DETECTOR_SIZE_RAW)
-            num_frames = np.product(self._scan_size)
-            expected_filesize = num_frames * framesize * np.dtype("float32").itemsize
+            framesize = int(np.product(EMPAD_DETECTOR_SIZE_RAW))
+            num_frames = int(np.product(self._scan_size))
+            expected_filesize = num_frames * framesize * int(np.dtype("float32").itemsize)
             if expected_filesize != self._filesize:
                 raise DataSetException("invalid filesize; expected %d, got %d" % (
                     expected_filesize, self._filesize
@@ -185,7 +186,7 @@ class EMPADDataSet(DataSet):
                 fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
-                num_frames=stop - start,
+                num_frames=int(stop - start),
             )
 
     def __repr__(self):

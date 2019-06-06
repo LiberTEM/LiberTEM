@@ -37,15 +37,6 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
     return(mask)
 
 
-def use_sparse(mask_area, detector_area):
-    '''
-    Empirical tests have shown that sparse.pydata.org is competitive
-    compared to dense matrices with pytorch up to about 20 % occupancy
-    See Issue #197
-    '''
-    return mask_area < 0.2 * detector_area
-
-
 def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSizeX, imageSizeY):
     '''
     Stamp the template in a multi-mask 3D stack at the positions indicated by

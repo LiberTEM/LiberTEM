@@ -57,9 +57,7 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
         cx = parameters.get('cx', detector_x / 2)
         cy = parameters.get('cy', detector_y / 2)
         r = parameters.get('r', min(detector_y, detector_x) / 2 * 0.3)
-        use_sparse = parameters.get('use_sparse', None)
-        if use_sparse is None:
-            use_sparse = masks.use_sparse(np.pi * r**2, detector_y * detector_x)
+        use_sparse = parameters.get('use_sparse', False)
 
         return {
             'cx': cx,

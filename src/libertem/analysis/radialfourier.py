@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import sparse
 
 from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
@@ -115,10 +116,12 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                 imageSizeX=detector_x,
                 imageSizeY=detector_y
             )
+            rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64)
+            ring_stack = [rings] * len(orders)
+            ring_stack = sparse.concatenate(ring_stack, axis=1)
             modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
-            rings = rings.todense()
-            s = rings[:, np.newaxis, ...] * modulator
-            return s.reshape((-1, detector_y, detector_x))
+            ring_stack *= modulator
+            return ring_stack.reshape((-1, detector_y, detector_x))
 
         return stack
 

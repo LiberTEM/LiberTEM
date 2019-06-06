@@ -19,20 +19,34 @@ from libertem.common.buffers import zeros_aligned
 log = logging.getLogger(__name__)
 
 
-def _make_mask_slicer(computed_masks, dtype):
+def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
         stack_height = computed_masks.shape[0]
         m = slice_.get(computed_masks, sig_only=True)
-        # We need the mask's signal dimension flattened and the stack transposed in the next step
-        # For that reason we flatten and transpose here so that we use the cache of this function.
-        m = m.reshape((stack_height, -1)).T
+        # We need the mask's signal dimension flattened
+        m = m.reshape((stack_height, -1))
+        if transpose:
+            # We need the stack transposed in the next step
+            m = m.T
+
         if is_sparse(m):
-            iis, jjs = m.coords
-            values = m.data
-            # Just for calculation: scipy.sparse.csr_matrix is
-            # the fastest for dot product
-            return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+            if sparse_backend == 'sparse.pydata':
+                # sparse.pydata.org is fastest for masks with few layers
+                # and few entries
+                return m.astype(dtype)
+            elif 'scipy.sparse' in sparse_backend:
+                # Just for calculation: scipy.sparse.csr_matrix is
+                # the fastest for dot product of deep mask stack
+                iis, jjs = m.coords
+                values = m.data
+                if sparse_backend == 'scipy.sparse.csc':
+                    return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                else:
+                    return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+            else:
+                raise ValueError(
+                    "sparse_backend %s not implemented, can be 'scipy.sparse' or 'sparse.pydata'" % sparse_backend)
         else:
             # We convert to the desired type.
             # This makes sure it is in row major, dense layout as well
@@ -46,7 +60,14 @@ class ApplyMasksJob(Job):
     """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, dtype=None, *args, **kwargs):
+        '''
+        use_sparse can be None, True, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+        '''        
         super().__init__(*args, **kwargs)
+        # Choose default back-end
+        # If None, decide in the mask container
+        if use_sparse is True:
+            use_sparse = 'scipy.sparse'
         self.masks = MaskContainer(mask_factories, dtype=mask_dtype,
             use_sparse=use_sparse, count=mask_count)
 
@@ -87,6 +108,9 @@ class ApplyMasksJob(Job):
 
 class MaskContainer(object):
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None):
+        '''
+        use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+        '''
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack
@@ -127,7 +151,7 @@ class MaskContainer(object):
         else:
             return len(self.computed_masks)
 
-    def get(self, key, dtype=None):
+    def get(self, key, dtype=None, sparse_backend=None, transpose=True):
         if isinstance(key, Partition):
             slice_ = key.slice
         elif isinstance(key, DataTile):
@@ -139,7 +163,12 @@ class MaskContainer(object):
                 "MaskContainer.get() can only be called with "
                 "DataTile/Slice/Partition instances"
             )
-        return self.get_masks_for_slice(slice_.discard_nav(), dtype=dtype)
+        return self.get_masks_for_slice(
+            slice_.discard_nav(),
+            dtype=dtype,
+            sparse_backend=sparse_backend,
+            transpose=transpose
+        )
 
     @property
     def dtype(self):
@@ -164,13 +193,15 @@ class MaskContainer(object):
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
 
+        default_sparse = 'scipy.sparse'
+        
         if callable(self.mask_factories):
             raw_masks = self.mask_factories()
-            default_sparse = is_sparse(raw_masks)
+            if not is_sparse(raw_masks):
+                default_sparse = False
             mask_slices = [raw_masks]
         else:
             mask_slices = []
-            default_sparse = True
             for f in self.mask_factories:
                 m = f()
                 # Scipy.sparse is always 2D, so we have to convert here
@@ -179,13 +210,17 @@ class MaskContainer(object):
                     m = sparse.COO.from_scipy_sparse(m)
                 # We reshape to be a stack of 1 so that we can unify code below
                 m = m.reshape((1, ) + m.shape)
-                default_sparse = default_sparse and is_sparse(m)
+                if not is_sparse(m):
+                    default_sparse = False
                 mask_slices.append(m)
 
         if self.use_sparse is None:
             self.use_sparse = default_sparse
 
         if self.use_sparse:
+            # Conversion to correct back-end will happen later
+            # Use sparse.pydata because it implements the array interface
+            # which makes mask handling easier
             masks = sparse.concatenate(
                 [to_sparse(m) for m in mask_slices]
             )
@@ -195,12 +230,20 @@ class MaskContainer(object):
             )
         return masks
 
-    def get_masks_for_slice(self, slice_, dtype=None):
+    def get_masks_for_slice(self, slice_, dtype=None, sparse_backend=None, transpose=True):
         if dtype is None:
             dtype = self.dtype
-        if dtype not in self._get_masks_for_slice:
-            self._get_masks_for_slice[dtype] = _make_mask_slicer(self.computed_masks, dtype=dtype)
-        return self._get_masks_for_slice[dtype](slice_)
+        if sparse_backend is None:
+            sparse_backend = self.use_sparse
+        key = (dtype, sparse_backend, transpose)
+        if key not in self._get_masks_for_slice:
+            self._get_masks_for_slice[key] = _make_mask_slicer(
+                self.computed_masks, 
+                dtype=dtype,
+                sparse_backend=sparse_backend,
+                transpose=transpose
+            )
+        return self._get_masks_for_slice[key](slice_)
 
     @property
     def computed_masks(self):
@@ -294,7 +337,9 @@ class ApplyMasksTask(Task):
         for data_tile in self.partition.get_tiles(mmap=True, dest_dtype=self.read_dtype):
             flat_data = data_tile.flat_data
             masks = self.masks.get(data_tile, self.mask_dtype)
-            if self.masks.use_sparse:
+            if isinstance(masks, sparse.SparseArray):
+                result = sparse.dot(flat_data, masks)
+            elif scipy.sparse.issparse(masks):
                 # This is scipy.sparse using the old matrix interface
                 # where "*" is the dot product
                 result = flat_data * masks

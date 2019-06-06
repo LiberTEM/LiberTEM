@@ -12,7 +12,7 @@ class PixelsumUDF(UDF):
             )
         }
 
-    def process_tile(self, tile):
+    def process_tile(self, tile, tile_slice):
         # the last tile contains only two frames:
         assert tile.shape[0] in (7, 2)
 

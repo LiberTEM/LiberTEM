@@ -20,7 +20,7 @@ class FeatureVecMakerUDF(UDF):
         coordinates = self.params.coordinates
         ref = savg[coordinates[:, 0], coordinates[:, 1]]
         for j in range(0, coordinates.shape[0]):
-            if frame[coordinates[j, 0], coordinates[j, 1]]-ref[j] > delta:
+            if (frame[coordinates[j, 0], coordinates[j, 1]]-ref[j])/ref[j] > delta:
                 self.results.feature_vec[j] = 1
         return
 
@@ -39,11 +39,11 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
 
     num: int
         Number of possible peak positions to detect (better put higher value,
-         the output is limited to number of peaks the algorithm could find)
+        the output is limited to the number of peaks the algorithm could find)
 
-    delta: int
-        Intensity difference between current frame and reference image for decision
-        making for feature vector value
+    delta: float
+        Relative intensity difference between current frame and reference image for decision making
+        for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1])
 
     rad_in: int, optional
         Inner radius in pixels of a ring to mask region of interest of SD image to delete outliers
@@ -57,6 +57,10 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
         (y,x) - pixels, coordinates of a ring to mask region of interest of SD image
         to delete outliers for peak finding
 
+    roi: np.ndarray, optional
+        boolean array which limits the elements the UDF is working on.
+        Has a shape of dataset_shape.nav
+        
     Returns
     -------
     pass_results: dict

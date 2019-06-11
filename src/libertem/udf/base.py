@@ -28,8 +28,8 @@ class UDFMeta:
         Returns
         -------
         Shape
-            The shape of the partition this UDF currently works on. If a ROI
-            was applied, the shape will be modified accordingly.
+            The shape of the partition this UDF currently works on.\
+            If a ROI was applied, the shape will be modified accordingly.
         """
         return self._partition_shape
 
@@ -49,8 +49,8 @@ class UDFMeta:
         Returns
         -------
         np.ndarray
-            boolean array which limits the elements the UDF is working on. Has a shape
-            of `dataset_shape.nav`.
+            boolean array which limits the elements the UDF is working on.\
+            Has a shape of `dataset_shape.nav`.
         """
         return self._roi
 

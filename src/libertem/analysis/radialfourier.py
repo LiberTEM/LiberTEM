@@ -109,7 +109,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                 imageSizeY=detector_y,
                 radius=ro,
                 radius_inner=ri,
-                n_bins=n_bins
+                n_bins=n_bins,
+                normalize=True
             )
 
             orders = np.arange(max_order + 1)

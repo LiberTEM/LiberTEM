@@ -26,7 +26,7 @@ class PointMaskAnalysis(BaseMasksAnalysis):
         ])
 
     def get_use_sparse(self):
-        return False
+        return 'sparse.pydata'
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

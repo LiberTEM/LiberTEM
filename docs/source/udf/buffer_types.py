@@ -15,16 +15,16 @@ class TestBuffer(UDF):
 
 		The second buffer "sig_buffer" specifies a buffer whose
 		dimension is initialized to be the same as the signal dimension.
-		With 'extra_shape = (2,)', two additional dimensions are added
-		to the first dimension of the signal dimension, so the resulting
-		dimension for this buffer will be (34, 32)
+		With 'extra_shape = (2,)', two additional dimensions are introduced
+		in addition to the signal dimension, so the resulting
+		dimension for this buffer will be (32, 32, 2). One can store, for
+		instance, two float32 numbers of interest for each frame as a result.
 
 		The third buffer "nav_buffer" specifies a buffer whose
 		dimension is initialized to be the same as the navigation dimension.
-		With 'extra_shape = (1, 2)', one additional dimension is added to the
-		first dimension of the navigation dimension and two additional
-		dimensions are added to the second dimension of the navigation dimension,
-		so the resulting dimension for this buffer will be (15, 16)
+		With 'extra_shape = (1, 2)', two additional dimensions are introduced
+		in addition to the navigation dimension, so the resulting dimension
+		for this buffer will be (14, 14, 1, 2).
 		"""
 		return {
 			"single_buffer": self.buffer(
@@ -38,7 +38,7 @@ class TestBuffer(UDF):
 				extra_shape=(2,), 
 				dtype="float32",
 				),
-			
+
 			"nav_buffer": self.buffer(
 				kind="nav",
 				extra_shape=(1, 2),

@@ -158,14 +158,21 @@ def polar_map(centerX, centerY, imageSizeX, imageSizeY):
     )
 
 
+def bounding_radius(centerX, centerY, imageSizeX, imageSizeY):
+    '''
+    Calculate a radius around centerX, centerY that covers the whole frame
+    '''
+    dy = max(centerY, imageSizeY - centerY)
+    dx = max(centerX, imageSizeX - centerX)
+    return int(np.ceil(np.sqrt(dy**2 + dx**2))) + 1
+
+
 def radial_bins(centerX, centerY, imageSizeX, imageSizeY, radius=None, radius_inner=0, n_bins=None):
     '''
     Generate antialiased rings
     '''
     if radius is None:
-        dy = max(centerY, imageSizeY - centerY)
-        dx = max(centerX, imageSizeX - centerX)
-        radius = int(np.ceil(np.sqrt(dy**2 + dx**2))) + 1
+        radius = bounding_radius(centerX, centerY, imageSizeX, imageSizeY)
 
     if n_bins is None:
         n_bins = int(np.round(radius - radius_inner))

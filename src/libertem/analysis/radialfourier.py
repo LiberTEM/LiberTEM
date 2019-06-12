@@ -99,6 +99,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         n_bins = p['n_bins']
         max_order = p['max_order']
 
+        use_sparse = p['use_sparse']
+
         def stack():
             rings = masks.radial_bins(
                 centerX=cx,
@@ -109,32 +111,28 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                 radius_inner=ri,
                 n_bins=n_bins
             )
+
             orders = np.arange(max_order + 1)
+
             r, phi = masks.polar_map(
                 centerX=cx,
                 centerY=cy,
                 imageSizeX=detector_x,
                 imageSizeY=detector_y
             )
-
-            bin_width = ro - ri
-            bin_area = np.pi * ro**2 - np.pi * (ro - bin_width)**2
             modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
-            # Actually dense
-            if bin_area / (detector_x * detector_y) > 0.05:
-                if isinstance(rings, sparse.SparseArray):
-                    ring_stack = rings.todense()
-                else:
-                    ring_stack = rings
-                ring_stack = ring_stack[:, np.newaxis, ...] * modulator
-            else:
-                rings = sparse.COO(
-                    rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64))
+
+            if use_sparse:
+                rings = masks.to_sparse(
+                    rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64)
+                )
                 ring_stack = [rings] * len(orders)
                 ring_stack = sparse.concatenate(ring_stack, axis=1)
                 ring_stack *= modulator
+            else:
+                ring_stack = masks.to_dense(rings)
+                ring_stack = ring_stack[:, np.newaxis, ...] * modulator
             return ring_stack.reshape((-1, detector_y, detector_x))
-
         return stack
 
     def get_parameters(self, parameters):
@@ -143,7 +141,10 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         cx = parameters.get('cx', detector_x / 2)
         cy = parameters.get('cy', detector_y / 2)
         ri = parameters.get('ri', 0)
-        ro = parameters.get('ro', None)
+        ro = parameters.get(
+            'ro',
+            masks.bounding_radius(cx, cy, detector_x, detector_y)
+        )
         n_bins = parameters.get('n_bins', 1)
         max_order = parameters.get('max_order', 24)
 
@@ -155,7 +156,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         default = 'scipy.sparse'
         # If the mask stack fits the L3 cache
         # FIXME more testing for optimum backend
-        if mask_count * detector_y * detector_x < 2**19:
+        if mask_count * detector_y * detector_x < 2**18:
             default = False
         # Masks are actually dense
         elif bin_area / (detector_x * detector_y) > 0.05:

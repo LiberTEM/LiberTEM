@@ -10,15 +10,15 @@ to worry about parallelizing, I/O, the details of buffer management and so on.
 How UDF works in layman's terms
 -----------------------------------
 
-.. image:: ./images/diagram.svg
+.. image:: ./images/diagram.png
 
 The UDF interface of LiberTEM is heavily utilizing the existing LiberTEM architecture. First,
 data is partitioned into several `"partitions"` and distributed across workers. Then, each partition,
-which can be viewed as a collection of frames, are processed by the user-defined `process_frame` function.
-Here, frames are fetched in an iterative manner, and one could view `process_frame` as `merging` the previous
-computations (i.e., the result computed on previously considered set of frames) and the newly added frame.
-After all the frames in a partition are processed, LiberTEM `merges` the results from each worker, which is called
-by the parameter `merge` in UDF class. Note that in both `process_frame` and `merge`, buffers store the intermediate
+which can be viewed as a collection of frames, are processed by the user-defined `process_frame` method.
+Here, frames are fetched in an iterative manner, and `process_frame` method performs user-defined operations
+on the frames. After all the frames in a partition are processed, LiberTEM iteratively `merges` the results from each worker, which is called
+by the `merge` method in UDF class. To summarize, the UDF interface of LiberTEM performs operations at two levels: `process_frame`, which performs user-defined operations
+on frames within each partition, and `merge`, which merges the output of `process_frame` from each partition. Note that in both `process_frame` and `merge`, buffers store the intermediate
 outcomes of the user-defined operations.
 
 Initializing Buffers
@@ -33,18 +33,29 @@ dimension of their choice. Note that in the case of "single" buffer, users may s
 the dimension of the buffer through `"extra_shape"` parameter. If `"extra_shape"` 
 parameter is not specified, the buffer is assumed to have `(1,)` dimension. Additionally, 
 users may also specify `"extra_shape"` parameters for `"sig"` or `"nav"` buffers. 
-In that case, the dimension specified by "extra_shape" parameter will be added to the 
+In that case, the dimensions specified by "extra_shape" parameter will be added to the 
 dimension of `"sig"` or `"nav"`, with respect to each component. As an example,
 one may specify the buffers as following:
 
 .. include:: udf/buffer_types.py
    :code:
 
+One can access a buffer of interest via `self.results.buffername`, from which one can get a view into a numpy array
+that the buffer is storing. This numpy array corresponds to the current intermediate result that LiberTEM is working
+on and can be intermediate results of processing frames/tiles/partitions. 
 Note that buffers are only designed to pass lightweight intermediate results and thus, it is important
-that the size of the buffer remains small. Otherwise, it could lead to significant surge in performance.
+that the size of the buffer remains small. Otherwise, it could lead to significant decline in performance.
 
 By-frame processing
 -------------------
+Note that `process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
+are dealing. If the type of the buffer is `"sig"`, then `process_frame` can be viewed as iteratively `merging` the previous
+computations (i.e., the result computed on previously considered set of frames) and a newly added frame. If the type of
+the buffer is `"nav"`, then `process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is `nav`, which means that it uses the navigation dimension, two different frames
+correspond to two different scan positions so it does not
+make much sense to view it as `merging`. Lastly, if the type of the buffer is `"single"`, then `process_frame` can be
+interpreted in either way.
+
 As an easy example, let's have a look at a function that simply sums up each frame
 to a single value:
 

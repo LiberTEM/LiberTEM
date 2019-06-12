@@ -167,7 +167,8 @@ def bounding_radius(centerX, centerY, imageSizeX, imageSizeY):
     return int(np.ceil(np.sqrt(dy**2 + dx**2))) + 1
 
 
-def radial_bins(centerX, centerY, imageSizeX, imageSizeY, radius=None, radius_inner=0, n_bins=None):
+def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
+        radius=None, radius_inner=0, n_bins=None, normalize=False):
     '''
     Generate antialiased rings
     '''
@@ -195,8 +196,17 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY, radius=None, radius_in
         vals = np.maximum(0, np.minimum(1, width/2 + 0.5 - diff))
         if use_sparse:
             select = vals != 0
-            slices.append(sparse.COO(shape=len(r), data=vals[select], coords=(jjs[select],)))
+            vals = vals[select]
+            if normalize:  # Make sure each bin has a sum of 1
+                s = vals.sum()
+                if not np.isclose(s, 0):
+                    vals /= s
+            slices.append(sparse.COO(shape=len(r), data=vals, coords=(jjs[select],)))
         else:
+            if normalize:  # Make sure each bin has a sum of 1
+                s = vals.sum()
+                if not np.isclose(s, 0):
+                    vals /= s
             slices.append(vals.reshape((imageSizeY, imageSizeX)))
     # Patch a singularity at the center
     if radius_inner < 0.5:

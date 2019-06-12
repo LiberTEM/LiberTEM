@@ -78,8 +78,23 @@ async def do_stop(shared_data):
     loop.stop()
 
 
+async def nannynanny():
+    '''
+    Make sure the event loop wakes up regularly.
+
+    This mitigates a strange bug on Windows
+    where Ctrl-C is only handled after an event is processed.
+
+    See Issue #356
+    '''
+    while True:
+        await asyncio.sleep(1)
+
+
 def sig_exit(signum, frame, shared_data):
+    log.info("Handling sig_exit...")
     loop = tornado.ioloop.IOLoop.instance()
+
     loop.add_callback_from_signal(
         lambda: asyncio.ensure_future(do_stop(shared_data))
     )
@@ -102,10 +117,12 @@ def run(host, port, local_directory):
     shared_data = SharedData()
 
     shared_data.set_local_directory(local_directory)
-
     main(host, port, event_registry, shared_data)
     loop = asyncio.get_event_loop()
     signal.signal(signal.SIGINT, partial(sig_exit, shared_data=shared_data))
+    # Strictly necessary only on Windows, but doesn't do harm in any case.
+    # FIXME check later if the unknown root cause was fixed upstream
+    asyncio.ensure_future(nannynanny())
     loop.run_forever()
 
 

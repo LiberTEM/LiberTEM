@@ -1,5 +1,6 @@
 import functools
 import logging
+import signal
 
 import tornado.util
 from dask import distributed as dd
@@ -120,6 +121,12 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         """
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
+
+        # Disable handling Ctrl-C on the workers for a local cluster
+        # since the nanny restarts workers in that case and that gets mixed
+        # with Ctrl-C handling of the main process, at least on Windows
+        client.run(functools.partial(signal.signal, signal.SIGINT, signal.SIG_IGN))
+
         return cls(client=client, is_local=True)
 
 

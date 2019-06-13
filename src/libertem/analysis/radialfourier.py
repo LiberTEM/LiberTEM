@@ -83,7 +83,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                         desc="Fourier component",
                     )
                 )
-        return AnalysisResultSet(sets)
+        return AnalysisResultSet(sets, raw_results=job_results)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

@@ -28,8 +28,9 @@ class AnalysisResult(object):
 
 
 class AnalysisResultSet(object):
-    def __init__(self, results):
+    def __init__(self, results, raw_results=None):
         self.results = results
+        self.raw_results = raw_results
 
     def __repr__(self):
         return repr(self.results)

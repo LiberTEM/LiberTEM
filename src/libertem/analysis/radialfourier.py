@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 
 import numpy as np
 import sparse
@@ -15,75 +16,80 @@ log = logging.getLogger(__name__)
 class RadialFourierAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
-        sets = []
         orders = self.parameters['max_order'] + 1
         n_bins = self.parameters['n_bins']
         job_results = job_results.reshape((n_bins, orders, *shape))
-        absolute = np.absolute(job_results)
-        normal = np.maximum(1, absolute[:, 0])
-        min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
-        max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
-        angle = np.angle(job_results)
-        for b in range(self.parameters['n_bins']):
-            sets.append(
-                AnalysisResult(
-                    raw_data=absolute[b, 0],
-                    visualized=visualize_simple(absolute[b, 0]),
-                    key="absolute_%s_%s" % (b, 0),
-                    title="absolute of bin %s order %s" % (b, 0),
-                    desc="Absolute value of Fourier component",
-                )
-            )
-            for o in range(1, orders):
+
+        def resultlist():
+            sets = []
+            absolute = np.absolute(job_results)
+            normal = np.maximum(1, absolute[:, 0])
+            min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
+            max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
+            angle = np.angle(job_results)
+            for b in range(n_bins):
                 sets.append(
                     AnalysisResult(
-                        raw_data=absolute[b, o],
-                        visualized=visualize_simple(
-                            absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute
-                        ),
-                        key="absolute_%s_%s" % (b, o),
-                        title="absolute of bin %s order %s" % (b, o),
+                        raw_data=absolute[b, 0],
+                        visualized=partial(visualize_simple, absolute[b, 0]),
+                        key="absolute_%s_%s" % (b, 0),
+                        title="absolute of bin %s order %s" % (b, 0),
                         desc="Absolute value of Fourier component",
                     )
                 )
-        for b in range(self.parameters['n_bins']):
-            for o in range(orders):
-                sets.append(
-                    AnalysisResult(
-                        raw_data=angle[b, o],
-                        visualized=visualize_simple(
-                            angle[b, o], colormap=cmaps['perception_circular']
-                        ),
-                        key="phase_%s_%s" % (b, o),
-                        title="phase of bin %s order %s" % (b, o),
-                        desc="Phase of Fourier component",
+                for o in range(1, orders):
+                    sets.append(
+                        AnalysisResult(
+                            raw_data=absolute[b, o],
+                            visualized=partial(visualize_simple,
+                                absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute
+                            ),
+                            key="absolute_%s_%s" % (b, o),
+                            title="absolute of bin %s order %s" % (b, o),
+                            desc="Absolute value of Fourier component",
+                        )
                     )
-                )
-        for b in range(self.parameters['n_bins']):
-            data = job_results[b, 0]
-            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data.imag, data.real))
-            sets.append(
-                AnalysisResult(
-                    raw_data=data,
-                    visualized=f,
-                    key="complex_%s_%s" % (b, 0),
-                    title="bin %s order %s" % (b, 0),
-                    desc="Fourier component",
-                )
-            )
-            for o in range(1, orders):
-                data = job_results[b, o] / normal[b]
-                f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data.imag, data.real), vmax=max_absolute)
+            for b in range(n_bins):
+                for o in range(orders):
+                    sets.append(
+                        AnalysisResult(
+                            raw_data=angle[b, o],
+                            visualized=partial(visualize_simple,
+                                angle[b, o], colormap=cmaps['perception_circular']
+                            ),
+                            key="phase_%s_%s" % (b, o),
+                            title="phase of bin %s order %s" % (b, o),
+                            desc="Phase of Fourier component",
+                        )
+                    )
+            for b in range(n_bins):
+                data = job_results[b, 0]
+                f = partial(CMAP_CIRCULAR_DEFAULT.rgb_from_vector, (data.imag, data.real))
                 sets.append(
                     AnalysisResult(
                         raw_data=data,
                         visualized=f,
-                        key="complex_%s_%s" % (b, o),
-                        title="bin %s order %s" % (b, o),
+                        key="complex_%s_%s" % (b, 0),
+                        title="bin %s order %s" % (b, 0),
                         desc="Fourier component",
                     )
                 )
-        return AnalysisResultSet(sets, raw_results=job_results)
+                for o in range(1, orders):
+                    data = job_results[b, o] / normal[b]
+                    f = partial(CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
+                        (data.imag, data.real), vmax=max_absolute
+                    )
+                    sets.append(
+                        AnalysisResult(
+                            raw_data=data,
+                            visualized=f,
+                            key="complex_%s_%s" % (b, o),
+                            title="bin %s order %s" % (b, o),
+                            desc="Fourier component",
+                        )
+                    )
+            return sets
+        return AnalysisResultSet(resultlist, raw_results=job_results)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:
@@ -150,7 +156,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         mask_count = n_bins * (max_order + 1)
         bin_width = (ro - ri) / n_bins
         bin_area = np.pi * ro**2 - np.pi * (ro - bin_width)**2
-        stack_size = mask_count * detector_y * detector_x
+        stack_size = mask_count * detector_y * detector_x * 8
 
         default = 'scipy.sparse'
         # If the mask stack comfortably fits the L3 cache
@@ -160,10 +166,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         # Masks are actually dense
         elif bin_area / (detector_x * detector_y) > 0.05 and n_bins < 10:
             default = False
-        # sparse.pydata.org is good with masks that don't cover much area
-        # FIXME more testing for optimum
-        elif mask_count < 16:
-            default = 'sparse.pydata'
+
         use_sparse = parameters.get('use_sparse', default)
         return {
             'cx': cx,

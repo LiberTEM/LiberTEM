@@ -9,7 +9,7 @@ class AnalysisResult(object):
     """
     def __init__(self, raw_data, visualized, title, desc, key):
         self.raw_data = raw_data
-        self.visualized = visualized
+        self._visualized = visualized
         self.title = title
         self.desc = desc
         self.key = key
@@ -26,10 +26,16 @@ class AnalysisResult(object):
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
+    @property
+    def visualized(self):
+        if callable(self._visualized):
+            self._visualized = self._visualized()
+        return self._visualized
+
 
 class AnalysisResultSet(object):
     def __init__(self, results, raw_results=None):
-        self.results = results
+        self._results = results
         self.raw_results = raw_results
 
     def __repr__(self):
@@ -48,6 +54,12 @@ class AnalysisResultSet(object):
 
     def __len__(self):
         return len(self.results)
+
+    @property
+    def results(self):
+        if callable(self._results):
+            self._results = self._results()
+        return self._results
 
 
 class BaseAnalysis(object):

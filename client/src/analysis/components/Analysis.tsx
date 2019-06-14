@@ -8,6 +8,7 @@ import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
 import PointSelectionAnalysis from "./PointSelectionAnalysis";
 import RingMaskAnalysis from "./RingMaskAnalysis";
+import RadialFourierAnalysis from "./RadialFourierAnalysis";
 
 interface AnalysisProps {
     analysis: AnalysisState,
@@ -38,6 +39,9 @@ const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
         }
         case AnalysisTypes.APPLY_POINT_SELECTOR: {
             return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
+        }
+        case AnalysisTypes.RADIAL_FOURIER: {
+            return <RadialFourierAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
         }
     }
 

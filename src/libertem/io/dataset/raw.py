@@ -53,6 +53,8 @@ class RawFile(File3D):
 
     def close(self):
         self._file.close()
+        self._file = None
+        self._mmap = None
 
     def readinto(self, start, stop, out, crop_to=None):
         offset = start * self._frame_size

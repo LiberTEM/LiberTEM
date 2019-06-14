@@ -1,6 +1,4 @@
 from typing import Union, Tuple
-from types import MappingProxyType
-import uuid
 
 import psutil
 import numpy as np
@@ -13,13 +11,14 @@ from libertem.common import Slice, Shape
 from libertem.executor.dask import DaskJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
+from libertem.analysis.radialfourier import RadialFourierAnalysis
 from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import BaseAnalysis
-from libertem.udf import make_udf_tasks, merge_assign
+from libertem.udf.base import UDFRunner, UDF
 
 
 class Context:
@@ -222,6 +221,41 @@ class Context:
         )
         return analysis
 
+    def create_radial_fourier_analysis(self, dataset, cx: float = None, cy: float = None,
+            ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None):
+        """
+        Calculate the Fourier transform of rings around the center.
+
+        Parameters
+        ----------
+        dataset
+            the dataset to work on
+        cx
+            center x value
+        cy
+            center y value
+        ri
+            inner radius
+        ro
+            outer radius
+        n_bins
+            number of bins
+        max_order
+            maximum order of calculated Fourier component
+        """
+        if dataset.shape.sig.dims != 2:
+            raise ValueError("incompatible dataset: need two signal dimensions")
+        loc = locals()
+        parameters = {
+            name: loc[name]
+            for name in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']
+            if loc[name] is not None
+        }
+        analysis = RadialFourierAnalysis(
+            dataset=dataset, parameters=parameters
+        )
+        return analysis
+
     def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None):
         """
         Integrate over a disk (i.e. filled circle)
@@ -401,7 +435,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, BaseAnalysis]):
+    def run(self, job: Union[Job, BaseAnalysis], roi=None):
         """
         Run the given `Job` or `Analysis` and return the result data.
 
@@ -413,7 +447,13 @@ class Context:
         analysis = None
         if hasattr(job, "get_job"):
             analysis = job
-            job_to_run = analysis.get_job()
+            if analysis.TYPE == 'JOB':
+                job_to_run = analysis.get_job()
+            else:
+                udf_results = self.run_udf(
+                    dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
+                )
+                return analysis.get_udf_results(udf_results)
         else:
             job_to_run = job
 
@@ -425,75 +465,22 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset, fn, make_buffers, init=None, merge=merge_assign, roi=None):
+    def run_udf(self, dataset: DataSet, udf: UDF, roi=None):
         """
-        Run `fn` on `dataset`.
+        Run `udf` on `dataset`.
 
         Parameters
         ----------
         dataset
             The dataset to work on
 
-        init
-            Function to perform initialization. Should return a dict of variables that will
-            be shared between calls calls of your function. Note that these variables should
-            be considered read-only; they are not meant as a way to communicate between calls.
-
-        make_buffers
-            Function that returns a dict, mapping buffer names to BufferWrapper instances
-
-        fn
-            The function to run on the dataset. It needs to accept the frame as keyword argument.
-            Additionally, it needs to have a parameter for each buffer created in make_buffers,
-            and also for each variable returned from the init function.
-
-        merge
-            A function merging a partial result into the final result buffer. By default it just
-            performs assignment.
+        udf
+            UDF instance you want to run
 
         roi : np.ndarray
             region of interest as bool mask over the navigation axes of the dataset
-
-        Example
-        -------
-
-        This example creates a "sum image", where all pixels of each
-        diffraction pattern are summed up:
-
-        >>> def my_buffers():
-        >>>     return {
-        >>>         'pixelsum': BufferWrapper(
-        >>>             kind="nav", dtype="float32"
-        >>>         )
-        >>>     }
-
-        >>> def my_frame_fn(frame, pixelsum):
-        >>>     pixelsum[:] = np.sum(frame)
-
-        >>> ctx = Context()
-        >>> ds = ctx.load(...)
-        >>> res = ctx.run_udf(
-        >>>     dataset=ds,
-        >>>     fn=my_frame_fn,
-        >>>     make_buffers=my_buffers,
-        >>> )
         """
-        result_buffers = make_buffers()
-        for buf in result_buffers.values():
-            buf.set_shape_ds(dataset, roi=roi)
-            buf.allocate()
-        cancel_id = str(uuid.uuid4())
-
-        tasks = make_udf_tasks(dataset, fn, init, make_buffers, roi)
-
-        for partition_result_buffers, partition in self.executor.run_tasks(tasks, cancel_id):
-            buffer_views = {}
-            for k, buf in result_buffers.items():
-                buffer_views[k] = buf.get_view_for_partition(partition=partition)
-            buffers = {k: b.raw_data
-                       for k, b in partition_result_buffers.items()}
-            merge(dest=MappingProxyType(buffer_views), src=MappingProxyType(buffers))
-        return result_buffers
+        return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

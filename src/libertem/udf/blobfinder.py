@@ -5,10 +5,10 @@ from skimage.feature import peak_local_max
 import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 
-from libertem.udf import check_cast
-from libertem.common.buffers import BufferWrapper
-from libertem.masks import radial_gradient, background_substraction
+from libertem.udf import UDF
+from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
 from libertem.job.sum import SumFramesJob
+from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
 
@@ -158,11 +158,16 @@ def do_correlation(template, crop_part):
     spec_part = fft.rfft2(crop_part)
     corrspec = template * spec_part
     corr = fft.fftshift(fft.irfft2(corrspec))
+    return evaluate_correlation(corr)
+
+
+def evaluate_correlation(corr):
     center = np.unravel_index(np.argmax(corr), corr.shape)
     refined = np.array(refine_center(center, 2, corr), dtype='float32')
     height = np.float32(corr[center])
     elevation = np.float32(peak_elevation(refined, corr, height))
-    return np.array(center, dtype='u2'), refined, height, elevation
+    center = np.array(center, dtype='u2')
+    return center, refined, height, elevation
 
 
 def log_scale(data, out):
@@ -196,168 +201,349 @@ def crop_disks_from_frame(peaks, frame, mask):
         yield frame[slice_], crop_buf_slice
 
 
-def get_result_buffers_pass_2(num_disks):
-    """
-    we 'declare' what kind of result buffers we need, without concrete shapes
-
-    concrete shapes come later, either for partition or whole dataset
-    """
-    return {
-        'centers': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-        ),
-        'refineds': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-        ),
-        'peak_values': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32",
-        ),
-        'peak_elevations': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32",
-        ),
-    }
-
-
-def init_pass_2(partition, peaks, parameters):
-    mask = mask_maker(parameters)
-    crop_size = mask.get_crop_size()
-    template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
-    crop_buf = zeros((2 * crop_size, 2 * crop_size), dtype="float32")
-    kwargs = {
-        'peaks': peaks,
-        'mask': mask,
-        'crop_buf': crop_buf,
-        'template': template,
-    }
-    return kwargs
-
-
 def _shift(relative_center, anchor, crop_size):
     return relative_center + anchor - [crop_size, crop_size]
 
 
-def pass_2(frame, template, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations):
-    crop_size = mask.get_crop_size()
-    for disk_idx, (crop_part, crop_buf_slice) in enumerate(
-            crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
+class CorrelationUDF(UDF):
+    '''
+    Abstract base class for peak correlation implementations
+    '''
+    def get_result_buffers(self):
+        """
+        we 'declare' what kind of result buffers we need, without concrete shapes
 
-        crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
-        log_scale(crop_part, out=crop_buf[crop_buf_slice])
-        center, refined, peak_value, peak_elevation = do_correlation(template, crop_buf)
-        abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
-        abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
-        check_cast(abs_center, centers)
-        check_cast(abs_refined, refineds)
-        check_cast(peak_value, peak_values)
-        check_cast(peak_elevation, peak_elevations)
-        centers[disk_idx] = abs_center
-        refineds[disk_idx] = abs_refined
-        peak_values[disk_idx] = peak_value
-        peak_elevations[disk_idx] = peak_elevation
+        concrete shapes come later, either for partition or whole dataset
+        """
+        num_disks = len(self.params.peaks)
+
+        return {
+            'centers': self.buffer(
+                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+            ),
+            'refineds': self.buffer(
+                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+            ),
+            'peak_values': self.buffer(
+                kind="nav", extra_shape=(num_disks,), dtype="float32",
+            ),
+            'peak_elevations': self.buffer(
+                kind="nav", extra_shape=(num_disks,), dtype="float32",
+            ),
+        }
 
 
-def run_blobcorrelation(ctx, dataset, peaks, parameters):
+class FastCorrelationUDF(CorrelationUDF):
+    def __init__(self, *args, **kwargs):
+        '''
+        peaks : numpy.ndarray
+            Numpy array of (y, x) coordinates with peak positions to correlate
+        mask_type : str
+            Mask to use for correlation. Currently one of 'radial_gradient' and
+            'background_substraction'
+        radius:
+            Radius of the CBED disks in px
+        padding:
+            Extra space around radius as a fraction of radius, which defines the search
+            area around a peak
+        radius_outer:
+            Only with 'background_substraction': Radius of outer region with negative values.
+            For calculating the padding, the maximum of radius and radius_outer is used.
+        '''
+        super().__init__(*args, **kwargs)
+
+    def get_task_data(self, meta):
+        mask = mask_maker(self.params)
+        crop_size = mask.get_crop_size()
+        template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
+        crop_buf = zeros((2 * crop_size, 2 * crop_size), dtype="float32")
+        kwargs = {
+            'mask': mask,
+            'crop_buf': crop_buf,
+            'template': template,
+        }
+        return kwargs
+
+    def process_frame(self, frame):
+        mask = self.task_data.mask
+        peaks = self.params.peaks
+        crop_buf = self.task_data.crop_buf
+        crop_size = mask.get_crop_size()
+        r = self.results
+        for disk_idx, (crop_part, crop_buf_slice) in enumerate(
+                crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
+
+            crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
+            log_scale(crop_part, out=crop_buf[crop_buf_slice])
+            center, refined, peak_value, peak_elevation = do_correlation(
+                self.task_data.template, crop_buf)
+            abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
+            abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
+            r.centers[disk_idx] = abs_center
+            r.refineds[disk_idx] = abs_refined
+            r.peak_values[disk_idx] = peak_value
+            r.peak_elevations[disk_idx] = peak_elevation
+
+    def postprocess(self):
+        pass
+
+
+class SparseCorrelationUDF(CorrelationUDF):
+    '''
+    Direct correlation using sparse matrices
+
+    This method allows to adjust the number of correlation steps independent of the template size.
+    '''
+    def __init__(self, *args, **kwargs):
+        '''
+        peaks : numpy.ndarray
+            Numpy array of (y, x) coordinates with peak positions to correlate
+        mask_type : str
+            Mask to use for correlation. Currently one of 'radial_gradient' and
+            'background_substraction'
+        radius:
+            Radius of the CBED disks in px
+        padding:
+            Extra space around radius as a fraction of radius. Can be zero for this method
+            since the shifting is performed independently of the template size.
+        radius_outer:
+            Only with 'background_substraction': Radius of outer region with negative values.
+            For calculating the padding, the maximum of radius and radius_outer is used.
+        steps:
+            The template is correlated with 2 * steps + 1 symmetrically around the peak position
+            in x and y direction. This defines the maximum shift that can be
+            detected. The number of calculations grows with the square of this value, that means
+            keeping this as small as the data allows speeds up the calculation.
+        '''
+        super().__init__(*args, **kwargs)
+
+    def get_result_buffers(self):
+        super_buffers = super().get_result_buffers()
+        num_disks = len(self.params.peaks)
+        steps = self.params.steps * 2 + 1
+        my_buffers = {
+            'corr': self.buffer(
+                kind="nav", extra_shape=(num_disks * steps**2,), dtype="float32"
+            ),
+        }
+        super_buffers.update(my_buffers)
+        return super_buffers
+
+    def get_task_data(self, meta):
+        mask = mask_maker(self.params)
+        crop_size = mask.get_crop_size()
+        size = (2 * crop_size + 1, 2 * crop_size + 1)
+        template = mask.get_mask(sig_shape=size)
+        steps = self.params.steps
+        peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
+
+        offsetY = self.params.peaks[:, 0, np.newaxis, np.newaxis] + peak_offsetY - crop_size
+        offsetX = self.params.peaks[:, 1, np.newaxis, np.newaxis] + peak_offsetX - crop_size
+
+        offsetY = offsetY.flatten()
+        offsetX = offsetX.flatten()
+
+        stack = functools.partial(
+            sparse_template_multi_stack,
+            mask_index=range(len(offsetY)),
+            offsetX=offsetX,
+            offsetY=offsetY,
+            template=template,
+            imageSizeX=meta.dataset_shape.sig[1],
+            imageSizeY=meta.dataset_shape.sig[0]
+        )
+        # CSC matrices in combination with transposed data are fastest
+        container = MaskContainer(mask_factories=stack, dtype=np.float32,
+            use_sparse='scipy.sparse.csc')
+
+        kwargs = {
+            'mask_container': container,
+            'crop_size': crop_size,
+        }
+        return kwargs
+
+    def process_tile(self, tile, tile_slice):
+        c = self.task_data['mask_container']
+        tile_t = np.zeros(
+            (np.prod(tile.shape[1:]), tile.shape[0]),
+            dtype=tile.dtype
+        )
+        log_scale(tile.reshape((tile.shape[0], -1)).T, out=tile_t)
+
+        sl = c.get(key=tile_slice, transpose=False)
+        self.results.corr[:] += sl.dot(tile_t).T
+
+    def postprocess(self):
+        steps = 2 * self.params.steps + 1
+        corrmaps = self.results.corr.reshape((
+            -1,  # frames
+            len(self.params.peaks),  # peaks
+            steps,  # Y steps
+            steps,  # X steps
+        ))
+        peaks = self.params.peaks
+        r = self.results
+        for f in range(corrmaps.shape[0]):
+            for p in range(len(self.params.peaks)):
+                corr = corrmaps[f, p]
+                center, refined, peak_value, peak_elevation = evaluate_correlation(corr)
+                abs_center = _shift(center, peaks[p], self.params.steps).astype('u2')
+                abs_refined = _shift(refined, peaks[p], self.params.steps).astype('float32')
+                r.centers[f, p] = abs_center
+                r.refineds[f, p] = abs_refined
+                r.peak_values[f, p] = peak_value
+                r.peak_elevations[f, p] = peak_elevation
+
+
+def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
     peaks = peaks.astype(np.int)
-    return ctx.run_udf(
-        dataset=dataset,
-        fn=pass_2,
-        init=functools.partial(init_pass_2, peaks=peaks, parameters=parameters),
-        make_buffers=functools.partial(
-            get_result_buffers_pass_2,
-            num_disks=len(peaks),
-        ),
-    )
+    udf = FastCorrelationUDF(peaks=peaks, **parameters)
+    return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
 
-def run_blobfinder(ctx, dataset, parameters):
+def run_blobfinder(ctx, dataset, parameters, roi=None):
+    # FIXME implement ROI for SumFramesJob
     sum_job = SumFramesJob(dataset=dataset)
     sum_result = ctx.run(sum_job)
-    sum_result = np.log(sum_result - np.min(sum_result) + 1)
+
+    sum_result = log_scale(sum_result, out=None)
 
     peaks = get_peaks(
         parameters=parameters,
         sum_result=sum_result,
     )
 
-    pass_2_results = run_blobcorrelation(ctx, dataset, peaks, parameters)
+    pass_2_results = run_fastcorrelation(
+        ctx=ctx,
+        dataset=dataset,
+        peaks=peaks,
+        parameters=parameters,
+        roi=roi
+    )
 
     return (sum_result, pass_2_results['centers'],
         pass_2_results['refineds'], pass_2_results['peak_values'],
         pass_2_results['peak_elevations'], peaks)
 
 
-def get_result_buffers_refine(num_disks):
-    return {
-        'centers': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-        ),
-        'refineds': BufferWrapper(
-            kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-        ),
-        'peak_values': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32"
-        ),
-        'peak_elevations': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="float32"
-        ),
-        'zero': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32"
-        ),
-        'a': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32"
-        ),
-        'b': BufferWrapper(
-            kind="nav", extra_shape=(2,), dtype="float32"
-        ),
-        'selector': BufferWrapper(
-            kind="nav", extra_shape=(num_disks,), dtype="bool"
-        ),
-    }
+class RefinementMixin():
+    '''
+    To be combined with a CorrelationUDF using multiple inheritance.
+
+    The mixin must come before the UDF in the inheritance list.
+
+    It adds buffers zero, a, b, selector. A subclass of this mixin implements a
+    process_frame() method that will first call the superclass process_frame(), likely the
+    CorrelationUDF's, and expects that this will populate the CorrelationUDF result buffers.
+    It then calculates a refinement of start_zero, start_a and start_b based on the
+    correlation result and populates its own result buffers with this refinement result.
+
+    This allows combining arbitrary implementations of correlation-based matching with
+    arbitrary implementations of the refinement by declaring an ad-hoc class that inherits from one
+    subclass of RefinementMixin and one subclass of CorrelationUDF.
+
+    '''
+    def get_result_buffers(self):
+        super_buffers = super().get_result_buffers()
+        num_disks = len(self.params.peaks)
+        my_buffers = {
+            'zero': self.buffer(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'a': self.buffer(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'b': self.buffer(
+                kind="nav", extra_shape=(2,), dtype="float32"
+            ),
+            'selector': self.buffer(
+                kind="nav", extra_shape=(num_disks,), dtype="bool"
+            ),
+        }
+        super_buffers.update(my_buffers)
+        return super_buffers
+
+    def apply_match(self, index,  match):
+        r = self.results
+        # We cast from float64 to float32 here
+        r.zero[index] = match.zero
+        r.a[index] = match.a
+        r.b[index] = match.b
+        r.selector[index] = match.selector
 
 
-def refine(frame, template, start_zero, start_a, start_b, crop_buf, peaks, mask,
-           centers, refineds, peak_values, peak_elevations, zero, a, b, selector,
-           match_params, indices):
-    pass_2(
-        frame=frame,
-        template=template,
-        crop_buf=crop_buf,
-        peaks=peaks,
-        mask=mask,
-        centers=centers,
-        refineds=refineds,
-        peak_values=peak_values,
-        peak_elevations=peak_elevations
-    )
-    if match_params.get('affine', False):
-        match = grm.affinematch(
-            centers=centers,
-            refineds=refineds,
-            peak_values=peak_values,
-            peak_elevations=peak_elevations,
-            indices=indices,
-        )
-    else:
-        match = grm.fastmatch(
-            centers=centers,
-            refineds=refineds,
-            peak_values=peak_values,
-            peak_elevations=peak_elevations,
-            zero=start_zero,
-            a=start_a,
-            b=start_b,
-            parameters=match_params
-        )
-    # We don't check the cast since we cast from float64 to float32 here
-    # and avoid a lot of boilerplate
-    zero[:] = match.zero
-    a[:] = match.a
-    b[:] = match.b
-    selector[:] = match.selector
+class FastmatchMixin(RefinementMixin):
+    '''
+    Refinement using gridmatching.fastmatch()
+    '''
+    def __init__(self, *args, **kwargs):
+        '''
+        Parameters for gridmatching.fastmatch():
+
+        start_a : (y, x)
+            Approximate value for "a" vector.
+        start_b : (y, x)
+            Approximate value for "b" vector.
+        start_zero : (y, x)
+            Approximate value for "zero" point (origin, zero order peak)
+        tolerance (optional):
+            Relative position tolerance for peaks to be considered matches
+        min_delta (optional):
+            Minimum length of a potential grid vector
+        max_delta:
+            Maximum length of a potential grid vector
+        '''
+        super().__init__(*args, **kwargs)
+
+    def postprocess(self):
+        super().postprocess()
+        p = self.params
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.fastmatch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                zero=p.start_zero,
+                a=p.start_a,
+                b=p.start_b,
+                parameters=p,
+            )
+            self.apply_match(index, match)
 
 
-def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None):
+class AffineMixin(RefinementMixin):
+    '''
+    Refinement using gridmatching.affinematch()
+    '''
+    def __init__(self, *args, **kwargs):
+        '''
+        Parameters for gridmatching.affinematch():
+
+        indices : numpy.ndarray
+            List of indices [(h1, k1), (h2, k2), ...] of all peaks. The indices can be
+            non-integer and relative to any base vectors, including virtual ones like
+            (1, 0); (0, 1). See documentation of gridmatching.affinematch() for details.
+        '''
+        super().__init__(*args, **kwargs)
+
+    def postprocess(self):
+        super().postprocess()
+        p = self.params
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.affinematch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                indices=p.indices,
+            )
+            self.apply_match(index, match)
+
+
+def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
     '''
     Refine the given lattice for each frame by calculating approximate peak positions and refining
     them for each frame by using the blobcorrelation and gridmatching.fastmatch().
@@ -367,9 +553,10 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
         As a convenience, for the indices parameter this function accepts both shape
         (n, 2) and (2, n, m) so that numpy.mgrid[h:k, i:j] works directly to specify indices.
         This saves boilerplate code when using this function. Default: numpy.mgrid[-10:10, -10:10].
-    match_params['affine']: If True, use affine transformation matching. This is very fast and
-        robust against a distorted field of view, but doesn't exclude outliers.
-
+    params['affine']:
+        If True, use affine transformation matching. This is robust against a
+        distorted field of view, but doesn't exclude outliers and requires the indices of the
+        peaks to be known. See documentation of gridmatching.affinematch() for details.
 
     returns:
         (result, used_indices) where result is
@@ -418,32 +605,47 @@ def run_refine(ctx, dataset, zero, a, b, corr_params, match_params, indices=None
 
     peaks = grm.calc_coords(zero, a, b, indices).astype('int')
 
-    selector = grm.within_frame(peaks, corr_params['radius'], fy, fx)
+    selector = grm.within_frame(peaks, params['radius'], fy, fx)
 
     peaks = peaks[selector]
     indices = indices[selector]
 
+    if params.get('method', 'fastcorrelation') == 'fastcorrelation':
+        method = FastCorrelationUDF
+    elif params['method'] == 'sparse':
+        method = SparseCorrelationUDF
+
+    if params.get('affine', False):
+        mixin = AffineMixin
+    else:
+        mixin = FastmatchMixin
+
+    # The inheritance order matters: FIRST the mixin, which calls
+    # the super class methods.
+    class MyUDF(mixin, method):
+        pass
+
+    udf = MyUDF(
+        peaks=peaks,
+        indices=indices,
+        start_zero=zero,
+        start_a=a,
+        start_b=b,
+        **params
+    )
+
     result = ctx.run_udf(
         dataset=dataset,
-        fn=functools.partial(
-            refine,
-            start_zero=zero,
-            start_a=a,
-            start_b=b,
-            match_params=match_params,
-            indices=indices,
-        ),
-        init=functools.partial(init_pass_2, peaks=peaks, parameters=corr_params),
-        make_buffers=functools.partial(
-            get_result_buffers_refine,
-            num_disks=len(peaks),
-        ),
+        udf=udf,
+        roi=roi,
     )
     return (result, indices)
 
 
-# Visualize the refinement of a specific frame in matplotlib axes
 def visualize_frame(ctx, ds, result, indices, r, y, x, axes, colors=None, stretch=10):
+    '''
+    Visualize the refinement of a specific frame in matplotlib axes
+    '''
     # Get the frame from the dataset
     get_sample_frame = ctx.create_pick_analysis(dataset=ds, y=y, x=x)
     sample_frame = ctx.run(get_sample_frame)

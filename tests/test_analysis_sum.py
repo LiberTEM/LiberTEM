@@ -44,7 +44,8 @@ def test_sum_endian(lt_ctx):
 
 def test_sum_signed(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype='<i4')
-    dataset = MemoryDataSet(data=data, tileshape=(8, 16, 16), num_partitions=32)
+    dataset = MemoryDataSet(data=data, tileshape=(8, 16, 16), num_partitions=32,
+                            check_cast=False)
     expected = data.sum(axis=(0, 1))
 
     analysis = lt_ctx.create_sum_analysis(dataset=dataset)

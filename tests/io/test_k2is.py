@@ -10,6 +10,7 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
+from libertem.udf import UDF
 
 K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..',
                                   'data', 'Capture52', 'Capture52_.gtg')
@@ -174,16 +175,24 @@ def test_udf_on_k2is(lt_ctx, default_k2is):
     # assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
 
 
+class PixelsumUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'pixelsum': BufferWrapper(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def process_frame(self, frame):
+        assert self.results.pixelsum.shape == (1,)
+        self.results.pixelsum[:] = np.sum(frame)
+
+
 def test_udf_roi(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
-    res = lt_ctx.run_udf(
-        dataset=default_k2is,
-        fn=pixelsum_frame_fn,
-        init=pixelsum_init,
-        make_buffers=pixelsum_buffers,
-        roi=roi,
-    )
+    psum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=default_k2is, udf=psum, roi=roi)
     assert 'pixelsum' in res
 
 

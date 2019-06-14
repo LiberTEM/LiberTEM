@@ -36,7 +36,52 @@ def get_result_buffers(n_components, frame_size, total_frames):
         }
 
 
-def merge_frame(frame, num_frame, left_singular, singular_vals, components):
+def ccfipca(frame, num_frame, left_singular, singular_vals, components):
+    """
+    Implementation of Candid Covariance free Incremental PCA algorithm.
+    As the name suggests, this algorithm does not explicitly computes
+    the covariance matrix and thus, can lead to efficient use of memory
+    compared to other algorithms that utilizes the covariance matrix,
+    which can be arbitrarily large based on the dimension of the data
+
+    Parameters
+    """
+    num_features, n_components = components[:].shape
+
+    # initialize eigenvalues and eigenspace matrices, if needed
+    if num_frame[:] == 0:
+        U = np.random.normal(
+                            loc=0,
+                            scale=1/num_features,
+                            size=(num_features, n_components)
+                            ).T
+        eigvals = np.abs(np.random.normal(
+                                        loc=0,
+                                        scale=1,
+                                        size=(n_components,)
+                                        ) / np.sqrt(n_components)
+                        )
+
+    amnesic = max(1, num_frame[:]-2) / (num_frame[:] + 1)
+
+    frame_flattened = frame.reshape(frame.size,)
+
+    for i in range(n_components):
+
+        V =  amnesic * eigvals[i] * U[i, :] + (1 - amnesic) * np.dot(frame_flattened.reshape(-1, 1), U[i, :]) * frame_flattened
+
+        # update eigenvalues and eigenspace matrices
+        eigvals[i] = np.linalg.norm(V)
+        U[i, :] = V / eigvals[i]
+
+        frame_flattened -= np.dot(frame_flattened, U[i, :]) * U[i, :]
+
+    num_frame[:] += 1
+    left_singular[:] = U
+    singular_vals[:] = np.sqrt(eigvals)
+
+
+def incremental_pca(frame, num_frame, left_singular, singular_vals, components):
     """
     Given previous SVD results, characterized by, sum of
     frames, number of frames, variance of frames, singular values,

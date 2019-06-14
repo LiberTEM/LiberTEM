@@ -110,7 +110,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                 radius=ro,
                 radius_inner=ri,
                 n_bins=n_bins,
-                normalize=True
+                use_sparse=use_sparse,
+                dtype=np.complex64
             )
 
             orders = np.arange(max_order + 1)
@@ -124,15 +125,12 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
 
             if use_sparse:
-                rings = masks.to_sparse(
-                    rings.reshape((rings.shape[0], 1, *rings.shape[1:])).astype(np.complex64)
-                )
+                rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:]))
                 ring_stack = [rings] * len(orders)
                 ring_stack = sparse.concatenate(ring_stack, axis=1)
                 ring_stack *= modulator
             else:
-                ring_stack = masks.to_dense(rings)
-                ring_stack = ring_stack[:, np.newaxis, ...] * modulator
+                ring_stack = rings[:, np.newaxis, ...] * modulator
             return ring_stack.reshape((-1, detector_y, detector_x))
         return stack
 
@@ -150,24 +148,23 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         max_order = parameters.get('max_order', 24)
 
         mask_count = n_bins * (max_order + 1)
-
-        bin_width = ro - ri
+        bin_width = (ro - ri) / n_bins
         bin_area = np.pi * ro**2 - np.pi * (ro - bin_width)**2
+        stack_size = mask_count * detector_y * detector_x
 
         default = 'scipy.sparse'
-        # If the mask stack fits the L3 cache
+        # If the mask stack comfortably fits the L3 cache
         # FIXME more testing for optimum backend
-        if mask_count * detector_y * detector_x < 2**18:
+        if stack_size < 2**18:
             default = False
         # Masks are actually dense
-        elif bin_area / (detector_x * detector_y) > 0.05:
+        elif bin_area / (detector_x * detector_y) > 0.05 and n_bins < 10:
             default = False
         # sparse.pydata.org is good with masks that don't cover much area
         # FIXME more testing for optimum
         elif mask_count < 16:
             default = 'sparse.pydata'
         use_sparse = parameters.get('use_sparse', default)
-
         return {
             'cx': cx,
             'cy': cy,

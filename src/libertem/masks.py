@@ -168,7 +168,7 @@ def bounding_radius(centerX, centerY, imageSizeX, imageSizeY):
 
 
 def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
-        radius=None, radius_inner=0, n_bins=None, normalize=False):
+        radius=None, radius_inner=0, n_bins=None, normalize=False, use_sparse=None, dtype=None):
     '''
     Generate antialiased rings
     '''
@@ -185,7 +185,9 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
     width = (radius - radius_inner) / n_bins
     bin_area = np.pi * (radius**2 - (radius - width)**2)
 
-    use_sparse = bin_area / (imageSizeX * imageSizeY) < 0.1
+    if use_sparse is None:
+        use_sparse = bin_area / (imageSizeX * imageSizeY) < 0.1
+
     if use_sparse:
         jjs = np.arange(len(r), dtype=np.int64)
 
@@ -201,13 +203,13 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
                 s = vals.sum()
                 if not np.isclose(s, 0):
                     vals /= s
-            slices.append(sparse.COO(shape=len(r), data=vals, coords=(jjs[select],)))
+            slices.append(sparse.COO(shape=len(r), data=vals.astype(dtype), coords=(jjs[select],)))
         else:
             if normalize:  # Make sure each bin has a sum of 1
                 s = vals.sum()
                 if not np.isclose(s, 0):
                     vals /= s
-            slices.append(vals.reshape((imageSizeY, imageSizeX)))
+            slices.append(vals.reshape((imageSizeY, imageSizeX)).astype(dtype))
     # Patch a singularity at the center
     if radius_inner < 0.5:
         yy = int(np.round(centerY))

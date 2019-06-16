@@ -109,21 +109,21 @@ if __name__ == '__main__':
     plt.imshow(absmaps[0])
     plt.colorbar()
     plt.title("Map of absolute of order 0")
-    plt.savefig("images/radialfourier/absolute order 0.svg")
+    plt.savefig("images/radialfourier/absolute_order-0.svg")
 
     for o in range(1, 7):
         fig, axes = plt.subplots()
         plt.imshow(absmaps[o], vmin=vmin, vmax=vmax)
         plt.colorbar()
         plt.title("Map of absolute of order %s" % o)
-        plt.savefig("images/radialfourier/absolute order %s.svg" % o)
+        plt.savefig("images/radialfourier/absolute_order_%s.svg" % o)
 
         # The phase gives information about orientation
         fig, axes = plt.subplots()
         plt.imshow(np.angle(maps[o]), cmap=cm.twilight)
         plt.colorbar()
         plt.title("Map of phase of order %s" % o)
-        plt.savefig("images/radialfourier/phase order %s.svg" % o)
+        plt.savefig("images/radialfourier/phase_order_%s.svg" % o)
 
     # We determine which order is predominant
     # We reject values below a threshold to eliminate noise
@@ -138,4 +138,4 @@ if __name__ == '__main__':
     plt.imshow(dominant, cmap=cm.tab20, vmin=0, vmax=20)
     plt.colorbar()
     plt.title("Map of predominant order")
-    plt.savefig("images/radialfourier/predominant order.svg")
+    plt.savefig("images/radialfourier/predominant_order.svg")

@@ -64,31 +64,31 @@ Having a fine-grained analysis with many orders calculated as a function of radi
 
 ..  figure:: ./images/radialfourier/coefficients.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 0.svg
+..  figure:: ./images/radialfourier/absolute_order_0.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 1.svg
+..  figure:: ./images/radialfourier/absolute_order_1.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 1.svg
+..  figure:: ./images/radialfourier/phase_order_1.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 2.svg
+..  figure:: ./images/radialfourier/absolute_order_2.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 2.svg
+..  figure:: ./images/radialfourier/phase_order_2.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 3.svg
+..  figure:: ./images/radialfourier/absolute_order_3.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 3.svg
+..  figure:: ./images/radialfourier/phase_order_3.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 4.svg
+..  figure:: ./images/radialfourier/absolute_order_4.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 4.svg
+..  figure:: ./images/radialfourier/phase_order_4.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 5.svg
+..  figure:: ./images/radialfourier/absolute_order_5.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 5.svg
+..  figure:: ./images/radialfourier/phase_order_5.svg
 
-..  figure:: ./images/radialfourier/absolute\ order\ 6.svg
+..  figure:: ./images/radialfourier/absolute_order_6.svg
 
-..  figure:: ./images/radialfourier/phase\ order\ 6.svg
+..  figure:: ./images/radialfourier/phase_order_6.svg
 
-..  figure:: ./images/radialfourier/predominant\ order.svg
+..  figure:: ./images/radialfourier/predominant_order.svg
 

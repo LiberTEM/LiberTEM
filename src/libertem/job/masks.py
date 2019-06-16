@@ -15,6 +15,7 @@ from .base import Job, Task, ResultTile
 from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
 from libertem.common.buffers import zeros_aligned
+from libertem.common.sparse import CustomCSC
 
 log = logging.getLogger(__name__)
 
@@ -41,9 +42,17 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
                 iis, jjs = m.coords
                 values = m.data
                 if sparse_backend == 'scipy.sparse.csc':
-                    return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    mm = scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
                 else:
-                    return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    mm = scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                mm.sort_indices()
+                return mm
+            elif sparse_backend == 'CustomCSC':
+                iis, jjs = m.coords
+                values = m.data
+                mm = CustomCSC((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                mm.sort_indices()
+                return mm
             else:
                 raise ValueError(
                     "sparse_backend %s not implemented, can be 'scipy.sparse', "
@@ -62,7 +71,8 @@ class ApplyMasksJob(Job):
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, dtype=None, *args, **kwargs):
         '''
-        use_sparse can be None, True, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+        use_sparse can be None, True, 'scipy.sparse', 'scipy.sparse.csc',
+            'CustomCSC' or 'sparse.pydata'
         '''
         super().__init__(*args, **kwargs)
         # Choose default back-end
@@ -110,7 +120,7 @@ class ApplyMasksJob(Job):
 class MaskContainer(object):
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None):
         '''
-        use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+        use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc', 'CustomCSC' or 'sparse.pydata'
         '''
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,

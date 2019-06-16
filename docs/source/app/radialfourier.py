@@ -10,7 +10,7 @@ if __name__ == '__main__':
     ctx = lt.Context()
 
     # Sample data: Metallic glass
-    # Shuai Wei <shuai.wei@physik.rwth-aachen.de>
+    # Shuai Wei <shuai.wei@physik.rwth-aachen.de>, RWTH Aachen
     # Alexander Kuball, Universität des Saarlandes
     # Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich
     ds = ctx.load(

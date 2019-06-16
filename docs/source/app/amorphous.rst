@@ -44,7 +44,7 @@ Pick mode comes in handy to inspect individual frames:
 
 ..  figure:: ./images/radialfourier/radialfourier-pick.png
 
-Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.de>, Alexander Kuball, Universität des Saarlandes, Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich.
+Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.de>, RWTH Aachen; Alexander Kuball, Universität des Saarlandes; Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich.
 
 Scripting interface
 -------------------
@@ -55,3 +55,40 @@ Having a fine-grained analysis with many orders calculated as a function of radi
 
 .. include:: radialfourier.py
     :code:
+
+..  figure:: ./images/radialfourier/spectrum.svg
+
+..  figure:: ./images/radialfourier/radial_variance.svg
+
+..  figure:: ./images/radialfourier/radial_integrated_intensity.svg
+
+..  figure:: ./images/radialfourier/coefficients.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 0.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 1.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 1.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 2.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 2.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 3.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 3.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 4.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 4.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 5.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 5.svg
+
+..  figure:: ./images/radialfourier/absolute\ order\ 6.svg
+
+..  figure:: ./images/radialfourier/phase\ order\ 6.svg
+
+..  figure:: ./images/radialfourier/predominant\ order.svg
+

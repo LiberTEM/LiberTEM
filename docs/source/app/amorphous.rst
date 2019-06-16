@@ -34,7 +34,7 @@ Use the controls on the left to position the ring-shaped selector over the regio
 
 ..  figure:: ./images/radialfourier/radialfourier.png
 
-Under the right-hand side image you can select the channel to display. Available are absolute value, phase angle and a cubehelix vector field visualization of the complex number. The orders larger than zero are all plotted on the same range and are normalized by the zero-order component for each scan position to make the components comparable and eliminate the influence of absolute intensity variations in the visual display.
+Under the right-hand side image you can select the channel to display. Available are predominant order, absolute value, phase angle and a cubehelix vector field visualization of the complex number. The orders larger than zero are all plotted on the same range and are normalized by the zero-order component for each scan position to make the components comparable and eliminate the influence of absolute intensity variations in the visual display.
 
 You can select entries with the arrow keys on the keyboard in case the menu is outside the browser window. Your help with a more user-friendly GUI implementation would be highly appreciated!
 
@@ -43,6 +43,8 @@ You can select entries with the arrow keys on the keyboard in case the menu is o
 Pick mode comes in handy to inspect individual frames:
 
 ..  figure:: ./images/radialfourier/radialfourier-pick.png
+
+Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.de>, Alexander Kuball, Universität des Saarlandes, Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich.
 
 Scripting interface
 -------------------

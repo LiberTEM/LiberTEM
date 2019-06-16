@@ -3,6 +3,7 @@ from functools import partial
 
 import numpy as np
 import sparse
+import matplotlib.cm as cm
 
 from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
@@ -27,7 +28,23 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             angle = np.angle(job_results)
+            below_threshold = absolute[:, 1:20, ...] < \
+                absolute[:, 2:7:2, ...].max(axis=(1, 2, 3)) * 0.5
+            below_threshold = np.all(below_threshold, axis=1)
+            dominant = np.argmax(absolute[:, 1:20], axis=1) + 1
+            dominant[below_threshold] = 0
             for b in range(n_bins):
+                sets.append(
+                    AnalysisResult(
+                        raw_data=dominant[b],
+                        visualized=partial(
+                            visualize_simple, dominant[b], colormap=cm.tab20, vmin=0, vmax=20
+                        ),
+                        key="dominant_%s" % b,
+                        title="dominant order of bin %s" % b,
+                        desc="Dominant Fourier component",
+                    )
+                )
                 sets.append(
                     AnalysisResult(
                         raw_data=absolute[b, 0],

@@ -15,8 +15,7 @@ if __name__ == '__main__':
     # Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich
     ds = ctx.load(
         'MIB',
-        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data'
-             r'\hdu\2019-03-28-as spun\001\20190328 151006\default.hdr'
+        path='/cachedata/users/du/200_20190328_185735/default.hdr'
     )
     # ds.shape is (256, 256, 256, 256)
     # Size: 8 GB

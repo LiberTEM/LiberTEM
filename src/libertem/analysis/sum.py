@@ -7,7 +7,7 @@ from libertem import masks
 
 
 class SumUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
         }

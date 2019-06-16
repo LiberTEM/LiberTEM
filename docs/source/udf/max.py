@@ -4,7 +4,7 @@ from libertem.udf import UDF
 
 
 class MaxUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         """
         Describe the buffers we need to store our results:
         kind="sig" means we want to have a value for each coordinate

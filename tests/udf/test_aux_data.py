@@ -6,7 +6,7 @@ from utils import MemoryDataSet, _mk_random
 
 
 class EchoUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'echo': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
@@ -22,7 +22,7 @@ class EchoUDF(UDF):
 
 
 class EchoTiledUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'echo': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)

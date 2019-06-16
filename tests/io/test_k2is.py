@@ -176,7 +176,7 @@ def test_udf_on_k2is(lt_ctx, default_k2is):
 
 
 class PixelsumUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'pixelsum': BufferWrapper(
                 kind="nav", dtype="float32"

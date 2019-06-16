@@ -5,7 +5,7 @@ from libertem.udf import UDF
 
 
 class FEMUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'intensity': self.buffer(
                 kind="nav", dtype="float32"

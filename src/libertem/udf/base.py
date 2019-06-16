@@ -15,9 +15,10 @@ class UDFMeta:
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
     """
-    def __init__(self, partition_shape, dataset_shape, roi):
+    def __init__(self, partition_shape, dataset_shape, roi, dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
+        self._dtype = dtype
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -53,6 +54,16 @@ class UDFMeta:
             Has a shape of `dataset_shape.nav`.
         """
         return self._roi
+
+    @property
+    def dtype(self) -> np.dtype:
+        """
+        Returns
+        -------
+        np.dtype
+            Native dtype of the dataset
+        """
+        return self._dtype
 
 
 class UDFData:
@@ -258,8 +269,8 @@ class UDFBase:
     def init_task_data(self, meta):
         self.task_data = UDFData(self.get_task_data(meta))
 
-    def init_result_buffers(self):
-        self.results = UDFData(self.get_result_buffers())
+    def init_result_buffers(self, meta):
+        self.results = UDFData(self.get_result_buffers(meta))
 
 
 class UDF(UDFBase):
@@ -335,7 +346,7 @@ class UDF(UDFBase):
         """
         return {}
 
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta: UDFMeta):
         """
         Return result buffer declaration.
 
@@ -349,6 +360,12 @@ class UDF(UDFBase):
         Data available in this method:
 
         - `self.params` - the parameters of this UDF
+
+        Parameters
+        ----------
+
+        meta
+            relevant metadata, see :class:`UDFMeta` documentation.
 
         Returns
         -------
@@ -438,21 +455,27 @@ class UDFRunner:
         self._udf = udf
         self._debug = debug
 
-    def run_for_partition(self, partition, roi):
+    def _get_dtype(self, dtype):
+        '''
+        FIXME replace with dtype switching logic and user control similar to MaskJob
+        '''
+        dtype = np.dtype(dtype)
         # simple dtype logic for now: if data is complex or float, keep data dtype,
         # otherwise convert to float32
-        if partition.dtype.kind in ('c', 'f'):
-            dtype = partition.dtype
-        else:
-            # integer data, convert to float for now:
+        if dtype.kind not in ('c', 'f'):
             dtype = np.dtype("float32")
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_part(partition, roi)
+        return dtype
+
+    def run_for_partition(self, partition, roi):
+        dtype = self._get_dtype(partition.dtype)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
             roi=roi,
+            dtype=dtype
         )
+        self._udf.init_result_buffers(meta)
+        self._udf.allocate_for_part(partition, roi)
         self._udf.init_task_data(meta)
         if hasattr(self._udf, 'process_tile'):
             method = 'tile'
@@ -509,7 +532,13 @@ class UDFRunner:
         return self._udf.results, partition
 
     def run_for_dataset(self, dataset, executor, roi=None):
-        self._udf.init_result_buffers()
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=roi,
+            dtype=self._get_dtype(dataset.dtype)
+        )
+        self._udf.init_result_buffers(meta)
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)
@@ -527,8 +556,14 @@ class UDFRunner:
         return self._udf.results
 
     async def run_for_dataset_async(self, dataset, executor, roi=None):
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=roi,
+            dtype=dataset.dtype
+        )
         # FIXME: code duplication?
-        self._udf.init_result_buffers()
+        self._udf.init_result_buffers(meta)
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)

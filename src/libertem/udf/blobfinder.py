@@ -209,7 +209,7 @@ class CorrelationUDF(UDF):
     '''
     Abstract base class for peak correlation implementations
     '''
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         """
         we 'declare' what kind of result buffers we need, without concrete shapes
 
@@ -317,8 +317,8 @@ class SparseCorrelationUDF(CorrelationUDF):
         '''
         super().__init__(*args, **kwargs)
 
-    def get_result_buffers(self):
-        super_buffers = super().get_result_buffers()
+    def get_result_buffers(self, meta):
+        super_buffers = super().get_result_buffers(meta)
         num_disks = len(self.params.peaks)
         steps = self.params.steps * 2 + 1
         my_buffers = {
@@ -443,8 +443,8 @@ class RefinementMixin():
     subclass of RefinementMixin and one subclass of CorrelationUDF.
 
     '''
-    def get_result_buffers(self):
-        super_buffers = super().get_result_buffers()
+    def get_result_buffers(self, meta):
+        super_buffers = super().get_result_buffers(meta)
         num_disks = len(self.params.peaks)
         my_buffers = {
             'zero': self.buffer(

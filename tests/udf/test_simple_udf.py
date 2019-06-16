@@ -4,11 +4,12 @@ import numpy as np
 import pytest
 
 from libertem.udf import UDF
+from libertem.udf.base import UDFMeta
 from utils import MemoryDataSet, _mk_random
 
 
 class PixelsumUDF(UDF):
-    def get_result_buffers(self):
+    def get_result_buffers(self, meta):
         return {
             'pixelsum': self.buffer(
                 kind="nav", dtype="float32"
@@ -76,7 +77,7 @@ def test_kind_single(lt_ctx):
                             num_partitions=2, sig_dims=2)
 
     class CounterUDF(UDF):
-        def get_result_buffers(self):
+        def get_result_buffers(self, meta):
             return {
                 'counter': self.buffer(
                     kind="single", dtype="uint32"
@@ -113,7 +114,7 @@ def test_bad_merge(lt_ctx):
                             num_partitions=2, sig_dims=2)
 
     class BadmergeUDF(UDF):
-        def get_result_buffers(self):
+        def get_result_buffers(self, meta):
             return {
                 'pixelsum': self.buffer(
                     kind="nav", dtype="float32"
@@ -147,7 +148,7 @@ def test_extra_dimension_shape(lt_ctx):
                             num_partitions=2, sig_dims=2)
 
     class ExtraShapeUDF(UDF):
-        def get_result_buffers(self):
+        def get_result_buffers(self, meta):
             return {
                 'test': self.buffer(
                     kind="nav", extra_shape=(2,), dtype="float32"
@@ -229,6 +230,12 @@ def test_udf_pickle(lt_ctx):
 
     partition = next(dataset.get_partitions())
     pixelsum = PixelsumUDF()
-    pixelsum.init_result_buffers()
+    meta = UDFMeta(
+        partition_shape=partition.slice.shape,
+        dataset_shape=dataset.shape,
+        roi=None,
+        dtype="float32"
+    )
+    pixelsum.init_result_buffers(meta)
     pixelsum.allocate_for_part(partition, None)
     pickle.loads(pickle.dumps(pixelsum))

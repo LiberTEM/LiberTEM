@@ -11,8 +11,8 @@ class SumUDF(UDF):
             'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
         }
 
-    def process_frame(self, frame):
-        self.results.intensity += frame
+    def process_tile(self, tile, tile_slice):
+        self.results.intensity += np.sum(tile, axis=0)
 
     def merge(self, dest, src):
         dest['intensity'][:] += src['intensity']
@@ -40,6 +40,6 @@ class SumAnalysis(BaseAnalysis):
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.intensity,
-                           visualized=visualize_simple(udf_results.intensity),
+                           visualized=visualize_simple(udf_results.intensity, logarithmic=True),
                            key="intensity", title="intensity", desc="sum of all frames"),
         ])

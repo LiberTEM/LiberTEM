@@ -265,6 +265,16 @@ export interface PickFrameParams {
     y: number,
 }
 
+export interface RadialFourierParams {
+    shape: "radial_fourier",
+    cx: number,
+    cy: number,
+    ri: number,
+    ro: number,
+    n_bins: number,
+    max_order: number
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
@@ -273,7 +283,8 @@ export enum AnalysisTypes {
     SUM_FRAMES = "SUM_FRAMES",
     PICK_FRAME = "PICK_FRAME",
     APPLY_FFT_MASK="APPLY_FFT_MASK",
-    FFTSUM_FRAMES="FFTSUM_FRAMES"
+    FFTSUM_FRAMES="FFTSUM_FRAMES",
+    RADIAL_FOURIER = "RADIAL_FOURIER",
 }
 
 export interface RingMaskDetails {
@@ -311,8 +322,13 @@ export interface PickFrameDetails {
     parameters: PickFrameParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | FFTDetails;
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | FFTDetails | RadialFourierDetails;
+export interface RadialFourierDetails {
+    type: AnalysisTypes.RADIAL_FOURIER,
+    parameters: RadialFourierParams,
+}
+
 
 export interface StartJobRequest {
     job: {

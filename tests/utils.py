@@ -1,15 +1,10 @@
 import numpy as np
 
 from libertem.io.dataset.base import (
-    FileSet3D, Partition3D, DataSet, DataSetMeta
+    FileSet3D, Partition3D, DataSet, DataSetMeta, DataTile
 )
 from libertem.common import Shape
 from libertem.masks import to_dense
-
-
-class MemoryReader(object):
-    def __init__(self, data):
-        self.data = data
 
 
 class MemoryFile3D(object):
@@ -37,7 +32,8 @@ class MemoryFile3D(object):
 
 
 class MemoryDataSet(DataSet):
-    def __init__(self, data, tileshape, num_partitions, sig_dims=2, check_cast=True):
+    def __init__(self, data, tileshape, num_partitions, sig_dims=2, check_cast=True,
+                 crop_frames=False):
         assert len(tileshape) == sig_dims + 1
         self.data = data
         self.tileshape = Shape(tileshape, sig_dims=sig_dims)
@@ -48,6 +44,7 @@ class MemoryDataSet(DataSet):
             raw_dtype=self.data.dtype,
         )
         self._check_cast = check_cast
+        self._crop_frames = crop_frames
 
     @property
     def dtype(self):
@@ -60,9 +57,6 @@ class MemoryDataSet(DataSet):
     def check_valid(self):
         return True
 
-    def get_reader(self):
-        return MemoryReader(data=self.data)
-
     def get_partitions(self):
         fileset = FileSet3D([
             MemoryFile3D(self.data.reshape(self.shape.flatten_nav()),
@@ -74,14 +68,41 @@ class MemoryDataSet(DataSet):
                 shape=self.shape,
                 num_partitions=self.num_partitions):
             print("creating partition", part_slice, start, stop, stackheight)
-            yield Partition3D(
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=fileset.get_for_range(start, stop),
-                start_frame=start,
-                num_frames=stop - start,
-                stackheight=stackheight,
-            )
+            if self._crop_frames:
+                yield CropFramesMemPartition(
+                    meta=self._meta,
+                    partition_slice=part_slice,
+                    fileset=fileset.get_for_range(start, stop),
+                    start_frame=start,
+                    num_frames=stop - start,
+                    stackheight=stackheight,
+                    tileshape=self.tileshape,
+                )
+            else:
+                yield Partition3D(
+                    meta=self._meta,
+                    partition_slice=part_slice,
+                    fileset=fileset.get_for_range(start, stop),
+                    start_frame=start,
+                    num_frames=stop - start,
+                    stackheight=stackheight,
+                )
+
+
+class CropFramesMemPartition(Partition3D):
+    def __init__(self, tileshape, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._tileshape = tileshape
+
+    def get_tiles(self, *args, **kwargs):
+        crop = self._tileshape[1:]
+        for tile in super().get_tiles(*args, **kwargs):
+            print("tile with slice %r" % tile.tile_slice)
+            for subslice in tile.tile_slice.subslices((self._stackheight,) + crop):
+                yield DataTile(
+                    data=subslice.shift(tile.tile_slice).get(tile.data),
+                    tile_slice=subslice,
+                )
 
 
 def _naive_mask_apply(masks, data):

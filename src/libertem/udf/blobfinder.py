@@ -1,11 +1,14 @@
+import functools
+
 import numpy as np
 from skimage.feature import peak_local_max
 import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
-from libertem.masks import radial_gradient, background_substraction
+from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
 from libertem.job.sum import SumFramesJob
+from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
 
@@ -155,11 +158,16 @@ def do_correlation(template, crop_part):
     spec_part = fft.rfft2(crop_part)
     corrspec = template * spec_part
     corr = fft.fftshift(fft.irfft2(corrspec))
+    return evaluate_correlation(corr)
+
+
+def evaluate_correlation(corr):
     center = np.unravel_index(np.argmax(corr), corr.shape)
     refined = np.array(refine_center(center, 2, corr), dtype='float32')
     height = np.float32(corr[center])
     elevation = np.float32(peak_elevation(refined, corr, height))
-    return np.array(center, dtype='u2'), refined, height, elevation
+    center = np.array(center, dtype='u2')
+    return center, refined, height, elevation
 
 
 def log_scale(data, out):
@@ -276,6 +284,116 @@ class FastCorrelationUDF(CorrelationUDF):
             r.peak_values[disk_idx] = peak_value
             r.peak_elevations[disk_idx] = peak_elevation
 
+    def postprocess(self):
+        pass
+
+
+class SparseCorrelationUDF(CorrelationUDF):
+    '''
+    Direct correlation using sparse matrices
+
+    This method allows to adjust the number of correlation steps independent of the template size.
+    '''
+    def __init__(self, *args, **kwargs):
+        '''
+        peaks : numpy.ndarray
+            Numpy array of (y, x) coordinates with peak positions to correlate
+        mask_type : str
+            Mask to use for correlation. Currently one of 'radial_gradient' and
+            'background_substraction'
+        radius:
+            Radius of the CBED disks in px
+        padding:
+            Extra space around radius as a fraction of radius. Can be zero for this method
+            since the shifting is performed independently of the template size.
+        radius_outer:
+            Only with 'background_substraction': Radius of outer region with negative values.
+            For calculating the padding, the maximum of radius and radius_outer is used.
+        steps:
+            The template is correlated with 2 * steps + 1 symmetrically around the peak position
+            in x and y direction. This defines the maximum shift that can be
+            detected. The number of calculations grows with the square of this value, that means
+            keeping this as small as the data allows speeds up the calculation.
+        '''
+        super().__init__(*args, **kwargs)
+
+    def get_result_buffers(self):
+        super_buffers = super().get_result_buffers()
+        num_disks = len(self.params.peaks)
+        steps = self.params.steps * 2 + 1
+        my_buffers = {
+            'corr': self.buffer(
+                kind="nav", extra_shape=(num_disks * steps**2,), dtype="float32"
+            ),
+        }
+        super_buffers.update(my_buffers)
+        return super_buffers
+
+    def get_task_data(self, meta):
+        mask = mask_maker(self.params)
+        crop_size = mask.get_crop_size()
+        size = (2 * crop_size + 1, 2 * crop_size + 1)
+        template = mask.get_mask(sig_shape=size)
+        steps = self.params.steps
+        peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
+
+        offsetY = self.params.peaks[:, 0, np.newaxis, np.newaxis] + peak_offsetY - crop_size
+        offsetX = self.params.peaks[:, 1, np.newaxis, np.newaxis] + peak_offsetX - crop_size
+
+        offsetY = offsetY.flatten()
+        offsetX = offsetX.flatten()
+
+        stack = functools.partial(
+            sparse_template_multi_stack,
+            mask_index=range(len(offsetY)),
+            offsetX=offsetX,
+            offsetY=offsetY,
+            template=template,
+            imageSizeX=meta.dataset_shape.sig[1],
+            imageSizeY=meta.dataset_shape.sig[0]
+        )
+        # CSC matrices in combination with transposed data are fastest
+        container = MaskContainer(mask_factories=stack, dtype=np.float32,
+            use_sparse='scipy.sparse.csc')
+
+        kwargs = {
+            'mask_container': container,
+            'crop_size': crop_size,
+        }
+        return kwargs
+
+    def process_tile(self, tile, tile_slice):
+        c = self.task_data['mask_container']
+        tile_t = np.zeros(
+            (np.prod(tile.shape[1:]), tile.shape[0]),
+            dtype=tile.dtype
+        )
+        log_scale(tile.reshape((tile.shape[0], -1)).T, out=tile_t)
+
+        sl = c.get(key=tile_slice, transpose=False)
+        self.results.corr[:] += sl.dot(tile_t).T
+
+    def postprocess(self):
+        steps = 2 * self.params.steps + 1
+        corrmaps = self.results.corr.reshape((
+            -1,  # frames
+            len(self.params.peaks),  # peaks
+            steps,  # Y steps
+            steps,  # X steps
+        ))
+        peaks = self.params.peaks
+        r = self.results
+        for f in range(corrmaps.shape[0]):
+            for p in range(len(self.params.peaks)):
+                corr = corrmaps[f, p]
+                center, refined, peak_value, peak_elevation = evaluate_correlation(corr)
+                abs_center = _shift(center, peaks[p], self.params.steps).astype('u2')
+                abs_refined = _shift(refined, peaks[p], self.params.steps).astype('float32')
+                r.centers[f, p] = abs_center
+                r.refineds[f, p] = abs_refined
+                r.peak_values[f, p] = peak_value
+                r.peak_elevations[f, p] = peak_elevation
+
 
 def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
     peaks = peaks.astype(np.int)
@@ -345,13 +463,13 @@ class RefinementMixin():
         super_buffers.update(my_buffers)
         return super_buffers
 
-    def apply_match(self, match):
+    def apply_match(self, index,  match):
         r = self.results
         # We cast from float64 to float32 here
-        r.zero[:] = match.zero
-        r.a[:] = match.a
-        r.b[:] = match.b
-        r.selector[:] = match.selector
+        r.zero[index] = match.zero
+        r.a[index] = match.a
+        r.b[index] = match.b
+        r.selector[index] = match.selector
 
 
 class FastmatchMixin(RefinementMixin):
@@ -377,22 +495,22 @@ class FastmatchMixin(RefinementMixin):
         '''
         super().__init__(*args, **kwargs)
 
-    def process_frame(self, frame):
-        super().process_frame(frame)
-        r = self.results
+    def postprocess(self):
+        super().postprocess()
         p = self.params
-        # TODO include parameter in dummy __init__ docstring
-        match = grm.fastmatch(
-            centers=r.centers,
-            refineds=r.refineds,
-            peak_values=r.peak_values,
-            peak_elevations=r.peak_elevations,
-            zero=p.start_zero,
-            a=p.start_a,
-            b=p.start_b,
-            parameters=p  # TODO include fastmatch parameters in dummy init
-        )
-        self.apply_match(match)
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.fastmatch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                zero=p.start_zero,
+                a=p.start_a,
+                b=p.start_b,
+                parameters=p,
+            )
+            self.apply_match(index, match)
 
 
 class AffineMixin(RefinementMixin):
@@ -410,19 +528,19 @@ class AffineMixin(RefinementMixin):
         '''
         super().__init__(*args, **kwargs)
 
-    def process_frame(self, frame):
-        super().process_frame(frame)
-        r = self.results
+    def postprocess(self):
+        super().postprocess()
         p = self.params
-        # TODO include parameter in dummy __init__ docstring
-        match = grm.affinematch(
-            centers=r.centers,
-            refineds=r.refineds,
-            peak_values=r.peak_values,
-            peak_elevations=r.peak_elevations,
-            indices=p.indices,
-        )
-        self.apply_match(match)
+        r = self.results
+        for index in range(len(self.results.centers)):
+            match = grm.affinematch(
+                centers=r.centers[index],
+                refineds=r.refineds[index],
+                peak_values=r.peak_values[index],
+                peak_elevations=r.peak_elevations[index],
+                indices=p.indices,
+            )
+            self.apply_match(index, match)
 
 
 def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
@@ -494,6 +612,8 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
 
     if params.get('method', 'fastcorrelation') == 'fastcorrelation':
         method = FastCorrelationUDF
+    elif params['method'] == 'sparse':
+        method = SparseCorrelationUDF
 
     if params.get('affine', False):
         mixin = AffineMixin

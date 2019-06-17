@@ -28,8 +28,8 @@ class UDFMeta:
         Returns
         -------
         Shape
-            The shape of the partition this UDF currently works on. If a ROI
-            was applied, the shape will be modified accordingly.
+            The shape of the partition this UDF currently works on.\
+            If a ROI was applied, the shape will be modified accordingly.
         """
         return self._partition_shape
 
@@ -49,8 +49,8 @@ class UDFMeta:
         Returns
         -------
         np.ndarray
-            boolean array which limits the elements the UDF is working on. Has a shape
-            of `dataset_shape.nav`.
+            boolean array which limits the elements the UDF is working on.\
+            Has a shape of `dataset_shape.nav`.
         """
         return self._roi
 
@@ -160,7 +160,7 @@ class UDFFrameMixin:
 
 
 class UDFTileMixin:
-    def process_tile(self, tile):
+    def process_tile(self, tile, tile_slice):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -176,6 +176,10 @@ class UDFTileMixin:
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
+
+        tile_slice : Slice
+            A libertem.common.Slice instance that describes the location within the
+            dataset with navigation dimension flattened and reduced to the ROI.
         """
         raise NotImplementedError()
 
@@ -205,6 +209,23 @@ class UDFPartitionMixin:
             A large number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
+        """
+        raise NotImplementedError()
+
+
+class UDFPostprocessMixin:
+    def postprocess(self):
+        """
+        Implement this method to postprocess the result data for a partition.
+
+        This can be useful in combination with process_tile() to implement
+        a postprocessing step that requires the reduced results for whole frames.
+
+        Data available in this method:
+
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
         """
         raise NotImplementedError()
 
@@ -457,7 +478,7 @@ class UDFRunner:
         for tile in tiles:
             if method == 'tile':
                 self._udf.set_views_for_tile(partition, tile)
-                self._udf.process_tile(tile.data)
+                self._udf.process_tile(tile.data, tile.tile_slice)
             elif method == 'frame':
                 for frame_idx, frame in enumerate(tile.data):
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
@@ -467,6 +488,10 @@ class UDFRunner:
 
         if method == 'partition':
             self._udf.process_partition(partition_data)
+
+        if hasattr(self._udf, 'postprocess'):
+            self._udf.clear_views()
+            self._udf.postprocess()
 
         self._udf.cleanup()
         self._udf.clear_views()

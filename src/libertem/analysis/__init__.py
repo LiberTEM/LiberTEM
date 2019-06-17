@@ -1,5 +1,6 @@
 from .sum import SumAnalysis
 from .com import COMAnalysis
+from .radialfourier import RadialFourierAnalysis
 from .disk import DiskMaskAnalysis
 from .ring import RingMaskAnalysis
 from .point import PointMaskAnalysis
@@ -9,6 +10,7 @@ from .sumfft import SumfftAnalysis
 __all__ = [
     'SumAnalysis',
     'COMAnalysis',
+    'RadialFourierAnalysis',
     'DiskMaskAnalysis',
     'RingMaskAnalysis',
     'PointMaskAnalysis',

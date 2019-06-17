@@ -111,15 +111,15 @@ def test_crop_disks_from_frame():
 
 def test_run_refine_fastmatch(lt_ctx):
     shape = np.array([256, 256])
-    zero = shape / 2 + np.random.normal(size=2)
-    a = np.array([27.17, 0.]) + np.random.normal(size=2)
-    b = np.array([0., 29.19]) + np.random.normal(size=2)
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
     params = {
         'radius': 10,
-        'padding': 0.2,
+        'padding': 0.5,
         'mask_type': 'radial_gradient',
     }
 
@@ -131,9 +131,9 @@ def test_run_refine_fastmatch(lt_ctx):
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
         dataset=dataset,
-        zero=zero + np.random.normal(size=2),
-        a=a + np.random.normal(size=2),
-        b=b + np.random.normal(size=2),
+        zero=zero + np.random.uniform(-1, 1, size=2),
+        a=a + np.random.uniform(-1, 1, size=2),
+        b=b + np.random.uniform(-1, 1, size=2),
         params=params
     )
 
@@ -151,15 +151,15 @@ def test_run_refine_fastmatch(lt_ctx):
 
 def test_run_refine_affinematch(lt_ctx):
     shape = np.array([256, 256])
-    zero = shape / 2 + np.random.normal(size=2)
-    a = np.array([27.17, 0.]) + np.random.normal(size=2)
-    b = np.array([0., 29.19]) + np.random.normal(size=2)
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
     params = {
         'radius': 10,
-        'padding': 0.2,
+        'padding': 0.5,
         'mask_type': 'radial_gradient',
         'affine': True,
     }
@@ -174,13 +174,55 @@ def test_run_refine_affinematch(lt_ctx):
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
         dataset=dataset,
-        zero=zero + np.random.normal(size=2),
-        a=np.array([1, 0]) + np.random.normal(scale=0.05, size=2),
-        b=np.array([0, 1]) + np.random.normal(scale=0.05, size=2),
+        zero=zero + np.random.uniform(-1, 1, size=2),
+        a=np.array([1, 0]) + np.random.uniform(-0.05, 0.05, size=2),
+        b=np.array([0, 1]) + np.random.uniform(-0.05, 0.05, size=2),
         indices=affine_indices,
         params=params
     )
 
     assert np.allclose(res['zero'].data[0], zero, atol=0.5)
-    assert np.allclose(res['a'].data[0], [1, 0], atol=0.01)
-    assert np.allclose(res['b'].data[0], [0, 1], atol=0.01)
+    assert np.allclose(res['a'].data[0], [1, 0], atol=0.05)
+    assert np.allclose(res['b'].data[0], [0, 1], atol=0.05)
+
+
+def test_run_refine_sparse(lt_ctx):
+    shape = np.array([256, 256])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-3:4, -3:4]
+    indices = np.concatenate(indices.T)
+
+    params = {
+        'radius': 10,
+        'padding': 0.5,
+        'mask_type': 'radial_gradient',
+        'method': 'sparse',
+        'steps': 5
+    }
+
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    (res, real_indices) = blobfinder.run_refine(
+        ctx=lt_ctx,
+        dataset=dataset,
+        zero=zero + np.random.uniform(-0.5, 0.5, size=2),
+        a=a + np.random.uniform(-0.5, 0.5, size=2),
+        b=b + np.random.uniform(-0.5, 0.5, size=2),
+        params=params
+    )
+
+    print(peaks - grm.calc_coords(
+        res['zero'].data[0],
+        res['a'].data[0],
+        res['b'].data[0],
+        indices)
+    )
+
+    assert np.allclose(res['zero'].data[0], zero, atol=0.5)
+    assert np.allclose(res['a'].data[0], a, atol=0.2)
+    assert np.allclose(res['b'].data[0], b, atol=0.2)

@@ -32,13 +32,15 @@ def test_mask_caching_1():
     slice_ = Slice(origin=(0, 0, 0), shape=shape)
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    key = (mask_container.dtype, False, True)
+
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 0
     assert cache_info.misses == 1
 
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 1
     assert cache_info.misses == 1
 
@@ -46,7 +48,7 @@ def test_mask_caching_1():
 
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 2
     assert cache_info.misses == 1
 
@@ -63,13 +65,15 @@ def test_mask_caching_2():
     slice_ = Slice(origin=(0, 0, 0), shape=shape1)
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    key = (mask_container.dtype, False, True)
+
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 0
     assert cache_info.misses == 1
 
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 1
     assert cache_info.misses == 1
 
@@ -77,7 +81,7 @@ def test_mask_caching_2():
 
     mask_container.get(slice_)
 
-    cache_info = mask_container._get_masks_for_slice[mask_container.dtype].cache_info()
+    cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 2
     assert cache_info.misses == 1
 

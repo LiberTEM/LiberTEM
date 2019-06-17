@@ -19,21 +19,24 @@ interface AnalysisProps {
     dataset: DatasetOpen,
 }
 
+
 const mapDispatchToProps = {
     run: analysisActions.Actions.run,
 }
 
-type MergedProps = AnalysisProps & DispatchProps<typeof mapDispatchToProps>;
+type MergedProps = AnalysisProps & DispatchProps<typeof mapDispatchToProps>
 
-const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
+const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
-    const minLength = Math.min(imageWidth, imageHeight);
 
+    const minLength = Math.min(imageWidth, imageHeight);
     const [cx, setCx] = useState(imageWidth / 2);
     const [cy, setCy] = useState(imageHeight / 2);
     const [ri, setRi] = useState(minLength / 4);
     const [ro, setRo] = useState(minLength / 2);
+    const [nBins] = useState(1);
+    const [maxOrder] = useState(8);
 
     const riHandle = {
         x: cx - ri,
@@ -77,19 +80,6 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
             imageWidth={imageWidth} />
     )
 
-    const runAnalysis = () => {
-        run(analysis.id, 1, {
-            type: AnalysisTypes.APPLY_RING_MASK,
-            parameters: {
-                shape: "ring",
-                cx,
-                cy,
-                ri,
-                ro,
-            }
-        });
-    };
-
     const { frameViewTitle, frameModeSelector, handles: resultHandles } = useDefaultFrameView({
         scanWidth,
         scanHeight,
@@ -101,11 +91,26 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
+    const runAnalysis = () => {
+        run(analysis.id, 1, {
+            type: AnalysisTypes.RADIAL_FOURIER,
+            parameters: {
+                shape: "radial_fourier",
+                cx,
+                cy,
+                ri,
+                ro,
+                n_bins: nBins,
+                max_order: maxOrder,
+            }
+        });
+    };
+
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
-            title="Ring analysis" subtitle={subtitle}
+            title="Radial Fourier analysis" subtitle={subtitle}
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
@@ -116,7 +121,6 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
             </>}
             right={<>
                 <ResultList
-                    extraWidgets={frameViewWidgets}
                     jobIndex={1} analysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
@@ -127,4 +131,4 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
     );
 }
 
-export default connect(null, mapDispatchToProps)(RingMaskAnalysis);
+export default connect(null, mapDispatchToProps)(RadialFourierAnalysis);

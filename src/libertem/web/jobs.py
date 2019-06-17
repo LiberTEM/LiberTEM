@@ -102,11 +102,14 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.finish()
         self.event_registry.broadcast_event(msg)
 
+        t = time.time()
         async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor):
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,
             )
+            if time.time() - t < 0.3:
+                continue
             images = await result_images(results)
 
             # NOTE: make sure the following broadcast_event messages are sent atomically!
@@ -125,6 +128,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             for image in images:
                 raw_bytes = image.read()
                 self.event_registry.broadcast_event(raw_bytes, binary=True)
+            # The broadcast might have taken quite some time due to
+            # backpressure from the network
+            t = time.time()
 
         if self.data.job_is_cancelled(uuid):
             return

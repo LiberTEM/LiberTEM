@@ -93,6 +93,22 @@ class BaseAnalysis(object):
         """
         raise NotImplementedError()
 
+    def get_udf(self):
+        """
+        set TYPE='UDF' on the class and implement this method to run a UDF
+        from this analysis
+        """
+        raise NotImplementedError()
+
+    def get_roi(self):
+        """
+        Returns
+        -------
+        ndarray or None
+            region of interest for which we want to run our analysis
+        """
+        return None
+
     def get_complex_results(self, job_result, key_prefix, title, desc):
         magn = np.abs(job_result)
         angle = np.angle(job_result)

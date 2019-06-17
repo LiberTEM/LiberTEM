@@ -451,6 +451,8 @@ class Context:
             if analysis.TYPE == 'JOB':
                 job_to_run = analysis.get_job()
             else:
+                if roi is None:
+                    roi = analysis.get_roi()
                 udf_results = self.run_udf(
                     dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
                 )
@@ -458,6 +460,8 @@ class Context:
         else:
             job_to_run = job
 
+        if roi is not None:
+            raise TypeError("old-style analyses don't support ROIs")
         out = job_to_run.get_result_buffer()
         for tiles in self.executor.run_job(job_to_run):
             for tile in tiles:

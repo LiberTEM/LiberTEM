@@ -88,6 +88,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def run_udf(self, uuid, ds, analysis):
         udf = analysis.get_udf()
+        roi = analysis.get_roi()
 
         # FIXME: register_job for UDFs?
         self.data.register_job(uuid=uuid, job=udf, dataset=ds)
@@ -103,7 +104,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
-        async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor):
+        async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor, roi):
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,

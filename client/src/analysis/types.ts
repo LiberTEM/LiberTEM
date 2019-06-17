@@ -1,16 +1,10 @@
-import { AnalysisDetails, AnalysisTypes, PickFrameDetails, SumFramesDetails } from "../messages";
-
-export type FrameMode = AnalysisTypes.PICK_FRAME | AnalysisTypes.SUM_FRAMES;
-
-export type JobKind = "FRAME" | "RESULT";
+import { AnalysisTypes, PickFrameDetails, SumFramesDetails } from "../messages";
 
 export type AnalysisStatus = "busy" | "idle";
 
-export type JobList = Partial<{ [K in JobKind]: string }>;
+export type JobList = string[];
 
-export type JobHistory = {
-    [K in JobKind]: string[]
-};
+export type JobHistory = string[][];
 
 export type FrameAnalysisDetails = PickFrameDetails | SumFramesDetails;
 
@@ -19,8 +13,7 @@ export interface Analysis {
     dataset: string,
     jobs: JobList,
     jobHistory: JobHistory,
-    frameDetails: FrameAnalysisDetails,
-    resultDetails: AnalysisDetails,
+    mainAnalysisType: AnalysisTypes,
 }
 
 export type AnalysisState = Analysis & {

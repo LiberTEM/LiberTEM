@@ -7,8 +7,8 @@ import { AnalysisState } from "../types";
 import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./DiskMaskAnalysis";
 import PointSelectionAnalysis from "./PointSelectionAnalysis";
-import RingMaskAnalysis from "./RingMaskAnalysis";
 import RadialFourierAnalysis from "./RadialFourierAnalysis";
+import RingMaskAnalysis from "./RingMaskAnalysis";
 
 interface AnalysisProps {
     analysis: AnalysisState,
@@ -27,21 +27,21 @@ const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
         return null;
     }
 
-    switch (analysis.resultDetails.type) {
-        case AnalysisTypes.APPLY_DISK_MASK: {
-            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
-        };
+    switch (analysis.mainAnalysisType) {
         case AnalysisTypes.APPLY_RING_MASK: {
-            return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
+            return <RingMaskAnalysis dataset={dataset} analysis={analysis} />;
         }
+        case AnalysisTypes.APPLY_DISK_MASK: {
+            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} />;
+        };
         case AnalysisTypes.CENTER_OF_MASS: {
-            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
+            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} />;
         }
         case AnalysisTypes.APPLY_POINT_SELECTOR: {
-            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
+            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} />
         }
         case AnalysisTypes.RADIAL_FOURIER: {
-            return <RadialFourierAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
+            return <RadialFourierAnalysis dataset={dataset} analysis={analysis} />
         }
     }
 

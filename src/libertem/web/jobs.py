@@ -167,7 +167,6 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                     tile.reduce_into_result(full_result)
                 if time.time() - t < 0.3:
                     continue
-                t = time.time()
                 results = yield full_result
                 images = await result_images(results)
 
@@ -187,6 +186,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 for image in images:
                     raw_bytes = image.read()
                     self.event_registry.broadcast_event(raw_bytes, binary=True)
+                # The broadcast might have taken quite some time due to
+                # backpressure from the network
+                t = time.time()
         except JobCancelledError:
             return  # TODO: maybe write a message on the websocket?
 

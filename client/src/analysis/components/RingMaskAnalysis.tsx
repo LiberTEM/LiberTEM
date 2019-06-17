@@ -90,7 +90,11 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
         });
     };
 
-    const { frameViewTitle, frameModeSelector, handles: resultHandles } = useDefaultFrameView({
+    const {
+        frameViewTitle, frameModeSelector,
+        handles: resultHandles,
+        widgets: resultWidgets,
+    } = useDefaultFrameView({
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
@@ -116,10 +120,10 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
             </>}
             right={<>
                 <ResultList
-                    extraWidgets={frameViewWidgets}
                     jobIndex={1} analysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
+                    extraWidgets={resultWidgets}
                 />
             </>}
             toolbar={toolbar}

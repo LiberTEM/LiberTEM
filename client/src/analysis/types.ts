@@ -51,6 +51,11 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         short: "Sum all frames",
         showInUI: false,
     },
+    [AnalysisTypes.SUM_FRAMES_ROI]: {
+        long: "Create a sum of ROI",
+        short: "Sum over ROI",
+        showInUI: false,
+    },
     [AnalysisTypes.PICK_FRAME]: {
         long: "Pick a single frame",
         short: "Pick frame",

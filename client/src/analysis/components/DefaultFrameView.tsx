@@ -5,6 +5,7 @@ import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
+import { useRoiPicker } from "./RoiPicker";
 import useSumFrames from "./SumFrames";
 
 const useDefaultFrameView = ({
@@ -21,6 +22,10 @@ const useDefaultFrameView = ({
         {
             text: "Pick",
             value: AnalysisTypes.PICK_FRAME,
+        },
+        {
+            text: "Average over ROI (disk)",
+            value: AnalysisTypes.SUM_FRAMES_ROI,
         }
     ];
 
@@ -36,6 +41,14 @@ const useDefaultFrameView = ({
         run
     });
 
+    const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({
+        enabled: frameMode === AnalysisTypes.SUM_FRAMES_ROI,
+        scanWidth, scanHeight,
+        jobIndex: 0,
+        analysisId,
+        run
+    })
+
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
@@ -49,10 +62,30 @@ const useDefaultFrameView = ({
 
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
 
+    let handles = nullHandles;
+
+    switch (frameMode) {
+        case AnalysisTypes.PICK_FRAME:
+            handles = pickHandles;
+            break;
+        case AnalysisTypes.SUM_FRAMES_ROI:
+            handles = sumRoiHandles;
+            break;
+    }
+
+    let widgets;
+
+    switch (frameMode) {
+        case AnalysisTypes.SUM_FRAMES_ROI:
+            widgets = sumRoiWidgets;
+            break;
+    }
+
     return {
         frameViewTitle,
-        handles: frameMode !== AnalysisTypes.PICK_FRAME ? nullHandles : pickHandles,
         frameModeSelector,
+        handles,
+        widgets,
     }
 }
 

@@ -80,7 +80,11 @@ const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run 
             imageWidth={imageWidth} />
     )
 
-    const { frameViewTitle, frameModeSelector, handles: resultHandles } = useDefaultFrameView({
+    const {
+        frameViewTitle, frameModeSelector,
+        handles: resultHandles,
+        widgets: resultWidgets,
+    } = useDefaultFrameView({
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
@@ -124,6 +128,7 @@ const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run 
                     jobIndex={1} analysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
+                    extraWidgets={resultWidgets}
                 />
             </>}
             toolbar={toolbar}

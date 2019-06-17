@@ -275,14 +275,24 @@ export interface RadialFourierParams {
     max_order: number
 }
 
+export type SumFrameParams = {} | {
+    roi: {
+        shape: "disk",
+        cx: number,
+        cy: number,
+        r: number,
+    }
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
-    RADIAL_FOURIER = "RADIAL_FOURIER"
+    RADIAL_FOURIER = "RADIAL_FOURIER",
 }
 
 export interface RingMaskDetails {
@@ -307,7 +317,7 @@ export interface CenterOfMassDetails {
 
 export interface SumFramesDetails {
     type: AnalysisTypes.SUM_FRAMES,
-    parameters: {},
+    parameters: SumFrameParams
 }
 
 export interface PickFrameDetails {

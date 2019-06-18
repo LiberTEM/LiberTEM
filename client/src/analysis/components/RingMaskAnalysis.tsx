@@ -1,31 +1,20 @@
 import * as React from "react";
 import { useState } from "react";
-import { connect } from "react-redux";
+import { useDispatch } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
-import { AnalysisTypes, DatasetOpen } from "../../messages";
+import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, riConstraint, roConstraints } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisState } from "../types";
+import { AnalysisProps } from "../types";
 import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
 import useDefaultFrameView from "./DefaultFrameView";
 import Toolbar from "./Toolbar";
 
-interface AnalysisProps {
-    analysis: AnalysisState,
-    dataset: DatasetOpen,
-}
-
-const mapDispatchToProps = {
-    run: analysisActions.Actions.run,
-}
-
-type MergedProps = AnalysisProps & DispatchProps<typeof mapDispatchToProps>;
-
-const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
+const RingMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -77,17 +66,16 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
             imageWidth={imageWidth} />
     )
 
+    const dispatch = useDispatch();
+
     const runAnalysis = () => {
-        run(analysis.id, 1, {
+        dispatch(analysisActions.Actions.run(analysis.id, 1, {
             type: AnalysisTypes.APPLY_RING_MASK,
             parameters: {
                 shape: "ring",
-                cx,
-                cy,
-                ri,
-                ro,
+                cx, cy, ri, ro,
             }
-        });
+        }));
     };
 
     const {
@@ -98,7 +86,6 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
-        run
     })
 
     const subtitle = (
@@ -131,4 +118,4 @@ const RingMaskAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) =>
     );
 }
 
-export default connect(null, mapDispatchToProps)(RingMaskAnalysis);
+export default RingMaskAnalysis;

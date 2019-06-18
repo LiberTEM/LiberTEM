@@ -1,4 +1,5 @@
 import React from "react";
+import { useDispatch } from "react-redux";
 import { AnalysisTypes } from "../../messages";
 import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
@@ -6,23 +7,26 @@ import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 
 const useFramePicker = ({
-    enabled, scanWidth, scanHeight, jobIndex, analysisId, run
+    enabled, scanWidth, scanHeight, jobIndex, analysisId,
 }: {
     enabled: boolean, scanWidth: number, scanHeight: number,
-    jobIndex: number, analysisId: string, run: typeof analysisActions.Actions.run
+    jobIndex: number, analysisId: string,
 }) => {
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
 
+    const dispatch = useDispatch();
+
     React.useEffect(() => {
         if (enabled) {
-            run(analysisId, jobIndex, {
+            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                 type: AnalysisTypes.PICK_FRAME,
                 parameters: {
                     x: cx,
                     y: cy,
                 },
-            });
+            }
+            ))
         }
     }, [analysisId, cx, cy, enabled, jobIndex]);
 

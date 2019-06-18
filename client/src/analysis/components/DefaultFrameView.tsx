@@ -2,17 +2,15 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
 import { useRoiPicker } from "./RoiPicker";
 import useSumFrames from "./SumFrames";
 
 const useDefaultFrameView = ({
-    scanWidth, scanHeight, analysisId, run
+    scanWidth, scanHeight, analysisId,
 }: {
-    scanWidth: number, scanHeight: number,
-    analysisId: string, run: typeof analysisActions.Actions.run
+    scanWidth: number, scanHeight: number, analysisId: string,
 }) => {
     const availableModes = [
         {
@@ -38,7 +36,6 @@ const useDefaultFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        run
     });
 
     const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({
@@ -46,14 +43,12 @@ const useDefaultFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        run
     })
 
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
         analysisId,
-        run
     })
 
     const frameViewTitle = (

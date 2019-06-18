@@ -1,20 +1,22 @@
 import React from "react";
+import { useDispatch } from "react-redux";
 import { AnalysisTypes } from "../../messages";
 import * as analysisActions from "../actions";
 
 const useSumFrames = ({
-    enabled, jobIndex, analysisId, run,
+    enabled, jobIndex, analysisId,
 }: {
     enabled: boolean, jobIndex: number, analysisId: string,
-    run: typeof analysisActions.Actions.run,
 }) => {
+    const dispatch = useDispatch();
+
     // FIXME: effect won't re-run when parameters change
     React.useEffect(() => {
         if (enabled) {
-            run(analysisId, jobIndex, {
+            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                 type: AnalysisTypes.SUM_FRAMES,
                 parameters: {},
-            });
+            }));
         }
     }, [analysisId, enabled, jobIndex]);
 };

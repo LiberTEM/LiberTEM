@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import { AnalysisTypes, SumFrameParams } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
@@ -8,18 +9,19 @@ import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 
-const useRoiPicker = ({ scanWidth, scanHeight, analysisId, run, enabled, jobIndex }: {
+const useRoiPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
     jobIndex: number,
     analysisId: string;
-    run: typeof analysisActions.Actions.run;
 }) => {
     const minLength = Math.min(scanWidth, scanHeight);
     const [cx, setCx] = useState(scanWidth / 2);
     const [cy, setCy] = useState(scanHeight / 2);
     const [r, setR] = useState(minLength / 8);
+
+    const dispatch = useDispatch();
 
     const roiParameters: SumFrameParams = {
         roi: {
@@ -32,10 +34,10 @@ const useRoiPicker = ({ scanWidth, scanHeight, analysisId, run, enabled, jobInde
 
     React.useEffect(() => {
         if (enabled) {
-            run(analysisId, jobIndex, {
+            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                 type: AnalysisTypes.SUM_FRAMES,
                 parameters: roiParameters,
-            });
+            }))
         }
     }, [analysisId, enabled, jobIndex, cx, cy, r]);
 

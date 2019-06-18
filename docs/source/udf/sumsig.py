@@ -4,7 +4,7 @@ from libertem.udf import UDF
 
 
 class SumOverSig(UDF):
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         """
         Describe the buffers we need to store our results:
         kind="nav" means we want to have a value for each coordinate

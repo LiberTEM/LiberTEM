@@ -5,7 +5,7 @@ from utils import MemoryDataSet, _mk_random
 
 
 class PixelsumUDF(UDF):
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         return {
             'pixelsum': self.buffer(
                 kind="nav", dtype="float32"
@@ -39,7 +39,7 @@ class PixelsumForCropped(UDF):
     """
     like above but different asserts in process_tile
     """
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         return {
             'pixelsum': self.buffer(
                 kind="nav", dtype="float32"

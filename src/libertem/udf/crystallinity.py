@@ -5,15 +5,15 @@ from libertem.udf import UDF
 
 
 class CrystallinityUDF(UDF):
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         return {
             'intensity': self.buffer(
                 kind="nav", dtype="float32"
             ),
         }
 
-    def get_task_data(self, meta):
-        sigshape = tuple(meta.partition_shape.sig)
+    def get_task_data(self):
+        sigshape = tuple(self.meta.partition_shape.sig)
         rad_in = self.params.rad_in
         rad_out = self.params.rad_out
         real_center = self.params.real_center

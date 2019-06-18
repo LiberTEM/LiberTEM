@@ -5,7 +5,7 @@ from libertem.udf import UDF
 
 class LogsumUDF(UDF):
     # FIXME dummy __init__ for docstring
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         return {
             'logsum': self.buffer(
                 kind='sig', dtype='float32'

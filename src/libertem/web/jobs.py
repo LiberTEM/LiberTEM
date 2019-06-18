@@ -104,13 +104,15 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
+        post_t = time.time()
         async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor, roi):
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,
             )
-            if time.time() - t < 0.3:
+            if time.time() - t < min(max(0.3, time.time() - post_t), 10):
                 continue
+            post_t = time.time()
             images = await result_images(results)
 
             # NOTE: make sure the following broadcast_event messages are sent atomically!
@@ -168,12 +170,14 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
+        post_t = time.time()
         try:
             async for result in executor.run_job(job):
                 for tile in result:
                     tile.reduce_into_result(full_result)
-                if time.time() - t < 0.3:
+                if time.time() - t < min(max(0.3, time.time() - post_t), 10):
                     continue
+                post_t = time.time()
                 results = yield full_result
                 images = await result_images(results)
 

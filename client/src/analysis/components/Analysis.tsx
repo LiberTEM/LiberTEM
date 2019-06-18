@@ -45,7 +45,7 @@ const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
             return <RadialFourierAnalysis dataset={dataset} analysis={analysis} />
         }
         case AnalysisTypes.APPLY_FFT_MASK: {
-            return <FFTAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
+            return <FFTAnalysis dataset={dataset} analysis={analysis}  />
         }
     }
 

@@ -275,6 +275,16 @@ export interface RadialFourierParams {
     max_order: number
 }
 
+export interface FFTParams{
+    //shape: "fft_mask"
+    rad_in:number,
+    rad_out:number,
+    real_rad:number,
+    real_centerx:number,
+    real_centery:number,//not a number?
+}
+
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
@@ -290,11 +300,12 @@ export enum AnalysisTypes {
 export interface RingMaskDetails {
     type: AnalysisTypes.APPLY_RING_MASK,
     parameters: MaskDefRing,
+    
 }
 
 export interface FFTDetails {
     type: AnalysisTypes.APPLY_FFT_MASK,
-    parameters: MaskDefRing,
+    parameters: FFTParams,
 }
 
 export interface DiskMaskDetails {
@@ -317,18 +328,22 @@ export interface SumFramesDetails {
     parameters: {},
 }
 
+export interface FFTSumFramesDetails {
+    type: AnalysisTypes.FFTSUM_FRAMES,
+    parameters: {},
+}
+
 export interface PickFrameDetails {
     type: AnalysisTypes.PICK_FRAME,
     parameters: PickFrameParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | FFTDetails | RadialFourierDetails;
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams | FFTParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | FFTDetails | RadialFourierDetails | FFTSumFramesDetails;
 export interface RadialFourierDetails {
     type: AnalysisTypes.RADIAL_FOURIER,
     parameters: RadialFourierParams,
 }
-
 
 export interface StartJobRequest {
     job: {

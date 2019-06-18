@@ -1,18 +1,28 @@
 from libertem.viz import visualize_simple
-from libertem.job.sum import SumFramesJob
+
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-import numpy as np
+
 import libertem.udf.crystallinity as crystal
 crystal.run_analysis_crystall
 
-class SumfftAnalysis(BaseAnalysis):
-    TYPE = "UDF"
-    def get_job(self):
-        return SumFramesJob(dataset=self.dataset)
 
-    def get_results(self, job_results):
-        fft_result = np.log(abs(np.fft.fftshift(np.fft.fft2(job_results)))+1)
+class ApplyFFTMask(BaseAnalysis):
+    TYPE = "UDF"
+
+    def get_udf(self):
+        rad_in = self.parameters["rad_in"]
+        rad_out = self.parameters["rad_out"]
+        real_center = (self.parameters["real_centery"], self.parameters["real_centerx"])
+        real_rad = self.parameters["real_rad"]
+        return crystal.CrystallinityUDF(rad_in=rad_in, rad_out=rad_out, real_center=real_center,
+         real_rad=real_rad)
+
+    def get_udf_results(self, udf_results):
+
         return AnalysisResultSet([
-            AnalysisResult(raw_data=job_results, visualized=visualize_simple(fft_result),
-                   key="intensity", title="intensity", desc="sum of all frames"),
+            AnalysisResult(raw_data=udf_results.intensity,
+                           visualized=visualize_simple(
+                               udf_results.intensity.reshape(self.dataset.shape.nav)),
+                           key="intensity", title="intensity",
+                           desc="result from integration over mask in Fourier space"),
         ])

@@ -5,7 +5,7 @@ import tornado.web
 
 from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    COMAnalysis, SumAnalysis, PickFrameAnalysis, SumfftAnalysis, RadialFourierAnalysis
+    COMAnalysis, SumAnalysis, PickFrameAnalysis, SumfftAnalysis, RadialFourierAnalysis, ApplyFFTMask
 )
 from .base import CORSMixin, run_blocking, log_message, result_images
 from .messages import Message
@@ -30,7 +30,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             "RADIAL_FOURIER": RadialFourierAnalysis,
             "SUM_FRAMES": SumAnalysis,
             "PICK_FRAME": PickFrameAnalysis,
-            "APPLY_FFT_MASK": RingMaskAnalysis,
+            "APPLY_FFT_MASK": ApplyFFTMask,
         }
         return analysis_by_type[type_]
 

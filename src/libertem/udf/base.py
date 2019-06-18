@@ -568,9 +568,7 @@ class UDFRunner:
 
         cancel_id = str(uuid.uuid4())
 
-        counter = 0
         async for part_results, partition in executor.run_tasks(tasks, cancel_id):
-            counter += 1
             self._udf.set_views_for_partition(partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
@@ -578,9 +576,8 @@ class UDFRunner:
             )
             self._udf.clear_views()
             yield self._udf.results
-
-        # yield at least one result (which should be empty):
-        if counter == 0:
+        else:
+            # yield at least one result (which should be empty):
             self._udf.clear_views()
             yield self._udf.results
 

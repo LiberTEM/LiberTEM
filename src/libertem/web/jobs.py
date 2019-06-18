@@ -49,28 +49,28 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
                 self.event_registry.broadcast_event(msg)
                 await self.data.remove_job(uuid)
-
-        job = analysis.get_job()
-        full_result = job.get_result_buffer()
-        job_runner = self.run_job(
-            full_result=full_result,
-            uuid=uuid, ds=ds, job=job,
-        )
-        try:
-            await job_runner.asend(None)
-            while True:
-                results = await run_blocking(
-                    analysis.get_results,
-                    job_results=full_result,
-                )
-                await job_runner.asend(results)
-        except StopAsyncIteration:
-            pass
-        except Exception as e:
-            log.exception("error running job, params=%r", params)
-            msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
-            self.event_registry.broadcast_event(msg)
-            await self.data.remove_job(uuid)
+        else:
+            job = analysis.get_job()
+            full_result = job.get_result_buffer()
+            job_runner = self.run_job(
+                full_result=full_result,
+                uuid=uuid, ds=ds, job=job,
+            )
+            try:
+                await job_runner.asend(None)
+                while True:
+                    results = await run_blocking(
+                        analysis.get_results,
+                        job_results=full_result,
+                    )
+                    await job_runner.asend(results)
+            except StopAsyncIteration:
+                pass
+            except Exception as e:
+                log.exception("error running job, params=%r", params)
+                msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
+                self.event_registry.broadcast_event(msg)
+                await self.data.remove_job(uuid)
 
     async def delete(self, uuid):
         result = await self.data.remove_job(uuid)

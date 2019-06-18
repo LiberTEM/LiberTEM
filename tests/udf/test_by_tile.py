@@ -88,3 +88,28 @@ def test_cropped(lt_ctx):
     assert 'pixelsum' in res
     print(data.shape, res['pixelsum'].data.shape)
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
+
+
+class FrameCounter(UDF):
+    def get_result_buffers(self):
+        return {
+            'counter': self.buffer(kind="single", dtype="int64"),
+        }
+
+    def process_tile(self, tile, tile_slice):
+        self.results.counter += 1  # FIXME
+
+    def merge(self, dest, src):
+        dest['counter'][:] += src['counter']
+
+
+def test_frame_counter(lt_ctx):
+    data = _mk_random(size=(16, 16, 24, 24), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(7, 7, 7),
+                            num_partitions=2, sig_dims=2, crop_frames=True)
+
+    counter = FrameCounter()
+    res = lt_ctx.run_udf(dataset=dataset, udf=counter)
+    assert 'counter' in res
+    print(data.shape, res['counter'].data.shape)
+    assert res['counter'].data == 256

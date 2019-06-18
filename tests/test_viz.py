@@ -44,3 +44,11 @@ def test_all_zeros(log):
 def test_all_negative(log):
     data = np.full((16, 16), -1)
     viz.visualize_simple(data, logarithmic=log)
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_some_nonnegative(log):
+    data = np.full((16, 16), -1)
+    data[0] = 0
+    data[1] = 1
+    viz.visualize_simple(data, logarithmic=log)

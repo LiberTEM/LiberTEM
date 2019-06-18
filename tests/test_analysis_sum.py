@@ -185,3 +185,37 @@ def test_sum_with_roi(lt_ctx):
     assert not np.allclose(results.intensity.raw_data, data.sum(axis=(0, 1)))
     # ... but rather like `expected`:
     assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_sum_zero_roi(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype='<u2')
+    dataset = MemoryDataSet(data=data, tileshape=(2, 16, 16), num_partitions=32)
+
+    roi = {
+        "shape": "disk",
+        "cx": -1,
+        "cy": -1,
+        "r": 0,
+    }
+    analysis = SumAnalysis(dataset=dataset, parameters={
+        "roi": roi,
+    })
+
+    results = lt_ctx.run(analysis)
+
+    mask = masks.circular(roi["cx"], roi["cy"], 16, 16, roi["r"])
+    assert mask.shape == (16, 16)
+    assert np.count_nonzero(mask) == 0
+    assert mask.dtype == np.bool
+
+    # applying the mask flattens the first two dimensions, so we
+    # only sum over axis 0 here:
+    expected = data[mask, ...].sum(axis=(0,))
+
+    assert expected.shape == (16, 16)
+    assert results.intensity.raw_data.shape == (16, 16)
+
+    # is not equal to results without mask:
+    assert not np.allclose(results.intensity.raw_data, data.sum(axis=(0, 1)))
+    # ... but rather like `expected`:
+    assert np.allclose(results.intensity.raw_data, expected)

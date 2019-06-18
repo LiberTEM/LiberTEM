@@ -1,4 +1,5 @@
 import asyncio
+import functools
 
 import pytest
 import h5py
@@ -9,6 +10,8 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.web.server import make_app, EventRegistry, SharedData
+from libertem.executor.base import AsyncAdapter, sync_to_async
+from libertem.executor.dask import DaskJobExecutor
 from libertem import api as lt
 
 from utils import MemoryDataSet, _mk_random
@@ -22,6 +25,20 @@ def inline_executor():
 @pytest.fixture
 def lt_ctx(inline_executor):
     return lt.Context(executor=inline_executor)
+
+
+@pytest.fixture
+async def async_executor():
+    cluster_kwargs = {
+        "threads_per_worker": 1,
+        "n_workers": 2,
+    }
+    sync_executor = await sync_to_async(
+        functools.partial(DaskJobExecutor.make_local, cluster_kwargs=cluster_kwargs)
+    )
+    executor = AsyncAdapter(wrapped=sync_executor)
+    yield executor
+    await executor.close()
 
 
 @pytest.fixture(scope='session')

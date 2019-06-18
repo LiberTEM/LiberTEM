@@ -1,8 +1,12 @@
 import pickle
+
 import cloudpickle
 import numpy as np
+import pytest
+
 from libertem.io.dataset.hdf5 import H5DataSet, unravel_nav
 from libertem.common import Slice, Shape
+from libertem.analysis.sum import SumAnalysis
 
 from utils import _naive_mask_apply, _mk_random
 
@@ -134,3 +138,65 @@ def test_roi_1(hdf5, lt_ctx):
     assert tiles[0].tile_slice.shape.nav.size == 1
     assert tuple(tiles[0].tile_slice.shape.sig) == (16, 16)
     assert tiles[0].tile_slice.origin == (0, 0, 0)
+
+
+def test_pick(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
+    )
+    ds.initialize()
+    assert len(ds.shape) == 4
+    print(ds.shape)
+    pick = lt_ctx.create_pick_analysis(dataset=ds, x=2, y=3)
+    lt_ctx.run(pick)
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize("mnp", [None, 1, 4])
+def test_roi_2(random_hdf5, lt_ctx, mnp):
+    ds = H5DataSet(
+        path=random_hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        min_num_partitions=mnp,
+    )
+    ds = ds.initialize()
+
+    roi = {
+        "shape": "disk",
+        "cx": 2,
+        "cy": 2,
+        "r": 1,
+    }
+    analysis = SumAnalysis(dataset=ds, parameters={
+        "roi": roi,
+    })
+
+    print(analysis.get_roi())
+
+    results = lt_ctx.run(analysis)
+
+    # let's draw a circle!
+    mask = np.full((5, 5), False)
+    mask[1, 2] = True
+    mask[2, 1:4] = True
+    mask[3, 2] = True
+
+    print(mask)
+
+    assert mask.shape == (5, 5)
+    assert mask.dtype == np.bool
+
+    reader = ds.get_reader()
+    with reader.get_h5ds() as h5ds:
+        data = np.array(h5ds)
+
+        # applying the mask flattens the first two dimensions, so we
+        # only sum over axis 0 here:
+        expected = data[mask, ...].sum(axis=(0,))
+
+        assert expected.shape == (16, 16)
+        assert results.intensity.raw_data.shape == (16, 16)
+
+        # is not equal to results without mask:
+        assert not np.allclose(results.intensity.raw_data, data.sum(axis=(0, 1)))
+        # ... but rather like `expected`:
+        assert np.allclose(results.intensity.raw_data, expected)

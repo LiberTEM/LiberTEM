@@ -185,9 +185,11 @@ class H5Partition(Partition):
             slice_4d = unravel_nav(self.slice, self.meta.shape)
             subslices = list(slice_4d.subslices(shape=tileshape))
             for tile_slice in subslices:
+                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
+                assert tile_slice_flat.shape.dims == 3
                 assert tile_slice.shape.dims == 4
                 if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
+                    intersection = tile_slice_flat.intersection_with(crop_to)
                     if intersection.is_null():
                         continue
                 if tuple(tile_slice.shape) != tuple(tileshape):
@@ -200,8 +202,6 @@ class H5Partition(Partition):
                     # reuse buffer
                     buf = data
                 dataset.read_direct(buf, source_sel=tile_slice.get())
-                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
-                assert tile_slice_flat.shape.dims == 3
                 yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
 
     def _get_tiles_with_roi(self, roi, dest_dtype):
@@ -210,7 +210,9 @@ class H5Partition(Partition):
         one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
-        frame_offset = 0  # FIXME! countzero of roi up to this partition
+        frame_offset = 0
+        # start_at_frame = self.slice.flatten_nav(self.meta.shape).origin[0]
+        # frame_offset = np.count_nonzero(roi[:start_at_frame])
         for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
             roi_idx = tile.tile_slice.origin[0] - self.slice.origin[0]
             if roi[roi_idx]:

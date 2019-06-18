@@ -349,7 +349,7 @@ class MIBDataSet(DataSet):
             s = self._scan_size
             num_images = self._num_images()
             # FIXME: read hdr file and check if num images matches the number there
-            if s[0] * s[1] != num_images:
+            if s[0] * s[1] > num_images:
                 raise DataSetException(
                     "scan_size (%r) does not match number of images (%d)" % (
                         s, num_images

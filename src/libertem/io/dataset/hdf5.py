@@ -210,12 +210,10 @@ class H5Partition(Partition):
         one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
-        frame_offset = 0
-        # start_at_frame = self.slice.flatten_nav(self.meta.shape).origin[0]
-        # frame_offset = np.count_nonzero(roi[:start_at_frame])
+        start_at_frame = self.slice.origin[0]
+        frame_offset = np.count_nonzero(roi[:start_at_frame])
         for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
-            roi_idx = tile.tile_slice.origin[0] - self.slice.origin[0]
-            if roi[roi_idx]:
+            if roi[tile.tile_slice.origin[0]]:
                 tile_slice = Slice(
                     origin=(frames_read + frame_offset,) + sig_origin,
                     shape=tile.tile_slice.shape,

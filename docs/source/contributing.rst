@@ -250,6 +250,7 @@ Before
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment
+* For the GUI-related items, open in an incognito window
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
 * Copy test files of all supported types to a fresh location or purge the parameter cache

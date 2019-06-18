@@ -151,7 +151,6 @@ def test_pick(hdf5, lt_ctx):
     lt_ctx.run(pick)
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("mnp", [None, 1, 4])
 def test_roi_2(random_hdf5, lt_ctx, mnp):
     ds = H5DataSet(

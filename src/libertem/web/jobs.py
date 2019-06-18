@@ -105,15 +105,15 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         t = time.time()
         post_t = time.time()
-        prev = 0
+        window = 0.3
         async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor, roi):
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,
             )
-            if time.time() - t < min(max(0.3, 2*(t - post_t), prev * 0.8), 10):
+            window = min(max(window, 2*(t - post_t)), 5)
+            if time.time() - t < window:
                 continue
-            prev = 2*(t - post_t)
             post_t = time.time()
             images = await result_images(results)
 
@@ -173,14 +173,14 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         t = time.time()
         post_t = time.time()
-        prev = 0
+        window = 0.3
         try:
             async for result in executor.run_job(job):
                 for tile in result:
                     tile.reduce_into_result(full_result)
-                if time.time() - t < min(max(0.3, 2*(t - post_t), prev * 0.8), 10):
+                window = min(max(window, 2*(t - post_t)), 5)
+                if time.time() - t < window:
                     continue
-                prev = 2*(t - post_t)
                 post_t = time.time()
                 results = yield full_result
                 images = await result_images(results)

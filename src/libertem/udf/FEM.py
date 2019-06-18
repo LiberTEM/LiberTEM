@@ -5,16 +5,16 @@ from libertem.udf import UDF
 
 
 class FEMUDF(UDF):
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         return {
             'intensity': self.buffer(
                 kind="nav", dtype="float32"
             ),
         }
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         center = self.params.center
-        sig_shape = tuple(meta.partition_shape.sig)
+        sig_shape = tuple(self.meta.partition_shape.sig)
         rad_out, rad_in = self.params.rad_out, self.params.rad_in
         mask_out = 1*_make_circular_mask(
             center[1], center[0],

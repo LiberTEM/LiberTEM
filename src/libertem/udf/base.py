@@ -15,10 +15,10 @@ class UDFMeta:
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
     """
-    def __init__(self, partition_shape, dataset_shape, roi, dtype):
+    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
-        self._dtype = dtype
+        self._dataset_dtype = dataset_dtype
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -56,14 +56,14 @@ class UDFMeta:
         return self._roi
 
     @property
-    def dtype(self) -> np.dtype:
+    def dataset_dtype(self) -> np.dtype:
         """
         Returns
         -------
         np.dtype
             Native dtype of the dataset
         """
-        return self._dtype
+        return self._dataset_dtype
 
 
 class UDFData:
@@ -266,11 +266,14 @@ class UDFBase:
         for ns in [self.params, self.results]:
             ns.clear_views()
 
-    def init_task_data(self, meta):
-        self.task_data = UDFData(self.get_task_data(meta))
+    def init_task_data(self):
+        self.task_data = UDFData(self.get_task_data())
 
-    def init_result_buffers(self, meta):
-        self.results = UDFData(self.get_result_buffers(meta))
+    def init_result_buffers(self):
+        self.results = UDFData(self.get_result_buffers())
+
+    def set_meta(self, meta):
+        self.meta = meta
 
 
 class UDF(UDFBase):
@@ -316,7 +319,7 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def get_task_data(self, meta: UDFMeta):
+    def get_task_data(self):
         """
         Initialize per-task data.
 
@@ -330,12 +333,7 @@ class UDF(UDFBase):
         Data available in this method:
 
         - `self.params` - the input parameters of this UDF
-
-        Parameters
-        ----------
-
-        meta
-            relevant metadata, see :class:`UDFMeta` documentation.
+        - `self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
 
         Returns
         -------
@@ -346,7 +344,7 @@ class UDF(UDFBase):
         """
         return {}
 
-    def get_result_buffers(self, meta: UDFMeta):
+    def get_result_buffers(self):
         """
         Return result buffer declaration.
 
@@ -360,12 +358,9 @@ class UDF(UDFBase):
         Data available in this method:
 
         - `self.params` - the parameters of this UDF
-
-        Parameters
-        ----------
-
-        meta
-            relevant metadata, see :class:`UDFMeta` documentation.
+        - `self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
+            Please note that partition metadata will not be set when this method is
+            executed on the head node.
 
         Returns
         -------
@@ -472,11 +467,12 @@ class UDFRunner:
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
             roi=roi,
-            dtype=dtype
+            dataset_dtype=dtype
         )
-        self._udf.init_result_buffers(meta)
+        self._udf.set_meta(meta)
+        self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
-        self._udf.init_task_data(meta)
+        self._udf.init_task_data()
         if hasattr(self._udf, 'process_tile'):
             method = 'tile'
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
@@ -536,9 +532,10 @@ class UDFRunner:
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
-            dtype=self._get_dtype(dataset.dtype)
+            dataset_dtype=self._get_dtype(dataset.dtype)
         )
-        self._udf.init_result_buffers(meta)
+        self._udf.set_meta(meta)
+        self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)
@@ -560,10 +557,11 @@ class UDFRunner:
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
-            dtype=dataset.dtype
+            dataset_dtype=dataset.dtype
         )
+        self._udf.set_meta(meta)
         # FIXME: code duplication?
-        self._udf.init_result_buffers(meta)
+        self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)

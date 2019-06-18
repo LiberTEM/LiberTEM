@@ -54,7 +54,7 @@ def merge(p0, p1):
 
 
 class StdDevUDF(UDF):
-    def get_result_buffers(self, meta):
+    def get_result_buffers(self):
         """
         Initializes BufferWrapper objects for sum of variances,
         sum of frames, and the number of frames

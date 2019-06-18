@@ -110,7 +110,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 analysis.get_udf_results,
                 udf_results=udf_results,
             )
-            if time.time() - t < min(max(0.3, time.time() - post_t), 10):
+            if time.time() - t < min(max(0.3, t - post_t), 10):
                 continue
             post_t = time.time()
             images = await result_images(results)
@@ -175,7 +175,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             async for result in executor.run_job(job):
                 for tile in result:
                     tile.reduce_into_result(full_result)
-                if time.time() - t < min(max(0.3, time.time() - post_t), 10):
+                if time.time() - t < min(max(0.3, t - post_t), 10):
                     continue
                 post_t = time.time()
                 results = yield full_result

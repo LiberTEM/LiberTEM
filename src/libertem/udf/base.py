@@ -275,6 +275,17 @@ class UDFBase:
     def set_meta(self, meta):
         self.meta = meta
 
+    def get_method(self):
+        if hasattr(self, 'process_tile'):
+            method = 'tile'
+        elif hasattr(self, 'process_frame'):
+            method = 'frame'
+        elif hasattr(self, 'process_partition'):
+            method = 'partition'
+        else:
+            raise TypeError("UDF should implement one of the `process_*` methods")
+        return method
+
 
 class UDF(UDFBase):
     """
@@ -473,18 +484,14 @@ class UDFRunner:
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
         self._udf.init_task_data()
-        if hasattr(self._udf, 'process_tile'):
-            method = 'tile'
+        method = self._udf.get_method()
+        if method == 'tile':
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
-        elif hasattr(self._udf, 'process_frame'):
-            method = 'frame'
+        elif method == 'frame':
             tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
-        elif hasattr(self._udf, 'process_partition'):
-            method = 'partition'
+        elif method == 'partition':
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
             raise NotImplementedError("process_partition is not implemented yet")
-        else:
-            raise TypeError("UDF should implement one of the `process_*` methods")
 
         partition_data = None
         if method == 'partition':

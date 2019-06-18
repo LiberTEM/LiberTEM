@@ -3,7 +3,6 @@ import numpy as np
 
 from libertem.udf.base import UDFRunner, UDF
 from utils import MemoryDataSet, _mk_random
-from libertem.web.base import run_blocking
 
 
 class PixelsumUDF(UDF):

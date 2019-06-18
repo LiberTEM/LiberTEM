@@ -94,11 +94,12 @@ def test_cropped(lt_ctx):
 class FrameCounter(UDF):
     def get_result_buffers(self):
         return {
-            'counter': self.buffer(kind="single", dtype="int64"),
+            # FIXME: "by_tile_position" not implemented yet, name TBD
+            'counter': self.buffer(kind="by_tile_position", dtype="int64"),
         }
 
     def process_tile(self, tile, tile_slice):
-        self.results.counter += 1  # FIXME
+        self.results.counter += 1
 
     def merge(self, dest, src):
         dest['counter'][:] += src['counter']

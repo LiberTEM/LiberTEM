@@ -1,10 +1,46 @@
+import time
+
 import numpy as np
 
+from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet3D, Partition3D, DataSet, DataSetMeta, DataTile
 )
 from libertem.common import Shape
 from libertem.masks import to_dense
+
+
+class MemDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/MEMDatasetParams.schema.json",
+        "title": "MEMDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "mem"},
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+            "num_partitions": {"type": "number"},
+            "sig_dims": {"type": "number"},
+            "check_cast": {"type": "boolean"},
+            "crop_frames": {"type": "boolean"},
+            "tiledelay": {"type": "number"},
+        },
+        "required": ["type", "tileshape", "num_partitions"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["tileshape", "num_partitions", "sig_dims", "check_cast",
+                      "crop_frames", "tiledelay"]
+            if k in raw_data
+        }
+        return data
 
 
 class MemoryFile3D(object):
@@ -32,9 +68,11 @@ class MemoryFile3D(object):
 
 
 class MemoryDataSet(DataSet):
-    def __init__(self, data, tileshape, num_partitions, sig_dims=2, check_cast=True,
-                 crop_frames=False):
+    def __init__(self, tileshape, num_partitions, data=None, sig_dims=2, check_cast=True,
+                 crop_frames=False, tiledelay=None):
         assert len(tileshape) == sig_dims + 1
+        if data is None:
+            data = _mk_random((16, 8, 32, 64))
         self.data = data
         self.tileshape = Shape(tileshape, sig_dims=sig_dims)
         self.num_partitions = num_partitions
@@ -45,6 +83,11 @@ class MemoryDataSet(DataSet):
         )
         self._check_cast = check_cast
         self._crop_frames = crop_frames
+        self._tiledelay = tiledelay
+
+    @classmethod
+    def get_msg_converter(cls):
+        return MemDatasetParams
 
     @property
     def dtype(self):
@@ -77,28 +120,48 @@ class MemoryDataSet(DataSet):
                     num_frames=stop - start,
                     stackheight=stackheight,
                     tileshape=self.tileshape,
+                    tiledelay=self._tiledelay,
                 )
             else:
-                yield Partition3D(
+                yield MemPartition(
                     meta=self._meta,
                     partition_slice=part_slice,
                     fileset=fileset.get_for_range(start, stop),
                     start_frame=start,
                     num_frames=stop - start,
                     stackheight=stackheight,
+                    tiledelay=self._tiledelay,
                 )
 
 
+class MemPartition(Partition3D):
+    def __init__(self, tiledelay, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._tiledelay = tiledelay
+
+    def get_tiles(self, *args, **kwargs):
+        tiles = super().get_tiles(*args, **kwargs)
+        if self._tiledelay:
+            for tile in tiles:
+                time.sleep(self._tiledelay)
+                yield tile
+        else:
+            yield from tiles
+
+
 class CropFramesMemPartition(Partition3D):
-    def __init__(self, tileshape, *args, **kwargs):
+    def __init__(self, tileshape, tiledelay, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tileshape = tileshape
+        self._tiledelay = tiledelay
 
     def get_tiles(self, *args, **kwargs):
         crop = self._tileshape[1:]
         for tile in super().get_tiles(*args, **kwargs):
             print("tile with slice %r" % tile.tile_slice)
             for subslice in tile.tile_slice.subslices((self._stackheight,) + crop):
+                if self._tiledelay:
+                    time.sleep(self._tiledelay)
                 yield DataTile(
                     data=subslice.shift(tile.tile_slice).get(tile.data),
                     tile_slice=subslice,

@@ -7,12 +7,49 @@ import logging
 import numpy as np
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D
 )
 
 log = logging.getLogger(__name__)
+
+
+class MIBDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/MIBDatasetParams.schema.json",
+        "title": "MIBDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "mib"},
+            "path": {"type": "string"},
+            "scan_size": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 2,
+                "maxItems": 2,
+            },
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+        },
+        "required": ["type", "path"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            "path": raw_data["path"],
+        }
+        if "scan_size" in raw_data:
+            data["scan_size"] = tuple(raw_data["scan_size"])
+        if "tileshape" in raw_data:
+            data["tileshape"] = tuple(raw_data["tileshape"])
+        return data
 
 
 def read_hdr_file(path):
@@ -282,6 +319,10 @@ class MIBDataSet(DataSet):
             {"name": "Data type",
              "value": str(first_file.fields['mib_dtype'])},
         ]
+
+    @classmethod
+    def get_msg_converter(cls):
+        return MIBDatasetParams
 
     @classmethod
     def detect_params(cls, path):

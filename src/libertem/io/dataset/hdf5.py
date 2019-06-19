@@ -4,6 +4,7 @@ import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
@@ -25,6 +26,34 @@ def unravel_nav(slice_, containing_shape):
         origin=nav_origin + slice_.origin[-sig_dims:],
         shape=Shape(nav_shape + tuple(slice_.shape.sig), sig_dims=sig_dims)
     )
+
+
+class HDF5DatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/HDF5DatasetParams.schema.json",
+        "title": "HDF5DatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "hdf5"},
+            "path": {"type": "string"},
+            "ds_path": {"type": "string"},
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+        },
+        "required": ["type", "path", "ds_path", "tileshape"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path", "ds_path", "tileshape"]
+        }
+        return data
 
 
 def _get_datasets(path):
@@ -84,6 +113,10 @@ class H5DataSet(DataSet):
                 iocaps={"FULL_FRAMES"},
             )
         return self
+
+    @classmethod
+    def get_msg_converter(cls):
+        return HDF5DatasetParams
 
     @classmethod
     def detect_params(cls, path):

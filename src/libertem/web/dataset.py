@@ -2,7 +2,7 @@ import logging
 
 import tornado.web
 
-from libertem.io.dataset import load, detect
+from libertem.io.dataset import load, detect, get_dataset_cls
 from .base import CORSMixin, log_message
 from .messages import Message
 
@@ -29,61 +29,11 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
-        # TODO: validate request_data
-        # let's start simple:
-        ds_type = params["type"].lower()
-        assert ds_type in ["hdfs", "hdf5", "raw", "mib", "blo", "k2is", "ser",
-                           "frms6", "empad"]
-        if ds_type == "hdfs":
-            dataset_params = {
-                "index_path": params["path"],
-                "tileshape": params["tileshape"],
-                "host": "localhost",  # FIXME: config param
-                "port": 8020,  # FIXME: config param
-            }
-        elif ds_type == "hdf5":
-            dataset_params = {
-                "path": params["path"],
-                "ds_path": params["ds_path"],
-                "tileshape": params["tileshape"],
-            }
-        elif ds_type == "raw":
-            dataset_params = {
-                "path": params["path"],
-                "dtype": params["dtype"],
-                "detector_size": params["detector_size"],
-                "enable_direct": params["enable_direct"],
-                "tileshape": params["tileshape"],
-                "scan_size": params["scan_size"],
-            }
-        elif ds_type == "empad":
-            dataset_params = {
-                "path": params["path"],
-                "scan_size": params["scan_size"],
-            }
-        elif ds_type == "mib":
-            dataset_params = {
-                "path": params["path"],
-                "tileshape": params["tileshape"],
-                "scan_size": params["scan_size"],
-            }
-        elif ds_type == "blo":
-            dataset_params = {
-                "path": params["path"],
-                "tileshape": params["tileshape"],
-            }
-        elif ds_type == "k2is":
-            dataset_params = {
-                "path": params["path"],
-            }
-        elif ds_type == "ser":
-            dataset_params = {
-                "path": params["path"],
-            }
-        elif ds_type == "frms6":
-            dataset_params = {
-                "path": params["path"],
-            }
+        params["type"] = ds_type = params["type"].lower()
+        cls = get_dataset_cls(ds_type)
+        ConverterCls = cls.get_msg_converter()
+        converter = ConverterCls()
+        dataset_params = converter.to_python(params)
         try:
             executor = self.data.get_executor()
             ds = await executor.run_function(load, filetype=params["type"], **dataset_params)

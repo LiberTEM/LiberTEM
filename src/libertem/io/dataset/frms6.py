@@ -11,6 +11,7 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.common.buffers import zeros_aligned
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     File3D, FileSet3D, Partition3D
@@ -43,6 +44,27 @@ frame_header_dtype = [
     ('padding_2', (bytes, 12)),
     ('comment', (bytes, 36)),
 ]
+
+
+class FRMS6DatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/FRMS6DatasetParams.schema.json",
+      "title": "FRMS6DatasetParams",
+      "type": "object",
+      "properties": {
+          "type": {"const": "frms6"},
+          "path": {"type": "string"},
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        return data
 
 
 class GainMapCSVDialect(csv.excel):
@@ -124,15 +146,9 @@ class FRMS6File(File3D):
         return self._start_idx
 
     def readinto(self, start, stop, out, crop_to=None):
-        if crop_to is not None:
-            slice_ = (
-                slice(start, stop),
-                crop_to.get(sig_only=True),
-            )
-        else:
-            slice_ = (
-                slice(start, stop),
-            )
+        # ignore crop_top here, as we don't support it anyways
+        # (and it would be very awkward, as the data is still folded here...)
+        slice_ = (slice(start, stop),)
         out[:] = self.data[slice_]
 
     def _get_mmapped_array(self):
@@ -243,8 +259,7 @@ class FRMS6FileSet(FileSet3D):
 
 
 class FRMS6DataSet(DataSet):
-    def __init__(self, path, enable_offset_correction=True, dest_dtype=np.dtype("float32"),
-                 gain_map_path=None):
+    def __init__(self, path, enable_offset_correction=True, gain_map_path=None):
         """
         Parameters:
         -----------
@@ -253,8 +268,6 @@ class FRMS6DataSet(DataSet):
             path to one of the files of the FRMS6 dataset
         enable_offset_correction : boolean
             substract dark frames when reading data
-        dest_dtype : numpy.dtype
-            convert data into this dtype after reading
         gain_map_path : string
             path to a gain map to apply (.mat format)
         """
@@ -263,7 +276,6 @@ class FRMS6DataSet(DataSet):
         self._gain_map_path = gain_map_path
         self._dark_frame = None
         self._meta = None
-        self._dest_dtype = dest_dtype
         self._enable_offset_correction = enable_offset_correction
 
     @property
@@ -285,7 +297,6 @@ class FRMS6DataSet(DataSet):
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
         self._meta = DataSetMeta(
             raw_dtype=np.dtype("u2"),
-            dtype=self._dest_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
             iocaps={"FULL_FRAMES"},
@@ -297,6 +308,10 @@ class FRMS6DataSet(DataSet):
             for path in self._files()
         )
         return self
+
+    @classmethod
+    def get_msg_converter(cls):
+        return FRMS6DatasetParams
 
     def _get_hdr_info(self):
         hdr_filename = "%s.hdr" % self._get_base_filename()

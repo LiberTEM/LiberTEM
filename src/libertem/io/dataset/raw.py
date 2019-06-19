@@ -5,10 +5,48 @@ import warnings
 import numpy as np
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D,
 )
+
+
+class RAWDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/RAWDatasetParams.schema.json",
+        "title": "RAWDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "raw"},
+            "path": {"type": "string"},
+            "dtype": {"type": "string"},
+            "scan_size": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "detector_size": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "enable_direct": {
+                "type": "boolean"
+            }
+        },
+        "required": ["type", "path", "dtype", "scan_size", "detector_size"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path", "dtype", "scan_size", "detector_size"]
+        }
+        return data
 
 
 class RawFile(File3D):
@@ -121,6 +159,10 @@ class RawFileDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
+
+    @classmethod
+    def get_msg_converter(cls):
+        return RAWDatasetParams
 
     def _get_fileset(self):
         return RawFileSet([

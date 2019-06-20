@@ -341,11 +341,30 @@ class Match(PointSelection):
         '''
         Return the match that matches most points
         '''
+        def fom(d):
+            m = d[1]
+            na = np.linalg.norm(m.a)
+            nb = np.linalg.norm(m.b)
+            res = len(m)
+            # Orthogonal
+            if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
+                res *= 5
+            elif np.abs(np.dot(m.a, m.b)) < 0.3 * na * nb:
+                res *= 2
+            # nearly equal length
+            if (na - nb) < 0.1 * max(na, nb):
+                res *= 5
+            if (na - nb) < 0.3 * max(na, nb):
+                res *= 2
+            res /= na
+            res /= nb
+            return res
+
         match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
         if match_matrix:
             # we select the entry with highest number of matches
             candidate_index, match = sorted(
-                match_matrix.items(), key=lambda d: len(d[1]), reverse=True
+                match_matrix.items(), key=fom, reverse=True
             )[0]
             return match
         else:

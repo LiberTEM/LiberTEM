@@ -1,14 +1,16 @@
 import numpy as np
 import hdbscan
 
-from libertem.analysis.gridmatching import (Match, PointSelection, CorrelationResult,
-make_polar, NotFoundException, make_polar_vectors)
+import libertem.analysis.gridmatching as grm
+from libertem.utils import make_polar
+# import (Match, PointSelection, CorrelationResult,
+# make_polar, NotFoundException, make_polar_vectors)
 
 
 def full_match(centers, zero=None, parameters={}):
     if zero is None:
         zero = centers[0]
-    corr = CorrelationResult(
+    corr = grm.CorrelationResult(
         centers=centers,
         refineds=centers,
         peak_values=np.ones(len(centers)),
@@ -21,9 +23,9 @@ def full_match(centers, zero=None, parameters={}):
     )
 
 
-class FullMatch(Match):
+class FullMatch(grm.Match):
     @classmethod
-    def full_match(cls, correlation_result: CorrelationResult, zero, cand=[], parameters={}):
+    def full_match(cls, correlation_result: grm.CorrelationResult, zero, cand=[], parameters={}):
         # FIXME check formatting when included in documentation
         '''
         This function extracts a list of Match objects as well two PointCollection objects
@@ -59,7 +61,7 @@ class FullMatch(Match):
 
         filt = correlation_result.peak_elevations >= p['min_weight']
 
-        working_set = PointSelection(correlation_result, selector=filt)
+        working_set = grm.PointSelection(correlation_result, selector=filt)
 
         zero_selector = np.array([
             np.allclose(correlation_result.centers[i], zero)
@@ -83,7 +85,7 @@ class FullMatch(Match):
                     point_selection=working_set, zero=zero,
                     candidates=polar_candidate_vectors, parameters=p)
                 match = match.weighted_optimize()
-            except NotFoundException:
+            except grm.NotFoundException:
                 # print("no match found:\n", working_set)
                 new_selector = np.copy(working_set.selector)
                 new_selector[zero_selector] = False
@@ -115,7 +117,7 @@ class FullMatch(Match):
                 new_selector[zero_selector] = False
                 unmatched = working_set.derive(selector=new_selector)
                 break
-        weak = PointSelection(correlation_result, selector=np.logical_not(filt))
+        weak = grm.PointSelection(correlation_result, selector=np.logical_not(filt))
         return (matches, unmatched, weak)
 
 
@@ -143,7 +145,7 @@ def hdbscan_candidates(points, parameters):
     '''
     cutoff = parameters["tolerance"] * parameters["max_delta"]
     clusterer = hdbscan.HDBSCAN(**make_hdbscan_config(points, parameters))
-    vectors = make_polar_vectors(points, parameters)
+    vectors = grm.make_polar_vectors(points, parameters)
     clusterer.fit(vectors)
     labels = clusterer.labels_
     cand = []
@@ -175,7 +177,7 @@ def candidates(points, parameters):
     if len(polar_vectors) < parameters["min_match"]:
         if len(points) > parameters["min_points"]:
             print("WARNING matching many points directly: ", len(points))
-        polar_vectors = make_polar_vectors(points, parameters)
+        polar_vectors = grm.make_polar_vectors(points, parameters)
         # Brute force is too slow
         # polar_vectors = all_bruteforce(points, min_delta, max_delta, 2)
     return polar_vectors

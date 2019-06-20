@@ -120,7 +120,7 @@ class Match(PointSelection):
 
         parameters = {
             "min_angle": np.pi / 5,
-            "tolerance": 0.02,
+            "tolerance": 1,
             "min_points": 10,
             "min_match": 3,
             "min_cluster_size_fraction": 4,
@@ -222,7 +222,7 @@ class Match(PointSelection):
             The near approximate vectors a, b to match the grid as numpy arrays (y, x).
         parameters
             Parameters for the matching.
-            tolerance: Relative position tolerance for peaks to be considered matches
+            tolerance: Position tolerance in px for peaks to be considered matches
             min_delta: Minimum length of a potential grid vector
             max_delta: Maximum length of a potential grid vector
 
@@ -291,13 +291,6 @@ class Match(PointSelection):
 
         Return match
         '''
-        # If we have a properly set max_delta, we scale the tolerance so that
-        # it can stay at a default value
-        # Otherwise we just assume a scaling factor 1, for better or for worse
-        if parameters['max_delta'] < np.float('inf'):
-            cutoff = parameters['max_delta'] * parameters["tolerance"]
-        else:
-            cutoff = parameters["tolerance"]
         try:
             indices = get_indices(point_selection.refineds, zero, a, b)
         # FIXME proper error handling strategy
@@ -305,7 +298,7 @@ class Match(PointSelection):
             raise
         rounded = np.around(indices)
         errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
-        matched_selector = errors < cutoff
+        matched_selector = errors < parameters["tolerance"]
         matched_indices = rounded[matched_selector].astype(np.int)
         # remove the ones that weren't matched
         new_selector = point_selection.new_selector(matched_selector)

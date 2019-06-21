@@ -6,7 +6,6 @@ cache:
 
 install:
   - pip install tox
-  - sudo apt-get install -y pandoc
 
 script:
   - tox
@@ -39,6 +38,8 @@ jobs:
       python: 3.7
       dist: xenial
       sudo: true
+      install:
+        - sudo apt-get install -y pandoc
     - stage: test
       language: node_js
       node_js:
@@ -54,6 +55,8 @@ jobs:
       python: 3.7
       dist: xenial
       sudo: true
+      install:
+        - sudo apt-get install -y pandoc
 
     - stage: packaging
       sudo: require

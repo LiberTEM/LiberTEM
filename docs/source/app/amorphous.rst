@@ -11,6 +11,10 @@ TODO
 Radial Fourier Series
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. toctree::
+
+   radialfourier
+
 Fluctuation EM doesn't evaluate the spatial distribution of intensity. It only works if enough intensity accumulates in each pixel so that local ordering leads to larger intensity variations than just random noise, i.e. if statistical variations from shot noise average out and variations introduced by the sample dominate.
 
 If most of the detector pixels are only hit with one electron or none, the standard deviation between detector positions in a region of interest is the same, even if pixels that received electrons are spatially close, while other regions received no intensity. That means Fluctuation EM doesn't produce contrast between amorphous and crystalline regions if the detector has a high resolution, and/or if only low intensity is scattered into the region of interest.
@@ -51,44 +55,4 @@ Scripting interface
 
 The scripting interface allows to calculate more than one bin at a time and influence the number of orders that are calculated. It relies on the sparse matrix back-end for MaskJob and allows to calculate many orders for many bins at once with acceptable efficiency.
 
-Having a fine-grained analysis with many orders calculated as a function of radius allows for a number of additional processing and analysis steps:
-
-.. include:: radialfourier.py
-    :code:
-
-..  figure:: ./images/radialfourier/spectrum.svg
-
-..  figure:: ./images/radialfourier/radial_variance.svg
-
-..  figure:: ./images/radialfourier/radial_integrated_intensity.svg
-
-..  figure:: ./images/radialfourier/coefficients.svg
-
-..  figure:: ./images/radialfourier/absolute_order_0.svg
-
-..  figure:: ./images/radialfourier/absolute_order_1.svg
-
-..  figure:: ./images/radialfourier/phase_order_1.svg
-
-..  figure:: ./images/radialfourier/absolute_order_2.svg
-
-..  figure:: ./images/radialfourier/phase_order_2.svg
-
-..  figure:: ./images/radialfourier/absolute_order_3.svg
-
-..  figure:: ./images/radialfourier/phase_order_3.svg
-
-..  figure:: ./images/radialfourier/absolute_order_4.svg
-
-..  figure:: ./images/radialfourier/phase_order_4.svg
-
-..  figure:: ./images/radialfourier/absolute_order_5.svg
-
-..  figure:: ./images/radialfourier/phase_order_5.svg
-
-..  figure:: ./images/radialfourier/absolute_order_6.svg
-
-..  figure:: ./images/radialfourier/phase_order_6.svg
-
-..  figure:: ./images/radialfourier/predominant_order.svg
-
+Having a fine-grained analysis with many orders calculated as a function of radius allows for a number of additional processing and analysis steps. `Follow this link to a Jupyter notebook. <radialfourier.ipynb>`_

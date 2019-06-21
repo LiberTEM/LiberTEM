@@ -6,6 +6,7 @@ cache:
 
 install:
   - pip install tox
+  - sudo apt-get install -y pandoc
 
 script:
   - tox

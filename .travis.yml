@@ -39,6 +39,7 @@ jobs:
       dist: xenial
       sudo: true
       install:
+        - pip install tox
         - sudo apt-get install -y pandoc
     - stage: test
       language: node_js
@@ -56,6 +57,7 @@ jobs:
       dist: xenial
       sudo: true
       install:
+        - pip install tox
         - sudo apt-get install -y pandoc
 
     - stage: packaging

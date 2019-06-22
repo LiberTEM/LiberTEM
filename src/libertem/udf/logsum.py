@@ -39,5 +39,5 @@ def run_logsum(ctx, dataset, roi=None):
     sum(log10(f1) ... log10(f10)) == (10.4, 2.04)
 
     '''
-    udf = LogsumUDF(dataset=dataset)
+    udf = LogsumUDF()
     return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

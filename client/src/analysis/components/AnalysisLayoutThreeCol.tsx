@@ -11,7 +11,9 @@ interface AnalysisLayoutTwoColProps {
 }
 
 type MergedProps = AnalysisLayoutTwoColProps;
-const title1="yhfgkjdsh"
+const title2 = "Masking out of zero-order diffraction peak in real space";
+const title1 ="Masking of intergation region in Fourier space";
+const title3 ="Result of analysis"
 const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
     title, subtitle,
     left, mid, right,
@@ -30,14 +32,15 @@ const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
                         <Grid.Column>
                             <p>{title1}</p>
                             {left}
-                            <p>{subtitle}kjhljhio</p>
+                            <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <p>{title1}</p>
+                            <p>{title2}</p>
                             {mid}
-                            <p>{subtitle}lkjioljoi</p>
+                            <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
+                            <p>{title3}</p>
                             {right}
                         </Grid.Column>
                     </Grid.Row>

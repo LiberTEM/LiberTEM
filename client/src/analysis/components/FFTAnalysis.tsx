@@ -132,7 +132,7 @@ const frameViewWidgetsreal = (
     })
 
     const subtitle = (
-        <>{frameViewTitle} Ring: center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), ri={rad_in.toFixed(2)}, ro={rad_out.toFixed(2)}</>
+        <>{frameViewTitle} real_rad={rad_in.toFixed(2)}, real_center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
     )
 /////
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />

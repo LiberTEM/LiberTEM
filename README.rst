@@ -6,7 +6,7 @@
 .. |travis| image:: https://api.travis-ci.org/LiberTEM/LiberTEM.svg?branch=master
 .. _travis: https://travis-ci.org/LiberTEM/LiberTEM
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/wokeo6ee2frq481m?svg=true
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/wokeo6ee2frq481m/branch/master?svg=true
 .. _appveyor: https://ci.appveyor.com/project/sk1p/libertem
 
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1478763.svg

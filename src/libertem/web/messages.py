@@ -97,6 +97,13 @@ class Message(object):
             "job": job_id,
         }
 
+    def cancel_done(self, job_id):
+        return {
+            "status": "ok",
+            "messageType": "CANCEL_JOB_DONE",
+            "job": job_id,
+        }
+
     def cancel_failed(self, job_id):
         return {
             "status": "error",

@@ -1,3 +1,5 @@
+import asyncio
+
 import tornado.websocket
 
 from .base import log_message
@@ -40,10 +42,18 @@ class EventRegistry(object):
         self.handlers.remove(handler)
 
     def broadcast_event(self, message, *args, **kwargs):
+        futures = []
         for handler in self.handlers:
-            handler.write_message(message, *args, **kwargs)
+            futures.append(
+                handler.write_message(message, *args, **kwargs)
+            )
+        return asyncio.gather(*futures)
 
     def broadcast_together(self, messages, *args, **kwargs):
+        futures = []
         for handler in self.handlers:
             for message in messages:
-                handler.write_message(message, *args, **kwargs)
+                futures.append(
+                    handler.write_message(message, *args, **kwargs)
+                )
+        return asyncio.gather(*futures)

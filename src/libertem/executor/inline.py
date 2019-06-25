@@ -9,7 +9,7 @@ class InlineJobExecutor(JobExecutor):
     def __init__(self, debug=False, *args, **kwargs):
         self._debug = debug
 
-    def run_job(self, job):
+    def run_job(self, job, cancel_id=None):
         tasks = job.get_tasks()
         return self.run_tasks(tasks, cancel_id=job)
 

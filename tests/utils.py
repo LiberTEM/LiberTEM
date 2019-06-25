@@ -21,8 +21,10 @@ class MemDatasetParams(MessageConverter):
             "tileshape": {
                 "type": "array",
                 "items": {"type": "number"},
-                "minItems": 4,
-                "maxItems": 4,
+            },
+            "datashape": {
+                "type": "array",
+                "items": {"type": "number"},
             },
             "num_partitions": {"type": "number"},
             "sig_dims": {"type": "number"},
@@ -69,10 +71,12 @@ class MemoryFile3D(object):
 
 class MemoryDataSet(DataSet):
     def __init__(self, tileshape, num_partitions, data=None, sig_dims=2, check_cast=True,
-                 crop_frames=False, tiledelay=None):
+                 crop_frames=False, tiledelay=None, datashape=None):
         assert len(tileshape) == sig_dims + 1
+        if datashape is None:
+            datashape = (16, 8, 32, 64)
         if data is None:
-            data = _mk_random((16, 8, 32, 64))
+            data = _mk_random(datashape)
         self.data = data
         self.tileshape = Shape(tileshape, sig_dims=sig_dims)
         self.num_partitions = num_partitions
@@ -84,6 +88,9 @@ class MemoryDataSet(DataSet):
         self._check_cast = check_cast
         self._crop_frames = crop_frames
         self._tiledelay = tiledelay
+
+    def initialize(self):
+        return self
 
     @classmethod
     def get_msg_converter(cls):
@@ -142,9 +149,10 @@ class MemPartition(Partition3D):
     def get_tiles(self, *args, **kwargs):
         tiles = super().get_tiles(*args, **kwargs)
         if self._tiledelay:
+            print("delayed get_tiles, tiledelay=%.3f" % self._tiledelay)
             for tile in tiles:
-                time.sleep(self._tiledelay)
                 yield tile
+                time.sleep(self._tiledelay)
         else:
             yield from tiles
 

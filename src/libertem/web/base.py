@@ -159,7 +159,7 @@ class SharedData(object):
         try:
             job = self.jobs[uuid]
             executor = self.get_executor()
-            await executor.cancel(job)
+            await executor.cancel(uuid)
             del self.jobs[uuid]
             del self.job_to_id[job]
             return True

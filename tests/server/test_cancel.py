@@ -11,8 +11,6 @@ pytestmark = [pytest.mark.functional]
 
 @pytest.fixture
 def register_mem_ds():
-    # FIXME: registering like this doesn't work, because it is not
-    # communicated to worker processes
     register_dataset_cls("mem", MemoryDataSet)
     yield
     unregister_dataset_cls("mem")
@@ -23,16 +21,17 @@ def _get_ds_params():
         "dataset": {
             "params": {
                 "type": "mem",
-                "tileshape": [1, 6, 32, 64],
-                "num_partitions": 4,
+                "tileshape": [7, 32, 32],
+                "datashape": [256, 32, 32],
+                "tiledelay": .5,
+                "num_partitions": 16,
             }
         }
     }
 
 
-@pytest.mark.xfail
 @pytest.mark.asyncio
-async def test_cancel_udf_job(base_url, http_client, server_port, register_mem_ds):
+async def test_cancel_udf_job(base_url, http_client, server_port, register_mem_ds, shared_data):
     conn_url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {
@@ -91,34 +90,45 @@ async def test_cancel_udf_job(base_url, http_client, server_port, register_mem_d
         assert msg['details']['dataset'] == ds_uuid
         assert msg['details']['id'] == job_uuid
 
-        num_followup = 0
-        done = False
-        while not done:
-            msg = json.loads(await ws.recv())
-            if msg['messageType'] == 'TASK_RESULT':
-                assert_msg(msg, 'TASK_RESULT')
-                assert msg['job'] == job_uuid
-            elif msg['messageType'] == 'FINISH_JOB':
-                done = True  # but we still need to check followup messages below
-            elif msg['messageType'] == 'JOB_ERROR':
-                raise Exception('JOB_ERROR: {}'.format(msg['msg']))
-            else:
-                raise Exception("invalid message type: {}".format(msg['messageType']))
-
-            if 'followup' in msg:
-                for i in range(msg['followup']['numMessages']):
-                    msg = await ws.recv()
-                    # followups should be PNG encoded:
-                    assert msg[:8] == b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A'
-                    num_followup += 1
-        assert num_followup > 0
-
-        # we are done with this job, clean up:
         async with http_client.delete(job_url) as resp:
             assert resp.status == 200
             assert_msg(await resp.json(), 'CANCEL_JOB')
 
-        # also get rid of the dataset:
+        # this is the confirmation sent from the DELETE method handler:
+        msg = json.loads(await ws.recv())
+        assert_msg(await resp.json(), 'CANCEL_JOB')
+
+        assert job_uuid not in shared_data.jobs
+
+        # now we drain messages from websocket and look for CANCEL_JOB_DONE msg:
+        done = False
+        num_seen = 0
+        types_seen = []
+        while not done:
+            msg = json.loads(await ws.recv())
+            print(msg)
+            num_seen += 1
+            types_seen.append(msg['messageType'])
+            if msg['messageType'] == 'TASK_RESULT':
+                assert_msg(msg, 'TASK_RESULT')
+                assert msg['job'] == job_uuid
+            elif msg['messageType'] == 'CANCEL_JOB_DONE':
+                assert msg['job'] == job_uuid
+                done = True
+            elif msg['messageType'] == 'FINISH_JOB':
+                done = True  # we should not get this one...
+            elif msg['messageType'] == 'JOB_ERROR':
+                raise Exception('JOB_ERROR: {}'.format(msg['msg']))
+            else:
+                raise Exception("invalid message type: {}".format(msg['messageType']))
+            if 'followup' in msg:
+                for i in range(msg['followup']['numMessages']):
+                    # drain binary messages:
+                    msg = await ws.recv()
+        assert set(types_seen) == {"CANCEL_JOB_DONE"}
+        assert num_seen < 4
+
+        # get rid of the dataset:
         async with http_client.delete(ds_url) as resp:
             assert resp.status == 200
             resp_json = await resp.json()

@@ -36,7 +36,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         dataset_params = converter.to_python(params)
         try:
             executor = self.data.get_executor()
-            ds = await executor.run_function(load, filetype=params["type"], **dataset_params)
+            ds = await executor.run_function(load, filetype=cls, **dataset_params)
             ds = await executor.run_function(ds.initialize)
             available_workers = await executor.get_available_workers()
             ds.set_num_cores(len(available_workers))

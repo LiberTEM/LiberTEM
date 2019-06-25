@@ -255,6 +255,41 @@ class MIBFileSet(FileSet3D):
 
 
 class MIBDataSet(DataSet):
+    """
+    MIB data sets consist of one or more `.mib` files, and optionally
+    a `.hdr` file. The HDR file is used to automatically set the
+    `scan_size` parameter from the fields "Frames per Trigger" and "Frames
+    in Acquisition." When loading a MIB data set, you can either specify
+    the path to the HDR file, or choose one of the MIB files. The MIB files
+    are assumed to follow a naming pattern of some non-numerical prefix,
+    and a sequential numerical suffix.
+
+    Note that, as of the current version, no gain correction or hot/cold pixel
+    removal is done yet: processing is done on the RAW data, though you can do
+    pre-processing in your own UDF.
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> # both examples look for files matching /path/to/default*.mib:
+    >>> ctx.load("mib", path="/path/to/default.hdr")
+    >>> ctx.load("mib", path="/path/to/default64.mib")
+
+    Parameters
+    ----------
+    path: str
+        Path to either the .hdr file or one of the .mib files
+
+    tileshape: tuple of int, optional
+        Tuning parameter, specifying the size of the smallest data unit
+        we are reading and working on. Will be automatically determined
+        if left None.
+
+    scan_size: tuple of int, optional
+        A tuple (y, x) that specifies the size of the scanned region. Is
+        automatically read from the .hdr file if you specify one as `path`.
+    """
     def __init__(self, path, tileshape=None, scan_size=None):
         super().__init__()
         self._sig_dims = 2

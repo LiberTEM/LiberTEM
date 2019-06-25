@@ -110,6 +110,15 @@ class RawFileSet(FileSet3D):
 
 
 class RawFileDataSet(DataSet):
+    """
+    Read raw data from a single file of raw binary data.
+
+    Parameters
+    ----------
+
+    path: str
+        Path to the file
+    """
     def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None):
         super().__init__()

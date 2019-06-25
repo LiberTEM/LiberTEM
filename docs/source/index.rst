@@ -21,6 +21,7 @@ Documentation
 
    install
    usage
+   formats
    udf
    applications
    architecture

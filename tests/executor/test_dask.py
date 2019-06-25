@@ -50,7 +50,7 @@ async def test_run_job(aexecutor):
     job = SumFramesJob(dataset=dataset)
     out = job.get_result_buffer()
 
-    async for tiles in aexecutor.run_job(job):
+    async for tiles in aexecutor.run_job(job, cancel_id="42"):
         for tile in tiles:
             tile.reduce_into_result(out)
 
@@ -82,7 +82,7 @@ async def test_fd_limit(aexecutor):
         for i in range(32):
             print(i)
             print(proc.num_fds())
-            async for tiles in aexecutor.run_job(job):
+            async for tiles in aexecutor.run_job(job, cancel_id="42"):
                 pass
     finally:
         resource.setrlimit(resource.RLIMIT_NOFILE, oldlimit)

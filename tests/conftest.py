@@ -143,8 +143,13 @@ async def http_client():
         yield session
 
 
+@pytest.fixture
+def shared_data():
+    return SharedData()
+
+
 @pytest.fixture(scope="function")
-async def server_port(unused_tcp_port_factory):
+async def server_port(unused_tcp_port_factory, shared_data):
     """
     start a LiberTEM API server on a unused port
     """
@@ -152,7 +157,6 @@ async def server_port(unused_tcp_port_factory):
     loop.set_debug(True)
     port = unused_tcp_port_factory()
     event_registry = EventRegistry()
-    shared_data = SharedData()
     app = make_app(event_registry, shared_data)
     print("starting server at port {}".format(port))
     server = app.listen(address="127.0.0.1", port=port)

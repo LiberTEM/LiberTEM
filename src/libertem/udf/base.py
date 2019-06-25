@@ -559,7 +559,7 @@ class UDFRunner:
 
         return self._udf.results
 
-    async def run_for_dataset_async(self, dataset, executor, roi=None):
+    async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -572,8 +572,6 @@ class UDFRunner:
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)
-
-        cancel_id = str(uuid.uuid4())
 
         async for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)

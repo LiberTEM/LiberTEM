@@ -183,6 +183,10 @@ class DataSet(object):
         # for example number of signal elements
         raise NotImplementedError()
 
+    @classmethod
+    def get_msg_converter(cls):
+        raise NotImplementedError()
+
     @property
     def diagnostics(self):
         """

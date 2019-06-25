@@ -19,7 +19,8 @@ export enum MessageTypes {
     OPEN = "OPEN",
     CLOSE = "CLOSE",
     ERROR = "ERROR",
-    DELETE_DATASET = "DELETE_DATASET"
+    DELETE_DATASET = "DELETE_DATASET",
+    CANCEL_JOB_DONE = "CANCEL_JOB_DONE",
 }
 
 export const Messages = {
@@ -33,6 +34,7 @@ export const Messages = {
     close: () => createMessage(MessageTypes.CLOSE, {}),
     error: (msg: string) => createMessage(MessageTypes.ERROR, { msg }),
     deleteDataset: (dataset: string) => createMessage(MessageTypes.DELETE_DATASET, { dataset }),
+    cancelled: (job: string) => createMessage(MessageTypes.CANCEL_JOB_DONE, { job }),
 }
 
 export type MessagesUnion<A extends ActionCreatorsMapObject> = ReturnType<A[keyof A]>

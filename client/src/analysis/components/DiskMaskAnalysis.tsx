@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
@@ -24,11 +23,11 @@ const DiskMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const [cy, setCy] = useState(imageHeight / 2);
     const [r, setR] = useState(minLength / 4);
 
-    const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
+    const handleCenterChange = (newCx: number, newCy: number) => {
         setCx(newCx);
         setCy(newCy);
-    });
-    const handleRChange = defaultDebounce(setR);
+    };
+    const handleRChange = setR;
 
     const rHandle = {
         x: cx - r,

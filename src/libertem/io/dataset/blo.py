@@ -7,8 +7,34 @@ from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D
 )
+from libertem.web.messages import MessageConverter
 
 MAGIC_EXPECT = 258
+
+
+class BLODatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/BLODatasetParams.schema.json",
+      "title": "BLODatasetParams",
+      "type": "object",
+      "properties": {
+        "type": {"const": "blo"},
+        "path": {"type": "string"},
+        "tileshape": {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 4,
+            "maxItems": 4
+        },
+      },
+      "required": ["type", "path", "tileshape"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = dict(raw_data)
+        del data["type"]
+        return data
 
 
 # stolen from hyperspy
@@ -125,6 +151,10 @@ class BloDataSet(DataSet):
             }
         except Exception:
             return False
+
+    @classmethod
+    def get_msg_converter(cls):
+        return BLODatasetParams
 
     @property
     def dtype(self):

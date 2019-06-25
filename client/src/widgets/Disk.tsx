@@ -11,7 +11,7 @@ export interface DiskProps {
 
 const Disk: React.SFC<DiskProps> = ({ imageWidth, imageHeight, cx, cy, r }) => {
     return (
-        <circle cx={cx} cy={cy} r={r} style={{ ...defaultMaskStyles(imageWidth) }} />
+        <circle cx={cx + .5} cy={cy + .5} r={r} style={{ ...defaultMaskStyles(imageWidth) }} />
     );
 }
 

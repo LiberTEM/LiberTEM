@@ -6,10 +6,38 @@ import numpy as np
 import hdfs3
 
 from libertem.common import Slice, Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
 log = logging.getLogger(__name__)
+
+
+class HDFSDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/HDFSDatasetParams.schema.json",
+        "title": "HDFSDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "hdfs"},
+            "path": {"type": "string"},
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+        },
+        "required": ["type", "path", "tileshape"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            "index_path": raw_data["path"],
+            "tileshape": raw_data["tileshape"],
+        }
+        return data
 
 
 class HDFSReader(object):
@@ -54,6 +82,10 @@ class BinaryHDFSDataSet(DataSet):
 
     def get_reader(self):
         return HDFSReader(host=self.host, port=self.port)
+
+    @classmethod
+    def get_msg_converter(cls):
+        return HDFSDatasetParams
 
     @property
     def dtype(self):

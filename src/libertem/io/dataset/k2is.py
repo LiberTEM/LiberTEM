@@ -14,6 +14,7 @@ from ncempy.io import dm
 
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Slice, Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,27 @@ NUM_SECTORS = 8
 SECTOR_SIZE = (2 * 930, 256)
 
 SHUTTER_ACTIVE_MASK = 0x1
+
+
+class K2ISDatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/K2ISDatasetParams.schema.json",
+      "title": "K2ISDatasetParams",
+      "type": "object",
+      "properties": {
+          "type": {"const": "k2is"},
+          "path": {"type": "string"},
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        return data
 
 
 @numba.njit
@@ -477,6 +499,10 @@ class K2ISDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
+
+    @classmethod
+    def get_msg_converter(cls):
+        return K2ISDatasetParams
 
     @classmethod
     def detect_params(cls, path):

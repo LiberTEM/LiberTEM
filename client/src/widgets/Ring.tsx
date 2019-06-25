@@ -13,8 +13,8 @@ export interface RingProps {
 const Ring: React.SFC<RingProps> = ({ imageWidth, cx, cy, ri, ro }) => {
     // see also: https://stackoverflow.com/a/37883328/540644
     const pathSpecs = [
-        getPathArc({ x: cx, y: cy }, 90, 90, ro),
-        getPathArc({ x: cx, y: cy }, 90, 90, ri)
+        getPathArc({ x: cx + .5, y: cy + .5 }, 90, 90, ro),
+        getPathArc({ x: cx + .5, y: cy + .5 }, 90, 90, ri)
     ]
     const pathSpec = pathSpecs.join(' ');
 

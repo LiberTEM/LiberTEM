@@ -4,6 +4,7 @@ import re
 import csv
 import glob
 import logging
+import warnings
 import configparser
 
 import scipy.io as sio
@@ -259,7 +260,7 @@ class FRMS6FileSet(FileSet3D):
 
 
 class FRMS6DataSet(DataSet):
-    def __init__(self, path, enable_offset_correction=True, gain_map_path=None):
+    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
         """
         Parameters:
         -----------
@@ -277,6 +278,11 @@ class FRMS6DataSet(DataSet):
         self._dark_frame = None
         self._meta = None
         self._enable_offset_correction = enable_offset_correction
+        if dest_dtype is not None:
+            warnings.warn(
+                "dest_dtype is now handled per `get_tiles` call, and ignored here",
+                DeprecationWarning
+            )
 
     @property
     def shape(self):

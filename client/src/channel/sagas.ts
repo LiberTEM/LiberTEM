@@ -123,6 +123,9 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     const id = uuid();
                     yield put(channelActions.Actions.jobError(msg.job, msg.msg, id, timestamp));
                 }
+                case channelMessages.MessageTypes.CANCEL_JOB_DONE: {
+                    yield put(channelActions.Actions.cancelled(msg.job));
+                }
             }
         }
     } finally {

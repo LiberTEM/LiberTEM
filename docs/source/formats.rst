@@ -72,7 +72,7 @@ K2IS
 FRMS6
 -----
 
-.. autoclass:: libertem.io.dataset.frms5.FRMS6DataSet
+.. autoclass:: libertem.io.dataset.frms6.FRMS6DataSet
 
 BLO
 ---

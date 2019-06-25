@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { defaultDebounce } from "../../helpers";
 import { AnalysisTypes, SumFrameParams } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
@@ -33,22 +32,26 @@ const useRoiPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }: 
     }
 
     React.useEffect(() => {
-        if (enabled) {
-            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.SUM_FRAMES,
-                parameters: roiParameters,
-            }))
-        }
+        const handle = setTimeout(() => {
+            if (enabled) {
+                dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+                    type: AnalysisTypes.SUM_FRAMES,
+                    parameters: roiParameters,
+                }))
+            }
+        }, 100);
+
+        return () => clearTimeout(handle);
     }, [analysisId, enabled, jobIndex, cx, cy, r]);
 
-    const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
+    const handleCenterChange = (newCx: number, newCy: number) => {
         setCx(newCx);
         setCy(newCy);
-    });
+    };
 
-    const handleRChange = defaultDebounce((newR: number) => {
+    const handleRChange = (newR: number) => {
         setR(newR);
-    });
+    };
 
     const rHandle = {
         x: cx - r,

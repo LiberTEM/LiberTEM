@@ -260,9 +260,9 @@ class FRMS6FileSet(FileSet3D):
 
 
 class FRMS6DataSet(DataSet):
-    """
+    r"""
     Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and
-    a .hdr file. The first .frms6 file (matching *_000.frms6) contains dark frames, which
+    a .hdr file. The first .frms6 file (matching \*_000.frms6) contains dark frames, which
     are substracted if `enable_offset_correction` is true.
 
     Parameters

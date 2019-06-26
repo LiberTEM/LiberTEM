@@ -90,19 +90,11 @@ export function* analysisSidecar(analysisId: string) {
             yield put(analysisActions.Actions.prepareRun(analysis.id, jobIndex, jobId));
 
             const oldJobId = analysis.jobs[jobIndex];
-            // tslint:disable-next-line:no-console
-            console.log("oldJobId:", oldJobId);
             if (oldJobId !== undefined) {
                 const job: JobState = yield select(selectJob, oldJobId);
-                // tslint:disable-next-line:no-console
-                console.log("maybe we should cancel? let's see...", job);
                 if (job && job.running !== "DONE") {
                     // wait until the job is cancelled:
-                    // tslint:disable-next-line:no-console
-                    console.log("canceling job", oldJobId);
                     yield call(cancelJob, oldJobId);
-                    // tslint:disable-next-line:no-console
-                    console.log("job cancelled", oldJobId);
                 }
             }
 

@@ -1,4 +1,9 @@
-import { AnalysisTypes, PickFrameDetails, SumFramesDetails } from "../messages";
+import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
+import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
+import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
+import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
+import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
+import RingMaskAnalysis from "./components/RingMaskAnalysis";
 
 export type AnalysisStatus = "busy" | "idle";
 
@@ -16,45 +21,65 @@ export interface Analysis {
     mainAnalysisType: AnalysisTypes,
 }
 
+
+/**
+ * AnalysisProps is the interface you should implement with your Analysis, as a functional component.
+ * For example:
+ * 
+ * const MyAnalysis: React.FunctionalComponent<AnalysisProps> = ({ analysis, dataset }) = { ... }
+ * 
+ */
+export interface AnalysisProps {
+    analysis: AnalysisState,
+    dataset: DatasetOpen,
+}
+
 export type AnalysisState = Analysis & {
 };
 
 interface AnalysisMetadataItem {
-    long: string,
-    short: string,
-    showInUI: boolean,
+    desc: string,
+    title: string,
+    component?: React.FunctionComponent<AnalysisProps>,
 }
 
+/**
+ * list of all analyses; those having a component will be available for selection in the UI
+ * 
+ * please fill in a title and description, and reference your component.
+ */
 export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
     [AnalysisTypes.APPLY_RING_MASK]: {
-        long: "Apply a ring mask with center cx, cy; inner radius ri, outer radius ro",
-        short: "Ring",
-        showInUI: true,
+        desc: "Apply a ring mask with center cx, cy; inner radius ri, outer radius ro",
+        title: "Ring",
+        component: RingMaskAnalysis,
     },
     [AnalysisTypes.APPLY_DISK_MASK]: {
-        long: "Apply a disk mask with center cx, cy; radius r",
-        short: "Disk",
-        showInUI: true,
+        desc: "Apply a disk mask with center cx, cy; radius r",
+        title: "Disk",
+        component: DiskMaskAnalysis,
     },
     [AnalysisTypes.CENTER_OF_MASS]: {
-        long: "Compute the center of mass of all diffraction images",
-        short: "Center of mass",
-        showInUI: true,
+        desc: "Compute the center of mass of all diffraction images",
+        title: "Center of mass",
+        component: CenterOfMassAnalysis,
     },
     [AnalysisTypes.APPLY_POINT_SELECTOR]: {
-        long: "Create an image from a single pixel selected in the detector",
-        short: "Point selection",
-        showInUI: true,
+        desc: "Create an image from a single pixel selected in the detector",
+        title: "Point selection",
+        component: PointSelectionAnalysis,
     },
     [AnalysisTypes.SUM_FRAMES]: {
-        long: "Create a sum of all detector frames",
-        short: "Sum all frames",
-        showInUI: false,
+        desc: "Create a sum of all detector frames",
+        title: "Sum all frames",
+    },
+    [AnalysisTypes.SUM_FRAMES_ROI]: {
+        desc: "Create a sum of ROI",
+        title: "Sum over ROI",
     },
     [AnalysisTypes.PICK_FRAME]: {
-        long: "Pick a single frame",
-        short: "Pick frame",
-        showInUI: false,
+        desc: "Pick a single frame",
+        title: "Pick frame",
     },
 
     [AnalysisTypes.APPLY_FFT_MASK]: {
@@ -69,8 +94,8 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         showInUI: false,
     },
     [AnalysisTypes.RADIAL_FOURIER]: {
-        long: "Compute a radial Fourier analysis",
-        short: "Radial Fourier",
-        showInUI: true,
+        desc: "Compute a radial Fourier analysis",
+        title: "Radial Fourier",
+        component: RadialFourierAnalysis,
     },
 }

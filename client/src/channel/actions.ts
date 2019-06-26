@@ -14,6 +14,7 @@ export enum ActionTypes {
     OPEN = "CHANNEL_OPEN",
     CLOSE = "CHANNEL_CLOSE",
     ERROR = "CHANNEL_ERROR",
+    CANCELLED = "CANCELLED",
 }
 
 export const Actions = {
@@ -25,6 +26,7 @@ export const Actions = {
     open: (timestamp: number) => createAction(ActionTypes.OPEN, { timestamp }),
     close: (timestamp: number) => createAction(ActionTypes.CLOSE, { timestamp }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
+    cancelled: (job: string) => createAction(ActionTypes.CANCELLED, { job }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

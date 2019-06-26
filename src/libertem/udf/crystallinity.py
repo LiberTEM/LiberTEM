@@ -12,8 +12,8 @@ class CrystallinityUDF(UDF):
             ),
         }
 
-    def get_task_data(self, meta):
-        sigshape = tuple(meta.partition_shape.sig)
+    def get_task_data(self):
+        sigshape = tuple(self.meta.partition_shape.sig)
         rad_in = self.params.rad_in
         rad_out = self.params.rad_out
         real_center = self.params.real_center

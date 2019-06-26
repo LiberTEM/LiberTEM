@@ -252,7 +252,7 @@ class FastCorrelationUDF(CorrelationUDF):
         '''
         super().__init__(*args, **kwargs)
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         mask = mask_maker(self.params)
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
@@ -329,7 +329,7 @@ class SparseCorrelationUDF(CorrelationUDF):
         super_buffers.update(my_buffers)
         return super_buffers
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         mask = mask_maker(self.params)
         crop_size = mask.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
@@ -349,8 +349,8 @@ class SparseCorrelationUDF(CorrelationUDF):
             offsetX=offsetX,
             offsetY=offsetY,
             template=template,
-            imageSizeX=meta.dataset_shape.sig[1],
-            imageSizeY=meta.dataset_shape.sig[0]
+            imageSizeX=self.meta.dataset_shape.sig[1],
+            imageSizeY=self.meta.dataset_shape.sig[0]
         )
         # CSC matrices in combination with transposed data are fastest
         container = MaskContainer(mask_factories=stack, dtype=np.float32,

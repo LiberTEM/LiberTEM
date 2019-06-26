@@ -31,3 +31,6 @@
 **Dieter Weber (Jülich Research Centre)**
     Management, requirements analysis, system design, testing, documentation, communication
 
+**Jay van Schyndel (Monash University eResearch Centre)**
+    Fix issue 80 to allow container deployment
+

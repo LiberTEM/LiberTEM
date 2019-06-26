@@ -12,9 +12,9 @@ class FEMUDF(UDF):
             ),
         }
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         center = self.params.center
-        sig_shape = tuple(meta.partition_shape.sig)
+        sig_shape = tuple(self.meta.partition_shape.sig)
         rad_out, rad_in = self.params.rad_out, self.params.rad_in
         mask_out = 1*_make_circular_mask(
             center[1], center[0],

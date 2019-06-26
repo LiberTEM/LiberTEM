@@ -222,7 +222,8 @@ class Context:
         return analysis
 
     def create_radial_fourier_analysis(self, dataset, cx: float = None, cy: float = None,
-            ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None):
+            ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None,
+            use_sparse: bool = None):
         """
         Calculate the Fourier transform of rings around the center.
 
@@ -248,7 +249,7 @@ class Context:
         loc = locals()
         parameters = {
             name: loc[name]
-            for name in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']
+            for name in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order', 'use_sparse']
             if loc[name] is not None
         }
         analysis = RadialFourierAnalysis(
@@ -450,6 +451,8 @@ class Context:
             if analysis.TYPE == 'JOB':
                 job_to_run = analysis.get_job()
             else:
+                if roi is None:
+                    roi = analysis.get_roi()
                 udf_results = self.run_udf(
                     dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
                 )
@@ -457,6 +460,8 @@ class Context:
         else:
             job_to_run = job
 
+        if roi is not None:
+            raise TypeError("old-style analyses don't support ROIs")
         out = job_to_run.get_result_buffer()
         for tiles in self.executor.run_job(job_to_run):
             for tile in tiles:

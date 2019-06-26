@@ -276,14 +276,22 @@ export interface RadialFourierParams {
 }
 
 export interface FFTParams{
-    //shape: "fft_mask"
     rad_in:number,
     rad_out:number,
     real_rad:number,
     real_centerx:number,
-    real_centery:number,//not a number?
+    real_centery:number,
 }
 
+
+export type SumFrameParams = {} | {
+    roi: {
+        shape: "disk",
+        cx: number,
+        cy: number,
+        r: number,
+    }
+}
 
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
@@ -291,6 +299,7 @@ export enum AnalysisTypes {
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
     APPLY_FFT_MASK="APPLY_FFT_MASK",
     FFTSUM_FRAMES="FFTSUM_FRAMES",
@@ -325,7 +334,7 @@ export interface CenterOfMassDetails {
 
 export interface SumFramesDetails {
     type: AnalysisTypes.SUM_FRAMES,
-    parameters: {},
+    parameters: SumFrameParams
 }
 
 export interface FFTSumFramesDetails {
@@ -362,7 +371,6 @@ export interface CancelJobResponse {
     status: "ok",
     job: string,
 }
-
 
 /*
  * fs browser 

@@ -2,8 +2,9 @@ User-defined functions
 ======================
 
 A common case for analysing big EM data sets is running a reduction operation
-on each frame of the data set. The user-defined functions (UDF) interface
-of LiberTEM allows users to run their own reduction functions easily, without having
+on small subsets of the data set, for example individual detector frames.
+The user-defined functions (UDF) interface of LiberTEM allows users to run their
+own reduction functions easily, without having
 to worry about parallelizing, I/O, the details of buffer management and so on. 
 
 
@@ -14,8 +15,8 @@ How UDF works in layman's terms
 
 The UDF interface of LiberTEM is heavily utilizing the existing LiberTEM architecture. First,
 data is partitioned into several `"partitions"` and distributed across workers. Then, each partition,
-which can be viewed as a collection of frames, are processed by the user-defined `process_frame` method.
-Here, frames are fetched in an iterative manner, and `process_frame` method performs user-defined operations
+which can be viewed as a collection of frames, are processed by the user-defined `process_frame` or `process_tile` method. Tiles are described in more detail in TODO confirm link `Tiled processing`_ and are useful to improve the performance of some numerical operations. In the following, the simpler `process_frame` interface is described first.
+Here, frames or tiles are fetched in an iterative manner, and the `process_frame` or `process_tile` method performs user-defined operations
 on the frames. After all the frames in a partition are processed, LiberTEM iteratively `merges` the results from each worker, which is called
 by the `merge` method in UDF class. To summarize, the UDF interface of LiberTEM performs operations at two levels: `process_frame`, which performs user-defined operations
 on frames within each partition, and `merge`, which merges the output of `process_frame` from each partition. Note that in both `process_frame` and `merge`, buffers store the intermediate
@@ -46,14 +47,15 @@ on and can be intermediate results of processing frames/tiles/partitions.
 Note that buffers are only designed to pass lightweight intermediate results and thus, it is important
 that the size of the buffer remains small. Otherwise, it could lead to significant decline in performance.
 
+All numpy dtypes are supported for buffers. That includes the `object` dtype for arbitrary Python variables. The item just has to be picklable with `cloudpickle`.
+
 By-frame processing
 -------------------
 Note that `process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
 are dealing. If the type of the buffer is `"sig"`, then `process_frame` can be viewed as iteratively `merging` the previous
 computations (i.e., the result computed on previously considered set of frames) and a newly added frame. If the type of
 the buffer is `"nav"`, then `process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is `nav`, which means that it uses the navigation dimension, two different frames
-correspond to two different scan positions so it does not
-make much sense to view it as `merging`. Lastly, if the type of the buffer is `"single"`, then `process_frame` can be
+correspond to two different scan positions, so the `merging` is in fact an assignment of the result to the correct slot in the result buffer. Lastly, if the type of the buffer is `"single"`, then `process_frame` can be
 interpreted in either way.
 
 As an easy example, let's have a look at a function that simply sums up each frame
@@ -74,6 +76,10 @@ Here is another example, demonstrating `kind="sig"` buffers and the merge functi
 For a more complete example, please have a look at the functions implemented in `libertem.udf`,
 for example `blobfinder`.
 
+Auto UDF
+--------
+
+The `AutoUDF` class and `run_auto` function allow to run simple functions that accept a frame as the only parameter over a dataset ad-hoc without defining an UDF class. The `AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. Additional constant parameters can be passed to the function via `functools.partial`, for example.
 
 Tiled processing
 ----------------
@@ -155,3 +161,8 @@ API Reference
    :members:
    :special-members: __init__
    :exclude-members: UDFTask,UDFRunner
+
+.. automodule:: libertem.udf.auto
+   :members:
+   :special-members: __init__
+

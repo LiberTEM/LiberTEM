@@ -60,7 +60,7 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
     roi: np.ndarray, optional
         boolean array which limits the elements the UDF is working on.
         Has a shape of dataset_shape.nav
-        
+
     Returns
     -------
     pass_results: dict

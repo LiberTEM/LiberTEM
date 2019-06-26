@@ -31,16 +31,24 @@ const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
                     <Grid.Row>
                         <Grid.Column>
                             <p>{title1}</p>
+                        </Grid.Column> 
+                        <Grid.Column>
+                            <p>{title2}</p>
+                        </Grid.Column>
+                        <Grid.Column>
+                            <p>{title3}</p>
+                        </Grid.Column>    
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
                             {left}
                             <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <p>{title2}</p>
                             {mid}
                             <p>{subtitle}</p>
                         </Grid.Column>
                         <Grid.Column>
-                            <p>{title3}</p>
                             {right}
                         </Grid.Column>
                     </Grid.Row>

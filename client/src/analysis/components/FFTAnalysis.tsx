@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useState } from "react";
-import { connect } from "react-redux";
+import { useDispatch } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes, DatasetOpen } from "../../messages";
-import { cbToRadius, inRectConstraint, riConstraint, roConstraints, keepOnCY } from "../../widgets/constraints";
+import { cbToRadius, inRectConstraint, keepOnCY, riConstraint, roConstraints } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
@@ -21,13 +21,7 @@ interface AnalysisProps {
     dataset: DatasetOpen,
 }
 
-const mapDispatchToProps  = {
-    run: analysisActions.Actions.run,
-}
-
-type MergedProps = AnalysisProps & DispatchProps<typeof mapDispatchToProps>;
-
-const FFTAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
+const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -37,6 +31,7 @@ const FFTAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
     const [rad_in, setRi] = useState(minLength / 4);
     const [rad_out, setRo] = useState(minLength / 2);
 
+    const dispatch = useDispatch();
     const riHandle = {
         x: cx - rad_in,
         y: cy,
@@ -71,7 +66,7 @@ const FFTAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, run }) => {
             imageWidth={imageWidth} />
     )
 
-//here for disk
+// here for disk
 const [real_centerx, setCx] = useState(imageWidth / 2);
 const [real_centery, setCy] = useState(imageHeight / 2);
 const [real_rad, setR] = useState(minLength / 4);
@@ -111,7 +106,7 @@ const frameViewWidgetsreal = (
 
 
     const runAnalysis = () => {
-        run(analysis.id, 2, {
+        dispatch(analysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.APPLY_FFT_MASK,
             parameters: {
                 rad_in,
@@ -121,14 +116,13 @@ const frameViewWidgetsreal = (
                 real_centery
                 
             }
-        });
+        }));
     };
 
     const { frameViewTitle, frameModeSelector, handles: resultHandles } = useFFTFrameView({
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
-        run
     })
 
     const subtitle = (
@@ -145,7 +139,6 @@ const frameViewWidgetsreal = (
                     extraHandles={frameViewHandlesfft} extraWidgets={frameViewWidgetsfft}
                     jobIndex={0} analysis={analysis.id}
                     width={imageWidth} height={imageHeight}
-                    //selectors={frameModeSelector}
                 />
             </>}
             mid={<>
@@ -169,4 +162,4 @@ const frameViewWidgetsreal = (
     );
 }
 
-export default connect(null, mapDispatchToProps)(FFTAnalysis);
+export default FFTAnalysis;

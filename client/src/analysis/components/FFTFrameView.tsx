@@ -2,17 +2,16 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
 import useFFTSumFrames from "./FFTSumFrames";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
 import useSumFrames from "./SumFrames";
 
 const useFFTFrameView = ({
-    scanWidth, scanHeight, analysisId, run
+    scanWidth, scanHeight, analysisId
 }: {
     scanWidth: number, scanHeight: number,
-    analysisId: string, run: typeof analysisActions.Actions.run
+    analysisId: string,
 }) => {
     const availableModes = [
 
@@ -35,21 +34,18 @@ const useFFTFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 1,
         analysisId,
-        run
     });
 
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 1,
         analysisId,
-        run
     })
 
     useFFTSumFrames({
         enabled: true, // frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
         analysisId,
-        run
     })
 
     const frameViewTitle = (

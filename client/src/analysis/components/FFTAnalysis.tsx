@@ -66,44 +66,42 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
             imageWidth={imageWidth} />
     )
 
-// here for disk
-const [real_centerx, setCx] = useState(imageWidth / 2);
-const [real_centery, setCy] = useState(imageHeight / 2);
-const [real_rad, setR] = useState(minLength / 4);
 
-const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
-    setCx(newCx);
-    setCy(newCy);
-});
-const handleRChange = defaultDebounce(setR);
+    const [real_centerx, setCx] = useState(imageWidth / 2);
+    const [real_centery, setCy] = useState(imageHeight / 2);
+    const [real_rad, setR] = useState(minLength / 4);
 
-const rHandle = {
-    x: real_centerx - real_rad,
-    y: real_centery,
-}
+    const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
+        setCx(newCx);
+        setCy(newCy);
+    });
+    const handleRChange = defaultDebounce(setR);
 
-const frameViewHandlesreal: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
-    <DraggableHandle x={real_centerx} y={real_centery}
-        imageWidth={imageWidth}
-        onDragMove={handleCenterChange}
-        parentOnDragStart={handleDragStart}
-        parentOnDrop={handleDrop}
-        constraint={inRectConstraint(imageWidth, imageHeight)} />
-    <DraggableHandle x={rHandle.x} y={rHandle.y}
-        imageWidth={imageWidth}
-        onDragMove={cbToRadius(real_centerx, real_centery, handleRChange)}
-        parentOnDragStart={handleDragStart}
-        parentOnDrop={handleDrop}
-        constraint={keepOnCY(real_centery)} />
-</>);
+    const rHandle = {
+        x: real_centerx - real_rad,
+        y: real_centery,
+    }
 
-const frameViewWidgetsreal = (
-    <Disk cx={real_centerx} cy={real_centery} r={real_rad}
-        imageWidth={imageWidth} imageHeight={imageHeight}
-    />
-);
+    const frameViewHandlesreal: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
+        <DraggableHandle x={real_centerx} y={real_centery}
+            imageWidth={imageWidth}
+            onDragMove={handleCenterChange}
+            parentOnDragStart={handleDragStart}
+            parentOnDrop={handleDrop}
+            constraint={inRectConstraint(imageWidth, imageHeight)} />
+        <DraggableHandle x={rHandle.x} y={rHandle.y}
+            imageWidth={imageWidth}
+            onDragMove={cbToRadius(real_centerx, real_centery, handleRChange)}
+            parentOnDragStart={handleDragStart}
+            parentOnDrop={handleDrop}
+            constraint={keepOnCY(real_centery)} />
+    </>);
 
-
+    const frameViewWidgetsreal = (
+        <Disk cx={real_centerx} cy={real_centery} r={real_rad}
+            imageWidth={imageWidth} imageHeight={imageHeight}
+        />
+    );
 
     const runAnalysis = () => {
         dispatch(analysisActions.Actions.run(analysis.id, 2, {
@@ -128,7 +126,7 @@ const frameViewWidgetsreal = (
     const subtitle = (
         <>{frameViewTitle} real_rad={rad_in.toFixed(2)}, real_center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
     )
-/////
+
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
 
     return (
@@ -147,8 +145,8 @@ const frameViewWidgetsreal = (
                     jobIndex={1} analysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
-    />
-</>}
+                />
+            </>}
 
             right={<>
                 <ResultList
@@ -158,6 +156,10 @@ const frameViewWidgetsreal = (
                 />
             </>}
             toolbar={toolbar}
+            title2 = "Masking out of zero-order diffraction peak in real space"
+            title1 ="Masking of intergation region in Fourier space"
+            title3 ="Result of analysis"
+
         />
     );
 }

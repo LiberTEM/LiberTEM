@@ -1,23 +1,26 @@
 import * as React from "react";
 import { Grid, Header, Icon, Segment } from "semantic-ui-react";
 
-interface AnalysisLayoutTwoColProps {
+interface AnalysisLayoutThreeColProps {
     title: string,
     subtitle: React.ReactNode,
     left: React.ReactNode,
     mid: React.ReactNode,
     right: React.ReactNode,
     toolbar?: React.ReactNode,
+    title1: string,
+    title2: string,
+    title3:string,
 }
 
-type MergedProps = AnalysisLayoutTwoColProps;
-const title2 = "Masking out of zero-order diffraction peak in real space";
-const title1 ="Masking of intergation region in Fourier space";
-const title3 ="Result of analysis"
-const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
+type MergedProps = AnalysisLayoutThreeColProps;
+//const title2 = "Masking out of zero-order diffraction peak in real space";
+//const title1 ="Masking of intergation region in Fourier space";
+//const title3 ="Result of analysis"
+const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
     title, subtitle,
     left, mid, right,
-    toolbar,
+    toolbar,title1, title2, title3,
 }) => {
 
     return (
@@ -29,28 +32,44 @@ const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
             <Segment attached={true}>
                 <Grid columns={3}>
                     <Grid.Row>
-                        <Grid.Column>
+                        <Grid.Column width={5}>
                             <p>{title1}</p>
                         </Grid.Column> 
-                        <Grid.Column>
+
+                        <Grid.Column width={5}>
                             <p>{title2}</p>
                         </Grid.Column>
-                        <Grid.Column>
+
+                        <Grid.Column nwidth={6}>
                             <p>{title3}</p>
                         </Grid.Column>    
                     </Grid.Row>
+
                     <Grid.Row>
-                        <Grid.Column>
+                        <Grid.Column width={5}>
                             {left}
-                            <p>{subtitle}</p>
                         </Grid.Column>
-                        <Grid.Column>
+
+                        <Grid.Column width={5}>
                             {mid}
-                            <p>{subtitle}</p>
                         </Grid.Column>
-                        <Grid.Column>
+
+                        <Grid.Column width={6}>
                             {right}
                         </Grid.Column>
+
+                    </Grid.Row>
+
+                    <Grid.Row>
+                        <Grid.Column width={10}>
+
+                            <p>{subtitle}</p>
+                        </Grid.Column>
+
+                        <Grid.Column width={6}>
+
+                        </Grid.Column>
+
                     </Grid.Row>
                 </Grid>
             </Segment>
@@ -59,4 +78,4 @@ const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
     )
 }
 
-export default AnalysisLayoutTwoCol
+export default AnalysisLayoutThreeCol

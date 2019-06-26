@@ -1,6 +1,10 @@
 Loading Data
 ============
 
+To efficiently handle files larger than main memory, LiberTEM never loads the whole
+data set into memory. Calling the `load` function only opens the data set and gives
+back a handle; running a job then streams the data from mass storage.
+
 There are two main ways of opening a data set in LiberTEM: using the GUI, or
 the Python API.
 
@@ -27,7 +31,8 @@ Using the GUI, mostly the same parameters need to be specified, although some ar
 in the Python API. Tuples (for example for `scan_size` or `tileshape`) have to be entered as
 comma-separated values. We follow the numpy convention here and specify the "fast-access"
 dimension last, so a value of "42, 21" would mean the same as specifying (42, 21) in the
-Python API, setting y=42 and x=21.
+Python API, setting y=42 and x=21. Note that the GUI currently only support 4D data sets,
+while the scripting API should handle more general n-dimensional data.
 
 Common parameters
 ~~~~~~~~~~~~~~~~~
@@ -54,8 +59,8 @@ Merlin Medipix (MIB)
 
 .. autoclass:: libertem.io.dataset.mib.MIBDataSet
 
-RAW
----
+Raw binary files
+----------------
 
 .. autoclass:: libertem.io.dataset.raw.RawFileDataSet
 

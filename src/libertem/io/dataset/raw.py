@@ -111,13 +111,42 @@ class RawFileSet(FileSet3D):
 
 class RawFileDataSet(DataSet):
     """
-    Read raw data from a single file of raw binary data.
+    Read raw data from a single file of raw binary data. This reader assumes the following
+    format:
+
+     * only raw data (no file header)
+     * frames are stored in C-order without additional frame headers
+     * dtype supported by numpy
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> ds = ctx.load("raw", path="/path/to/file.raw", scan_size=(256, 256),
+    ...               dtype="float32", detector_size=(128, 128))
 
     Parameters
     ----------
 
     path: str
         Path to the file
+
+    scan_size: tuple of int, optional
+        A n-tuple that specifies the size of the scanned region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    dtype: numpy dtype
+        The dtype of the data as it is on disk. Can contain endian indicator, for
+        example >u2 for big-endian 16bit data.
+
+    detector_size: tuple of int
+        Common case: (height, width); but can be any dimensionality
+
+    enable_direct: bool
+        Enable direct I/O. This bypasses the filesystem cache and is useful for
+        systems with very fast I/O and for data sets that are much larger than the
+        main memory.
     """
     def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None):

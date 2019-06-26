@@ -114,8 +114,32 @@ class BloFileSet(FileSet3D):
 
 
 class BloDataSet(DataSet):
-    def __init__(self, path, tileshape, endianess='<'):
+    """
+    Read nanomegas .blo files
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> ds = ctx.load("blo", path="/path/to/file.blo")
+
+    Parameters
+    ----------
+    path: str
+        Path to the file
+
+    tileshape: tuple of int
+        Tuning parameter, specifying the size of the smallest data unit
+        we are reading and working on. Will be automatically determined
+        if left None.
+
+    endianess: str
+        either '<' or '>' for little or big endian
+    """
+    def __init__(self, path, tileshape=None, endianess='<'):
         super().__init__()
+        if tileshape is None:
+            tileshape = (1, 8, 144, 144)
         self._tileshape = tileshape
         self._path = path
         self._header = None
@@ -141,12 +165,12 @@ class BloDataSet(DataSet):
     @classmethod
     def detect_params(cls, path):
         try:
-            ds = cls(path, tileshape=(1, 1, 144, 144), endianess='<')
+            ds = cls(path, tileshape=(1, 8, 144, 144), endianess='<')
             if not ds.check_valid():
                 return False
             return {
                 "path": path,
-                "tileshape": (1, 8) + ds.shape.sig,  # FIXME: maybe adjust number of frames?
+                "tileshape": (1, 8) + ds.shape.sig,
                 "endianess": "<",
             }
         except Exception:

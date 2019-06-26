@@ -85,6 +85,41 @@ class H5Reader(object):
 
 
 class H5DataSet(DataSet):
+    """
+    Read data from a HDF5 data set.
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> ds = ctx.load(
+    ...     "hdf5", path="/path/to/file.h5", ds_path="/experimental/data",
+    ...     tileshape=(3, 256, 256),
+    ... )
+
+    Parameters
+    ----------
+    path: str
+        Path to the file
+
+    ds_path: str
+        Path to the HDF5 data set inside the file
+
+    tileshape: tuple of int
+        Tuning parameter, specifying the size of the smallest data unit
+        we are reading and working on. Should match dimensionality of the data set.
+
+    sig_dims: int
+        Number of dimensions that should be considered part of the signal (for example
+        2 when dealing with 2D image data)
+
+    target_size: int
+        Target partition size, in bytes. Usually doesn't need to be changed.
+
+    min_num_partitions: int
+        Minimum number of partitions, set to number of cores if not specified. Usually
+        doesn't need to be specified.
+    """
     def __init__(self, path, ds_path, tileshape,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
         super().__init__()
@@ -227,8 +262,6 @@ class H5Partition(Partition):
                         continue
                 if tuple(tile_slice.shape) != tuple(tileshape):
                     # at the border, can't reuse buffer
-                    # hmm. aren't there only like 3 different shapes at the border?
-                    # FIXME: use buffer pool to reuse buffers of same shape
                     border_data = np.ndarray(tile_slice.shape, dtype=dest_dtype)
                     buf = border_data
                 else:

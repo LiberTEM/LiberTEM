@@ -79,6 +79,17 @@ class SERFileSet(FileSet3D):
 
 
 class SERDataSet(DataSet):
+    """
+    Read TIA SER files.
+
+    Parameters
+    ----------
+    path: str
+        Path to the .ser file
+
+    emipath: str
+        Path to EMI file (currently unused)
+    """
     def __init__(self, path, emipath=None):
         super().__init__()
         self._path = path

@@ -273,8 +273,8 @@ class MIBDataSet(DataSet):
     >>> from libertem.api import Context
     >>> ctx = Context()
     >>> # both examples look for files matching /path/to/default*.mib:
-    >>> ctx.load("mib", path="/path/to/default.hdr")
-    >>> ctx.load("mib", path="/path/to/default64.mib")
+    >>> ds1 = ctx.load("mib", path="/path/to/default.hdr")
+    >>> ds2 = ctx.load("mib", path="/path/to/default64.mib")
 
     Parameters
     ----------
@@ -287,7 +287,7 @@ class MIBDataSet(DataSet):
         if left None.
 
     scan_size: tuple of int, optional
-        A tuple (y, x) that specifies the size of the scanned region. Is
+        A tuple (y, x) that specifies the size of the scanned region. It is
         automatically read from the .hdr file if you specify one as `path`.
     """
     def __init__(self, path, tileshape=None, scan_size=None):

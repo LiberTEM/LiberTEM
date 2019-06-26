@@ -92,6 +92,22 @@ class EMPADFileSet(RawFileSet):
 
 
 class EMPADDataSet(DataSet):
+    """
+    Read data from EMPAD detector. EMPAD data sets consist of two files,
+    one .raw and one .xml file. Note that the .xml file contains the file name
+    of the .raw file, so if the raw file was renamed at some point, opening using
+    the .xml file will fail.
+
+    Parameters
+    ----------
+    path: str
+        Path to either the .xml or the .raw file. If the .xml file given,
+        the `scan_size` parameter can be left out
+
+    scan_size: tuple of int
+        A tuple (y, x) that specifies the size of the scanned region. It is
+        automatically read from the .xml file if you specify one as `path`.
+    """
     def __init__(self, path, scan_size=None):
         super().__init__()
         self._path = path

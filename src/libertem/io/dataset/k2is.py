@@ -456,6 +456,14 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
+    """
+    Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
+
+    Parameters
+    ----------
+    path: str
+        Path to one of the files of the data set (either one of the .bin files or the .gtg file)
+    """
     def __init__(self, path):
         super().__init__()
         self._path = path

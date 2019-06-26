@@ -177,8 +177,8 @@ class FRMS6FileSet(FileSet3D):
         """
         Represents all files belonging to a measurement.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         files : list of FRMS6File
             full paths of all files, without the file containing dark frames
         meta : DataSetMeta
@@ -260,24 +260,30 @@ class FRMS6FileSet(FileSet3D):
 
 
 class FRMS6DataSet(DataSet):
-    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
-        """
-        Parameters:
-        -----------
+    """
+    Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and
+    a .hdr file. The first .frms6 file (matching *_000.frms6) contains dark frames, which
+    are substracted if `enable_offset_correction` is true.
 
-        path : string
-            path to one of the files of the FRMS6 dataset
-        enable_offset_correction : boolean
-            substract dark frames when reading data
-        gain_map_path : string
-            path to a gain map to apply (.mat format)
-        """
+    Parameters
+    ----------
+
+    path : string
+        Path to one of the files of the FRMS6 dataset (either .hdr or .frms6)
+
+    enable_offset_correction : boolean
+        Substract dark frames when reading data
+
+    gain_map_path : string
+        Path to a gain map to apply (.mat format)
+    """
+    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
         super().__init__()
         self._path = path
         self._gain_map_path = gain_map_path
         self._dark_frame = None
-        self._meta = None
         self._enable_offset_correction = enable_offset_correction
+        self._meta = None
         if dest_dtype is not None:
             warnings.warn(
                 "dest_dtype is now handled per `get_tiles` call, and ignored here",

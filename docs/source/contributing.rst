@@ -240,17 +240,17 @@ Release checklist
 
 Not all aspects of LiberTEM are covered with automated unit tests. For that reason we should perform some manual tests before and after a release.
 
-Before
-~~~~~~
+Before (using a release candidate package)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Full documentation review and update
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
-* Update ``packaging/README.html`` with ``rst2html.py README.rst packaging/README.html`` and edit it in such a way that only the HTML body remains. This is used as a description on Zenodo.org
+* Update ``packaging/README.html`` with ``python scripts/readme_to_html.py README.rst packaging/README.html`` (needs html5lib). This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment
-* For the GUI-related items, open in an incognito window
+* For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
 * Copy test files of all supported types to a fresh location or purge the parameter cache

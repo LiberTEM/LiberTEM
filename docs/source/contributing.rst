@@ -172,7 +172,7 @@ You can check the code style by running:
 Building the Documentation
 --------------------------
 
-Documentation building is also done with tox, see above for the basics. It requires `installation of pandoc <https://pandoc.org/installing.html>`_.
+Documentation building is also done with tox, see above for the basics. It requires manual `installation of pandoc <https://pandoc.org/installing.html>`_ on the build system since pandoc can't be installed reliably using pip.
 To start the live building process:
 
 .. code-block:: shell

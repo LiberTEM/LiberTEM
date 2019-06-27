@@ -484,6 +484,11 @@ class Context:
 
         roi : np.ndarray
             region of interest as bool mask over the navigation axes of the dataset
+
+        Returns
+        -------
+        UDFData:
+            Return value of the UDF containing the result buffers
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
 

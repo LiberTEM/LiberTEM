@@ -110,7 +110,7 @@ To run the testsuite for the client, first install the JavaScript/TypeScript dep
    $ cd client/
    $ npm install
 
-Then, in the same dircetory, to run the tests execute:
+Then, in the same directory, to run the tests execute:
 
 .. code-block:: shell
 
@@ -194,7 +194,7 @@ If you would like to contribute to the client, you first need to set up the deve
 For this, first install nodejs. On Linux, we recommend to `install via package manager <https://nodejs.org/en/download/package-manager/>`_,
 on Windows `the installer <https://nodejs.org/en/download/>`_ should be fine. Choose the current LTS version, which is 10.x at the time of writing.
 
-One you have nodejs installed, you should have the npm command available in your path. You can then install
+One you have NodeJS installed, you should have the npm command available in your path. You can then install
 the needed build tools and dependencies by changing to the client directory and running the install command:
 
 .. code-block:: shell

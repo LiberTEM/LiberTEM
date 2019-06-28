@@ -75,6 +75,12 @@ class Match(PointSelection):
         super().__init__(correlation_result, selector)
         assert len(indices) == len(self)
 
+    def __str__(self):
+        result = "zero: %s\n"\
+            "a: %s\n"\
+            "b: %s\n"
+        return result % (str(self.zero), str(self.a), str(self.b))
+
     @classmethod
     def from_point_selection(cls, point_selection: PointSelection,
             zero, a, b, indices, selector=None, parameters={}):
@@ -332,33 +338,47 @@ class Match(PointSelection):
     @classmethod
     def _find_best_vector_match(cls, point_selection: PointSelection, zero, candidates, parameters):
         '''
-        Return the match that matches most points
+        Return the match that matches with the best figure of merit
+
+        Good properties for vectors are
+        * Matching many points in the result
+        * Orthogonal
+        * Equal length
+        * Short
+
+        The function implements a heuristic to calculate a figure of merit that boosts
+        candidates for each of the criteria that they fulfill or nearly fulfill.
+
+        FIXME the figure of merit is currently determined heuristically based on discrete
+        thresholds. A smooth function would be more elegant.
+
+        FIXME improve this on more real-world examples; define test cases.
         '''
         def fom(d):
             m = d[1]
             na = np.linalg.norm(m.a)
             nb = np.linalg.norm(m.b)
+            # Matching many points is good
             res = len(m)
-            # Orthogonal
+            # Boost for orthogonality
             if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
                 res *= 5
             elif np.abs(np.dot(m.a, m.b)) < 0.3 * na * nb:
                 res *= 2
-            # nearly equal length
-            if (na - nb) < 0.1 * max(na, nb):
+            # Boost fo nearly equal length
+            if np.abs(na - nb) < 0.1 * max(na, nb):
                 res *= 5
-            if (na - nb) < 0.3 * max(na, nb):
+            if np.abs(na - nb) < 0.3 * max(na, nb):
                 res *= 2
+            # The division favors short vectors
             res /= na
             res /= nb
             return res
 
         match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
         if match_matrix:
-            # we select the entry with highest number of matches
-            candidate_index, match = sorted(
-                match_matrix.items(), key=fom, reverse=True
-            )[0]
+            # we select the entry with highest figure of merit (fom)
+            candidate_index, match = max(match_matrix.items(), key=fom)
             return match
         else:
             raise NotFoundException

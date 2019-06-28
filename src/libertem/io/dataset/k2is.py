@@ -645,7 +645,7 @@ class K2ISPartition(Partition):
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None):
+                  roi=None, target_size=None):
         if roi is not None:
             # FIXME: implement roi for _read_stacked; forcing full_frames=True is suboptimal
             # for performance reasons.
@@ -654,6 +654,27 @@ class K2ISPartition(Partition):
             yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype, roi=roi)
         else:
             yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype, roi=roi)
+
+    def get_macrotile(self, mmap=False, dest_dtype="float32", roi=None):
+        '''
+        Return a single tile for the entire partition.
+
+        This is useful to support process_partiton() in UDFs and to construct dask arrays
+        from datasets.
+        '''
+        buffer = zeros_aligned((self._num_frames, 1860, 2048), dtype=dest_dtype)
+        for index, t in enumerate(self._read_full_frames(dest_dtype=dest_dtype, roi=roi)):
+            buffer[index] = t.data
+
+        tile_slice = Slice(
+            origin=(0, 0, 0),
+            shape=Shape(buffer.shape, sig_dims=2),
+        )
+
+        return DataTile(
+            data=buffer,
+            tile_slice=tile_slice
+        )
 
     def _read_full_frames(self, crop_to=None, dest_dtype="float32", roi=None):
         with contextlib.ExitStack() as stack:

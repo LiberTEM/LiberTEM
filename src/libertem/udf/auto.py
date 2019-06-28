@@ -1,6 +1,11 @@
+import logging
+
 import numpy as np
 
 from libertem.udf import UDF
+
+
+log = logging.getLogger(__name__)
 
 
 class AutoUDF(UDF):
@@ -27,7 +32,20 @@ class AutoUDF(UDF):
         Auto-generate result buffers based on the return value of f() called with a mock frame.
         '''
         mock_frame = np.ones(tuple(self.meta.dataset_shape.sig), dtype=self.meta.dataset_dtype)
-        result = self.params.f(mock_frame)
+        result = np.array(self.params.f(mock_frame))
+
+        try:
+            # FIXME Thresholds chosen somewhat arbitrarily
+            if result.nbytes > max(1024, mock_frame.nbytes / (2**7)):
+                log.warn(
+                    "Return value of function has size %s, "
+                    "not strongly reduced compared to input size %s"
+                    % (result.nbytes, mock_frame.nbytes)
+                )
+        # Numpy arrays of dtype "object" can throw an AttributeError
+        # upon size calculations
+        except AttributeError:
+            pass
 
         return {
             'result': self.auto_buffer(result)
@@ -38,31 +56,4 @@ class AutoUDF(UDF):
         Call f() for the frame and assign return value to the result buffer slot.
         '''
         res = self.params.f(frame)
-        self.results.result[:] = res
-
-
-def run_auto(ctx, dataset, f, roi=None):
-    '''
-    Create an :code:`AutoUDF` with function :code:`f` and run it through
-    :code:`ctx` on :code:`dataset`
-
-    Parameters
-    ----------
-
-    ctx:
-        LiberTEM Context
-    dataset:
-        Dataset
-    f:
-        Function that accepts a frame as the only parameter
-
-    Returns
-    -------
-
-    UDFData:
-        The result of the UDF with a single buffer named "result" containing all
-        return values of :code:`f` converted to a numpy array
-
-    '''
-    udf = AutoUDF(f=f)
-    return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+        self.results.result[:] = np.array(res)

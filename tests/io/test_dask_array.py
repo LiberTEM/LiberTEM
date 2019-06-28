@@ -10,7 +10,7 @@ def test_dask_array():
         tileshape=(16, 16, 16),
         num_partitions=2,
     )
-    da = dataset.get_dask_array()
+    (da, workers) = dataset.get_dask_array()
     assert np.allclose(da, data)
-    assert np.allclose(da.sum().compute(), data.sum())
+    assert np.allclose(da.sum().compute(workers=workers), data.sum())
     assert da.shape == data.shape

@@ -19,6 +19,7 @@ const useFFTFrameView = ({
             text: "Pick",
             value: AnalysisTypes.PICK_FRAME,
         },
+
         {
             text: "Average",
             value: AnalysisTypes.SUM_FRAMES,
@@ -29,12 +30,32 @@ const useFFTFrameView = ({
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
 
+    /*useFrameFFTPicker({
+        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        scanWidth, scanHeight,
+        jobIndex: 0,
+        analysisId,
+    });*/
+
+    const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
+    const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
+
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
         jobIndex: 1,
         analysisId,
+        cx, cy, setCx, setCy, type: AnalysisTypes.PICK_FRAME
     });
+    
+    useFramePicker({
+        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        scanWidth, scanHeight,
+        jobIndex: 0,
+        analysisId,
+        cx, cy, setCx, setCy, type: AnalysisTypes.PICK_FFT_FRAME
+    });
+    
 
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
@@ -43,7 +64,7 @@ const useFFTFrameView = ({
     })
 
     useFFTSumFrames({
-        enabled: true, // frameMode === AnalysisTypes.SUM_FRAMES,
+        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
         analysisId,
     })
@@ -52,11 +73,14 @@ const useFFTFrameView = ({
         frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
 
+
+
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
 
     return {
         frameViewTitle,
         handles: frameMode !== AnalysisTypes.PICK_FRAME ? nullHandles : pickHandles,
+
         frameModeSelector,
     }
 }

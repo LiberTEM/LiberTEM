@@ -31,11 +31,16 @@ const useDefaultFrameView = ({
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
 
+    const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
+    const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
+
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
+        cx, cy, setCx, setCy,
+        type: AnalysisTypes.PICK_FRAME 
     });
 
     const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({

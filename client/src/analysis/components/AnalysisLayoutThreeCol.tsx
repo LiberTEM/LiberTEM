@@ -9,8 +9,9 @@ interface AnalysisLayoutThreeColProps {
     right: React.ReactNode,
     toolbar?: React.ReactNode,
     title1: string,
-    title2: string,
+    title2: React.ReactNode,
     title3:string,
+
 }
 
 type MergedProps = AnalysisLayoutThreeColProps;
@@ -20,8 +21,15 @@ type MergedProps = AnalysisLayoutThreeColProps;
 const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
     title, subtitle,
     left, mid, right,
-    toolbar,title1, title2, title3,
+    toolbar,title1, title2, title3
 }) => {
+// tslint:disable-next-line: no-console
+    
+
+    // handleChange({target: {checked: true}})
+
+
+    
 
     return (
         <>
@@ -37,10 +45,11 @@ const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
                         </Grid.Column> 
 
                         <Grid.Column width={5}>
-                            <p>{title2}</p>
+                            <p>{title2}</p>   
+
                         </Grid.Column>
 
-                        <Grid.Column nwidth={6}>
+                        <Grid.Column width={6}>
                             <p>{title3}</p>
                         </Grid.Column>    
                     </Grid.Row>

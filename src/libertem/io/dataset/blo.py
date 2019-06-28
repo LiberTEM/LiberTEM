@@ -32,9 +32,12 @@ class BLODatasetParams(MessageConverter):
     }
 
     def convert_to_python(self, raw_data):
-        data = dict(raw_data)
-        del data["type"]
+        data = {
+            k: raw_data[k]
+            for k in ["path", "tileshape"]
+        }
         return data
+
 
 
 # stolen from hyperspy

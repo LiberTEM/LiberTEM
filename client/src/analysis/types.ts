@@ -84,6 +84,11 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         title: "Pick frame",
     },
 
+    [AnalysisTypes.PICK_FFT_FRAME]: {
+        desc: "Pick a single frame",
+        title: "Pick frame",
+    },
+
     [AnalysisTypes.APPLY_FFT_MASK]: {
         desc: "Pick a single frame",
         title: "FFT",
@@ -94,7 +99,7 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         desc: "Create a sum of all detector frames",
         title: "Sum all frames",
     },
-    
+
     [AnalysisTypes.RADIAL_FOURIER]: {
         desc: "Compute a radial Fourier analysis",
         title: "Radial Fourier",

@@ -21,6 +21,8 @@ interface AnalysisProps {
     dataset: DatasetOpen,
 }
 
+
+
 const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
@@ -128,6 +130,11 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
     )
 
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    
+    const [check, setCheck] = React.useState(true);
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCheck(event.target.checked);
+    }
 
     return (
         <AnalysisLayoutThreeCol
@@ -156,7 +163,10 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
                 />
             </>}
             toolbar={toolbar}
-            title2 = "Masking out of zero-order diffraction peak in real space"
+
+
+            //title2 = "Masking out of zero-order diffraction peak in real space"
+            title2={<input type="checkbox" name="check" id="id_enable_maskout" onChange={handleChange} checked={check}/>}
             title1 ="Masking of intergation region in Fourier space"
             title3 ="Result of analysis"
 
@@ -165,3 +175,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
 }
 
 export default FFTAnalysis;
+
+
+//<label htmlFor="id_enable_maskout"> Masking out of zero order diffraction peak </label>
+

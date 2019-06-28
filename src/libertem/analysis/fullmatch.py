@@ -3,8 +3,6 @@ import hdbscan
 
 import libertem.analysis.gridmatching as grm
 from libertem.utils import make_polar
-# import (Match, PointSelection, CorrelationResult,
-# make_polar, NotFoundException, make_polar_vectors)
 
 
 def full_match(centers, zero=None, parameters={}):
@@ -42,7 +40,7 @@ class FullMatch(grm.Match):
         parameters
             Parameters for the matching.
             min_angle: Minimum angle between two vectors to be considered candidates
-            tolerance: Relative position tolerance for peaks to be considered matches
+            tolerance: Absolute position tolerance in px for peaks to be considered matches
             min_points: Minimum points to try clustering matching. Otherwise match directly
             min_match: Minimum matched clusters from clustering matching to be considered successful
             min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
@@ -143,7 +141,7 @@ def hdbscan_candidates(points, parameters):
     In the end we return the shortest matches.
 
     '''
-    cutoff = parameters["tolerance"] * parameters["max_delta"]
+    cutoff = parameters["tolerance"]
     clusterer = hdbscan.HDBSCAN(**make_hdbscan_config(points, parameters))
     vectors = grm.make_polar_vectors(points, parameters)
     clusterer.fit(vectors)

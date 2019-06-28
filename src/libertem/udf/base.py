@@ -510,16 +510,7 @@ class UDFRunner:
         elif method == 'frame':
             tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
         elif method == 'partition':
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
-            raise NotImplementedError("process_partition is not implemented yet")
-
-        partition_data = None
-        if method == 'partition':
-            # FIXME: allocate a buffer the size of the partition (nav+sig)
-            # (or more correct: the size of the part of the partition that is
-            # selected by the `roi`; see meta.partition_shape)
-            # partition_data = ...
-            pass
+            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype)]
 
         for tile in tiles:
             if method == 'tile':
@@ -530,10 +521,8 @@ class UDFRunner:
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
             elif method == 'partition':
-                raise NotImplementedError("TODO: copy tiles into partition_data")
-
-        if method == 'partition':
-            self._udf.process_partition(partition_data)
+                self._udf.set_views_for_tile(partition, tile)
+                self._udf.process_partition(tile.data)
 
         if hasattr(self._udf, 'postprocess'):
             self._udf.clear_views()

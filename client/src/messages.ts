@@ -293,10 +293,16 @@ export enum AnalysisTypes {
     SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
     RADIAL_FOURIER = "RADIAL_FOURIER",
+    FEM = "FEM"
 }
 
 export interface RingMaskDetails {
     type: AnalysisTypes.APPLY_RING_MASK,
+    parameters: MaskDefRing,
+}
+
+export interface FEMDetails {
+    type: AnalysisTypes.FEM,
     parameters: MaskDefRing,
 }
 
@@ -331,7 +337,7 @@ export interface RadialFourierDetails {
 }
 
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | RadialFourierDetails;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails;
 
 export interface StartJobRequest {
     job: {

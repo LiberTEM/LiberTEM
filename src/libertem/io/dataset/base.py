@@ -1,7 +1,8 @@
 import itertools
-import math
 
 import numpy as np
+import dask
+import dask.array
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
@@ -145,6 +146,21 @@ class DataSet(object):
         """
         raise NotImplementedError()
 
+    def get_dask_array(self, dtype='float32', roi=None):
+        chunks = []
+        for p in self.get_partitions():
+            chunks.append(
+                dask.array.from_delayed(
+                    dask.delayed(p.get_macrotile)(
+                        dest_dtype=dtype, roi=roi
+                    ).data,
+                    dtype=dtype,
+                    shape=p.shape
+                )
+            )
+        arr = dask.array.concatenate(chunks, axis=0)
+        return arr.reshape(self.shape)
+
     @property
     def dtype(self):
         """
@@ -267,7 +283,7 @@ class Partition(object):
         return self.slice.shape.flatten_nav()
 
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None):
+                  roi=None, target_size=None):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -298,8 +314,21 @@ class Partition(object):
             the beginning of the dataset. Compressed means, only frames that have a 1
             in the ROI are considered, and the resulting tile slices are from a coordinate
             system that has the shape `(np.count_nonzero(roi),)`.
+        target_size : int
+            Target size for each tile in bytes.
         """
         raise NotImplementedError()
+
+    def get_macrotile(self, mmap=False, dest_dtype="float32", roi=None):
+        '''
+        Return a single tile for the entire partition.
+
+        This is useful to support process_partiton() in UDFs and to construct dask arrays
+        from datasets.
+        '''
+        return next(self.get_tiles(
+            full_frames=True, mmap=mmap, dest_dtype=dest_dtype, roi=roi, target_size=float('inf')
+        ))
 
     def get_locations(self):
         # Allow using any worker by default
@@ -532,18 +561,19 @@ class Partition3D(Partition):
         self._stackheight = stackheight
         super().__init__(*args, **kwargs)
 
-    def _get_stackheight(self, sig_shape, dest_dtype, target_size=1 * 1024 * 1024):
+    def _get_stackheight(self, sig_shape, dest_dtype, target_size=None):
         """
         Compute target stackheight
 
         The cropped tile of size `sig_shape` should fit into `target_size`,
         once converted to `dest_dtype`.
         """
-        # FIXME: centralize this decision and make target_size tunable
-        if self._stackheight is not None:
-            return self._stackheight
+        if target_size is None:
+            if self._stackheight is not None:
+                return self._stackheight
+            target_size = 1 * 1024 * 1024
         framesize = sig_shape.size * dest_dtype.itemsize
-        return max(1, math.floor(target_size / framesize))
+        return int(min(max(1, np.floor(target_size / framesize)), self._num_frames))
 
     @classmethod
     def make_slices(cls, shape, num_partitions):
@@ -569,7 +599,7 @@ class Partition3D(Partition):
             yield part_slice, start, stop
 
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None):
+                  roi=None, target_size=None):
         """
         roi should be a 1d bitmask with the same shape as the navigation axis of the dataset
         """
@@ -608,13 +638,16 @@ class Partition3D(Partition):
                 raise ValueError("don't use crop_to with roi")
 
         if roi is not None:
-            yield from self._get_tiles_with_roi(crop_to, full_frames, dest_dtype, roi)
+            yield from self._get_tiles_with_roi(
+                crop_to, full_frames, dest_dtype, roi, target_size=target_size)
         elif mmap:
-            yield from self._get_tiles_mmap(crop_to, full_frames, dest_dtype)
+            yield from self._get_tiles_mmap(
+                crop_to, full_frames, dest_dtype)
         else:
-            yield from self._get_tiles_normal(crop_to, full_frames, dest_dtype)
+            yield from self._get_tiles_normal(
+                crop_to, full_frames, dest_dtype, target_size=target_size)
 
-    def _get_tiles_normal(self, crop_to, full_frames, dest_dtype):
+    def _get_tiles_normal(self, crop_to, full_frames, dest_dtype, target_size=None):
         start_at_frame = self._start_frame
         num_frames = self._num_frames
         sig_shape = self.meta.shape.sig
@@ -624,7 +657,8 @@ class Partition3D(Partition):
             sig_shape = crop_to.shape.sig
         if full_frames:
             sig_shape = self.meta.shape.sig
-        stackheight = self._get_stackheight(sig_shape=sig_shape, dest_dtype=dest_dtype)
+        stackheight = self._get_stackheight(
+            sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
         tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         tileshape = (
@@ -663,7 +697,7 @@ class Partition3D(Partition):
                     tile_slice=tile_slice
                 )
 
-    def _get_tiles_with_roi(self, crop_to, full_frames, dest_dtype, roi):
+    def _get_tiles_with_roi(self, crop_to, full_frames, dest_dtype, roi, target_size=None):
         """
         With a ROI, we yield tiles from a "compressed" navigation axis, relative to
         the beginning of the partition. Compressed means, only frames that have a 1
@@ -678,7 +712,8 @@ class Partition3D(Partition):
             sig_shape = crop_to.shape.sig
         if full_frames:
             sig_shape = self.meta.shape.sig
-        stackheight = self._get_stackheight(sig_shape=sig_shape, dest_dtype=dest_dtype)
+        stackheight = self._get_stackheight(
+            sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
         tile_buf = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         frames_read = 0

@@ -29,28 +29,41 @@ class FullMatch(grm.Match):
         This function extracts a list of Match objects as well two PointCollection objects
         for unmatched and weak points from correlation_result and zero point.
         The zero point is included in each of the matches because it is shared between all grids.
+
         Parameters
         ----------
-        correlation_result
+
+        correlation_result:
             A CorrelationResult object with coordinates and weights
-        zero
+        zero:
             Zero point as numpy array (y, x).
-        cand
+        cand:
             Optional list of candidate vectors to use in a first matching round before guessing.
-        parameters
+        parameters:
             Parameters for the matching.
-            min_angle: Minimum angle between two vectors to be considered candidates
-            tolerance: Absolute position tolerance in px for peaks to be considered matches
-            min_points: Minimum points to try clustering matching. Otherwise match directly
-            min_match: Minimum matched clusters from clustering matching to be considered successful
-            min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
+
+            min_angle:
+                Minimum angle between two vectors to be considered candidates
+            tolerance:
+                Absolute position tolerance in px for peaks to be considered matches
+            min_points:
+                Minimum points to try clustering matching. Otherwise match directly
+            min_match:
+                Minimum matched clusters from clustering matching to be considered successful
+            min_cluster_size_fraction:
+                Tuning parameter for clustering matching. Larger values allow
                 smaller or fuzzier clusters.
-            min_samples_fraction: Tuning parameter for clustering matching. Larger values allow
+            min_samples_fraction:
+                Tuning parameter for clustering matching. Larger values allow
                 smaller or fuzzier clusters.
-            min_weight: Minimum weight for a point to be included in the fit
-            num_candidates: Maximum number of candidates to return from clustering matching
-            min_delta: Minimum length of a potential grid vector
-            max_delta: Maximum length of a potential grid vector
+            min_weight:
+                Minimum weight for a point to be included in the fit
+            num_candidates:
+                Maximum number of candidates to return from clustering matching
+            min_delta:
+                Minimum length of a potential grid vector
+            max_delta:
+                Maximum length of a potential grid vector
         returns:
             (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
         '''

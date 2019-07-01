@@ -15,11 +15,11 @@ How UDF works in layman's terms
 
 The UDF interface of LiberTEM is heavily utilizing the existing LiberTEM architecture. First,
 data is partitioned into several `"partitions"` and distributed across workers. Then, each partition,
-which can be viewed as a collection of frames, are processed by the user-defined :meth:`process_frame` or :meth:`process_tile` method. Tiles are described in more detail in `tiled processing`_ and are useful to improve the performance of some numerical operations. In the following, the simpler :meth:`process_frame` interface is described first.
-Here, frames or tiles are fetched in an iterative manner, and the :meth:`process_frame` or :meth:`process_tile` method performs user-defined operations
+which can be viewed as a collection of frames, are processed by the user-defined :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFTileMixin.process_tile` :meth:`~libertem.udf.UDFPartitionMixin.process_partition` method. Tiles are described in more detail in `tiled processing`_ and are useful to improve the performance of some numerical operations. In the following, the simpler :meth:`~libertem.udf.UDFFrameMixin.process_frame` interface is described first.
+Here, frames or tiles are fetched in an iterative manner, and the :meth:`~libertem.udf.UDFFrameMixin.process_frame` or :meth:`~libertem.udf.UDFTileMixin.process_tile` method performs user-defined operations
 on the frames. After all the frames in a partition are processed, LiberTEM iteratively `merges` the results from each worker, which is called
-by the :meth:`merge` method in UDF class. To summarize, the UDF interface of LiberTEM performs operations at two levels: :meth:`process_frame`, which performs user-defined operations
-on frames within each partition, and :meth:`merge`, which merges the output of :meth:`process_frame` from each partition. Note that in both :meth:`process_frame` and :meth:`merge`, buffers store the intermediate
+by the :meth:`~libertem.udf.UDF.merge` method in UDF class. To summarize, the UDF interface of LiberTEM performs operations at two levels: :meth:`~libertem.udf.UDFFrameMixin.process_frame`, which performs user-defined operations
+on frames within each partition, and :meth:`~libertem.udf.UDF.merge`, which merges the output of :meth:`~libertem.udf.UDFFrameMixin.process_frame` from each partition. Note that in both :meth:`~libertem.udf.UDFFrameMixin.process_frame` and :meth:`~libertem.udf.UDF.merge`, buffers store the intermediate
 outcomes of the user-defined operations.
 
 Initializing Buffers
@@ -51,11 +51,11 @@ All numpy dtypes are supported for buffers. That includes the :code:`object` dty
 
 By-frame processing
 -------------------
-Note that :meth:`process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
-are dealing. If the type of the buffer is :code:"sig", then :meth:`process_frame` can be viewed as iteratively `merging` the previous
+Note that :meth:`~libertem.udf.UDFFrameMixin.process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
+are dealing. If the type of the buffer is :code:"sig", then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as iteratively `merging` the previous
 computations (i.e., the result computed on previously considered set of frames) and a newly added frame. If the type of
-the buffer is :code:`"nav"`, then :meth:`process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is :code:`"nav"`, which means that it uses the navigation dimension, two different frames
-correspond to two different scan positions, so the `merging` is in fact an assignment of the result to the correct slot in the result buffer. Lastly, if the type of the buffer is :code:`"single"`, then :meth:`process_frame` can be
+the buffer is :code:`"nav"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is :code:`"nav"`, which means that it uses the navigation dimension, two different frames
+correspond to two different scan positions, so the `merging` is in fact an assignment of the result to the correct slot in the result buffer. Lastly, if the type of the buffer is :code:`"single"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be
 interpreted in either way.
 
 As an easy example, let's have a look at a function that simply sums up each frame
@@ -79,9 +79,9 @@ for example :code:`libertem.udf.blobfinder`.
 Auto UDF
 --------
 
-The :class:`AutoUDF` class and :meth:`Context.map()` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, postprocessing or performance optimization through tiled processing, defining an UDF class is required.
+The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, post-processing or performance optimization through tiled processing, defining an UDF class is required.
 
-The :class:`AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array. Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
+The :class:`~libertem.udf.AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array. Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
 
 Example: Calculate sum over the last signal axis.
 
@@ -91,6 +91,78 @@ Example: Calculate sum over the last signal axis.
             dataset=dataset,
             f=functools.partial(np.sum, axis=-1)
       )
+
+      # or alternatively:
+
+      udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
+      result = self.run_udf(dataset=dataset, udf=udf)
+
+.. _tiled:
+
+Passing parameters
+------------------
+
+By default, keyword arguments that are passed to the constructor of a UDF are available as properties of :code:`self.params`:
+
+.. code-block::python
+
+    class MyUDF(UDF):
+
+        def process_frame(self, frame):
+            result = correlate_peaks(frame, self.params.peaks)
+            ...
+
+    udf = MyUDF(peaks=peaks, ...)
+
+
+AUX data
+~~~~~~~~
+
+If a parameter is an instance of :class:`~libertem.common.buffers.BufferWrapper`, the UDF interface will interpret it as auxiliary data. It will set the views for each tile/frame/partition accordingly so that accessing the parameter returns a view of the auxiliary data matching the data portion that is currently being processed. That way, it is possible to pass parameters individually for each frame or to mask the signal dimension. The :meth:`~libertem.udf.UDF.aux_data` class method helps to wrap data into a suitable :class:`~libertem.common.buffers.BufferWrapper`.
+
+For masks in the signal dimension that are used for dot products in combination with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows to use more advanced slicing and transformation methods targeted at preparing mask stacks for optimal dot product performance.
+
+Task data
+---------
+
+A UDF can generate task-specific intermediate data on the worker nodes by defining a :meth:`~libertem.udf.UDF.get_task_data` method. The result is available as an instance of :class:`~libertem.udf.UDFData` in :code:`self.task_data`. Depending on the circumstances, this can be more efficient than making the data available as a parameter since it avoids pickling, network transport and unpickling.
+
+This non-trivial example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates a :class:`~libertem.job.masks.MaskContainer` based on the parameters in :code:`self.params`. This :class:`~libertem.job.masks.MaskContainer` is then available as :code:`self.task_data['mask_container']` within the processing functions.
+
+.. code-block:: python
+
+    def get_task_data(self):
+        mask = mask_maker(self.params)
+        crop_size = mask.get_crop_size()
+        size = (2 * crop_size + 1, 2 * crop_size + 1)
+        template = mask.get_mask(sig_shape=size)
+        steps = self.params.steps
+        peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
+
+        offsetY = self.params.peaks[:, 0, np.newaxis, np.newaxis] + peak_offsetY - crop_size
+        offsetX = self.params.peaks[:, 1, np.newaxis, np.newaxis] + peak_offsetX - crop_size
+
+        offsetY = offsetY.flatten()
+        offsetX = offsetX.flatten()
+
+        stack = functools.partial(
+            sparse_template_multi_stack,
+            mask_index=range(len(offsetY)),
+            offsetX=offsetX,
+            offsetY=offsetY,
+            template=template,
+            imageSizeX=self.meta.dataset_shape.sig[1],
+            imageSizeY=self.meta.dataset_shape.sig[0]
+        )
+        # CSC matrices in combination with transposed data are fastest
+        container = MaskContainer(mask_factories=stack, dtype=np.float32,
+            use_sparse='scipy.sparse.csc')
+
+        kwargs = {
+            'mask_container': container,
+            'crop_size': crop_size,
+        }
+        return kwargs
 
 Tiled processing
 ----------------
@@ -157,7 +229,67 @@ Note: you may have noticed that we talk about block sizes of 1MB as efficient in
 but many CPUs have larger L3 caches. As the L3 cache is shared between cores, and LiberTEM tries
 to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
 
-TODO: documentation on implementing :code:`process_tile`, :code:`process_partition`
+Real-world example
+~~~~~~~~~~~~~~~~~~
+
+The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.MaskJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :class:`~libertem.common.Slice` :code:`tile_slice` argument is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
+
+.. code-block:: python
+
+    def process_tile(self, tile, tile_slice):
+        c = self.task_data['mask_container']
+        tile_t = np.zeros(
+            (np.prod(tile.shape[1:]), tile.shape[0]),
+            dtype=tile.dtype
+        )
+        log_scale(tile.reshape((tile.shape[0], -1)).T, out=tile_t)
+
+        sl = c.get(key=tile_slice, transpose=False)
+        self.results.corr[:] += sl.dot(tile_t).T
+
+Post-processing
+~~~~~~~~~~~~~~~
+
+Post-processing allows to perform additional processing steps once the data of a partition is completely processed with :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFTileMixin.process_tile` or :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is particularly relevant for tiled processing since that allows to combine the performance benefits of tiled processing for a first reduction step with additional steps that require reduced data from complete frames or even a complete partition.
+
+Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` which evaluates the correlation maps that have been generated with the dot product in the previous processing step and places the results in additional result buffers:
+
+.. code-block:: python
+
+    def postprocess(self):
+        steps = 2 * self.params.steps + 1
+        corrmaps = self.results.corr.reshape((
+            -1,  # frames
+            len(self.params.peaks),  # peaks
+            steps,  # Y steps
+            steps,  # X steps
+        ))
+        peaks = self.params.peaks
+        r = self.results
+        for f in range(corrmaps.shape[0]):
+            for p in range(len(self.params.peaks)):
+                corr = corrmaps[f, p]
+                center, refined, peak_value, peak_elevation = evaluate_correlation(corr)
+                abs_center = _shift(center, peaks[p], self.params.steps).astype('u2')
+                abs_refined = _shift(refined, peaks[p], self.params.steps).astype('float32')
+                r.centers[f, p] = abs_center
+                r.refineds[f, p] = abs_refined
+                r.peak_values[f, p] = peak_value
+                r.peak_elevations[f, p] = peak_elevation
+
+
+Partition processing
+--------------------
+
+Motivation
+~~~~~~~~~~
+
+Some algorithms can benefit from processing entire partitions, for example if they require several passes over the data. In most cases, :ref:`tiled processing<tiled>` will be faster because it uses the L3 cache more efficiently. For that reason, per-partition processing should only be used if there are clear indications for it. Implementing :meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates per-partition processing for an UDF.
+
+Precedence
+----------
+
+The UDF interface looks for methods in the order :meth:`~libertem.udf.UDFTileMixin.process_tile`, :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. For now, the first in that order is executed. In the future, composition of UDFs may allow to use different methods depending on the circumstances. :meth:`~libertem.udf.UDFTileMixin.process_tile` is the most general method and allows by-frame and by-partition processing as well.
 
 Debugging
 ---------

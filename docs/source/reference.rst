@@ -29,3 +29,8 @@ Internal API
    :members:
    :undoc-members:
    :special-members: __init__
+
+.. automodule:: libertem.job.masks
+   :members: MaskContainer
+   :undoc-members:
+   :special-members: __init__

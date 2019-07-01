@@ -1,10 +1,10 @@
 import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
 import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
+import FEM from "./components/FEM";
 import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
 import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
 import RingMaskAnalysis from "./components/RingMaskAnalysis";
-import FEM from "./components/FEM";
 
 export type AnalysisStatus = "busy" | "idle";
 

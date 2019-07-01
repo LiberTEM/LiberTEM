@@ -70,7 +70,7 @@ const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
     const runAnalysis = () => {
         dispatch(analysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.APPLY_RING_MASK,
+            type: AnalysisTypes.FEM,
             parameters: {
                 shape: "ring",
                 cx, cy, ri, ro,

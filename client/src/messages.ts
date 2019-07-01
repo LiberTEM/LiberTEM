@@ -239,6 +239,7 @@ export interface MaskDefRing {
     ro: number
 }
 
+
 export interface MaskDefDisk {
     shape: "disk",
     cx: number,

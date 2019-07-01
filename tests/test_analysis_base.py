@@ -14,10 +14,10 @@ def test_result_set():
 
     results = AnalysisResultSet([result])
 
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(AttributeError) as einfo:
         results.foo
-    assert "not found" in str(e)
-    assert "have: test" in str(e)
+    assert einfo.match("not found")
+    assert einfo.match("have: test")
 
     assert results.test == result
     assert len(results) == 1

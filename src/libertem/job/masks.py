@@ -108,6 +108,12 @@ class ApplyMasksJob(Job):
 
 
 class MaskContainer(object):
+    '''
+    Container for mask stacks that are created from factory functions.
+
+    It allows stacking, cached slicing, transposing and conversion
+    to condition the masks for high-performance dot products.
+    '''
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None):
         '''
         use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'

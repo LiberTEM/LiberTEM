@@ -96,7 +96,7 @@ const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
     return (
         <AnalysisLayoutTwoCol
-            title="FEM (SD Ring analysis)" subtitle={subtitle}
+            title="Fluctuation EM (SD over Ring analysis)" subtitle={subtitle}
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}

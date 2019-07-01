@@ -62,7 +62,7 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
     },
 
     [AnalysisTypes.FEM]: {
-        desc: "Apply a disk mask with center cx, cy; radius r",
+        desc: "Apply a ring mask with center cx, cy; radius r",
         title: "FEM (SD over Ring)",
         component: FEM,
     },

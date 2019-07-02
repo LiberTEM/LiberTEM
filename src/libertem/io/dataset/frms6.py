@@ -453,8 +453,10 @@ class FRMS6DataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 512MB per partition
-        res = max(self._cores, self._total_filesize // (512*1024*1024))
+        # let's try to aim for 512MB (converted float data) per partition
+        partition_size = 512 * 1024 * 1024 / 4
+        partition_size /= np.dtype("u2").itemsize
+        res = max(self._cores, self._total_filesize // int(partition_size))
         return res
 
     def get_partitions(self):

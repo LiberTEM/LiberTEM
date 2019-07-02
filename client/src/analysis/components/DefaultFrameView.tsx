@@ -39,8 +39,7 @@ const useDefaultFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        cx, cy, setCx, setCy,
-        type: AnalysisTypes.PICK_FRAME 
+        cx, cy, setCx, setCy
     });
 
     const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({

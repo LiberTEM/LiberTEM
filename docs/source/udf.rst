@@ -52,7 +52,7 @@ All numpy dtypes are supported for buffers. That includes the :code:`object` dty
 By-frame processing
 -------------------
 Note that :meth:`~libertem.udf.UDFFrameMixin.process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
-are dealing. If the type of the buffer is :code:"sig", then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as iteratively `merging` the previous
+are dealing. If the type of the buffer is :code:`"sig"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as iteratively `merging` the previous
 computations (i.e., the result computed on previously considered set of frames) and a newly added frame. If the type of
 the buffer is :code:`"nav"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is :code:`"nav"`, which means that it uses the navigation dimension, two different frames
 correspond to two different scan positions, so the `merging` is in fact an assignment of the result to the correct slot in the result buffer. Lastly, if the type of the buffer is :code:`"single"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be
@@ -104,7 +104,7 @@ Passing parameters
 
 By default, keyword arguments that are passed to the constructor of a UDF are available as properties of :code:`self.params`:
 
-.. code-block::python
+.. code-block:: python
 
     class MyUDF(UDF):
 
@@ -232,7 +232,7 @@ to use multiple cores, the effectively available L3 cache has to be divided by n
 Real-world example
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.MaskJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :class:`~libertem.common.Slice` :code:`tile_slice` argument is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
+The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :class:`~libertem.common.Slice` :code:`tile_slice` argument is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
 
 .. code-block:: python
 
@@ -250,7 +250,7 @@ The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem
 Post-processing
 ~~~~~~~~~~~~~~~
 
-Post-processing allows to perform additional processing steps once the data of a partition is completely processed with :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFTileMixin.process_tile` or :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is particularly relevant for tiled processing since that allows to combine the performance benefits of tiled processing for a first reduction step with additional steps that require reduced data from complete frames or even a complete partition.
+Post-processing allows to perform additional processing steps once the data of a partition is completely processed with :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFTileMixin.process_tile` or :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is particularly relevant for tiled processing since that allows to combine the performance benefits of tiled processing for a first reduction step with subsequent steps that require reduced data from complete frames or even a complete partition.
 
 Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` which evaluates the correlation maps that have been generated with the dot product in the previous processing step and places the results in additional result buffers:
 
@@ -280,9 +280,6 @@ Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` w
 
 Partition processing
 --------------------
-
-Motivation
-~~~~~~~~~~
 
 Some algorithms can benefit from processing entire partitions, for example if they require several passes over the data. In most cases, :ref:`tiled processing<tiled>` will be faster because it uses the L3 cache more efficiently. For that reason, per-partition processing should only be used if there are clear indications for it. Implementing :meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates per-partition processing for an UDF.
 

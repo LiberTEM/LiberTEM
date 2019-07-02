@@ -125,6 +125,9 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
+        real_rad: check ? real_rad : null,
+        real_centerx: check ? real_centerx : null,
+        real_centery: check ? real_centery : null
         })
 
     

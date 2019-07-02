@@ -8,10 +8,10 @@ import ModeSelector from "./ModeSelector";
 import useSumFrames from "./SumFrames";
 
 const useFFTFrameView = ({
-    scanWidth, scanHeight, analysisId
+    scanWidth, scanHeight, analysisId, real_rad, real_centerx, real_centery
 }: {
     scanWidth: number, scanHeight: number,
-    analysisId: string,
+    analysisId: string, real_rad:number|null, real_centerx:number|null, real_centery:number|null
 }) => {
     const availableModes = [
 
@@ -67,6 +67,9 @@ const useFFTFrameView = ({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
         analysisId,
+        real_rad,
+        real_centerx,
+        real_centery
     })
 
     const frameViewTitle = (

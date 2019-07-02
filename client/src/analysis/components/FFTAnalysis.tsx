@@ -197,7 +197,3 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
 
 
 export default FFTAnalysis;
-
-
-
-

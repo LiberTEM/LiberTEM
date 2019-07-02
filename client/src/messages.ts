@@ -274,6 +274,9 @@ export interface FFTSumFramesParams {
 export interface PickFFTFrameParams {
     x: number,
     y: number,
+    real_rad: number | null ,
+    real_centerx: number | null,
+    real_centery: number | null,
 }
 export interface RadialFourierParams {
     shape: "radial_fourier",

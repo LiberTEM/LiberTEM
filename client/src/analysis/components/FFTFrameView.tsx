@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import useFFTFramePicker from "./FFTFramePicker";
 import useFFTSumFrames from "./FFTSumFrames";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
@@ -30,13 +31,6 @@ const useFFTFrameView = ({
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
 
-    /*useFrameFFTPicker({
-        enabled: frameMode === AnalysisTypes.PICK_FRAME,
-        scanWidth, scanHeight,
-        jobIndex: 0,
-        analysisId,
-    });*/
-
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
 
@@ -45,15 +39,15 @@ const useFFTFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 1,
         analysisId,
-        cx, cy, setCx, setCy, type: AnalysisTypes.PICK_FRAME
+        cx, cy, setCx, setCy
     });
     
-    useFramePicker({
+    useFFTFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        cx, cy, setCx, setCy, type: AnalysisTypes.PICK_FFT_FRAME
+        cx, cy, setCx, setCy,real_rad, real_centerx, real_centery, type: AnalysisTypes.PICK_FFT_FRAME
     });
     
 

@@ -54,12 +54,13 @@ class Message(object):
             "datasetParams": params,
         }
 
-    def dataset_detect_failed(self, path):
+    def dataset_detect_failed(self, path,
+                              reason="could not automatically determine dataset format"):
         return {
             "status": "error",
             "messageType": "DATASET_DETECTION_FAILED",
             "path": path,
-            "msg": "could not automatically determine dataset format",
+            "msg": reason,
         }
 
     def start_job(self, job_id):

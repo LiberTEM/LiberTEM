@@ -167,7 +167,7 @@ class BloDataSet(DataSet):
     @classmethod
     def detect_params(cls, path):
         try:
-            ds = cls(path, tileshape=(1, 8, 144, 144), endianess='<')
+            ds = cls(path, endianess='<')
             if not ds.check_valid():
                 return False
             return {

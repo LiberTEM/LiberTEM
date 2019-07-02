@@ -117,7 +117,7 @@ class PcaUDF(UDF):
             transpose = True
             X = X.T
 
-        rand_matrix = np.random.normal(size=(col, n_components))
+        rand_matrix = np.random.normal(size=(row, n_components))
         Q, _ = np.linalg.qr(X @ rand_matrix, mode='reduced')
 
         smaller_matrix = Q.T @ X
@@ -264,7 +264,7 @@ class PcaUDF(UDF):
                         * components, X, mean_correction))
 
         if min(X.shape) < 10:
-            U, S, V = self.randomized_svd(X, k=10)
+            U, S, V = self.randomized_svd(X, n_components=10)
         else:
             U, S, V = fbpca.pca(X, k=10)
 

@@ -3,23 +3,18 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
-import { AnalysisTypes, DatasetOpen } from "../../messages";
+import { AnalysisTypes} from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY, riConstraint, roConstraints } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisState } from "../types";
+import { AnalysisProps } from "../types";
 import AnalysisLayoutThreeCol from "./AnalysisLayoutThreeCol";
 import useFFTFrameView from "./FFTFrameView";
 import Toolbar from "./Toolbar";
 
-
-interface AnalysisProps {
-    analysis: AnalysisState,
-    dataset: DatasetOpen,
-}
 
 
 
@@ -68,7 +63,14 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
             imageWidth={imageWidth} />
     )
 
+    const [check, setCheck] = React.useState(true);
+    
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCheck(event.target.checked);
+    }
 
+
+    
     const [real_centerx, setCx] = useState(imageWidth / 2);
     const [real_centery, setCy] = useState(imageHeight / 2);
     const [real_rad, setR] = useState(minLength / 4);
@@ -111,9 +113,9 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
             parameters: {
                 rad_in,
                 rad_out,
-                real_rad,
-                real_centerx,
-                real_centery
+                real_rad: check ? real_rad : null,
+                real_centerx: check ? real_centerx : null,
+                real_centery: check ? real_centery : null
                 
             }
         }));
@@ -123,19 +125,43 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
-    })
+        })
 
-    const subtitle = (
-        <>{frameViewTitle} real_rad={rad_in.toFixed(2)}, real_center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
-    )
+    
 
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
     
-    const [check, setCheck] = React.useState(true);
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCheck(event.target.checked);
+
+    let subtitle;
+    let mid: React.ReactNode;
+    if (check) {
+        mid = (<>
+            <ResultList
+                extraHandles={frameViewHandlesreal} extraWidgets={frameViewWidgetsreal}
+                jobIndex={1} analysis={analysis.id}
+                width={imageWidth} height={imageHeight}
+                selectors={frameModeSelector}
+            />
+        </>)
+        subtitle = (
+            <>{frameViewTitle} real_rad={rad_in.toFixed(2)}, real_center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
+        )
     }
 
+    else {
+        mid = (<>
+            <ResultList
+                jobIndex={1} analysis={analysis.id}
+                width={imageWidth} height={imageHeight}
+                selectors={frameModeSelector}
+            />
+        </>)
+        subtitle = (
+            <>{frameViewTitle} fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
+        )
+    }
+    
+    
     return (
         <AnalysisLayoutThreeCol
             title="FFT analysis" subtitle={subtitle}
@@ -146,14 +172,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
                     width={imageWidth} height={imageHeight}
                 />
             </>}
-            mid={<>
-                <ResultList
-                    extraHandles={frameViewHandlesreal} extraWidgets={frameViewWidgetsreal}
-                    jobIndex={1} analysis={analysis.id}
-                    width={imageWidth} height={imageHeight}
-                    selectors={frameModeSelector}
-                />
-            </>}
+            mid={mid}
 
             right={<>
                 <ResultList
@@ -164,9 +183,8 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
             </>}
             toolbar={toolbar}
 
-
-            //title2 = "Masking out of zero-order diffraction peak in real space"
-            title2={<input type="checkbox" name="check" id="id_enable_maskout" onChange={handleChange} checked={check}/>}
+            title2={<><label> Masking out of zero order diffraction peak <input type="checkbox" name="check" onChange={handleChange} checked={check}/> </label>
+            </>}
             title1 ="Masking of intergation region in Fourier space"
             title3 ="Result of analysis"
 
@@ -174,8 +192,9 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset}) => {
     );
 }
 
+
 export default FFTAnalysis;
 
 
-//<label htmlFor="id_enable_maskout"> Masking out of zero order diffraction peak </label>
+
 

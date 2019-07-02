@@ -282,9 +282,9 @@ export interface RadialFourierParams {
 export interface FFTParams{
     rad_in:number,
     rad_out:number,
-    real_rad:number,
-    real_centerx:number,
-    real_centery:number,
+    real_rad: number | null ,
+    real_centerx: number | null,
+    real_centery: number | null,
 }
 
 

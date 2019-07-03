@@ -47,7 +47,7 @@ const useFFTFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        cx, cy, setCx, setCy,real_rad, real_centerx, real_centery, type: AnalysisTypes.PICK_FFT_FRAME
+        cx, cy, setCx, setCy,real_rad, real_centerx, real_centery
     });
     
 

@@ -1,9 +1,6 @@
 from libertem.viz import visualize_simple
-
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-
 import libertem.udf.crystallinity as crystal
-crystal.run_analysis_crystall
 
 
 class ApplyFFTMask(BaseAnalysis):

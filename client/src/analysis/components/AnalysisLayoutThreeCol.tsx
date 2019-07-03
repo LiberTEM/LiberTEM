@@ -15,9 +15,7 @@ interface AnalysisLayoutThreeColProps {
 }
 
 type MergedProps = AnalysisLayoutThreeColProps;
-//const title2 = "Masking out of zero-order diffraction peak in real space";
-//const title1 ="Masking of intergation region in Fourier space";
-//const title3 ="Result of analysis"
+
 const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
     title, subtitle,
     left, mid, right,

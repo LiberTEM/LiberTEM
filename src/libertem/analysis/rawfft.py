@@ -5,7 +5,7 @@ from .base import AnalysisResult, AnalysisResultSet
 from .raw import PickFrameAnalysis
 
 
-class PickFFTFrameAnalysis(PickFrameAnalysis):   
+class PickFFTFrameAnalysis(PickFrameAnalysis):
     def get_results(self, job_results):
         data, coords = self.get_results_base(job_results)
         real_rad = self.parameters["real_rad"]

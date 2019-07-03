@@ -39,7 +39,6 @@ class BLODatasetParams(MessageConverter):
         return data
 
 
-
 # stolen from hyperspy
 def get_header_dtype_list(endianess='<'):
     end = endianess

@@ -4,8 +4,6 @@ import { DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
 import { AnalysisMetadata, AnalysisState } from "../types";
 
-
-
 interface AnalysisDispatcherProps {
     analysis: AnalysisState,
 }

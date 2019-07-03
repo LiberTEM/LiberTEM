@@ -90,14 +90,14 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
     },
 
     [AnalysisTypes.APPLY_FFT_MASK]: {
-        desc: "Pick a single frame",
-        title: "FFT",
+        desc: "Apply a ring mask with inner radius fourier_rad_in and outer radius fourier_rad_out in Fourier space",
+        title: "FFT analysis",
         component: FFTAnalysis
     },
     
     [AnalysisTypes.FFTSUM_FRAMES]: {
-        desc: "Create a sum of all detector frames",
-        title: "Sum all frames",
+        desc: "Fourier transform of sum of all detector frames",
+        title: "FFT of Sum all frames",
     },
 
     [AnalysisTypes.RADIAL_FOURIER]: {

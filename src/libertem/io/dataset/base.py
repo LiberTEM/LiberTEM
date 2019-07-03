@@ -1,8 +1,6 @@
 import itertools
 
 import numpy as np
-import dask
-import dask.array
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
@@ -145,27 +143,6 @@ class DataSet(object):
         Return a generator over all Partitions in this DataSet
         """
         raise NotImplementedError()
-
-    def get_dask_array(self, dtype='float32', roi=None):
-        '''
-        Create a Dask array using the DataSet's partitions as blocks.
-        '''
-        chunks = []
-        workers = {}
-        for p in self.get_partitions():
-            d = dask.delayed(p.get_macrotile)(
-                dest_dtype=dtype, roi=roi
-            )
-            workers[d] = p.get_locations()
-            chunks.append(
-                dask.array.from_delayed(
-                    d.data,
-                    dtype=dtype,
-                    shape=p.shape
-                )
-            )
-        arr = dask.array.concatenate(chunks, axis=0)
-        return (arr.reshape(self.shape), workers)
 
     @property
     def dtype(self):

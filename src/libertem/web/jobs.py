@@ -6,7 +6,7 @@ import tornado.web
 
 from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    COMAnalysis, SumAnalysis, PickFrameAnalysis, PickFFTFrameAnalysis, SumfftAnalysis, 
+    COMAnalysis, SumAnalysis, PickFrameAnalysis, PickFFTFrameAnalysis, SumfftAnalysis,
     RadialFourierAnalysis, ApplyFFTMask
 )
 from .base import CORSMixin, run_blocking, log_message, result_images

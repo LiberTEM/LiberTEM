@@ -78,4 +78,3 @@ class PickFrameAnalysis(BaseAnalysis):
                            key="intensity", title="intensity",
                            desc="the frame at %s" % (coords,)),
         ])
-        

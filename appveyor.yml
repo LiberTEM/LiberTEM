@@ -25,5 +25,5 @@ on_success:
 
 branches:
   except:
-    - # Do not build tags that we create when we upload to GitHub Releases
-    - /^continuous/
+    # Do not build tags that we create when we upload to GitHub Releases
+    - "/^continuous/"

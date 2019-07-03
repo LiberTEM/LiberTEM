@@ -126,7 +126,7 @@ For a full API reference, please see :doc:`Reference <reference>`.
 Integration with Dask arrays
 ----------------------------
 
-A :class:`DataSet` can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ using its partitions as blocks through the :meth:`DataSet.get_dask_array` method. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
+The :meth:`~libertem.contrib.dask.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
 .. include:: /../../examples/dask_array.py
     :code:

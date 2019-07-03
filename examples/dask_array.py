@@ -8,6 +8,7 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 import matplotlib.pyplot as plt
 
 from libertem import api
+from libertem.contrib.dask import make_dask_array
 
 
 if __name__ == '__main__':
@@ -18,7 +19,7 @@ if __name__ == '__main__':
             path = ('C:/Users/weber/Nextcloud/Projects/'
                     'Open Pixelated STEM framework/Data/EMPAD/'
                     'acquisition_12.xml')
-        
+
         ds = ctx.load(
             'EMPAD',
             path=path
@@ -28,7 +29,7 @@ if __name__ == '__main__':
         # The second return value contains information
         # on workers that hold parts of a dataset in local
         # storage to ensure optimal data locality
-        dask_array, workers = ds.get_dask_array()
+        dask_array, workers = make_dask_array(ds)
 
         # Perform calculations using the worker map.
         result = dask_array.sum(axis=(-1, -2)).compute(workers=workers)

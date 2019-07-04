@@ -30,21 +30,21 @@ class CrystallinityUDF(UDF):
         fourier_mask_in = 1*_make_circular_mask(
             sigshape[1]*0.5, sigshape[0]*0.5, sigshape[1], sigshape[0], rad_in
         )
-        fourier_mask = fourier_mask_out - fourier_mask_in
-
+        fourier_mask = np.fft.fftshift(fourier_mask_out - fourier_mask_in)
+        half_fourier_mask = fourier_mask[:, :int(fourier_mask.shape[1]*0.5)+1]
         kwargs = {
             'real_mask': real_mask,
-            'fourier_mask': fourier_mask,
+            'half_fourier_mask': half_fourier_mask,
         }
         return kwargs
 
     def process_frame(self, frame):
-        f_mask = self.task_data.fourier_mask
+        h_f_mask = self.task_data.half_fourier_mask
         if self.task_data.real_mask is not None:
             maskedframe = frame*self.task_data.real_mask
         else:
             maskedframe = frame
-        self.results.intensity[:] = np.sum(np.fft.fftshift(abs(np.fft.fft2(maskedframe)))*f_mask)
+        self.results.intensity[:] = np.sum(abs(np.fft.rfft2(maskedframe))*h_f_mask)
 
 
 def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None, roi=None):

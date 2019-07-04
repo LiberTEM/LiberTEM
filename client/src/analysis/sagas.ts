@@ -69,7 +69,7 @@ export function* analysisSidecar(analysisId: string) {
     // channel for incoming actions:
     // all actions that arrive while we block in `call` will be buffered here.
     // because the buffer is sliding of size 1, we only keep the latest action!
-    const runOrParamsChannel = yield actionChannel(analysisActions.ActionTypes.RUN, buffers.sliding(1));
+    const runOrParamsChannel = yield actionChannel(analysisActions.ActionTypes.RUN, buffers.sliding(2));
 
     while (true) {
         try {

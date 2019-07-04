@@ -1,9 +1,11 @@
 import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
 import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
+import FFTAnalysis from "./components/FFTAnalysis";
 import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
 import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
 import RingMaskAnalysis from "./components/RingMaskAnalysis";
+
 
 export type AnalysisStatus = "busy" | "idle";
 
@@ -81,6 +83,23 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         desc: "Pick a single frame",
         title: "Pick frame",
     },
+
+    [AnalysisTypes.PICK_FFT_FRAME]: {
+        desc: "Pick a single frame",
+        title: "Pick frame",
+    },
+
+    [AnalysisTypes.APPLY_FFT_MASK]: {
+        desc: "Apply a ring mask with inner radius fourier_rad_in and outer radius fourier_rad_out in Fourier space",
+        title: "FFT analysis",
+        component: FFTAnalysis
+    },
+    
+    [AnalysisTypes.FFTSUM_FRAMES]: {
+        desc: "Fourier transform of sum of all detector frames",
+        title: "FFT of Sum all frames",
+    },
+
     [AnalysisTypes.RADIAL_FOURIER]: {
         desc: "Compute a radial Fourier analysis",
         title: "Radial Fourier",

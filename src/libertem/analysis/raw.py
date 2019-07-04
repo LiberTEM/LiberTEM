@@ -48,7 +48,7 @@ class PickFrameAnalysis(BaseAnalysis):
             squeeze=True,
         )
 
-    def get_results(self, job_results):
+    def get_results_base(self, job_results):
         parameters = self.parameters
         coords = [
             "%s=%d" % (axis, parameters.get(axis))
@@ -58,6 +58,10 @@ class PickFrameAnalysis(BaseAnalysis):
         coords = " ".join(coords)
         shape = tuple(self.dataset.shape.sig)
         data = job_results.reshape(shape)
+        return data, coords
+
+    def get_results(self, job_results):
+        data, coords = self.get_results_base(job_results)
 
         if data.dtype.kind == 'c':
             return AnalysisResultSet(

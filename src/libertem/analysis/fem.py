@@ -5,7 +5,7 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.FEM as FEM
 
 
-class ApplyFEM(BaseAnalysis):
+class FEMAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
     def get_udf(self):

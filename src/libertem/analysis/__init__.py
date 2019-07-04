@@ -6,7 +6,7 @@ from .ring import RingMaskAnalysis
 from .point import PointMaskAnalysis
 from .masks import MasksAnalysis
 from .raw import PickFrameAnalysis
-from .fem import ApplyFEM
+from .fem import FEMAnalysis
 
 __all__ = [
     'SumAnalysis',
@@ -17,5 +17,5 @@ __all__ = [
     'PointMaskAnalysis',
     'MasksAnalysis',
     'PickFrameAnalysis',
-    'ApplyFEM',
+    'FEMAnalysis',
 ]

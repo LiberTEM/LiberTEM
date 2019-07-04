@@ -391,7 +391,10 @@ class FRMS6DataSet(DataSet):
 
     def _get_signal_files(self):
         start_idx = 0
-        for path in self._files()[1:]:
+        files = self._files()
+        if len(files) < 2:
+            raise DataSetException("did not find signal files")
+        for path in files[1:]:
             f = FRMS6File(path=path, start_idx=start_idx, hdr_info=self._get_hdr_info())
             start_idx += f.num_frames
             yield f

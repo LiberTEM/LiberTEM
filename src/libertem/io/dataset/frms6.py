@@ -85,6 +85,48 @@ def _unbin(tile_data, factor):
     return unbinned.reshape((s[0], factor * s[1], s[2]))
 
 
+def _get_base_filename(_path):
+    path, ext = os.path.splitext(_path)
+    if ext == ".hdr":
+        base = path
+    elif ext == ".frms6":
+        base = re.sub(r'_[0-9]+$', '', path)
+    else:
+        raise DataSetException("unknown extension: %s" % ext)
+    return base
+
+
+def _read_hdr(fname):
+    config = configparser.ConfigParser()
+    config.read(fname)
+    parsed = {}
+    sections = config.sections()
+    if 'measurementInfo' not in sections:
+        raise DataSetException(
+            "measurementInfo missing from .hdr file %s, have: %s" % (
+                fname,
+                repr(sections),
+            )
+        )
+    msm_info = config['measurementInfo']
+    int_fields = {'darkframes', 'dwelltimemicroseconds', 'gain', 'signalframes'}
+    for key in msm_info:
+        value = msm_info[key]
+        if key in int_fields:
+            parsed[key] = int(value)
+        else:
+            parsed[key] = value
+    # FIXME: are the dimensions the right way aroud? is there a sample file with a non-square
+    # scan region?
+    parsed['stemimagesize'] = tuple(int(p) for p in parsed['stemimagesize'].split('x'))
+    match = READOUT_MODE_PAT.match(parsed['readoutmode'])
+    if match is None:
+        raise DataSetException("could not parse readout mode")
+    readout_mode = match.groupdict()
+    parsed['readoutmode'] = {k: int(v) for k, v in readout_mode.items()}
+    return parsed
+
+
 class FRMS6File(File3D):
     def __init__(self, path, start_idx=None, hdr_info=None):
         self._path = path
@@ -322,39 +364,21 @@ class FRMS6DataSet(DataSet):
         return self
 
     @classmethod
+    def detect_params(cls, path):
+        hdr_filename = "%s.hdr" % _get_base_filename(path)
+        try:
+            _read_hdr(hdr_filename)
+        except Exception:
+            return False
+        return {"path": path}
+
+    @classmethod
     def get_msg_converter(cls):
         return FRMS6DatasetParams
 
     def _get_hdr_info(self):
-        hdr_filename = "%s.hdr" % self._get_base_filename()
-        config = configparser.ConfigParser()
-        config.read(hdr_filename)
-        parsed = {}
-        sections = config.sections()
-        if 'measurementInfo' not in sections:
-            raise DataSetException(
-                "measurementInfo missing from .hdr file %s, have: %s" % (
-                    hdr_filename,
-                    repr(sections),
-                )
-            )
-        msm_info = config['measurementInfo']
-        int_fields = {'darkframes', 'dwelltimemicroseconds', 'gain', 'signalframes'}
-        for key in msm_info:
-            value = msm_info[key]
-            if key in int_fields:
-                parsed[key] = int(value)
-            else:
-                parsed[key] = value
-        # FIXME: are the dimensions the right way aroud? is there a sample file with a non-square
-        # scan region?
-        parsed['stemimagesize'] = tuple(int(p) for p in parsed['stemimagesize'].split('x'))
-        match = READOUT_MODE_PAT.match(parsed['readoutmode'])
-        if match is None:
-            raise DataSetException("could not parse readout mode")
-        readout_mode = match.groupdict()
-        parsed['readoutmode'] = {k: int(v) for k, v in readout_mode.items()}
-        return parsed
+        hdr_filename = "%s.hdr" % _get_base_filename(self._path)
+        return _read_hdr(hdr_filename)
 
     def _get_dark_frame(self):
         if not self._enable_offset_correction:
@@ -406,16 +430,6 @@ class FRMS6DataSet(DataSet):
             dark_frame=self._dark_frame,
             gain_map=self._gain_map,
         )
-
-    def _get_base_filename(self):
-        path, ext = os.path.splitext(self._path)
-        if ext == ".hdr":
-            base = path
-        elif ext == ".frms6":
-            base = re.sub(r'_[0-9]+$', '', path)
-        else:
-            raise DataSetException("unknown extension: %s" % ext)
-        return base
 
     def _pattern(self):
         path, ext = os.path.splitext(self._path)

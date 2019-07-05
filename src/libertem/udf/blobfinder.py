@@ -79,11 +79,51 @@ class BackgroundSubstraction(MatchPattern):
         )
 
 
+class UserTemplate(MatchPattern):
+    def __init__(self, parameters):
+        self.template = parameters['template']
+        self.padding = parameters['padding']
+
+    def get_crop_size(self):
+        return int(np.ceil(np.max(self.template.shape) / 2 * (1 + self.padding)))
+
+    def get_mask(self, sig_shape):
+        result = np.zeros((sig_shape), dtype=self.template.dtype)
+        dy, dx = sig_shape
+        ty, tx = self.template.shape
+        left = dx // 2 - tx // 2
+        right = left + tx
+        top = dy // 2 - ty // 2
+        bottom = top + ty
+
+        r_left = max(0, left)
+        r_right = min(dx, right)
+        r_top = max(0, top)
+        r_bottom = min(dy, bottom)
+
+        t_left = max(0, -left)
+        t_right = min(tx, right)
+        t_top = max(0, -top)
+        t_bottom = min(ty, bottom)
+
+        result[r_top:r_bottom, r_left:r_right] = self.template[t_top:t_bottom, t_left:t_right]
+        return result
+
+
+def condition_template(template, texture, lower, upper):
+    truncated = np.maximum(lower, np.minimum(upper, template))
+    truncated -= lower
+    truncated /= (upper - lower)
+    return truncated * texture
+
+
 def mask_maker(parameters):
     if parameters['mask_type'] == 'radial_gradient':
         return RadialGradient(parameters)
     elif parameters['mask_type'] == 'background_substraction':
         return BackgroundSubstraction(parameters)
+    elif parameters['mask_type'] == 'template':
+        return UserTemplate(parameters)
     else:
         raise ValueError("unknown mask type: %s" % parameters['mask_type'])
 

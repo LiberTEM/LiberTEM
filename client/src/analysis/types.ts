@@ -1,6 +1,7 @@
 import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
 import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
 import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
+import FEM from "./components/FEM";
 import FFTAnalysis from "./components/FFTAnalysis";
 import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
 import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
@@ -61,6 +62,14 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         title: "Disk",
         component: DiskMaskAnalysis,
     },
+
+    [AnalysisTypes.FEM]: {
+        desc: "Apply a ring mask with center cx, cy; radius r",
+        title: "FEM (SD over Ring)",
+        component: FEM,
+    },
+
+    
     [AnalysisTypes.CENTER_OF_MASS]: {
         desc: "Compute the center of mass of all diffraction images",
         title: "Center of mass",

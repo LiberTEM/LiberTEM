@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
 from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
-from libertem.job.sum import SumFramesJob
 from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
@@ -402,11 +401,11 @@ def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
 
 
 def run_blobfinder(ctx, dataset, parameters, roi=None):
-    # FIXME implement ROI for SumFramesJob
-    sum_job = SumFramesJob(dataset=dataset)
-    sum_result = ctx.run(sum_job)
+    # FIXME implement ROI for sum analysis
+    sum_analysis = ctx.create_sum_analysis(dataset=dataset)
+    sum_result = ctx.run(sum_analysis)
 
-    sum_result = log_scale(sum_result, out=None)
+    sum_result = log_scale(sum_result.intensity.raw_data, out=None)
 
     peaks = get_peaks(
         parameters=parameters,

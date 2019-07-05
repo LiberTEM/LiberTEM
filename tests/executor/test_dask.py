@@ -8,7 +8,6 @@ from libertem.executor.dask import (
 )
 from libertem.common import Shape, Slice
 from libertem.executor.base import AsyncAdapter
-from libertem.job.sum import SumFramesJob
 from libertem.job.raw import PickFrameJob
 from utils import MemoryDataSet, _mk_random
 
@@ -45,16 +44,17 @@ def test_task_affinity_1():
 async def test_run_job(aexecutor):
     data = _mk_random(size=(16, 16, 16, 16), dtype='<u2')
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
-    expected = data.sum(axis=(0, 1))
+    expected = data[0, 0]
 
-    job = SumFramesJob(dataset=dataset)
+    slice_ = Slice(origin=(0, 0, 0), shape=Shape((1, 16, 16), sig_dims=2))
+    job = PickFrameJob(dataset=dataset, slice_=slice_)
     out = job.get_result_buffer()
 
     async for tiles in aexecutor.run_job(job, cancel_id="42"):
         for tile in tiles:
             tile.reduce_into_result(out)
 
-    assert out.shape == (16, 16)
+    assert out.shape == (1, 16, 16)
     assert np.allclose(out, expected)
 
 

@@ -13,7 +13,7 @@ class SumUDF(UDF):
         }
 
     def process_tile(self, tile, tile_slice):
-        self.results.intensity += np.sum(tile, axis=0)
+        self.results.intensity[:] += np.sum(tile, axis=0)
 
     def merge(self, dest, src):
         dest['intensity'][:] += src['intensity']

@@ -219,3 +219,14 @@ def test_sum_zero_roi(lt_ctx):
     assert not np.allclose(results.intensity.raw_data, data.sum(axis=(0, 1)))
     # ... but rather like `expected`:
     assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_sum_with_crop_frames(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(7, 8, 8),
+                            num_partitions=2, sig_dims=2, crop_frames=True)
+
+    analysis = lt_ctx.create_sum_analysis(dataset=dataset)
+    res = lt_ctx.run(analysis)
+    print(data.shape, res.intensity.raw_data.shape)
+    assert np.allclose(res.intensity.raw_data, np.sum(data, axis=(0, 1)))

@@ -9,14 +9,14 @@ class LogsumUDF(UDF):
         return {
             'logsum': self.buffer(
                 kind='sig', dtype='float32'
-                ),
+            ),
         }
 
     def merge(self, dest, src):
         dest['logsum'][:] += src['logsum'][:]
 
     def process_frame(self, frame):
-        self.results.logsum += np.log(frame - np.min(frame) + 1)
+        self.results.logsum[:] += np.log(frame - np.min(frame) + 1)
 
 
 def run_logsum(ctx, dataset, roi=None):

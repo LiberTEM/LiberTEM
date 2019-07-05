@@ -87,6 +87,15 @@ class UDFData:
         except KeyError as e:
             raise AttributeError(str(e))
 
+    def __setattr__(self, k, v):
+        if not k.startswith("_"):
+            raise AttributeError(
+                "cannot re-assign attribute %s, did you mean `.%s[:] = ...`?" % (
+                    k, k
+                )
+            )
+        super().__setattr__(k, v)
+
     def _get_view_or_data(self, k):
         if k in self._views:
             return self._views[k]

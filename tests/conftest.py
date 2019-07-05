@@ -132,6 +132,23 @@ def default_raw(tmpdir_factory):
     yield ds
 
 
+@pytest.fixture(scope='session')
+def uint16_raw(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-default'
+    data = _mk_random(size=(16, 16, 128, 128), dtype='uint16')
+    data.tofile(str(filename))
+    del data
+    ds = RawFileDataSet(
+        path=str(filename),
+        scan_size=(16, 16),
+        dtype="uint16",
+        detector_size=(128, 128),
+    )
+    ds = ds.initialize()
+    yield ds
+
+
 @pytest.fixture
 async def http_client():
     # FIXME: maybe re-scope to module, but would also need

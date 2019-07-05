@@ -88,8 +88,8 @@ def test_kind_single(lt_ctx):
             }
 
         def process_frame(self, frame):
-            self.results.counter += 1
-            self.results.sum_frame += np.sum(frame, axis=1)
+            self.results.counter[:] += 1
+            self.results.sum_frame[:] += np.sum(frame, axis=1)
 
         def merge(self, dest, src):
             dest['counter'][:] += src['counter']

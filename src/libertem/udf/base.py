@@ -67,6 +67,9 @@ class UDFMeta:
 
 
 class UDFData:
+    '''
+    Container for result buffers, return value from running UDFs
+    '''
     def __init__(self, data):
         self._data = data
         self._views = {}
@@ -83,6 +86,15 @@ class UDFData:
             return self._get_view_or_data(k)
         except KeyError as e:
             raise AttributeError(str(e))
+
+    def __setattr__(self, k, v):
+        if not k.startswith("_"):
+            raise AttributeError(
+                "cannot re-assign attribute %s, did you mean `.%s[:] = ...`?" % (
+                    k, k
+                )
+            )
+        super().__setattr__(k, v)
 
     def _get_view_or_data(self, k):
         if k in self._views:
@@ -150,6 +162,9 @@ class UDFData:
 
 
 class UDFFrameMixin:
+    '''
+    Implement :code:`process_frame` for per-frame processing.
+    '''
     def process_frame(self, frame):
         """
         Implement this method to process the data on a frame-by-frame manner.
@@ -171,6 +186,9 @@ class UDFFrameMixin:
 
 
 class UDFTileMixin:
+    '''
+    Implement :code:`process_tile` for per-tile processing.
+    '''
     def process_tile(self, tile, tile_slice):
         """
         Implement this method to process the data in a tiled manner.
@@ -196,6 +214,9 @@ class UDFTileMixin:
 
 
 class UDFPartitionMixin:
+    '''
+    Implement :code:`process_partition` for per-partition processing.
+    '''
     def process_partition(self, partition):
         """
         Implement this method to process the data partitioned into large
@@ -225,6 +246,11 @@ class UDFPartitionMixin:
 
 
 class UDFPostprocessMixin:
+    '''
+    Implement :code:`postprocess` to modify the resulf buffers of a partition on the worker
+    after the partition data has been completely processed, but before it is returned to the
+    master node for the final merging step.
+    '''
     def postprocess(self):
         """
         Implement this method to postprocess the result data for a partition.
@@ -242,6 +268,9 @@ class UDFPostprocessMixin:
 
 
 class UDFBase:
+    '''
+    Base class for UDFs with helper functions.
+    '''
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi)
@@ -490,16 +519,7 @@ class UDFRunner:
         elif method == 'frame':
             tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
         elif method == 'partition':
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
-            raise NotImplementedError("process_partition is not implemented yet")
-
-        partition_data = None
-        if method == 'partition':
-            # FIXME: allocate a buffer the size of the partition (nav+sig)
-            # (or more correct: the size of the part of the partition that is
-            # selected by the `roi`; see meta.partition_shape)
-            # partition_data = ...
-            pass
+            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype)]
 
         for tile in tiles:
             if method == 'tile':
@@ -510,10 +530,8 @@ class UDFRunner:
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
             elif method == 'partition':
-                raise NotImplementedError("TODO: copy tiles into partition_data")
-
-        if method == 'partition':
-            self._udf.process_partition(partition_data)
+                self._udf.set_views_for_tile(partition, tile)
+                self._udf.process_partition(tile.data)
 
         if hasattr(self._udf, 'postprocess'):
             self._udf.clear_views()

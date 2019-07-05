@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
 from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
-from libertem.job.sum import SumFramesJob
 from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
@@ -402,11 +401,11 @@ def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
 
 
 def run_blobfinder(ctx, dataset, parameters, roi=None):
-    # FIXME implement ROI for SumFramesJob
-    sum_job = SumFramesJob(dataset=dataset)
-    sum_result = ctx.run(sum_job)
+    # FIXME implement ROI for sum analysis
+    sum_analysis = ctx.create_sum_analysis(dataset=dataset)
+    sum_result = ctx.run(sum_analysis)
 
-    sum_result = log_scale(sum_result, out=None)
+    sum_result = log_scale(sum_result.intensity.raw_data, out=None)
 
     peaks = get_peaks(
         parameters=parameters,
@@ -559,34 +558,39 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
         peaks to be known. See documentation of gridmatching.affinematch() for details.
 
     returns:
-        (result, used_indices) where result is
-        {
-            'centers': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-            ),
-            'refineds': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-            ),
-            'peak_values': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'peak_elevations': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'zero': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'a': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'b': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'selector': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="bool"
-            ),
-        }
-        and used_indices are the indices that were within the frame.
+        :code:`(result, used_indices)` where :code:`result` is a :class:`~libertem.udf.UDFData`
+        instance based on
+
+        .. code-block:: python
+
+            {
+                'centers': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+                ),
+                'refineds': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+                ),
+                'peak_values': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="float32"
+                ),
+                'peak_elevations': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="float32"
+                ),
+                'zero': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'a': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'b': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'selector': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="bool"
+                ),
+            }
+
+        and :code:`used_indices` are the indices that were within the frame.
     '''
     if indices is None:
         indices = np.mgrid[-10:10, -10:10]

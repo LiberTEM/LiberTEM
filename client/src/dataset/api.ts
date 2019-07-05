@@ -17,7 +17,7 @@ export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
 
 
 export function detectDataset(path: string): Promise<DetectDatasetResponse> {
-    return fetch(`/api/datasets/detect/?path=${path}`, {
+    return fetch(`/api/datasets/detect/?path=${encodeURIComponent(path)}`, {
         credentials: "same-origin",
         method: "GET",
     }).then(r => r.json());

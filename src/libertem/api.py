@@ -19,6 +19,7 @@ from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import BaseAnalysis
 from libertem.udf.base import UDFRunner, UDF
+from libertem.udf.auto import AutoUDF
 
 
 class Context:
@@ -484,8 +485,39 @@ class Context:
 
         roi : np.ndarray
             region of interest as bool mask over the navigation axes of the dataset
+
+        Returns
+        -------
+        UDFData:
+            Return value of the UDF containing the result buffers
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
+
+    def map(self, dataset, f, roi=None):
+        '''
+        Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
+
+        Parameters
+        ----------
+
+        dataset:
+            The dataset to work on
+        f:
+            Function that accepts a frame as the only parameter. It should return a strongly
+            reduced output compared to the size of a frame.
+        roi : np.ndarray
+            region of interest as bool mask over the navigation axes of the dataset
+
+        Returns
+        -------
+
+        UDFData:
+            The result of the UDF with a single buffer named "result" with :code:`extra_shape`
+            and :code:`dtype` set to contain all return values of :meth:`f` converted to a numpy
+            array
+        '''
+        udf = AutoUDF(f=f)
+        return self.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

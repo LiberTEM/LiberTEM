@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 import pytest
 import websockets
@@ -23,7 +24,7 @@ def _get_ds_params():
                 "type": "mem",
                 "tileshape": [7, 32, 32],
                 "datashape": [256, 32, 32],
-                "tiledelay": .5,
+                "tiledelay": 0.1,
                 "num_partitions": 16,
             }
         }
@@ -90,25 +91,47 @@ async def test_cancel_udf_job(base_url, http_client, server_port, register_mem_d
         assert msg['details']['dataset'] == ds_uuid
         assert msg['details']['id'] == job_uuid
 
+        await asyncio.sleep(0)  # for debugging, set to >0
+
         async with http_client.delete(job_url) as resp:
             assert resp.status == 200
             assert_msg(await resp.json(), 'CANCEL_JOB')
 
-        # this is the confirmation sent from the DELETE method handler:
-        msg = json.loads(await ws.recv())
-        assert_msg(await resp.json(), 'CANCEL_JOB')
+        # wait for CANCEL_JOB message:
+        done = False
+        num_seen = 0
+        while not done:
+            msg = json.loads(await ws.recv())
+            num_seen += 1
+            if msg['messageType'] == 'TASK_RESULT':
+                assert_msg(msg, 'TASK_RESULT')
+                assert msg['job'] == job_uuid
+            elif msg['messageType'] == 'CANCEL_JOB':
+                # this is the confirmation sent from the DELETE method handler:
+                assert_msg(msg, 'CANCEL_JOB')
+                assert msg['job'] == job_uuid
+                done = True
+            else:
+                raise Exception("invalid message type: {}".format(msg['messageType']))
+            if 'followup' in msg:
+                for i in range(msg['followup']['numMessages']):
+                    # drain binary messages:
+                    msg = await ws.recv()
 
+        assert num_seen < 4
         assert job_uuid not in shared_data.jobs
 
         # now we drain messages from websocket and look for CANCEL_JOB_DONE msg:
         done = False
         num_seen = 0
         types_seen = []
+        msgs = []
         while not done:
             msg = json.loads(await ws.recv())
             print(msg)
             num_seen += 1
             types_seen.append(msg['messageType'])
+            msgs.append(msg)
             if msg['messageType'] == 'TASK_RESULT':
                 assert_msg(msg, 'TASK_RESULT')
                 assert msg['job'] == job_uuid

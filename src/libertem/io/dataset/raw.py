@@ -101,7 +101,13 @@ class RawFile(File3D):
         except OSError as e:
             raise DataSetException("could not seek to offset {}: {}".format(offset, e)) from e
         readsize = (stop - start) * self._frame_size
-        bytes_read = self._file.readinto(out)
+        if out.dtype != self._meta.raw_dtype:
+            rawbuf = self.get_buffer("raw_read_buffer", readsize)
+            buf = np.frombuffer(rawbuf, dtype=self._meta.raw_dtype).reshape(out.shape)
+            bytes_read = self._file.readinto(buf)
+            out[:] = buf
+        else:
+            bytes_read = self._file.readinto(out)
         assert bytes_read == readsize
 
 

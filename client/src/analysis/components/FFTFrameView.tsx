@@ -2,29 +2,29 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import useFFTFramePicker from "./FFTFramePicker";
+import useFFTSumFrames from "./FFTSumFrames";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
-import { useRoiPicker } from "./RoiPicker";
 import useSumFrames from "./SumFrames";
 
-const useDefaultFrameView = ({
-    scanWidth, scanHeight, analysisId,
+const useFFTFrameView = ({
+    scanWidth, scanHeight, analysisId, real_rad, real_centerx, real_centery
 }: {
-    scanWidth: number, scanHeight: number, analysisId: string,
+    scanWidth: number, scanHeight: number,
+    analysisId: string, real_rad:number|null, real_centerx:number|null, real_centery:number|null
 }) => {
     const availableModes = [
-        {
-            text: "Average",
-            value: AnalysisTypes.SUM_FRAMES,
-        },
+
         {
             text: "Pick",
             value: AnalysisTypes.PICK_FRAME,
         },
+
         {
-            text: "Average over ROI (disk)",
-            value: AnalysisTypes.SUM_FRAMES_ROI,
-        }
+            text: "Average",
+            value: AnalysisTypes.SUM_FRAMES,
+        },
     ];
 
     const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
@@ -37,55 +37,49 @@ const useDefaultFrameView = ({
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
-        jobIndex: 0,
+        jobIndex: 1,
         analysisId,
         cx, cy, setCx, setCy
     });
-
-    const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES_ROI,
+    
+    useFFTFramePicker({
+        enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-    })
+        cx, cy, setCx, setCy,real_rad, real_centerx, real_centery
+    });
+    
 
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+        jobIndex: 1,
+        analysisId,
+    })
+
+    useFFTSumFrames({
+        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
         analysisId,
+        real_rad,
+        real_centerx,
+        real_centery
     })
 
     const frameViewTitle = (
         frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
 
+
+
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
-
-    let handles = nullHandles;
-
-    switch (frameMode) {
-        case AnalysisTypes.PICK_FRAME:
-            handles = pickHandles;
-            break;
-        case AnalysisTypes.SUM_FRAMES_ROI:
-            handles = sumRoiHandles;
-            break;
-    }
-
-    let widgets;
-
-    switch (frameMode) {
-        case AnalysisTypes.SUM_FRAMES_ROI:
-            widgets = sumRoiWidgets;
-            break;
-    }
 
     return {
         frameViewTitle,
+        handles: frameMode !== AnalysisTypes.PICK_FRAME ? nullHandles : pickHandles,
+
         frameModeSelector,
-        handles,
-        widgets,
     }
 }
 
-export default useDefaultFrameView;
+export default useFFTFrameView;

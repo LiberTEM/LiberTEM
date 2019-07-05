@@ -63,6 +63,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinxcontrib.bibtex',
     'nbsphinx',
+    'nbsphinx_link',
     'IPython.sphinxext.ipython_console_highlighting',
 ]
 

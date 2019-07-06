@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.random as rnd
 
 import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
@@ -28,7 +29,7 @@ def _peakframe(fy, fx, zero, a, b, indices, radius):
     return (data, indices, peaks)
 
 
-def test_refinenemt():
+def test_refinement():
     data = np.array([
         (0, 0, 0, 0, 0, 1),
         (0, 1, 0, 0, 1, 0),
@@ -226,3 +227,50 @@ def test_run_refine_sparse(lt_ctx):
     assert np.allclose(res['zero'].data[0], zero, atol=0.5)
     assert np.allclose(res['a'].data[0], a, atol=0.2)
     assert np.allclose(res['b'].data[0], b, atol=0.2)
+
+
+def test_custom_template():
+    template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
+    parameters = {
+        'template': template,
+        'padding': 0.5
+    }
+    custom = blobfinder.UserTemplate(parameters)
+
+    assert custom.get_crop_size() == 12 + 6
+
+    same = custom.get_mask((23, 21))
+    larger = custom.get_mask((25, 23))
+    smaller = custom.get_mask((10, 10))
+
+    assert np.allclose(same, template)
+    assert np.allclose(larger[1:-1, 1:-1], template)
+    assert np.allclose(template[6:-7, 5:-6], smaller)
+
+
+def test_custom_template_fuzz():
+    for i in range(10):
+        integers = np.arange(1, 15)
+        center_y = np.random.choice(integers)
+        center_x = np.random.choice(integers)
+
+        size_y = np.random.choice(integers)
+        size_x = np.random.choice(integers)
+
+        radius = np.random.choice(integers)
+
+        mask_y = np.random.choice(integers)
+        mask_x = np.random.choice(integers)
+
+        template = m.radial_gradient(
+            centerX=center_x, centerY=center_y,
+            imageSizeX=size_x, imageSizeY=size_y,
+            radius=radius
+        )
+        parameters = {
+            'template': template,
+            'padding': 0.5
+        }
+        custom = blobfinder.UserTemplate(parameters)
+
+        mask = custom.get_mask((mask_y, mask_x))

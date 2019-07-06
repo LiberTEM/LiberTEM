@@ -110,13 +110,6 @@ class UserTemplate(MatchPattern):
         return result
 
 
-def condition_template(template, texture, lower, upper):
-    truncated = np.maximum(lower, np.minimum(upper, template))
-    truncated -= lower
-    truncated /= (upper - lower)
-    return truncated * texture
-
-
 def mask_maker(parameters):
     if parameters['mask_type'] == 'radial_gradient':
         return RadialGradient(parameters)

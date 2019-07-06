@@ -139,15 +139,50 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
 
 
 def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
+    '''
+    Generate a linear radial gradient from 0 to 1 within radius
+    '''
     x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
     mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
     return mask
 
 
-def polar_map(centerX, centerY, imageSizeX, imageSizeY):
+def radial_gradient_background_subtraction(r, r0, r_outer, delta=1):
+    '''
+    Generate a template with a linear radial gradient from 0 to 1 inside r0,
+    linear transition region for antialiasing between [r0 - delta/2, r0 + delta/2[,
+    and a negative ring with value -1 in [r0 + delta/2, r_outer].
+
+    The function accepts the radius for each pixel as a parameter so that a distorted version can
+    be generated with the stretchY and angle parameters of :meth:`~libertem.masks.polar_map`.
+    '''
+    result = np.zeros_like(r)
+    within = r < r0 - delta/2
+    result[within] = r[within] / r0
+
+    transition = (r >= r0 - delta/2) * (r < r0 + delta/2)
+    result[transition] = (r0 - r[transition]) / (delta/2)
+
+    without = (r >= r0 + delta/2) * (r <= r_outer)
+    result[without] = -1
+
+    return result
+
+
+def polar_map(centerX, centerY, imageSizeX, imageSizeY, stretchY=1., angle=0.):
+    '''
+    Return a map of radius and angle.
+
+    The optional parameters stretchY and angle allow to stretch and rotate the coordinate system
+    into an elliptical form. This is useful to generate modified input data for functions that
+    generate a template as a function of radius and angle.
+    '''
     y, x = np.mgrid[0:imageSizeY, 0:imageSizeX]
     dy = y - centerY
     dx = x - centerX
+    if stretchY != 1.0 or angle != 0.:
+        dx = dx*np.cos(angle) + dy*np.sin(angle)
+        dy = (dy*np.cos(angle) - dx*np.sin(angle)) / stretchY
     dy = dy.flatten()
     dx = dx.flatten()
     cartesians = np.stack((dy, dx)).T
@@ -156,6 +191,21 @@ def polar_map(centerX, centerY, imageSizeX, imageSizeY):
         polars[:, 0].reshape((imageSizeY, imageSizeX)),
         polars[:, 1].reshape((imageSizeY, imageSizeX))
     )
+
+
+def balance(template):
+    '''
+    Accept a template with both positive and negative values and scale the negative
+    part in such a way that the sum is zero.
+
+    This is useful to generate masks that return zero when applied to a
+    uniform background or linear gradient.
+    '''
+    result = template.copy()
+    above = template > 0
+    below = template < 0
+    result[below] *= template[above].sum() / template[below].sum() * -1
+    return result
 
 
 def bounding_radius(centerX, centerY, imageSizeX, imageSizeY):
@@ -178,7 +228,6 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
     if n_bins is None:
         n_bins = int(np.round(radius - radius_inner))
 
-    y, x = np.ogrid[0:imageSizeY, 0:imageSizeX]
     r, phi = polar_map(centerX, centerY, imageSizeX, imageSizeY)
     r = r.flatten()
 

@@ -181,8 +181,11 @@ def polar_map(centerX, centerY, imageSizeX, imageSizeY, stretchY=1., angle=0.):
     dy = y - centerY
     dx = x - centerX
     if stretchY != 1.0 or angle != 0.:
-        dx = dx*np.cos(angle) + dy*np.sin(angle)
-        dy = (dy*np.cos(angle) - dx*np.sin(angle)) / stretchY
+        (dy, dx) = (
+            (dy*np.cos(angle) - dx*np.sin(angle)) / stretchY,
+            dx*np.cos(angle) + dy*np.sin(angle),
+        )
+
     dy = dy.flatten()
     dx = dx.flatten()
     cartesians = np.stack((dy, dx)).T

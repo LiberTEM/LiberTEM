@@ -279,7 +279,7 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
         return np.stack(slices)
 
 
-def background_substraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
+def background_subtraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     mask_1 = circular(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
     sum_1 = np.sum(mask_1)
     mask_2 = ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner)

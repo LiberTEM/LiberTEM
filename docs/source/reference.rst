@@ -15,6 +15,11 @@ Python API
 Internal API
 ------------
 
+.. automodule:: libertem.masks
+   :members:
+   :undoc-members:
+   :special-members: __init__
+
 .. automodule:: libertem.common.shape
    :members:
    :undoc-members:

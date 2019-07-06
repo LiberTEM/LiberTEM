@@ -6,7 +6,7 @@ import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
-from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
+from libertem.masks import radial_gradient, background_subtraction, sparse_template_multi_stack
 from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
@@ -59,7 +59,7 @@ class RadialGradient(MatchPattern):
         )
 
 
-class BackgroundSubstraction(MatchPattern):
+class BackgroundSubtraction(MatchPattern):
     def __init__(self, parameters):
         self.radius = parameters['radius']
         self.padding = parameters['padding']
@@ -69,7 +69,7 @@ class BackgroundSubstraction(MatchPattern):
         return int(np.ceil(max(self.radius, self.radius_outer) * (1 + self.padding)))
 
     def get_mask(self, sig_shape):
-        return background_substraction(
+        return background_subtraction(
             centerY=sig_shape[0] // 2,
             centerX=sig_shape[1] // 2,
             imageSizeY=sig_shape[0],
@@ -113,8 +113,8 @@ class UserTemplate(MatchPattern):
 def mask_maker(parameters):
     if parameters['mask_type'] == 'radial_gradient':
         return RadialGradient(parameters)
-    elif parameters['mask_type'] == 'background_substraction':
-        return BackgroundSubstraction(parameters)
+    elif parameters['mask_type'] == 'background_subtraction':
+        return BackgroundSubtraction(parameters)
     elif parameters['mask_type'] == 'template':
         return UserTemplate(parameters)
     else:
@@ -272,14 +272,14 @@ class FastCorrelationUDF(CorrelationUDF):
             Numpy array of (y, x) coordinates with peak positions to correlate
         mask_type : str
             Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_substraction'
+            'background_subtraction'
         radius:
             Radius of the CBED disks in px
         padding:
             Extra space around radius as a fraction of radius, which defines the search
             area around a peak
         radius_outer:
-            Only with 'background_substraction': Radius of outer region with negative values.
+            Only with 'background_subtraction': Radius of outer region with negative values.
             For calculating the padding, the maximum of radius and radius_outer is used.
         '''
         super().__init__(*args, **kwargs)
@@ -332,14 +332,14 @@ class SparseCorrelationUDF(CorrelationUDF):
             Numpy array of (y, x) coordinates with peak positions to correlate
         mask_type : str
             Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_substraction'
+            'background_subtraction'
         radius:
             Radius of the CBED disks in px
         padding:
             Extra space around radius as a fraction of radius. Can be zero for this method
             since the shifting is performed independently of the template size.
         radius_outer:
-            Only with 'background_substraction': Radius of outer region with negative values.
+            Only with 'background_subtraction': Radius of outer region with negative values.
             For calculating the padding, the maximum of radius and radius_outer is used.
         steps:
             The template is correlated with 2 * steps + 1 symmetrically around the peak position

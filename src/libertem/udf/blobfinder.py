@@ -91,22 +91,29 @@ class UserTemplate(MatchPattern):
         result = np.zeros((sig_shape), dtype=self.template.dtype)
         dy, dx = sig_shape
         ty, tx = self.template.shape
-        left = dx // 2 - tx // 2
-        right = left + tx
-        top = dy // 2 - ty // 2
-        bottom = top + ty
+
+        left = dx / 2 - tx / 2
+        top = dy / 2 - ty / 2
 
         r_left = max(0, left)
-        r_right = min(dx, right)
         r_top = max(0, top)
-        r_bottom = min(dy, bottom)
 
         t_left = max(0, -left)
-        t_right = min(tx, right)
         t_top = max(0, -top)
-        t_bottom = min(ty, bottom)
 
-        result[r_top:r_bottom, r_left:r_right] = self.template[t_top:t_bottom, t_left:t_right]
+        crop_x = r_left - left
+        crop_y = r_top - top
+
+        h = int(ty - 2*crop_y)
+        w = int(tx - 2*crop_x)
+
+        r_left = int(r_left)
+        r_top = int(r_top)
+        t_left = int(t_left)
+        t_top = int(t_top)
+
+        result[r_top:r_top + h, r_left:r_left + w] = \
+            self.template[t_top:t_top + h, t_left:t_left + w]
         return result
 
 

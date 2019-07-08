@@ -15,9 +15,10 @@ class UDFMeta:
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
     """
-    def __init__(self, partition_shape, dataset_shape, roi):
+    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
+        self._dataset_dtype = dataset_dtype
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -54,8 +55,21 @@ class UDFMeta:
         """
         return self._roi
 
+    @property
+    def dataset_dtype(self) -> np.dtype:
+        """
+        Returns
+        -------
+        np.dtype
+            Native dtype of the dataset
+        """
+        return self._dataset_dtype
+
 
 class UDFData:
+    '''
+    Container for result buffers, return value from running UDFs
+    '''
     def __init__(self, data):
         self._data = data
         self._views = {}
@@ -72,6 +86,15 @@ class UDFData:
             return self._get_view_or_data(k)
         except KeyError as e:
             raise AttributeError(str(e))
+
+    def __setattr__(self, k, v):
+        if not k.startswith("_"):
+            raise AttributeError(
+                "cannot re-assign attribute %s, did you mean `.%s[:] = ...`?" % (
+                    k, k
+                )
+            )
+        super().__setattr__(k, v)
 
     def _get_view_or_data(self, k):
         if k in self._views:
@@ -139,6 +162,9 @@ class UDFData:
 
 
 class UDFFrameMixin:
+    '''
+    Implement :code:`process_frame` for per-frame processing.
+    '''
     def process_frame(self, frame):
         """
         Implement this method to process the data on a frame-by-frame manner.
@@ -160,6 +186,9 @@ class UDFFrameMixin:
 
 
 class UDFTileMixin:
+    '''
+    Implement :code:`process_tile` for per-tile processing.
+    '''
     def process_tile(self, tile, tile_slice):
         """
         Implement this method to process the data in a tiled manner.
@@ -185,6 +214,9 @@ class UDFTileMixin:
 
 
 class UDFPartitionMixin:
+    '''
+    Implement :code:`process_partition` for per-partition processing.
+    '''
     def process_partition(self, partition):
         """
         Implement this method to process the data partitioned into large
@@ -214,6 +246,11 @@ class UDFPartitionMixin:
 
 
 class UDFPostprocessMixin:
+    '''
+    Implement :code:`postprocess` to modify the resulf buffers of a partition on the worker
+    after the partition data has been completely processed, but before it is returned to the
+    master node for the final merging step.
+    '''
     def postprocess(self):
         """
         Implement this method to postprocess the result data for a partition.
@@ -231,6 +268,9 @@ class UDFPostprocessMixin:
 
 
 class UDFBase:
+    '''
+    Base class for UDFs with helper functions.
+    '''
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi)
@@ -255,11 +295,25 @@ class UDFBase:
         for ns in [self.params, self.results]:
             ns.clear_views()
 
-    def init_task_data(self, meta):
-        self.task_data = UDFData(self.get_task_data(meta))
+    def init_task_data(self):
+        self.task_data = UDFData(self.get_task_data())
 
     def init_result_buffers(self):
         self.results = UDFData(self.get_result_buffers())
+
+    def set_meta(self, meta):
+        self.meta = meta
+
+    def get_method(self):
+        if hasattr(self, 'process_tile'):
+            method = 'tile'
+        elif hasattr(self, 'process_frame'):
+            method = 'frame'
+        elif hasattr(self, 'process_partition'):
+            method = 'partition'
+        else:
+            raise TypeError("UDF should implement one of the `process_*` methods")
+        return method
 
 
 class UDF(UDFBase):
@@ -305,7 +359,7 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def get_task_data(self, meta: UDFMeta):
+    def get_task_data(self):
         """
         Initialize per-task data.
 
@@ -319,12 +373,7 @@ class UDF(UDFBase):
         Data available in this method:
 
         - `self.params` - the input parameters of this UDF
-
-        Parameters
-        ----------
-
-        meta
-            relevant metadata, see :class:`UDFMeta` documentation.
+        - `self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
 
         Returns
         -------
@@ -349,6 +398,9 @@ class UDF(UDFBase):
         Data available in this method:
 
         - `self.params` - the parameters of this UDF
+        - `self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
+            Please note that partition metadata will not be set when this method is
+            executed on the head node.
 
         Returns
         -------
@@ -438,42 +490,36 @@ class UDFRunner:
         self._udf = udf
         self._debug = debug
 
-    def run_for_partition(self, partition, roi):
+    def _get_dtype(self, dtype):
+        '''
+        FIXME replace with dtype switching logic and user control similar to MaskJob
+        '''
+        dtype = np.dtype(dtype)
         # simple dtype logic for now: if data is complex or float, keep data dtype,
         # otherwise convert to float32
-        if partition.dtype.kind in ('c', 'f'):
-            dtype = partition.dtype
-        else:
-            # integer data, convert to float for now:
+        if dtype.kind not in ('c', 'f'):
             dtype = np.dtype("float32")
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_part(partition, roi)
+        return dtype
+
+    def run_for_partition(self, partition, roi):
+        dtype = self._get_dtype(partition.dtype)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
             roi=roi,
+            dataset_dtype=dtype
         )
-        self._udf.init_task_data(meta)
-        if hasattr(self._udf, 'process_tile'):
-            method = 'tile'
+        self._udf.set_meta(meta)
+        self._udf.init_result_buffers()
+        self._udf.allocate_for_part(partition, roi)
+        self._udf.init_task_data()
+        method = self._udf.get_method()
+        if method == 'tile':
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
-        elif hasattr(self._udf, 'process_frame'):
-            method = 'frame'
+        elif method == 'frame':
             tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
-        elif hasattr(self._udf, 'process_partition'):
-            method = 'partition'
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
-            raise NotImplementedError("process_partition is not implemented yet")
-        else:
-            raise TypeError("UDF should implement one of the `process_*` methods")
-
-        partition_data = None
-        if method == 'partition':
-            # FIXME: allocate a buffer the size of the partition (nav+sig)
-            # (or more correct: the size of the part of the partition that is
-            # selected by the `roi`; see meta.partition_shape)
-            # partition_data = ...
-            pass
+        elif method == 'partition':
+            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype)]
 
         for tile in tiles:
             if method == 'tile':
@@ -484,10 +530,8 @@ class UDFRunner:
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
             elif method == 'partition':
-                raise NotImplementedError("TODO: copy tiles into partition_data")
-
-        if method == 'partition':
-            self._udf.process_partition(partition_data)
+                self._udf.set_views_for_tile(partition, tile)
+                self._udf.process_partition(tile.data)
 
         if hasattr(self._udf, 'postprocess'):
             self._udf.clear_views()
@@ -509,6 +553,13 @@ class UDFRunner:
         return self._udf.results, partition
 
     def run_for_dataset(self, dataset, executor, roi=None):
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=roi,
+            dataset_dtype=self._get_dtype(dataset.dtype)
+        )
+        self._udf.set_meta(meta)
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
@@ -526,14 +577,19 @@ class UDFRunner:
 
         return self._udf.results
 
-    async def run_for_dataset_async(self, dataset, executor, roi=None):
+    async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=roi,
+            dataset_dtype=dataset.dtype
+        )
+        self._udf.set_meta(meta)
         # FIXME: code duplication?
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
         tasks = self._make_udf_tasks(dataset, roi)
-
-        cancel_id = str(uuid.uuid4())
 
         async for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)
@@ -541,6 +597,10 @@ class UDFRunner:
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()
             )
+            self._udf.clear_views()
+            yield self._udf.results
+        else:
+            # yield at least one result (which should be empty):
             self._udf.clear_views()
             yield self._udf.results
 

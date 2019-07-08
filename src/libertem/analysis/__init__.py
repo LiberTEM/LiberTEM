@@ -6,6 +6,10 @@ from .ring import RingMaskAnalysis
 from .point import PointMaskAnalysis
 from .masks import MasksAnalysis
 from .raw import PickFrameAnalysis
+from .fem import FEMAnalysis
+from .rawfft import PickFFTFrameAnalysis
+from .sumfft import SumfftAnalysis
+from .apply_fft_mask import ApplyFFTMask
 
 __all__ = [
     'SumAnalysis',
@@ -16,4 +20,8 @@ __all__ = [
     'PointMaskAnalysis',
     'MasksAnalysis',
     'PickFrameAnalysis',
+    'FEMAnalysis',
+    'PickFFTFrameAnalysis',
+    'SumfftAnalysis',
+    'ApplyFFTMask',
 ]

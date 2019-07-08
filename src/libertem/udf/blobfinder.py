@@ -6,8 +6,7 @@ import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
-from libertem.masks import radial_gradient, background_substraction, sparse_template_multi_stack
-from libertem.job.sum import SumFramesJob
+from libertem.masks import radial_gradient, background_subtraction, sparse_template_multi_stack
 from libertem.job.masks import MaskContainer
 
 import libertem.analysis.gridmatching as grm
@@ -60,7 +59,7 @@ class RadialGradient(MatchPattern):
         )
 
 
-class BackgroundSubstraction(MatchPattern):
+class BackgroundSubtraction(MatchPattern):
     def __init__(self, parameters):
         self.radius = parameters['radius']
         self.padding = parameters['padding']
@@ -70,7 +69,7 @@ class BackgroundSubstraction(MatchPattern):
         return int(np.ceil(max(self.radius, self.radius_outer) * (1 + self.padding)))
 
     def get_mask(self, sig_shape):
-        return background_substraction(
+        return background_subtraction(
             centerY=sig_shape[0] // 2,
             centerX=sig_shape[1] // 2,
             imageSizeY=sig_shape[0],
@@ -80,11 +79,51 @@ class BackgroundSubstraction(MatchPattern):
         )
 
 
+class UserTemplate(MatchPattern):
+    def __init__(self, parameters):
+        self.template = parameters['template']
+        self.padding = parameters['padding']
+
+    def get_crop_size(self):
+        return int(np.ceil(np.max(self.template.shape) / 2 * (1 + self.padding)))
+
+    def get_mask(self, sig_shape):
+        result = np.zeros((sig_shape), dtype=self.template.dtype)
+        dy, dx = sig_shape
+        ty, tx = self.template.shape
+
+        left = dx / 2 - tx / 2
+        top = dy / 2 - ty / 2
+
+        r_left = max(0, left)
+        r_top = max(0, top)
+
+        t_left = max(0, -left)
+        t_top = max(0, -top)
+
+        crop_x = r_left - left
+        crop_y = r_top - top
+
+        h = int(ty - 2*crop_y)
+        w = int(tx - 2*crop_x)
+
+        r_left = int(r_left)
+        r_top = int(r_top)
+        t_left = int(t_left)
+        t_top = int(t_top)
+
+        result[r_top:r_top + h, r_left:r_left + w] = \
+            self.template[t_top:t_top + h, t_left:t_left + w]
+        return result
+
+
 def mask_maker(parameters):
     if parameters['mask_type'] == 'radial_gradient':
         return RadialGradient(parameters)
-    elif parameters['mask_type'] == 'background_substraction':
-        return BackgroundSubstraction(parameters)
+    elif parameters['mask_type'] == 'background_subtraction':
+        return BackgroundSubtraction(parameters)
+    elif parameters['mask_type'] == 'template':
+        return UserTemplate(parameters)
     else:
         raise ValueError("unknown mask type: %s" % parameters['mask_type'])
 
@@ -240,19 +279,19 @@ class FastCorrelationUDF(CorrelationUDF):
             Numpy array of (y, x) coordinates with peak positions to correlate
         mask_type : str
             Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_substraction'
+            'background_subtraction'
         radius:
             Radius of the CBED disks in px
         padding:
             Extra space around radius as a fraction of radius, which defines the search
             area around a peak
         radius_outer:
-            Only with 'background_substraction': Radius of outer region with negative values.
+            Only with 'background_subtraction': Radius of outer region with negative values.
             For calculating the padding, the maximum of radius and radius_outer is used.
         '''
         super().__init__(*args, **kwargs)
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         mask = mask_maker(self.params)
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
@@ -300,14 +339,14 @@ class SparseCorrelationUDF(CorrelationUDF):
             Numpy array of (y, x) coordinates with peak positions to correlate
         mask_type : str
             Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_substraction'
+            'background_subtraction'
         radius:
             Radius of the CBED disks in px
         padding:
             Extra space around radius as a fraction of radius. Can be zero for this method
             since the shifting is performed independently of the template size.
         radius_outer:
-            Only with 'background_substraction': Radius of outer region with negative values.
+            Only with 'background_subtraction': Radius of outer region with negative values.
             For calculating the padding, the maximum of radius and radius_outer is used.
         steps:
             The template is correlated with 2 * steps + 1 symmetrically around the peak position
@@ -329,7 +368,7 @@ class SparseCorrelationUDF(CorrelationUDF):
         super_buffers.update(my_buffers)
         return super_buffers
 
-    def get_task_data(self, meta):
+    def get_task_data(self):
         mask = mask_maker(self.params)
         crop_size = mask.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
@@ -349,8 +388,8 @@ class SparseCorrelationUDF(CorrelationUDF):
             offsetX=offsetX,
             offsetY=offsetY,
             template=template,
-            imageSizeX=meta.dataset_shape.sig[1],
-            imageSizeY=meta.dataset_shape.sig[0]
+            imageSizeX=self.meta.dataset_shape.sig[1],
+            imageSizeY=self.meta.dataset_shape.sig[0]
         )
         # CSC matrices in combination with transposed data are fastest
         container = MaskContainer(mask_factories=stack, dtype=np.float32,
@@ -402,11 +441,11 @@ def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
 
 
 def run_blobfinder(ctx, dataset, parameters, roi=None):
-    # FIXME implement ROI for SumFramesJob
-    sum_job = SumFramesJob(dataset=dataset)
-    sum_result = ctx.run(sum_job)
+    # FIXME implement ROI for sum analysis
+    sum_analysis = ctx.create_sum_analysis(dataset=dataset)
+    sum_result = ctx.run(sum_analysis)
 
-    sum_result = log_scale(sum_result, out=None)
+    sum_result = log_scale(sum_result.intensity.raw_data, out=None)
 
     peaks = get_peaks(
         parameters=parameters,
@@ -559,34 +598,39 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
         peaks to be known. See documentation of gridmatching.affinematch() for details.
 
     returns:
-        (result, used_indices) where result is
-        {
-            'centers': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-            ),
-            'refineds': BufferWrapper(
-                kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-            ),
-            'peak_values': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'peak_elevations': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="float32"
-            ),
-            'zero': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'a': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'b': BufferWrapper(
-                kind="nav", extra_shape=(2,), dtype="float32"
-            ),
-            'selector': BufferWrapper(
-                kind="nav", extra_shape=(num_disks,), dtype="bool"
-            ),
-        }
-        and used_indices are the indices that were within the frame.
+        :code:`(result, used_indices)` where :code:`result` is a :class:`~libertem.udf.UDFData`
+        instance based on
+
+        .. code-block:: python
+
+            {
+                'centers': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks, 2), dtype="u2"
+                ),
+                'refineds': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks, 2), dtype="float32"
+                ),
+                'peak_values': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="float32"
+                ),
+                'peak_elevations': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="float32"
+                ),
+                'zero': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'a': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'b': BufferWrapper(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'selector': BufferWrapper(
+                    kind="nav", extra_shape=(num_disks,), dtype="bool"
+                ),
+            }
+
+        and :code:`used_indices` are the indices that were within the frame.
     '''
     if indices is None:
         indices = np.mgrid[-10:10, -10:10]

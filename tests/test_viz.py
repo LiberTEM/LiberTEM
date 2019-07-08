@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from libertem import viz
 
@@ -21,6 +22,33 @@ def test_interpolate_color():
     np.testing.assert_equal(rgb, (0.5, 0.5, 0.5))
 
 
-def test_norm_negative():
-    data = -1 * np.ones((16, 16))
-    viz.visualize_simple(data)
+@pytest.mark.parametrize("log", [True, False])
+def test_all_nan(log):
+    data = np.full((16, 16), np.nan)
+    viz.visualize_simple(data, logarithmic=log)
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_all_ones(log):
+    data = np.ones((16, 16))
+    viz.visualize_simple(data, logarithmic=log)
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_all_zeros(log):
+    data = np.zeros((16, 16))
+    viz.visualize_simple(data, logarithmic=log)
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_all_negative(log):
+    data = np.full((16, 16), -1)
+    viz.visualize_simple(data, logarithmic=log)
+
+
+@pytest.mark.parametrize("log", [True, False])
+def test_some_nonnegative(log):
+    data = np.full((16, 16), -1)
+    data[0] = 0
+    data[1] = 1
+    viz.visualize_simple(data, logarithmic=log)

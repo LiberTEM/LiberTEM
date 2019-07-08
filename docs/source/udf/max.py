@@ -13,18 +13,18 @@ class MaxUDF(UDF):
         """
         return {
             'maxbuf': self.buffer(
-                kind="sig", dtype="float32"
+                kind="sig", dtype=self.meta.dataset_dtype
             )
         }
 
     def process_frame(self, frame):
         """
-        In this function, we have a frame and the buffer `maxbuf` available, which we declared above.
-        This function is called for all frames / diffraction patterns in the data set. The maxbuf is
-        a partial result, and all partial results will later be merged (see below).
+        In this function, we have a frame and the buffer `maxbuf` available, which we declared
+        above. This function is called for all frames / diffraction patterns in the data set.
+        The maxbuf is a partial result, and all partial results will later be merged (see below).
 
-        In this case, we determine the maximum from the current maximum and the current frame, for each
-        pixel in the diffraction pattern.
+        In this case, we determine the maximum from the current maximum and the current frame, for
+        each pixel in the diffraction pattern.
 
         Notes:
 

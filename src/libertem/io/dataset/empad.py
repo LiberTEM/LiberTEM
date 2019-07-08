@@ -5,6 +5,7 @@ from xml.dom import minidom
 import numpy as np
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, DataSetException, DataSetMeta, Partition3D
 from .raw import RawFile, RawFileSet
 
@@ -19,6 +20,33 @@ def xml_get_text(nodelist):
         if node.nodeType == node.TEXT_NODE:
             rc.append(node.data)
     return ''.join(rc)
+
+
+class EMPADDatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/EMPADDatasetParams.schema.json",
+      "title": "EMPADDatasetParams",
+      "type": "object",
+      "properties": {
+        "type": {"const": "empad"},
+        "path": {"type": "string"},
+        "scan_size": {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 2,
+            "maxItems": 2
+        },
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path", "scan_size"]
+        }
+        return data
 
 
 class EMPADFile(RawFile):
@@ -64,6 +92,22 @@ class EMPADFileSet(RawFileSet):
 
 
 class EMPADDataSet(DataSet):
+    """
+    Read data from EMPAD detector. EMPAD data sets consist of two files,
+    one .raw and one .xml file. Note that the .xml file contains the file name
+    of the .raw file, so if the raw file was renamed at some point, opening using
+    the .xml file will fail.
+
+    Parameters
+    ----------
+    path: str
+        Path to either the .xml or the .raw file. If the .xml file given,
+        the `scan_size` parameter can be left out
+
+    scan_size: tuple of int
+        A tuple (y, x) that specifies the size of the scanned region. It is
+        automatically read from the .xml file if you specify one as `path`.
+    """
     def __init__(self, path, scan_size=None):
         super().__init__()
         self._path = path
@@ -113,6 +157,10 @@ class EMPADDataSet(DataSet):
             iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         return self
+
+    @classmethod
+    def get_msg_converter(cls):
+        return EMPADDatasetParams
 
     @classmethod
     def detect_params(cls, path):

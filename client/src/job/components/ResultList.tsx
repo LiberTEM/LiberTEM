@@ -1,8 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dropdown, DropdownProps } from "semantic-ui-react";
-import { JobKind } from "../../analysis/types";
-import { AnalysisTypes } from "../../messages";
 import { RootReducer } from "../../store";
 import { HandleRenderFunction } from "../../widgets/types";
 import { JobRunning, JobState } from "../types";
@@ -12,34 +10,29 @@ import Selectors from "./Selectors";
 interface ResultListProps {
     width: number,
     height: number,
-    kind: JobKind,
     selectors?: React.ReactElement<any>,
     extraHandles?: HandleRenderFunction,
     extraWidgets?: React.ReactElement<SVGElement>,
+    subtitle?: React.ReactNode,
 }
 
 interface ExternalResultListProps {
     analysis: string,
-    kind: JobKind,
+    jobIndex: number,
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
     const analysis = state.analyses.byId[ownProps.analysis];
-    const jobId = analysis.jobs[ownProps.kind];
+    const jobId = analysis.jobs[ownProps.jobIndex];
     const job = jobId ? state.jobs.byId[jobId] : undefined;
     const ds = job ? state.datasets.byId[job.dataset] : undefined;
-    const pickCoords = (
-        (analysis.frameDetails.type === AnalysisTypes.SUM_FRAMES || ownProps.kind === "FRAME") ?
-            null
-            : <>Pick: x={analysis.frameDetails.parameters.x}, y={analysis.frameDetails.parameters.y} &emsp;</>
-    );
 
     return {
         currentJob: job,
         jobsById: state.jobs.byId,
         analysis,
         dataset: ds,
-        pickCoords,
+        jobIndex: ownProps.jobIndex,
     };
 };
 
@@ -58,14 +51,18 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
     }
 
     public getJob = () => {
-        const { currentJob, analysis, jobsById, kind } = this.props;
+        const { currentJob, analysis, jobsById, jobIndex } = this.props;
         if (!currentJob) {
             return;
         }
         if (currentJob.results.length > 0) {
             return currentJob;
         }
-        const history = analysis.jobHistory[kind];
+        const history = analysis.jobHistory[jobIndex];
+
+        if (history === undefined) {
+            return;
+        }
         for (const tmpJobId of history) {
             const tmpJob = jobsById[tmpJobId];
             if (tmpJob.results.length > 0) {
@@ -77,8 +74,8 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
 
     public render() {
         const {
-            kind, selectors, analysis, dataset, children, width, height, pickCoords,
-            extraHandles, extraWidgets
+            selectors, analysis, dataset, children, width, height, jobIndex,
+            extraHandles, extraWidgets, subtitle,
         } = this.props;
         let msg;
         let currentResult = (
@@ -91,10 +88,10 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
         } else {
             currentResult = (
                 <Result analysis={analysis} job={job} dataset={dataset}
-                    kind={kind}
                     extraHandles={extraHandles}
                     extraWidgets={extraWidgets}
                     width={width} height={height}
+                    jobIndex={jobIndex}
                     idx={this.state.selectedChannel}
                 />
             );
@@ -113,7 +110,7 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
                     <ResultImageSelector job={job} handleChange={this.selectChannel} selectedImg={this.state.selectedChannel} />
                     {selectors}
                 </Selectors>
-                <p>{pickCoords} {msg}</p>
+                <p>{subtitle} {msg}</p>
             </div>
         );
     }

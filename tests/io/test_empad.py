@@ -141,9 +141,10 @@ def test_invalid_size():
         scan_size=(4, 5),
     )
     ds = ds.initialize()
-    with pytest.raises(DataSetException) as e:
+    with pytest.raises(DataSetException) as einfo:
         ds.check_valid()
-    assert "invalid filesize" in str(e)
+
+    assert einfo.match("invalid filesize")
 
 
 def test_nonexistent():
@@ -151,9 +152,9 @@ def test_nonexistent():
         path="/does/not/exist.raw",
         scan_size=(4, 4),
     )
-    with pytest.raises(DataSetException) as e:
+    with pytest.raises(DataSetException) as einfo:
         ds = ds.initialize()
-    assert "No such file or directory" in str(e)
+    assert einfo.match("No such file or directory")
 
 
 def test_detect_fail():

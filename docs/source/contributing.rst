@@ -110,7 +110,7 @@ To run the testsuite for the client, first install the JavaScript/TypeScript dep
    $ cd client/
    $ npm install
 
-Then, in the same dircetory, to run the tests execute:
+Then, in the same directory, to run the tests execute:
 
 .. code-block:: shell
 
@@ -172,7 +172,7 @@ You can check the code style by running:
 Building the Documentation
 --------------------------
 
-Documentation building is also done with tox, see above for the basics.
+Documentation building is also done with tox, see above for the basics. It requires manual `installation of pandoc <https://pandoc.org/installing.html>`_ on the build system since pandoc can't be installed reliably using pip.
 To start the live building process:
 
 .. code-block:: shell
@@ -194,7 +194,7 @@ If you would like to contribute to the client, you first need to set up the deve
 For this, first install nodejs. On Linux, we recommend to `install via package manager <https://nodejs.org/en/download/package-manager/>`_,
 on Windows `the installer <https://nodejs.org/en/download/>`_ should be fine. Choose the current LTS version, which is 10.x at the time of writing.
 
-One you have nodejs installed, you should have the npm command available in your path. You can then install
+One you have NodeJS installed, you should have the npm command available in your path. You can then install
 the needed build tools and dependencies by changing to the client directory and running the install command:
 
 .. code-block:: shell
@@ -240,16 +240,17 @@ Release checklist
 
 Not all aspects of LiberTEM are covered with automated unit tests. For that reason we should perform some manual tests before and after a release.
 
-Before
-~~~~~~
+Before (using a release candidate package)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Full documentation review and update
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
-* Update ``packaging/README.html`` with ``rst2html.py README.rst packaging/README.html`` and edit it in such a way that only the HTML body remains. This is used as a description on Zenodo.org
+* Update ``packaging/README.html`` with ``python scripts/readme_to_html.py README.rst packaging/README.html`` (needs html5lib). This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment
+* For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
 * Copy test files of all supported types to a fresh location or purge the parameter cache

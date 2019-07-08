@@ -146,31 +146,13 @@ def test_get_diags(default_k2is):
     json.dumps(diags)
 
 
-def pixelsum_init(partition):
-    return {}
-
-
-def pixelsum_buffers():
-    return {
-        'pixelsum': BufferWrapper(
-            kind="nav", dtype="float32"
-        )
-    }
-
-
-def pixelsum_frame_fn(frame, pixelsum):
-    pixelsum[:] = np.sum(frame)
-
-
 @pytest.mark.slow
 def test_udf_on_k2is(lt_ctx, default_k2is):
-    res = lt_ctx.run_udf(
+    res = lt_ctx.map(
         dataset=default_k2is,
-        fn=pixelsum_frame_fn,
-        init=pixelsum_init,
-        make_buffers=pixelsum_buffers,
+        f=np.sum,
     )
-    assert 'pixelsum' in res
+    assert 'result' in res
     # print(data.shape, res['pixelsum'].data.shape)
     # assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
 

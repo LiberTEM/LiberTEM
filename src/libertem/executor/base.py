@@ -15,7 +15,7 @@ class JobCancelledError(Exception):
 
 
 class JobExecutor(object):
-    def run_job(self, job):
+    def run_job(self, job, cancel_id=None):
         """
         run a Job
         """
@@ -48,7 +48,7 @@ class JobExecutor(object):
 
 
 class AsyncJobExecutor(object):
-    async def run_job(self, job):
+    async def run_job(self, job, cancel_id):
         """
         run a Job
         """
@@ -119,11 +119,11 @@ class AsyncAdapter(AsyncJobExecutor):
         self._wrapped = wrapped
         self._pool = concurrent.futures.ThreadPoolExecutor(1)
 
-    async def run_job(self, job):
+    async def run_job(self, job, cancel_id):
         """
         run a Job
         """
-        gen = self._wrapped.run_job(job)
+        gen = self._wrapped.run_job(job, cancel_id)
         agen = async_generator(gen, self._pool)
         async for i in agen:
             yield i

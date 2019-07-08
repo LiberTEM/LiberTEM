@@ -10,7 +10,7 @@ import libertem.io.dataset.raw
 # import libertem.io.ingest.hdf5
 # import libertem.io.ingest.sink
 import libertem.job.masks
-import libertem.job.sum
+import libertem.job.raw
 import libertem.web.server
 import libertem.web.cli
 import libertem.api

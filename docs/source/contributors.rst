@@ -52,6 +52,9 @@
 **Christoph Koch (HU Berlin)**
     Discussions
 
+**Matus Krajnak (Quantum Detectors)**
+    Bug report and fix regarding MIB format
+
 **Alexander Krings (FZ Jülich)**
     Discussions, requirements description
 

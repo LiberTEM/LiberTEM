@@ -17,13 +17,9 @@ if __name__ == "__main__":
     with api.Context() as ctx:
 
         ds = ctx.load(
-            "raw",
+            "EMPAD",
             path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-            "Data/EMPAD/scan_11_x256_y256.raw"),
-            dtype="float32",
-            scan_size=(256, 256),
-            detector_size_raw=(130, 128),
-            crop_detector_to=(128, 128),
+            "Data/EMPAD/acquisition_12.xml")
         )
 
         sum_analysis = ctx.create_sum_analysis(dataset=ds)

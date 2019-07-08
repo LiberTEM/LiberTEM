@@ -239,6 +239,7 @@ export interface MaskDefRing {
     ro: number
 }
 
+
 export interface MaskDefDisk {
     shape: "disk",
     cx: number,
@@ -265,6 +266,19 @@ export interface PickFrameParams {
     y: number,
 }
 
+export interface FFTSumFramesParams {
+    real_rad: number | null ,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
+
+export interface PickFFTFrameParams {
+    x: number,
+    y: number,
+    real_rad: number | null ,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
 export interface RadialFourierParams {
     shape: "radial_fourier",
     cx: number,
@@ -275,18 +289,52 @@ export interface RadialFourierParams {
     max_order: number
 }
 
+export interface FFTParams{
+    rad_in:number,
+    rad_out:number,
+    real_rad: number | null ,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
+
+
+export type SumFrameParams = {} | {
+    roi: {
+        shape: "disk",
+        cx: number,
+        cy: number,
+        r: number,
+    }
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
-    RADIAL_FOURIER = "RADIAL_FOURIER"
+    PICK_FFT_FRAME = "PICK_FFT_FRAME",
+    APPLY_FFT_MASK = "APPLY_FFT_MASK",
+    FFTSUM_FRAMES = "FFTSUM_FRAMES",
+    RADIAL_FOURIER = "RADIAL_FOURIER",
+    FEM = "FEM"
 }
 
 export interface RingMaskDetails {
     type: AnalysisTypes.APPLY_RING_MASK,
+    parameters: MaskDefRing,
+    
+}
+
+export interface FFTDetails {
+    type: AnalysisTypes.APPLY_FFT_MASK,
+    parameters: FFTParams,
+}
+
+export interface FEMDetails {
+    type: AnalysisTypes.FEM,
     parameters: MaskDefRing,
 }
 
@@ -307,7 +355,12 @@ export interface CenterOfMassDetails {
 
 export interface SumFramesDetails {
     type: AnalysisTypes.SUM_FRAMES,
-    parameters: {},
+    parameters: SumFrameParams
+}
+
+export interface FFTSumFramesDetails {
+    type: AnalysisTypes.FFTSUM_FRAMES,
+    parameters: FFTSumFramesParams,
 }
 
 export interface PickFrameDetails {
@@ -315,13 +368,18 @@ export interface PickFrameDetails {
     parameters: PickFrameParams,
 }
 
+export interface PickFFTFrameDetails {
+    type: AnalysisTypes.PICK_FFT_FRAME,
+    parameters: PickFFTFrameParams,
+}
+
 export interface RadialFourierDetails {
     type: AnalysisTypes.RADIAL_FOURIER,
     parameters: RadialFourierParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | RadialFourierDetails;
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails;
 
 export interface StartJobRequest {
     job: {
@@ -340,7 +398,6 @@ export interface CancelJobResponse {
     status: "ok",
     job: string,
 }
-
 
 /*
  * fs browser 

@@ -7,12 +7,49 @@ import logging
 import numpy as np
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D
 )
 
 log = logging.getLogger(__name__)
+
+
+class MIBDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/MIBDatasetParams.schema.json",
+        "title": "MIBDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "mib"},
+            "path": {"type": "string"},
+            "scan_size": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 2,
+                "maxItems": 2,
+            },
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+        },
+        "required": ["type", "path"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            "path": raw_data["path"],
+        }
+        if "scan_size" in raw_data:
+            data["scan_size"] = tuple(raw_data["scan_size"])
+        if "tileshape" in raw_data:
+            data["tileshape"] = tuple(raw_data["tileshape"])
+        return data
 
 
 def read_hdr_file(path):
@@ -218,6 +255,41 @@ class MIBFileSet(FileSet3D):
 
 
 class MIBDataSet(DataSet):
+    """
+    MIB data sets consist of one or more `.mib` files, and optionally
+    a `.hdr` file. The HDR file is used to automatically set the
+    `scan_size` parameter from the fields "Frames per Trigger" and "Frames
+    in Acquisition." When loading a MIB data set, you can either specify
+    the path to the HDR file, or choose one of the MIB files. The MIB files
+    are assumed to follow a naming pattern of some non-numerical prefix,
+    and a sequential numerical suffix.
+
+    Note that, as of the current version, no gain correction or hot/cold pixel
+    removal is done yet: processing is done on the RAW data, though you can do
+    pre-processing in your own UDF.
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> # both examples look for files matching /path/to/default*.mib:
+    >>> ds1 = ctx.load("mib", path="/path/to/default.hdr")
+    >>> ds2 = ctx.load("mib", path="/path/to/default64.mib")
+
+    Parameters
+    ----------
+    path: str
+        Path to either the .hdr file or one of the .mib files
+
+    tileshape: tuple of int, optional
+        Tuning parameter, specifying the size of the smallest data unit
+        we are reading and working on. Will be automatically determined
+        if left None.
+
+    scan_size: tuple of int, optional
+        A tuple (y, x) that specifies the size of the scanned region. It is
+        automatically read from the .hdr file if you specify one as `path`.
+    """
     def __init__(self, path, tileshape=None, scan_size=None):
         super().__init__()
         self._sig_dims = 2
@@ -282,6 +354,10 @@ class MIBDataSet(DataSet):
             {"name": "Data type",
              "value": str(first_file.fields['mib_dtype'])},
         ]
+
+    @classmethod
+    def get_msg_converter(cls):
+        return MIBDatasetParams
 
     @classmethod
     def detect_params(cls, path):
@@ -349,7 +425,7 @@ class MIBDataSet(DataSet):
             s = self._scan_size
             num_images = self._num_images()
             # FIXME: read hdr file and check if num images matches the number there
-            if s[0] * s[1] != num_images:
+            if s[0] * s[1] > num_images:
                 raise DataSetException(
                     "scan_size (%r) does not match number of images (%d)" % (
                         s, num_images

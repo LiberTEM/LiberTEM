@@ -4,6 +4,7 @@ import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
@@ -25,6 +26,34 @@ def unravel_nav(slice_, containing_shape):
         origin=nav_origin + slice_.origin[-sig_dims:],
         shape=Shape(nav_shape + tuple(slice_.shape.sig), sig_dims=sig_dims)
     )
+
+
+class HDF5DatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/HDF5DatasetParams.schema.json",
+        "title": "HDF5DatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "hdf5"},
+            "path": {"type": "string"},
+            "ds_path": {"type": "string"},
+            "tileshape": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
+        },
+        "required": ["type", "path", "ds_path", "tileshape"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path", "ds_path", "tileshape"]
+        }
+        return data
 
 
 def _get_datasets(path):
@@ -56,6 +85,41 @@ class H5Reader(object):
 
 
 class H5DataSet(DataSet):
+    """
+    Read data from a HDF5 data set.
+
+    Examples
+    --------
+    >>> from libertem.api import Context
+    >>> ctx = Context()
+    >>> ds = ctx.load(
+    ...     "hdf5", path="/path/to/file.h5", ds_path="/experimental/data",
+    ...     tileshape=(3, 256, 256),
+    ... )
+
+    Parameters
+    ----------
+    path: str
+        Path to the file
+
+    ds_path: str
+        Path to the HDF5 data set inside the file
+
+    tileshape: tuple of int
+        Tuning parameter, specifying the size of the smallest data unit
+        we are reading and working on. Should match dimensionality of the data set.
+
+    sig_dims: int
+        Number of dimensions that should be considered part of the signal (for example
+        2 when dealing with 2D image data)
+
+    target_size: int
+        Target partition size, in bytes. Usually doesn't need to be changed.
+
+    min_num_partitions: int
+        Minimum number of partitions, set to number of cores if not specified. Usually
+        doesn't need to be specified.
+    """
     def __init__(self, path, ds_path, tileshape,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
         super().__init__()
@@ -84,6 +148,10 @@ class H5DataSet(DataSet):
                 iocaps={"FULL_FRAMES"},
             )
         return self
+
+    @classmethod
+    def get_msg_converter(cls):
+        return HDF5DatasetParams
 
     @classmethod
     def detect_params(cls, path):
@@ -185,23 +253,21 @@ class H5Partition(Partition):
             slice_4d = unravel_nav(self.slice, self.meta.shape)
             subslices = list(slice_4d.subslices(shape=tileshape))
             for tile_slice in subslices:
+                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
+                assert tile_slice_flat.shape.dims == 3
                 assert tile_slice.shape.dims == 4
                 if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
+                    intersection = tile_slice_flat.intersection_with(crop_to)
                     if intersection.is_null():
                         continue
                 if tuple(tile_slice.shape) != tuple(tileshape):
                     # at the border, can't reuse buffer
-                    # hmm. aren't there only like 3 different shapes at the border?
-                    # FIXME: use buffer pool to reuse buffers of same shape
                     border_data = np.ndarray(tile_slice.shape, dtype=dest_dtype)
                     buf = border_data
                 else:
                     # reuse buffer
                     buf = data
                 dataset.read_direct(buf, source_sel=tile_slice.get())
-                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
-                assert tile_slice_flat.shape.dims == 3
                 yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
 
     def _get_tiles_with_roi(self, roi, dest_dtype):
@@ -210,10 +276,10 @@ class H5Partition(Partition):
         one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
-        frame_offset = 0  # FIXME! countzero of roi up to this partition
+        start_at_frame = self.slice.origin[0]
+        frame_offset = np.count_nonzero(roi[:start_at_frame])
         for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
-            roi_idx = tile.tile_slice.origin[0] - self.slice.origin[0]
-            if roi[roi_idx]:
+            if roi[tile.tile_slice.origin[0]]:
                 tile_slice = Slice(
                     origin=(frames_read + frame_offset,) + sig_origin,
                     shape=tile.tile_slice.shape,

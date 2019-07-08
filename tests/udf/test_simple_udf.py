@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from libertem.udf import UDF
+from libertem.udf.base import UDFMeta
 from utils import MemoryDataSet, _mk_random
 
 
@@ -87,8 +88,8 @@ def test_kind_single(lt_ctx):
             }
 
         def process_frame(self, frame):
-            self.results.counter += 1
-            self.results.sum_frame += np.sum(frame, axis=1)
+            self.results.counter[:] += 1
+            self.results.sum_frame[:] += np.sum(frame, axis=1)
 
         def merge(self, dest, src):
             dest['counter'][:] += src['counter']
@@ -229,6 +230,13 @@ def test_udf_pickle(lt_ctx):
 
     partition = next(dataset.get_partitions())
     pixelsum = PixelsumUDF()
+    meta = UDFMeta(
+        partition_shape=partition.slice.shape,
+        dataset_shape=dataset.shape,
+        roi=None,
+        dataset_dtype="float32"
+    )
+    pixelsum.set_meta(meta)
     pixelsum.init_result_buffers()
     pixelsum.allocate_for_part(partition, None)
     pickle.loads(pickle.dumps(pixelsum))

@@ -1,14 +1,14 @@
 import numpy as np
 import hdbscan
 
-from libertem.analysis.gridmatching import (Match, PointSelection, CorrelationResult,
-make_polar, NotFoundException, make_polar_vectors)
+import libertem.analysis.gridmatching as grm
+from libertem.utils import make_polar
 
 
 def full_match(centers, zero=None, parameters={}):
     if zero is None:
         zero = centers[0]
-    corr = CorrelationResult(
+    corr = grm.CorrelationResult(
         centers=centers,
         refineds=centers,
         peak_values=np.ones(len(centers)),
@@ -21,36 +21,49 @@ def full_match(centers, zero=None, parameters={}):
     )
 
 
-class FullMatch(Match):
+class FullMatch(grm.Match):
     @classmethod
-    def full_match(cls, correlation_result: CorrelationResult, zero, cand=[], parameters={}):
+    def full_match(cls, correlation_result: grm.CorrelationResult, zero, cand=[], parameters={}):
         # FIXME check formatting when included in documentation
         '''
         This function extracts a list of Match objects as well two PointCollection objects
         for unmatched and weak points from correlation_result and zero point.
         The zero point is included in each of the matches because it is shared between all grids.
+
         Parameters
         ----------
-        correlation_result
+
+        correlation_result:
             A CorrelationResult object with coordinates and weights
-        zero
+        zero:
             Zero point as numpy array (y, x).
-        cand
+        cand:
             Optional list of candidate vectors to use in a first matching round before guessing.
-        parameters
+        parameters:
             Parameters for the matching.
-            min_angle: Minimum angle between two vectors to be considered candidates
-            tolerance: Relative position tolerance for peaks to be considered matches
-            min_points: Minimum points to try clustering matching. Otherwise match directly
-            min_match: Minimum matched clusters from clustering matching to be considered successful
-            min_cluster_size_fraction: Tuning parameter for clustering matching. Larger values allow
+
+            min_angle:
+                Minimum angle between two vectors to be considered candidates
+            tolerance:
+                Absolute position tolerance in px for peaks to be considered matches
+            min_points:
+                Minimum points to try clustering matching. Otherwise match directly
+            min_match:
+                Minimum matched clusters from clustering matching to be considered successful
+            min_cluster_size_fraction:
+                Tuning parameter for clustering matching. Larger values allow
                 smaller or fuzzier clusters.
-            min_samples_fraction: Tuning parameter for clustering matching. Larger values allow
+            min_samples_fraction:
+                Tuning parameter for clustering matching. Larger values allow
                 smaller or fuzzier clusters.
-            min_weight: Minimum weight for a point to be included in the fit
-            num_candidates: Maximum number of candidates to return from clustering matching
-            min_delta: Minimum length of a potential grid vector
-            max_delta: Maximum length of a potential grid vector
+            min_weight:
+                Minimum weight for a point to be included in the fit
+            num_candidates:
+                Maximum number of candidates to return from clustering matching
+            min_delta:
+                Minimum length of a potential grid vector
+            max_delta:
+                Maximum length of a potential grid vector
         returns:
             (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
         '''
@@ -59,7 +72,7 @@ class FullMatch(Match):
 
         filt = correlation_result.peak_elevations >= p['min_weight']
 
-        working_set = PointSelection(correlation_result, selector=filt)
+        working_set = grm.PointSelection(correlation_result, selector=filt)
 
         zero_selector = np.array([
             np.allclose(correlation_result.centers[i], zero)
@@ -83,7 +96,7 @@ class FullMatch(Match):
                     point_selection=working_set, zero=zero,
                     candidates=polar_candidate_vectors, parameters=p)
                 match = match.weighted_optimize()
-            except NotFoundException:
+            except grm.NotFoundException:
                 # print("no match found:\n", working_set)
                 new_selector = np.copy(working_set.selector)
                 new_selector[zero_selector] = False
@@ -115,7 +128,7 @@ class FullMatch(Match):
                 new_selector[zero_selector] = False
                 unmatched = working_set.derive(selector=new_selector)
                 break
-        weak = PointSelection(correlation_result, selector=np.logical_not(filt))
+        weak = grm.PointSelection(correlation_result, selector=np.logical_not(filt))
         return (matches, unmatched, weak)
 
 
@@ -141,9 +154,9 @@ def hdbscan_candidates(points, parameters):
     In the end we return the shortest matches.
 
     '''
-    cutoff = parameters["tolerance"] * parameters["max_delta"]
+    cutoff = parameters["tolerance"]
     clusterer = hdbscan.HDBSCAN(**make_hdbscan_config(points, parameters))
-    vectors = make_polar_vectors(points, parameters)
+    vectors = grm.make_polar_vectors(points, parameters)
     clusterer.fit(vectors)
     labels = clusterer.labels_
     cand = []
@@ -175,7 +188,7 @@ def candidates(points, parameters):
     if len(polar_vectors) < parameters["min_match"]:
         if len(points) > parameters["min_points"]:
             print("WARNING matching many points directly: ", len(points))
-        polar_vectors = make_polar_vectors(points, parameters)
+        polar_vectors = grm.make_polar_vectors(points, parameters)
         # Brute force is too slow
         # polar_vectors = all_bruteforce(points, min_delta, max_delta, 2)
     return polar_vectors

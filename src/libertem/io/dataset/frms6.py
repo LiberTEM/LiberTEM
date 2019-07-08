@@ -4,6 +4,7 @@ import re
 import csv
 import glob
 import logging
+import warnings
 import configparser
 
 import scipy.io as sio
@@ -11,6 +12,7 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.common.buffers import zeros_aligned
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     File3D, FileSet3D, Partition3D
@@ -45,6 +47,27 @@ frame_header_dtype = [
 ]
 
 
+class FRMS6DatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/FRMS6DatasetParams.schema.json",
+      "title": "FRMS6DatasetParams",
+      "type": "object",
+      "properties": {
+          "type": {"const": "frms6"},
+          "path": {"type": "string"},
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        return data
+
+
 class GainMapCSVDialect(csv.excel):
     delimiter = ';'
 
@@ -60,6 +83,48 @@ def _unbin(tile_data, factor):
     unbinned = tile_data.repeat(factor, axis=2)
     # FIXME: should we scale the data by the binning factor?
     return unbinned.reshape((s[0], factor * s[1], s[2]))
+
+
+def _get_base_filename(_path):
+    path, ext = os.path.splitext(_path)
+    if ext == ".hdr":
+        base = path
+    elif ext == ".frms6":
+        base = re.sub(r'_[0-9]+$', '', path)
+    else:
+        raise DataSetException("unknown extension: %s" % ext)
+    return base
+
+
+def _read_hdr(fname):
+    config = configparser.ConfigParser()
+    config.read(fname)
+    parsed = {}
+    sections = config.sections()
+    if 'measurementInfo' not in sections:
+        raise DataSetException(
+            "measurementInfo missing from .hdr file %s, have: %s" % (
+                fname,
+                repr(sections),
+            )
+        )
+    msm_info = config['measurementInfo']
+    int_fields = {'darkframes', 'dwelltimemicroseconds', 'gain', 'signalframes'}
+    for key in msm_info:
+        value = msm_info[key]
+        if key in int_fields:
+            parsed[key] = int(value)
+        else:
+            parsed[key] = value
+    # FIXME: are the dimensions the right way aroud? is there a sample file with a non-square
+    # scan region?
+    parsed['stemimagesize'] = tuple(int(p) for p in parsed['stemimagesize'].split('x'))
+    match = READOUT_MODE_PAT.match(parsed['readoutmode'])
+    if match is None:
+        raise DataSetException("could not parse readout mode")
+    readout_mode = match.groupdict()
+    parsed['readoutmode'] = {k: int(v) for k, v in readout_mode.items()}
+    return parsed
 
 
 class FRMS6File(File3D):
@@ -124,15 +189,9 @@ class FRMS6File(File3D):
         return self._start_idx
 
     def readinto(self, start, stop, out, crop_to=None):
-        if crop_to is not None:
-            slice_ = (
-                slice(start, stop),
-                crop_to.get(sig_only=True),
-            )
-        else:
-            slice_ = (
-                slice(start, stop),
-            )
+        # ignore crop_top here, as we don't support it anyways
+        # (and it would be very awkward, as the data is still folded here...)
+        slice_ = (slice(start, stop),)
         out[:] = self.data[slice_]
 
     def _get_mmapped_array(self):
@@ -160,8 +219,8 @@ class FRMS6FileSet(FileSet3D):
         """
         Represents all files belonging to a measurement.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         files : list of FRMS6File
             full paths of all files, without the file containing dark frames
         meta : DataSetMeta
@@ -243,28 +302,35 @@ class FRMS6FileSet(FileSet3D):
 
 
 class FRMS6DataSet(DataSet):
-    def __init__(self, path, enable_offset_correction=True, dest_dtype=np.dtype("float32"),
-                 gain_map_path=None):
-        """
-        Parameters:
-        -----------
+    r"""
+    Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and
+    a .hdr file. The first .frms6 file (matching \*_000.frms6) contains dark frames, which
+    are substracted if `enable_offset_correction` is true.
 
-        path : string
-            path to one of the files of the FRMS6 dataset
-        enable_offset_correction : boolean
-            substract dark frames when reading data
-        dest_dtype : numpy.dtype
-            convert data into this dtype after reading
-        gain_map_path : string
-            path to a gain map to apply (.mat format)
-        """
+    Parameters
+    ----------
+
+    path : string
+        Path to one of the files of the FRMS6 dataset (either .hdr or .frms6)
+
+    enable_offset_correction : boolean
+        Substract dark frames when reading data
+
+    gain_map_path : string
+        Path to a gain map to apply (.mat format)
+    """
+    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
         super().__init__()
         self._path = path
         self._gain_map_path = gain_map_path
         self._dark_frame = None
-        self._meta = None
-        self._dest_dtype = dest_dtype
         self._enable_offset_correction = enable_offset_correction
+        self._meta = None
+        if dest_dtype is not None:
+            warnings.warn(
+                "dest_dtype is now handled per `get_tiles` call, and ignored here",
+                DeprecationWarning
+            )
 
     @property
     def shape(self):
@@ -285,7 +351,6 @@ class FRMS6DataSet(DataSet):
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
         self._meta = DataSetMeta(
             raw_dtype=np.dtype("u2"),
-            dtype=self._dest_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
             iocaps={"FULL_FRAMES"},
@@ -298,36 +363,22 @@ class FRMS6DataSet(DataSet):
         )
         return self
 
+    @classmethod
+    def detect_params(cls, path):
+        hdr_filename = "%s.hdr" % _get_base_filename(path)
+        try:
+            _read_hdr(hdr_filename)
+        except Exception:
+            return False
+        return {"path": path}
+
+    @classmethod
+    def get_msg_converter(cls):
+        return FRMS6DatasetParams
+
     def _get_hdr_info(self):
-        hdr_filename = "%s.hdr" % self._get_base_filename()
-        config = configparser.ConfigParser()
-        config.read(hdr_filename)
-        parsed = {}
-        sections = config.sections()
-        if 'measurementInfo' not in sections:
-            raise DataSetException(
-                "measurementInfo missing from .hdr file %s, have: %s" % (
-                    hdr_filename,
-                    repr(sections),
-                )
-            )
-        msm_info = config['measurementInfo']
-        int_fields = {'darkframes', 'dwelltimemicroseconds', 'gain', 'signalframes'}
-        for key in msm_info:
-            value = msm_info[key]
-            if key in int_fields:
-                parsed[key] = int(value)
-            else:
-                parsed[key] = value
-        # FIXME: are the dimensions the right way aroud? is there a sample file with a non-square
-        # scan region?
-        parsed['stemimagesize'] = tuple(int(p) for p in parsed['stemimagesize'].split('x'))
-        match = READOUT_MODE_PAT.match(parsed['readoutmode'])
-        if match is None:
-            raise DataSetException("could not parse readout mode")
-        readout_mode = match.groupdict()
-        parsed['readoutmode'] = {k: int(v) for k, v in readout_mode.items()}
-        return parsed
+        hdr_filename = "%s.hdr" % _get_base_filename(self._path)
+        return _read_hdr(hdr_filename)
 
     def _get_dark_frame(self):
         if not self._enable_offset_correction:
@@ -364,7 +415,10 @@ class FRMS6DataSet(DataSet):
 
     def _get_signal_files(self):
         start_idx = 0
-        for path in self._files()[1:]:
+        files = self._files()
+        if len(files) < 2:
+            raise DataSetException("did not find signal files")
+        for path in files[1:]:
             f = FRMS6File(path=path, start_idx=start_idx, hdr_info=self._get_hdr_info())
             start_idx += f.num_frames
             yield f
@@ -376,16 +430,6 @@ class FRMS6DataSet(DataSet):
             dark_frame=self._dark_frame,
             gain_map=self._gain_map,
         )
-
-    def _get_base_filename(self):
-        path, ext = os.path.splitext(self._path)
-        if ext == ".hdr":
-            base = path
-        elif ext == ".frms6":
-            base = re.sub(r'_[0-9]+$', '', path)
-        else:
-            raise DataSetException("unknown extension: %s" % ext)
-        return base
 
     def _pattern(self):
         path, ext = os.path.splitext(self._path)
@@ -426,8 +470,10 @@ class FRMS6DataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 512MB per partition
-        res = max(self._cores, self._total_filesize // (512*1024*1024))
+        # let's try to aim for 512MB (converted float data) per partition
+        partition_size = 512 * 1024 * 1024 / 4
+        partition_size /= np.dtype("u2").itemsize
+        res = max(self._cores, self._total_filesize // int(partition_size))
         return res
 
     def get_partitions(self):

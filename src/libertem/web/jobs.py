@@ -1,11 +1,14 @@
 import time
 import logging
+import asyncio
 
 import tornado.web
 
 from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    COMAnalysis, SumAnalysis, PickFrameAnalysis, RadialFourierAnalysis
+    FEMAnalysis, COMAnalysis, SumAnalysis, PickFrameAnalysis,
+    PickFFTFrameAnalysis, SumfftAnalysis,
+    RadialFourierAnalysis, ApplyFFTMask
 )
 from .base import CORSMixin, run_blocking, log_message, result_images
 from .messages import Message
@@ -24,11 +27,15 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         analysis_by_type = {
             "APPLY_DISK_MASK": DiskMaskAnalysis,
             "APPLY_RING_MASK": RingMaskAnalysis,
+            "FFTSUM_FRAMES": SumfftAnalysis,
             "APPLY_POINT_SELECTOR": PointMaskAnalysis,
             "CENTER_OF_MASS": COMAnalysis,
             "RADIAL_FOURIER": RadialFourierAnalysis,
             "SUM_FRAMES": SumAnalysis,
             "PICK_FRAME": PickFrameAnalysis,
+            "FEM": FEMAnalysis,
+            "PICK_FFT_FRAME": PickFFTFrameAnalysis,
+            "APPLY_FFT_MASK": ApplyFFTMask,
         }
         return analysis_by_type[type_]
 
@@ -41,31 +48,16 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             parameters=params['analysis']['parameters']
         )
 
-        if analysis.TYPE == 'UDF':
-            try:
-                return await self.run_udf(uuid, ds, analysis)
-            except Exception as e:
-                log.exception("error running job, params=%r", params)
-                msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
-                self.event_registry.broadcast_event(msg)
-                await self.data.remove_job(uuid)
-
-        job = analysis.get_job()
-        full_result = job.get_result_buffer()
-        job_runner = self.run_job(
-            full_result=full_result,
-            uuid=uuid, ds=ds, job=job,
-        )
         try:
-            await job_runner.asend(None)
-            while True:
-                results = await run_blocking(
-                    analysis.get_results,
-                    job_results=full_result,
-                )
-                await job_runner.asend(results)
-        except StopAsyncIteration:
-            pass
+            if analysis.TYPE == 'UDF':
+                return await self.run_udf(uuid, ds, analysis)
+            else:
+                return await self.run_job(uuid, ds, analysis)
+        except JobCancelledError:
+            msg = Message(self.data).cancel_done(uuid)
+            log_message(msg)
+            await self.event_registry.broadcast_event(msg)
+            return
         except Exception as e:
             log.exception("error running job, params=%r", params)
             msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
@@ -88,6 +80,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def run_udf(self, uuid, ds, analysis):
         udf = analysis.get_udf()
+        roi = analysis.get_roi()
 
         # FIXME: register_job for UDFs?
         self.data.register_job(uuid=uuid, job=udf, dataset=ds)
@@ -102,54 +95,38 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.finish()
         self.event_registry.broadcast_event(msg)
 
-        async for udf_results in UDFRunner(udf).run_for_dataset_async(ds, executor):
+        t = time.time()
+        post_t = time.time()
+        window = 0.3
+        result_iter = UDFRunner(udf).run_for_dataset_async(
+            ds, executor, roi=roi, cancel_id=uuid
+        )
+        async for udf_results in result_iter:
+            window = min(max(window, 2*(t - post_t)), 5)
+            if time.time() - t < window:
+                continue
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,
             )
-            images = await result_images(results)
-
-            # NOTE: make sure the following broadcast_event messages are sent atomically!
-            # (that is: keep the code below synchronous, and only send the messages
-            # once the images have finished encoding, and then send all at once)
-            msg = Message(self.data).task_result(
-                job_id=uuid,
-                num_images=len(results),
-                image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
-                    for result in results
-                ],
-            )
-            log_message(msg)
-            self.event_registry.broadcast_event(msg)
-            for image in images:
-                raw_bytes = image.read()
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
+            post_t = time.time()
+            await self.send_results(results, uuid)
+            # The broadcast might have taken quite some time due to
+            # backpressure from the network
+            t = time.time()
 
         if self.data.job_is_cancelled(uuid):
-            return
+            raise JobCancelledError()
         results = await run_blocking(
             analysis.get_udf_results,
             udf_results=udf_results,
         )
-        images = await result_images(results)
-        if self.data.job_is_cancelled(uuid):
-            return
-        msg = Message(self.data).finish_job(
-            job_id=uuid,
-            num_images=len(results),
-            image_descriptions=[
-                {"title": result.title, "desc": result.desc}
-                for result in results
-            ],
-        )
-        log_message(msg)
-        self.event_registry.broadcast_event(msg)
-        for image in images:
-            raw_bytes = image.read()
-            self.event_registry.broadcast_event(raw_bytes, binary=True)
+        await self.send_results(results, uuid, finished=True)
 
-    async def run_job(self, uuid, ds, job, full_result):
+    async def run_job(self, uuid, ds, analysis):
+        job = analysis.get_job()
+        full_result = job.get_result_buffer()
+
         self.data.register_job(uuid=uuid, job=job, dataset=job.dataset)
         executor = self.data.get_executor()
         msg = Message(self.data).start_job(
@@ -161,51 +138,69 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
 
         t = time.time()
-        try:
-            async for result in executor.run_job(job):
-                for tile in result:
-                    tile.reduce_into_result(full_result)
-                if time.time() - t < 0.3:
-                    continue
-                t = time.time()
-                results = yield full_result
-                images = await result_images(results)
+        post_t = time.time()
+        window = 0.3
+        async for result in executor.run_job(job, cancel_id=uuid):
+            for tile in result:
+                tile.reduce_into_result(full_result)
+            window = min(max(window, 2*(t - post_t)), 5)
+            if time.time() - t < window:
+                continue
+            post_t = time.time()
 
-                # NOTE: make sure the following broadcast_event messages are sent atomically!
-                # (that is: keep the code below synchronous, and only send the messages
-                # once the images have finished encoding, and then send all at once)
-                msg = Message(self.data).task_result(
-                    job_id=uuid,
-                    num_images=len(results),
-                    image_descriptions=[
-                        {"title": result.title, "desc": result.desc}
-                        for result in results
-                    ],
-                )
-                log_message(msg)
-                self.event_registry.broadcast_event(msg)
-                for image in images:
-                    raw_bytes = image.read()
-                    self.event_registry.broadcast_event(raw_bytes, binary=True)
-        except JobCancelledError:
-            return  # TODO: maybe write a message on the websocket?
+            results = await run_blocking(
+                analysis.get_results,
+                job_results=full_result,
+            )
 
-        results = yield full_result
+            await self.send_results(results, uuid)
+            # The broadcast might have taken quite some time due to
+            # backpressure from the network
+            t = time.time()
+
         if self.data.job_is_cancelled(uuid):
-            return
+            raise JobCancelledError()
+        results = await run_blocking(
+            analysis.get_results,
+            job_results=full_result,
+        )
+        await self.send_results(results, uuid, finished=True)
+
+    async def send_results(self, results, uuid, finished=False):
+        if self.data.job_is_cancelled(uuid):
+            raise JobCancelledError()
         images = await result_images(results)
         if self.data.job_is_cancelled(uuid):
-            return
-        msg = Message(self.data).finish_job(
-            job_id=uuid,
-            num_images=len(results),
-            image_descriptions=[
-                {"title": result.title, "desc": result.desc}
-                for result in results
-            ],
-        )
+            raise JobCancelledError()
+        if finished:
+            msg = Message(self.data).finish_job(
+                job_id=uuid,
+                num_images=len(results),
+                image_descriptions=[
+                    {"title": result.title, "desc": result.desc}
+                    for result in results
+                ],
+            )
+        else:
+            msg = Message(self.data).task_result(
+                job_id=uuid,
+                num_images=len(results),
+                image_descriptions=[
+                    {"title": result.title, "desc": result.desc}
+                    for result in results
+                ],
+            )
         log_message(msg)
-        self.event_registry.broadcast_event(msg)
+        # NOTE: make sure the following broadcast_event messages are sent atomically!
+        # (that is: keep the code below synchronous, and only send the messages
+        # once the images have finished encoding, and then send all at once)
+        futures = []
+        futures.append(
+            self.event_registry.broadcast_event(msg)
+        )
         for image in images:
             raw_bytes = image.read()
-            self.event_registry.broadcast_event(raw_bytes, binary=True)
+            futures.append(
+                self.event_registry.broadcast_event(raw_bytes, binary=True)
+            )
+        await asyncio.gather(*futures)

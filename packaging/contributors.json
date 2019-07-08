@@ -36,6 +36,12 @@
         "contribution": "Discussions, funding applications"
     },
     {
+        "displayname": "Matus Krajnak",
+        "authorname": "Krajnak, Matus",
+        "affiliation": "Quantum Detectors",
+        "contribution": "Bug report and fix regarding MIB format"
+    },
+    {
         "displayname": "Phillip Crout",
         "authorname": "Crout, Phillip",
         "affiliation": "pyXem",

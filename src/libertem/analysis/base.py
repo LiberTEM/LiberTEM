@@ -9,7 +9,7 @@ class AnalysisResult(object):
     """
     def __init__(self, raw_data, visualized, title, desc, key):
         self.raw_data = raw_data
-        self.visualized = visualized
+        self._visualized = visualized
         self.title = title
         self.desc = desc
         self.key = key
@@ -26,10 +26,17 @@ class AnalysisResult(object):
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
+    @property
+    def visualized(self):
+        if callable(self._visualized):
+            self._visualized = self._visualized()
+        return self._visualized
+
 
 class AnalysisResultSet(object):
-    def __init__(self, results):
-        self.results = results
+    def __init__(self, results, raw_results=None):
+        self._results = results
+        self.raw_results = raw_results
 
     def __repr__(self):
         return repr(self.results)
@@ -47,6 +54,12 @@ class AnalysisResultSet(object):
 
     def __len__(self):
         return len(self.results)
+
+    @property
+    def results(self):
+        if callable(self._results):
+            self._results = self._results()
+        return self._results
 
 
 class BaseAnalysis(object):
@@ -79,6 +92,22 @@ class BaseAnalysis(object):
             a Job instance
         """
         raise NotImplementedError()
+
+    def get_udf(self):
+        """
+        set TYPE='UDF' on the class and implement this method to run a UDF
+        from this analysis
+        """
+        raise NotImplementedError()
+
+    def get_roi(self):
+        """
+        Returns
+        -------
+        ndarray or None
+            region of interest for which we want to run our analysis
+        """
+        return None
 
     def get_complex_results(self, job_result, key_prefix, title, desc):
         magn = np.abs(job_result)

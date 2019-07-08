@@ -5,11 +5,33 @@ import contextlib
 from ncempy.io.ser import fileSER
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta,
 )
 
 log = logging.getLogger(__name__)
+
+
+class SERDatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/SERDatasetParams.schema.json",
+      "title": "SERDatasetParams",
+      "type": "object",
+      "properties": {
+          "type": {"const": "ser"},
+          "path": {"type": "string"},
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        return data
 
 
 class SERFile(File3D):
@@ -57,6 +79,17 @@ class SERFileSet(FileSet3D):
 
 
 class SERDataSet(DataSet):
+    """
+    Read TIA SER files.
+
+    Parameters
+    ----------
+    path: str
+        Path to the .ser file
+
+    emipath: str
+        Path to EMI file (currently unused)
+    """
     def __init__(self, path, emipath=None):
         super().__init__()
         self._path = path
@@ -93,6 +126,10 @@ class SERDataSet(DataSet):
                 iocaps={"FULL_FRAMES"},
             )
         return self
+
+    @classmethod
+    def get_msg_converter(cls):
+        return SERDatasetParams
 
     @classmethod
     def detect_params(cls, path):

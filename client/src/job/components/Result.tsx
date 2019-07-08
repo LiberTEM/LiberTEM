@@ -1,8 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import styled from 'styled-components';
-import * as analysisActions from '../../analysis/actions';
-import { AnalysisState, JobKind } from "../../analysis/types";
+import { AnalysisState } from "../../analysis/types";
 import { DatasetState } from "../../messages";
 import BusyWrapper from "../../widgets/BusyWrapper";
 import HandleParent from "../../widgets/HandleParent";
@@ -19,7 +18,7 @@ interface ResultProps {
     extraHandles?: HandleRenderFunction,
     extraWidgets?: React.ReactElement<SVGElement>,
     idx: number,
-    kind: JobKind,
+    jobIndex: number,
 }
 
 const ResultWrapper = styled.svg`
@@ -29,11 +28,7 @@ const ResultWrapper = styled.svg`
     height: auto;
 `;
 
-const mapDispatchToProps = {
-    updateParameters: analysisActions.Actions.updateParameters,
-};
-
-type MergedProps = ResultProps & DispatchProps<typeof mapDispatchToProps>;
+type MergedProps = ResultProps;
 
 class Result extends React.Component<MergedProps> {
     public renderHandles() {
@@ -64,4 +59,4 @@ class Result extends React.Component<MergedProps> {
     }
 };
 
-export default connect(null, mapDispatchToProps)(Result);
+export default connect(null, null)(Result);

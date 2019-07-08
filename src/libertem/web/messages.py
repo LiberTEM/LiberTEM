@@ -1,3 +1,6 @@
+import jsonschema
+
+
 class Message(object):
     """
     possible messages - the translation of our python datatypes to json types
@@ -51,12 +54,13 @@ class Message(object):
             "datasetParams": params,
         }
 
-    def dataset_detect_failed(self, path):
+    def dataset_detect_failed(self, path,
+                              reason="could not automatically determine dataset format"):
         return {
             "status": "error",
             "messageType": "DATASET_DETECTION_FAILED",
             "path": path,
-            "msg": "could not automatically determine dataset format",
+            "msg": reason,
         }
 
     def start_job(self, job_id):
@@ -91,6 +95,13 @@ class Message(object):
         return {
             "status": "ok",
             "messageType": "CANCEL_JOB",
+            "job": job_id,
+        }
+
+    def cancel_done(self, job_id):
+        return {
+            "status": "ok",
+            "messageType": "CANCEL_JOB_DONE",
             "job": job_id,
         }
 
@@ -147,3 +158,40 @@ class Message(object):
             "msg": msg,
             "alternative": alternative,
         }
+
+
+class MessageConverter:
+    SCHEMA = None
+
+    def validate(self, raw_data):
+        if self.SCHEMA is None:
+            raise NotImplementedError("please specify a SCHEMA")
+        # FIXME: re-throw own exception type?
+        jsonschema.validate(schema=self.SCHEMA, instance=raw_data)
+
+    def to_python(self, raw_data):
+        """
+        validate and convert from JSONic data structures to python data structures
+        """
+        self.validate(raw_data)
+        return self.convert_to_python(raw_data)
+
+    def convert_to_python(self, raw_data):
+        """
+        override this method to provide your own conversion
+        """
+        return raw_data
+
+    def from_python(self, raw_data):
+        """
+        convert from python data structures to JSONic data structures and validate
+        """
+        converted = self.convert_from_python(raw_data)
+        self.validate(converted)
+        return converted
+
+    def convert_from_python(self, raw_data):
+        """
+        override this method to provide your own conversion
+        """
+        return raw_data

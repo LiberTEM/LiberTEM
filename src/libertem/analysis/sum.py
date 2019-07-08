@@ -3,6 +3,7 @@ import numpy as np
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.udf import UDF
+from libertem import masks
 
 
 class SumUDF(UDF):
@@ -12,7 +13,7 @@ class SumUDF(UDF):
         }
 
     def process_tile(self, tile, tile_slice):
-        self.results.intensity += np.sum(tile, axis=0)
+        self.results.intensity[:] += np.sum(tile, axis=0)
 
     def merge(self, dest, src):
         dest['intensity'][:] += src['intensity']
@@ -26,6 +27,22 @@ class SumAnalysis(BaseAnalysis):
         if dest_dtype.kind not in ('c', 'f'):
             dest_dtype = 'float32'
         return SumUDF(dtype=dest_dtype)
+
+    def get_roi(self):
+        if "roi" not in self.parameters:
+            return None
+        params = self.parameters["roi"]
+        ny, nx = tuple(self.dataset.shape.nav)
+        if params["shape"] == "disk":
+            roi = masks.circular(
+                params["cx"],
+                params["cy"],
+                nx, ny,
+                params["r"],
+            )
+        else:
+            raise NotImplementedError("unknown shape %s" % params["shape"])
+        return roi
 
     def get_udf_results(self, udf_results):
         if udf_results.intensity.dtype.kind == 'c':

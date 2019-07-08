@@ -7,8 +7,8 @@ import { AnalysisMetadata } from "../types";
 
 const getMetadata = (t: any) => AnalysisMetadata[AnalysisTypes[t]];
 const analysisTypeKeys = getEnumValues(AnalysisTypes);
-const analysisTypeOptions = analysisTypeKeys.filter(t => getMetadata(t).showInUI).map(t => ({
-    text: getMetadata(t).short,
+const analysisTypeOptions = analysisTypeKeys.filter(t => getMetadata(t).component !== undefined).map(t => ({
+    text: getMetadata(t).title,
     value: AnalysisTypes[t],
 }));
 

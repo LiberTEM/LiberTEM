@@ -7,14 +7,14 @@ For the beginning, LiberTEM will focus on pixelated STEM data processing, both
 interactive and offline. As concrete supported operations, we will start with
 everything that can be expressed as the application of one or more masks and
 summation, i.e. virtual detector, center of mass etc. These operations are
-embarrasingly parallel and can be scaled to a distributed system very well.
+embarrassingly parallel and can be scaled to a distributed system very well.
 
 For our task, data locality is one of the most important factors for achieving
-good performance and scalabilty. With a traditional distributed storage
-solution (like lustre or NFS), the network will quickly become the bottleneck.
+good performance and scalability. With a traditional distributed storage
+solution (like Lustre or NFS), the network will quickly become the bottleneck.
 
 LiberTEM is distributing the data to the local storage of
-each compute node. One possible implementation is using the `Hadoop filesytem (HDFS)`_,
+each compute node. One possible implementation is using the `Hadoop filesystem (HDFS)`_,
 although we are `working on a transparent caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_ as an alternative. The general idea is to split the dataset into (usually disjoint) partitions,
 which are assigned to worker nodes.
 
@@ -28,7 +28,7 @@ allows us to control our computation in a flexible way, with little overhead.
 With dask Futures, we can assure that computation on a partition of the dataset
 is scheduled on the node(s) that hold the partition on their local storage.
 
-.. _Hadoop filesytem (HDFS): https://hadoop.apache.org/docs/r3.1.0/
+.. _Hadoop filesystem (HDFS): https://hadoop.apache.org/docs/r3.1.0/
 
 
 For ingesting data into the cluster, a `caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_ 

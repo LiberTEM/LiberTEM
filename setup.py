@@ -147,6 +147,7 @@ setup(
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
         'scikit-image',
         'cloudpickle',
+        'jsonschema',
     ],
     extras_require={
         'hdfs': 'hfds3',

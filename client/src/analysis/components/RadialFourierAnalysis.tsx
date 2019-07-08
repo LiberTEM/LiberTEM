@@ -1,44 +1,30 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { defaultDebounce } from "../../helpers";
-import { DatasetOpen, RadialFourierParams } from "../../messages";
+import ResultList from "../../job/components/ResultList";
+import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, riConstraint, roConstraints } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisState } from "../types";
-import AnalysisItem from "./AnalysisItem";
+import { AnalysisProps } from "../types";
+import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import useDefaultFrameView from "./DefaultFrameView";
+import Toolbar from "./Toolbar";
 
-interface AnalysisProps {
-    parameters: RadialFourierParams,
-    analysis: AnalysisState,
-    dataset: DatasetOpen,
-}
-
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
-    return {
-        handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
-        }),
-        handleRIChange: defaultDebounce((ri: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ri }, "RESULT"));
-        }),
-        handleROChange: defaultDebounce((ro: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { ro }, "RESULT"));
-        }),
-    }
-}
-
-type MergedProps = AnalysisProps & ReturnType<typeof mapDispatchToProps>
-
-const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, parameters, handleCenterChange, handleRIChange, handleROChange }) => {
+const RadialFourierAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const { shape } = dataset.params;
-    const imageWidth = shape[3];
-    const imageHeight = shape[2];
+    const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
-    const { cx, cy, ri, ro } = parameters;
+    const minLength = Math.min(imageWidth, imageHeight);
+    const [cx, setCx] = useState(imageWidth / 2);
+    const [cy, setCy] = useState(imageHeight / 2);
+    const [ri, setRi] = useState(minLength / 4);
+    const [ro, setRo] = useState(minLength / 2);
+    const [nBins] = useState(1);
+    const [maxOrder] = useState(8);
 
     const riHandle = {
         x: cx - ri,
@@ -48,6 +34,13 @@ const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, para
         x: cx - ro,
         y: cy,
     }
+
+    const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
+        setCx(newCx);
+        setCy(newCy);
+    });
+    const handleRIChange = defaultDebounce(setRi);
+    const handleROChange = defaultDebounce(setRo);
 
     const frameViewHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
         <DraggableHandle x={cx} y={cy}
@@ -71,21 +64,62 @@ const RadialFourierAnalysis: React.SFC<MergedProps> = ({ analysis, dataset, para
     </>);
 
     const frameViewWidgets = (
-        <Ring cx={parameters.cx} cy={parameters.cy} ri={parameters.ri} ro={parameters.ro}
+        <Ring cx={cx} cy={cy} ri={ri} ro={ro}
             imageWidth={imageWidth} />
     )
 
+    const {
+        frameViewTitle, frameModeSelector,
+        handles: resultHandles,
+        widgets: resultWidgets,
+    } = useDefaultFrameView({
+        scanWidth,
+        scanHeight,
+        analysisId: analysis.id,
+    })
+
     const subtitle = (
-        <>Ring: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), ri={parameters.ri.toFixed(2)}, ro={parameters.ro.toFixed(2)}</>
+        <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
+    const dispatch = useDispatch();
+
+    const runAnalysis = () => {
+        dispatch(analysisActions.Actions.run(analysis.id, 1, {
+            type: AnalysisTypes.RADIAL_FOURIER,
+            parameters: {
+                shape: "radial_fourier",
+                cx, cy, ri, ro,
+                n_bins: nBins,
+                max_order: maxOrder,
+            }
+        }));
+    };
+
+    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
-        <AnalysisItem analysis={analysis} dataset={dataset}
+        <AnalysisLayoutTwoCol
             title="Radial Fourier analysis" subtitle={subtitle}
-            frameViewHandles={frameViewHandles} frameViewWidgets={frameViewWidgets}
+            left={<>
+                <ResultList
+                    extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
+                    jobIndex={0} analysis={analysis.id}
+                    width={imageWidth} height={imageHeight}
+                    selectors={frameModeSelector}
+                />
+            </>}
+            right={<>
+                <ResultList
+                    jobIndex={1} analysis={analysis.id}
+                    width={scanWidth} height={scanHeight}
+                    extraHandles={resultHandles}
+                    extraWidgets={resultWidgets}
+                />
+            </>}
+            toolbar={toolbar}
         />
     );
 }
 
-export default connect(null, mapDispatchToProps)(RadialFourierAnalysis);
+export default RadialFourierAnalysis;

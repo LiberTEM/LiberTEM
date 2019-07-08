@@ -1,51 +1,26 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { assertNotReached } from '../../helpers';
-import { AnalysisTypes, DatasetStatus } from "../../messages";
+import { useSelector } from "react-redux";
+import { DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
-import { AnalysisState } from "../types";
-import CenterOfMassAnalysis from "./CenterOfMassAnalysis";
-import DiskMaskAnalysis from "./DiskMaskAnalysis";
-import PointSelectionAnalysis from "./PointSelectionAnalysis";
-import RingMaskAnalysis from "./RingMaskAnalysis";
-import RadialFourierAnalysis from "./RadialFourierAnalysis";
+import { AnalysisMetadata, AnalysisState } from "../types";
 
-interface AnalysisProps {
+interface AnalysisDispatcherProps {
     analysis: AnalysisState,
 }
 
-const mapStateToProps = (state: RootReducer, ownProps: AnalysisProps) => {
-    return {
-        dataset: state.datasets.byId[ownProps.analysis.dataset],
-    }
-}
+const AnalysisDispatcherComponent: React.SFC<AnalysisDispatcherProps> = ({ analysis }) => {
+    const dataset = useSelector((state: RootReducer) => state.datasets.byId[analysis.dataset])
 
-type MergedProps = AnalysisProps & ReturnType<typeof mapStateToProps>;
-
-const AnalysisComponent: React.SFC<MergedProps> = ({ analysis, dataset }) => {
     if (dataset.status !== DatasetStatus.OPEN) {
         return null;
     }
 
-    switch (analysis.resultDetails.type) {
-        case AnalysisTypes.APPLY_DISK_MASK: {
-            return <DiskMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
-        };
-        case AnalysisTypes.APPLY_RING_MASK: {
-            return <RingMaskAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
-        }
-        case AnalysisTypes.CENTER_OF_MASS: {
-            return <CenterOfMassAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />;
-        }
-        case AnalysisTypes.APPLY_POINT_SELECTOR: {
-            return <PointSelectionAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
-        }
-        case AnalysisTypes.RADIAL_FOURIER: {
-            return <RadialFourierAnalysis dataset={dataset} analysis={analysis} parameters={analysis.resultDetails.parameters} />
-        }
+    const AnalysisComponent = AnalysisMetadata[analysis.mainAnalysisType].component;
+    if (!AnalysisComponent) {
+        throw new Error("unknown analysis type");
     }
 
-    return assertNotReached("unknown analysis type");
+    return <AnalysisComponent dataset={dataset} analysis={analysis} />;
 }
 
-export default connect(mapStateToProps)(AnalysisComponent);
+export default AnalysisDispatcherComponent;

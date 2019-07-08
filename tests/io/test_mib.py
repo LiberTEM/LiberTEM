@@ -41,6 +41,37 @@ def test_check_valid(default_mib):
     default_mib.check_valid()
 
 
+@pytest.mark.xfail
+def test_missing_frames(lt_ctx):
+    """
+    there can be some frames missing at the end
+    """
+    # one full row of additional frames in the data set than in the file
+    scan_size = (33, 32)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = ds.initialize()
+    ds.check_valid()
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles():
+            pass
+
+
+def test_too_many_frames():
+    """
+    mib files can contain more frames than the intended scanning dimensions
+    """
+    # one full row of additional frames in the file
+    scan_size = (31, 32)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = ds.initialize()
+    ds.check_valid()
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles():
+            pass
+
+
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
     p = next(partitions)

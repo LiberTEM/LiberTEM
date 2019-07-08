@@ -14,6 +14,7 @@ from ncempy.io import dm
 
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Slice, Shape
+from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,27 @@ NUM_SECTORS = 8
 SECTOR_SIZE = (2 * 930, 256)
 
 SHUTTER_ACTIVE_MASK = 0x1
+
+
+class K2ISDatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/K2ISDatasetParams.schema.json",
+      "title": "K2ISDatasetParams",
+      "type": "object",
+      "properties": {
+          "type": {"const": "k2is"},
+          "path": {"type": "string"},
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        return data
 
 
 @numba.njit
@@ -434,6 +456,14 @@ class DataBlock:
 
 
 class K2ISDataSet(DataSet):
+    """
+    Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
+
+    Parameters
+    ----------
+    path: str
+        Path to one of the files of the data set (either one of the .bin files or the .gtg file)
+    """
     def __init__(self, path):
         super().__init__()
         self._path = path
@@ -477,6 +507,10 @@ class K2ISDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
+
+    @classmethod
+    def get_msg_converter(cls):
+        return K2ISDatasetParams
 
     @classmethod
     def detect_params(cls, path):
@@ -611,7 +645,7 @@ class K2ISPartition(Partition):
         super().__init__(*args, **kwargs)
 
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None):
+                  roi=None, target_size=None):
         if roi is not None:
             # FIXME: implement roi for _read_stacked; forcing full_frames=True is suboptimal
             # for performance reasons.
@@ -620,6 +654,27 @@ class K2ISPartition(Partition):
             yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype, roi=roi)
         else:
             yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype, roi=roi)
+
+    def get_macrotile(self, mmap=False, dest_dtype="float32", roi=None):
+        '''
+        Return a single tile for the entire partition.
+
+        This is useful to support process_partiton() in UDFs and to construct dask arrays
+        from datasets.
+        '''
+        buffer = zeros_aligned((self._num_frames, 1860, 2048), dtype=dest_dtype)
+        for index, t in enumerate(self._read_full_frames(dest_dtype=dest_dtype, roi=roi)):
+            buffer[index] = t.data
+
+        tile_slice = Slice(
+            origin=(0, 0, 0),
+            shape=Shape(buffer.shape, sig_dims=2),
+        )
+
+        return DataTile(
+            data=buffer,
+            tile_slice=tile_slice
+        )
 
     def _read_full_frames(self, crop_to=None, dest_dtype="float32", roi=None):
         with contextlib.ExitStack() as stack:

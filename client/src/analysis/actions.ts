@@ -1,29 +1,25 @@
 import { ActionsUnion, createAction } from "../helpers/actionHelpers";
-import { AnalysisParameters, AnalysisTypes } from "../messages";
-import { AnalysisState, FrameMode, JobKind } from "./types";
+import { AnalysisDetails, AnalysisTypes } from "../messages";
+import { AnalysisState } from "./types";
 
 
 export enum ActionTypes {
     CREATE = 'ANALYSIS_CREATE',
     CREATED = 'ANALYSIS_CREATED',
-    UPDATE_PARAMETERS = 'ANALYSIS_UPDATE_PARAMETERS',
     PREPARE_RUN = 'ANALYSIS_PREPARE_RUN',
     RUN = 'ANALYSIS_RUN',
     RUNNING = 'ANALYSIS_RUNNING',
     REMOVE = 'ANALYSIS_REMOVE',
     REMOVED = 'ANALYSIS_REMOVED',
     ERROR = 'ANALYSIS_ERROR',
-    SET_FRAMEVIEW_MODE = 'ANALYSIS_SET_FRAMEVIEW_MODE',
 }
 
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
     created: (analysis: AnalysisState) => createAction(ActionTypes.CREATED, { analysis }),
-    updateParameters: (id: string, parameters: Partial<AnalysisParameters>, kind: JobKind) => createAction(ActionTypes.UPDATE_PARAMETERS, { id, kind, parameters }),
-    setFrameViewMode: (id: string, mode: FrameMode, initialParams: Partial<AnalysisParameters>) => createAction(ActionTypes.SET_FRAMEVIEW_MODE, { id, mode, initialParams }),
-    prepareRun: (id: string, kind: JobKind, job: string) => createAction(ActionTypes.PREPARE_RUN, { id, kind, job }),
-    run: (id: string, kind: JobKind) => createAction(ActionTypes.RUN, { id, kind }),
-    running: (id: string, job: string, kind: JobKind) => createAction(ActionTypes.RUNNING, { id, job, kind }),
+    prepareRun: (id: string, jobIndex: number, job: string) => createAction(ActionTypes.PREPARE_RUN, { id, jobIndex, job }),
+    run: (id: string, jobIndex: number, parameters: AnalysisDetails) => createAction(ActionTypes.RUN, { id, jobIndex, parameters }),
+    running: (id: string, job: string, jobIndex: number) => createAction(ActionTypes.RUNNING, { id, job, jobIndex }),
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
     removed: (id: string) => createAction(ActionTypes.REMOVED, { id }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),

@@ -1,42 +1,33 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { defaultDebounce } from "../../helpers";
-import { DatasetOpen, MaskDefDisk } from "../../messages";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import ResultList from "../../job/components/ResultList";
+import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisState } from "../types";
-import AnalysisItem from "./AnalysisItem";
-
-interface AnalysisProps {
-    parameters: MaskDefDisk,
-    analysis: AnalysisState,
-    dataset: DatasetOpen,
-}
-
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: AnalysisProps) => {
-    return {
-        handleCenterChange: defaultDebounce((cx: number, cy: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { cx, cy }, "RESULT"));
-        }),
-        handleRChange: defaultDebounce((r: number) => {
-            dispatch(analysisActions.Actions.updateParameters(ownProps.analysis.id, { r }, "RESULT"));
-        }),
-    }
-}
+import { AnalysisProps } from "../types";
+import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import useDefaultFrameView from "./DefaultFrameView";
+import Toolbar from "./Toolbar";
 
 
-type MergedProps = AnalysisProps & ReturnType<typeof mapDispatchToProps>
-
-const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, dataset, handleRChange, handleCenterChange }) => {
+const DiskMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const { shape } = dataset.params;
-    const imageWidth = shape[3];
-    const imageHeight = shape[2];
+    const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
-    const { cx, cy, r } = parameters;
+    const minLength = Math.min(imageWidth, imageHeight);
+    const [cx, setCx] = useState(imageWidth / 2);
+    const [cy, setCy] = useState(imageHeight / 2);
+    const [r, setR] = useState(minLength / 4);
+
+    const handleCenterChange = (newCx: number, newCy: number) => {
+        setCx(newCx);
+        setCy(newCy);
+    };
+    const handleRChange = setR;
 
     const rHandle = {
         x: cx - r,
@@ -59,19 +50,58 @@ const DiskMaskAnalysis: React.SFC<MergedProps> = ({ parameters, analysis, datase
     </>);
 
     const frameViewWidgets = (
-        <Disk cx={parameters.cx} cy={parameters.cy} r={parameters.r}
+        <Disk cx={cx} cy={cy} r={r}
             imageWidth={imageWidth} imageHeight={imageHeight}
         />
     );
 
-    const subtitle = <>Disk: center=(x={parameters.cx.toFixed(2)}, y={parameters.cy.toFixed(2)}), r={parameters.r.toFixed(2)}</>;
+    const dispatch = useDispatch();
+
+    const runAnalysis = () => {
+        dispatch(analysisActions.Actions.run(analysis.id, 1, {
+            type: AnalysisTypes.APPLY_DISK_MASK,
+            parameters: {
+                shape: "disk",
+                cx, cy, r
+            }
+        }));
+    };
+
+    const {
+        frameViewTitle, frameModeSelector,
+        handles: resultHandles, widgets: resultWidgets
+    } = useDefaultFrameView({
+        scanWidth,
+        scanHeight,
+        analysisId: analysis.id,
+    })
+
+    const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;
+
+    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
-        <AnalysisItem analysis={analysis} dataset={dataset}
+        <AnalysisLayoutTwoCol
             title="Disk analysis" subtitle={subtitle}
-            frameViewHandles={frameViewHandles} frameViewWidgets={frameViewWidgets}
+            left={<>
+                <ResultList
+                    extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
+                    jobIndex={0} analysis={analysis.id}
+                    width={imageWidth} height={imageHeight}
+                    selectors={frameModeSelector}
+                />
+            </>}
+            right={<>
+                <ResultList
+                    jobIndex={1} analysis={analysis.id}
+                    width={scanWidth} height={scanHeight}
+                    extraHandles={resultHandles}
+                    extraWidgets={resultWidgets}
+                />
+            </>}
+            toolbar={toolbar}
         />
     );
 }
 
-export default connect(null, mapDispatchToProps)(DiskMaskAnalysis);
+export default DiskMaskAnalysis;

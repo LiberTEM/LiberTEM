@@ -232,9 +232,9 @@ def test_fullmatch_three_residual(zero, a, b):
     grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
 
     random = np.array([
-        (0.3, 0.5),
-        (-0.3, 12.5),
-        (-0.3, -17.5),
+        (0.3, 0.4),
+        (-0.33, 12.5),
+        (-0.37, -17.4),
     ])
 
     grid = np.vstack((grid_1, grid_2, random))
@@ -242,9 +242,13 @@ def test_fullmatch_three_residual(zero, a, b):
     parameters = {
         'min_delta': 0.3,
         'max_delta': 3,
+        'tolerance': 0.05
     }
 
     (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
+
+    print(matches[0])
+    print(matches[1])
 
     assert(len(matches) == 2)
 
@@ -253,11 +257,11 @@ def test_fullmatch_three_residual(zero, a, b):
 
     match1 = matches[0]
 
-    assert(np.allclose(zero, match1.zero))
+    assert np.allclose(zero, match1.zero)
     assert(np.allclose(a, match1.a) or np.allclose(b, match1.a)
-           or np.allclose(-a, match1.a) or np.allclose(-b, match1.a))
+          or np.allclose(-a, match1.a) or np.allclose(-b, match1.a))
     assert(np.allclose(a, match1.b) or np.allclose(b, match1.b)
-           or np.allclose(-a, match1.b) or np.allclose(-b, match1.b))
+          or np.allclose(-a, match1.b) or np.allclose(-b, match1.b))
     assert(len(match1) == len(grid_1))
     assert(np.allclose(match1.calculated_refineds, grid_1))
 
@@ -297,6 +301,7 @@ def test_fullmatch_one_residual(zero, a, b):
     parameters = {
         'min_delta': 0.3,
         'max_delta': 3,
+        'tolerance': 0.1
     }
     (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
 
@@ -320,8 +325,12 @@ def test_fullmatch_no_residual(zero, a, b):
     parameters = {
         'min_delta': 0.3,
         'max_delta': 3,
+        'tolerance': 0.1
     }
     (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
+
+    print(matches[0])
+    print(matches[1])
 
     assert(len(matches) == 2)
 
@@ -347,6 +356,7 @@ def test_fullmatch_weak(zero, a, b):
     parameters = {
         'min_delta': 0.3,
         'max_delta': 3,
+        'tolerance': 0.05
     }
 
     values = np.ones(len(grid))

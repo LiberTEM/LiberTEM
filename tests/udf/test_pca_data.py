@@ -1,58 +1,14 @@
 import numpy as np 
+import scipy.optimize.nnls as nnls
+from sklearn.decomposition import NMF
+import fbpca
+from scipy.linalg import cholesky, eigh, lu, qr, svd, norm, solve
+from scipy.sparse import coo_matrix, issparse, spdiags
+import math
 
 from utils import MemoryDataSet, _mk_random
 from libertem import api
-from libertem.udf.pca import run_pca
-
-def eig_error(eig_approx, eig):
-    """
-    Compute the correlation between the approximated eigenvalues
-    and the true eigenvalues (computed using PCA on full-batch data)
-    through inner product.
-
-    Parameters
-    ----------
-    eig_approx: numpy.array
-        Approximation of eigenvalues
-
-    eig: numpy.array
-        True eigenvalues as computed by PCA on full-batch data
-    """
-    corr = np.linalg.norm(eig_approx-eig)
-    corr = np.inner(eig_approx, eig)
-    return corr
-
-
-def subspace_error(U_approx, U):
-    """
-    Compute the frobenius distance between the approximated left
-    singular matrix and the exact left singular matrix (computed
-    using PCA on full-batch data)
-
-    Parameters
-    -----------
-    U_approx: numpy.array
-        Approximation of eigenspace matrix
-
-    U: numpy.array
-        True eigenspace matrix as computed by PCA on full-batch data
-
-    Returns
-    -------
-    err: float32
-        Approximation error defined by the frobenius distance norm
-        between the approximation and the true error
-    """
-    n_components = U.shape[1]
-    A = U_approx.dot(U)
-    B = U_approx.T.dot(U_approx)
-
-    err = np.sqrt(n_components+np.trace(B.dot(B)) - 2 * np.trace(A.dot(A.T)))
-
-    frob = np.linalg.norm(U-U_approx.T, ord='fro')
-
-    return err/np.sqrt(n_components )
-
+from libertem.udf.pca_data import run_pca
 def mult(A, B):
     """
     default matrix multiplication.
@@ -278,27 +234,100 @@ def diffsnorm(A, U, s, Va, n_iter=20):
 
     return snorm
 
+def subspace_error(U_approx, U):
+	"""
+	Compute the frobenius distance between the approximated left
+	singular matrix and the exact left singular matrix (computed
+	using PCA on full-batch data)
+
+	Parameters
+	-----------
+	U_approx: numpy.array
+		Approximation of eigenspace matrix
+
+	U: numpy.array
+		True eigenspace matrix as computed by PCA on full-batch data
+
+	Returns
+	-------
+	err: float32
+		Approximation error defined by the frobenius distance norm
+		between the approximation and the true error
+	"""
+	n_components = U.shape[1]
+	A = U_approx.T.dot(U)
+	B = U_approx.dot(U_approx.T)
+
+	err = np.sqrt(n_components+np.trace(B.dot(B)) - 2 * np.trace(A.dot(A.T)))
+
+	frob = np.linalg.norm(U-U_approx, ord='fro')
+
+	return err/np.sqrt(n_components )
+
+
 def test_pca(lt_ctx):
 	"""
 	Test Principal Component Analysis
 
-    Parameters
-    ----------
-    lt_ctx
-        Context class for loading dataset and creating jobs on them
+	Parameters
+	----------
+	lt_ctx
+		Context class for loading dataset and creating jobs on them
 	"""
-	data = _mk_random(size=(32, 32, 32, 32), dtype="float32")
-	dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
-							num_partitions=2, sig_dims=2)
-	# with api.Context() as ctx:
-	# 	path = '/home/jae/Downloads/scan_11_x256_y256.raw'
-	# 	dataset = ctx.load(
-	# 	'empad',
-	# 	path=path,
-	# 	scan_size=(256, 256),
-	# 	)
+	# path = '/home/jae/Downloads/saved_data.raw'
+	# data = np.random.rand(256, 256, 128, 128)
+	# # data.tofile(path)
+	# # data = _mk_random(size=(256, 256, 128, 128), dtype="float32")
+	# dataset = np.memmap(path, dtype=np.float32, mode="w+", shape=(256, 256, 128, 128))
+	# # dataset[:] = data[:]
 
-	res = run_pca(lt_ctx, dataset, n_components=10)
+	# for i in range(256):
+	# 	for j in range(256):
+	# 		dataset[i, j, :, :] = data[i, j, :, :]
+
+	# del dataset
+
+	# with api.Context() as ctx:
+	# 		path = filename
+	# 		dataset = ctx.load(
+	# 		'raw',
+	# 		path=path,
+	# 		scan_size=(256, 256),
+	# 		)
+
+
+	# dataset = np.memmap(path, dtype=np.float32, shape=(256, 256, 128, 128))
+	# newfp = np.memmap(path, dtype="float32", mode='r', shape=(256, 256, 128, 128))
+	# data.tofile(path)
+
+
+	# data = _mk_random(size=(64, 64, 64, 64), dtype="float32")
+	# dataset = MemoryDataSet(data=data, tileshape=(1, 32, 32),
+	# 						num_partitions=4, sig_dims=2)
+
+	# dataset = ctx.load(
+	#	 "raw",
+	#	 path=filename,
+	#	 dtype="float32",
+	#	 scan_size=(256, 256),
+	#	 detector_size_raw=(128, 128),
+	#	 crop_detector_to=(128, 128),
+	# )
+	# path = '/home/jae/Downloads/data256.raw'
+	# dataset = np.memmap(path, dtype=np.float32, mode="w+", shape=(256, 256, 128, 128))
+
+	with api.Context() as ctx:
+		path = '/home/jae/Downloads/scan_11_x256_y256.raw'
+		dataset = ctx.load(
+		'empad',
+		path=path,
+		scan_size=(256, 256),
+		)
+	# data = _mk_random(size=(32, 32, 32, 32), dtype="float32")
+	# dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+	# 						num_partitions=2, sig_dims=2)
+
+	res = run_pca(lt_ctx, dataset, n_components=100)
 
 	assert 'components' in res
 	assert 'left_singular' in res
@@ -309,25 +338,33 @@ def test_pca(lt_ctx):
 	components = res['components'].data
 
 
-	reconstruct_loading = left_singular @ np.diag(singular_vals)
+	# reconstruct_loading = left_singular @ np.diag(singular_vals)
 
-	print("loading shape: ", reconstruct_loading.shape)
-	print("Component shape: ", components.shape)
-	reconstruct_data = reconstruct_loading @ components
+	# print("loading shape: ", reconstruct_loading.shape)
+	# print("Component shape: ", components.shape)
+	# reconstruct_data = reconstruct_loading @ components
 
-	data = data.reshape((data.shape[0]*data.shape[1], data.shape[2]*data.shape[3]))
-	# print("data shape: ", data.shape)
-	# U, S, V = fbpca.pca(data, k=100)
 
-	# loading = U @ np.diag(S)
-	# orig_data = loading @ V
-	# print("orig_data reconstructed: ", orig_data.shape)
+	# data = data.reshape((data.shape[0]*data.shape[1], data.shape[2]*data.shape[3]))
+	# # print("data shape: ", data.shape)
+	# # U, S, V = fbpca.pca(data, k=100)
+
+	# # loading = U @ np.diag(S)
+	# # orig_data = loading @ V
+	# # print("orig_data reconstructed: ", orig_data.shape)
 	# print("reconstructed using pca: ", reconstruct_data.shape)
-	raise ValueError(diffsnorm(data, left_singular, singular_vals, components))
+	# raise ValueError(diffsnorm(reconstruct_data, left_singular, singular_vals, components))
 
-	# N = data.shape[2] * data.shape[3]
-	# assert res['num_frame'].data == N
+	# components = np.absolute(components)
 
+	# model = NMF(n_components=9, init='random', random_state=0)
+
+	# W = model.fit_transform(components)
+	# H = model.components_
+	# A, H = NMF(components, 9)
+
+	# assert W.shape == (components.shape[0], 9)
+	# assert H.shape == (9, components.shape[1])
 	# flattened = data.reshape((1024, 1024))
 	# U, D, V = np.linalg.svd(flattened)
 
@@ -339,6 +376,5 @@ def test_pca(lt_ctx):
 	# tol = 1
 
 	# assert eig_error(eig_approx, D[:9]) < tol
-	# assert subspace_error(res['left_singular'].data, U[:9]) < tol
+	# assert subspace_error(res['components'].data, V[:9]) < tol
 
-	# TODO: Find the appropriate tolerance error bound

@@ -252,7 +252,7 @@ class PcaUDF(UDF):
 
         U, V, S, col_mean, col_var = \
             self.ipca(num_frame, components, singular_vals, mean, var, frame, process_frame=True)
-
+        
         self.results.left_singular[:][:U.shape[0], :] = U
         self.results.components[:] = V
         self.results.singular_vals[:] = S

@@ -153,61 +153,61 @@ def nnmf(X, n_components, max_iter=200):
 	return A, H
 
 
-def nnmf_merge(p0, p1):
-	"""
-	Merge two Non-negative matrix factorization results
-	"""
-	U0, U1 = p0.score, p1.score
-	V0, V1 = p0.loading, p1.loading
+# def nnmf_merge(p0, p1):
+# 	"""
+# 	Merge two Non-negative matrix factorization results
+# 	"""
+# 	U0, U1 = p0.score, p1.score
+# 	V0, V1 = p0.loading, p1.loading
 
-	for i in range(iterations):
+# 	for i in range(iterations):
 
-class NNMF(UDF):
+# class NNMF(UDF):
 
-	def get_result_buffers(self):
-		"""
-		Intialize BufferWrapper object for NNMF
+# 	def get_result_buffers(self):
+# 		"""
+# 		Intialize BufferWrapper object for NNMF
 
-		Returns
-		-------
+# 		Returns
+# 		-------
 
-		"""
-		return {
-			"score": self.buffer(
-				kind="single", extra_shape= , dtype="float32"
-				),
-			"loading": self.buffer(
-				kind="single", extra_shape= , dtype="float32"
-				)
-		}
+# 		"""
+# 		return {
+# 			"score": self.buffer(
+# 				kind="single", extra_shape= , dtype="float32"
+# 				),
+# 			"loading": self.buffer(
+# 				kind="single", extra_shape= , dtype="float32"
+# 				)
+# 		}
 
-	def merge(self, dest, src):
-		"""
-        Given two sets of partitions, with score and loading matrices,
-        update the merged score and loading matrices
-		"""
-		p0 = nnmf(
-					score=dest["score"][:],
-					loading=dest["loading"][:]
-					)
+# 	def merge(self, dest, src):
+# 		"""
+#         Given two sets of partitions, with score and loading matrices,
+#         update the merged score and loading matrices
+# 		"""
+# 		p0 = nnmf(
+# 					score=dest["score"][:],
+# 					loading=dest["loading"][:]
+# 					)
 
-		p1 = nnmf(
-					score=src["score"][:],
-					loading=src["loading"][:]
-					)
+# 		p1 = nnmf(
+# 					score=src["score"][:],
+# 					loading=src["loading"][:]
+# 					)
 
-		A, H = nnmf_merge(p0, p1)
+# 		A, H = nnmf_merge(p0, p1)
 
-		dest["score"][:] = A
-		dest["loading"][:] = H
+# 		dest["score"][:] = A
+# 		dest["loading"][:] = H
 
-	def process_tile(self, tile):
-		"""
-		Given a tile, update parameters related to NNMF
+# 	def process_tile(self, tile):
+# 		"""
+# 		Given a tile, update parameters related to NNMF
 
-        Parameters
-        ----------
-        tile
-            single tile of the data
-		"""
+#         Parameters
+#         ----------
+#         tile
+#             single tile of the data
+# 		"""
 

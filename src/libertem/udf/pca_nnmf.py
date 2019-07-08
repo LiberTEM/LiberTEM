@@ -111,24 +111,24 @@ class PcaUDF(UDF):
         """
         row, col = X.shape
 
-        transpose = False
+        # transpose = False
 
-        if row < col:
-            transpose = True
-            X = X.T
+        # if row < col:
+        #     transpose = True
+        #     X = X.T
 
-        rand_matrix = np.random.normal(size=(row, n_components))
+        rand_matrix = np.random.normal(size=(col, n_components))
         Q, _ = np.linalg.qr(X @ rand_matrix, mode='reduced')
 
         smaller_matrix = Q.T @ X
         U_hat, S, V = np.linalg.svd(smaller_matrix, full_matrices=False)
         U = Q @ U_hat
         
-        if transpose:
-            return V.T, S.T, U.T
+        # if transpose:
+        #     return  U.T, S.T, V.T
 
-        else:
-            return U, S, V
+        # else:
+        return U, S, V
 
     def _safe_accumulator_op(self, op, x, *args, **kwargs):
         """
@@ -263,6 +263,7 @@ class PcaUDF(UDF):
             X = np.vstack((singular_vals.reshape((-1, 1))
                         * components, X, mean_correction))
 
+        # U, S, V = np.linalg.svd(X, full_matrices=False)
         if min(X.shape) < 10:
             U, S, V = self.randomized_svd(X, n_components=10)
         else:
@@ -458,7 +459,7 @@ class PcaUDF(UDF):
         """
         dest_comp = dest['components'][:]
         src_comp = src['components'][:]
-
+        
         new_comp = np.vstack([dest_comp, src_comp])
 
         dest['merge_components'][:][:new_comp.shape[0], :] = new_comp

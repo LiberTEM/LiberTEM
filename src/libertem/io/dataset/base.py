@@ -309,9 +309,20 @@ class Partition(object):
         This is useful to support process_partiton() in UDFs and to construct dask arrays
         from datasets.
         '''
-        return next(self.get_tiles(
-            full_frames=True, mmap=mmap, dest_dtype=dest_dtype, roi=roi, target_size=float('inf')
-        ))
+        try:
+            return next(self.get_tiles(
+                full_frames=True, mmap=mmap, dest_dtype=dest_dtype, roi=roi,
+                target_size=float('inf')
+            ))
+        except StopIteration:
+            tile_slice = Slice(
+                origin=(self.slice.origin[0], 0, 0),
+                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
+            )
+            return DataTile(
+                data=np.zeros(tile_slice.shape, dtype=dest_dtype),
+                tile_slice=tile_slice
+            )
 
     def get_locations(self):
         # Allow using any worker by default

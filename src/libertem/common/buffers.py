@@ -31,7 +31,7 @@ def empty_aligned(size, dtype):
 
 
 def zeros_aligned(size, dtype):
-    if dtype == np.object:
+    if dtype == np.object or np.product(size) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)

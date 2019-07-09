@@ -187,3 +187,42 @@ def test_roi(lt_ctx, default_k2is):
         print("tile:", tile)
         tiles.append(tile)
     assert len(tiles) == 1
+
+
+def test_macrotile_normal(lt_ctx, default_k2is):
+    ps = default_k2is.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile()
+    assert macrotile.tile_slice.shape == p2.shape
+    assert macrotile.tile_slice.origin[0] == p2._start_frame
+
+
+def test_macrotile_roi_1(lt_ctx, default_k2is):
+    roi = np.zeros(default_k2is.shape.nav, dtype=bool)
+    roi[0, 5] = 1
+    roi[0, 17] = 1
+    p = next(default_k2is.get_partitions())
+    macrotile = p.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == (2, 1860, 2048)
+
+
+def test_macrotile_roi_2(lt_ctx, default_k2is):
+    roi = np.zeros(default_k2is.shape.nav, dtype=bool)
+    # all ones are in the first partition, so we don't get any data in p2:
+    roi[0, 5] = 1
+    roi[0, 17] = 1
+    ps = default_k2is.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == (0, 1860, 2048)
+
+
+def test_macrotile_roi_3(lt_ctx, default_k2is):
+    roi = np.ones(default_k2is.shape.nav, dtype=bool)
+    ps = default_k2is.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)

@@ -662,17 +662,22 @@ class K2ISPartition(Partition):
         This is useful to support process_partiton() in UDFs and to construct dask arrays
         from datasets.
         '''
-        buffer = zeros_aligned((self._num_frames, 1860, 2048), dtype=dest_dtype)
+        num_frames = self._num_frames
+        if roi is not None:
+            start_frame = self._start_frame
+            roi = roi.reshape((-1,))
+            num_frames = np.count_nonzero(roi[start_frame:start_frame+num_frames])
+        buf = zeros_aligned((num_frames, 1860, 2048), dtype=dest_dtype)
         for index, t in enumerate(self._read_full_frames(dest_dtype=dest_dtype, roi=roi)):
-            buffer[index] = t.data
+            buf[index] = t.data
 
         tile_slice = Slice(
-            origin=(0, 0, 0),
-            shape=Shape(buffer.shape, sig_dims=2),
+            origin=(self._start_frame, 0, 0),
+            shape=Shape(buf.shape, sig_dims=2),
         )
 
         return DataTile(
-            data=buffer,
+            data=buf,
             tile_slice=tile_slice
         )
 

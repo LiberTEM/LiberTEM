@@ -313,13 +313,16 @@ export enum AnalysisTypes {
     APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
+    SD_FRAMES = "SD_FRAMES",
     SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
+    SD_FRAMES_ROI = "SD_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
     PICK_FFT_FRAME = "PICK_FFT_FRAME",
     APPLY_FFT_MASK = "APPLY_FFT_MASK",
     FFTSUM_FRAMES = "FFTSUM_FRAMES",
     RADIAL_FOURIER = "RADIAL_FOURIER",
     FEM = "FEM"
+
 }
 
 export interface RingMaskDetails {
@@ -358,6 +361,11 @@ export interface SumFramesDetails {
     parameters: SumFrameParams
 }
 
+export interface SDFramesDetails {
+    type: AnalysisTypes.SD_FRAMES,
+    parameters: SumFrameParams
+}
+
 export interface FFTSumFramesDetails {
     type: AnalysisTypes.FFTSUM_FRAMES,
     parameters: FFTSumFramesParams,
@@ -379,7 +387,7 @@ export interface RadialFourierDetails {
 }
 
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails;
 
 export interface StartJobRequest {
     job: {

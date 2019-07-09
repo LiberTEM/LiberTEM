@@ -4,7 +4,9 @@ import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
-import { useRoiPicker } from "./RoiPicker";
+import { useRoiSumPicker } from "./RoiPicker";
+import { useRoiSDPicker } from "./RoiSDPicker";
+import useSDFrames from "./SDFrames";
 import useSumFrames from "./SumFrames";
 
 const useDefaultFrameView = ({
@@ -17,6 +19,12 @@ const useDefaultFrameView = ({
             text: "Average",
             value: AnalysisTypes.SUM_FRAMES,
         },
+
+        {
+            text: "SD",
+            value: AnalysisTypes.SD_FRAMES,
+        },
+
         {
             text: "Pick",
             value: AnalysisTypes.PICK_FRAME,
@@ -24,7 +32,12 @@ const useDefaultFrameView = ({
         {
             text: "Average over ROI (disk)",
             value: AnalysisTypes.SUM_FRAMES_ROI,
-        }
+        },
+        {
+            text: "SD over ROI (disk)",
+            value: AnalysisTypes.SD_FRAMES_ROI,
+        },
+
     ];
 
     const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
@@ -42,8 +55,15 @@ const useDefaultFrameView = ({
         cx, cy, setCx, setCy
     });
 
-    const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({
+    const { sumRoiHandles, sumRoiWidgets } = useRoiSumPicker({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES_ROI,
+        scanWidth, scanHeight,
+        jobIndex: 0,
+        analysisId,
+    });
+
+    const { SDRoiHandles, SDRoiWidgets } = useRoiSDPicker({
+        enabled: frameMode === AnalysisTypes.SD_FRAMES_ROI,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
@@ -51,6 +71,12 @@ const useDefaultFrameView = ({
 
     useSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+        jobIndex: 0,
+        analysisId,
+    })
+
+    useSDFrames({
+        enabled: frameMode === AnalysisTypes.SD_FRAMES,
         jobIndex: 0,
         analysisId,
     })
@@ -70,13 +96,19 @@ const useDefaultFrameView = ({
         case AnalysisTypes.SUM_FRAMES_ROI:
             handles = sumRoiHandles;
             break;
-    }
+        case AnalysisTypes.SD_FRAMES_ROI:
+            handles = SDRoiHandles;
+            break;
+}
 
     let widgets;
 
     switch (frameMode) {
         case AnalysisTypes.SUM_FRAMES_ROI:
             widgets = sumRoiWidgets;
+            break;
+        case AnalysisTypes.SD_FRAMES_ROI:
+            widgets = SDRoiWidgets;
             break;
     }
 

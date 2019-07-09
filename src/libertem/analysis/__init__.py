@@ -10,6 +10,7 @@ from .fem import FEMAnalysis
 from .rawfft import PickFFTFrameAnalysis
 from .sumfft import SumfftAnalysis
 from .apply_fft_mask import ApplyFFTMask
+from .sd import SDAnalysis
 
 __all__ = [
     'SumAnalysis',
@@ -24,4 +25,5 @@ __all__ = [
     'PickFFTFrameAnalysis',
     'SumfftAnalysis',
     'ApplyFFTMask',
+    'SDAnalysis',
 ]

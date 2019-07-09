@@ -8,7 +8,7 @@ from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
     FEMAnalysis, COMAnalysis, SumAnalysis, PickFrameAnalysis,
     PickFFTFrameAnalysis, SumfftAnalysis,
-    RadialFourierAnalysis, ApplyFFTMask
+    RadialFourierAnalysis, ApplyFFTMask, SDAnalysis
 )
 from .base import CORSMixin, run_blocking, log_message, result_images
 from .messages import Message
@@ -36,6 +36,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             "FEM": FEMAnalysis,
             "PICK_FFT_FRAME": PickFFTFrameAnalysis,
             "APPLY_FFT_MASK": ApplyFFTMask,
+            "SD_FRAMES": SDAnalysis,
         }
         return analysis_by_type[type_]
 

@@ -8,7 +8,7 @@ import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 
-const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }: {
+const useRoiSDPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
@@ -35,7 +35,7 @@ const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex 
         const handle = setTimeout(() => {
             if (enabled) {
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                    type: AnalysisTypes.SUM_FRAMES,
+                    type: AnalysisTypes.SD_FRAMES,
                     parameters: roiParameters,
                 }))
             }
@@ -58,7 +58,7 @@ const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex 
         y: cy,
     }
 
-    const sumRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
+    const SDRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
         <DraggableHandle x={cx} y={cy}
             imageWidth={scanWidth}
             onDragMove={handleCenterChange}
@@ -73,7 +73,7 @@ const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex 
             constraint={keepOnCY(cy)} />
     </>);
 
-    const sumRoiWidgets = (
+    const SDRoiWidgets = (
         <Disk cx={cx} cy={cy} r={r}
             imageWidth={scanWidth} imageHeight={scanHeight}
         />
@@ -81,10 +81,10 @@ const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex 
 
     return {
         roiParameters,
-        sumRoiHandles,
-        sumRoiWidgets,
+        SDRoiHandles,
+        SDRoiWidgets,
     };
 };
 
-export { useRoiSumPicker };
+export { useRoiSDPicker };
 

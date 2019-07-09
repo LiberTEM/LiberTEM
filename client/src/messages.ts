@@ -307,6 +307,16 @@ export type SumFrameParams = {} | {
     }
 }
 
+export type SDFrameParams = {} | {
+    roi: {
+        shape: "rect",
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+    }
+}
+
 export enum AnalysisTypes {
     APPLY_RING_MASK = "APPLY_RING_MASK",
     APPLY_DISK_MASK = "APPLY_DISK_MASK",
@@ -363,7 +373,7 @@ export interface SumFramesDetails {
 
 export interface SDFramesDetails {
     type: AnalysisTypes.SD_FRAMES,
-    parameters: SumFrameParams
+    parameters: SDFrameParams
 }
 
 export interface FFTSumFramesDetails {

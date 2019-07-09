@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { AnalysisTypes, SDFrameParams } from "../../messages";
-import { inRectConstraint} from "../../widgets/constraints";
+import { AnalysisTypes, SumFrameParams } from "../../messages";
+import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
+import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
-import Rect from "../../widgets/Rect";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 
@@ -16,20 +16,18 @@ const useRoiSDPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }
     analysisId: string;
 }) => {
     const minLength = Math.min(scanWidth, scanHeight);
-    const [x, setx] = useState(scanWidth / 2);
-    const [y, sety] = useState(scanHeight / 2);
-    const [width, setwidth] = useState(minLength / 8);
-    const [height, setheight] = useState(minLength / 8);
+    const [cx, setCx] = useState(scanWidth / 2);
+    const [cy, setCy] = useState(scanHeight / 2);
+    const [r, setR] = useState(minLength / 8);
 
     const dispatch = useDispatch();
 
-    const roiParameters: SDFrameParams = {
+    const roiParameters: SumFrameParams = {
         roi: {
-            shape: "rect",
-            x,
-            y,
-            width,
-            height,
+            shape: "disk",
+            cx,
+            cy,
+            r,
         },
     }
 
@@ -44,40 +42,40 @@ const useRoiSDPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }
         }, 100);
 
         return () => clearTimeout(handle);
-    }, [analysisId, enabled, jobIndex, x, y, width, height]);
+    }, [analysisId, enabled, jobIndex, cx, cy, r]);
 
-    const handleCornerChange = (newx: number, newy: number) => {
-        setx(newx);
-        sety(newy);
+    const handleCenterChange = (newCx: number, newCy: number) => {
+        setCx(newCx);
+        setCy(newCy);
     };
 
-    const handleShapeChange = (newx: number, newy: number) => {
-        setwidth(newx-x);
-        setheight(newy-y);
+    const handleRChange = (newR: number) => {
+        setR(newR);
     };
 
-    const smthHandle = {
-        x: x + width ,
-        y: y + height,
+    const rHandle = {
+        x: cx - r,
+        y: cy,
     }
 
+
     const SDRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
-        <DraggableHandle x={x} y={y}
+        <DraggableHandle x={cx} y={cy}
             imageWidth={scanWidth}
-            onDragMove={handleCornerChange}
+            onDragMove={handleCenterChange}
             parentOnDragStart={handleDragStart}
             parentOnDrop={handleDrop}
             constraint={inRectConstraint(scanWidth, scanHeight)} />
-        <DraggableHandle x={smthHandle.x} y={smthHandle.y}
+        <DraggableHandle x={rHandle.x} y={rHandle.y}
             imageWidth={scanWidth}
-            onDragMove={handleShapeChange}
+            onDragMove={cbToRadius(cx, cy, handleRChange)}
             parentOnDragStart={handleDragStart}
             parentOnDrop={handleDrop}
-            constraint={inRectConstraint(scanWidth, scanHeight)} />
+            constraint={keepOnCY(cy)} />
     </>);
 
     const SDRoiWidgets = (
-        <Rect x={x} y={y} width={width} height={height}
+        <Disk cx={cx} cy={cy} r={r}
             imageWidth={scanWidth} imageHeight={scanHeight}
         />
     );

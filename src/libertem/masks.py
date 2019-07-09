@@ -112,6 +112,30 @@ def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
     return bool_mask
 
 
+def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
+    """
+    Make a rectangular mask as a 2D array of bool.
+
+    Parameters
+    ----------
+    X, Y : Corner coordinates
+        Centre point of the mask.
+    imageSizeX, imageSizeY : int
+        Size of the image to be masked.
+    Width, Height : Width and Height of the rectangle
+
+    Returns
+    -------
+    Numpy 2D Array
+        Array with the shape (imageSizeX, imageSizeY) with the mask.
+    """
+    #bool_mask = np.zeros([imageSizeX, imageSizeY])
+    bool_mask = np.zeros([imageSizeY, imageSizeX])
+    #bool_mask[int(X):int(X+Width), int(Y):int(Y+Height)] = 1
+    bool_mask[int(Y):int(Y+Height), int(X):int(X+Width)] = 1
+    return bool_mask
+
+
 def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     """
     Make a ring mask as a double array.

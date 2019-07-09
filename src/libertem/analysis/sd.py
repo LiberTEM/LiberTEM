@@ -24,6 +24,14 @@ class SDAnalysis(BaseAnalysis):
                 nx, ny,
                 params["r"],
             )
+        if params["shape"] == "rect":
+            roi = masks.rectangular(
+                params["x"],
+                params["y"],
+                params["width"],
+                params["height"],
+                nx, ny,
+            )
         else:
             raise NotImplementedError("unknown shape %s" % params["shape"])
         return roi

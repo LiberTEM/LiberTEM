@@ -87,6 +87,12 @@ class UDFData:
         except KeyError as e:
             raise AttributeError(str(e))
 
+    def get(self, k, default=None):
+        try:
+            return self.__getattr__(k)
+        except KeyError:
+            return default
+
     def __setattr__(self, k, v):
         if not k.startswith("_"):
             raise AttributeError(

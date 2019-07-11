@@ -222,35 +222,30 @@ def test_find_center(points):
     assert np.allclose(center, target_center)
 
 
-def test_fullmatch_three_residual(zero, a, b):
+def test_fullmatch_two_residual(zero, a, b):
     if fm is None:
         pytest.skip("Failed to load optional dependency %s." % missing)
-    aa = np.array([1.27, 1.2])
-    bb = np.array([1.27, -1.2])
 
-    grid_1 = _fullgrid(zero, a, b, 7)
-    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
+    grid_1 = _fullgrid(zero, a, b, 5)
 
     random = np.array([
         (0.3, 0.4),
         (-0.33, 12.5),
-        (-0.37, -17.4),
     ])
 
-    grid = np.vstack((grid_1, grid_2, random))
+    grid = np.vstack((grid_1, random))
 
     parameters = {
         'min_delta': 0.3,
         'max_delta': 3,
-        'tolerance': 0.05
+        'tolerance': 0.1
     }
 
     (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
 
     print(matches[0])
-    print(matches[1])
 
-    assert(len(matches) == 2)
+    assert(len(matches) == 1)
 
     assert(len(unmatched) == len(random))
     assert(len(weak) == 0)
@@ -265,93 +260,18 @@ def test_fullmatch_three_residual(zero, a, b):
     assert(len(match1) == len(grid_1))
     assert(np.allclose(match1.calculated_refineds, grid_1))
 
-    match2 = matches[1]
-
-    assert(np.allclose(zero, match2.zero))
-    assert(np.allclose(aa, match2.a) or np.allclose(bb, match2.a)
-           or np.allclose(-aa, match2.a) or np.allclose(-bb, match2.a))
-    assert(np.allclose(aa, match2.b) or np.allclose(bb, match2.b)
-           or np.allclose(-aa, match2.b) or np.allclose(-bb, match2.b))
-    # We always match the zero point for each lattice
-    assert(len(match2) == len(grid_2) + 1)
-    # We filter out the zero point, which is added in the matching routine to each matching cycle
-    skip_zero = np.array([
-        any(match2.indices[i] != np.array((0, 0))) for i in range(len(match2))
-    ], dtype=np.bool)
-    # We calculate by hand because the built-in method can't skip the zero point
-    assert(np.allclose(grm.calc_coords(
-        match2.zero, match2.a, match2.b, match2.indices[skip_zero]), grid_2))
-
-
-def test_fullmatch_one_residual(zero, a, b):
-    if fm is None:
-        pytest.skip("Failed to load optional dependency %s." % missing)
-    aa = np.array([1.27, 1.2])
-    bb = np.array([1.27, -1.2])
-
-    grid_1 = _fullgrid(zero, a, b, 7)
-    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
-
-    random = np.array([
-        (0.3, 0.5),
-    ])
-
-    grid = np.vstack((grid_1, grid_2, random))
-
-    parameters = {
-        'min_delta': 0.3,
-        'max_delta': 3,
-        'tolerance': 0.1
-    }
-    (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
-
-    assert(len(matches) == 2)
-
-    assert(len(unmatched) == len(random))
-    assert(len(weak) == 0)
-
-
-def test_fullmatch_no_residual(zero, a, b):
-    if fm is None:
-        pytest.skip("Failed to load optional dependency %s." % missing)
-    aa = np.array([1.27, 1.2])
-    bb = np.array([1.27, -1.2])
-
-    grid_1 = _fullgrid(zero, a, b, 7)
-    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
-
-    grid = np.vstack((grid_1, grid_2))
-
-    parameters = {
-        'min_delta': 0.3,
-        'max_delta': 3,
-        'tolerance': 0.1
-    }
-    (matches, unmatched, weak) = fm.full_match(grid, zero=zero, parameters=parameters)
-
-    print(matches[0])
-    print(matches[1])
-
-    assert(len(matches) == 2)
-
-    assert(len(unmatched) == 0)
-    assert(len(weak) == 0)
-
 
 def test_fullmatch_weak(zero, a, b):
     if fm is None:
         pytest.skip("Failed to load optional dependency %s." % missing)
-    aa = np.array([1.27, 1.2])
-    bb = np.array([1.27, -1.2])
 
     grid_1 = _fullgrid(zero, a, b, 7)
-    grid_2 = _fullgrid(zero, aa, bb, 4, skip_zero=True)
 
     random = np.array([
         (0.3, 0.5),
     ])
 
-    grid = np.vstack((grid_1, grid_2, random))
+    grid = np.vstack((grid_1, random))
 
     parameters = {
         'min_delta': 0.3,
@@ -375,7 +295,7 @@ def test_fullmatch_weak(zero, a, b):
     (matches, unmatched, weak) = fm.FullMatch.full_match(
         correlation_result=correlation_result, zero=zero, parameters=parameters)
 
-    assert(len(matches) == 2)
+    assert(len(matches) == 1)
 
     assert(len(unmatched) == len(random))
     assert(len(weak) == 1)

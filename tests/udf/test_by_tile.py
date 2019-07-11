@@ -91,6 +91,60 @@ def test_cropped(lt_ctx):
     assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
 
 
+def test_roi_extra_dimension_shape(lt_ctx):
+    """
+    Test sum over the pixels for 2-dimensional dataset
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+
+    """
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    class ExtraShapeUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'test': self.buffer(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'test2': self.buffer(
+                    kind="sig", extra_shape=(2,), dtype="float32"
+                ),
+                # 'test3': self.buffer(
+                #     kind="single", extra_shape=(2,), dtype="float32"
+                # )
+            }
+
+        def process_tile(self, tile, tile_slice):
+            self.results.test[:] = np.ones(tuple(tile_slice.shape.nav)) * (1, 2)
+            framecount = np.prod(tuple(tile_slice.shape.nav))
+            self.results.test2[:] += np.ones(tuple(tile_slice.shape.sig) + (2, )) * framecount
+            # self.results.test3[:] += (framecount, 2*framecount)
+
+        def merge(self, dest, src):
+            dest['test'][:] = src['test'][:]
+            dest['test2'][:] += src['test2'][:]
+            # dest['test3'][:] += src['test3'][:]
+
+    extra = ExtraShapeUDF()
+    roi = _mk_random(size=dataset.shape.nav, dtype=np.bool)
+    res = lt_ctx.run_udf(dataset=dataset, udf=extra, roi=roi)
+
+    navcount = np.count_nonzero(roi)
+
+    print(data.shape, res['test'].data.shape)
+    assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
+    assert res['test2'].data.shape == tuple(dataset.shape.sig) + (2,)
+    # assert res['test3'].data.shape == (2,)
+    assert np.allclose(res['test'].raw_data, (1, 2))
+    assert np.allclose(res['test2'].raw_data, navcount)
+    # assert np.allclose(res['test3'].raw_data, (navcount, 2*navcount))
+
+
 class FrameCounter(UDF):
     def get_result_buffers(self):
         return {

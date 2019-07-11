@@ -67,6 +67,9 @@ class FullMatch(grm.Match):
         returns:
             (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
         '''
+        class ExitException(Exception):
+            pass
+
         matches = []
         p = cls._make_parameters(parameters)
 
@@ -96,24 +99,16 @@ class FullMatch(grm.Match):
                     point_selection=working_set, zero=zero,
                     candidates=polar_candidate_vectors, parameters=p)
                 match = match.weighted_optimize()
-            except grm.NotFoundException:
-                # print("no match found:\n", working_set)
+                (match, err) = cls._match_all(
+                    point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
+                if len(match) == 0:
+                    raise ExitException()
+                match = match.weighted_optimize()
+            except (grm.NotFoundException, np.linalg.LinAlgError, ExitException):
                 new_selector = np.copy(working_set.selector)
                 new_selector[zero_selector] = False
                 unmatched = working_set.derive(selector=new_selector)
                 break
-            # We redo the match with optimized parameters
-            match = cls._match_all(
-                point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
-            if len(match) == 0:
-                new_selector = np.copy(working_set.selector)
-                new_selector[zero_selector] = False
-                unmatched = working_set.derive(selector=new_selector)
-                # print("no endless loop")
-                break
-
-            match = match.weighted_optimize()
-
             matches.append(match)
             new_selector = np.copy(working_set.selector)
             # remove the ones that have been matched

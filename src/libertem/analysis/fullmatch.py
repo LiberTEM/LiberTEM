@@ -100,7 +100,9 @@ class FullMatch(grm.Match):
                     candidates=polar_candidate_vectors, parameters=p)
                 match = match.weighted_optimize()
                 (match, err) = cls._match_all(
-                    point_selection=working_set, zero=match.zero, a=match.a, b=match.b, parameters=p)
+                    point_selection=working_set, zero=match.zero,
+                    a=match.a, b=match.b, parameters=p
+                )
                 if len(match) == 0:
                     raise ExitException()
                 match = match.weighted_optimize()

@@ -123,11 +123,11 @@ class BufferWrapper(object):
         original dataset shape. If a ROI is set, embed the result into a new
         array; unset values have nan value.
         """
-        if self._roi is None:
+        if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
         wrapper = np.full(shape, np.nan, dtype=self._dtype)
-        wrapper[self._roi.reshape(shape)] = self._data
+        wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
         return wrapper
 
     @property

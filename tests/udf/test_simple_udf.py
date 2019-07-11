@@ -152,18 +152,37 @@ def test_extra_dimension_shape(lt_ctx):
             return {
                 'test': self.buffer(
                     kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'test2': self.buffer(
+                    kind="sig", extra_shape=(2,), dtype="float32"
+                ),
+                'test3': self.buffer(
+                    kind="single", extra_shape=(2,), dtype="float32"
                 )
             }
 
         def process_frame(self, frame):
             self.results.test[:] = (1, 2)
+            self.results.test2[:] += np.ones(tuple(self.meta.dataset_shape.sig) + (2, ))
+            self.results.test3[:] += (1, 2)
+
+        def merge(self, dest, src):
+            dest['test'][:] = src['test'][:]
+            dest['test2'][:] += src['test2'][:]
+            dest['test3'][:] += src['test3'][:]
 
     extra = ExtraShapeUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=extra)
 
+    navcount = np.prod(tuple(dataset.shape.nav))
+
     print(data.shape, res['test'].data.shape)
     assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
-    assert np.allclose(res['test'].data[0, 0], (1, 2))
+    assert res['test2'].data.shape == tuple(dataset.shape.sig) + (2,)
+    assert res['test3'].data.shape == (2,)
+    assert np.allclose(res['test'].data, (1, 2))
+    assert np.allclose(res['test2'].data, navcount)
+    assert np.allclose(res['test3'].data, (navcount, 2*navcount))
 
 
 def test_roi_1(lt_ctx):
@@ -221,6 +240,60 @@ def test_roi_some_zeros(lt_ctx):
     print(data.shape, res['pixelsum'].data.shape)
     expected = np.sum(data[mask, ...], axis=(-1, -2))
     assert np.allclose(res['pixelsum'].raw_data, expected)
+
+
+def test_roi_extra_dimension_shape(lt_ctx):
+    """
+    Test sum over the pixels for 2-dimensional dataset
+
+    Parameters
+    ----------
+    lt_ctx
+        Context class for loading dataset and creating jobs on them
+
+    """
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    class ExtraShapeUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'test': self.buffer(
+                    kind="nav", extra_shape=(2,), dtype="float32"
+                ),
+                'test2': self.buffer(
+                    kind="sig", extra_shape=(2,), dtype="float32"
+                ),
+                'test3': self.buffer(
+                    kind="single", extra_shape=(2,), dtype="float32"
+                )
+            }
+
+        def process_frame(self, frame):
+            self.results.test[:] = (1, 2)
+            self.results.test2[:] += np.ones(tuple(self.meta.dataset_shape.sig) + (2, ))
+            self.results.test3[:] += (1, 2)
+
+        def merge(self, dest, src):
+            dest['test'][:] = src['test'][:]
+            dest['test2'][:] += src['test2'][:]
+            dest['test3'][:] += src['test3'][:]
+
+    extra = ExtraShapeUDF()
+    roi = _mk_random(size=dataset.shape.nav, dtype=np.bool)
+    res = lt_ctx.run_udf(dataset=dataset, udf=extra, roi=roi)
+
+    navcount = np.count_nonzero(roi)
+    print(navcount)
+
+    print(data.shape, res['test'].data.shape)
+    assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
+    assert res['test2'].data.shape == tuple(dataset.shape.sig) + (2,)
+    assert res['test3'].data.shape == (2,)
+    assert np.allclose(res['test'].raw_data, (1, 2))
+    assert np.allclose(res['test2'].raw_data, navcount)
+    assert np.allclose(res['test3'].raw_data, (navcount, 2*navcount))
 
 
 def test_udf_pickle(lt_ctx):

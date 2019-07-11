@@ -1,5 +1,6 @@
+import functools
+
 import numpy as np
-import numpy.random as rnd
 
 import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
@@ -24,6 +25,7 @@ def _peakframe(fy, fx, zero, a, b, indices, radius):
             imageSizeX=fx,
             imageSizeY=fy,
             radius=radius,
+            antialiased=True,
         )
 
     return (data, indices, peaks)
@@ -273,4 +275,57 @@ def test_custom_template_fuzz():
         }
         custom = blobfinder.UserTemplate(parameters)
 
-        mask = custom.get_mask((mask_y, mask_x))
+        mask = custom.get_mask((mask_y, mask_x))  # noqa
+
+
+def test_featurevector(lt_ctx):
+    shape = np.array([256, 256])
+    zero = shape // 2
+    a = np.array([24, 0.])
+    b = np.array([0., 30])
+    indices = np.mgrid[-3:4, -3:4]
+    indices = np.concatenate(indices.T)
+
+    params = {
+        'radius': 5,
+        'radius_outer': 10,
+        'padding': 0.5,
+        'mask_type': 'background_subtraction',
+    }
+
+    template = m.background_subtraction(
+        centerX=params['radius_outer'] + 1,
+        centerY=params['radius_outer'] + 1,
+        imageSizeX=params['radius_outer']*2 + 2,
+        imageSizeY=params['radius_outer']*2 + 2,
+        radius=params['radius_outer'],
+        radius_inner=params['radius'] + 1,
+        antialiased=False
+    )
+
+    params['mask_type'] = 'template'
+    params['template'] = template
+
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    stack = functools.partial(
+        blobfinder.feature_vector,
+        imageSizeX=shape[1],
+        imageSizeY=shape[0],
+        peaks=peaks,
+        parameters=params
+    )
+
+    job = lt_ctx.create_mask_job(
+        dataset=dataset, factories=stack, mask_count=len(peaks), mask_dtype=np.float32
+    )
+    res = lt_ctx.run(job)
+
+    peak_data, _, _ = _peakframe(*shape, zero, a, b, np.array([(0, 0)]), params['radius'])
+    peak_sum = peak_data.sum()
+
+    assert np.allclose(res.sum(), data.sum())
+    assert np.allclose(res, peak_sum)

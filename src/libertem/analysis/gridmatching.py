@@ -141,8 +141,11 @@ class Match(PointSelection):
 
     @property
     def error(self):
-        diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
-        return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
+        if len(self) > 0:
+            diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
+            return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
+        else:
+            return np.float('nan')
 
     @classmethod
     def _make_parameters(cls, p, a=None, b=None):

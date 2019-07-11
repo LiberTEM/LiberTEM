@@ -216,7 +216,7 @@ class Match(PointSelection):
         Aw = indices * np.sqrt(self.peak_elevations[:, np.newaxis])
         Bw = self.refineds * np.sqrt(W.T)
         (x, residuals, rank, s) = np.linalg.lstsq(
-            Aw, Bw, rcond=self.parameters['tolerance'] / 10000
+            Aw, Bw, rcond=None
         )
         # (zero, a, b)
         if x.size == 0:
@@ -232,7 +232,7 @@ class Match(PointSelection):
         ])
 
         (x, residuals, rank, s) = np.linalg.lstsq(
-            indices, self.refineds, rcond=self.parameters['tolerance'] / 100)
+            indices, self.refineds, rcond=None)
         # (zero, a, b)
         if x.size == 0:
             raise np.linalg.LinAlgError("Optimizing returned empty result")

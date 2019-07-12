@@ -36,7 +36,7 @@ class SDAnalysis(BaseAnalysis):
             raise NotImplementedError("unknown shape %s" % params["shape"])
         return roi
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.var,
                            visualized=visualize_simple(

@@ -15,7 +15,8 @@ class FeatureVecMakerUDF(UDF):
         }
 
     def process_frame(self, frame):
-        delta = self.params.delta
+        #delta = self.params.delta
+        delta = 0.1
         savg = self.params.savg
         coordinates = self.params.coordinates
         ref = savg[coordinates[:, 0], coordinates[:, 1]]
@@ -25,7 +26,9 @@ class FeatureVecMakerUDF(UDF):
         return
 
 
-def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out=None, roi=None):
+def make_feature_vec(ctx, dataset,
+# num, delta,
+                    center=None, rad_in=None, rad_out=None, roi=None):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.
     Parameters
@@ -84,9 +87,10 @@ def make_feature_vec(ctx, dataset, num, delta, center=None, rad_in=None, rad_out
         masked_sstd = sstd*mask
     else:
         masked_sstd = sstd
-    coordinates = peak_local_max(masked_sstd, num_peaks=num, min_distance=0)
+    coordinates = peak_local_max(masked_sstd, num_peaks=400, min_distance=0)
     udf = FeatureVecMakerUDF(
-        num=num, delta=delta, center=center, rad_in=rad_in, rad_out=rad_out,
+        #num=num, delta=delta,
+        center=center, rad_in=rad_in, rad_out=rad_out,
         savg=savg, coordinates=coordinates
         )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

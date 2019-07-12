@@ -44,7 +44,7 @@ class SumAnalysis(BaseAnalysis):
             raise NotImplementedError("unknown shape %s" % params["shape"])
         return roi
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
         if udf_results.intensity.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(

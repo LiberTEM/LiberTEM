@@ -4,6 +4,7 @@ import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
+import { useRectROI } from "./RectROI";
 import { useRoiSumPicker } from "./RoiPicker";
 import { useRoiSDPicker } from "./RoiSDPicker";
 import useSDFrames from "./SDFrames";
@@ -62,11 +63,14 @@ const useDefaultFrameView = ({
         analysisId,
     });
 
-    const { SDRoiHandles, SDRoiWidgets } = useRoiSDPicker({
+    const { RectRoiHandles, RectRoiWidgets, roiParameters }  = useRectROI({ scanHeight, scanWidth })
+
+    useRoiSDPicker({
         enabled: frameMode === AnalysisTypes.SD_FRAMES_ROI,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
+        roiParameters,
     })
 
     useSumFrames({
@@ -97,7 +101,7 @@ const useDefaultFrameView = ({
             handles = sumRoiHandles;
             break;
         case AnalysisTypes.SD_FRAMES_ROI:
-            handles = SDRoiHandles;
+            handles = RectRoiHandles;
             break;
 }
 
@@ -108,7 +112,7 @@ const useDefaultFrameView = ({
             widgets = sumRoiWidgets;
             break;
         case AnalysisTypes.SD_FRAMES_ROI:
-            widgets = SDRoiWidgets;
+            widgets = RectRoiWidgets;
             break;
     }
 

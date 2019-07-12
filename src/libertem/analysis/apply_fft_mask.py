@@ -14,7 +14,7 @@ class ApplyFFTMask(BaseAnalysis):
         return crystal.CrystallinityUDF(rad_in=rad_in, rad_out=rad_out, real_center=real_center,
          real_rad=real_rad)
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.intensity,

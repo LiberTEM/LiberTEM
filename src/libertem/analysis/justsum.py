@@ -1,18 +1,13 @@
 from libertem.viz import visualize_simple
-
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+import libertem.udf.justsumudf as justsumudf
 
-import libertem.udf.FEM as FEM
 
-
-class FEMAnalysis(BaseAnalysis):
+class JustSumAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
     def get_udf(self):
-        center = (self.parameters["cy"], self.parameters["cx"])
-        rad_in = self.parameters["ri"]
-        rad_out = self.parameters["ro"]
-        return FEM.FEMUDF(center=center, rad_in=rad_in, rad_out=rad_out)
+        return justsumudf.justsumUDF()
 
     def get_udf_results(self, udf_results, roi):
 
@@ -21,5 +16,5 @@ class FEMAnalysis(BaseAnalysis):
                            visualized=visualize_simple(
                                udf_results.intensity.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
-                           desc="result from SD calculation over ring"),
+                           desc="result from frame integration"),
         ])

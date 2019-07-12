@@ -129,9 +129,7 @@ def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
     Numpy 2D Array
         Array with the shape (imageSizeX, imageSizeY) with the mask.
     """
-    #bool_mask = np.zeros([imageSizeX, imageSizeY])
-    bool_mask = np.zeros([imageSizeY, imageSizeX])
-    #bool_mask[int(X):int(X+Width), int(Y):int(Y+Height)] = 1
+    bool_mask = np.zeros([imageSizeY, imageSizeX], dtype="bool")
     bool_mask[int(Y):int(Y+Height), int(X):int(X+Width)] = 1
     return bool_mask
 

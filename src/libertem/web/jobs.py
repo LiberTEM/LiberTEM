@@ -8,7 +8,7 @@ from libertem.analysis import (
     DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
     FEMAnalysis, COMAnalysis, SumAnalysis, PickFrameAnalysis,
     PickFFTFrameAnalysis, SumfftAnalysis,
-    RadialFourierAnalysis, ApplyFFTMask, SDAnalysis
+    RadialFourierAnalysis, ApplyFFTMask, SDAnalysis, JustSumAnalysis, ClusterAnalysis
 )
 from .base import CORSMixin, run_blocking, log_message, result_images
 from .messages import Message
@@ -37,6 +37,8 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             "PICK_FFT_FRAME": PickFFTFrameAnalysis,
             "APPLY_FFT_MASK": ApplyFFTMask,
             "SD_FRAMES": SDAnalysis,
+            "JUST_SUM": JustSumAnalysis,
+            "CLUST": ClusterAnalysis
         }
         return analysis_by_type[type_]
 
@@ -96,6 +98,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.finish()
         self.event_registry.broadcast_event(msg)
 
+        if hasattr(analysis, 'controller'):
+            return await analysis.controller(
+                cancel_id=uuid, executor=executor,
+                job_is_cancelled=lambda: self.data.job_is_cancelled(uuid),
+                send_results=lambda results, finished: self.send_results(results, uuid, finished=finished)
+            )
+
         t = time.time()
         post_t = time.time()
         window = 0.3
@@ -109,6 +118,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             results = await run_blocking(
                 analysis.get_udf_results,
                 udf_results=udf_results,
+                roi=roi,
             )
             post_t = time.time()
             await self.send_results(results, uuid)
@@ -121,6 +131,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         results = await run_blocking(
             analysis.get_udf_results,
             udf_results=udf_results,
+            roi=roi,
         )
         await self.send_results(results, uuid, finished=True)
 

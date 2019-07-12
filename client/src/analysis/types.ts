@@ -1,11 +1,13 @@
 import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
 import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
+import ClustAnalysis from "./components/Clustering";
 import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
 import FEM from "./components/FEM";
 import FFTAnalysis from "./components/FFTAnalysis";
 import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
 import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
 import RingMaskAnalysis from "./components/RingMaskAnalysis";
+
 
 
 export type AnalysisStatus = "busy" | "idle";
@@ -125,5 +127,16 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         desc: "Compute a radial Fourier analysis",
         title: "Radial Fourier",
         component: RadialFourierAnalysis,
+    },
+
+    [AnalysisTypes.CLUST]: {
+        desc: "Do clustering",
+        title: "Clustering?",
+        component: ClustAnalysis,
+    },
+
+    [AnalysisTypes.JUST_SUM]: {
+        desc: "Do clustering",
+        title: "Clustering?",
     },
 }

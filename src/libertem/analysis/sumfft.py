@@ -9,7 +9,7 @@ import numpy as np
 class SumfftAnalysis(SumAnalysis):
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
         job_results = udf_results.intensity
         real_rad = self.parameters["real_rad"]
         real_center = (self.parameters["real_centery"], self.parameters["real_centerx"])

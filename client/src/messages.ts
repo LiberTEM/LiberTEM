@@ -297,7 +297,6 @@ export interface FFTParams{
     real_centery: number | null,
 }
 
-
 export type SumFrameParams = {} | {
     roi: {
         shape: "disk",
@@ -307,14 +306,30 @@ export type SumFrameParams = {} | {
     }
 }
 
-export type SDFrameParams = {} | {
+export interface SDFrameParams {
     roi: {
         shape: "rect",
         x: number,
         y: number,
         width: number,
         height: number,
-    }
+    }|{}
+}
+
+export interface ClustParams {
+    roi: {
+        shape: "rect",
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+    }|{}
+    cx: number,
+    cy: number,
+    ri:number,
+    ro:number,
+    // delta: number,
+    // n_peaks: number,
 }
 
 export enum AnalysisTypes {
@@ -331,7 +346,9 @@ export enum AnalysisTypes {
     APPLY_FFT_MASK = "APPLY_FFT_MASK",
     FFTSUM_FRAMES = "FFTSUM_FRAMES",
     RADIAL_FOURIER = "RADIAL_FOURIER",
-    FEM = "FEM"
+    FEM = "FEM",
+    CLUST = "CLUST",
+    JUST_SUM = "JUST_SUM"
 
 }
 
@@ -376,6 +393,11 @@ export interface SDFramesDetails {
     parameters: SDFrameParams
 }
 
+export interface JustSumDetails {
+    type: AnalysisTypes.JUST_SUM,
+    parameters: {}
+}
+
 export interface FFTSumFramesDetails {
     type: AnalysisTypes.FFTSUM_FRAMES,
     parameters: FFTSumFramesParams,
@@ -396,8 +418,18 @@ export interface RadialFourierDetails {
     parameters: RadialFourierParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails;
+export interface RadialFourierDetails {
+    type: AnalysisTypes.RADIAL_FOURIER,
+    parameters: RadialFourierParams,
+}
+
+export interface ClustDetails {
+    type: AnalysisTypes.CLUST,
+    parameters: ClustParams,
+}
+
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams | ClustParams;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | JustSumDetails | ClustDetails;
 
 export interface StartJobRequest {
     job: {

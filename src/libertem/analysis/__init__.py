@@ -11,6 +11,8 @@ from .rawfft import PickFFTFrameAnalysis
 from .sumfft import SumfftAnalysis
 from .apply_fft_mask import ApplyFFTMask
 from .sd import SDAnalysis
+from .justsum import JustSumAnalysis
+from .clust import ClusterAnalysis
 
 __all__ = [
     'SumAnalysis',
@@ -26,4 +28,6 @@ __all__ = [
     'SumfftAnalysis',
     'ApplyFFTMask',
     'SDAnalysis',
+    'ClusterAnalysis',
+    'JustSumAnalysis'
 ]

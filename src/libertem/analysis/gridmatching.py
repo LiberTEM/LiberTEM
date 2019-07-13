@@ -292,14 +292,14 @@ class Match(PointSelection):
         selection = PointSelection(correlation_result=correlation_result, selector=filt)
         # We match twice because we might catch more peaks in the second run with better parameters
         try:
-            (match1, err) = cls._match_all(
+            match1 = cls._match_all(
                 point_selection=selection, zero=zero, a=a, b=b, parameters=p
             )
             if len(match1) >= p['min_match']:
                 match1 = match1.weighted_optimize()
             else:
                 raise np.linalg.LinAlgError("Not enough matched points")
-            (match2, err) = cls._match_all(
+            match2 = cls._match_all(
                 point_selection=selection, zero=match1.zero, a=match1.a, b=match1.b, parameters=p)
             return match2.weighted_optimize()
         # FIXME proper error handling strategy
@@ -370,7 +370,7 @@ class Match(PointSelection):
         result = cls.from_point_selection(
             point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices
         )
-        return (result, np.linalg.norm(errors[matched_selector]))
+        return result
 
     @classmethod
     def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
@@ -399,11 +399,11 @@ class Match(PointSelection):
                     jj = j
                 aa, bb = make_cartesian(np.array([aa, bb]))
 
-                (match, error) = cls._match_all(
+                match = cls._match_all(
                     point_selection=point_selection, zero=zero, a=aa, b=bb, parameters=parameters)
                 # At least three points matched
                 if len(match) > 2:
-                    match_matrix[(ii, jj)] = (match, error)
+                    match_matrix[(ii, jj)] = match
         return match_matrix
 
     @classmethod
@@ -426,15 +426,11 @@ class Match(PointSelection):
         FIXME improve this on more real-world examples; define test cases.
         '''
         def fom(d):
-            m = d[1][0]
-            err = d[1][1]
+            m = d[1]
             na = np.linalg.norm(m.a)
             nb = np.linalg.norm(m.b)
             # Matching many points is good
             res = len(m)**2
-            # Low error is good
-            if err != 0:
-                res /= err**2
             # Boost for orthogonality
             if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
                 res *= 5
@@ -442,8 +438,6 @@ class Match(PointSelection):
                 res *= 2
             # Boost fo nearly equal length
             if np.abs(na - nb) < 0.1 * max(na, nb):
-                res *= 5
-            if np.abs(na - nb) < 0.3 * max(na, nb):
                 res *= 2
             # The division favors short vectors
             res /= na
@@ -453,7 +447,7 @@ class Match(PointSelection):
         match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
         if match_matrix:
             # we select the entry with highest figure of merit (fom)
-            candidate_index, (match, error) = max(match_matrix.items(), key=fom)
+            candidate_index, match = max(match_matrix.items(), key=fom)
             return match
         else:
             raise NotFoundException

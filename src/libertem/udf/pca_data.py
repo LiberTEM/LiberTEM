@@ -1,8 +1,7 @@
 import collections
 
 import numpy as np
-import scipy.optimize.nnls as nnls
-import fbpca
+from scipy.linalg import svd, qr
 
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
@@ -61,64 +60,39 @@ class PcaUDF(UDF):
                 extra_shape=(self.params.frame_size,),
                 dtype='float32'
                 ),
-            'merge_mean': BufferWrapper(
-                kind='single',
-                extra_shape=(self.params.frame_size,),
-                dtype='float32'
-                ),
-
-            'merge_var': BufferWrapper(
-                kind='single',
-                extra_shape=(self.params.frame_size,),
-                dtype='float32'
-                ),
-
-            'merge_components': BufferWrapper(
-                kind='single',
-                extra_shape=(self.params.num_frames, self.params.frame_size),
-                dtype='float32'
-                ),
 
             'merge_num': BufferWrapper(
                 kind='single',
                 dtype='int32'),
             }
 
-    def svd_flip(self, u, v, u_based_decision=False):
-        """Sign correction to ensure deterministic output from SVD.
-        Adjusts the columns of u and the rows of v such that the loadings in the
-        columns in u that are largest in absolute value are always positive.
+    def svd_flip(self, U, V):
+        """
+        Sign correction to ensure deterministic output from SVD.
+
         Parameters
         ----------
-        u : ndarray
-            u and v are the output of `linalg.svd` or
-            `sklearn.utils.extmath.randomized_svd`, with matching inner dimensions
-            so one can compute `np.dot(u * s, v)`.
-        v : ndarray
-            u and v are the output of `linalg.svd` or
-            `sklearn.utils.extmath.randomized_svd`, with matching inner dimensions
-            so one can compute `np.dot(u * s, v)`.
-        u_based_decision : boolean, (default=True)
-            If True, use the columns of u as the basis for sign flipping.
-            Otherwise, use the rows of v. The choice of which variable to base the
-            decision on is generally algorithm dependent.
+        U
+            Left singular matrix
+
+        V
+            Right singular matrix
+
         Returns
         -------
-        u_adjusted, v_adjusted : arrays with the same dimensions as the input.
+        U_adjusted
+            sign adjusted left singular matrix
+
+        V_adjusted
+            sign adjusted right singular matrix
         """
-        if u_based_decision:
-            # columns of u, rows of v
-            max_abs_cols = np.argmax(np.abs(u), axis=0)
-            signs = np.sign(u[max_abs_cols, range(u.shape[1])])
-            u *= signs
-            v *= signs[:, np.newaxis]
-        else:
-            # rows of v, columns of u
-            max_abs_rows = np.argmax(np.abs(v), axis=1)
-            signs = np.sign(v[range(v.shape[0]), max_abs_rows])
-            u *= signs
-            v *= signs[:, np.newaxis]
-        return u, v
+        max_abs_rows = np.argmax(np.abs(V), axis=1)
+        signs = np.sign(V[range(V.shape[0]), max_abs_rows])
+
+        U *= signs
+        V *= signs[:, np.newaxis]
+
+        return U, V
 
     def randomized_svd(self, X, n_components):
         """
@@ -126,77 +100,78 @@ class PcaUDF(UDF):
         """
         row, col = X.shape
 
-        # transpose = False
-
-        # if row < col:
-        #     transpose = True
-        #     X = X.T
-
         rand_matrix = np.random.normal(size=(col, n_components))
-        Q, _ = np.linalg.qr(X @ rand_matrix, mode='reduced')
+        Q, _ = qr(X @ rand_matrix, mode='reduced')
 
         smaller_matrix = Q.T @ X
-        U_hat, S, V = np.linalg.svd(smaller_matrix, full_matrices=False)
+        U_hat, S, V = svd(smaller_matrix, full_matrices=False)
         U = Q @ U_hat
-        
-        # if transpose:
-        #     return  U.T, S.T, V.T
 
-        # else:
         return U, S, V
 
-    def _safe_accumulator_op(self, op, x, *args, **kwargs):
+    def safe_accumulator_op(self, op, x, *args, **kwargs):
         """
         This function provides numpy accumulator functions with a float64 dtype
         when used on a floating point input. This prevents accumulator overflow on
         smaller floating point dtypes.
+
         Parameters
         ----------
-        op : function
+        op
             A numpy accumulator function such as np.mean or np.sum
-        x : numpy array
+
+        x
             A numpy array to apply the accumulator function
-        *args : positional arguments
+
+        *args
             Positional arguments passed to the accumulator function after the
             input x
-        **kwargs : keyword arguments
+
+        **kwargs
             Keyword arguments passed to the accumulator function
+
         Returns
         -------
-        result : The output of the accumulator function passed to this function
+        result
+            The output of the accumulator function passed to this function
         """
+
         if np.issubdtype(x.dtype, np.floating) and x.dtype.itemsize < 8:
             result = op(x, *args, **kwargs, dtype=np.float64)
+
         else:
             result = op(x, *args, **kwargs)
+
         return result
 
-    def _incremental_mean_and_var(self, X, last_mean, last_variance, last_sample_count):
-        """Calculate mean update and a Youngs and Cramer variance update.
-        last_mean and last_variance are statistics computed at the last step by the
-        function. Both must be initialized to 0.0. In case no scaling is required
-        last_variance can be None. The mean is always required and returned because
-        necessary for the calculation of the variance. last_n_samples_seen is the
-        number of samples encountered until now.
-        From the paper "Algorithms for computing the sample variance: analysis and
-        recommendations", by Chan, Golub, and LeVeque.
+    def incremental_mean_and_var(self, X, last_mean, last_variance, last_sample_count):
+        """
+        Calculate mean update and a Youngs and Cramer variance update.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Data to use for variance update
-        last_mean : array-like, shape: (n_features,)
-        last_variance : array-like, shape: (n_features,)
-        last_sample_count : array-like, shape (n_features,)
+        X
+            ndarray with shape (n_samples, n_features)
+
+        last_mean
+            ndarray with shape (n_features,)
+
+        last_variance
+            ndarray with shape (n_features,)
+
+        last_sample_count
+            ndarray with shape (n_features,)
+
         Returns
         -------
-        updated_mean : array, shape (n_features,)
-        updated_variance : array, shape (n_features,)
-            If None, only mean is computed
-        updated_sample_count : array, shape (n_features,)
-        Notes
-        -----
-        NaNs are ignored during the algorithm.
+        updated_mean
+            ndarray with shape (n_features,)
+
+        updated_variance
+            ndarray with shape (n_features,)
+
+        updated_sample_count
+            ndarray with shape (n_features,)
 
         References
         ----------
@@ -205,7 +180,7 @@ class PcaUDF(UDF):
             pp. 242-247
         """
         last_sum = last_mean * last_sample_count
-        new_sum = self._safe_accumulator_op(np.nansum, X, axis=0)
+        new_sum = self.safe_accumulator_op(np.nansum, X, axis=0)
 
         new_sample_count = np.sum(~np.isnan(X), axis=0)
         updated_sample_count = last_sample_count + new_sample_count
@@ -214,9 +189,10 @@ class PcaUDF(UDF):
 
         if last_variance is None:
             updated_variance = None
+
         else:
             new_unnormalized_variance = (
-                self._safe_accumulator_op(np.nanvar, X, axis=0) * new_sample_count)
+                self.safe_accumulator_op(np.nanvar, X, axis=0) * new_sample_count)
             last_unnormalized_variance = last_variance * last_sample_count
 
             with np.errstate(divide='ignore', invalid='ignore'):
@@ -232,7 +208,7 @@ class PcaUDF(UDF):
 
         return updated_mean, updated_variance, updated_sample_count
 
-    def ipca(self, num_frame, components, singular_vals, mean, var, obs, process_frame=False, n_components=100):
+    def ipca(self, num_frame, components, singular_vals, mean, var, obs, n_components=100):
         """
         IncrementalPCA sklearn method
 
@@ -250,18 +226,15 @@ class PcaUDF(UDF):
         frame : numpy.array
             A diffraction pattern frame
         """
-        X = obs
-
-        if process_frame:
-            X = obs.reshape(1, obs.size)
+        X = obs.copy()
 
         if num_frame == 0:
             mean = 0
             var = 0
 
         col_mean, col_var, n_total_samples = \
-            self._incremental_mean_and_var(
-                X, last_mean=mean, last_variance=var,
+            self.incremental_mean_and_var(
+                obs, last_mean=mean, last_variance=var,
                 last_sample_count=np.repeat(num_frame, X.shape[1]))
         n_total_samples = n_total_samples[0]
 
@@ -274,39 +247,63 @@ class PcaUDF(UDF):
             mean_correction = \
                 np.sqrt((num_frame * X.shape[0])
                     / n_total_samples) * (mean - col_batch_mean)
-
             X = np.vstack((singular_vals.reshape((-1, 1))
                         * components, X, mean_correction))
 
-        # U, S, V = np.linalg.svd(X, full_matrices=False)
-        if min(X.shape) < n_components:
-            U, S, V = self.randomized_svd(X, n_components=n_components)
-        else:
-            U, S, V = fbpca.pca(X, k=n_components)
+        U, S, V = svd(X, full_matrices=False)
 
         U, V = self.svd_flip(U, V)
 
         return U[:, :n_components], V[:n_components], S[:n_components], col_mean, col_var
 
-    def process_frame(self, frame):
+    def process_partition(self, partition, n_components=100):
         """
-        Perform incremental pca on frames
+        Perform incremental PCA on partitions
         """
-        num_frame = self.results.num_frame[:]
-        components = self.results.components[:]
-        singular_vals = self.results.singular_vals[:]
-        mean = self.results.mean[:]
-        var = self.results.var[:]
+        num_frame, sig_row, sig_col = partition.shape
+        obs = partition.reshape((num_frame, sig_row * sig_col))
 
-        U, V, S, col_mean, col_var = \
-            self.ipca(num_frame, components, singular_vals, mean, var, frame, process_frame=True)
-        
-        self.results.left_singular[:][:U.shape[0], :] = U
-        self.results.components[:] = V
-        self.results.singular_vals[:] = S
-        self.results.num_frame[:] += 1
-        self.results.mean[:] = col_mean
-        self.results.var[:] = col_var
+        U, S, V = svd(obs, full_matrices=False)
+
+        self.results.left_singular[:][:U.shape[0], :] = U[:, :n_components]
+        self.results.components[:] = V[:n_components]
+        self.results.singular_vals[:] = S[:n_components]
+        self.results.num_frame[:] += num_frame
+
+    def modify_loading(self, loading, component):
+        """
+        Modify loaidng matrix so that it is bounded by
+        a hypercube box
+
+        Parameters
+        ----------
+        loading
+            loading matrix of the PCA
+
+        component
+            component matrix of the PCA
+
+        Returns
+        -------
+        src_data
+            Updated data matrix
+        """
+        n_sample, n_component = loading.shape
+
+        minimum = np.amin(loading, axis=0)
+        maximum = np.amax(loading, axis=0)
+
+        idx = []
+
+        for i in range(n_sample):
+            check = np.where((loading[i, :] == minimum) | (loading[i, :] == maximum), True, False)
+            if True in check:
+                idx.append(i)
+
+        src_loading = loading[np.array(idx)]
+        src_data = src_loading @ component
+
+        return src_data
 
     def merge(self, dest, src):
         """
@@ -327,53 +324,38 @@ class PcaUDF(UDF):
             sum of variances, sum of pixels, and number of frames used
 
         """
-        components = src['components'][:]
-        # row = components.shape[0]
-        # src_data = np.identity(row) @ components
+        U = src['left_singular'][:]
+        S = src['singular_vals'][:]
+        V = src['components'][:]
+        src_num_frame = src['num_frame'][:][0]
+        col_mean = src['mean'][:]
+        col_var = src['var'][:]
+        U = U[:src_num_frame, :]
 
-        singular_vals = src['singular_vals'][:]
-        left_singular = src['left_singular'][:]
-        num_frame = src['num_frame'][:][0]
-        # print("num frame: ", num_frame)
-        # print("left_singular shape: ", left_singular, left_singular.shape)
-        # print("left singular: ", left_singular[num_frame-1, :], left_singular[num_frame, :])
-        # print("Singular values shape: ", singular_vals.shape)
-        # print("components shape: ", components.shape)
-        left_singular = left_singular[:num_frame, :]
-        loading = left_singular[:num_frame, :] @ np.diag(singular_vals)
+        src_data = self.modify_loading(U, V)
 
-        src_data = loading @ components
-        # print("reconstructed data shape: ", src_data.shape)
-        if dest['merge_num'][:] == 0:
+        merge_num = dest['merge_num'][:][0]
+
+        if merge_num == 0:
             U, V, S, col_mean, col_var =\
-                self.ipca(0, None, None, None, None, src_data)
+                self.ipca(merge_num, V, S, col_mean, col_var, src_data)
 
         else:
             components = dest['components'][:]
-            components = components[~np.all(components==0, axis=1)]
-
             singular_vals = dest['singular_vals'][:]
-            num_frame = dest['merge_num'][:]
+            mean = dest['mean'][:]
+            var = dest['var'][:]
 
-            mean = dest['merge_mean'][:]
-            # mean = mean[~np.all(mean==0, axis=0)]
-            var = dest['merge_var'][:]
-            # var = var[~np.all(var==0, axis=0)]
-
-            # print("mean shape: ", mean.shape)
-            # print("var shape: ", var.shape)
-            # print("singular values shape: ", singular_vals.shape)
-            # print("compoents shape: ", components.shape)
-            # print("num frame : ", num_frame)
             U, V, S, col_mean, col_var =\
-                self.ipca(num_frame, components, singular_vals, mean, var, src_data)
+                self.ipca(merge_num, components, singular_vals, mean, var, src_data)
 
         dest['left_singular'][:][:U.shape[0], :] = U
-        dest['components'][:][:, :V.shape[1]] = V
+        dest['components'][:] = V
         dest['singular_vals'][:] = S
         dest['merge_num'][:] += src_data.shape[0]
-        dest['merge_mean'][:][:col_mean.size] = col_mean
-        dest['merge_var'][:][:col_var.size] = col_var
+        dest['mean'][:] = col_mean
+        dest['var'][:] = col_var
+
 
 def run_pca(ctx, dataset, n_components=100, roi=None):
     """
@@ -395,6 +377,12 @@ def run_pca(ctx, dataset, n_components=100, roi=None):
     frame_size = dataset.shape.sig.size
     total_frames = dataset.shape.nav.size
     num_frames = len(list(dataset.get_partitions())) * n_components
-    udf = PcaUDF(frame_size=frame_size, total_frames=total_frames, n_components=n_components, num_frames=num_frames)
+
+    udf = PcaUDF(
+                frame_size=frame_size,
+                total_frames=total_frames,
+                n_components=n_components,
+                num_frames=num_frames
+                )
 
     return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

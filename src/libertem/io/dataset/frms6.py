@@ -246,7 +246,7 @@ class FRMS6FileSet(FileSet3D):
         Pre-processing steps:
 
         1) convert into float
-        2) offset correction (dark frame substraction)
+        2) offset correction (dark frame subtraction)
         3) folding
         4) apply gain map
         5) un-binning
@@ -305,7 +305,7 @@ class FRMS6DataSet(DataSet):
     r"""
     Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and
     a .hdr file. The first .frms6 file (matching \*_000.frms6) contains dark frames, which
-    are substracted if `enable_offset_correction` is true.
+    are subtracted if `enable_offset_correction` is true.
 
     Parameters
     ----------
@@ -314,7 +314,7 @@ class FRMS6DataSet(DataSet):
         Path to one of the files of the FRMS6 dataset (either .hdr or .frms6)
 
     enable_offset_correction : boolean
-        Substract dark frames when reading data
+        Subtract dark frames when reading data
 
     gain_map_path : string
         Path to a gain map to apply (.mat format)

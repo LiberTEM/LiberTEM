@@ -244,7 +244,9 @@ def build_appimage(verbose):
         print("building AppImage in %s" % APPIMAGE_DIR)
 
     # cleanup existing AppDir
-    shutil.rmtree(join(APPIMAGE_DIR, 'AppDir'))
+    APPDIR = join(APPIMAGE_DIR, 'AppDir')
+    if os.path.exists(APPDIR):
+        shutil.rmtree(APPDIR)
 
     cmd = [
         join(APPIMAGE_DIR, 'make_app_image.sh')

@@ -1,19 +1,22 @@
 #!/bin/sh
-set -x
+set -ex
 BASE_DIR=$(dirname "$(readlink -f "${0}")")/../../
+
+CONDA_PKGS_DIRS=$BASE_DIR/conda-pkgs/
+
 mkdir -p AppDir
 
 MC_NAME=Miniconda3-latest-Linux-x86_64.sh
 [ ! -f $MC_NAME ] && wget -c -q https://repo.continuum.io/miniconda/$MC_NAME
 
+HERE=$(dirname "$(readlink -f "${0}")")/AppDir
 cd AppDir || exit 1
-HERE=$(dirname "$(readlink -f "${0}")")
 
 bash ../$MC_NAME -b -p ./usr || exit 1
 PATH="${HERE}"/usr/bin:$PATH
 # conda config --add channels conda-forge
 conda create -n libertem python=3.6 -y || exit 1
-# FIXME: install specific version (for example from pypi, or continuous build, ...)n s
+# FIXME: install specific version (for example from pypi, or continuous build, ...)
 
 # Build wheel & sdist
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )

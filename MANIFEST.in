@@ -4,3 +4,4 @@ include README.rst
 graft client
 prune client/node_modules
 prune client/build
+prune client/coverage

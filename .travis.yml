@@ -63,7 +63,7 @@ jobs:
     - stage: packaging
       sudo: require
       python: 3.7
-      dist: trusty
+      dist: xenial
       install:
         - pip install click pygithub requests twine
       script:

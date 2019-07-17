@@ -65,7 +65,7 @@ jobs:
       python: 3.7
       dist: xenial
       install:
-        - pip install click pygithub requests twine
+        - pip install click pygithub requests twine html5lib docutils
       script:
         - python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
 

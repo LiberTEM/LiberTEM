@@ -1,14 +1,10 @@
-import time
-
 import numpy as np 
-import scipy.optimize.nnls as nnls
-from scipy.linalg import svd, norm
-import math
-import fbpca
+from scipy.linalg import norm
 
 from utils import MemoryDataSet, _mk_random
 from libertem import api
 from libertem.udf.pca_data import run_pca
+
 
 def eig_error(eig_approx, eig):
 	"""
@@ -95,7 +91,6 @@ def test_pca(lt_ctx):
 	dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
 							num_partitions=2, sig_dims=2)
 
-	start = time.time()
 	res = run_pca(lt_ctx, dataset, n_components=100)
 
 	assert 'components' in res
@@ -107,10 +102,6 @@ def test_pca(lt_ctx):
 	singular_vals = res['singular_vals'].data
 	components = res['components'].data
 	mean = res['mean'].data
-
-	end = time.time()
-	
-	print(f"Time to finish: {end-start}")
 
 	left_singular = left_singular[~np.all(left_singular==0, axis=1)]
 	reconstruct_loading = left_singular @ np.diag(singular_vals)

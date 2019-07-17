@@ -1,13 +1,8 @@
-import collections
-
 import numpy as np
 from scipy.linalg import svd, qr
 
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
-
-pca = collections.namedtuple('pca', ['num_frame', 'singular_vals', 'components', 'left_singular'])
-nnmf = collections.namedtuple('NNMF', ['score', 'loading'])
 
 
 class PcaUDF(UDF):
@@ -208,7 +203,7 @@ class PcaUDF(UDF):
 
         return updated_mean, updated_variance, updated_sample_count
 
-    def ipca(self, num_frame, components, singular_vals, mean, var, obs, n_components=100):
+    def ipca(self, num_frame, components, singular_vals, mean, var, obs):
         """
         IncrementalPCA sklearn method
 
@@ -226,6 +221,8 @@ class PcaUDF(UDF):
         frame : numpy.array
             A diffraction pattern frame
         """
+        n_components = self.params.n_components
+
         X = obs.copy()
 
         if num_frame == 0:
@@ -256,10 +253,12 @@ class PcaUDF(UDF):
 
         return U[:, :n_components], V[:n_components], S[:n_components], col_mean, col_var
 
-    def process_partition(self, partition, n_components=100):
+    def process_partition(self, partition):
         """
         Perform incremental PCA on partitions
         """
+        n_components = self.params.n_components
+
         num_frame, sig_row, sig_col = partition.shape
         obs = partition.reshape((num_frame, sig_row * sig_col))
 
@@ -332,7 +331,7 @@ class PcaUDF(UDF):
         col_var = src['var'][:]
         U = U[:src_num_frame, :]
 
-        src_data = self.modify_loading(U, V)
+        src_data = self.modify_loading(U*S, V)
 
         merge_num = dest['merge_num'][:][0]
 
@@ -355,6 +354,8 @@ class PcaUDF(UDF):
         dest['merge_num'][:] += src_data.shape[0]
         dest['mean'][:] = col_mean
         dest['var'][:] = col_var
+
+        print(merge_num)
 
 
 def run_pca(ctx, dataset, n_components=100, roi=None):

@@ -66,7 +66,7 @@ jobs:
       install:
         - pip install click pygithub requests twine
       script:
-        - python scripts/release --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
+        - python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
 
 branches:
   except:

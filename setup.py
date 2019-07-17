@@ -144,6 +144,7 @@ setup(
         "pillow",
         "h5py",
         "psutil",
+        "llvmlite>=0.29.0",  # Contains bug fix relevant for numba in libertem.corrections.detector
         # Pinned due to https://github.com/pydata/sparse/issues/257
         # Ensure compatibility with numpy 1.17
         "numba>=0.45.1",

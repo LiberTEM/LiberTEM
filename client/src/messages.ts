@@ -326,9 +326,9 @@ export interface ClustParams {
     }|{}
     cx: number,
     cy: number,
-    ri:number,
-    ro:number,
-    // delta: number,
+    ri: number,
+    ro: number,
+    delta: number,
     // n_peaks: number,
 }
 

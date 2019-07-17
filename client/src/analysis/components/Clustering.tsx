@@ -38,6 +38,12 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         y: cy,
     }
 
+    const [delta, setDelta] = React.useState(0);
+
+    const deltaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setDelta(event.target.valueAsNumber);
+    }
+
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
         setCx(newCx);
         setCy(newCy);
@@ -90,7 +96,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             cy,
             ri,
             ro,
-            //delta,
+            delta,
             //n_peaks,
             }
         }));
@@ -110,7 +116,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
     
     return (
         <AnalysisLayoutThreeCol
@@ -142,8 +148,9 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             </>}
             toolbar={toolbar}
 
-            title2="Masking of intergation region in Fourier space"
             title1="Masking of intergation region in Fourier space"
+            title2={<><label> Masking out of zero order diffraction peak <input type="number" name="smth" step="0.01" min="0" max="2" onChange={deltaChange}/> </label>
+            </>}
             title3="Result of analysis"
 
         />

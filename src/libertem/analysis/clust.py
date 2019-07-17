@@ -15,29 +15,29 @@ from skimage.feature import peak_local_max
 
 
 class ClusterAnalysis(BaseAnalysis):
-    TYPE = "UDF"
+    TYPE = "UDF"  # FIXME: type?
 
     def get_udf(self):
         #num = self.parameters["num"]
-        #delta = self.parameters["delta"]
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
+        delta = self.parameters["delta"]
         return feature.FeatureVecMakerUDF(
-            #num=num, delta=delta,
-            center=center, rad_in=rad_in, rad_out=rad_out)
+            #num=num, 
+            delta=delta, center=center, rad_in=rad_in, rad_out=rad_out)
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results):
         clustering = AgglomerativeClustering(
-            affinity='euclidean', n_clusters=25, linkage='ward').fit(udf_results.feature_vec)
+            affinity='euclidean', n_clusters=30, linkage='ward').fit(udf_results.feature_vec)
         labels = np.array(clustering.labels_+1)
-        wrapper = np.full(self.dataset.shape.nav, np.nan, dtype=np.int16)
-        wrapper[roi.reshape(self.dataset.shape.nav)] = labels
+        # wrapper = np.full(self.dataset.shape.nav, np.nan, dtype=np.int16)
+        # wrapper[roi.reshape(self.dataset.shape.nav)] = labels
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.feature_vec,
                            visualized=visualize_simple(
-                               wrapper),
+                               labels.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
                            desc="result from integration over mask in Fourier space"),
         ])
@@ -86,6 +86,7 @@ class ClusterAnalysis(BaseAnalysis):
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
+        delta = self.parameters["delta"]
         savg = sd_udf_results['mean']
         sstd = sd_udf_results['std']
         sshape = sstd.shape
@@ -97,15 +98,17 @@ class ClusterAnalysis(BaseAnalysis):
         else:
             masked_sstd = sstd
 
-        coordinates = peak_local_max(masked_sstd, num_peaks=400, min_distance=0)
+        coordinates = peak_local_max(masked_sstd, num_peaks=100, min_distance=0)
+
+        print(coordinates.shape)
 
         udf = feature.FeatureVecMakerUDF(
-            #num=num, delta=delta,
-            savg=savg, coordinates=coordinates,
+            #num=num, 
+            delta=delta, savg=savg, coordinates=coordinates,
             center=center, rad_in=rad_in, rad_out=rad_out)
 
         result_iter = UDFRunner(udf).run_for_dataset_async(
-            self.dataset, executor, roi=roi, cancel_id=cancel_id
+            self.dataset, executor, cancel_id=cancel_id
         )
         async for udf_results in result_iter:
             pass
@@ -116,6 +119,6 @@ class ClusterAnalysis(BaseAnalysis):
         results = await run_blocking(
             self.get_udf_results,
             udf_results=udf_results,
-            roi=roi,
+            
         )
         await send_results(results, True)

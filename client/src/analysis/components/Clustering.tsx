@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { Form } from "semantic-ui-react";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
@@ -10,7 +11,7 @@ import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
 import { AnalysisProps } from "../types";
-import AnalysisLayoutThreeCol from "./AnalysisLayoutThreeCol";
+import AnalysisLayoutTwoRes from "./AnalysisLayoutTwoRes";
 import useDefaultFrameView from "./DefaultFrameView";
 import { useRectROI } from "./RectROI";
 import Toolbar from "./Toolbar";
@@ -42,6 +43,18 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
     const deltaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDelta(event.target.valueAsNumber);
+    }
+
+    const [n_peaks, setPeak] = React.useState(50);
+
+    const peakChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPeak(event.target.valueAsNumber);
+    }
+
+    const [n_clust, setClust] = React.useState(20);
+
+    const clustChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setClust(event.target.valueAsNumber);
     }
 
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
@@ -97,7 +110,8 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             ri,
             ro,
             delta,
-            //n_peaks,
+            n_clust,
+            n_peaks,
             }
         }));
     };
@@ -117,9 +131,21 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     )
 
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    const clustparams =
+    <Form>
+        <Form.Field> 
+                <label> delta </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
+        </Form.Field>
+        <Form.Field>
+            <label> number of clusters </label> <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> 
+        </Form.Field>    
+        <Form.Field>
+            <label> number of peaks </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
+        </Form.Field>
+    </Form>
     
     return (
-        <AnalysisLayoutThreeCol
+        <AnalysisLayoutTwoRes
             title="FFT analysis" subtitle={subtitle}
             left={<>
                 <ResultList
@@ -147,10 +173,10 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                 />
             </>}
             toolbar={toolbar}
+            clustparams= {clustparams}
 
-            title1="Masking of intergation region in Fourier space"
-            title2={<><label> Masking out of zero order diffraction peak <input type="number" name="smth" step="0.01" min="0" max="2" onChange={deltaChange}/> </label>
-            </>}
+            title1="frame"
+            title2="Masking of intergation region in Fourier space"
             title3="Result of analysis"
 
         />

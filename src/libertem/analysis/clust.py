@@ -18,18 +18,20 @@ class ClusterAnalysis(BaseAnalysis):
     TYPE = "UDF"  # FIXME: type?
 
     def get_udf(self):
-        #num = self.parameters["num"]
+        
+        n_peaks = self.parameters["n_peaks"]
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
         delta = self.parameters["delta"]
         return feature.FeatureVecMakerUDF(
-            #num=num, 
-            delta=delta, center=center, rad_in=rad_in, rad_out=rad_out)
+            n_peaks=n_peaks,  delta=delta,
+            center=center, rad_in=rad_in, rad_out=rad_out)
 
     def get_udf_results(self, udf_results):
+        n_clust = self.parameters["n_clust"]
         clustering = AgglomerativeClustering(
-            affinity='euclidean', n_clusters=30, linkage='ward').fit(udf_results.feature_vec)
+            affinity='euclidean', n_clusters=n_clust, linkage='ward').fit(udf_results.feature_vec)
         labels = np.array(clustering.labels_+1)
         # wrapper = np.full(self.dataset.shape.nav, np.nan, dtype=np.int16)
         # wrapper[roi.reshape(self.dataset.shape.nav)] = labels
@@ -87,6 +89,7 @@ class ClusterAnalysis(BaseAnalysis):
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
         delta = self.parameters["delta"]
+        n_peaks = self.parameters["n_peaks"]
         savg = sd_udf_results['mean']
         sstd = sd_udf_results['std']
         sshape = sstd.shape
@@ -98,14 +101,13 @@ class ClusterAnalysis(BaseAnalysis):
         else:
             masked_sstd = sstd
 
-        coordinates = peak_local_max(masked_sstd, num_peaks=100, min_distance=0)
+        coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=0)
 
         print(coordinates.shape)
 
         udf = feature.FeatureVecMakerUDF(
-            #num=num, 
             delta=delta, savg=savg, coordinates=coordinates,
-            center=center, rad_in=rad_in, rad_out=rad_out)
+            center=center, rad_in=rad_in, rad_out=rad_out, n_peaks=n_peaks)
 
         result_iter = UDFRunner(udf).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id

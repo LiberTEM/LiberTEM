@@ -25,7 +25,7 @@ class FeatureVecMakerUDF(UDF):
         return
 
 
-def make_feature_vec(ctx, dataset, delta,
+def make_feature_vec(ctx, dataset, delta, n_peaks,
 # num,
                     center=None, rad_in=None, rad_out=None, roi=None):
     """
@@ -86,10 +86,10 @@ def make_feature_vec(ctx, dataset, delta,
         masked_sstd = sstd*mask
     else:
         masked_sstd = sstd
-    coordinates = peak_local_max(masked_sstd, num_peaks=100, min_distance=1)
+    coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=1)
     udf = FeatureVecMakerUDF(
         #num=num,
-        delta=delta, center=center, rad_in=rad_in, rad_out=rad_out,
+        delta=delta, n_peaks=n_peaks, center=center, rad_in=rad_in, rad_out=rad_out,
         savg=savg, coordinates=coordinates
         )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

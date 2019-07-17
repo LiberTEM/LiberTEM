@@ -154,7 +154,6 @@ def correct(buffer, dark_image, gain_map, exclude_pixels, inplace=False):
 
     # Patch to help Numba determine the type in case of an empty list
     if len(repair_flat) == 0:
-        # That is an odd case that is hit during fuzzing
         repair_flat = (np.array([], dtype=np.int), )
 
     _correct_numba_inplace(

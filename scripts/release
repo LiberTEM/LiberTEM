@@ -293,6 +293,9 @@ def upload_to_pypi(verbose, user, password):
     cmd = ["twine", "upload"]
     release = get_release_kind()
 
+    cmd.extend(["-u", user])
+    cmd.extend(["-p", password])
+
     # upload command for test.pypi.org:
     # twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 

@@ -145,7 +145,7 @@ class Match(PointSelection):
             diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
             return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
         else:
-            return np.float('nan')
+            return np.float('inf')
 
     @classmethod
     def _make_parameters(cls, p, a=None, b=None):

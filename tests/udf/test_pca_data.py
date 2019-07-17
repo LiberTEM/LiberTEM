@@ -79,7 +79,7 @@ def diffsnorm(data, reconstruct):
 		square root of sum of squares of the norm difference
 		between data and reconstructed data
 	"""
-	return math.sqrt(norm(data-reconstruct))
+	return norm(data-reconstruct)/norm(data+reconstruct)
 
 
 def test_pca(lt_ctx):
@@ -109,7 +109,8 @@ def test_pca(lt_ctx):
 	mean = res['mean'].data
 
 	end = time.time()
-	print("Time to run PCA: ", end-start)
+	
+	print(f"Time to finish: {end-start}")
 
 	left_singular = left_singular[~np.all(left_singular==0, axis=1)]
 	reconstruct_loading = left_singular @ np.diag(singular_vals)
@@ -119,4 +120,4 @@ def test_pca(lt_ctx):
 	reconstruct_data = projected_data @ components + mean
 
 	# TODO : construct a reasonable lower bound on the reconstruction error
-	assert diffsnorm(data, reconstruct_data) < 30
+	assert diffsnorm(data, reconstruct_data) < 1

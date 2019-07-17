@@ -300,7 +300,7 @@ def main(wheel, tarball, parent, url, verbose):
 
     global VERBOSE
     VERBOSE = verbose
-    
+
     log("Creating new version of deposition %s..." % parent)
     r = new_version(parent_id=parent)
     prettylog(r)

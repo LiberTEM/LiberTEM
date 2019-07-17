@@ -63,11 +63,10 @@ jobs:
     - stage: packaging
       sudo: require
       dist: trusty
+      install:
+        - pip install click pygithub requests
       script:
-        - bash -ex packaging/appimage/make_app_image.sh
-        - ls -lh
-      after_success:
-        - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash -c "chmod +x upload.sh && ./upload.sh LiberTEM*.AppImage* dist/*"
+        - python scripts/release --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
 
 branches:
   except:

@@ -2,13 +2,23 @@
 # -*- encoding: utf-8 -*-
 import os
 import re
+import sys
+import json
+import glob
+import shutil
 import subprocess
+from os.path import join
 
+from github import Github, UnknownObjectException
+from pkg_resources import parse_version
 import click
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.normpath(join(HERE, '..'))
 
-VERSION_RE = re.compile(
-    r'^(?P<breaking>\d+)\.(?P<feature>\d+)\.(?P<fix>\d+)(?P<rc>\.rc\d+)?(?P<dev>\.dev0)?$'
+VERSION_PAT = re.compile(
+    r'^(?P<full>(?P<prefix>v)?(?P<breaking>\d+)\.(?P<feature>\d+)\.(?P<fix>\d+)'
+    r'(?P<rc>rc\d+)?(?P<dev>\.dev0)?)$'
 )
 
 
@@ -25,6 +35,10 @@ def read_version(version_file):
     return res['__version__']
 
 
+def get_version_fn():
+    return join(BASE_DIR, 'src', 'libertem', '__version__.py')
+
+
 def do_git_commit(old_version, new_version, version_file):
     cmd = ["git", "commit", version_file, "-m",
            "bump version: {} → {}".format(old_version, new_version)]
@@ -36,7 +50,366 @@ def do_git_tag(tag):
     subprocess.check_call(cmd)
 
 
-@click.command()
+def get_current_tags():
+    """
+    returns list of tags that point to HEAD
+    """
+    cmd = ["git", "tag", "--points-at", "HEAD"]
+    return subprocess.check_output(cmd, text="utf-8").strip().split("\n")
+
+
+def latest_tag_from_tags(tags):
+    """
+    A commit can have more than one version tag, for example if we re-tag
+    a release candidate as final release. This function returns the most current
+    tag, according to setuptools' parse_version
+    """
+    sorted_tags = list(sorted(tags, key=lambda t: parse_version(t)))
+    return sorted_tags[-1]
+
+
+def get_latest_tag():
+    """
+    return the latest tags, looking "back" from HEAD
+    """
+    try:
+        cmd = ["git", "describe", "--abbrev=0", "--tags"]
+        return subprocess.check_output(cmd, text="utf-8").strip()
+    except subprocess.CalledProcessError:
+        return ""
+
+
+def tag_matches(tags):
+    """
+    """
+    matches = [
+        VERSION_PAT.match(tag)
+        for tag in tags
+    ]
+    return [m.groupdict()
+            for m in matches
+            if m is not None]
+
+
+def current_version_tag_is_rc():
+    matches = tag_matches(get_current_tags())
+    for match in matches:
+        if match['rc'] is not None:
+            return True
+    return False
+
+
+def current_version_tag_is_release():
+    matches = tag_matches(get_current_tags())
+    for match in matches:
+        if match['rc'] is None and match['dev'] is None:
+            return True
+    return False
+
+
+def get_release_kind():
+    matches = tag_matches(get_current_tags())
+    for match in matches:
+        if match['rc'] is not None:
+            return "rc"
+        elif match['rc'] is None and match['dev'] is None:
+            return "release"
+    return "dev"
+
+
+def get_wheel():
+    wheels = glob.glob("%s/*.whl" % BASE_DIR)
+    assert len(wheels) == 1, "expected only one wheel, have: %s" % wheels
+    return wheels[0]
+
+
+def get_sdist():
+    sdists = glob.glob("%s/*.tar.gz" % BASE_DIR)
+    assert len(sdists) == 1, "expected only one tarball, have: %s" % sdists
+    return sdists[0]
+
+
+def get_py_release_files():
+    """
+    get wheel and sdist files (basically dist/*)
+    """
+    return glob.glob("%s/*" % BASE_DIR)
+
+
+def upload_to_zenodo(verbose, dry_run, parent_deposit):
+    if verbose:
+        print("uploading to zenodo")
+
+    wheel = get_wheel()
+    sdist = get_sdist()
+
+    release = get_release_kind()
+
+    if release == "dev":
+        raise Exception("don't want to upload to zenodo from dev release")
+    elif release == "rc":
+        url = "https://sandbox.zenodo.org/api/"
+        parent = "264899"  # FIXME?
+        raise Exception("please fix parent deposition IDs for sandbox and prod!")
+    elif release == "release":
+        url = "https://zenodo.org/api/"
+        parent = "1478763"  # FIXME: fix this number?
+
+    out = subprocess.check_output([
+        "python", join(HERE, "zenodo_upload"),
+        "--wheel=%s" % wheel,
+        "--tarball=%s" % sdist,
+        "--url=%s" % url,
+        "--parent=%s" % parent,
+    ])
+
+    if verbose and out:
+        print(out.decode("utf-8"))
+
+
+def get_release_msg():
+    parts = []
+    travis_url = os.environ.get("TRAVIS_BUILD_WEB_URL", "")
+    if travis_url:
+        parts.append("Travis CI biuld log: %s" % travis_url)
+    return "\n\n".join(parts)
+
+
+def upload_to_github(verbose, files, token, release):
+    if verbose:
+        print("uploading files to github:", files)
+    tags = tag_matches(get_current_tags())
+    msg = get_release_msg()
+
+    if verbose:
+        print("release message:", msg)
+
+    g = Github(token)
+    repo = g.get_repo("LiberTEM/LiberTEM")
+
+    # FIXME: what if we are not in context of travis?
+    target = os.environ["TRAVIS_COMMIT"]
+    release_data = {
+        "message": msg,
+        "target_commitish": target,
+    }
+    if release == "dev":
+        release_data = {
+            "tag": "continuous",
+            "name": "Continuous build",
+            "draft": False,
+            "prerelease": True,
+        }
+        # first, delete existing continuous tag:
+        try:
+            cont_tag = repo.get_git_ref("tags/continuous")
+            cont_tag.delete()
+        except UnknownObjectException:
+            pass
+        if verbose:
+            print("continuous release")
+    elif release == "rc":
+        tag = latest_tag_from_tags(tags)
+        release_data = {
+            "tag": tag,
+            "name": "Release Candidate",
+            "draft": False,
+            "prerelease": True,
+        }
+        if verbose:
+            print("release candidate, tag:", tag)
+    elif release == "release":
+        tag = latest_tag_from_tags(tags)
+        release_data = {
+            "tag": tag,
+            "name": "Release %s" % tag,
+            "draft": False,
+            "prerelease": False,
+        }
+        if verbose:
+            print("release, tag:", tag)
+    else:
+        raise ValueError("unknown release kind: %s" % release)
+
+    rel = repo.create_git_release(**release_data)
+
+    for path in files:
+        rel.upload_asset(path=path, content_type='application/octet-stream')
+
+
+def build_appimage(verbose):
+    APPIMAGE_DIR = join(BASE_DIR, 'packaging', 'appimage')
+
+    if verbose:
+        print("building AppImage in %s" % APPIMAGE_DIR)
+
+    # cleanup existing AppDir
+    shutil.rmtree(join(APPIMAGE_DIR, 'AppDir'))
+
+    cmd = [
+        join(APPIMAGE_DIR, 'make_app_image.sh')
+    ]
+    output = subprocess.check_output(cmd, text="utf-8", cwd=APPIMAGE_DIR).strip()
+
+    if verbose:
+        print(output)
+
+    # FIXME: where does the zsync file come from?
+    appimage_files = glob.glob(join(APPIMAGE_DIR, 'LiberTEM*.AppImage*'))
+
+    return appimage_files
+
+
+def prepare_upload(verbose):
+    """
+    Prepare for upload. This includes:
+
+     * running readme_to_html.py
+     * building sdist and wheel
+    """
+    if verbose:
+        print("preparing for upload")
+        print("calling readme_to_html.py")
+
+    out = subprocess.check_output([
+        "python", join(HERE, "readme_to_html.py"),
+        join(BASE_DIR, 'README.rst'),  # src
+        join(BASE_DIR, 'packaging', 'README.rst'),  # dest
+    ])
+
+    if verbose and out:
+        print(out.decode("utf-8"))
+
+    if verbose:
+        print("building wheel and sdist")
+
+    out = subprocess.check_output([
+        "python", "setup.py", "sdist", "bdist_wheel"
+    ], cwd=BASE_DIR)
+
+
+def upload_to_pypi(verbose, user, password):
+    files = get_py_release_files()
+    cmd = ["twine", "upload"]
+    release = get_release_kind()
+
+    # upload command for test.pypi.org:
+    # twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+    if release == "dev":
+        raise Exception("won't upload dev release to pypi")
+    elif release == "rc":
+        cmd.extend(["--repository-url", "https://test.pypi.org/legacy/"])
+    elif release == "release":
+        pass
+    else:
+        raise Exception("unknown release kind %s" % release)
+
+    cmd.extend(files)
+
+    out = subprocess.check_output(cmd)
+
+    if verbose:
+        print(out)
+
+
+@click.group()
+@click.option('--verbose/--no-verbose', default=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj['verbose'] = verbose
+
+
+@cli.command()
+@click.pass_context
+def is_rc(ctx):
+    res = current_version_tag_is_rc()
+    if ctx.obj['verbose']:
+        print("is rc?", res)
+    sys.exit(int(not res))
+
+
+@cli.command()
+@click.option('--dry-run/--no-dry-run', default=True,
+              help="don't actually upload, only prepare files etc.")
+@click.option('--pypi-user', type=str, show_envvar=True)
+@click.option('--pypi-password', type=str, show_envvar=True)
+@click.option('--pypi-test-user', type=str, show_envvar=True)
+@click.option('--pypi-test-password', type=str, show_envvar=True)
+@click.option('--token', type=str, show_envvar=True,
+              help='Github token for creating releases')
+@click.pass_context
+def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_password, token):
+    """
+    prepare, build and upload libertem to pypi (if release candidate, to the test instance)
+    """
+
+    if dry_run:
+        print("NOTE: running in dry-run mode, specify --no-dry-run to really upload!")
+
+    is_rc = current_version_tag_is_rc()
+    is_release = current_version_tag_is_release()
+
+    if is_rc:
+        # we want to upload release candidates to test.pypi.org:
+        assert (pypi_test_user is not None and pypi_test_password is not None)
+    if is_release:
+        # releases need the "real" pypi credentials:
+        assert (pypi_user is not None and pypi_password is not None)
+
+    prepare_upload(verbose=ctx.obj['verbose'])
+
+    # validate zenodo-upload.json:
+    with open(join(BASE_DIR, 'packaging/zenodo-upload.json')) as f:
+        json.load(f)
+
+    if not dry_run:
+        if is_release or is_rc:
+            upload_to_zenodo(verbose=ctx.obj['verbose'], dry_run=dry_run)
+        if is_release:
+            upload_to_pypi(ctx.obj['verbose'], user=pypi_user, password=pypi_password)
+        elif is_rc:
+            upload_to_pypi(ctx.obj['verbose'], user=pypi_test_user, password=pypi_test_password)
+
+    release = get_release_kind()
+
+    appimage_files = build_appimage(verbose=ctx.obj['verbose'])
+    github_files = get_py_release_files()
+    github_files.extend(appimage_files)
+
+    is_master = os.environ['TRAVIS_BRANCH'] == "master"
+    is_pull_request = os.environ['TRAVIS_PULL_REQUEST'] != "false"
+
+    if is_master and not is_pull_request:
+        if dry_run:
+            print("would upload the following files to github:")
+            for f in github_files:
+                print(f)
+        else:
+            upload_to_github(ctx.obj['verbose'], github_files, token=token, release=release)
+    else:
+        print("branch is not master, would not upload to github")
+
+
+@cli.command()
+@click.pass_context
+def status(ctx):
+    version_file = get_version_fn()
+    current_version = read_version(version_file)
+    print("current version: %s" % current_version)
+    print("version tags for HEAD: %s" % [m['full'] for m in tag_matches(get_current_tags())])
+    print("last version tags: %s" % [m['full'] for m in tag_matches([get_latest_tag()])])
+    print("is release candidate? %s" % current_version_tag_is_rc())
+
+
+@cli.command()
+@click.pass_context
+def do_build_appimage(ctx):
+    appimage_files = build_appimage(verbose=ctx.obj['verbose'])
+    print("success, files=", appimage_files)
+
+
+@cli.command()
 @click.argument('new_version', type=str)
 @click.option('--tag/--no-tag', help='create a git tag after bumping (implies --commit)',
               default=False)
@@ -44,7 +417,7 @@ def do_git_tag(tag):
               default=False)
 @click.option('--force/--no-force', help='force operation, even if it doesn\'t fit our conventions',
               default=False)
-def main(new_version, tag, commit, force):
+def bump(new_version, tag, commit, force):
     """
     bump the version in libertem.__version__
 
@@ -53,11 +426,10 @@ def main(new_version, tag, commit, force):
     if tag and not commit:
         commit = True
         print("NOTE: implicitly enabling --commit")
-    match = VERSION_RE.match(new_version)
+    match = VERSION_PAT.match(new_version)
     if match is None:
         raise click.UsageError("could not parse version, may not conform to our scheme")
-    here = os.path.abspath(os.path.dirname(__file__))
-    version_file = os.path.join(here, '..', 'src', 'libertem', '__version__.py')
+    version_file = get_version_fn()
     old_version = read_version(version_file)
     render_version(version_file, new_version)
     version_tag = "v{}".format(new_version)
@@ -85,4 +457,4 @@ def main(new_version, tag, commit, force):
 
 
 if __name__ == "__main__":
-    main()
+    cli(obj={}, auto_envvar_prefix="LT_RELEASE")

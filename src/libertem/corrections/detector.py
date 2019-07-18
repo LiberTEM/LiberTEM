@@ -2,7 +2,7 @@ import numpy as np
 import numba
 import sparse
 
-from libertem.masks import is_sparse
+from libertem.masks import is_sparse, to_dense
 
 
 @numba.njit
@@ -188,12 +188,17 @@ def correct_dot_masks(masks, gain_map, excluded_pixels):
     repairs = environments(excluded_pixels, sig_shape)
 
     if is_sparse(masks):
-        result = sparse.COO(masks)
+        result = sparse.DOK(masks)
     else:
         result = masks.copy()
 
     for e, r in zip(*flatten_filter(excluded_pixels, repairs, sig_shape)):
         result[:, e] = 0
-        result[:, r] += masks[:, e, np.newaxis] / len(r)
-    result *= gain_map.flatten()
+        rep = masks[:, e] / len(r)
+        # We have to loop because of sparse.pydata limitations
+        for rr in r:
+            result[:, rr] = to_dense(masks[:, rr] + rep)
+    if is_sparse(result):
+        result = sparse.COO(result)
+    result = result * gain_map.flatten()
     return result.reshape(mask_shape)

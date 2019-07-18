@@ -186,8 +186,6 @@ def test_mask_correction():
 
 
 def test_mask_correction_sparse():
-    return
-    np.random.random()
     num_nav_dims = np.random.choice([1, 2, 3])
     num_sig_dims = np.random.choice([2, 3])
 
@@ -212,9 +210,11 @@ def test_mask_correction_sparse():
     print("Sig dims:", sig_dims)
     print("Exclude: ", exclude)
 
-    masks = sparse.zeros((20, ) + sig_dims)
+    masks = sparse.DOK(sparse.zeros((20, ) + sig_dims))
     indices = np.array([np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims])
-    masks[(*indices, )] = 1
+    for tup in zip(*indices):
+        masks[tup] = 1
+    masks = masks.to_coo()
 
     data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
     damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))

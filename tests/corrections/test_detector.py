@@ -1,6 +1,8 @@
 import numpy as np
+import sparse
 
 from libertem.corrections import detector
+from libertem.masks import is_sparse
 
 
 def test_detector_correction():
@@ -34,7 +36,7 @@ def test_detector_correction():
                 buffer=damaged_data,
                 dark_image=dark_image,
                 gain_map=gain_map,
-                exclude_pixels=exclude,
+                excluded_pixels=exclude,
                 inplace=False
             )
         except detector.RepairValueError as e:
@@ -75,7 +77,7 @@ def test_detector_correction():
             buffer=damaged_data,
             dark_image=dark_image,
             gain_map=gain_map,
-            exclude_pixels=exclude,
+            excluded_pixels=exclude,
             inplace=True
         )
 
@@ -113,7 +115,7 @@ def test_detector_patch():
                 buffer=damaged_data,
                 dark_image=dark_image,
                 gain_map=gain_map,
-                exclude_pixels=exclude,
+                excluded_pixels=exclude,
                 inplace=False
             )
         except detector.RepairValueError as e:
@@ -140,3 +142,89 @@ def test_detector_patch():
         )
         # The settings were chosen to make patching the pixel easy
         assert np.allclose(data, corrected, atol=atol, rtol=rtol)
+
+
+def test_mask_correction():
+    num_nav_dims = np.random.choice([1, 2, 3])
+    num_sig_dims = np.random.choice([2, 3])
+
+    nav_dims = tuple(np.random.randint(low=8, high=16, size=num_nav_dims))
+    sig_dims = tuple(np.random.randint(low=8, high=16, size=num_sig_dims))
+
+    # We choose data that is easy to patch
+    data = data = np.ones(nav_dims + sig_dims, dtype=np.float32)
+
+    gain_map = np.random.random(sig_dims) + 1
+    dark_image = np.random.random(sig_dims) * 0.01
+
+    num_excluded = 3
+    exclude = np.array([np.random.randint(low=0, high=s, size=num_excluded) for s in sig_dims])
+
+    damaged_data = data.copy()
+    damaged_data /= gain_map
+    damaged_data += dark_image
+    damaged_data[(Ellipsis, *exclude)] = 0
+
+    print("Nav dims: ", nav_dims)
+    print("Sig dims:", sig_dims)
+    print("Exclude: ", exclude)
+
+    masks = np.random.random((2, ) + sig_dims).reshape((-1, np.prod(sig_dims))) - 0.5
+    data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
+    damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
+
+    correct_dot = np.dot(data_flat, masks.T)
+    corrected_masks = detector.correct_dot_masks(masks, gain_map, exclude)
+
+    assert not is_sparse(corrected_masks)
+
+    reconstructed_dot =\
+        np.dot(damaged_flat, corrected_masks.T)\
+        - np.dot(dark_image.flatten(), corrected_masks.T)
+
+    assert np.allclose(correct_dot, reconstructed_dot)
+
+
+def test_mask_correction_sparse():
+    return
+    np.random.random()
+    num_nav_dims = np.random.choice([1, 2, 3])
+    num_sig_dims = np.random.choice([2, 3])
+
+    nav_dims = tuple(np.random.randint(low=8, high=16, size=num_nav_dims))
+    sig_dims = tuple(np.random.randint(low=8, high=16, size=num_sig_dims))
+
+    # We choose data that is easy to patch
+    data = np.ones(nav_dims + sig_dims, dtype=np.float32)
+
+    gain_map = np.random.random(sig_dims) + 1
+    dark_image = np.random.random(sig_dims) * 0.01
+
+    num_excluded = 3
+    exclude = np.array([np.random.randint(low=0, high=s, size=num_excluded) for s in sig_dims])
+
+    damaged_data = data.copy()
+    damaged_data /= gain_map
+    damaged_data += dark_image
+    damaged_data[(Ellipsis, *exclude)] = 0
+
+    print("Nav dims: ", nav_dims)
+    print("Sig dims:", sig_dims)
+    print("Exclude: ", exclude)
+
+    masks = sparse.zeros((20, ) + sig_dims)
+    indices = np.array([np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims])
+    masks[(*indices, )] = 1
+
+    data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
+    damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
+
+    correct_dot = sparse.dot(data_flat, masks.reshape((-1, np.prod(sig_dims))).T)
+    corrected_masks = detector.correct_dot_masks(masks, gain_map, exclude)
+    assert is_sparse(corrected_masks)
+
+    reconstructed_dot =\
+        sparse.dot(damaged_flat, corrected_masks.reshape((-1, np.prod(sig_dims))).T)\
+        - sparse.dot(dark_image.flatten(), corrected_masks.reshape((-1, np.prod(sig_dims))).T)
+
+    assert np.allclose(correct_dot, reconstructed_dot)

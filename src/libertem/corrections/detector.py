@@ -1,5 +1,8 @@
 import numpy as np
 import numba
+import sparse
+
+from libertem.masks import is_sparse
 
 
 @numba.njit
@@ -79,25 +82,47 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
     return buffer
 
 
-def environment(excluded_pixel, sigshape):
+def environments(excluded_pixels, sigshape):
     '''
     Calculate a hypercube surface around a pixel, excluding frame boundaries
     '''
-    excluded_pixel = np.array(excluded_pixel)
     sigshape = np.array(sigshape)
-    coords = np.mgrid[tuple(slice(p-1, p+2) for p in excluded_pixel)]
-    coords = coords.reshape((len(excluded_pixel), -1))
-    select = np.any(coords != excluded_pixel[:, np.newaxis], axis=0)
-    select *= np.all(coords >= 0, axis=0)
-    select *= np.all(coords < sigshape[:, np.newaxis], axis=0)
-    return coords[..., select]
+    excluded_pixels = np.array(excluded_pixels).T
+    for p in excluded_pixels:
+        coords = np.mgrid[tuple(slice(pp-1, pp+2) for pp in p)]
+        coords = coords.reshape((len(p), -1))
+        select = np.any(coords != p[:, np.newaxis], axis=0)
+        select *= np.all(coords >= 0, axis=0)
+        select *= np.all(coords < sigshape[:, np.newaxis], axis=0)
+        yield coords[..., select]
 
 
 class RepairValueError(ValueError):
     pass
 
 
-def correct(buffer, dark_image, gain_map, exclude_pixels, inplace=False):
+def flatten_filter(excluded_pixels, repairs, sig_shape):
+    '''
+    Flatten excluded pixels and repair environments and filter for collisions
+
+    Ravel indices to flattened signal dimension and
+    removed damaged pixels from all repair environments, i.e. only use
+    "good" pixels.
+    '''
+    excluded_flat = np.ravel_multi_index(excluded_pixels, sig_shape)
+    repair_flat = tuple([
+            np.extract(np.invert(np.isin(a, excluded_flat)), a)
+            for a in [np.ravel_multi_index(r, sig_shape) for r in repairs]
+    ])
+
+    for i in range(len(excluded_flat)):
+        if len(repair_flat[i]) == 0:
+            raise RepairValueError("Repair environment for pixel %i is empty" % i)
+
+    return (excluded_flat, repair_flat)
+
+
+def correct(buffer, dark_image, gain_map, excluded_pixels, inplace=False):
     '''
     Function to perform detector corrections
 
@@ -138,19 +163,9 @@ def correct(buffer, dark_image, gain_map, exclude_pixels, inplace=False):
     else:
         out = buffer.copy()
 
-    exclude_flat = np.ravel_multi_index(exclude_pixels, sig_shape)
-    repairs = [environment(p, sig_shape) for p in exclude_pixels.T]
+    repairs = environments(excluded_pixels, sig_shape)
 
-    repair_flat = tuple(
-        [
-            np.extract(np.invert(np.isin(a, exclude_flat)), a)
-            for a in [np.ravel_multi_index(r, sig_shape) for r in repairs]
-        ]
-    )
-
-    for i, r in enumerate(exclude_flat):
-        if len(repair_flat[i]) == 0:
-            raise RepairValueError("Calculated repair environment for pixel %i is empty" % i)
+    exclude_flat, repair_flat = flatten_filter(excluded_pixels, repairs, sig_shape)
 
     # Patch to help Numba determine the type in case of an empty list
     if len(repair_flat) == 0:
@@ -164,3 +179,21 @@ def correct(buffer, dark_image, gain_map, exclude_pixels, inplace=False):
         repair_environments=repair_flat,
     )
     return out
+
+
+def correct_dot_masks(masks, gain_map, excluded_pixels):
+    mask_shape = masks.shape
+    sig_shape = gain_map.shape
+    masks = masks.reshape((-1, np.prod(sig_shape)))
+    repairs = environments(excluded_pixels, sig_shape)
+
+    if is_sparse(masks):
+        result = sparse.COO(masks)
+    else:
+        result = masks.copy()
+
+    for e, r in zip(*flatten_filter(excluded_pixels, repairs, sig_shape)):
+        result[:, e] = 0
+        result[:, r] += masks[:, e, np.newaxis] / len(r)
+    result *= gain_map.flatten()
+    return result.reshape(mask_shape)

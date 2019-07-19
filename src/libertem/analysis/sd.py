@@ -1,10 +1,8 @@
-import numpy as np
-
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-from libertem.udf import UDF
 from libertem import masks
 import libertem.udf.stddev as std
+
 
 class SDAnalysis(BaseAnalysis):
     TYPE = 'UDF'
@@ -24,7 +22,7 @@ class SDAnalysis(BaseAnalysis):
                 nx, ny,
                 params["r"],
             )
-        if params["shape"] == "rect":
+        elif params["shape"] == "rect":
             roi = masks.rectangular(
                 params["x"],
                 params["y"],

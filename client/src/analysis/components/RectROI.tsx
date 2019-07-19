@@ -19,7 +19,7 @@ const useRectROI = ({ scanWidth, scanHeight}: {
     const [height, setheight] = useState(minLength / 8);
 
 
-    const roiParameters: SDFrameParams = {
+    const RectroiParameters: SDFrameParams = {
         roi: {
             shape: "rect",
             x,
@@ -67,7 +67,7 @@ const useRectROI = ({ scanWidth, scanHeight}: {
     );
 
     return {
-        roiParameters,
+        RectroiParameters,
         RectRoiHandles,
         RectRoiWidgets,
     };

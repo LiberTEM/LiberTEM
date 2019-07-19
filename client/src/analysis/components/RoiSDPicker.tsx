@@ -3,22 +3,25 @@ import { useDispatch } from "react-redux";
 import { AnalysisTypes, SDFrameParams } from "../../messages";
 import * as analysisActions from "../actions";
 
-const useRoiSDPicker = ({ analysisId, enabled, jobIndex, roiParameters}: {
+
+const useRoiSDPicker = ({ analysisId, enabled, jobIndex, roiParameters, shapes}: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
     jobIndex: number,
     analysisId: string;
     roiParameters: SDFrameParams;
+    shapes: string;
 }) => {
 
-    const dispatch = useDispatch();
+    if (shapes==="rect")
+    {const dispatch = useDispatch();
     let x;
     let y;
     let width;
     let height;
 
-    if("shape" in roiParameters.roi) {
+    if("width" in roiParameters.roi) {
         ({ x, y, width, height } = roiParameters.roi);
     }
 
@@ -33,7 +36,32 @@ const useRoiSDPicker = ({ analysisId, enabled, jobIndex, roiParameters}: {
         }, 100);
 
         return () => clearTimeout(handle);
-    }, [analysisId, enabled, jobIndex, x, y, width, height]);
+    }, [analysisId, enabled, jobIndex, x, y, width, height]);}
+
+
+    if (shapes==="disk")
+    {const dispatch = useDispatch();
+    let cx;
+    let cy;
+    let r;
+
+    if("r" in roiParameters.roi) {
+        ({ cx, cy, r } = roiParameters.roi);
+    }
+
+    React.useEffect(() => {
+        const handle = setTimeout(() => {
+            if (enabled) {
+                dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+                    type: AnalysisTypes.SD_FRAMES,
+                    parameters: roiParameters,
+                }))
+            }
+        }, 100);
+
+        return () => clearTimeout(handle);
+    }, [analysisId, enabled, jobIndex, cx, cy, r]);}
+    
 
     return {
     };

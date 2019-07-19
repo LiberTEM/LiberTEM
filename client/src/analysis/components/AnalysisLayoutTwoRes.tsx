@@ -69,13 +69,10 @@ const AnalysisLayoutTwoRes: React.SFC<MergedProps> = ({
                     </Grid.Row>
 
                     <Grid.Row>
-                        <Grid.Column width={10}>
+                        <Grid.Column width={16}>
 
                             <p>{clustparams}</p>
                             <p>{subtitle}</p>
-                        </Grid.Column>
-
-                        <Grid.Column width={6}>
 
                         </Grid.Column>
 

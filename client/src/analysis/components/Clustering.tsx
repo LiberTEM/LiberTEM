@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Form } from "semantic-ui-react";
+import { Form, Accordion, Icon } from "semantic-ui-react";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
@@ -91,7 +91,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     )
 
     const dispatch = useDispatch();
-    const {roiParameters, RectRoiHandles, RectRoiWidgets}=useRectROI({scanWidth, scanHeight});
+    const {RectroiParameters, RectRoiHandles, RectRoiWidgets}=useRectROI({scanWidth, scanHeight});
     
     React.useEffect(() => {
             dispatch(analysisActions.Actions.run(analysis.id, 1, {
@@ -104,7 +104,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         dispatch(analysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.CLUST,
             parameters:{
-            roi: roiParameters.roi,
+            roi: RectroiParameters.roi,
             cx,
             cy,
             ri,
@@ -129,21 +129,36 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const subtitle = (
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
-
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    
+    const [paramsVisible, setParamsVisible] = React.useState(false);
+
+    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        setParamsVisible(!paramsVisible);
+    }
+    
     const clustparams =
+    <Accordion>
+    <Accordion.Title active={paramsVisible} index={0} onClick={handleClick}>
+          <Icon name='dropdown' />
+          Parameters
+    </Accordion.Title>
+    <Accordion.Content active={paramsVisible}>
     <Form>
         <Form.Field> 
-                <label> delta </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
+                <label> Delta. Relative intensity difference between current frame and reference image for decision making
+        for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
         </Form.Field>
         <Form.Field>
-            <label> number of clusters </label> <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> 
+            <label> Number of clusters </label> <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> 
         </Form.Field>    
         <Form.Field>
-            <label> number of peaks </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
+            <label>  Maximal number of possible peak positions to detect (better put higher value,
+        the output is limited to the number of peaks the algorithm could find) </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
         </Form.Field>
     </Form>
-    
+    </Accordion.Content>
+    </Accordion>
     return (
         <AnalysisLayoutTwoRes
             title="FFT analysis" subtitle={subtitle}

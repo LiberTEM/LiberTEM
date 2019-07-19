@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
-import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import { useDiskROI } from "./DiskROI";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
 import { useRectROI } from "./RectROI";
@@ -10,12 +10,21 @@ import { useRoiSDPicker } from "./RoiSDPicker";
 import useSDFrames from "./SDFrames";
 import useSumFrames from "./SumFrames";
 
+export enum DefaultModes {
+    SUM = "SUM",
+    SD = "SD",
+    PICK = "PICK",
+    SUM_DISK = "SUM_DISK",
+    SD_RECT = "SD_RECT",
+    SD_DISK ="SD_DISK",
+}
+
 const useDefaultFrameView = ({
     scanWidth, scanHeight, analysisId,
 }: {
     scanWidth: number, scanHeight: number, analysisId: string,
 }) => {
-    const availableModes = [
+    /*const availableModes = [
         {
             text: "Average",
             value: AnalysisTypes.SUM_FRAMES,
@@ -39,17 +48,45 @@ const useDefaultFrameView = ({
             value: AnalysisTypes.SD_FRAMES_ROI,
         },
 
-    ];
+    ];*/
+    const availableModes = [
+        {
+            text: "Average",
+            value: DefaultModes.SUM,
+        },
+        {
+            text: "SD",
+            value: DefaultModes.SD,
+        },
+        {
+            text: "PICK",
+            value: DefaultModes.PICK,
+        },
+        {
+            text: "Average over ROI (disk)",
+            value: DefaultModes.SUM_DISK,
+        },
+        {
+            text: "SD over ROI (rect)",
+            value: DefaultModes.SD_RECT,
+        },
+        {
+            text: "SD over ROI (disk)",
+            value: DefaultModes.SD_DISK,
+        },
 
-    const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
+    ]
+
+    const [frameMode, setMode] = useState(DefaultModes.SUM);
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
 
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
 
+
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
-        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        enabled: frameMode === DefaultModes.PICK,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
@@ -57,36 +94,49 @@ const useDefaultFrameView = ({
     });
 
     const { sumRoiHandles, sumRoiWidgets } = useRoiSumPicker({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES_ROI,
+        enabled: frameMode === DefaultModes.SUM_DISK,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
     });
 
-    const { RectRoiHandles, RectRoiWidgets, roiParameters }  = useRectROI({ scanHeight, scanWidth })
+    const { RectRoiHandles, RectRoiWidgets, RectroiParameters }  = useRectROI({ scanHeight, scanWidth })
+    const { diskRoiHandles, diskRoiWidgets, diskroiParameters}  = useDiskROI({ scanHeight, scanWidth })
 
     useRoiSDPicker({
-        enabled: frameMode === AnalysisTypes.SD_FRAMES_ROI,
+        enabled: frameMode === DefaultModes.SD_RECT,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        roiParameters,
+        roiParameters: RectroiParameters,
+        shapes: "rect"
     })
 
+    useRoiSDPicker({
+        enabled: frameMode === DefaultModes.SD_DISK,
+        scanWidth, scanHeight,
+        jobIndex: 0,
+        analysisId,
+        roiParameters: diskroiParameters,
+        shapes: "disk"
+    })
+
+    // (frameMode === DefaultModes.SUM) ? true_expr : false_expr
+
     useSumFrames({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+        enabled: frameMode === DefaultModes.SUM,
         jobIndex: 0,
         analysisId,
     })
 
     useSDFrames({
-        enabled: frameMode === AnalysisTypes.SD_FRAMES,
+        enabled: frameMode === DefaultModes.SD,
         jobIndex: 0,
         analysisId,
     })
 
     const frameViewTitle = (
-        frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
+        frameMode !== DefaultModes.PICK ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
 
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
@@ -94,25 +144,31 @@ const useDefaultFrameView = ({
     let handles = nullHandles;
 
     switch (frameMode) {
-        case AnalysisTypes.PICK_FRAME:
+        case DefaultModes.PICK:
             handles = pickHandles;
             break;
-        case AnalysisTypes.SUM_FRAMES_ROI:
+        case DefaultModes.SUM_DISK:
             handles = sumRoiHandles;
             break;
-        case AnalysisTypes.SD_FRAMES_ROI:
+        case DefaultModes.SD_RECT:
             handles = RectRoiHandles;
+            break;
+        case DefaultModes.SD_DISK:
+            handles = diskRoiHandles;
             break;
 }
 
     let widgets;
 
     switch (frameMode) {
-        case AnalysisTypes.SUM_FRAMES_ROI:
+        case DefaultModes.SUM_DISK:
             widgets = sumRoiWidgets;
             break;
-        case AnalysisTypes.SD_FRAMES_ROI:
+        case DefaultModes.SD_RECT:
             widgets = RectRoiWidgets;
+            break;
+        case DefaultModes.SD_DISK:
+            widgets = diskRoiWidgets;
             break;
     }
 

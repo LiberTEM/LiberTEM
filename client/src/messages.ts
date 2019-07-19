@@ -313,7 +313,13 @@ export interface SDFrameParams {
         y: number,
         width: number,
         height: number,
-    }|{}
+    }|{
+        shape: "disk",
+        cx: number,
+        cy: number,
+        r: number,
+    }|
+    {}
 }
 
 export interface ClustParams {

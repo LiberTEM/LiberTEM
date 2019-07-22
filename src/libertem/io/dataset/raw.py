@@ -231,7 +231,7 @@ class RawFileDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 1024MB per partition
-        res = max(self._cores, self._filesize // (32*32*32))
+        res = max(self._cores, self._filesize // (128*128*128))
         return res
 
     def get_partitions(self):

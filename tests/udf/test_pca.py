@@ -3,7 +3,7 @@ from scipy.linalg import norm
 
 from utils import MemoryDataSet, _mk_random
 from libertem import api
-from libertem.udf.pca_data import run_pca
+from libertem.udf.pca import run_pca
 
 
 def eig_error(eig_approx, eig):

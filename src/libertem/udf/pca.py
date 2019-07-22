@@ -355,8 +355,6 @@ class PcaUDF(UDF):
         dest['mean'][:] = col_mean
         dest['var'][:] = col_var
 
-        print(merge_num)
-
 
 def run_pca(ctx, dataset, n_components=100, roi=None):
     """

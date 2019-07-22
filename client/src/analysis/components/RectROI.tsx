@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 
-import { SDFrameParams } from "../../messages";
+import { FrameParams } from "../../messages";
 import { inRectConstraint} from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Rect from "../../widgets/Rect";
@@ -19,7 +19,7 @@ const useRectROI = ({ scanWidth, scanHeight}: {
     const [height, setheight] = useState(minLength / 8);
 
 
-    const RectroiParameters: SDFrameParams = {
+    const RectroiParameters: FrameParams = {
         roi: {
             shape: "rect",
             x,

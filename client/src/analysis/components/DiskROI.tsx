@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 
-import { SDFrameParams } from "../../messages";
+import { FrameParams } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
 import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
@@ -17,7 +17,7 @@ const useDiskROI = ({ scanWidth, scanHeight}: {
     const [r, setR] = useState(minLength / 8);
 
 
-    const diskroiParameters: SDFrameParams = {
+    const diskroiParameters: FrameParams = {
         roi: {
             shape: "disk",
             cx,

@@ -29,7 +29,7 @@ class SumAnalysis(BaseAnalysis):
         return SumUDF(dtype=dest_dtype)
 
     def get_roi(self):
-        if "roi" not in self.parameters:
+        if "shape" not in self.parameters["roi"]:
             return None
         params = self.parameters["roi"]
         ny, nx = tuple(self.dataset.shape.nav)
@@ -39,6 +39,14 @@ class SumAnalysis(BaseAnalysis):
                 params["cy"],
                 nx, ny,
                 params["r"],
+            )
+        elif params["shape"] == "rect":
+            roi = masks.rectangular(
+                params["x"],
+                params["y"],
+                params["width"],
+                params["height"],
+                nx, ny,
             )
         else:
             raise NotImplementedError("unknown shape %s" % params["shape"])
@@ -58,5 +66,5 @@ class SumAnalysis(BaseAnalysis):
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.intensity,
                            visualized=visualize_simple(udf_results.intensity, logarithmic=True),
-                           key="intensity", title="intensity", desc="sum of all frames"),
+                           key="intensity", title="intensity", desc="sum of frames"),
         ])

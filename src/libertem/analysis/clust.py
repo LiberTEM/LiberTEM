@@ -18,7 +18,6 @@ class ClusterAnalysis(BaseAnalysis):
     TYPE = "UDF"  # FIXME: type?
 
     def get_udf(self):
-        
         n_peaks = self.parameters["n_peaks"]
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
@@ -121,6 +120,5 @@ class ClusterAnalysis(BaseAnalysis):
         results = await run_blocking(
             self.get_udf_results,
             udf_results=udf_results,
-            
         )
         await send_results(results, True)

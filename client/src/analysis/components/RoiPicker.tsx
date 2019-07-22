@@ -1,90 +1,56 @@
 import * as React from "react";
-import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { AnalysisTypes, SumFrameParams } from "../../messages";
-import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
-import Disk from "../../widgets/Disk";
-import DraggableHandle from "../../widgets/DraggableHandle";
-import { HandleRenderFunction } from "../../widgets/types";
+
+import { AnalysisTypes, FrameParams } from "../../messages";
 import * as analysisActions from "../actions";
 
-const useRoiSumPicker = ({ scanWidth, scanHeight, analysisId, enabled, jobIndex }: {
+const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
     jobIndex: number,
     analysisId: string;
+    roiParameters: FrameParams;
+    analys: AnalysisTypes.SD_FRAMES|AnalysisTypes.SUM_FRAMES
 }) => {
-    const minLength = Math.min(scanWidth, scanHeight);
-    const [cx, setCx] = useState(scanWidth / 2);
-    const [cy, setCy] = useState(scanHeight / 2);
-    const [r, setR] = useState(minLength / 8);
 
+
+    
     const dispatch = useDispatch();
-
-    const roiParameters: SumFrameParams = {
-        roi: {
-            shape: "disk",
-            cx,
-            cy,
-            r,
-        },
-    }
 
     React.useEffect(() => {
         const handle = setTimeout(() => {
-            if (enabled) {
+            if ((enabled)&&(analys===AnalysisTypes.SD_FRAMES)) {
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                    type: AnalysisTypes.SUM_FRAMES,
+                    type: AnalysisTypes.SD_FRAMES,
                     parameters: roiParameters,
                 }))
             }
         }, 100);
 
         return () => clearTimeout(handle);
-    }, [analysisId, enabled, jobIndex, cx, cy, r]);
+    }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
-    const handleCenterChange = (newCx: number, newCy: number) => {
-        setCx(newCx);
-        setCy(newCy);
-    };
 
-    const handleRChange = (newR: number) => {
-        setR(newR);
-    };
+        React.useEffect(() => {
+            const handle = setTimeout(() => {
+                if ((enabled)&&(analys===AnalysisTypes.SUM_FRAMES)) {
+                    dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+                        type: AnalysisTypes.SUM_FRAMES,
+                        parameters: roiParameters,
+                    }))
+                }
+            }, 100);
+    
+            return () => clearTimeout(handle);
+        }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
-    const rHandle = {
-        x: cx - r,
-        y: cy,
-    }
 
-    const sumRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
-        <DraggableHandle x={cx} y={cy}
-            imageWidth={scanWidth}
-            onDragMove={handleCenterChange}
-            parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}
-            constraint={inRectConstraint(scanWidth, scanHeight)} />
-        <DraggableHandle x={rHandle.x} y={rHandle.y}
-            imageWidth={scanWidth}
-            onDragMove={cbToRadius(cx, cy, handleRChange)}
-            parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}
-            constraint={keepOnCY(cy)} />
-    </>);
-
-    const sumRoiWidgets = (
-        <Disk cx={cx} cy={cy} r={r}
-            imageWidth={scanWidth} imageHeight={scanHeight}
-        />
-    );
+   
 
     return {
-        roiParameters,
-        sumRoiHandles,
-        sumRoiWidgets,
     };
 };
 
-export { useRoiSumPicker };
+export { useRoiPicker };
 

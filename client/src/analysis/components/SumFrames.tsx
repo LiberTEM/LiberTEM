@@ -15,7 +15,7 @@ const useSumFrames = ({
         if (enabled) {
             dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                 type: AnalysisTypes.SUM_FRAMES,
-                parameters: {},
+                parameters: {roi: {}},
             }));
         }
     }, [analysisId, enabled, jobIndex]);

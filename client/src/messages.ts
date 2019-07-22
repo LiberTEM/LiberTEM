@@ -297,16 +297,8 @@ export interface FFTParams{
     real_centery: number | null,
 }
 
-export type SumFrameParams = {} | {
-    roi: {
-        shape: "disk",
-        cx: number,
-        cy: number,
-        r: number,
-    }
-}
 
-export interface SDFrameParams {
+export interface FrameParams {
     roi: {
         shape: "rect",
         x: number,
@@ -392,12 +384,12 @@ export interface CenterOfMassDetails {
 
 export interface SumFramesDetails {
     type: AnalysisTypes.SUM_FRAMES,
-    parameters: SumFrameParams
+    parameters: FrameParams
 }
 
 export interface SDFramesDetails {
     type: AnalysisTypes.SD_FRAMES,
-    parameters: SDFrameParams
+    parameters: FrameParams
 }
 
 export interface JustSumDetails {

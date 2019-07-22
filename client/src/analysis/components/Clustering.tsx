@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Form, Accordion, Icon } from "semantic-ui-react";
+import { Accordion, Form, Icon } from "semantic-ui-react";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
@@ -146,8 +146,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     <Accordion.Content active={paramsVisible}>
     <Form>
         <Form.Field> 
-                <label> Delta. Relative intensity difference between current frame and reference image for decision making
-        for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
+                <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
         </Form.Field>
         <Form.Field>
             <label> Number of clusters </label> <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> 
@@ -161,7 +160,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     </Accordion>
     return (
         <AnalysisLayoutTwoRes
-            title="FFT analysis" subtitle={subtitle}
+            title="Region clustering" subtitle={subtitle}
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
@@ -190,9 +189,9 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             toolbar={toolbar}
             clustparams= {clustparams}
 
-            title1="frame"
-            title2="Masking of intergation region in Fourier space"
-            title3="Result of analysis"
+            title1="Frame view. Choose ring parameters for peak finding"
+            title2="Bright field image (sum over frame). Choose ROI for SD map calculation"
+            title3="Clustering result"
 
         />
     );

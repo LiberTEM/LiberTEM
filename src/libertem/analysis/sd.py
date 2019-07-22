@@ -11,7 +11,7 @@ class SDAnalysis(BaseAnalysis):
         return std.StdDevUDF()
 
     def get_roi(self):
-        if "roi" not in self.parameters:
+        if "shape" not in self.parameters["roi"]:
             return None
         params = self.parameters["roi"]
         ny, nx = tuple(self.dataset.shape.nav)
@@ -40,5 +40,5 @@ class SDAnalysis(BaseAnalysis):
                            visualized=visualize_simple(
                                udf_results.var, logarithmic=True),
                            key="intensity", title="intensity",
-                           desc="SD"),
+                           desc="SD of frames"),
         ])

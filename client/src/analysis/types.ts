@@ -130,13 +130,13 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
     },
 
     [AnalysisTypes.CLUST]: {
-        desc: "Do clustering",
-        title: "Clustering?",
+        desc: "Region clustering based on non-zero order diffraction peaks positions",
+        title: "Clustering",
         component: ClustAnalysis,
     },
 
     [AnalysisTypes.JUST_SUM]: {
-        desc: "Do clustering",
-        title: "Clustering?",
+        desc: "Frame integration",
+        title: "Sum",
     },
 }

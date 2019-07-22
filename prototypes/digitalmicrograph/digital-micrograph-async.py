@@ -160,12 +160,8 @@ if __name__ == "__main__":
     remote_address = 'tcp://localhost:31313'
 
     ds_kwargs = dict(
-        filetype="raw",
-        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\scan_11_x256_y256.raw',
-        dtype="float32",
-        scan_size=(256, 256),
-        detector_size_raw=(130, 128),
-        crop_detector_to=(128, 128)
+        filetype="empad",
+        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\acquisition_12.xml',
     )
 
     ds_remote_kwargs = dict(

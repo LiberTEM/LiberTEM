@@ -25,11 +25,11 @@ if __name__ == "__main__":
         sum_analysis = ctx.create_sum_analysis(dataset=ds)
         sum_result = ctx.run(sum_analysis)
 
-        sum_image = DM.CreateImage(sum_result.intensity.raw_data)
+        sum_image = DM.CreateImage(sum_result.intensity.raw_data.copy())
         sum_image.ShowImage()
 
         haadf_analysis = ctx.create_ring_analysis(dataset=ds)
         haadf_result = ctx.run(haadf_analysis)
 
-        haadf_image = DM.CreateImage(haadf_result.intensity.raw_data)
+        haadf_image = DM.CreateImage(haadf_result.intensity.raw_data.copy())
         haadf_image.ShowImage()

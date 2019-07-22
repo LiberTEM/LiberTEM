@@ -128,6 +128,7 @@ def default_raw(tmpdir_factory):
         dtype="float32",
         detector_size=(128, 128),
     )
+    ds.set_num_cores(2)
     ds = ds.initialize()
     yield ds
 

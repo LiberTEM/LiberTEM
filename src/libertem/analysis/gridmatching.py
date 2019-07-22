@@ -94,10 +94,58 @@ class Match(PointSelection):
     def calculated_refineds(self):
         return calc_coords(self.zero, self.a, self.b, self.indices)
 
+    def calc_coords(self, indices=None, drop_zero=False, frame_shape=None, r=0):
+        '''
+        Shorthand to calculate peak coordinates.
+
+        Parameters
+        ----------
+
+        indices:
+            Indices to calculate coordinates for. Both an array of (y, x) pairs
+            and the output of np.mgrid are supported.
+        drop_zero:
+            Drop the zero order peak. This is important for virtual darkfield imaging.
+        frame_shape : tuple(fy, fx)
+            If set, the peaks are filtered with :meth:`~libertem.analysis.gridmatching.within_frame`
+        r:
+            Radius for :meth:`~libertem.analysis.gridmatching.within_frame`
+
+        Returns
+        -------
+
+        A list of (y, x) coordinate paris for peaks
+        '''
+        if indices is None:
+            indices = self.indices
+        s = indices.shape
+        # Output of mgrid
+        if (len(s) == 3) and (s[0] == 2):
+            indices = np.concatenate(indices.T)
+        # List of (i, j) pairs
+        elif (len(s) == 2) and (s[1] == 2):
+            pass
+        else:
+            raise ValueError(
+                "Shape of indices is %s, expected (n, 2) or (2, n, m)" % str(indices.shape))
+
+        selector = np.ones(len(indices), dtype=np.bool)
+        if drop_zero:
+            nz = np.any(indices != 0, axis=1)
+            selector *= nz
+        peaks = calc_coords(self.zero, self.a, self.b, indices)
+        if frame_shape is not None:
+            fy, fx = frame_shape
+            selector *= within_frame(peaks, r, fy, fx)
+        return peaks[selector]
+
     @property
     def error(self):
-        diff = self.refineds - self.calculated_refineds
-        return np.linalg.norm(diff)
+        if len(self) > 0:
+            diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
+            return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
+        else:
+            return np.float('inf')
 
     @classmethod
     def _make_parameters(cls, p, a=None, b=None):
@@ -125,8 +173,8 @@ class Match(PointSelection):
             max_delta = max(lower_a, lower_b)
 
         parameters = {
-            "min_angle": np.pi / 5,
-            "tolerance": 1,
+            "min_angle": np.pi / 10,
+            "tolerance": 3,
             "min_points": 10,
             "min_match": 3,
             "min_cluster_size_fraction": 4,
@@ -170,7 +218,9 @@ class Match(PointSelection):
 
         Aw = indices * np.sqrt(self.peak_elevations[:, np.newaxis])
         Bw = self.refineds * np.sqrt(W.T)
-        (x, residuals, rank, s) = np.linalg.lstsq(Aw, Bw, rcond=self.parameters['tolerance'] / 100)
+        (x, residuals, rank, s) = np.linalg.lstsq(
+            Aw, Bw, rcond=None
+        )
         # (zero, a, b)
         if x.size == 0:
             raise np.linalg.LinAlgError("Optimizing returned empty result")
@@ -185,7 +235,7 @@ class Match(PointSelection):
         ])
 
         (x, residuals, rank, s) = np.linalg.lstsq(
-            indices, self.refineds, rcond=self.parameters['tolerance'] / 100)
+            indices, self.refineds, rcond=None)
         # (zero, a, b)
         if x.size == 0:
             raise np.linalg.LinAlgError("Optimizing returned empty result")
@@ -242,7 +292,9 @@ class Match(PointSelection):
         selection = PointSelection(correlation_result=correlation_result, selector=filt)
         # We match twice because we might catch more peaks in the second run with better parameters
         try:
-            match1 = cls._match_all(point_selection=selection, zero=zero, a=a, b=b, parameters=p)
+            match1 = cls._match_all(
+                point_selection=selection, zero=zero, a=a, b=b, parameters=p
+            )
             if len(match1) >= p['min_match']:
                 match1 = match1.weighted_optimize()
             else:
@@ -303,13 +355,22 @@ class Match(PointSelection):
         except np.linalg.LinAlgError:
             raise
         rounded = np.around(indices)
-        errors = np.linalg.norm(np.absolute(indices - rounded), axis=1)
+        index_diffs = np.absolute(indices - rounded)
+        # We scale the difference from index dimension to the pixel dimension
+        diffs = index_diffs * (np.linalg.norm(a), np.linalg.norm(b))
+        # We scale far-out differences with the square root of the indices
+        # to be more tolerant to small errors of a and b that result in large deviations
+        # in absolute position at high indices
+        scaled_diffs = diffs / (np.maximum(1, np.abs(indices))**0.5)
+        errors = np.linalg.norm(scaled_diffs, axis=1)
         matched_selector = errors < parameters["tolerance"]
         matched_indices = rounded[matched_selector].astype(np.int)
         # remove the ones that weren't matched
         new_selector = point_selection.new_selector(matched_selector)
-        return cls.from_point_selection(
-            point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices)
+        result = cls.from_point_selection(
+            point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices
+        )
+        return result
 
     @classmethod
     def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
@@ -326,13 +387,23 @@ class Match(PointSelection):
                 # too parallel, not good lattice vectors
                 if not angle_check(np.array([a]), np.array([b]), parameters['min_angle']):
                     continue
-                a, b = make_cartesian(np.array([a, b]))
+                if a[0] > b[0]:
+                    bb = a
+                    aa = b
+                    ii = j
+                    jj = i
+                else:
+                    aa = a
+                    bb = b
+                    ii = i
+                    jj = j
+                aa, bb = make_cartesian(np.array([aa, bb]))
 
                 match = cls._match_all(
-                    point_selection=point_selection, zero=zero, a=a, b=b, parameters=parameters)
+                    point_selection=point_selection, zero=zero, a=aa, b=bb, parameters=parameters)
                 # At least three points matched
                 if len(match) > 2:
-                    match_matrix[(i, j)] = match
+                    match_matrix[(ii, jj)] = match
         return match_matrix
 
     @classmethod
@@ -359,7 +430,7 @@ class Match(PointSelection):
             na = np.linalg.norm(m.a)
             nb = np.linalg.norm(m.b)
             # Matching many points is good
-            res = len(m)
+            res = len(m)**2
             # Boost for orthogonality
             if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
                 res *= 5
@@ -367,8 +438,6 @@ class Match(PointSelection):
                 res *= 2
             # Boost fo nearly equal length
             if np.abs(na - nb) < 0.1 * max(na, nb):
-                res *= 5
-            if np.abs(na - nb) < 0.3 * max(na, nb):
                 res *= 2
             # The division favors short vectors
             res /= na

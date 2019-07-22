@@ -56,6 +56,7 @@ class RadialGradient(MatchPattern):
             imageSizeY=sig_shape[0],
             imageSizeX=sig_shape[1],
             radius=self.radius,
+            antialiased=True,
         )
 
 
@@ -75,7 +76,8 @@ class BackgroundSubtraction(MatchPattern):
             imageSizeY=sig_shape[0],
             imageSizeX=sig_shape[1],
             radius=self.radius_outer,
-            radius_inner=self.radius
+            radius_inner=self.radius,
+            antialiased=True
         )
 
 
@@ -498,6 +500,9 @@ class RefinementMixin():
             'selector': self.buffer(
                 kind="nav", extra_shape=(num_disks,), dtype="bool"
             ),
+            'error': self.buffer(
+                kind="nav", dtype="float32",
+            ),
         }
         super_buffers.update(my_buffers)
         return super_buffers
@@ -509,6 +514,7 @@ class RefinementMixin():
         r.a[index] = match.a
         r.b[index] = match.b
         r.selector[index] = match.selector
+        r.error[index] = match.error
 
 
 class FastmatchMixin(RefinementMixin):
@@ -628,6 +634,9 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
                 'selector': BufferWrapper(
                     kind="nav", extra_shape=(num_disks,), dtype="bool"
                 ),
+                'error': self.buffer(
+                    kind="nav", dtype="float32",
+                ),
             }
 
         and :code:`used_indices` are the indices that were within the frame.
@@ -684,6 +693,40 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
         roi=roi,
     )
     return (result, indices)
+
+
+def feature_vector(imageSizeX, imageSizeY, peaks, parameters):
+    '''
+    This function generates a sparse mask stack to extract a feature vector.
+
+    A match template based on the parameters in :code:`parameters` is placed at
+    each peak position in an individual mask layer. This mask stack can then
+    be used in :meth:`~libertem.api.Context.create_mask_job` to generate a feature vector for each
+    frame.
+
+    Summing up the mask stack along the first axis generates a mask that can be used for virtual
+    darkfield imaging of all peaks together.
+
+    Parameters
+    ----------
+
+    imageSizeX, imageSizeY : int
+        Frame size
+    peaks : numpy.ndarray of shape (n, 2) with integer type
+        Peak positions
+    parameters : dict
+        Dictionary with blobfinder parameters. Relevant are parameters that control the template.
+    '''
+    mask = mask_maker(parameters)
+    crop_size = mask.get_crop_size()
+    return sparse_template_multi_stack(
+        mask_index=range(len(peaks)),
+        offsetX=peaks[:, 1] - crop_size,
+        offsetY=peaks[:, 0] - crop_size,
+        template=mask.get_mask((2*crop_size + 1, 2*crop_size + 1)),
+        imageSizeX=imageSizeX,
+        imageSizeY=imageSizeY,
+    )
 
 
 def visualize_frame(ctx, ds, result, indices, r, y, x, axes, colors=None, stretch=10):

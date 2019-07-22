@@ -5,7 +5,7 @@ import sparse
 from libertem.utils import make_polar
 
 
-def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
+def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius, antialiased=False):
     """
     Make a circular mask in a bool array for masking a region in an image.
 
@@ -32,9 +32,14 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius):
     >>> import matplotlib.pyplot as plt
     >>> cax = plt.imshow(image_masked)
     """
-    x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
-    mask = x*x + y*y <= radius*radius
-    return(mask)
+    if antialiased:
+        mask = radial_bins(
+            centerX, centerY, imageSizeX, imageSizeY, radius, n_bins=1, use_sparse=False
+        )[0]
+    else:
+        x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
+        mask = x*x + y*y <= radius*radius
+    return mask
 
 
 def sparse_template_multi_stack(mask_index, offsetX, offsetY, template, imageSizeX, imageSizeY):
@@ -90,9 +95,9 @@ def sparse_circular_multi_stack(mask_index, centerX, centerY, imageSizeX, imageS
     )
 
 
-def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
+def circular(centerX, centerY, imageSizeX, imageSizeY, radius, antialiased=False):
     """
-    Make a circular mask as a 2D array of bool.
+    Make a circular mask as a 2D array
 
     Parameters
     ----------
@@ -108,33 +113,11 @@ def circular(centerX, centerY, imageSizeX, imageSizeY, radius):
     Numpy 2D Array
         Array with the shape (imageSizeX, imageSizeY) with the mask.
     """
-    bool_mask = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius)
-    return bool_mask
+    mask = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius, antialiased)
+    return mask
 
 
-def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
-    """
-    Make a rectangular mask as a 2D array of bool.
-
-    Parameters
-    ----------
-    X, Y : Corner coordinates
-        Centre point of the mask.
-    imageSizeX, imageSizeY : int
-        Size of the image to be masked.
-    Width, Height : Width and Height of the rectangle
-
-    Returns
-    -------
-    Numpy 2D Array
-        Array with the shape (imageSizeX, imageSizeY) with the mask.
-    """
-    bool_mask = np.zeros([imageSizeY, imageSizeX], dtype="bool")
-    bool_mask[int(Y):int(Y+Height), int(X):int(X+Width)] = 1
-    return bool_mask
-
-
-def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
+def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner, antialiased=False):
     """
     Make a ring mask as a double array.
 
@@ -154,18 +137,30 @@ def ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
     Numpy 2D Array
         Array with the shape (imageSizeX, imageSizeY) with the mask.
     """
-    outer = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius)
-    inner = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
-    bool_mask = outer & ~inner
-    return bool_mask
+    if antialiased:
+        mask = radial_bins(
+            centerX, centerY, imageSizeX, imageSizeY,
+            radius=radius, radius_inner=radius_inner, n_bins=1, use_sparse=False
+        )[0]
+    else:
+        outer = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius)
+        inner = _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
+        mask = outer & ~inner
+    return mask
 
 
-def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius):
+def radial_gradient(centerX, centerY, imageSizeX, imageSizeY, radius, antialiased=False):
     '''
     Generate a linear radial gradient from 0 to 1 within radius
     '''
     x, y = np.ogrid[-centerY:imageSizeY-centerY, -centerX:imageSizeX-centerX]
-    mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
+    if antialiased:
+        r = np.sqrt(x**2 + y**2)
+        mask = radial_gradient_background_subtraction(
+            r=r, r0=radius, r_outer=0
+        )
+    else:
+        mask = (x*x + y*y <= radius*radius) * (np.sqrt(x*x + y*y) / radius)
     return mask
 
 
@@ -301,10 +296,15 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
         return np.stack(slices)
 
 
-def background_subtraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner):
-    mask_1 = circular(centerX, centerY, imageSizeX, imageSizeY, radius_inner)
+def background_subtraction(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner,
+        antialiased=False):
+    mask_1 = circular(
+        centerX, centerY, imageSizeX, imageSizeY, radius_inner, antialiased=antialiased
+    )
     sum_1 = np.sum(mask_1)
-    mask_2 = ring(centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner)
+    mask_2 = ring(
+        centerX, centerY, imageSizeX, imageSizeY, radius, radius_inner, antialiased=antialiased
+    )
     sum_2 = np.sum(mask_2)
     mask = mask_1 - mask_2*sum_1/sum_2
     return mask

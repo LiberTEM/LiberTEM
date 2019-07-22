@@ -208,7 +208,7 @@ the needed build tools and dependencies by changing to the client directory and 
    above command. Having old versions of dependencies installed may cause the build to fail or
    cause unpredictable failures.
 
-Once this command finished without errors, you can start a development server:
+Once this command finished without errors, you can start a development server (also from the client directory):
 
 .. code-block:: shell
 

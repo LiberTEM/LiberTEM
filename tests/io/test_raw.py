@@ -104,3 +104,42 @@ def test_uint16_as_float32(uint16_raw, lt_ctx):
     stackheight = p._get_stackheight(sig_shape=p.meta.shape.sig, dest_dtype=np.dtype("float32"))
     roi[0:stackheight + 2] = 1
     tiles = list(p.get_tiles(dest_dtype="float32", roi=roi))
+
+
+def test_macrotile_normal(lt_ctx, default_raw):
+    ps = default_raw.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile()
+    assert macrotile.tile_slice.shape == p2.shape
+    assert macrotile.tile_slice.origin[0] == p2._start_frame
+
+
+def test_macrotile_roi_1(lt_ctx, default_raw):
+    roi = np.zeros(default_raw.shape.nav, dtype=bool)
+    roi[0, 5] = 1
+    roi[0, 1] = 1
+    p = next(default_raw.get_partitions())
+    macrotile = p.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == (2, 128, 128)
+
+
+def test_macrotile_roi_2(lt_ctx, default_raw):
+    roi = np.zeros(default_raw.shape.nav, dtype=bool)
+    # all ones are in the first partition, so we don't get any data in p2:
+    roi[0, 5] = 1
+    roi[0, 1] = 1
+    ps = default_raw.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == (0, 128, 128)
+
+
+def test_macrotile_roi_3(lt_ctx, default_raw):
+    roi = np.ones(default_raw.shape.nav, dtype=bool)
+    ps = default_raw.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)

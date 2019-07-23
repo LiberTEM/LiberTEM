@@ -102,7 +102,8 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             return await analysis.controller(
                 cancel_id=uuid, executor=executor,
                 job_is_cancelled=lambda: self.data.job_is_cancelled(uuid),
-                send_results=lambda results, finished: self.send_results(results, uuid, finished=finished)
+                send_results=lambda results, finished: self.send_results(results, uuid,
+                 finished=finished)
             )
 
         t = time.time()

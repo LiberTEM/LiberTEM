@@ -310,6 +310,45 @@ def background_subtraction(centerX, centerY, imageSizeX, imageSizeY, radius, rad
     return mask
 
 
+def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
+    """
+    Make a rectangular mask as a 2D array of bool.
+    Parameters
+    ----------
+    X, Y : Corner coordinates
+        Centre point of the mask.
+    imageSizeX, imageSizeY : int
+        Size of the image to be masked.
+    Width, Height : Width and Height of the rectangle
+    Returns
+    -------
+    Numpy 2D Array
+        Array with the shape (imageSizeX, imageSizeY) with the mask.
+    """
+    bool_mask = np.zeros([imageSizeY, imageSizeX], dtype="bool")
+    if Height*Width > 0:
+        ymin = min(Y, Y+Height)
+        xmin = min(X, X+Width)
+        ymax = max(Y, Y+Height)
+        xmax = max(X, X+Width)
+    elif Height > 0 and Width < 0:
+        ymin = Y
+        xmin = X+Width
+        ymax = Y+Height
+        xmax = X
+    elif Height < 0 and Width > 0:
+        ymin = Y+Height
+        xmin = X
+        ymax = Y
+        xmax = X+Width
+    ymin = int(ymin)
+    xmin = int(xmin)
+    ymax = int(ymax)
+    xmax = int(xmax)
+    bool_mask[max(0, ymin):min(ymax, imageSizeY), max(0, xmin):min(xmax, imageSizeX)] = 1
+    return bool_mask
+
+
 # TODO: dtype parameter? consistency with ring/circular above
 def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
     return np.tile(
@@ -343,3 +382,5 @@ def to_sparse(a):
 
 def is_sparse(a):
     return isinstance(a, sparse.SparseArray) or sp.issparse(a)
+
+

@@ -2,7 +2,6 @@ import * as React from "react";
 import { useState } from "react";
 
 import { FrameParams } from "../../messages";
-import { inRectConstraint} from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Rect from "../../widgets/Rect";
 import { HandleRenderFunction } from "../../widgets/types";
@@ -50,14 +49,12 @@ const useRectROI = ({ scanWidth, scanHeight}: {
             imageWidth={scanWidth}
             onDragMove={handleCornerChange}
             parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}
-            constraint={inRectConstraint(scanWidth, scanHeight)} />
+            parentOnDrop={handleDrop}/>
         <DraggableHandle x={smthHandle.x} y={smthHandle.y}
             imageWidth={scanWidth}
             onDragMove={handleShapeChange}
             parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}
-            constraint={inRectConstraint(scanWidth, scanHeight)} />
+            parentOnDrop={handleDrop}/>
     </>);
 
     const RectRoiWidgets = (

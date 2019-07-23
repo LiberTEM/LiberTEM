@@ -16,7 +16,7 @@ from libertem.job.sum import SumFramesJob
 from libertem.job.masks import ApplyMasksJob
 
 if not hasattr(sys, 'argv'):
-    sys.argv  = []
+    sys.argv = []
 
 
 # Since the interpreter is embedded, we have to set the Python executable.
@@ -48,16 +48,16 @@ async def run(executor, job, out):
 
 
 def mask_factory_from_rect(rect, mask_shape):
-    (t, l, b, r) = rect
+    (top, left, bottom, right) = rect
     (y, x) = mask_shape
-    t = int(max(0, t))
-    l = int(max(0, l))
-    b = int(min(y, b))
-    r = int(min(x, r))
+    top = int(max(0, top))
+    left = int(max(0, left))
+    bottom = int(min(y, bottom))
+    right = int(min(x, right))
 
     def mask():
         m = np.zeros(mask_shape)
-        m[int(t):int(b), int(l):int(r)] = 1
+        m[int(top):int(bottom), int(left):int(right)] = 1
         return m
 
     return mask
@@ -161,7 +161,8 @@ if __name__ == "__main__":
 
     ds_kwargs = dict(
         filetype="empad",
-        path=r'C:\Users\weber\Nextcloud\Projects\Open Pixelated STEM framework\Data\EMPAD\acquisition_12.xml',
+        path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
+        "Data/EMPAD/acquisition_12.xml"),
     )
 
     ds_remote_kwargs = dict(

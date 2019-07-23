@@ -6,7 +6,7 @@ import sys
 import multiprocessing
 
 from libertem import api
-import numpy as np
+
 
 # Since the interpreter is embedded, we have to set the Python executable.
 # Otherwise we'd spawn new instances of Digital Micrograph instead of workers.

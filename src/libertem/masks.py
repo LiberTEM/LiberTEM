@@ -382,5 +382,3 @@ def to_sparse(a):
 
 def is_sparse(a):
     return isinstance(a, sparse.SparseArray) or sp.issparse(a)
-
-

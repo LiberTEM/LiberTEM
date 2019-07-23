@@ -11,9 +11,21 @@ export interface RectProps {
 }
 
 const Rect: React.SFC<RectProps> = ({ imageWidth, imageHeight, x, y, width, height }) => {
+    let ymin: number;
+    let xmin: number;
+    if (height*width > 0) {
+    ymin = Math.min(y, y+height);
+    xmin = Math.min(x, x+width);}
+    else if (height > 0 && width < 0) 
+    {ymin = y;
+    xmin = x+width;}
+    else 
+    {ymin = y+height;
+    xmin = x;}
     return (
-        <rect x={x + .5} y={y + .5} width={width} height={height} style={{ ...defaultMaskStyles(imageWidth) }} />
+        <rect x={xmin + .5} y={ymin + .5} width={Math.abs(width)} height={Math.abs(height)} style={{ ...defaultMaskStyles(imageWidth) }} />
     );
 }
 
 export default Rect;
+

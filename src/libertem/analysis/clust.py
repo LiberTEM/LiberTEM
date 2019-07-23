@@ -27,7 +27,7 @@ class ClusterAnalysis(BaseAnalysis):
             n_peaks=n_peaks,  delta=delta,
             center=center, rad_in=rad_in, rad_out=rad_out)
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
         n_clust = self.parameters["n_clust"]
         clustering = AgglomerativeClustering(
             affinity='euclidean', n_clusters=n_clust, linkage='ward').fit(udf_results.feature_vec)

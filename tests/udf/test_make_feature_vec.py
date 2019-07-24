@@ -19,7 +19,7 @@ def test_simple_example(lt_ctx):
     data[3:6, 2, 4] = 1
     dataset = MemoryDataSet(data=data, tileshape=(1, 5, 5),
                             num_partitions=3, sig_dims=2)
-    result, coordinates = feature.make_feature_vec(ctx=lt_ctx, dataset=dataset, num=5, delta=0)
+    result, coordinates = feature.make_feature_vec(ctx=lt_ctx, dataset=dataset, delta=0, n_peaks=5)
     # check if values of feature vectors are zeros for amorphous frames
     assert np.allclose(result['feature_vec'].data[6:9], np.zeros([3, 4]))
     # check if all values of feature vectors are NOT zeros for strong crystalline frames

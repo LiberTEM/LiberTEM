@@ -26,7 +26,6 @@ class FeatureVecMakerUDF(UDF):
 
 
 def make_feature_vec(ctx, dataset, delta, n_peaks,
-# num,
                     center=None, rad_in=None, rad_out=None, roi=None):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.

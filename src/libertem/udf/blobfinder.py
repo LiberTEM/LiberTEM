@@ -156,12 +156,12 @@ class RadialGradientBackgroundSubtraction(UserTemplate):
         return super().get_mask(sig_shape)
 
 
-def get_peaks(sum_result, mask: MatchPattern, num_peaks):
+def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
     """
     executed on master node, calculate crop rects from average image
     """
 
-    spec_mask = mask.get_template(sig_shape=sum_result.shape)
+    spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
     spec_sum = fft.rfft2(sum_result)
     corrspec = spec_mask * spec_sum
     corr = fft.fftshift(fft.irfft2(corrspec))
@@ -236,8 +236,8 @@ def log_scale(data, out):
     return np.log(data - np.min(data) + 1, out=out)
 
 
-def crop_disks_from_frame(peaks, frame, mask):
-    crop_size = mask.get_crop_size()
+def crop_disks_from_frame(peaks, frame, match_pattern: MatchPattern):
+    crop_size = match_pattern.get_crop_size()
     for peak in peaks:
         slice_ = (
             slice(max(peak[0] - crop_size, 0), min(peak[0] + crop_size, frame.shape[0])),
@@ -317,13 +317,13 @@ class FastCorrelationUDF(CorrelationUDF):
         return kwargs
 
     def process_frame(self, frame):
-        mask = self.params.match_pattern
+        match_pattern = self.params.match_pattern
         peaks = self.params.peaks
         crop_buf = self.task_data.crop_buf
-        crop_size = mask.get_crop_size()
+        crop_size = match_pattern.get_crop_size()
         r = self.results
         for disk_idx, (crop_part, crop_buf_slice) in enumerate(
-                crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
+                crop_disks_from_frame(peaks=peaks, frame=frame, match_pattern=match_pattern)):
 
             crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
             log_scale(crop_part, out=crop_buf[crop_buf_slice])
@@ -373,10 +373,10 @@ class SparseCorrelationUDF(CorrelationUDF):
         return super_buffers
 
     def get_task_data(self):
-        mask = self.params.match_pattern
-        crop_size = mask.get_crop_size()
+        match_pattern = self.params.match_pattern
+        crop_size = match_pattern.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
-        template = mask.get_mask(sig_shape=size)
+        template = match_pattern.get_mask(sig_shape=size)
         steps = self.params.steps
         peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
 
@@ -452,7 +452,7 @@ def run_blobfinder(ctx, dataset, match_pattern: MatchPattern, num_peaks, roi=Non
     sum_result = log_scale(sum_result.intensity.raw_data, out=None)
     peaks = get_peaks(
         sum_result=sum_result,
-        mask=match_pattern,
+        match_pattern=match_pattern,
         num_peaks=num_peaks,
     )
 

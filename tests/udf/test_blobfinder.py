@@ -63,19 +63,14 @@ def test_smoke(lt_ctx):
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
-    blobfinder.run_blobfinder(ctx=lt_ctx, dataset=dataset, parameters={
-        'num_disks': 1,
-        'radius': 4,
-        'padding': 0,
-        'mask_type': 'radial_gradient',
-    })
+    match_pattern = blobfinder.RadialGradient(radius=4)
+    blobfinder.run_blobfinder(
+        ctx=lt_ctx, dataset=dataset, num_peaks=1, match_pattern=match_pattern
+    )
 
 
 def test_crop_disks_from_frame():
-    mask = blobfinder.RadialGradient({
-        'radius': 2,
-        'padding': 0,
-    })
+    mask = blobfinder.RadialGradient(radius=2, search=2)
     peaks = [
         [0, 0],
         [2, 2],
@@ -120,36 +115,50 @@ def test_run_refine_fastmatch(lt_ctx):
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
-    params = {
-        'radius': 10,
-        'padding': 0.5,
-        'mask_type': 'radial_gradient',
-    }
+    radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
+    matcher = grm.Matcher()
 
-    (res, real_indices) = blobfinder.run_refine(
-        ctx=lt_ctx,
-        dataset=dataset,
-        zero=zero + np.random.uniform(-1, 1, size=2),
-        a=a + np.random.uniform(-1, 1, size=2),
-        b=b + np.random.uniform(-1, 1, size=2),
-        params=params
+    template = m.radial_gradient(
+        centerX=radius+1,
+        centerY=radius+1,
+        imageSizeX=2*radius+2,
+        imageSizeY=2*radius+2,
+        radius=radius
     )
 
-    print(peaks - grm.calc_coords(
-        res['zero'].data[0],
-        res['a'].data[0],
-        res['b'].data[0],
-        indices)
-    )
+    match_patterns = [
+        blobfinder.RadialGradient(radius=radius),
+        blobfinder.BackgroundSubtraction(radius=radius),
+        blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
+        blobfinder.UserTemplate(template=template)
+    ]
 
-    assert np.allclose(res['zero'].data[0], zero, atol=0.5)
-    assert np.allclose(res['a'].data[0], a, atol=0.2)
-    assert np.allclose(res['b'].data[0], b, atol=0.2)
+    for match_pattern in match_patterns:
+        print("refining using template %s" % type(match_pattern))
+        (res, real_indices) = blobfinder.run_refine(
+            ctx=lt_ctx,
+            dataset=dataset,
+            zero=zero + np.random.uniform(-1, 1, size=2),
+            a=a + np.random.uniform(-1, 1, size=2),
+            b=b + np.random.uniform(-1, 1, size=2),
+            matcher=matcher,
+            match_pattern=match_pattern
+        )
+        print(peaks - grm.calc_coords(
+            res['zero'].data[0],
+            res['a'].data[0],
+            res['b'].data[0],
+            indices)
+        )
+
+        assert np.allclose(res['zero'].data[0], zero, atol=0.5)
+        assert np.allclose(res['a'].data[0], a, atol=0.2)
+        assert np.allclose(res['b'].data[0], b, atol=0.2)
 
 
 def test_run_refine_affinematch(lt_ctx):
@@ -160,17 +169,15 @@ def test_run_refine_affinematch(lt_ctx):
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
-    params = {
-        'radius': 10,
-        'padding': 0.5,
-        'mask_type': 'radial_gradient',
-        'affine': True,
-    }
+    radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
+
+    matcher = grm.Matcher()
+    match_pattern = blobfinder.RadialGradient(radius=radius)
 
     affine_indices = peaks - zero
 
@@ -181,7 +188,9 @@ def test_run_refine_affinematch(lt_ctx):
         a=np.array([1, 0]) + np.random.uniform(-0.05, 0.05, size=2),
         b=np.array([0, 1]) + np.random.uniform(-0.05, 0.05, size=2),
         indices=affine_indices,
-        params=params
+        matcher=matcher,
+        match_pattern=match_pattern,
+        match='affine'
     )
 
     assert np.allclose(res['zero'].data[0], zero, atol=0.5)
@@ -197,18 +206,15 @@ def test_run_refine_sparse(lt_ctx):
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
-    params = {
-        'radius': 10,
-        'padding': 0.5,
-        'mask_type': 'radial_gradient',
-        'method': 'sparse',
-        'steps': 5
-    }
+    radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
+
+    matcher = grm.Matcher()
+    match_pattern = blobfinder.RadialGradient(radius=radius)
 
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
@@ -216,7 +222,10 @@ def test_run_refine_sparse(lt_ctx):
         zero=zero + np.random.uniform(-0.5, 0.5, size=2),
         a=a + np.random.uniform(-0.5, 0.5, size=2),
         b=b + np.random.uniform(-0.5, 0.5, size=2),
-        params=params
+        matcher=matcher,
+        match_pattern=match_pattern,
+        correlation='sparse',
+        steps=5
     )
 
     print(peaks - grm.calc_coords(
@@ -233,13 +242,9 @@ def test_run_refine_sparse(lt_ctx):
 
 def test_custom_template():
     template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
-    parameters = {
-        'template': template,
-        'padding': 0.5
-    }
-    custom = blobfinder.UserTemplate(parameters)
+    custom = blobfinder.UserTemplate(template=template, search=18)
 
-    assert custom.get_crop_size() == 12 + 6
+    assert custom.get_crop_size() == 18
 
     same = custom.get_mask((23, 21))
     larger = custom.get_mask((25, 23))
@@ -260,6 +265,7 @@ def test_custom_template_fuzz():
         size_x = np.random.choice(integers)
 
         radius = np.random.choice(integers)
+        search = np.random.choice(integers)
 
         mask_y = np.random.choice(integers)
         mask_x = np.random.choice(integers)
@@ -269,11 +275,7 @@ def test_custom_template_fuzz():
             imageSizeX=size_x, imageSizeY=size_y,
             radius=radius
         )
-        parameters = {
-            'template': template,
-            'padding': 0.5
-        }
-        custom = blobfinder.UserTemplate(parameters)
+        custom = blobfinder.UserTemplate(template=template, search=search)
 
         mask = custom.get_mask((mask_y, mask_x))  # noqa
 
@@ -286,37 +288,33 @@ def test_featurevector(lt_ctx):
     indices = np.mgrid[-3:4, -3:4]
     indices = np.concatenate(indices.T)
 
-    params = {
-        'radius': 5,
-        'radius_outer': 10,
-        'padding': 0.5,
-        'mask_type': 'background_subtraction',
-    }
+    radius = 5
+    radius_outer = 10
 
     template = m.background_subtraction(
-        centerX=params['radius_outer'] + 1,
-        centerY=params['radius_outer'] + 1,
-        imageSizeX=params['radius_outer']*2 + 2,
-        imageSizeY=params['radius_outer']*2 + 2,
-        radius=params['radius_outer'],
-        radius_inner=params['radius'] + 1,
+        centerX=radius_outer + 1,
+        centerY=radius_outer + 1,
+        imageSizeX=radius_outer*2 + 2,
+        imageSizeY=radius_outer*2 + 2,
+        radius=radius_outer,
+        radius_inner=radius + 1,
         antialiased=False
     )
 
-    params['mask_type'] = 'template'
-    params['template'] = template
-
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, params['radius'])
+    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
+
+    match_pattern = blobfinder.UserTemplate(template=template)
 
     stack = functools.partial(
         blobfinder.feature_vector,
         imageSizeX=shape[1],
         imageSizeY=shape[0],
         peaks=peaks,
-        parameters=params
+        match_pattern=match_pattern,
+
     )
 
     job = lt_ctx.create_mask_job(
@@ -324,7 +322,7 @@ def test_featurevector(lt_ctx):
     )
     res = lt_ctx.run(job)
 
-    peak_data, _, _ = _peakframe(*shape, zero, a, b, np.array([(0, 0)]), params['radius'])
+    peak_data, _, _ = _peakframe(*shape, zero, a, b, np.array([(0, 0)]), radius)
     peak_sum = peak_data.sum()
 
     assert np.allclose(res.sum(), data.sum())

@@ -189,3 +189,44 @@ async def server_port(unused_tcp_port_factory, shared_data):
 @pytest.fixture(scope="function")
 async def base_url(server_port):
     return "http://127.0.0.1:%d" % server_port
+
+
+@pytest.fixture
+def points():
+    return np.array([
+        (0, 0),
+        (0, 1),
+        (1, 0),
+        (1, 1),
+        (0, -1),
+        (-1, 0),
+        (-1, -1)
+    ])
+
+
+@pytest.fixture
+def indices():
+    return np.array([
+        (0, 0),
+        (1, 0),
+        (0, 1),
+        (1, 1),
+        (-1, 0),
+        (0, -1),
+        (-1, -1)
+    ])
+
+
+@pytest.fixture
+def zero():
+    return np.array([0, 0])
+
+
+@pytest.fixture
+def a():
+    return np.array([0, 1])
+
+
+@pytest.fixture
+def b():
+    return np.array([1, 0])

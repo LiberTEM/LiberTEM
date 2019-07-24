@@ -70,7 +70,7 @@ def test_smoke(lt_ctx):
 
 
 def test_crop_disks_from_frame():
-    mask = blobfinder.RadialGradient(radius=2, search=2)
+    match_pattern = blobfinder.RadialGradient(radius=2, search=2)
     peaks = [
         [0, 0],
         [2, 2],
@@ -80,7 +80,7 @@ def test_crop_disks_from_frame():
     crop_disks = list(blobfinder.crop_disks_from_frame(
         peaks,
         frame,
-        mask
+        match_pattern
     ))
 
     #

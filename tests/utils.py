@@ -8,6 +8,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.common import Shape
 from libertem.masks import to_dense
+from libertem.analysis.gridmatching import calc_coords
 
 
 class MemDatasetParams(MessageConverter):
@@ -212,6 +213,15 @@ def _mk_random(size, dtype='float32'):
     data[coords2] = np.random.choice(choice) * sum(size)
     data[coords10] = np.random.choice(choice) * 10 * sum(size)
     return data
+
+
+def _fullgrid(zero, a, b, index, skip_zero=False):
+    i, j = np.mgrid[-index:index, -index:index]
+    indices = np.concatenate(np.array((i, j)).T)
+    if skip_zero:
+        select = (np.not_equal(indices[:, 0], 0) + np.not_equal(indices[:, 1], 0))
+        indices = indices[select]
+    return calc_coords(zero, a, b, indices)
 
 
 def assert_msg(msg, msg_type, status='ok'):

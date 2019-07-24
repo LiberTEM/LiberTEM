@@ -28,7 +28,19 @@ except ImportError:
 
 
 class MatchPattern:
+    '''
+    Abstract base class for correlation patterns.
+
+    This class provides an API to provide a template for fast correlation-based peak finding.
+    '''
     def __init__(self, search):
+        '''
+        Parameters
+        ----------
+
+        search:
+            range from the center point to include in the correlation
+        '''
         self.search = search
 
     def get_crop_size(self):
@@ -42,7 +54,21 @@ class MatchPattern:
 
 
 class RadialGradient(MatchPattern):
+    '''
+    Radial gradient from zero in the center to one at :code:`radius`.
+
+    This pattern rejects the influence of internal intensity variations of the CBED disk.
+    '''
     def __init__(self, radius, search=None):
+        '''
+        Parameters
+        ----------
+
+        radius:
+            Radius of the circular pattern
+        search:
+            range from the center point to include in the correlation, 2x radius by default
+        '''
         if search is None:
             search = 2*radius
         self.radius = radius
@@ -60,7 +86,24 @@ class RadialGradient(MatchPattern):
 
 
 class BackgroundSubtraction(MatchPattern):
+    '''
+    Solid circular disk surrounded with a balancing negative area
+
+    This pattern rejects background and avoids false positives at positions between peaks
+    '''
     def __init__(self, radius, search=None, radius_outer=None):
+        '''
+        Parameters
+        ----------
+
+        radius:
+            Radius of the circular pattern
+        search:
+            range from the center point to include in the correlation.
+            :code:`max(2*radius, radius_outer)` by default
+        radius_outer:
+            Radius of the negative region. 1.5x radius by default.
+        '''
         if radius_outer is None:
             radius_outer = radius * 1.5
         if search is None:
@@ -120,7 +163,28 @@ class UserTemplate(MatchPattern):
 
 
 class RadialGradientBackgroundSubtraction(UserTemplate):
+    '''
+    Combination of radial gradient with background subtraction
+    '''
     def __init__(self, radius, search=None, radius_outer=None, delta=1, radial_map=None):
+        '''
+        See :meth:`~libertem.masks.radial_gradient_background_subtraction` for details.
+
+        Parameters
+        ----------
+
+        radius:
+            Radius of the circular pattern
+        search:
+            range from the center point to include in the correlation.
+            :code:`max(2*radius, radius_outer)` by default
+        radius_outer:
+            Radius of the negative region. 1.5x radius by default.
+        delta:
+            Width of the transition region between positive and negative in px
+        radial_map:
+            Radius of each pixel. This can be used to distort the shape as needed.
+        '''
         if radius_outer is None:
             radius_outer = radius * 1.5
         if search is None:
@@ -157,10 +221,9 @@ class RadialGradientBackgroundSubtraction(UserTemplate):
 
 
 def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
-    """
-    executed on master node, calculate crop rects from average image
-    """
-
+    '''
+    Find peaks of the correlation between :code:`sum_result` and :code:`match_pattern`.
+    '''
     spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
     spec_sum = fft.rfft2(sum_result)
     corrspec = spec_mask * spec_sum
@@ -296,6 +359,10 @@ class CorrelationUDF(UDF):
 
 
 class FastCorrelationUDF(CorrelationUDF):
+    '''
+    Fourier-based fast correlation-based refinement of peak positions within a search frame
+    for each peak.
+    '''
     def __init__(self, *args, **kwargs):
         '''
         peaks : numpy.ndarray

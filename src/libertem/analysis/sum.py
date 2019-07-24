@@ -29,7 +29,7 @@ class SumAnalysis(BaseAnalysis):
         return SumUDF(dtype=dest_dtype)
 
     def get_roi(self):
-        if "roi" not in self.parameters and ("shape" not in self.parameters["roi"]):
+        if "roi" not in self.parameters or ("shape" not in self.parameters["roi"]):
             return None
         params = self.parameters["roi"]
         ny, nx = tuple(self.dataset.shape.nav)

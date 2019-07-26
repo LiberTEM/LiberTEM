@@ -1,12 +1,23 @@
+.. _contributing:
+
 Contributing
 ============
 
-TODO: introduction
+LiberTEM is intended and designed as a collaboratively developed platform for data analysis. That means all our development is coordinated openly, mostly on our `GitHub repository <https://github.com/LiberTEM/LiberTEM/>`_ where our code is hosted. Any suggestions, Issues, bug reports, discussions and code contributions are highly appreciated! Please let us know if you think we can improve on something, be it code, communication or other aspects.
 
-Our code is hosted `on GitHub <https://github.com/libertem/libertem/>`_, and we are using 
-`pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions.
+Development principles
+----------------------
 
-Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
+We have a `rather extensive and growing list of things to work on <https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize our limited resources to work on items with the largest benefit for our user base and project. Supporting users who contribute code is most important to us. Please contact us for help! Furthermore,we prioritize features that create direct benefits for many current users or open significant new applications. Generally, we follow user demand with our developments.
+
+For design of new features we roughly follow the `lead user method <https://en.wikipedia.org/wiki/Lead_user>`_, which means that we develop new features closely along a non-trivial real-world application in order to make sure the developments are appropriate and easy to use in practice. The interface for :ref:`user-defined functions`, as an example, follows the requirements around implementing and running complex algorithms like :ref:`strain mapping` for distributed systems.
+
+Furthermore we value a systematic approach to development with requirements analysis and evaluation of design options as well as iterative design with fast test and review cycles.
+
+Code contributions
+------------------
+
+We are using `pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions. Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
 To keep your changes organized and to prevent unrelated changes from disturbing your pull request,
 create a new branch for each pull request. 
 
@@ -27,8 +38,6 @@ pull request, and may add comments or ask questions. If everything is good to go
 be merged and you can delete the branch you created for the pull request.
 
 See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
-
-
 
 Running the Tests
 -----------------

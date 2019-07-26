@@ -228,6 +228,8 @@ class Context:
         """
         Calculate the Fourier transform of rings around the center.
 
+        See :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` for details!
+
         Parameters
         ----------
         dataset

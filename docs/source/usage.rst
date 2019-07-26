@@ -1,3 +1,5 @@
+.. _`usage documentation`:
+
 Usage
 =====
 
@@ -66,9 +68,9 @@ You can move up one directory with the ".." entry on top of the list. The file b
 
 ..  figure:: ./images/use/open.png
 
-After selecting a file, you set the type in the drop-down menu at the top of the dialogue above the file name. After that you set the appropriate parameters that depend on the file type. Clicking on "Load Dataset" will open the file with the selected parameters. The interface and internal logic to find good presets based on file type and available metadata, validate the inputs and display helpful error messages is still work in progress. Contributions are highly appreciated! TODO documentation of all supported file types and their parameters.
+After selecting a file, you set the type in the drop-down menu at the top of the dialogue above the file name. After that you set the appropriate parameters that depend on the file type. Clicking on "Load Dataset" will open the file with the selected parameters. The interface and internal logic to find good presets based on file type and available metadata, validate the inputs and display helpful error messages is still work in progress. Contributions are highly appreciated!
 
-* K2IS: You can open any of the files that belong to a K2IS data set and LiberTEM will find the remaining ones, provided they follow the default naming scheme.
+See :ref:`Loading using the GUI` for more detailed instructions and format-specific information.
 
 ..  figure:: ./images/use/type.png
 
@@ -110,13 +112,15 @@ The Python API
 --------------
 
 The Python API is a concise API for using LiberTEM from Python code. It is suitable both
-for interactive scripting, for example from jupyter notebooks, and for usage
+for interactive scripting, for example from Jupyter notebooks, and for usage
 from within a Python application.
 
 This is a basic example to load the API, create a local cluster, load a file and run a job. For a complete example on how to use the Python API, please see the
-jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
+Jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
-For a full API reference, please see :doc:`Reference <reference>`.
+For more details on loading data and a reference of supported file formats, please see :ref:`loading data`.
+
+For a full API reference, please see :ref:`reference`.
 
 .. include:: /../../examples/basic.py
     :code:

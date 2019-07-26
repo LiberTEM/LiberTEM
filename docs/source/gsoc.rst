@@ -11,7 +11,7 @@ LiberTEM is participating in the `Google Summer of Code <https://summerofcode.wi
 Why LiberTEM
 --------------
 
-`LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our `architecture <architecture.html>`_ page describes in more detail how exactly it works.
+`LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our :doc:`architecture` page describes in more detail how exactly it works.
 
 ..  figure:: ./images/Principle.png
     :scale: 50%
@@ -65,7 +65,7 @@ If you have questions, please ask freely: Supporting users and contributors has 
 Installation
 ~~~~~~~~~~~~
 
-Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details! Forking our repository, cloning the fork and `installing the clone <https://libertem.github.io/LiberTEM/install.html#installing-from-a-git-clone>`_ are the recommended setup if you will be contributing significant amounts of code. Our `page on contributing <contributing.html>`_ has some -- still incomplete -- information that can help you get started with development. 
+Please see our :ref:`installation` instructions for details! Forking our repository, cloning the fork and :ref:`installing from a git clone` are the recommended setup if you will be contributing significant amounts of code. Our :ref:`contributing` page has some -- still incomplete -- information that can help you get started with development.
 
 Currently, we are still working on getting suitable sample files online. Please contact us to get interesting sample data to work on!
 

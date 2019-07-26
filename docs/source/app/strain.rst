@@ -1,3 +1,5 @@
+.. _`strain mapping`:
+
 Strain mapping
 ==============
 

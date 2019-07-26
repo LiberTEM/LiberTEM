@@ -1,10 +1,13 @@
-import logging as log
+import logging
 
 import numpy as np
 import hdbscan
 
 import libertem.analysis.gridmatching as grm
 from libertem.utils import make_polar, make_cartesian
+
+
+log = logging.getLogger(__name__)
 
 
 class NotFoundException(Exception):

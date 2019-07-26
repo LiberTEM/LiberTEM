@@ -15,7 +15,22 @@ log = logging.getLogger(__name__)
 
 
 class RadialFourierAnalysis(BaseMasksAnalysis):
+    '''
+    Analysis to calculate Fourier transforms of rings around the center.
+
+    This can be used to characterize atomic ordering in materials, in particular for
+    low intensities where Fluctualtion EM :cite:`Gibson1997` has a hard time to
+    distinguish speckle from shot noise.
+
+    This analysis doesn't use fast Fourier transforms, but calculates the Fourier coefficients
+    using sparse matrices in a dot product following the `definition of Fourier series
+    <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>_`.
+    '''
     def get_results(self, job_results):
+        '''
+        The AnalysisResults are calculated lazily in this function to reduce
+        overhead.
+        '''
         shape = tuple(self.dataset.shape.nav)
         orders = self.parameters['max_order'] + 1
         n_bins = self.parameters['n_bins']

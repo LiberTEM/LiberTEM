@@ -6,7 +6,9 @@ Methods to determine the local order or crystallinity of amorphous and nanocryst
 Fluctuation EM
 ~~~~~~~~~~~~~~
 
-TODO
+The diffraction pattern of amorphous materials show a characteristic ring of intensity around the zero-order diffraction peak that is a result of near-range ordering of the atoms in the material. Any local ordering within the interaction volume of beam and sample will lead to increased "speckle", i.e. intensity fluctuations within this ring, since regions with local ordering will diffract the beam to preferred directions similar to a crystal. For Fluctuation EM :cite:`Gibson1997`, the standard deviation within this ring is calculated to obtain a measure of this local ordering.
+
+LiberTEM supports this with the :class:`~libertem.udf.FEM.FEMUDF` and :meth:`~libertem.udf.FEM.run_fem` method.
 
 Radial Fourier Series
 ~~~~~~~~~~~~~~~~~~~~~
@@ -53,6 +55,19 @@ Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.
 Scripting interface
 -------------------
 
-The scripting interface allows to calculate more than one bin at a time and influence the number of orders that are calculated. It relies on the sparse matrix back-end for MaskJob and allows to calculate many orders for many bins at once with acceptable efficiency.
+The scripting interface :meth:`~libertem.api.Context.create_radial_fourier_analysis` and :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` allows to calculate more than one bin at a time and influence the number of orders that are calculated. It relies on the sparse matrix back-end for MaskJob and allows to calculate many orders for many bins at once with acceptable efficiency.
 
 Having a fine-grained analysis with many orders calculated as a function of radius allows for a number of additional processing and analysis steps. `Follow this link to a Jupyter notebook. <radialfourier.ipynb>`_
+
+Reference
+~~~~~~~~~
+
+.. automodule:: libertem.udf.FEM
+   :members:
+   :undoc-members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.radialfourier
+   :members:
+   :undoc-members:
+   :special-members: __init__

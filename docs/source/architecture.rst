@@ -1,13 +1,15 @@
+.. _`architecture`:
+
 Architecture
 ============
 
 .. image:: ./images/architecture.svg
 
-For the beginning, LiberTEM will focus on pixelated STEM data processing, both
-interactive and offline. As concrete supported operations, we will start with
+LiberTEM currently focuses on pixelated STEM and scanning electron beam diffraction data processing, both
+interactive and offline. The processing back-end supports any n-dimensional binary data. As concrete supported operations, we started with
 everything that can be expressed as the application of one or more masks and
-summation, i.e. virtual detector, center of mass etc. These operations are
-embarrassingly parallel and can be scaled to a distributed system very well.
+summation, i.e. virtual detector, center of mas<s etc. These operations are
+embarrassingly parallel and can be scaled to a distributed system very well. Furthermore, we support :ref:`user-defined functions` that process well-defined subsets of a dataset following a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_.
 
 For our task, data locality is one of the most important factors for achieving
 good performance and scalability. With a traditional distributed storage
@@ -32,7 +34,7 @@ is scheduled on the node(s) that hold the partition on their local storage.
 
 
 For ingesting data into the cluster, a `caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_ 
-(WIP) transparently reads a dataset from a primary source (via a shared network file system,
+(WIP) will transparently read a dataset from a primary source (via a shared network file system,
 HTTP, ...) and stores it on fast local storage in a format that is best suited for efficient processing.
 The cached data can also be pre-processed, for example for offset correction or applying a gain map.
 
@@ -46,11 +48,12 @@ opened datasets. Traditionally this would be done with an external
 in-memory database, but for ease of deployment, we decided to integrate this into the
 API server.
 
-Processing is done in an asynchronous fashion; if you start a job the request
-immediately returns, but you get notifications about status changes, or you can
-explicitly query the API server about a specific job.
+Processing is done in an asynchronous fashion; if you start a job using the internal interfaces,
+the request immediately returns, but you get notifications about status changes, or you can
+explicitly query the API server about a specific job. This asynchronous interface is wrapped
+with a synchronous version for the public-facing API for simpler use in scripts.
 
-As UI, we are developing a web-based interface. This allows LiberTEM to work
+As UI, we use a web-based interface. This allows LiberTEM to work
 in cloud environment as well as locally on a single node. We can benefit from
 existing FOSS frameworks and infrastructure for communication, authentication
 etc. of the web.
@@ -60,8 +63,8 @@ all parts can run on a single node. We can also skip the caching step, if the da
 is already available locally.
 
 When taking care to avoid needless copying and buffering, we can achieve native
-throughput on each node. With NVMe SSDs, this means we can process multiple gigabytes per
-second per node.
+throughput on each node. With NVMe SSDs, this means we can `process multiple gigabytes per
+second per node <performance>`_.
 
 
 Mathematical expression for applying masks
@@ -91,4 +94,4 @@ of ``A`` and ``B``.
 That means we can use the BLAS function 
 `GEMM <https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3>`_.
 to process the flattened data and we can choose from  wide array of highly optimized 
-implementations of this operation.
+implementations of this operation. LiberTEM supports both dense and sparse masks (`sparse.pydata.org <https://sparse.pydata.org>`_ and `scipy.sparse <https://docs.scipy.org/doc/scipy/reference/sparse.html>`_) for this purpose. This functionality is available through :meth:`~libertem.api.Context.create_mask_job`, :meth:`~libertem.api.Context.create_mask_analysis` and a number of more specialized analysis functions in :class:`~libertem.api.Context`.

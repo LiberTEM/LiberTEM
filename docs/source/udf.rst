@@ -1,7 +1,9 @@
-User-defined functions
-======================
+.. _`user-defined functions`:
 
-A common case for analysing big EM data sets is running a reduction operation
+User-defined functions
+=========================
+
+A common case for analyzing big EM data sets is running a reduction operation
 on each individual detector frame or other small subsets of a data set and then combining the results of these reductions to form the complete result.
 The user-defined functions (UDF) interface of LiberTEM allows users to run their
 own reduction functions easily, without having
@@ -9,7 +11,7 @@ to worry about parallelizing, I/O, the details of buffer management and so on. T
 
 
 How UDF works in layman's terms
------------------------------------
+-------------------------------
 
 .. image:: ./images/diagram.png
 

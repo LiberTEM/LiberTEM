@@ -25,6 +25,7 @@ Documentation
    udf
    applications
    architecture
+   performance
    contributing
    acknowledgments
    citing

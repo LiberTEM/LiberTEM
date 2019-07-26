@@ -1,3 +1,5 @@
+.. _`installation`:
+
 Installation
 ============
 
@@ -19,7 +21,7 @@ AppImage
 On Linux, the easiest method is to use the provided AppImage. Just download the AppImage file from `our 
 releases page on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_, mark it executable and run
 the AppImage. See also the `official documentation <https://docs.appimage.org/user-guide/run-appimages.html>`_.
-Continue by reading the :doc:`usage documentation <usage>`.
+Continue by reading the :ref:`usage documentation`.
 
 Creating an isolated Python environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +101,9 @@ To install the latest release version, you can use pip. Activate the Python envi
     (libertem) $ pip install libertem
 
 This should install LiberTEM and its dependencies in the environment. Please
-continue by reading the :doc:`usage documentation <usage>`.
+continue by reading the :ref:`usage documentation`.
+
+.. _`installing from a git clone`:
 
 Installing from a git clone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +122,7 @@ Activate the Python environment (conda or virtualenv) and change to the newly cr
     (libertem) $ pip install -e .
 
 This should download the dependencies and install LiberTEM in the environment. Please
-continue by reading the :doc:`usage documentation <usage>`.
+continue by reading the :ref:`usage documentation`.
 
 PyTorch
 ~~~~~~~
@@ -136,6 +140,13 @@ Or from git checkout:
 .. code-block:: shell
 
     (libertem) $ pip install -e .[torch]
+
+Other extra packages
+~~~~~~~~~~~~~~~~~~~~
+
+The full grid matching routines in :py:mod:`libertem.analysis.fullmatch` depend on `HDBSCAN <https://hdbscan.readthedocs.io/en/latest/>`_. This is an optional dependency because of installation issues on some platforms.
+
+The fast correlation methods in :py:mod:`libertem.udf.blobfinder` can optionally use `pyFFTW <https://hgomersall.github.io/pyFFTW/>`_ instead of the built-in Numpy FFT.
 
 Updating
 ~~~~~~~~

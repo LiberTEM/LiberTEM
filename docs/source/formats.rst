@@ -1,15 +1,17 @@
+.. _`loading data`:
+
 Loading Data
 ============
 
 To efficiently handle files larger than main memory, LiberTEM never loads the whole
-data set into memory. Calling the `load` function only opens the data set and gives
-back a handle; running a job then streams the data from mass storage.
+data set into memory. Calling the :meth:`~libertem.api.Context.load` function only opens the data set and gives
+back a handle; running a job with :meth:`~libertem.api.Context.run` or :meth:`~libertem.api.Context.run_udf` then streams the data from mass storage.
 
 There are two main ways of opening a data set in LiberTEM: using the GUI, or
 the Python API.
 
-API
-~~~
+Loading through the API
+~~~~~~~~~~~~~~~~~~~~~~~
 
 In the API, you can use :meth:`libertem.api.Context.load`. The general
 pattern is:
@@ -24,8 +26,10 @@ arguments are documented below.
 
 For the full list of supported file formats and type names, see the documentation of :meth:`libertem.api.Context.load`.
 
-GUI
-~~~
+.. _`Loading using the GUI`:
+
+Loading using the GUI
+~~~~~~~~~~~~~~~~~~~~~
 
 Using the GUI, mostly the same parameters need to be specified, although some are only available
 in the Python API. Tuples (for example for `scan_size` or `tileshape`) have to be entered as

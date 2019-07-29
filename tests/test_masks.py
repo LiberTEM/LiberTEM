@@ -83,3 +83,20 @@ def test_oval_radial_background_symmetry():
 
     assert np.allclose(radius, radius2)
     assert np.allclose(radius3, np.flip(radius4, axis=1))
+
+
+def test_rectmask():
+    rect = np.ones([3, 3])
+    testrect = np.zeros([5, 5])
+    rect1 = 1*testrect
+    rect1[0:3, 0:3] = rect
+    rect2 = 1*testrect
+    rect2[0:3, 2:5] = rect
+    rect3 = 1*testrect
+    rect3[2:5, 0:3] = rect
+    rect4 = 1*testrect
+    rect4[2:5, 2:5] = rect
+    assert np.allclose(m.rectangular(2, 2, 3, 3, 5, 5), rect4)
+    assert np.allclose(m.rectangular(2, 2, -3, 3, 5, 5), rect3)
+    assert np.allclose(m.rectangular(2, 2, 3, -3, 5, 5), rect2)
+    assert np.allclose(m.rectangular(2, 2, -3, -3, 5, 5), rect1)

@@ -345,7 +345,7 @@ def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
     xmin = int(xmin)
     ymax = int(ymax)
     xmax = int(xmax)
-    bool_mask[max(0, ymin):min(ymax, imageSizeY), max(0, xmin):min(xmax, imageSizeX)] = 1
+    bool_mask[max(0, ymin):min(ymax+1, imageSizeY), max(0, xmin):min(xmax+1, imageSizeX)] = 1
     return bool_mask
 
 

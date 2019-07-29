@@ -134,7 +134,9 @@ setup(
     zip_safe=False,
     python_requires='>=3.6',
     install_requires=[
-        "numpy",
+        # FIXME pinned due to https://github.com/pydata/sparse/issues/257
+        # Unpin as soon as this is fixed, check regularly
+        "numpy<=1.16.4",
         "scipy",
         "sparse",
         "distributed>=1.23.3,<1.28",

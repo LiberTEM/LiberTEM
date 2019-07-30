@@ -11,6 +11,7 @@ from os.path import join
 
 from github import Github, UnknownObjectException
 from pkg_resources import parse_version
+from pkg_resources.extern.packaging.version import LegacyVersion
 import click
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -69,6 +70,11 @@ def validate_version_tag():
         raise click.ClickException(
             "version tags need to have a 'v' prefix"
         )
+    v = parse_version(version_tag['full'])
+    if isinstance(v, LegacyVersion):
+        raise click.ClickException(
+            "could not parse version"
+        )
     return True
 
 
@@ -87,8 +93,14 @@ def get_release_tag():
     """
     tags = get_current_tags()
     matches = tag_matches(tags)
-    assert len(matches) == 1
-    return matches[0]
+    if len(matches) == 0:
+        return None
+    elif len(matches) == 1:
+        return matches[0]
+    else:
+        raise Exception(
+            "cannot have more than one version tags per commit"
+        )
 
 
 def get_latest_tag():
@@ -116,16 +128,22 @@ def tag_matches(tags):
 
 def current_version_tag_is_rc():
     match = get_release_tag()
+    if match is None:
+        return False
     return match['rc'] is not None
 
 
 def current_version_tag_is_release():
     match = get_release_tag()
+    if match is None:
+        return False
     return match['rc'] is None and match['dev'] is None
 
 
 def get_release_kind():
     match = get_release_tag()
+    if match is None:
+        return "dev"
     if match['rc'] is not None:
         return "rc"
     elif match['rc'] is None and match['dev'] is None:

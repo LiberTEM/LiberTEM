@@ -50,6 +50,28 @@ def do_git_tag(tag):
     subprocess.check_call(cmd)
 
 
+def validate_version_tag():
+    """
+    Validate the current version tag. rules:
+
+     1) There must be exactly one version tag, and it has to conform to
+        to the version pattern.
+     2) The tag needs to have a prefix of "v".
+    """
+    tags = get_current_tags()
+    matches = tag_matches(tags)
+    if len(matches) != 1:
+        raise click.ClickException(
+            "can only have a single version tag for HEAD, aborting"
+        )
+    version_tag = matches[0]
+    if version_tag['prefix'] != 'v':
+        raise click.ClickException(
+            "version tags need to have a 'v' prefix"
+        )
+    return True
+
+
 def get_current_tags():
     """
     returns list of tags that point to HEAD
@@ -58,14 +80,15 @@ def get_current_tags():
     return subprocess.check_output(cmd, text="utf-8").strip().split("\n")
 
 
-def latest_tag_from_tags(tags):
+def get_release_tag():
     """
-    A commit can have more than one version tag, for example if we re-tag
-    a release candidate as final release. This function returns the most current
-    tag, according to setuptools' parse_version
+    A commit can have more than one tag (but should only have one version tag).
+    This function returns the matching version tag as a match dictionary.
     """
-    sorted_tags = list(sorted(tags, key=lambda t: parse_version(t)))
-    return sorted_tags[-1]
+    tags = get_current_tags()
+    matches = tag_matches(tags)
+    assert len(matches) == 1
+    return matches[0]
 
 
 def get_latest_tag():
@@ -92,29 +115,23 @@ def tag_matches(tags):
 
 
 def current_version_tag_is_rc():
-    matches = tag_matches(get_current_tags())
-    for match in matches:
-        if match['rc'] is not None:
-            return True
-    return False
+    match = get_release_tag()
+    return match['rc'] is not None
 
 
 def current_version_tag_is_release():
-    matches = tag_matches(get_current_tags())
-    for match in matches:
-        if match['rc'] is None and match['dev'] is None:
-            return True
-    return False
+    match = get_release_tag()
+    return match['rc'] is None and match['dev'] is None
 
 
 def get_release_kind():
-    matches = tag_matches(get_current_tags())
-    for match in matches:
-        if match['rc'] is not None:
-            return "rc"
-        elif match['rc'] is None and match['dev'] is None:
-            return "release"
-    return "dev"
+    match = get_release_tag()
+    if match['rc'] is not None:
+        return "rc"
+    elif match['rc'] is None and match['dev'] is None:
+        return "release"
+    else:
+        return "dev"
 
 
 def get_wheel():
@@ -209,9 +226,9 @@ def upload_to_github(verbose, files, token, release):
         if verbose:
             print("continuous release")
     elif release == "rc":
-        tag = latest_tag_from_tags(tags)
+        tag = get_release_tag()
         release_data = {
-            "tag": tag,
+            "tag": tag['full'],
             "name": "Release Candidate",
             "draft": False,
             "prerelease": True,
@@ -219,9 +236,9 @@ def upload_to_github(verbose, files, token, release):
         if verbose:
             print("release candidate, tag:", tag)
     elif release == "release":
-        tag = latest_tag_from_tags(tags)
+        tag = get_release_tag()
         release_data = {
-            "tag": tag,
+            "tag": tag['full'],
             "name": "Release %s" % tag,
             "draft": False,
             "prerelease": False,
@@ -351,6 +368,8 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
 
     if dry_run:
         print("NOTE: running in dry-run mode, specify --no-dry-run to really upload!")
+
+    validate_version_tag()
 
     is_rc = current_version_tag_is_rc()
     is_release = current_version_tag_is_release()

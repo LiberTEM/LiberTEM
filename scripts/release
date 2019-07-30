@@ -369,10 +369,11 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
     if dry_run:
         print("NOTE: running in dry-run mode, specify --no-dry-run to really upload!")
 
-    validate_version_tag()
-
     is_rc = current_version_tag_is_rc()
     is_release = current_version_tag_is_release()
+
+    if is_rc or is_release:
+        validate_version_tag()
 
     if is_rc:
         # we want to upload release candidates to test.pypi.org:

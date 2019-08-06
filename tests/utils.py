@@ -187,7 +187,7 @@ def _naive_mask_apply(masks, data):
     for mask in masks:
         assert mask.shape == data.shape[2:], "mask doesn't fit frame size"
 
-    dtype = np.result_type(*masks, data)
+    dtype = np.result_type(*[m.dtype for m in masks], data.dtype)
     res = np.zeros((len(masks),) + tuple(data.shape[:2]), dtype=dtype)
     for n in range(len(masks)):
         mask = to_dense(masks[n])

@@ -130,9 +130,7 @@ setup(
     zip_safe=False,
     python_requires='>=3.6',
     install_requires=[
-        # FIXME pinned due to https://github.com/pydata/sparse/issues/257
-        # Unpin as soon as this is fixed, check regularly
-        "numpy<=1.16.4",
+        "numpy",
         "scipy",
         "sparse",
         "distributed>=1.23.3,<1.28",
@@ -142,7 +140,9 @@ setup(
         "pillow",
         "h5py",
         "psutil",
-        "numba",
+        # Pinned due to https://github.com/pydata/sparse/issues/257
+        # Ensure compatibility with numpy 1.17
+        "numba>=0.45.1",
         "ncempy>=1.4",
         'pypiwin32;platform_system=="Windows"',
         # FIXME pull request #259

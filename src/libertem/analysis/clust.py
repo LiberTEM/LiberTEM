@@ -120,5 +120,6 @@ class ClusterAnalysis(BaseAnalysis):
         results = await run_blocking(
             self.get_udf_results,
             udf_results=udf_results,
+            roi=roi,
         )
         await send_results(results, True)

@@ -329,6 +329,7 @@ export interface ClustParams {
     delta: number,
     n_peaks: number,
     n_clust: number,
+    min_dist: number,
 }
 
 export enum AnalysisTypes {

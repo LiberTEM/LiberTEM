@@ -45,6 +45,12 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         setDelta(event.target.valueAsNumber);
     }
 
+    const [min_dist, setMin_dist] = React.useState(1);
+
+    const min_distChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setMin_dist(event.target.valueAsNumber);
+    }
+
     const [n_peaks, setPeak] = React.useState(50);
 
     const peakChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +118,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             delta,
             n_clust,
             n_peaks,
+            min_dist
             }
         }));
     };
@@ -154,6 +161,9 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         <Form.Field>
             <label>  Maximal number of possible peak positions to detect (better put higher value,
         the output is limited to the number of peaks the algorithm could find) </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
+        </Form.Field>
+        <Form.Field>
+            <label>  Minimal distance between peaks </label> <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>    
         </Form.Field>
     </Form>
     </Accordion.Content>

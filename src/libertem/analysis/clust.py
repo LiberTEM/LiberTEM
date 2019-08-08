@@ -23,8 +23,9 @@ class ClusterAnalysis(BaseAnalysis):
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
         delta = self.parameters["delta"]
+        min_dist = self.parameters["min_dist"]
         return feature.FeatureVecMakerUDF(
-            n_peaks=n_peaks,  delta=delta,
+            n_peaks=n_peaks,  delta=delta, min_dist=min_dist,
             center=center, rad_in=rad_in, rad_out=rad_out)
 
     def get_udf_results(self, udf_results, roi):
@@ -89,6 +90,7 @@ class ClusterAnalysis(BaseAnalysis):
         rad_out = self.parameters["ro"]
         delta = self.parameters["delta"]
         n_peaks = self.parameters["n_peaks"]
+        min_dist = self.parameters["min_dist"]
         savg = sd_udf_results['mean']
         sstd = sd_udf_results['std']
         sshape = sstd.shape
@@ -100,13 +102,13 @@ class ClusterAnalysis(BaseAnalysis):
         else:
             masked_sstd = sstd
 
-        coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=0)
+        coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
 
         print(coordinates.shape)
 
         udf = feature.FeatureVecMakerUDF(
             delta=delta, savg=savg, coordinates=coordinates,
-            center=center, rad_in=rad_in, rad_out=rad_out, n_peaks=n_peaks)
+            center=center, rad_in=rad_in, rad_out=rad_out, n_peaks=n_peaks, min_dist=min_dist)
 
         result_iter = UDFRunner(udf).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id

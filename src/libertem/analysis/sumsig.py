@@ -1,13 +1,13 @@
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-import libertem.udf.justsumudf as justsumudf
+import libertem.udf.sumsigudf as sumsigudf
 
 
-class JustSumAnalysis(BaseAnalysis):
+class SumSigAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
     def get_udf(self):
-        return justsumudf.justsumUDF()
+        return sumsigudf.sumsigUDF()
 
     def get_udf_results(self, udf_results, roi):
 

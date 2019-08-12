@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { AnalysisTypes } from "../../messages";
 import * as analysisActions from "../actions";
 
-const useJustSum = ({
+const useSumSig = ({
     enabled, jobIndex, analysisId, 
 }: {
     enabled: boolean, jobIndex: number, analysisId: string, 
@@ -13,11 +13,11 @@ const useJustSum = ({
     React.useEffect(() => {
         if (enabled) {
             dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.JUST_SUM,
+                type: AnalysisTypes.SUM_SIG,
                 parameters: {},
             }));
         }
     }, [analysisId, enabled, jobIndex]);
 };
 
-export default useJustSum;
+export default useSumSig;

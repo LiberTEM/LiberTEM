@@ -135,7 +135,7 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         component: ClustAnalysis,
     },
 
-    [AnalysisTypes.JUST_SUM]: {
+    [AnalysisTypes.SUM_SIG]: {
         desc: "Frame integration",
         title: "Sum",
     },

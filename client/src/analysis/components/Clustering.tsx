@@ -101,7 +101,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     
     React.useEffect(() => {
             dispatch(analysisActions.Actions.run(analysis.id, 1, {
-                type: AnalysisTypes.JUST_SUM,
+                type: AnalysisTypes.SUM_SIG,
                 parameters:{},
             }))
     }, [analysis.id]);

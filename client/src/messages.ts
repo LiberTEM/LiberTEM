@@ -348,7 +348,7 @@ export enum AnalysisTypes {
     RADIAL_FOURIER = "RADIAL_FOURIER",
     FEM = "FEM",
     CLUST = "CLUST",
-    JUST_SUM = "JUST_SUM"
+    SUM_SIG = "SUM_SIG"
 
 }
 
@@ -393,8 +393,8 @@ export interface SDFramesDetails {
     parameters: FrameParams
 }
 
-export interface JustSumDetails {
-    type: AnalysisTypes.JUST_SUM,
+export interface SumSigDetails {
+    type: AnalysisTypes.SUM_SIG,
     parameters: {}
 }
 
@@ -429,7 +429,7 @@ export interface ClustDetails {
 }
 
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams | ClustParams;
-export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | JustSumDetails | ClustDetails;
+export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | SumSigDetails | ClustDetails;
 
 export interface StartJobRequest {
     job: {

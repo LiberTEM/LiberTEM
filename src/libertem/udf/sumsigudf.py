@@ -3,7 +3,7 @@ import numpy as np
 from libertem.udf import UDF
 
 
-class justsumUDF(UDF):
+class sumsigUDF(UDF):
     def get_result_buffers(self):
         return {
             'intensity': self.buffer(
@@ -15,7 +15,7 @@ class justsumUDF(UDF):
         self.results.intensity[:] = np.sum(frame)
 
 
-def run_justsum(ctx, dataset):
-    udf = justsumUDF()
+def run_sumsig(ctx, dataset):
+    udf = sumsigUDF()
     pass_results = ctx.run_udf(dataset=dataset, udf=udf)
     return pass_results

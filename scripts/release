@@ -244,12 +244,12 @@ def upload_to_github(verbose, files, token, release):
         "target_commitish": target,
     }
     if release == "dev":
-        release_data = {
+        release_data.update({
             "tag": "continuous",
             "name": "Continuous build",
             "draft": False,
             "prerelease": True,
-        }
+        })
         # first, delete existing continuous tag:
         try:
             cont_tag = repo.get_git_ref("tags/continuous")
@@ -260,22 +260,22 @@ def upload_to_github(verbose, files, token, release):
             print("continuous release")
     elif release == "rc":
         tag = get_release_tag()
-        release_data = {
+        release_data.update({
             "tag": tag['full'],
             "name": "Release Candidate %s" % tag,
             "draft": False,
             "prerelease": True,
-        }
+        })
         if verbose:
             print("release candidate, tag:", tag)
     elif release == "release":
         tag = get_release_tag()
-        release_data = {
+        release_data.update({
             "tag": tag['full'],
             "name": "Release %s" % tag,
             "draft": False,
             "prerelease": False,
-        }
+        })
         if verbose:
             print("release, tag:", tag)
     else:

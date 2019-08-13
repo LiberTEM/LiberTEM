@@ -183,7 +183,7 @@ def get_py_release_files():
     """
     get wheel and sdist files (basically dist/*)
     """
-    return glob.glob("%s/*" % BASE_DIR)
+    return glob.glob("%s/dist/*" % BASE_DIR)
 
 
 def upload_to_zenodo(verbose, dry_run):

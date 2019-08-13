@@ -18,8 +18,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.normpath(join(HERE, '..'))
 
 VERSION_PAT = re.compile(
-    r'^(?P<full>(?P<prefix>v)?(?P<breaking>\d+)\.(?P<feature>\d+)\.(?P<fix>\d+)'
-    r'(?P<rc>rc\d+)?(?P<dev>\.dev0)?)$'
+    r'^(?P<full>(?P<prefix>v)?(?P<noprefix>(?P<breaking>\d+)\.(?P<feature>\d+)\.(?P<fix>\d+)'
+    r'(?P<rc>rc\d+)?(?P<dev>\.dev0)?))$'
 )
 
 
@@ -73,7 +73,19 @@ def validate_version_tag():
     v = parse_version(version_tag['full'])
     if isinstance(v, LegacyVersion):
         raise click.ClickException(
-            "could not parse version"
+            "The version tag %s could not be parsed as valid version" % v
+        )
+
+    version_from_file = parse_version(read_version(get_version_fn()))
+    if isinstance(version_from_file, LegacyVersion):
+        raise click.ClickException(
+            "__version__ %s could not be parsed as valid version" % version_from_file
+        )
+    if version_from_file != v:
+        raise click.ClickException(
+            "version tag %s and __version__ %s do not match" % (
+                v, version_from_file
+            )
         )
     return True
 
@@ -126,18 +138,21 @@ def tag_matches(tags):
             if m is not None]
 
 
+def get_version_tag():
+    """
+    get the current version tag as match dict
+    """
+    version_tags = tag_matches(get_current_tags())
+    if len(version_tags) == 1:
+        return version_tags[0]
+
+
 def current_version_tag_is_rc():
-    match = get_release_tag()
-    if match is None:
-        return False
-    return match['rc'] is not None
+    return get_release_kind() == "rc"
 
 
 def current_version_tag_is_release():
-    match = get_release_tag()
-    if match is None:
-        return False
-    return match['rc'] is None and match['dev'] is None
+    return get_release_kind() == "release"
 
 
 def get_release_kind():
@@ -171,7 +186,7 @@ def get_py_release_files():
     return glob.glob("%s/*" % BASE_DIR)
 
 
-def upload_to_zenodo(verbose, dry_run, parent_deposit):
+def upload_to_zenodo(verbose, dry_run):
     if verbose:
         print("uploading to zenodo")
 
@@ -189,6 +204,7 @@ def upload_to_zenodo(verbose, dry_run, parent_deposit):
     elif release == "release":
         url = "https://zenodo.org/api/"
         parent = "1478763"  # FIXME: fix this number?
+        raise Exception("please fix parent deposition IDs for sandbox and prod!")
 
     out = subprocess.check_output([
         "python", join(HERE, "zenodo_upload"),
@@ -213,7 +229,6 @@ def get_release_msg():
 def upload_to_github(verbose, files, token, release):
     if verbose:
         print("uploading files to github:", files)
-    tags = tag_matches(get_current_tags())
     msg = get_release_msg()
 
     if verbose:
@@ -247,7 +262,7 @@ def upload_to_github(verbose, files, token, release):
         tag = get_release_tag()
         release_data = {
             "tag": tag['full'],
-            "name": "Release Candidate",
+            "name": "Release Candidate %s" % tag,
             "draft": False,
             "prerelease": True,
         }
@@ -378,10 +393,16 @@ def is_rc(ctx):
 @click.option('--pypi-test-password', type=str, show_envvar=True)
 @click.option('--token', type=str, show_envvar=True,
               help='Github token for creating releases')
+@click.option('--zenodo-sandbox-token', type=str, show_envvar=True,
+              help='Zenodo sandbox token for RC upload testing')
+@click.option('--zenodo-token', type=str, show_envvar=True,
+              help='Zenodo production token for final release upload')
 @click.pass_context
-def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_password, token):
+def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_password, token,
+           zenodo_sandbox_token, zenodo_token):
     """
-    prepare, build and upload libertem to pypi (if release candidate, to the test instance)
+    prepare, build and upload libertem to github, zenodo and pypi
+    (if release candidate, to the test instance(s))
     """
 
     if dry_run:
@@ -431,7 +452,7 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
         else:
             upload_to_github(ctx.obj['verbose'], github_files, token=token, release=release)
     else:
-        print("branch is not master, would not upload to github")
+        print("branch is not master (or is PR), not uploading to github (files=%s)" % github_files)
 
 
 @cli.command()
@@ -441,8 +462,12 @@ def status(ctx):
     current_version = read_version(version_file)
     print("current version: %s" % current_version)
     print("version tags for HEAD: %s" % [m['full'] for m in tag_matches(get_current_tags())])
-    print("last version tags: %s" % [m['full'] for m in tag_matches([get_latest_tag()])])
     print("is release candidate? %s" % current_version_tag_is_rc())
+    kind = get_release_kind()
+    if kind in ["rc", "release"]:
+        print("validating version tag...")
+        validate_version_tag()
+        print("done.")
 
 
 @cli.command()
@@ -472,6 +497,7 @@ def bump(new_version, tag, commit, force):
     match = VERSION_PAT.match(new_version)
     if match is None:
         raise click.UsageError("could not parse version, may not conform to our scheme")
+    new_version = match['noprefix']
     version_file = get_version_fn()
     old_version = read_version(version_file)
     render_version(version_file, new_version)

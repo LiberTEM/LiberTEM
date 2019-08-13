@@ -7,7 +7,7 @@ class SumSigAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
     def get_udf(self):
-        return sumsigudf.sumsigUDF()
+        return sumsigudf.SumSigUDF()
 
     def get_udf_results(self, udf_results, roi):
 

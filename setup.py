@@ -150,6 +150,7 @@ setup(
         'scikit-image',
         'cloudpickle',
         'jsonschema',
+        'scikit-learn'
     ],
     extras_require={
         'hdfs': 'hfds3',

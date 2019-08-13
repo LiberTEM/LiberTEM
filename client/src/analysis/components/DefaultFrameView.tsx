@@ -35,7 +35,7 @@ const useDefaultFrameView = ({
             value: DefaultModes.SD,
         },
         {
-            text: "PICK",
+            text: "Pick",
             value: DefaultModes.PICK,
         },
         {
@@ -73,7 +73,7 @@ const useDefaultFrameView = ({
     });
 
 
-    const { RectRoiHandles, RectRoiWidgets, RectroiParameters }  = useRectROI({ scanHeight, scanWidth })
+    const { rectRoiHandles, rectRoiWidgets, rectRoiParameters }  = useRectROI({ scanHeight, scanWidth })
     const { diskRoiHandles, diskRoiWidgets, diskroiParameters}  = useDiskROI({ scanHeight, scanWidth })
 
     useRoiPicker({
@@ -81,7 +81,7 @@ const useDefaultFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        roiParameters: RectroiParameters,
+        roiParameters: rectRoiParameters,
         analys: AnalysisTypes.SD_FRAMES
     })
 
@@ -110,7 +110,7 @@ const useDefaultFrameView = ({
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
-        roiParameters: RectroiParameters,
+        roiParameters: rectRoiParameters,
         analys: AnalysisTypes.SUM_FRAMES,
     })
 
@@ -142,10 +142,10 @@ const useDefaultFrameView = ({
             handles = diskRoiHandles;
             break;
         case DefaultModes.SUM_RECT:
-            handles = RectRoiHandles;
+            handles = rectRoiHandles;
             break;  
         case DefaultModes.SD_RECT:
-            handles = RectRoiHandles;
+            handles = rectRoiHandles;
             break;
         case DefaultModes.SD_DISK:
             handles = diskRoiHandles;
@@ -159,10 +159,10 @@ const useDefaultFrameView = ({
             widgets = diskRoiWidgets;
             break;
         case DefaultModes.SUM_RECT:
-            widgets = RectRoiWidgets;
+            widgets = rectRoiWidgets;
             break;
         case DefaultModes.SD_RECT:
-            widgets = RectRoiWidgets;
+            widgets = rectRoiWidgets;
             break;
         case DefaultModes.SD_DISK:
             widgets = diskRoiWidgets;

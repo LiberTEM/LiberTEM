@@ -32,18 +32,18 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
     }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
 
-        React.useEffect(() => {
-            const handle = setTimeout(() => {
-                if ((enabled)&&(analys===AnalysisTypes.SUM_FRAMES)) {
-                    dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                        type: AnalysisTypes.SUM_FRAMES,
-                        parameters: roiParameters,
-                    }))
-                }
-            }, 100);
-    
-            return () => clearTimeout(handle);
-        }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
+    React.useEffect(() => {
+        const handle = setTimeout(() => {
+            if ((enabled)&&(analys===AnalysisTypes.SUM_FRAMES)) {
+                dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+                    type: AnalysisTypes.SUM_FRAMES,
+                    parameters: roiParameters,
+                }))
+            }
+        }, 100);
+
+        return () => clearTimeout(handle);
+    }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
 
    

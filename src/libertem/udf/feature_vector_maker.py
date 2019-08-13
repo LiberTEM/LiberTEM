@@ -85,10 +85,9 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
         masked_sstd = sstd*mask
     else:
         masked_sstd = sstd
-    if not (min_dist is None):
-        coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
-    else:
-        coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=1)
+    if min_dist is None:
+        min_dist = 1
+    coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=1)
     udf = FeatureVecMakerUDF(
         delta=delta, n_peaks=n_peaks, center=center, rad_in=rad_in, rad_out=rad_out,
         min_dist=min_dist, savg=savg, coordinates=coordinates

@@ -125,8 +125,6 @@ class BufferWrapper(object):
         """
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
-        if self._kind != "nav":
-            return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
         wrapper = np.full(shape, np.nan, dtype=self._dtype)
         wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data

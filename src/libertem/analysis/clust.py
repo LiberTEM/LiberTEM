@@ -15,7 +15,7 @@ from skimage.feature import peak_local_max
 
 
 class ClusterAnalysis(BaseAnalysis):
-    TYPE = "UDF"  # FIXME: type?
+    TYPE = "UDF"  
 
     def get_udf(self):
         n_peaks = self.parameters["n_peaks"]
@@ -33,9 +33,6 @@ class ClusterAnalysis(BaseAnalysis):
         clustering = AgglomerativeClustering(
             affinity='euclidean', n_clusters=n_clust, linkage='ward').fit(udf_results.feature_vec)
         labels = np.array(clustering.labels_+1)
-        # wrapper = np.full(self.dataset.shape.nav, np.nan, dtype=np.int16)
-        # wrapper[roi.reshape(self.dataset.shape.nav)] = labels
-
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.feature_vec,
                            visualized=visualize_simple(
@@ -103,8 +100,6 @@ class ClusterAnalysis(BaseAnalysis):
             masked_sstd = sstd
 
         coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
-
-        print(coordinates.shape)
 
         udf = feature.FeatureVecMakerUDF(
             delta=delta, savg=savg, coordinates=coordinates,

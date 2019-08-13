@@ -22,14 +22,6 @@ const AnalysisLayoutTwoRes: React.SFC<MergedProps> = ({
     left, mid, right,
     toolbar, clustparams, title1, title2, title3
 }) => {
-// tslint:disable-next-line: no-console
-    
-
-    // handleChange({target: {checked: true}})
-
-
-    
-
     return (
         <>
             <Header as='h3' attached="top">

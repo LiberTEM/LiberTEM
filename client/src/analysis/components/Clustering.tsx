@@ -39,7 +39,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         y: cy,
     }
 
-    const [delta, setDelta] = React.useState(0);
+    const [delta, setDelta] = React.useState(0.05);
 
     const deltaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDelta(event.target.valueAsNumber);
@@ -97,7 +97,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     )
 
     const dispatch = useDispatch();
-    const {RectroiParameters, RectRoiHandles, RectRoiWidgets}=useRectROI({scanWidth, scanHeight});
+    const {rectRoiParameters, rectRoiHandles, rectRoiWidgets}=useRectROI({scanWidth, scanHeight});
     
     React.useEffect(() => {
             dispatch(analysisActions.Actions.run(analysis.id, 1, {
@@ -110,7 +110,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         dispatch(analysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.CLUST,
             parameters:{
-            roi: RectroiParameters.roi,
+            roi: rectRoiParameters.roi,
             cx,
             cy,
             ri,
@@ -163,7 +163,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         the output is limited to the number of peaks the algorithm could find) </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
         </Form.Field>
         <Form.Field>
-            <label>  Minimal distance between peaks </label> <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>    
+            <label>  Minimal distance in pixels between peaks </label> <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>    
         </Form.Field>
     </Form>
     </Accordion.Content>
@@ -183,8 +183,8 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                 <ResultList
                     jobIndex={1} analysis={analysis.id}
                     width={scanWidth} height={scanHeight}
-                    extraHandles={RectRoiHandles}
-                    extraWidgets={RectRoiWidgets}
+                    extraHandles={rectRoiHandles}
+                    extraWidgets={rectRoiWidgets}
                 />
             </>}
 
@@ -199,8 +199,8 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             toolbar={toolbar}
             clustparams= {clustparams}
 
-            title1="Frame view. Choose ring parameters for peak finding"
-            title2="Bright field image (sum over frame). Choose ROI for SD map calculation"
+            title1="Frame view. Peaks on SD map inside the ring will be included in the feature vector"
+            title2="Bright field image (sum over frame). Choose ROI for SD map calculation, which will be used for peak detection"
             title3="Clustering result"
 
         />

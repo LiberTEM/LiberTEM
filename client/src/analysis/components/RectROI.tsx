@@ -18,7 +18,7 @@ const useRectROI = ({ scanWidth, scanHeight}: {
     const [height, setheight] = useState(minLength / 8);
 
 
-    const RectroiParameters: FrameParams = {
+    const rectRoiParameters: FrameParams = {
         roi: {
             shape: "rect",
             x,
@@ -44,7 +44,7 @@ const useRectROI = ({ scanWidth, scanHeight}: {
         y: y + height,
     }
 
-    const RectRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
+    const rectRoiHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
         <DraggableHandle x={x} y={y}
             imageWidth={scanWidth}
             onDragMove={handleCornerChange}
@@ -57,16 +57,16 @@ const useRectROI = ({ scanWidth, scanHeight}: {
             parentOnDrop={handleDrop}/>
     </>);
 
-    const RectRoiWidgets = (
+    const rectRoiWidgets = (
         <Rect x={x} y={y} width={width} height={height}
             imageWidth={scanWidth} imageHeight={scanHeight}
         />
     );
 
     return {
-        RectroiParameters,
-        RectRoiHandles,
-        RectRoiWidgets,
+        rectRoiParameters,
+        rectRoiHandles,
+        rectRoiWidgets,
     };
 };
 

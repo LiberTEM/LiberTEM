@@ -168,13 +168,13 @@ def get_release_kind():
 
 
 def get_wheel():
-    wheels = glob.glob("%s/*.whl" % BASE_DIR)
+    wheels = glob.glob("%s/dist/*.whl" % BASE_DIR)
     assert len(wheels) == 1, "expected only one wheel, have: %s" % wheels
     return wheels[0]
 
 
 def get_sdist():
-    sdists = glob.glob("%s/*.tar.gz" % BASE_DIR)
+    sdists = glob.glob("%s/dist/*.tar.gz" % BASE_DIR)
     assert len(sdists) == 1, "expected only one tarball, have: %s" % sdists
     return sdists[0]
 
@@ -269,22 +269,22 @@ def upload_to_github(verbose, files, token, release):
         tag = get_release_tag()
         release_data.update({
             "tag": tag['full'],
-            "name": "Release Candidate %s" % tag,
+            "name": "Release Candidate %s" % tag['full'],
             "draft": False,
             "prerelease": True,
         })
         if verbose:
-            print("release candidate, tag:", tag)
+            print("release candidate, tag:", tag['full'])
     elif release == "release":
         tag = get_release_tag()
         release_data.update({
             "tag": tag['full'],
-            "name": "Release %s" % tag,
+            "name": "Release %s" % tag['full'],
             "draft": False,
             "prerelease": False,
         })
         if verbose:
-            print("release, tag:", tag)
+            print("release, tag:", tag['full'])
     else:
         raise ValueError("unknown release kind: %s" % release)
 

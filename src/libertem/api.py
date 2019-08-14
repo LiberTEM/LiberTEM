@@ -65,7 +65,7 @@ class Context:
         """
         # delegate to libertem.io.dataset.load:
         ds = self.executor.run_function(load, filetype, *args, **kwargs)
-        ds = self.executor.run_function(ds.initialize)
+        ds = ds.initialize(self.executor)
         ds.set_num_cores(len(self.executor.get_available_workers()))
         self.executor.run_function(ds.check_valid)
         return ds

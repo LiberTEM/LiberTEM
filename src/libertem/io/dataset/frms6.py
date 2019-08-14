@@ -235,6 +235,15 @@ class FRMS6FileSet(FileSet3D):
         self._gain_map = gain_map
         super().__init__(files)
 
+    def get_for_range(self, start, stop):
+        """
+        return new FileSet3D filtered for files having frames in the [start, stop) range
+        """
+        files = self._get_files_for_range(start, stop)
+        return self.__class__(
+            files=files, meta=self._meta, dark_frame=self._dark_frame, gain_map=self._gain_map
+        )
+
     def read_images_multifile(self, start, stop, out, crop_to=None):
         """
         Read [`start`, `stop`) images from the dataset into `out`
@@ -336,7 +345,7 @@ class FRMS6DataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
-    def initialize(self):
+    def _do_initialize(self):
         first_file = next(self._get_signal_files())
         header = first_file.header
         raw_frame_size = header['height'], header['width']
@@ -363,11 +372,14 @@ class FRMS6DataSet(DataSet):
         )
         return self
 
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
+
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         hdr_filename = "%s.hdr" % _get_base_filename(path)
         try:
-            _read_hdr(hdr_filename)
+            executor.run_function(_read_hdr, hdr_filename)
         except Exception:
             return False
         return {"path": path}
@@ -457,6 +469,13 @@ class FRMS6DataSet(DataSet):
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_cache_key(self):
+        return {
+            "path": self._path,
+            "enable_offset_correction": self._enable_offset_correction,
+            "gain_map_path": self._gain_map_path,
+        }
 
     @property
     def dtype(self):

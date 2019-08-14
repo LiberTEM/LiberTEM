@@ -1,5 +1,6 @@
 import cloudpickle
 from .base import JobExecutor
+from .scheduler import Worker, WorkerSet
 
 
 class InlineJobExecutor(JobExecutor):
@@ -25,8 +26,10 @@ class InlineJobExecutor(JobExecutor):
     def run_function(self, fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
+    def run_each_host(self, fn, *args, **kwargs):
+        return {"localhost": fn(*args, **kwargs)}
+
     def get_available_workers(self):
-        return dict(
-            name='inline',
-            host='localhost'
-        )
+        return WorkerSet([
+            Worker(name='inline', host='localhost')
+        ])

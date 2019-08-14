@@ -1,4 +1,5 @@
 import pickle
+import json
 from unittest import mock
 
 import cloudpickle
@@ -32,7 +33,7 @@ def test_read_1(lt_ctx, hdf5):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     for p in ds.get_partitions():
         for t in p.get_tiles():
             print(t.tile_slice)
@@ -42,7 +43,7 @@ def test_read_2(lt_ctx, hdf5):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     for p in ds.get_partitions():
         for t in p.get_tiles():
             print(t.tile_slice)
@@ -54,7 +55,7 @@ def test_read_3(lt_ctx, random_hdf5):
         path=random_hdf5.filename, ds_path="data", tileshape=(1, 2, 16, 16),
         target_size=4096
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     for p in ds.get_partitions():
         for t in p.get_tiles():
             print(t.tile_slice)
@@ -82,7 +83,7 @@ def test_cloudpickle(lt_ctx, hdf5):
     assert loaded._shape is None
     repr(loaded)
 
-    ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
 
     pickled = cloudpickle.dumps(ds)
     loaded = cloudpickle.loads(pickled)
@@ -127,7 +128,7 @@ def test_roi_1(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     p = next(ds.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
@@ -145,51 +146,51 @@ def test_pick(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
     )
-    ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     assert len(ds.shape) == 4
     print(ds.shape)
     pick = lt_ctx.create_pick_analysis(dataset=ds, x=2, y=3)
     lt_ctx.run(pick)
 
 
-def test_diags(hdf5):
+def test_diags(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     print(ds.diagnostics)
 
 
-def test_check_valid(hdf5):
+def test_check_valid(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     assert ds.check_valid()
 
 
-def test_timeout_1(hdf5):
+def test_timeout_1(hdf5, lt_ctx):
     with mock.patch('h5py.File.visititems', side_effect=TimeoutError("too slow")):
-        params = H5DataSet.detect_params(hdf5.filename)
+        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)
         assert list(params.keys()) == ["path"]
 
         ds = H5DataSet(
             path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
         )
-        ds = ds.initialize()
+        ds = ds.initialize(lt_ctx.executor)
         diags = ds.diagnostics
         print(diags)
 
 
-def test_timeout_2(hdf5):
+def test_timeout_2(hdf5, lt_ctx):
     with mock.patch('time.time', side_effect=[1, 30, 30, 60]):
-        params = H5DataSet.detect_params(hdf5.filename)
+        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)
         assert list(params.keys()) == ["path"]
 
         ds = H5DataSet(
             path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
         )
-        ds = ds.initialize()
+        ds = ds.initialize(lt_ctx.executor)
         diags = ds.diagnostics
         print(diags)
 
@@ -200,7 +201,7 @@ def test_roi_2(random_hdf5, lt_ctx, mnp):
         path=random_hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
         min_num_partitions=mnp,
     )
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
 
     roi = {
         "shape": "disk",
@@ -242,3 +243,11 @@ def test_roi_2(random_hdf5, lt_ctx, mnp):
         assert not np.allclose(results.intensity.raw_data, data.sum(axis=(0, 1)))
         # ... but rather like `expected`:
         assert np.allclose(results.intensity.raw_data, expected)
+
+
+def test_cache_key_json_serializable(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    json.dumps(ds.get_cache_key())

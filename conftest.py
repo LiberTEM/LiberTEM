@@ -69,7 +69,7 @@ def hdf5_ds_1(hdf5):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(InlineJobExecutor())
     return ds
 
 
@@ -78,7 +78,7 @@ def hdf5_ds_2(random_hdf5):
     ds = H5DataSet(
         path=random_hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
     )
-    ds = ds.initialize()
+    ds = ds.initialize(InlineJobExecutor())
     return ds
 
 
@@ -110,7 +110,7 @@ def default_raw(tmpdir_factory):
         detector_size=(128, 128),
     )
     ds.set_num_cores(2)
-    ds = ds.initialize()
+    ds = ds.initialize(InlineJobExecutor())
     yield ds
 
 
@@ -127,7 +127,7 @@ def uint16_raw(tmpdir_factory):
         dtype="uint16",
         detector_size=(128, 128),
     )
-    ds = ds.initialize()
+    ds = ds.initialize(InlineJobExecutor())
     yield ds
 
 

@@ -1,4 +1,5 @@
 import pickle
+import json
 
 import numpy as np
 
@@ -143,3 +144,7 @@ def test_macrotile_roi_3(lt_ctx, default_raw):
     p2 = next(ps)
     macrotile = p2.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)
+
+
+def test_cache_key_json_serializable(default_raw):
+    json.dumps(default_raw.get_cache_key())

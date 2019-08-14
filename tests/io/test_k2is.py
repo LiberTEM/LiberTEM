@@ -22,12 +22,12 @@ pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testda
 @pytest.fixture
 def default_k2is():
     ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
-    ds.initialize()
+    ds.initialize(InlineJobExecutor())
     return ds
 
 
 def test_detect():
-    params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH)
+    params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH, InlineJobExecutor())
     assert params == {
         "path": K2IS_TESTDATA_PATH,
     }
@@ -227,3 +227,7 @@ def test_macrotile_roi_3(lt_ctx, default_k2is):
     p2 = next(ps)
     macrotile = p2.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)
+
+
+def test_cache_key_json_serializable(default_k2is):
+    json.dumps(default_k2is.get_cache_key())

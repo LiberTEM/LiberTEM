@@ -124,13 +124,14 @@ class EMPADDataSet(DataSet):
             # we strip off the path and only use the basename, hoping the .raw file will
             # be in the same directory as the XML file:
             filename = os.path.basename(raw_filename)
-            self._path_raw = os.path.join(
+            path_raw = os.path.join(
                 os.path.dirname(path),
                 filename
             )
             scan_y = int(xml_get_text(root.getElementsByTagName("pix_y")[0].childNodes))
             scan_x = int(xml_get_text(root.getElementsByTagName("pix_x")[0].childNodes))
-            self._scan_size = (scan_y, scan_x)
+            scan_size = (scan_y, scan_x)
+            return path_raw, scan_size
             # TODO: read more metadata
         except Exception as e:
             raise DataSetException(
@@ -138,17 +139,19 @@ class EMPADDataSet(DataSet):
                     str(e))
             )
 
-    def initialize(self):
+    def initialize(self, executor):
         lowpath = self._path.lower()
         if lowpath.endswith(".xml"):
-            self._init_from_xml(self._path)
+            self._path_raw, self._scan_size = executor.run_function(
+                self._init_from_xml, self._path
+            )
         else:
             assert lowpath.endswith(".raw")
             assert self._scan_size is not None
             self._path_raw = self._path
 
         try:
-            self._filesize = os.stat(self._path_raw).st_size
+            self._filesize = executor.run_function(os.stat, self._path_raw).st_size
         except OSError as e:
             raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
         self._meta = DataSetMeta(
@@ -163,7 +166,7 @@ class EMPADDataSet(DataSet):
         return EMPADDatasetParams
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         """
         Detect parameters. If an `path` is an xml file, we try to automatically
         set the scan_size, otherwise we can't really detect if this is a EMPAD
@@ -171,7 +174,7 @@ class EMPADDataSet(DataSet):
         """
         try:
             ds = cls(path)
-            ds = ds.initialize()
+            ds = ds.initialize(executor)
             if not ds.check_valid():
                 return False
             return {
@@ -220,6 +223,11 @@ class EMPADDataSet(DataSet):
             return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_cache_key(self):
+        return {
+            "path_raw": self._path_raw,
+        }
 
     def _get_num_partitions(self):
         """

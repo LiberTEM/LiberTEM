@@ -316,7 +316,7 @@ class MIBDataSet(DataSet):
         self._total_filesize = None
         self._sequence_start = None
 
-    def initialize(self):
+    def _do_initialize(self):
         self._headers = self._preread_headers()
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
@@ -348,6 +348,9 @@ class MIBDataSet(DataSet):
                                          key=lambda f: f.fields['sequence_first_image']))
         return self
 
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
+
     def get_diagnostics(self):
         first_file = self._files_sorted[0]
         return [
@@ -360,7 +363,7 @@ class MIBDataSet(DataSet):
         return MIBDatasetParams
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
             return {
@@ -368,7 +371,7 @@ class MIBDataSet(DataSet):
                 "tileshape": (1, 3, 256, 256),
             }
         elif pathlow.endswith(".hdr") and is_valid_hdr(path):
-            hdr = read_hdr_file(path)
+            hdr = executor.run_function(read_hdr_file, path)
             scan_size = scan_size_from_hdr(hdr)
             return {
                 "path": path,
@@ -443,6 +446,15 @@ class MIBDataSet(DataSet):
                 )
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_cache_key(self):
+        return {
+            "path": self._path,
+            # shape is included here because the structure will be invalid if you open
+            # the same .mib file with a different scan_size; should be no issue if you
+            # open via the .hdr file
+            "shape": tuple(self.shape),
+        }
 
     def _get_fileset(self):
         assert self._sequence_start is not None

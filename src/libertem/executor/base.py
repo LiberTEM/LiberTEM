@@ -46,6 +46,13 @@ class JobExecutor(object):
         """
         raise NotImplementedError()
 
+    def ensure_sync(self):
+        """
+        Returns a synchronous executor, incase of a `JobExecutor` we just
+        return `self; in case of `AsyncJobExecutor` below more work is needed!
+        """
+        return self
+
 
 class AsyncJobExecutor(object):
     async def run_job(self, job, cancel_id):
@@ -78,6 +85,9 @@ class AsyncJobExecutor(object):
         pass
 
     async def get_available_workers(self):
+        raise NotImplementedError()
+
+    def ensure_sync(self):
         raise NotImplementedError()
 
 
@@ -119,6 +129,9 @@ class AsyncAdapter(AsyncJobExecutor):
         self._wrapped = wrapped
         self._pool = concurrent.futures.ThreadPoolExecutor(1)
 
+    def ensure_sync(self):
+        return self._wrapped
+
     async def run_job(self, job, cancel_id):
         """
         run a Job
@@ -146,7 +159,8 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def close(self):
         """
-        cleanup resources used by this executor, if any
+        Cleanup resources used by this executor, if any. Also calls close on the
+        wrapped executor.
         """
         res = await sync_to_async(self._wrapped.close, self._pool)
         if self._pool:

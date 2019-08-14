@@ -70,7 +70,7 @@ class BinaryHDFSDataSet(DataSet):
         self._worker_map = worker_map
         self._sig_dims = 2  # FIXME: need to put this into the json metadata!
 
-    def initialize(self):
+    def _do_initialize(self):
         with self.get_reader().get_fs().open(self.index_path) as f:
             self._index = json.load(f)
         assert self._index['mode'] == 'rect', 'unsupported mode: %s' % self._index['mode']
@@ -79,6 +79,9 @@ class BinaryHDFSDataSet(DataSet):
             dtype=self.dtype,
         )
         return self
+
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
 
     def get_reader(self):
         return HDFSReader(host=self.host, port=self.port)

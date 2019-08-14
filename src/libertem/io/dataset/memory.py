@@ -101,7 +101,7 @@ class MemoryDataSet(DataSet):
         self._crop_frames = crop_frames
         self._tiledelay = tiledelay
 
-    def initialize(self):
+    def initialize(self, executor):
         return self
 
     @classmethod
@@ -118,6 +118,9 @@ class MemoryDataSet(DataSet):
 
     def check_valid(self):
         return True
+
+    def get_cache_key(self):
+        return TypeError("memory data set is not cacheable yet")
 
     def get_partitions(self):
         fileset = FileSet3D([

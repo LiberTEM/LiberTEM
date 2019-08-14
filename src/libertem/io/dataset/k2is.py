@@ -475,7 +475,7 @@ class K2ISDataSet(DataSet):
         self._files = None
         self._fileset = None
 
-    def initialize(self):
+    def _do_initialize(self):
         self._files = self._get_files()
         self._fileset = self._get_fileset()
         self._scan_size = self._get_scansize()
@@ -486,6 +486,9 @@ class K2ISDataSet(DataSet):
             iocaps={"FULL_FRAMES", "SUBFRAME_TILES"},
         )
         return self
+
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
 
     def _get_scansize(self):
         with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
@@ -513,7 +516,7 @@ class K2ISDataSet(DataSet):
         return K2ISDatasetParams
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         """
         detect if path points to a file that is part of a k2is dataset.
         extension needs to be bin or gtg, and number of files of the dataset needs to match
@@ -523,7 +526,7 @@ class K2ISDataSet(DataSet):
         """
         try:
             pattern = _pattern(path)
-            files = glob.glob(pattern)
+            files = executor.run_function(glob.glob, pattern)
             if len(files) != NUM_SECTORS:
                 return False
         except DataSetException:
@@ -540,6 +543,12 @@ class K2ISDataSet(DataSet):
         except Exception as e:
             raise DataSetException("failed to load dataset: %s" % e) from e
         return True
+
+    def get_cache_key(self):
+        gtg = _get_gtg_path(self._path)
+        return {
+            "gtg_path": gtg,
+        }
 
     def get_diagnostics(self):
         p = next(self.get_partitions())

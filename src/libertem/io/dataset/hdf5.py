@@ -135,7 +135,7 @@ class H5DataSet(DataSet):
             ds_path=self.ds_path
         )
 
-    def initialize(self):
+    def _do_initialize(self):
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
@@ -146,12 +146,15 @@ class H5DataSet(DataSet):
             )
         return self
 
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
+
     @classmethod
     def get_msg_converter(cls):
         return HDF5DatasetParams
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         try:
             with h5py.File(path, 'r'):
                 pass
@@ -193,6 +196,12 @@ class H5DataSet(DataSet):
             return True
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_cache_key(self):
+        return {
+            "path": self.path,
+            "ds_path": self.ds_path,
+        }
 
     def get_diagnostics(self):
         with self.get_reader().get_h5ds() as ds:

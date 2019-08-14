@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 
 import numpy as np
 import pytest
@@ -18,15 +19,15 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 
 
 @pytest.fixture
-def default_mib():
+def default_mib(lt_ctx):
     scan_size = (32, 32)
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     return ds
 
 
-def test_detect():
-    params = MIBDataSet.detect_params(MIB_TESTDATA_PATH)
+def test_detect(lt_ctx):
+    params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)
     assert params == {
         "path": MIB_TESTDATA_PATH,
         "tileshape": (1, 3, 256, 256)
@@ -49,7 +50,7 @@ def test_missing_frames(lt_ctx):
     # one full row of additional frames in the data set than in the file
     scan_size = (33, 32)
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
     for p in ds.get_partitions():
@@ -57,14 +58,14 @@ def test_missing_frames(lt_ctx):
             pass
 
 
-def test_too_many_frames():
+def test_too_many_frames(lt_ctx):
     """
     mib files can contain more frames than the intended scanning dimensions
     """
     # one full row of additional frames in the file
     scan_size = (31, 32)
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
     for p in ds.get_partitions():
@@ -143,7 +144,7 @@ def test_crop_to(default_mib, lt_ctx):
 def test_read_at_boundaries(default_mib, lt_ctx):
     scan_size = (32, 32)
     ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 7, 256, 256), scan_size=scan_size)
-    ds_odd = ds_odd.initialize()
+    ds_odd = ds_odd.initialize(lt_ctx.executor)
 
     sumjob_odd = lt_ctx.create_sum_analysis(dataset=ds_odd)
     res_odd = lt_ctx.run(sumjob_odd)
@@ -163,3 +164,7 @@ def test_invalid_crop_full_frames_combo(default_mib, lt_ctx):
 
 def test_diagnostics(default_mib):
     print(default_mib.diagnostics)
+
+
+def test_cache_key_json_serializable(default_mib):
+    json.dumps(default_mib.get_cache_key())

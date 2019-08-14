@@ -439,7 +439,7 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
         json.load(f)
 
     if not dry_run:
-        if is_release or is_rc:
+        if (is_release or is_rc) and False:
             upload_to_zenodo(verbose=ctx.obj['verbose'],
                              parent=zenodo_sandbox_parent if is_rc else zenodo_parent,
                              token=zenodo_token, sandbox_token=zenodo_sandbox_token)

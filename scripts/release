@@ -220,7 +220,7 @@ def get_release_msg():
     parts = []
     travis_url = os.environ.get("TRAVIS_BUILD_WEB_URL", "")
     if travis_url:
-        parts.append("Travis CI biuld log: %s" % travis_url)
+        parts.append("Travis CI build log: %s" % travis_url)
     return "\n\n".join(parts)
 
 
@@ -248,10 +248,19 @@ def upload_to_github(verbose, files, token, release):
             "draft": False,
             "prerelease": True,
         })
-        # first, delete existing continuous tag:
+        # first, delete existing continuous tag and release:
+        try:
+            cont_release = repo.get_release("continuous")
+            cont_release.delete()
+            if verbose:
+                print("deleted existing continuous release")
+        except UnknownObjectException:
+            pass
         try:
             cont_tag = repo.get_git_ref("tags/continuous")
             cont_tag.delete()
+            if verbose:
+                print("deleted existing continuous tag")
         except UnknownObjectException:
             pass
         if verbose:

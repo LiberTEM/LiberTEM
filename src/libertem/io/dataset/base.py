@@ -547,7 +547,8 @@ class Partition3D(Partition):
             How many frames this partition should contain
 
         stackheight : int
-            How many frames per tile?
+            How many frames per tile? Default value, can be overridden by
+            `target_size` in `get_tiles`.
         """
         self._fileset = fileset
         self._start_frame = start_frame

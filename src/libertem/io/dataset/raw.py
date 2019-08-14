@@ -50,23 +50,53 @@ class RAWDatasetParams(MessageConverter):
 
 
 class RawFile(File3D):
-    def __init__(self, meta, path, enable_direct, enable_mmap):
+    def __init__(self, path, num_frames, frame_shape, enable_direct, enable_mmap, dtype,
+                 start_idx=0):
+        """
+        Parameters
+        ----------
+        path : str
+            path to the file
+
+        num_frames : int
+            how many frames should be read from the file?
+
+        frame_shape : tuple of int
+            shape of frames, will be used for mmap shape
+
+        enable_direct : bool
+            enable direct I/O?
+
+        enable_mmap : bool
+            enable memory-mapped reading?
+
+        dtype : str or numpy.dtype
+            dtype on disk
+
+        start_idx : int
+            at which frame index should we start reading?
+        """
         super().__init__()
+
+        self._num_frames = num_frames
+        self._dtype = np.dtype(dtype)
+        self._frame_size = np.product(frame_shape) * self._dtype.itemsize
+        self._frame_shape = frame_shape
+        self._start_idx = start_idx
+
         self._path = path
-        self._meta = meta
         self._file = None
         self._mmap = None
         self._enable_direct = enable_direct
         self._enable_mmap = enable_mmap
-        self._frame_size = self._meta.shape.sig.size * self._meta.raw_dtype.itemsize
-
-    @property
-    def num_frames(self):
-        return self._meta.shape.flatten_nav()[0]
 
     @property
     def start_idx(self):
-        return 0
+        return self._start_idx
+
+    @property
+    def num_frames(self):
+        return self._num_frames
 
     def open(self):
         if self._enable_direct:
@@ -82,8 +112,8 @@ class RawFile(File3D):
                 offset=self.start_idx * self.num_frames,
                 access=mmap.ACCESS_READ,
             )
-            self._mmap = np.frombuffer(raw_data, dtype=self._meta.raw_dtype).reshape(
-                (self.num_frames,) + tuple(self._meta.shape.sig)
+            self._mmap = np.frombuffer(raw_data, dtype=self._dtype).reshape(
+                (self.num_frames,) + self._frame_shape
             )
 
     def mmap(self):
@@ -101,9 +131,9 @@ class RawFile(File3D):
         except OSError as e:
             raise DataSetException("could not seek to offset {}: {}".format(offset, e)) from e
         readsize = (stop - start) * self._frame_size
-        if out.dtype != self._meta.raw_dtype:
+        if out.dtype != self._dtype:
             rawbuf = self.get_buffer("raw_read_buffer", readsize)
-            buf = np.frombuffer(rawbuf, dtype=self._meta.raw_dtype).reshape(out.shape)
+            buf = np.frombuffer(rawbuf, dtype=self._dtype).reshape(out.shape)
             bytes_read = self._file.readinto(buf)
             out[:] = buf
         else:
@@ -209,12 +239,17 @@ class RawFileDataSet(DataSet):
         return RAWDatasetParams
 
     def _get_fileset(self):
+        frame_shape = tuple(self._meta.shape.sig)
+        num_frames = self._meta.shape.flatten_nav()[0]
         return RawFileSet([
             RawFile(
-                meta=self._meta,
                 path=self._path,
+                num_frames=num_frames,
+                frame_shape=frame_shape,
                 enable_direct=self._enable_direct,
                 enable_mmap=not self._enable_direct,
+                dtype=self._meta.raw_dtype,
+                start_idx=0,
             )
         ])
 

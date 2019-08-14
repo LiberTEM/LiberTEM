@@ -15,7 +15,7 @@ from skimage.feature import peak_local_max
 
 
 class ClusterAnalysis(BaseAnalysis):
-    TYPE = "UDF"  
+    TYPE = "UDF"
 
     def get_udf(self):
         n_peaks = self.parameters["n_peaks"]

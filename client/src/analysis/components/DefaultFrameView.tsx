@@ -82,7 +82,7 @@ const useDefaultFrameView = ({
         jobIndex: 0,
         analysisId,
         roiParameters: rectRoiParameters,
-        analys: AnalysisTypes.SD_FRAMES
+        analysis: AnalysisTypes.SD_FRAMES
     })
 
     
@@ -93,7 +93,7 @@ const useDefaultFrameView = ({
         jobIndex: 0,
         analysisId,
         roiParameters: diskroiParameters,
-        analys: AnalysisTypes.SD_FRAMES,
+        analysis: AnalysisTypes.SD_FRAMES,
     })
 
     useRoiPicker({
@@ -102,7 +102,7 @@ const useDefaultFrameView = ({
         jobIndex: 0,
         analysisId,
         roiParameters: diskroiParameters,
-        analys: AnalysisTypes.SUM_FRAMES,
+        analysis: AnalysisTypes.SUM_FRAMES,
     })
 
     useRoiPicker({
@@ -111,7 +111,7 @@ const useDefaultFrameView = ({
         jobIndex: 0,
         analysisId,
         roiParameters: rectRoiParameters,
-        analys: AnalysisTypes.SUM_FRAMES,
+        analysis: AnalysisTypes.SUM_FRAMES,
     })
 
     useSumFrames({

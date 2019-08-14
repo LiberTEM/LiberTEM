@@ -153,17 +153,17 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     <Accordion.Content active={paramsVisible}>
     <Form>
         <Form.Field> 
-                <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) </label><input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> 
+            <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) <input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> </label>
         </Form.Field>
         <Form.Field>
-            <label> Number of clusters </label> <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> 
+            <label> Number of clusters  <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> </label>
         </Form.Field>    
         <Form.Field>
             <label>  Maximal number of possible peak positions to detect (better put higher value,
-        the output is limited to the number of peaks the algorithm could find) </label> <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/>    
+        the output is limited to the number of peaks the algorithm could find)  <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/> </label>   
         </Form.Field>
         <Form.Field>
-            <label>  Minimal distance in pixels between peaks </label> <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>    
+            <label>  Minimal distance in pixels between peaks  <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>  </label>  
         </Form.Field>
     </Form>
     </Accordion.Content>
@@ -199,8 +199,8 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             toolbar={toolbar}
             clustparams= {clustparams}
 
-            title1="Frame view. Peaks on SD map inside the ring will be included in the feature vector"
-            title2="Bright field image (sum over frame). Choose ROI for SD map calculation, which will be used for peak detection"
+            title1="Peaks inside the ring will be considered"
+            title2="Choose specimen region"
             title3="Clustering result"
 
         />

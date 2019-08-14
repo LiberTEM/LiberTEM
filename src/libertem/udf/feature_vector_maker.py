@@ -28,7 +28,8 @@ class FeatureVecMakerUDF(UDF):
 def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
                     center=None, rad_in=None, rad_out=None, roi=None):
     """
-    Return a value after integration of Fourier spectrum for each frame over ring.
+    Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
+    positions
     Parameters
     ----------
     ctx: Context
@@ -76,7 +77,7 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
     """
     res_stat = run_stddev(ctx, dataset, roi)
     savg = res_stat['mean']
-    sstd = res_stat['var']
+    sstd = res_stat['std']
     sshape = sstd.shape
     if not (center is None or rad_in is None or rad_out is None):
         mask_out = 1*_make_circular_mask(center[1], center[0], sshape[1], sshape[0], rad_out)

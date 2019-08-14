@@ -4,14 +4,14 @@ import { useDispatch } from "react-redux";
 import { AnalysisTypes, FrameParams } from "../../messages";
 import * as analysisActions from "../actions";
 
-const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
+const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis}: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
     jobIndex: number,
     analysisId: string;
     roiParameters: FrameParams;
-    analys: AnalysisTypes.SD_FRAMES|AnalysisTypes.SUM_FRAMES
+    analysis: AnalysisTypes.SD_FRAMES|AnalysisTypes.SUM_FRAMES
 }) => {
 
 
@@ -20,7 +20,7 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
 
     React.useEffect(() => {
         const handle = setTimeout(() => {
-            if ((enabled)&&(analys===AnalysisTypes.SD_FRAMES)) {
+            if ((enabled)&&(analysis===AnalysisTypes.SD_FRAMES)) {
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                     type: AnalysisTypes.SD_FRAMES,
                     parameters: roiParameters,
@@ -29,12 +29,12 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
         }, 100);
 
         return () => clearTimeout(handle);
-    }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
+    }, [analysis, analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
 
     React.useEffect(() => {
         const handle = setTimeout(() => {
-            if ((enabled)&&(analys===AnalysisTypes.SUM_FRAMES)) {
+            if ((enabled)&&(analysis===AnalysisTypes.SUM_FRAMES)) {
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
                     type: AnalysisTypes.SUM_FRAMES,
                     parameters: roiParameters,
@@ -43,7 +43,7 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analys}: {
         }, 100);
 
         return () => clearTimeout(handle);
-    }, [analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
+    }, [analysis, analysisId, enabled, jobIndex, JSON.stringify(roiParameters)]);
 
 
    

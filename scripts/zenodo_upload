@@ -9,7 +9,8 @@ import click
 import requests
 import bibtexparser
 
-import libertem
+HERE = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.normpath(os.path.join(HERE, '..'))
 
 ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 
@@ -274,17 +275,29 @@ def make_references(db):
     return references
 
 
+def read_version(version_file):
+    res = {}
+    with open(version_file) as f:
+        exec(f.read(), res)
+    return res['__version__']
+
+
+def get_version_fn():
+    return os.path.join(BASE_DIR, 'src', 'libertem', '__version__.py')
+
+
 def make_data():
     db = load_bibtex()
     data = config['template']
     metadata = data['metadata']
+    version = read_version(get_version_fn())
     metadata['creators'] = make_creators()
     metadata['contributors'] = make_contributors()
     metadata['description'] = make_description()
     metadata['related_identifiers'] = make_related(db)
     metadata['references'] = make_references(db)
-    metadata['version'] = libertem.__version__
-    metadata['title'] += libertem.__version__
+    metadata['version'] = version
+    metadata['title'] += version
     return data
 
 

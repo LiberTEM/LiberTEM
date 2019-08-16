@@ -59,21 +59,31 @@ Amorphous frame:
 Clustering
 ~~~~~~~~~~
 
-The scripting interface allows to cluster membrane, amorphous and crystalline regions with different lattice orientation in more efficient way, taking into acoount regions of interests,
-to look at full analysis `Follow this link to a Jupyter notebook. <pcmclustering.ipynb>`_. To make preliminary analysis for parameters choise and brief look at the result, you can select "Clustering" from the "Add Analysis" menu in the GUI.
+The scripting interface allows to cluster membrane, amorphous and crystalline regions with different lattice orientation in a more efficient way, taking into account regions of interests.
+To look at full analysis `Follow this link to a Jupyter notebook. <pcmclustering.ipynb>`_. To make preliminary analysis for parameters choice and a brief look at the result, you can select "Clustering" from the "Add Analysis" menu in the GUI.
 
 GUI use:
 --------
 
-
 You can select "Clustering" from the "Add Analysis" menu in the GUI.
 
 Then you can choose the region in the navigation space in the middle to select the standard deviation calculation region (recommendation: try to select as much of the specimen you can, avoiding membrane zone).
-Adjust position of the ring and its radii in the left side to select region for detecting peaks and click Apply
+Adjust the position of the ring and its radii in the left side to select the region for detecting peaks and click "Apply"
 
-After first result will be shown, you can readjust region of peak detection (in the left side) SD calculation region (in the middle) and parameters, which are hidden in parameters section.
-For Radii readjuatment you can use SD over ROI mode.
+.. figure:: ./images/phasechange/first.PNG
+
+After the first result will be shown, you can readjust the region of peak detection (in the left side) SD calculation region (in the middle) and parameters, which are hidden in the parameters section.
+For radii readjustment, you can use SD over ROI mode, to look at actual SD over ROI (for visuasization of actual SD, use the right side with "SD over ROI (rect) mode", to choose ROI for feature vector calculation and clustering, use the middle section.
+
+.. figure:: ./images/phasechange/second.PNG
 
 
+You can check you clustering by using Pick mode.
 
+Example of cluster with one lattice orientation:
 
+.. figure:: ./images/phasechange/1.PNG
+
+Example of cluster with another lattice orientation:
+
+.. figure:: ./images/phasechange/2.PNG

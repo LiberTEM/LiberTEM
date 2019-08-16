@@ -89,6 +89,10 @@ def read(*parts):
     return codecs.open(os.path.join(here, *parts), 'r').read()
 
 
+def remove_rst_roles(txt):
+    return re.sub(':cite:`[^`]+`', '', txt)
+
+
 def get_git_rev():
     # NOTE: this is a copy from src/libertem/versioning.py
     # this is because it is not guaranteed that we can import our own packages
@@ -182,7 +186,7 @@ setup(
     },
     keywords="electron microscopy",
     description="Open pixelated STEM framework",
-    long_description=read("README.rst"),
+    long_description=remove_rst_roles(read("README.rst")),
     long_description_content_type="text/x-rst",
     url="https://libertem.github.io/LiberTEM/",
     author_email="libertem-dev@googlegroups.com",

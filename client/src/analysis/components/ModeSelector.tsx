@@ -11,10 +11,11 @@ interface ModeSelectorProps {
     modes: ModeOptions,
     currentMode: any,
     onModeChange: (mode: any) => void,
+    label: string,
 }
 
 const ModeSelector: React.FunctionComponent<ModeSelectorProps> = ({
-    modes, currentMode, onModeChange,
+    modes, currentMode, onModeChange, label
 }) => {
 
     const onChange = (e: React.SyntheticEvent, data: DropdownProps) => {
@@ -24,7 +25,7 @@ const ModeSelector: React.FunctionComponent<ModeSelectorProps> = ({
     return (
         <>
             <div>
-                Mode:{' '}
+                {label}:{' '}
                 <Dropdown
                     inline={true}
                     options={modes}

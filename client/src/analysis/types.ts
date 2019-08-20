@@ -92,16 +92,6 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         title: "SD all frames",
     },
 
-    [AnalysisTypes.SUM_FRAMES_ROI]: {
-        desc: "Create a sum of ROI",
-        title: "Sum over ROI",
-    },
-
-    [AnalysisTypes.SD_FRAMES_ROI]: {
-        desc: "Create SD of ROI",
-        title: "SD over ROI",
-    },
-
     [AnalysisTypes.PICK_FRAME]: {
         desc: "Pick a single frame",
         title: "Pick frame",

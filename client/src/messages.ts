@@ -339,8 +339,6 @@ export enum AnalysisTypes {
     CENTER_OF_MASS = "CENTER_OF_MASS",
     SUM_FRAMES = "SUM_FRAMES",
     SD_FRAMES = "SD_FRAMES",
-    SUM_FRAMES_ROI = "SUM_FRAMES_ROI",
-    SD_FRAMES_ROI = "SD_FRAMES_ROI",
     PICK_FRAME = "PICK_FRAME",
     PICK_FFT_FRAME = "PICK_FFT_FRAME",
     APPLY_FFT_MASK = "APPLY_FFT_MASK",
@@ -348,8 +346,7 @@ export enum AnalysisTypes {
     RADIAL_FOURIER = "RADIAL_FOURIER",
     FEM = "FEM",
     CLUST = "CLUST",
-    SUM_SIG = "SUM_SIG"
-
+    SUM_SIG = "SUM_SIG",
 }
 
 export interface RingMaskDetails {

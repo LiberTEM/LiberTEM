@@ -21,10 +21,14 @@ export function mergeLocalStorage(serverConfig: MsgPartConfig): ConfigParams {
     return mergedConfig;
 }
 
+type ConfigKeys = Array<Partial<keyof ConfigState>>;
+
 export function setLocalStorage(config: ConfigState): void {
-    const keys: Array<Partial<keyof ConfigState>> = ["cwd", "lastOpened", "fileHistory"];
+    
+    const keys: ConfigKeys = ["cwd", "lastOpened", "fileHistory"];
     const localSettings = keys.reduce((acc, item) => {
-        acc[item] = config[item];
+        const configItem = config[item];
+        acc[item] = configItem;
         return acc;
     }, {} as ConfigState);
     window.localStorage.setItem(CONFIG_KEY, JSON.stringify(localSettings));

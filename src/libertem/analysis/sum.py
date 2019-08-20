@@ -3,7 +3,7 @@ import numpy as np
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.udf import UDF
-from libertem import masks
+from libertem.analysis.getroi import get_roi
 
 
 class SumUDF(UDF):
@@ -29,28 +29,7 @@ class SumAnalysis(BaseAnalysis):
         return SumUDF(dtype=dest_dtype)
 
     def get_roi(self):
-        if "roi" not in self.parameters or ("shape" not in self.parameters["roi"]):
-            return None
-        params = self.parameters["roi"]
-        ny, nx = tuple(self.dataset.shape.nav)
-        if params["shape"] == "disk":
-            roi = masks.circular(
-                params["cx"],
-                params["cy"],
-                nx, ny,
-                params["r"],
-            )
-        elif params["shape"] == "rect":
-            roi = masks.rectangular(
-                params["x"],
-                params["y"],
-                params["width"],
-                params["height"],
-                nx, ny,
-            )
-        else:
-            raise NotImplementedError("unknown shape %s" % params["shape"])
-        return roi
+        return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
     def get_udf_results(self, udf_results, roi):
         if udf_results.intensity.dtype.kind == 'c':

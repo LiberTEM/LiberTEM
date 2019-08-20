@@ -6,7 +6,7 @@ import useFFTFramePicker from "./FFTFramePicker";
 import useFFTSumFrames from "./FFTSumFrames";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
-import useSumFrames from "./SumFrames";
+import { useRoiPicker } from "./RoiPicker";
 
 const useFFTFrameView = ({
     scanWidth, scanHeight, analysisId, real_rad, real_centerx, real_centery
@@ -29,7 +29,7 @@ const useFFTFrameView = ({
 
     const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
 
-    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
+    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode"/>
 
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
@@ -51,12 +51,14 @@ const useFFTFrameView = ({
     });
     
 
-    useSumFrames({
+    useRoiPicker({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 1,
         analysisId,
+        scanWidth, scanHeight,
+        roiParameters: {roi:{}},
+        analysis: AnalysisTypes.SUM_FRAMES,
     })
-
     useFFTSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,

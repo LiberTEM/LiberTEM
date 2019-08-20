@@ -17,7 +17,7 @@ const useDiskROI = ({ scanWidth, scanHeight}: {
     const [r, setR] = useState(minLength / 8);
 
 
-    const diskroiParameters: FrameParams = {
+    const diskRoiParameters: FrameParams = {
         roi: {
             shape: "disk",
             cx,
@@ -63,7 +63,7 @@ const useDiskROI = ({ scanWidth, scanHeight}: {
     );
 
     return {
-        diskroiParameters,
+        diskRoiParameters,
         diskRoiHandles,
         diskRoiWidgets,
     };

@@ -41,6 +41,4 @@ But what about (multicore) scaling?
 
 ``numpy`` releases the GIL, so multiple threads can work at the same time. Even if
 this were not the case, we can still use the multiprocessing workers of ``dask.distributed``
-and scale to multiple cores. See also the
-`notebook <https://github.com/LiberTEM/LiberTEM/blob/master/examples/multicore_scalability.ipynb>`_ 
-that explores the different parameters (number of processes, number of masks, number of frames processed at once).
+and scale to multiple cores. See also the :doc:`performance` section.

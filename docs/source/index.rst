@@ -27,13 +27,13 @@ Documentation
    architecture
    performance
    contributing
-   acknowledgments
-   citing
    debugging
-   why_python
    reference
    tips
+   why_python
    gsoc
+   citing
+   acknowledgments
 
 Indices and tables
 ------------------

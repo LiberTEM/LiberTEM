@@ -48,10 +48,11 @@ opened datasets. Traditionally this would be done with an external
 in-memory database, but for ease of deployment, we decided to integrate this into the
 API server.
 
-Processing is done in an asynchronous fashion; if you start a job using the internal interfaces,
-the request immediately returns, but you get notifications about status changes, or you can
-explicitly query the API server about a specific job. This asynchronous interface is wrapped
-with a synchronous version for the public-facing API for simpler use in scripts.
+Processing is done in an asynchronous fashion; if you start a job using the
+HTTP API, the request immediately returns, but you get notifications about
+status changes and results on the websocket channel, or you can explicitly
+query the API server about a specific job. API calls in the Python API are synchronous
+for keeping it easy to use.
 
 As UI, we use a web-based interface. This allows LiberTEM to work
 in cloud environment as well as locally on a single node. We can benefit from

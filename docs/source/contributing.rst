@@ -190,6 +190,8 @@ To start the live building process:
 
 You can then view a live-built version at http://localhost:8008
 
+.. _`building the client`:
+
 Building the client
 -------------------
 

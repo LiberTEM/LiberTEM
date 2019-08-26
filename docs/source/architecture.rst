@@ -8,7 +8,7 @@ Architecture
 LiberTEM currently focuses on pixelated STEM and scanning electron beam diffraction data processing, both
 interactive and offline. The processing back-end supports any n-dimensional binary data. As concrete supported operations, we started with
 everything that can be expressed as the application of one or more masks and
-summation, i.e. virtual detector, center of mas<s etc. These operations are
+summation, i.e. virtual detector, center of mass etc. These operations are
 embarrassingly parallel and can be scaled to a distributed system very well. Furthermore, we support :ref:`user-defined functions` that process well-defined subsets of a dataset following a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_.
 
 For our task, data locality is one of the most important factors for achieving

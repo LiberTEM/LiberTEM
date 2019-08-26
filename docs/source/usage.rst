@@ -8,8 +8,9 @@ Usage
 Starting the LiberTEM Server
 ----------------------------
 
-LiberTEM is based on a client-server architecture. To use LiberTEM, you need to
-have the server running on the machine where your data is available.
+LiberTEM is based on a client-server architecture. To use the LiberTEM GUI, you need to
+have the server running on the machine where your data is available. For using LiberTEM from
+Python scripts, this is not necessary, see `The Python API`_ below.
 
 After :doc:`installing LiberTEM <install>`, activate the virtualenv or conda environment.
 
@@ -31,6 +32,8 @@ There are a few command line options available::
     Options:
       --port INTEGER  port on which the server should listen on
       --help          Show this message and exit.
+
+To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
     
 As there is currently no authentication yet, listening on a different host than
 `127.0.0.1` / `localhost` is disabled. As a workaround, if you want to access LiberTEM from a different computer,
@@ -100,6 +103,8 @@ Some analyses, such as the Center of Mass (COM) analysis, can render the result 
 
 ..  figure:: ./images/use/image.png
 
+For more applications, like strain mapping and crystallinity analysis, please see the :doc:`Applications <applications>` section.
+
 
 Keyboard controls
 ~~~~~~~~~~~~~~~~~
@@ -113,17 +118,19 @@ The Python API
 
 The Python API is a concise API for using LiberTEM from Python code. It is suitable both
 for interactive scripting, for example from Jupyter notebooks, and for usage
-from within a Python application.
+from within a Python application or script.
 
 This is a basic example to load the API, create a local cluster, load a file and run a job. For a complete example on how to use the Python API, please see the
 Jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
 For more details on loading data and a reference of supported file formats, please see :ref:`loading data`.
 
-For a full API reference, please see :ref:`reference`.
-
 .. include:: /../../examples/basic.py
     :code:
+
+For a full API reference, please see :ref:`reference`.
+
+To go beyond the included capabilities of LiberTEM, you can implement your own using :ref:`user-defined functions`.
 
 .. _daskarray:
 
@@ -134,23 +141,3 @@ The :meth:`~libertem.contrib.dask.make_dask_array` function can generate a `dist
 
 .. include:: /../../examples/dask_array.py
     :code:
-
-From an embedded interpreter
-----------------------------
-
-If LiberTEM is run from within an embedded interpreter, the following steps should be taken. This is necessary for Python scripting in Digital Micrograph, for example.
-
-The variable :code:`sys.argv` `may not be set in embedded interpreters <https://bugs.python.org/issue32573>`_, but it is expected by the :code:`multiprocessing` module when spawning new processes. This workaround guarantees that :code:`sys.argv` is set `until this is fixed upstream <https://github.com/python/cpython/pull/12463>`_:
-
-.. code-block:: python
-    
-    if not hasattr(sys, 'argv'):
-        sys.argv  = []
-
-
-Furthermore, the `correct executable for spawning subprocesses <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_executable>`_ has to be set. 
-
-.. code-block:: python
-    
-    multiprocessing.set_executable(
-        os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only

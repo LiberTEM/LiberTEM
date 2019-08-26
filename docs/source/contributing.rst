@@ -8,7 +8,7 @@ LiberTEM is intended and designed as a collaboratively developed platform for da
 Development principles
 ----------------------
 
-We have a `rather extensive and growing list of things to work on <https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize our limited resources to work on items with the largest benefit for our user base and project. Supporting users who contribute code is most important to us. Please contact us for help! Furthermore,we prioritize features that create direct benefits for many current users or open significant new applications. Generally, we follow user demand with our developments.
+We have a `rather extensive and growing list of things to work on <https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize our limited resources to work on items with the largest benefit for our user base and project. Supporting users who contribute code is most important to us. Please contact us for help! Furthermore, we prioritize features that create direct benefits for many current users or open significant new applications. Generally, we follow user demand with our developments.
 
 For design of new features we roughly follow the `lead user method <https://en.wikipedia.org/wiki/Lead_user>`_, which means that we develop new features closely along a non-trivial real-world application in order to make sure the developments are appropriate and easy to use in practice. The interface for :ref:`user-defined functions`, as an example, follows the requirements around implementing and running complex algorithms like :ref:`strain mapping` for distributed systems.
 

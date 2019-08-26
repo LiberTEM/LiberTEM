@@ -103,7 +103,7 @@ List of marks used in our test suite:
 - `functional`: tests that spin up a local dask cluster
 
 Code coverage
--------------
+~~~~~~~~~~~~~
 
 After running the tests, you can inspect the test coverage by opening `htmlcov/index.html` in a web browser. When
 creating a pull request, the change in coverage is also reported by the codecov bot. Ideally, the test coverage
@@ -255,7 +255,6 @@ Before (using a release candidate package)
 * Full documentation review and update
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
-* Update ``packaging/README.html`` with ``python scripts/readme_to_html.py README.rst packaging/README.html`` (needs html5lib). This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages from GitHub in a clean environment
@@ -303,7 +302,7 @@ After releasing on GitHub
 * Confirm that all release packages are built
 * Install release package
 * Confirm correct version info
-* Upload to PyPi
+* confirm package upload to PyPi
 * Publish new version on zenodo.org
 * Update documentation with new links, if necessary
 * Send announcement message on mailing list

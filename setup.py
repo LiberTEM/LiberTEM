@@ -90,7 +90,7 @@ def read(*parts):
 
 
 def remove_rst_roles(txt):
-    return re.sub(':cite:`[^`]+`', '', txt)
+    return re.sub(':(cite|doc):`[^`]+`', '', txt)
 
 
 def get_git_rev():
@@ -134,9 +134,7 @@ setup(
     zip_safe=False,
     python_requires='>=3.6',
     install_requires=[
-        # FIXME pinned due to https://github.com/pydata/sparse/issues/257
-        # Unpin as soon as this is fixed, check regularly
-        "numpy<=1.16.4",
+        "numpy",
         "scipy",
         "sparse",
         "distributed>=1.23.3,<1.28",

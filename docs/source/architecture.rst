@@ -52,7 +52,9 @@ Processing is done in an asynchronous fashion; if you start a job using the
 HTTP API, the request immediately returns, but you get notifications about
 status changes and results on the websocket channel, or you can explicitly
 query the API server about a specific job. API calls in the Python API are synchronous
-for keeping it easy to use.
+for keeping it easy to use. Please `contact us <https://gitter.im/LiberTEM/Lobby>`_ or
+`add a comment to Issue #216 <https://github.com/LiberTEM/LiberTEM/issues/216>`_ if you are interested in
+an asynchronous Python API for LiberTEM!
 
 As UI, we use a web-based interface. This allows LiberTEM to work
 in cloud environment as well as locally on a single node. We can benefit from

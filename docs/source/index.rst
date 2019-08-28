@@ -21,6 +21,7 @@ Documentation
 
    install
    usage
+   api
    formats
    udf
    applications

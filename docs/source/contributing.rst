@@ -25,7 +25,7 @@ Before creating a pull request, please make sure all tests still pass. See `Runn
 information. You should also update the test suite and add test cases for your contribution. See the section
 `Code coverage`_ below on how to check if your new code is covered by tests.
 
-To make sure our code base stays readable, we have follow a `Code Style`_.
+To make sure our code base stays readable, we follow a `Code Style`_.
 
 Please update ``packaging/creators.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited. ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` are generated from the JSON files with ``python scripts/build-authors-contributors``.
 
@@ -177,6 +177,8 @@ You can check the code style by running:
    
    $ tox -e flake8
 
+We recommend using an editor that can check code style on the fly, such as `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
+
 
 Building the Documentation
 --------------------------
@@ -233,7 +235,7 @@ Run it on the default port (9000) to allow proxying from the front-end server to
 To learn more about the build process, please see `the README in the client directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
 
 You can then use any editor you like to change the client source files, in the client/src directory.
-We recommend `visual studio code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
+We recommend `Visual Studio Code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
 
 To simplify development and installing from a git checkout, we currently always ship a production build
 of the client in the git repository. When you are creating a pull request for the client, please always

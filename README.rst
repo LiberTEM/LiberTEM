@@ -59,8 +59,7 @@ LiberTEM is suitable as a high-performance processing backend for other applicat
 
 LiberTEM is evolving rapidly and prioritizes features following user demand and contributions. In the future we'd like to implement live acquisition, and more analysis methods for all applications of pixelated STEM and other large-scale detector data.
 If you like to influence the direction this
-project is taking, or if you'd like to :doc:`contribute <contributing>`, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_,
-our `development mailing list <https://groups.google.com/forum/#!forum/libertem-dev>`_,
+project is taking, or if you'd like to `contribute <https://libertem.github.io/LiberTEM/contributing.html>`_, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_
 and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_. 
 
 File formats

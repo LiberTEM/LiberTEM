@@ -164,7 +164,7 @@ After updating the installation, you can run the updated version by restarting t
 Windows
 -------
 
-The recommended method to install LiberTEM on Windows is based on `Anaconda 64 bit with Python version 3.6 <https://www.anaconda.com/download/>`_. This installs a Python distribution.
+The recommended method to install LiberTEM on Windows is based on `Anaconda 64 bit with Python version 3.6 or 3.7 <https://www.anaconda.com/download/>`_. This installs a Python distribution.
 
 For `installing from a git clone`_ you require a suitable git client, for example `GitHub Desktop <https://desktop.github.com/>`_, `TortoiseGit <https://tortoisegit.org/>`_, or `git for windows <https://gitforwindows.org/>`_. Clone the repository https://github.com/LiberTEM/LiberTEM.git in a folder of your choice.
 

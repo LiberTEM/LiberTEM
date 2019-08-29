@@ -21,7 +21,7 @@ class MemDatasetParams(MessageConverter):
         "title": "MEMDatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "mem"},
+            "type": {"const": "memory"},
             "tileshape": {
                 "type": "array",
                 "items": {"type": "number"},

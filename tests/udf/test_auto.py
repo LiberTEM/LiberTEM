@@ -2,7 +2,9 @@ import functools
 
 import numpy as np
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_auto(lt_ctx):

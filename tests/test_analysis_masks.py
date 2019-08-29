@@ -3,7 +3,9 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 from libertem.masks import to_dense, to_sparse, is_sparse
-from utils import MemoryDataSet, _naive_mask_apply, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _naive_mask_apply, _mk_random
 
 import libertem.api as api
 

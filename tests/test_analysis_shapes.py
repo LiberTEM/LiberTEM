@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
-from utils import MemoryDataSet, _naive_mask_apply, _mk_random
+
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _naive_mask_apply, _mk_random
 
 
 @pytest.fixture

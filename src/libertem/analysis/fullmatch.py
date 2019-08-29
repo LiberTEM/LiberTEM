@@ -15,46 +15,61 @@ class NotFoundException(Exception):
 
 
 class FullMatcher(grm.Matcher):
+    '''
+    Extension of :class:`~libertem.analysis.gridmatching.Matcher` will full matching
+
+    Include the ability to guess grid parameters from a point cloud. This is separated
+    from the other code since it currently only works with :class:`~hdbscan.HDBSCAN`,
+    which can be problematic
+    to install on some platforms. FOr that reason it is an optional dependency.
+    '''
     def __init__(
             self, tolerance=3, min_weight=0.1, min_match=3, min_angle=np.pi/10,
             min_points=10, min_delta=0, max_delta=np.float('inf'), min_candidates=3,
             max_candidates=7, clusterer=None, min_cluster_size_fraction=4,
             min_samples_fraction=20):
         '''
-        tolerance:
+        Parameters
+        ----------
+
+        tolerance : float
             Position tolerance in px for peaks to be considered matches
-        min_weight:
+        min_weight : float
             Minimum peak elevation of a peak to be considered for matching
-        min_match:
+        min_match : int
             Minimum number of matching peaks to be considered a match.
-        min_angle:
-            Minimum angle between two vectors to be considered candidates
-        min_points:
+        min_angle : float
+            Minimum angle in radians between two vectors to be considered candidates
+        min_points : int
             Minimum points to try clustering matching. Otherwise match directly
-        min_delta:
+        min_delta : float
             Minimum length of a potential grid vector
-        max_delta:
+        max_delta : float
             Maximum length of a potential grid vector
-        min_candidates:
+        min_candidates : int
             Minimum number of candidates to consider clustering matching successful.
             If not enough are found, the algorithm uses a brute-force search with all
             pairwise vectors between points
-        max_candidates:
+        max_candidates : int
             Maximum number of candidates to return from clustering matching
-        clusterer:
-            sklearn.cluster compatible clusterer. Default is HDBSCAN.
-        min_cluster_size_fraction:
-            Tuning parameter for clustering matching with HDBSCAN. Larger values allow
+        clusterer
+            Instance of sklearn.cluster compatible clusterer. Default is :class:`~hdbscan.HDBSCAN`.
+        min_cluster_size_fraction : float
+            Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
+            Larger values allow
             smaller or fuzzier clusters. This is used to adapt the :code:`min_cluster_size`
-            parameter of HDBSCAN dynamically to the number of points to be matched.
+            parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
+            matched.
             Set this to :code:`None` to disable dynamic adjustment of :code:`min_cluster_size`.
             If you like to set :code:`min_cluster_size` to a constant value, you can
             set this to :code:`None`and additionally set the :code:`clusterer` parameter with
             your own clusterer object to have direct control over all parameters.
-        min_samples_fraction:
-            Tuning parameter for clustering matching with HDBSCAN. Larger values allow
+        min_samples_fraction : float
+            Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
+            Larger values allow
             smaller or fuzzier clusters. This is used to adapt the :code:`min_samples`
-            parameter of HDBSCAN dynamically to the number of points to be matched.
+            parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
+            matched.
             Set this to :code:`None` to disable dynamic adjustment of :code:`min_samples`.
             If you like to set :code:`min_samples` to a constant value, you can
             set this to :code:`None` and additionally set the :code:`clusterer` parameter with
@@ -74,34 +89,61 @@ class FullMatcher(grm.Matcher):
         self.min_samples_fraction = min_samples_fraction
 
     def full_match(
-            self, centers, zero=None, cand=[],
+            self, centers, zero=None, cand=None,
             refineds=None, peak_values=None, peak_elevations=None):
         # FIXME check formatting when included in documentation
         '''
-        This function extracts a list of Match objects as well two PointCollection objects
+        This function extracts a list of Match objects as well two PointSelection objects
         for unmatched and weak points from correlation_result and zero point.
         The zero point is included in each of the matches because it is shared between all grids.
 
         Parameters
         ----------
 
-        centers:
-            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks
-        zero:
+        centers : numpy.ndarray
+            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks. This would typically
+            be extracted with :meth:`~libertem.udf.blobfinder.get_peaks`
+        zero : numpy.ndarray
             Zero point as numpy array (y, x).
-        cand:
+        cand : list or numpy.ndarray
             Optional list of candidate vectors (y, x) to use in a first matching round before
             guessing.
-        refineds:
+        refineds : numpy.ndarray
             numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)
-        peak_values:
+        peak_values : numpy.ndarray
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
-        peak_values:
+        peak_elevations : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
             See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
 
-        returns:
-            (matches: list of Match objects, unmatched: PointCollection, weak: PointCollection)
+        Returns
+        -------
+
+        Tuple[List[libertem.analysis.gridmatching.Match, ...],\
+        libertem.analysis.gridmatching.PointSelection,\
+        libertem.analysis.gridmatching.PointSelection]
+            matches: list of :class:`~libertem.analysis.gridmatching.Match` instances,
+
+            unmatched: instance of :class:`~libertem.analysis.gridmatching.PointSelection`,
+
+            weak: instance of :class:`~libertem.analysis.gridmatching.PointSelection`
+
+        Example
+        -------
+
+        >>> peaks = np.array([
+        ...     # First peak is zero if not specified otherwise
+        ...     (64, 64),
+        ...     (32, 32), (32, 64), (32, 96),
+        ...     (64, 32), (64, 96),
+        ...     (96, 32), (96, 64), (96, 96),
+        ... ])
+        >>> matcher = FullMatcher()
+        >>> (matches, unmatched, weak) = matcher.full_match(peaks)
+        >>> print(matches[0])
+        zero: [64. 64.]
+        a: [32.  0.]
+        b: [2.90077857e-15 3.20000000e+01]
         '''
         class ExitException(Exception):
             pass
@@ -133,9 +175,9 @@ class FullMatcher(grm.Matcher):
             # Expensive operation, should be done on smaller sample
             # or sum frame result, at least for first passes to match majority
             # of peaks
-            if cand:
+            if cand is not None:
                 polar_candidate_vectors = make_polar(np.array(cand))
-                cand = []
+                cand = None
             else:
                 polar_candidate_vectors = self._candidates(working_set.refineds)
 
@@ -287,7 +329,7 @@ class FullMatcher(grm.Matcher):
 
         '''
         cutoff = self.tolerance
-        # We have special tuning parameters for the default HDBSCAN
+        # We have special tuning parameters for the default :class:`~hdbscan.HDBSCAN`
         if isinstance(self.clusterer, hdbscan.HDBSCAN):
             defaults = self._make_hdbscan_config(points)
             for key, value in defaults.items():

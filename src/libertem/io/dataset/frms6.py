@@ -225,9 +225,9 @@ class FRMS6FileSet(FileSet3D):
             full paths of all files, without the file containing dark frames
         meta : DataSetMeta
             dataset metadata
-        dark_frame : ndarray or None
+        dark_frame : numpy.ndarray or None
             the raw dark frame (2D, not folded)
-        gain_map : ndarray or None
+        gain_map : numpy.ndarray or None
             gain map (2D, folded)
         """
         self._meta = meta

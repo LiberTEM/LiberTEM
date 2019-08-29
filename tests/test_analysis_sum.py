@@ -1,6 +1,9 @@
 import numpy as np
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
+
 from libertem import masks
 from libertem.analysis.sum import SumAnalysis
 

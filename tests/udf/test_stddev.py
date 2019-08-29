@@ -1,7 +1,9 @@
 import numpy as np
 
 from libertem.udf.stddev import run_stddev
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_stddev(lt_ctx):

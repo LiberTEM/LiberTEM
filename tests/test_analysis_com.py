@@ -2,7 +2,9 @@ import pytest
 import numpy as np
 from scipy.ndimage import measurements
 from libertem import masks
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 @pytest.fixture

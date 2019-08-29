@@ -1,8 +1,10 @@
 import numpy as np
 
-from libertem.contrib.dask import make_dask_array
+from libertem.contrib.daskadapter import make_dask_array
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_dask_array():

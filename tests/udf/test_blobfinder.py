@@ -5,30 +5,11 @@ import numpy as np
 import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
 import libertem.masks as m
+from libertem.utils.generate import cbed_frame
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
 
-
-def _peakframe(fy, fx, zero, a, b, indices, radius):
-    peaks = grm.calc_coords(zero, a, b, indices)
-    selector = grm.within_frame(peaks, radius, fy, fx)
-
-    peaks = peaks[selector]
-    indices = indices[selector]
-
-    data = np.zeros((1, fy, fx), dtype=np.float32)
-
-    for p in peaks:
-        data += m.circular(
-            centerX=p[1],
-            centerY=p[0],
-            imageSizeX=fx,
-            imageSizeY=fy,
-            radius=radius,
-            antialiased=True,
-        )
-
-    return (data, indices, peaks)
+from utils import _mk_random
 
 
 def test_refinement():
@@ -117,7 +98,7 @@ def test_run_refine_fastmatch(lt_ctx):
 
     radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
@@ -171,7 +152,7 @@ def test_run_refine_affinematch(lt_ctx):
 
     radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
@@ -208,7 +189,7 @@ def test_run_refine_sparse(lt_ctx):
 
     radius = 10
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
@@ -301,7 +282,7 @@ def test_featurevector(lt_ctx):
         antialiased=False
     )
 
-    data, indices, peaks = _peakframe(*shape, zero, a, b, indices, radius)
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
@@ -322,7 +303,7 @@ def test_featurevector(lt_ctx):
     )
     res = lt_ctx.run(job)
 
-    peak_data, _, _ = _peakframe(*shape, zero, a, b, np.array([(0, 0)]), radius)
+    peak_data, _, _ = cbed_frame(*shape, zero, a, b, np.array([(0, 0)]), radius)
     peak_sum = peak_data.sum()
 
     assert np.allclose(res.sum(), data.sum())

@@ -1,4 +1,5 @@
 import numpy as np
+from libertem.utils import calc_coords, within_frame
 
 
 class CorrelationResult:
@@ -66,11 +67,12 @@ class Matcher:
 
         Parameters
         ----------
-        tolerance:
+
+        tolerance : float
             Position tolerance in px for peaks to be considered matches
-        min_weight:
+        min_weight : float
             Minimum peak elevation of a peak to be considered for matching
-        min_match:
+        min_match : int
             Minimum number of matching peaks to be considered a match.
         '''
         self.tolerance = tolerance
@@ -91,23 +93,26 @@ class Matcher:
 
         Parameters
         ----------
-        centers:
+
+        centers : numpy.ndarray
             numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks
-        refineds:
+        refineds : numpy.ndarray
             numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)
-        peak_values:
+        peak_values : numpy.ndarray
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
-        peak_values:
+        peak_elevations : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
             See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
-        zero:
+        zero : numpy.ndarray
             The near approximate zero point as numpy array (y, x).
-        a, b:
+        a,b : numpy.ndarray
             The near approximate vectors a, b to match the grid as numpy arrays (y, x).
 
         Returns
         -------
-            :class:`~libertem.analysis.gridmatching.Match`
+
+        Match
+            :class:`~libertem.analysis.gridmatching.Match` object with the matching result.
         '''
         corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
         filt = corr.peak_elevations >= self.min_weight
@@ -147,20 +152,21 @@ class Matcher:
 
         Parameters
         ----------
-        centers:
+        centers : numpy.ndarray
             numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks
-        refineds:
+        refineds : numpy.ndarray
             numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)
-        peak_values:
+        peak_values : numpy.ndarray
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
-        peak_values:
+        peak_values : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
             See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
-        indices
+        indices : numpy.ndarray
             The indices assigned to each point of the CorrelationResult.
 
         Returns
         -------
+        Match
             :class:`~libertem.analysis.gridmatching.Match`
         '''
         corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
@@ -176,12 +182,11 @@ class Matcher:
 
         Returns
         -------
+
         :class:`~libertem.analysis.gridmatching.Match`
+
         '''
-        try:
-            indices = get_indices(point_selection.refineds, zero, a, b)
-        except np.linalg.LinAlgError:
-            raise
+        indices = get_indices(point_selection.refineds, zero, a, b)
         rounded = np.around(indices)
         index_diffs = np.absolute(indices - rounded)
         # We scale the difference from index dimension to the pixel dimension
@@ -214,7 +219,7 @@ class Match(PointSelection):
     def __str__(self):
         result = "zero: %s\n"\
             "a: %s\n"\
-            "b: %s\n"
+            "b: %s"
         return result % (str(self.zero), str(self.a), str(self.b))
 
     @classmethod
@@ -249,20 +254,27 @@ class Match(PointSelection):
         Parameters
         ----------
 
-        indices:
+        indices : numpy.ndarray
             Indices to calculate coordinates for. Both an array of (y, x) pairs
             and the output of np.mgrid are supported.
-        drop_zero:
+        drop_zero : bool
             Drop the zero order peak. This is important for virtual darkfield imaging.
-        frame_shape : tuple(fy, fx)
+        frame_shape : Tuple[int, int]
             If set, the peaks are filtered with :meth:`~libertem.analysis.gridmatching.within_frame`
-        r:
+        r : float
             Radius for :meth:`~libertem.analysis.gridmatching.within_frame`
 
         Returns
         -------
 
-        A list of (y, x) coordinate paris for peaks
+        numpy.ndarray
+            A list of (y, x) coordinate pairs for peaks
+
+        Raises
+        ------
+
+        ValueError
+            If the shape of :code:`indices` is not as expected.
         '''
         if indices is None:
             indices = self.indices
@@ -310,6 +322,13 @@ class Match(PointSelection):
             zero=zero, a=a, b=b, indices=indices)
 
     def weighted_optimize(self):
+        '''
+        Raises
+        ------
+
+        np.linalg.LinAlgError
+            If the solver didn't find a solution.
+        '''
 
         # Following
         # https://stackoverflow.com/questions/27128688/how-to-use-least-squares-with-weight-matrix-in-python
@@ -347,22 +366,6 @@ class Match(PointSelection):
             raise np.linalg.LinAlgError("Optimizing returned empty result")
         zero, a, b = x
         return self.derive(zero=zero, a=a, b=b)
-
-
-def calc_coords(zero, a, b, indices):
-    '''
-    Calculate coordinates from lattice vectors a, b and indices
-    '''
-    coefficients = np.array((a, b))
-    return zero + np.dot(indices, coefficients)
-
-
-def within_frame(peaks, r, fy, fx):
-    '''
-    Return a boolean vector indicating peaks that are within (r, r) and (fy - r, fx - r)
-    '''
-    selector = (peaks >= (r, r)) * (peaks < (fy - r, fx - r))
-    return selector.all(axis=-1)
 
 
 def get_indices(points, zero, a, b):

@@ -183,7 +183,7 @@ class UDFFrameMixin:
 
         Parameters
         ----------
-        frame : ndarray
+        frame : numpy.ndarray
             A single frame or signal element from the dataset.
             The shape is the same as `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 2D, for spectra 1D etc.
@@ -207,7 +207,7 @@ class UDFTileMixin:
 
         Parameters
         ----------
-        tile : ndarray
+        tile : numpy.ndarray
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
@@ -243,7 +243,7 @@ class UDFPartitionMixin:
 
         Parameters
         ----------
-        partition : ndarray
+        partition : numpy.ndarray
             A large number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
@@ -341,11 +341,11 @@ class UDF(UDFBase):
         -------
 
         >>> class MyUDF(UDF):
-        >>>     def __init__(self, param1, param2="def2", **kwargs):
-        >>>         param1 = int(param1)
-        >>>         if "param3" not in kwargs:
-        >>>             raise TypeError("missing argument param3")
-        >>>         super().__init__(param1=param1, param2=param2, **kwargs)
+        ...     def __init__(self, param1, param2="def2", **kwargs):
+        ...         param1 = int(param1)
+        ...         if "param3" not in kwargs:
+        ...             raise TypeError("missing argument param3")
+        ...         super().__init__(param1=param1, param2=param2, **kwargs)
 
         Parameters
         ----------
@@ -462,13 +462,30 @@ class UDF(UDFBase):
 
         Example
         -------
-        >>> # for each frame, provide 7 random values:
+
+        We create a UDF to demonstrate the behavior:
+
+        >>> class MyUDF(UDF):
+        ...     def get_result_buffers(self):
+        ...         # Result buffer for debug output
+        ...         return {'aux_dump': self.buffer(kind='nav', dtype='object')}
+        ...
+        ...     def process_frame(self, frame):
+        ...         # Extract value of aux data for demonstration
+        ...         self.results.aux_dump[:] = str(self.params.aux_data[:])
+        ...
+        >>> # for each frame, provide three values from a sequential series:
         >>> aux1 = MyUDF.aux_data(
-        >>>     data=np.random.randn(*(tuple(dataset.shape.nav) + (7,))).astype("float32"),
-        >>>     kind="nav", extra_shape=(7,), dtype="float32"
-        >>> )
-        >>> udf = MyUDF(random_data=aux1)
-        >>> ctx.run_udf(dataset=dataset, udf=udf)
+        ...     data=np.arange(np.prod(dataset.shape.nav) * 3, dtype=np.float32),
+        ...     kind="nav", extra_shape=(3,), dtype="float32"
+        ... )
+        >>> udf = MyUDF(aux_data=aux1)
+        >>> res = ctx.run_udf(dataset=dataset, udf=udf)
+
+        process_frame for frame 7 received a view of aux_data with values [21., 22., 23.]:
+
+        >>> res.aux_dump[7]
+        '[21. 22. 23.]'
         """
         buf = BufferWrapper(kind, extra_shape, dtype)
         buf.set_buffer(data)

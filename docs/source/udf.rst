@@ -83,7 +83,7 @@ Auto UDF
 
 The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, post-processing or performance optimization through tiled processing, defining an UDF class is required.
 
-As an alternative to Auto UDF, you can use the :meth:`~libertem.contrib.dask.make_dask_array` method to create a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See :ref:`Integration with Dask arrays<daskarray>` for more details.
+As an alternative to Auto UDF, you can use the :meth:`~libertem.contrib.daskadapter.make_dask_array` method to create a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See :ref:`Integration with Dask arrays<daskarray>` for more details.
 
 The :class:`~libertem.udf.AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array. Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
 

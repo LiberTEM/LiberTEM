@@ -61,6 +61,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.doctest',
     'sphinxcontrib.bibtex',
     'nbsphinx',
     'nbsphinx_link',
@@ -186,6 +187,11 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+# Disable standard doctest block testing since that would run it for
+# docstrings in API reference, leading to failures because the test environment
+# is not set up correctly
+doctest_test_doctest_blocks = ''
 
 # -- Options for todo extension ----------------------------------------------
 

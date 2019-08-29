@@ -27,7 +27,25 @@ To go beyond the included capabilities of LiberTEM, you can implement your own u
 Integration with Dask arrays
 ----------------------------
 
-The :meth:`~libertem.contrib.dask.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
+The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
-.. include:: /../../examples/dask_array.py
-    :code:
+.. testsetup:: *
+
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
+
+.. testcode::
+
+    from libertem.contrib.daskadapter import make_dask_array
+
+    # Construct a Dask array from the dataset
+    # The second return value contains information
+    # on workers that hold parts of a dataset in local
+    # storage to ensure optimal data locality
+    dask_array, workers = make_dask_array(dataset)
+
+    # Perform calculations using the worker map.
+    result = dask_array.sum(axis=(-1, -2)).compute(workers=workers)

@@ -1,6 +1,8 @@
 import pytest
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 @pytest.fixture

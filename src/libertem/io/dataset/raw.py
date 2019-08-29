@@ -156,9 +156,8 @@ class RawFileDataSet(DataSet):
 
     Examples
     --------
-    >>> from libertem.api import Context
-    >>> ctx = Context()
-    >>> ds = ctx.load("raw", path="/path/to/file.raw", scan_size=(256, 256),
+
+    >>> ds = ctx.load("raw", path=path_to_raw, scan_size=(16, 16),
     ...               dtype="float32", detector_size=(128, 128))
 
     Parameters

@@ -2,7 +2,9 @@ import numpy as np
 
 import libertem.udf.crystallinity as crystal
 
-from utils import MemoryDataSet
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_smoke(lt_ctx):

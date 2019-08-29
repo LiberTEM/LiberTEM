@@ -4,24 +4,17 @@ import asyncio
 import pytest
 import websockets
 
-from libertem.io.dataset import register_dataset_cls, unregister_dataset_cls
-from utils import assert_msg, MemoryDataSet
+from utils import assert_msg
+
 
 pytestmark = [pytest.mark.functional]
-
-
-@pytest.fixture
-def register_mem_ds():
-    register_dataset_cls("mem", MemoryDataSet)
-    yield
-    unregister_dataset_cls("mem")
 
 
 def _get_ds_params():
     return {
         "dataset": {
             "params": {
-                "type": "mem",
+                "type": "memory",
                 "tileshape": [7, 32, 32],
                 "datashape": [256, 32, 32],
                 "tiledelay": 0.1,
@@ -32,7 +25,7 @@ def _get_ds_params():
 
 
 @pytest.mark.asyncio
-async def test_cancel_udf_job(base_url, http_client, server_port, register_mem_ds, shared_data):
+async def test_cancel_udf_job(base_url, http_client, server_port, shared_data):
     conn_url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {

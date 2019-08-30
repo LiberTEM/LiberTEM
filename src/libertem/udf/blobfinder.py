@@ -287,14 +287,15 @@ def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
 
     >>> frame, _, _ = libertem.utils.generate.cbed_frame(radius=4)
     >>> pattern = RadialGradient(radius=4)
-    >>> get_peaks(frame[0], pattern, 7)
-    array([[64, 64],
-           [64, 80],
-           [80, 80],
-           [80, 64],
-           [48, 80],
-           [48, 64],
-           [64, 96]], dtype=int64)
+    >>> peaks = get_peaks(frame[0], pattern, 7)
+    >>> print(peaks)
+    [[64 64]
+     [64 80]
+     [80 80]
+     [80 64]
+     [48 80]
+     [48 64]
+     [64 96]]
     '''
     spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
     spec_sum = fft.rfft2(sum_result)

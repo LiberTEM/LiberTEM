@@ -3,7 +3,7 @@ from libertem.utils import make_cartesian, make_polar, frame_peaks
 import libertem.masks as m
 
 
-def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4):
+def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4, all_equal=False):
     if zero is None:
         zero = (fy//2, fx//2)
     zero = np.array(zero)
@@ -30,6 +30,6 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
             imageSizeY=fy,
             radius=radius,
             antialiased=True,
-        ) * (max_dist - dists[i] + i)
+        ) * (1 if all_equal else max_dist - dists[i] + i)
 
     return (data, indices, peaks)

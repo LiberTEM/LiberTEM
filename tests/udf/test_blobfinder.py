@@ -282,7 +282,7 @@ def test_featurevector(lt_ctx):
         antialiased=False
     )
 
-    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius, all_equal=True)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
@@ -303,7 +303,7 @@ def test_featurevector(lt_ctx):
     )
     res = lt_ctx.run(job)
 
-    peak_data, _, _ = cbed_frame(*shape, zero, a, b, np.array([(0, 0)]), radius)
+    peak_data, _, _ = cbed_frame(*shape, zero, a, b, np.array([(0, 0)]), radius, all_equal=True)
     peak_sum = peak_data.sum()
 
     assert np.allclose(res.sum(), data.sum())

@@ -217,10 +217,13 @@ class FullMatcher(grm.Matcher):
 
     def make_polar_vectors(self, coords):
         '''
-        Calculate all unique pairwise connecting vectors between points in coords.
+        Calculate all unique pairwise connecting polar vectors between points in coords.
 
-        The vectors are filtered with parameters :py:attr:`~min_delta` and :py:attr:`~max_delta`
-        to avoid calculating for unwanted higher order or random smaller vectors
+        The pairwise connecting vectors are converted to polar coordinates and
+        filtered with parameters :py:attr:`~min_delta` and :py:attr:`~max_delta`
+        to avoid calculating for unwanted higher order or random smaller vectors.
+
+        All calculated vectors have a positive or zero x direction.
         '''
         # sort by x coordinate so that we have always positive x difference vectors
         sort_indices = np.argsort(coords[:, 1])

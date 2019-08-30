@@ -21,6 +21,16 @@ class CorrelationResult:
 
 
 class PointSelection:
+    '''
+    Class that represents a subset of a correlation result.
+
+    Attributes
+    ----------
+
+    selector : numpy.ndarray
+        Boolean mask for all points in the correlation result, :code:`True` indicating
+        selected points.
+    '''
     def __init__(self, correlation_result: CorrelationResult, selector=None):
         self.correlation_result = correlation_result
         if selector is None:
@@ -31,18 +41,31 @@ class PointSelection:
 
     @property
     def centers(self):
+        '''
+        numpy.ndarray : Integer centers (y, x) of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.centers[self.selector]
 
     @property
     def refineds(self):
+        '''
+        numpy.ndarray : Refined float centers (y, x) of correlation result masked
+                        with :attr:`selector`
+        '''
         return self.correlation_result.refineds[self.selector]
 
     @property
     def peak_values(self):
+        '''
+        numpy.ndarray : Peak heights of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.peak_values[self.selector]
 
     @property
     def peak_elevations(self):
+        '''
+        numpy.ndarray : Peak elevations of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.peak_elevations[self.selector]
 
     def __len__(self):
@@ -80,7 +103,6 @@ class Matcher:
         self.min_weight = min_weight
 
     def fastmatch(self, centers, zero, a, b, refineds=None, peak_values=None, peak_elevations=None):
-        # FIXME check formatting when included in documentation
         '''
         This function creates a Match object from correlation_result and approximates
         for zero point and lattice vectors a and b.
@@ -112,7 +134,8 @@ class Matcher:
         -------
 
         Match
-            :class:`~libertem.analysis.gridmatching.Match` object with the matching result.
+            :class:`~libertem.analysis.gridmatching.Match` object with the optimized
+            matching result.
         '''
         corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
         filt = corr.peak_elevations >= self.min_weight
@@ -134,7 +157,6 @@ class Matcher:
             return Match.invalid(corr)
 
     def affinematch(self, centers, indices, refineds=None, peak_values=None, peak_elevations=None):
-        # FIXME check formatting when included in documentation
         '''
         This function creates a Match object from correlation_result and
         indices for all points. The indices can be non-integer and relative to any
@@ -207,6 +229,29 @@ class Matcher:
 
 
 class Match(PointSelection):
+    '''
+    Class that represents a lattice match to a subset of a correlation result
+
+    The attributes are not guaranteed to be correct or sensible for the given lattice.
+    The methods :meth:`weighted_optimize` and :meth:`optimize`
+    calculate a derived :class:`Match` with a best fit of :attr:`zero`,
+    :attr:`a` and :attr:`b` based on the points and the indices.
+
+    Attributes
+    ----------
+
+    zero : numpy.ndarray
+        Declared zero point (y, x) of the lattice
+    a : numpy.ndarray
+        Declared "a" vector (y, x) of the lattice
+    b : numpy.ndarray
+        Declared "b" vector (y, x) of the lattice
+    indices : numpy.ndarray
+        List of indices (i, j) that are declared to express the matched points as linear combination
+        of vectors :code:`a` and :code:`b` with reference to :code:`zero`. The indices
+        can be integers or floats, and they can be precise or approximate, depending on the
+        matching method.
+    '''
     def __init__(self, correlation_result: CorrelationResult,
             selector, zero, a, b, indices):
         self.zero = zero
@@ -233,6 +278,10 @@ class Match(PointSelection):
 
     @classmethod
     def invalid(cls, correlation_result):
+        '''
+        Match
+            A :class:`Match` instance with empty selector and all-'nan' attributes
+        '''
         nanvec = np.array([np.float('nan'), np.float('nan')])
         return cls(
             correlation_result=correlation_result,
@@ -245,6 +294,9 @@ class Match(PointSelection):
 
     @property
     def calculated_refineds(self):
+        '''
+        numpy.ndarray : Calculated peak positions based on lattice parameters and indices.
+        '''
         return calc_coords(self.zero, self.a, self.b, self.indices)
 
     def calc_coords(self, indices=None, drop_zero=False, frame_shape=None, r=0):
@@ -301,6 +353,10 @@ class Match(PointSelection):
 
     @property
     def error(self):
+        '''
+        float : Weighted average distance between calculated and given peak position.
+                numpy.float('inf') if match of length zero.
+        '''
         if len(self) > 0:
             diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
             return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
@@ -323,6 +379,16 @@ class Match(PointSelection):
 
     def weighted_optimize(self):
         '''
+        Weighted least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Optimization to match the given points and indices using :attr:`peak_elevation` as weight.
+
+        Returns
+        -------
+
+        Match
+            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`
+
         Raises
         ------
 
@@ -353,6 +419,23 @@ class Match(PointSelection):
         return self.derive(zero=zero, a=a, b=b)
 
     def optimize(self):
+        '''
+        Least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Optimization to match the given points and indices.
+
+        Returns
+        -------
+
+        Match
+            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Raises
+        ------
+
+        np.linalg.LinAlgError
+            If the solver didn't find a solution.
+        '''
         # We stack an index of 1 to the index list for the zero component
         indices = np.hstack([
             np.ones((len(self.indices), 1)),

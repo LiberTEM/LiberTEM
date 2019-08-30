@@ -11,7 +11,7 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
         a = (fy//8, 0)
     a = np.array(a)
     if b is None:
-        b = make_cartesian(make_polar(a))
+        b = make_cartesian(make_polar(a) - (0, np.pi/2))
     b = np.array(b)
     if indices is None:
         indices = np.mgrid[-10:11, -10:11]
@@ -19,7 +19,10 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
 
     data = np.zeros((1, fy, fx), dtype=np.float32)
 
-    for p in peaks:
+    dists = np.linalg.norm(peaks - zero, axis=-1)
+    max_dist = dists.max()
+
+    for i, p in enumerate(peaks):
         data += m.circular(
             centerX=p[1],
             centerY=p[0],
@@ -27,6 +30,6 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
             imageSizeY=fy,
             radius=radius,
             antialiased=True,
-        )
+        ) * (max_dist - dists[i] + i)
 
     return (data, indices, peaks)

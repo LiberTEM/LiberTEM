@@ -49,14 +49,17 @@ Reference
 .. automodule:: libertem.udf.blobfinder
    :members:
    :undoc-members:
+   :inherited-members:
    :special-members: __init__
 
 .. automodule:: libertem.analysis.gridmatching
    :members:
    :undoc-members:
+   :inherited-members:
    :special-members: __init__
 
 .. automodule:: libertem.analysis.fullmatch
    :members:
    :undoc-members:
+   :inherited-members:
    :special-members: __init__

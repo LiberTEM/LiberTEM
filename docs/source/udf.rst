@@ -15,7 +15,32 @@ I/O, the details of buffer management and so on. This corresponds to
 a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_,
 where the intermediate re-keying and shuffling step is omitted.
 
-It can be helpful to review :doc:`some general concepts <concepts>` before reading this section.
+It can be helpful to review :doc:`some general concepts <concepts>` before
+reading the following sections.
+
+Getting started
+---------------
+
+The easiest way of running a function over your data is using the 
+:meth:`~libertem.api.Context.map` method of the LiberTEM API.
+
+For example, to calculate the sum over the last signal axis:
+
+.. code-block:: python
+
+      >>>result = ctx.map(
+      >>>      dataset=dataset,
+      >>>      f=functools.partial(np.sum, axis=-1)
+      >>>)
+      >>>result
+
+The function specified via the :code:`f` parameter is called for each frame / diffraction pattern.
+
+See `Auto UDF`_ below for details. This is most suited for simple functions; once you have
+parameters or want to re-use some data across function calls, you should create a
+:class:`~libertem.udf.UDF` subclass instead.
+
+Read on for a more in-detail view of UDFs and their capabilities.
 
 How UDFs works
 --------------
@@ -45,7 +70,7 @@ In pseudocode, data is processed in the following way:
 
 In reality, the loop over partitions is run in parallel using multiple worker processes,
 potentially :doc:`on multiple computers <architecture>`. The loop over individual frames is
-run on the worker process, and the merge function is run on the master node, once the results
+run in the worker processes, and the merge function is run on the main process, once the results
 for a partition are available. 
 
 In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two more methods
@@ -54,13 +79,18 @@ available for overriding, to work on larger units of data at the same time:
 and :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. They can be used for optimizing
 some operations, and are documented in the :doc:`advanced topics <udf/advanced>` section.
 
+Implementing a UDF
+------------------
+
+
+
 
 Declaring Buffers
 -----------------
 
 There are two very common patterns for reductions, either reducing over the navigation axes
-into a common accumulator for all frames, or reducing over the signal axes and keeping the
-navigation axes.
+into a common accumulator for all frames (keeping the shape of a single frame),
+or reducing over the signal axes and keeping the navigation axes.
 
 To make your UDF code more readable, LiberTEM supports these cases out of the box: you can
 declare buffers in the :meth:`~libertem.udf.UDF.get_result_buffers` method.
@@ -128,31 +158,6 @@ Here is another example, demonstrating :code:`kind="sig"` buffers and the merge 
 For a more complete example, please have a look at the functions implemented in the sub-modules of :code:`libertem.udf`,
 for example :code:`libertem.udf.blobfinder`.
 
-Auto UDF
---------
-
-The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, post-processing or performance optimization through tiled processing, defining an UDF class is required.
-
-As an alternative to Auto UDF, you can use the :meth:`~libertem.contrib.dask.make_dask_array` method to create a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See :ref:`Integration with Dask arrays<daskarray>` for more details.
-
-The :class:`~libertem.udf.AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array. Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
-
-Example: Calculate sum over the last signal axis.
-
-.. code-block:: python
-
-      result = ctx.map(
-            dataset=dataset,
-            f=functools.partial(np.sum, axis=-1)
-      )
-
-      # or alternatively:
-
-      udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
-      result = self.run_udf(dataset=dataset, udf=udf)
-
-.. _tiled:
-
 Passing parameters
 ------------------
 
@@ -217,6 +222,35 @@ This non-trivial example from :class:`~libertem.udf.blobfinder.SparseCorrelation
             'crop_size': crop_size,
         }
         return kwargs
+
+
+Auto UDF
+--------
+
+The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, post-processing or performance optimization through tiled processing, defining an UDF class is required.
+
+As an alternative to Auto UDF, you can use the :meth:`~libertem.contrib.dask.make_dask_array` method to create a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See :ref:`Integration with Dask arrays<daskarray>` for more details.
+
+The :class:`~libertem.udf.AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array.
+
+Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
+
+Example: Calculate sum over the last signal axis.
+
+.. code-block:: python
+
+      result = ctx.map(
+            dataset=dataset,
+            f=functools.partial(np.sum, axis=-1)
+      )
+
+      # or alternatively:
+
+      udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
+      result = self.run_udf(dataset=dataset, udf=udf)
+
+.. _tiled:
+
 
 Debugging
 ---------

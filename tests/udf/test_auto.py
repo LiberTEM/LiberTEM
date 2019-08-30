@@ -15,7 +15,7 @@ def test_auto(lt_ctx):
 
     naive_result = data.sum(axis=-1)
 
-    assert np.allclose(auto_result['result'].data, naive_result)
+    assert np.allclose(auto_result.data, naive_result)
 
 
 def test_auto_weird(lt_ctx):
@@ -33,7 +33,7 @@ def test_auto_weird(lt_ctx):
         ]
 
     auto_result = lt_ctx.map(dataset=dataset, f=f)
-    item = auto_result['result'].data[0, 0]
+    item = auto_result.data[0, 0]
 
     assert len(item) == 4
     assert isinstance(item[0], str)

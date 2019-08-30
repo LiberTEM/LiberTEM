@@ -122,6 +122,9 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
+    def as_dict(self):
+        return dict(self.items())
+
     def get_proxy(self):
         return MappingProxyType({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
@@ -581,7 +584,7 @@ class UDFRunner:
 
         self._udf.clear_views()
 
-        return self._udf.results
+        return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         meta = UDFMeta(
@@ -604,11 +607,11 @@ class UDFRunner:
                 src=part_results.get_proxy()
             )
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
         else:
             # yield at least one result (which should be empty):
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
 
     def _roi_for_partition(self, roi, partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

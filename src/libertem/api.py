@@ -513,13 +513,13 @@ class Context:
         Returns
         -------
 
-        UDFData:
-            The result of the UDF with a single buffer named "result" with :code:`extra_shape`
-            and :code:`dtype` set to contain all return values of :meth:`f` converted to a numpy
-            array
+        BufferWrapper:
+            The result of the UDF. Access the underlying numpy array using the `data` attribute.
+            Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        return self.run_udf(dataset=dataset, udf=udf, roi=roi)
+        results = self.run_udf(dataset=dataset, udf=udf, roi=roi)
+        return results['result']
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

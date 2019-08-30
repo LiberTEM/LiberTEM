@@ -36,6 +36,7 @@ def _run_mask_test_program(lt_ctx, dataset, mask, expected):
     )
 
 
+@pytest.mark.xfail
 @pytest.mark.slow
 def test_weird_partition_shapes_1_slow(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")

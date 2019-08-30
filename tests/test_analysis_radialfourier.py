@@ -26,6 +26,8 @@ def test_smoke_small(ds_random, lt_ctx):
         dataset=ds_random, cx=0, cy=0, ri=0, ro=1, n_bins=1, max_order=23
     )
     results = lt_ctx.run(analysis)
+    # access result to actually create result list:
+    results['absolute_0_0']
 
 
 def test_smoke_large(ds_random, lt_ctx):
@@ -38,5 +40,12 @@ def test_smoke_large(ds_random, lt_ctx):
 def test_smoke_defaults(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random
+    )
+    results = lt_ctx.run(analysis)
+
+
+def test_sparse(ds_random, lt_ctx):
+    analysis = lt_ctx.create_radial_fourier_analysis(
+        dataset=ds_random, use_sparse=True,
     )
     results = lt_ctx.run(analysis)

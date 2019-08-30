@@ -50,6 +50,9 @@ class BufferWrapper(object):
     Usually, as a user, you only need to instantiate this class, specifying `kind`,
     `dtype` and sometimes `extra_shape` parameters. Most methods are meant to be called
     from LiberTEM-internal code, for example the UDF functionality.
+
+    This class is array_like, so you can directly use it, for example, as argument
+    for numpy functions.
     """
     def __init__(self, kind, extra_shape=(), dtype="float32"):
         """
@@ -121,7 +124,7 @@ class BufferWrapper(object):
         """
         Get the buffer contents in shape that corresponds to the
         original dataset shape. If a ROI is set, embed the result into a new
-        array; unset values have nan value.
+        array; unset values have nan value, if supported by the underlying dtype.
         """
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
@@ -137,6 +140,12 @@ class BufferWrapper(object):
         may be even filtered to a ROI
         """
         return self._data
+
+    def __array__(self):
+        """
+        returns the "wrapped"/reshaped array, see above
+        """
+        return self.data
 
     def allocate(self):
         """

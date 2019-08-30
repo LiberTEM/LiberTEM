@@ -8,8 +8,8 @@ from .raw import PickFrameAnalysis
 class PickFFTFrameAnalysis(PickFrameAnalysis):
     def get_results(self, job_results):
         data, coords = self.get_results_base(job_results)
-        real_rad = self.parameters["real_rad"]
-        real_center = (self.parameters["real_centery"], self.parameters["real_centerx"])
+        real_rad = self.parameters.get("real_rad")
+        real_center = (self.parameters.get("real_centery"), self.parameters.get("real_centerx"))
         if data.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(

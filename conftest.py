@@ -13,7 +13,8 @@ from libertem.io.dataset.memory import MemoryDataSet
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests
 basedir = os.path.dirname(__file__)
-spec = importlib.util.spec_from_file_location("utils", "tests/utils.py")
+location = os.path.join(basedir, "tests/utils.py")
+spec = importlib.util.spec_from_file_location("utils", location)
 utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 

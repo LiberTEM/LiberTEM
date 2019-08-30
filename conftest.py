@@ -5,6 +5,8 @@ import numpy as np
 import pytest
 import h5py
 
+import libertem.api as lt
+from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
@@ -12,6 +14,7 @@ from libertem.io.dataset.memory import MemoryDataSet
 
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests
+# and this file is outside the package
 basedir = os.path.dirname(__file__)
 location = os.path.join(basedir, "tests/utils.py")
 spec = importlib.util.spec_from_file_location("utils", location)
@@ -126,3 +129,35 @@ def uint16_raw(tmpdir_factory):
     )
     ds = ds.initialize()
     yield ds
+
+
+@pytest.fixture(autouse=True)
+def auto_ctx(doctest_namespace):
+    ctx = lt.Context(executor=InlineJobExecutor())
+    doctest_namespace["ctx"] = ctx
+
+
+@pytest.fixture(autouse=True)
+def auto_ds(doctest_namespace):
+    dataset = MemoryDataSet(datashape=[16, 16, 16, 16])
+    doctest_namespace["dataset"] = dataset
+
+
+@pytest.fixture(autouse=True)
+def auto_libertem(doctest_namespace):
+    import libertem
+    import libertem.utils
+    import libertem.utils.generate
+    import libertem.udf.blobfinder
+    import libertem.masks
+    doctest_namespace["libertem"] = libertem
+    doctest_namespace["libertem.utils"] = libertem.utils
+    doctest_namespace["libertem.utils.generate"] = libertem.utils.generate
+    doctest_namespace["libertem.udf.blobfinder"] = libertem.udf.blobfinder
+    doctest_namespace["libertem.masks"] = libertem.masks
+
+
+@pytest.fixture(autouse=True)
+def auto_files(doctest_namespace, hdf5, default_raw):
+    doctest_namespace["path_to_hdf5"] = hdf5.filename
+    doctest_namespace["path_to_raw"] = default_raw._path

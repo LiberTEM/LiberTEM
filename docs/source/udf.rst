@@ -70,8 +70,8 @@ In pseudocode, data is processed in the following way:
 
 In reality, the loop over partitions is run in parallel using multiple worker processes,
 potentially :doc:`on multiple computers <architecture>`. The loop over individual frames is
-run in the worker processes, and the merge function is run on the main process, once the results
-for a partition are available. 
+run in the worker processes, and the merge function is run in the main process, accumulating the
+results, every time the results for a partition are available. 
 
 In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two more methods
 available for overriding, to work on larger units of data at the same time:
@@ -82,70 +82,160 @@ some operations, and are documented in the :doc:`advanced topics <udf/advanced>`
 Implementing a UDF
 ------------------
 
-
-
-
-Declaring Buffers
------------------
+The workflow for implementing a UDF starts with subclassing
+:class:`~libertem.udf.UDF`. In the simplest case, you need to implement the
+:meth:`~libertem.udf.UDF.get_result_buffers` method and 
+:meth:`~libertem.udf.UDFFrameMixin.process_frame`.
 
 There are two very common patterns for reductions, either reducing over the navigation axes
-into a common accumulator for all frames (keeping the shape of a single frame),
+into a common accumulator for all frames, keeping the shape of a single frame,
 or reducing over the signal axes and keeping the navigation axes.
 
-To make your UDF code more readable, LiberTEM supports these cases out of the box: you can
-declare buffers in the :meth:`~libertem.udf.UDF.get_result_buffers` method.
+A UDF can implement one of these reductions, or even combinations. To handle indexing for you,
+LiberTEM needs to know about the sturcture of your reduction. You can build this structure in the
+:meth:`~libertem.udf.UDF.get_result_buffers` method, by declaring one or more buffers.
+
+Declaring buffers
+~~~~~~~~~~~~~~~~~
+
 These buffers can have a :code:`kind` declared, which corresponds to the two reduction patterns above:
 :code:`kind="sig"` for reducing over the navigation axes (and keeping the signal axes), and 
 :code:`kind="nav"` for reducing over the signal axes and keeping the navigation axes. There is a
-third, :code:`kind="single"`, which stores just a single value. It is also possible to append
-new axes to the end of the buffer using the :code:`extra_shape` parameter.
+third, :code:`kind="single"`, which stores just a single value.
 
-By keeping with these patterns, a UDF author doesn't have to take care of indexing, and code 
-can easily be written to support any dimensionality in both navigation and signal axes.
+It is also possible to append new axes to the end of the buffer using the
+:code:`extra_shape` parameter.
 
-# XXX FIXME XXX: rewrite the following parts
-================
+:meth:`~libertem.udf.UDF.get_result_buffers` should return a :code:`dict` which maps
+buffer names to buffer declarations. You can create a buffer declaration by calling
+the :meth:`~libertem.udf.UDF.buffer` method.
 
-In the UDF interface of LiberTEM, buffers are the tools to save and pass on the
-intermediate results of computation. Currently, LiberTEM supports three different
-types of buffer: :code:`"sig"`, :code:`"nav"`, and :code:`"single"`. By setting :code:`kind="sig"`, users
-can make the buffer to have the same dimension as the signal dimension. By setting
-the :code:`kind="nav"`, users can make the buffer to have the same dimension as the navigation
-dimension. Lastly, by setting :code:`kind="single"`, users can make the buffer to have an arbitrary 
-dimension of their choice. Note that in the case of :code:`"single"` buffer, users may specify 
-the dimension of the buffer through :code:`extra_shape` parameter. If :code:`extra_shape` 
-parameter is not specified, the buffer is assumed to have :code:`(1,)` dimension. Additionally, 
-users may also specify :code:`extra_shape` parameters for :code:`"sig"` or :code:`"nav"` buffers. 
-In that case, the dimensions specified by :code:`extra_shape` parameter will be added to the 
-dimension of :code:`dataset.shape.sig` or :code:`dataset.shape.nav`, with respect to each component. As an example,
-one may specify the buffers as following:
+The buffer name is later used to access the buffer via :code:`self.results.<buffername>`,
+which returns a view into a numpy array. For this to work, the name has to be a valid Python
+identifier.
 
-.. include:: udf/buffer_types.py
-   :code:
+Examples of buffer declarations (this is a :code:`dict` as it would be returned by
+:meth:`~libertem.udf.UDF.get_result_buffers`):
 
-One can access a buffer of interest via :code:`self.results.<buffername>`, from which one can get a view into a numpy array
-that the buffer is storing. This numpy array corresponds to the current intermediate result that LiberTEM is working
-on and can be intermediate results of processing frames/tiles/partitions. 
-Note that buffers are only designed to pass lightweight intermediate results and thus, it is important
-that the size of the buffer remains small. Otherwise, it could lead to significant decline in performance.
+.. code-block:: python
 
-All numpy dtypes are supported for buffers. That includes the :code:`object` dtype for arbitrary Python variables. The item just has to be pickleable with :code:`cloudpickle`.
+   # Suppose our dataset has the shape (14, 14, 32, 32),
+   # where the first two dimensions represent the navigation
+   # dimension and the last two dimensions represent the signal dimension.
 
-By-frame processing
--------------------
-Note that :meth:`~libertem.udf.UDFFrameMixin.process_frame` method can interpreted in a slightly different manner for different types of buffer with which you
-are dealing. If the type of the buffer is :code:`"sig"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as iteratively `merging` the previous
-computations (i.e., the result computed on previously considered set of frames) and a newly added frame. If the type of
-the buffer is :code:`"nav"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be viewed as performing operations on each frame independently. Intuitively, when the type of the buffer is :code:`"nav"`, which means that it uses the navigation dimension, two different frames
-correspond to two different scan positions, so the `merging` is in fact an assignment of the result to the correct slot in the result buffer. Lastly, if the type of the buffer is :code:`"single"`, then :meth:`~libertem.udf.UDFFrameMixin.process_frame` can be
-interpreted in either way.
+   buffers = {
+      # same shape as navigation dimensions of dataset, plus two extra dimensions of
+      # shape (3, 2). The full shape is (14, 14, 3, 2) in this example.
+      # This means this buffer can store an array of shape (3, 2) for each frame in the dataset.
+      "nav_buffer": self.buffer(
+          kind="nav",
+          extra_shape=(3, 2),
+          dtype="float32",
+      ),
+
+      # same shape as signal dimensions of dataset, plus an extra dimension of shape (2,).
+      # so the full shape is (32, 32, 2) in this example. That means we can store two
+      # float32 values for each pixel of the signal dimensions.
+      "sig_buffer": self.buffer(
+          kind="sig",
+          extra_shape=(2,),
+          dtype="float32",
+      ),
+
+      # buffer of shape (16, 16); shape is unrelated to dataset shape
+      "single_buffer": self.buffer(
+          kind="single",
+          extra_shape=(16, 16),
+          dtype="float32",
+      ),
+
+   }
+
+See below for some more real-world examples.
+
+All numpy dtypes are supported for buffers. That includes the :code:`object`
+dtype for arbitrary Python variables. The item just has to be pickleable with
+:code:`cloudpickle`.
+
+Note that buffers are only designed to pass lightweight intermediate results
+and thus, it is important that the size of the buffer remains small. Having too
+large buffers can lead to significant decline in performance.
+
+Implementing the processing function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now to the actual "meat" of the processing: implementing
+:meth:`~libertem.udf.UDFFrameMixin.process_frame`. The method signature looks like this:
+
+.. code-block:: python
+
+   class YourUDF(UDF):
+      def process_frame(self, frame):
+         pass
+
+The general idea is that you get a single frame from the data set, do your processing,
+and write the results to one of the previously declared buffers, via :code:`self.results.<buffername>`.
+When accessing a :code:`kind="nav"` buffer this way, you automatically get a view into the buffer
+that corresponds to the current frame that is being processed. In case of :code:`kind="sig"`
+or :code:`kind="single"`, you get the whole buffer.
+
+Intuitively, with :code:`kind="sig"` (and :code:`kind="single"`), you are most
+likely implementing an operation like :code:`buf = f(buf, frame)`. That is, you
+are computing a new result based on a single (new) frame and the results from all
+previous frames, and overwrite the results with the new value(s).
+
+With :code:`kind="nav"`, you compute independent results for each frame,
+which are written to different positions in the result buffer. Because of the independence
+between frames, you don't need to merge with a previous value; the result is simply written
+to the correct index in the result buffer (via the aforementioned view).
 
 As an easy example, let's have a look at a function that simply sums up each frame
-to a single value:
+to a single value. This is a :code:`kind="nav"` reduction, as we sum over all values
+in the signal dimensions:
+
+.. testsetup:: *
+
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
+   
+.. testcode::
+
+   import numpy as np   
+   from libertem.udf import UDF
 
 
-.. include:: udf/sumsig.py
-   :code:
+   class SumOverSig(UDF):
+      def get_result_buffers(self):
+         """
+         Describe the buffers we need to store our results:
+         kind="nav" means we want to have a value for each coordinate
+         in the navigation dimensions. We name our buffer 'pixelsum'.
+         """
+         return {
+            'pixelsum': self.buffer(
+               kind="nav", dtype="float32"
+            )
+         }
+
+      def process_frame(self, frame):
+         """
+         Sum up all pixels in this frame and store the result in the `pixelsum`
+         buffer. `self.results.pixelsum` is a view into the result buffer we
+         defined above, and corresponds to the entry for the current frame we
+         work on. We don't have to take care of finding the correct index for
+         the frame we are processing ourselves.
+         """
+         self.results.pixelsum[:] = np.sum(frame)
+
+   res = ctx.run_udf(
+      udf=SumOverSig(),
+      dataset=dataset,
+   )
+
+   print(res['pixelsum'].shape)
 
 
 Here is another example, demonstrating :code:`kind="sig"` buffers and the merge function:

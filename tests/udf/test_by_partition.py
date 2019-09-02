@@ -1,7 +1,9 @@
 import numpy as np
 
 from libertem.udf import UDF
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 class PixelsumUDF(UDF):

@@ -106,7 +106,7 @@ class BaseAnalysis(object):
         """
         Returns
         -------
-        ndarray or None
+        numpy.ndarray or None
             region of interest for which we want to run our analysis
         """
         return None

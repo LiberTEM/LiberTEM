@@ -3,7 +3,7 @@ import numpy as np
 import libertem.udf.FEM as FEM
 from libertem.analysis.fem import FEMAnalysis
 
-from utils import MemoryDataSet
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 def test_smoke(lt_ctx):

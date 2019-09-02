@@ -42,7 +42,7 @@ Internal API
    :undoc-members:
    :special-members: __init__
 
-.. automodule:: libertem.contrib.dask
+.. automodule:: libertem.contrib.daskadapter
    :members:
    :undoc-members:
    :special-members: __init__

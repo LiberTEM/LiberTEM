@@ -4,7 +4,9 @@ import pytest
 
 from libertem.io.dataset.base import FileTree, Partition3D
 from libertem.common import Shape
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 FakeFile = namedtuple('FakeFile', ['start_idx', 'end_idx'])
 

@@ -156,7 +156,7 @@ setup(
         'jsonschema',
     ],
     extras_require={
-        'hdfs': 'hfds3',
+        'hdfs': 'hdfs3',
         'torch': 'torch',
         'hdbscan': 'hdbscan',
         'pyfftw': 'pyfftw',

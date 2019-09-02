@@ -179,6 +179,10 @@ You can check the code style by running:
 
 We recommend using an editor that can check code style on the fly, such as `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
 
+Docstrings
+~~~~~~~~~~
+
+The `NumPy docstring guide <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_ is our guideline for formatting docstrings. We are testing docstring code examples in Continuous Integration using `doctest <https://docs.python.org/3/library/doctest.html>`_. You can test files by hand by running :code:`pytest --doctest-modules <pathspec>`.
 
 Building the Documentation
 --------------------------
@@ -191,6 +195,12 @@ To start the live building process:
     $ tox -e docs
 
 You can then view a live-built version at http://localhost:8008
+
+You can include code samples with the `doctest sphinx extension <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ and test them with
+
+.. code-block:: shell
+
+    $ tox -e docs-check
 
 .. _`building the client`:
 

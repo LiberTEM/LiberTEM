@@ -1,20 +1,15 @@
 import numpy as np
-
-from libertem.utils import make_polar, make_cartesian
-
-
-def fastmatch(centers, refineds, peak_values, peak_elevations, zero, a, b, parameters):
-    corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
-    return Match.fastmatch(corr, zero, a, b, parameters)
-
-
-def affinematch(centers, refineds, peak_values, peak_elevations, indices):
-    corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
-    return Match.affinematch(corr, indices)
+from libertem.utils import calc_coords, within_frame
 
 
 class CorrelationResult:
-    def __init__(self, centers, refineds, peak_values, peak_elevations):
+    def __init__(self, centers, refineds=None, peak_values=None, peak_elevations=None):
+        if refineds is None:
+            refineds = centers
+        if peak_values is None:
+            peak_values = np.ones(len(centers))
+        if peak_elevations is None:
+            peak_elevations = np.ones(len(centers))
         assert all(len(centers) == len(other) for other in [refineds, peak_values, peak_elevations])
         self.centers = centers
         self.refineds = refineds
@@ -26,6 +21,16 @@ class CorrelationResult:
 
 
 class PointSelection:
+    '''
+    Class that represents a subset of a correlation result.
+
+    Attributes
+    ----------
+
+    selector : numpy.ndarray
+        Boolean mask for all points in the correlation result, :code:`True` indicating
+        selected points.
+    '''
     def __init__(self, correlation_result: CorrelationResult, selector=None):
         self.correlation_result = correlation_result
         if selector is None:
@@ -36,18 +41,31 @@ class PointSelection:
 
     @property
     def centers(self):
+        '''
+        numpy.ndarray : Integer centers (y, x) of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.centers[self.selector]
 
     @property
     def refineds(self):
+        '''
+        numpy.ndarray : Refined float centers (y, x) of correlation result masked
+                        with :attr:`selector`
+        '''
         return self.correlation_result.refineds[self.selector]
 
     @property
     def peak_values(self):
+        '''
+        numpy.ndarray : Peak heights of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.peak_values[self.selector]
 
     @property
     def peak_elevations(self):
+        '''
+        numpy.ndarray : Peak elevations of correlation result masked with :attr:`selector`
+        '''
         return self.correlation_result.peak_elevations[self.selector]
 
     def __len__(self):
@@ -64,34 +82,221 @@ class PointSelection:
         return PointSelection(self.correlation_result, selector)
 
 
+class Matcher:
+    def __init__(self, tolerance=3, min_weight=0.1, min_match=3):
+        '''
+        The main job of the Matcher object is managing the matching parameters
+        and making them available for the various matching routines.
+
+        Parameters
+        ----------
+
+        tolerance : float
+            Position tolerance in px for peaks to be considered matches
+        min_weight : float
+            Minimum peak elevation of a peak to be considered for matching
+        min_match : int
+            Minimum number of matching peaks to be considered a match.
+        '''
+        self.tolerance = tolerance
+        self.min_match = min_match
+        self.min_weight = min_weight
+
+    def fastmatch(self, centers, zero, a, b, refineds=None, peak_values=None, peak_elevations=None):
+        '''
+        This function creates a Match object from correlation_result and approximates
+        for zero point and lattice vectors a and b.
+        This function is much, much faster than the full match.
+        It works well to match a large number of point sets
+        that share the same lattice vectors, for example from a
+        larger grain or monocrystalline material. It rejects
+        random points or other lattices in the CorrelationResult,
+        provided they are not on near-integer positions of zero, a, b.
+
+        Parameters
+        ----------
+
+        centers : numpy.ndarray
+            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks
+        refineds : numpy.ndarray
+            numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)
+        peak_values : numpy.ndarray
+            numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
+        peak_elevations : numpy.ndarray
+            numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
+            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+        zero : numpy.ndarray
+            The near approximate zero point as numpy array (y, x).
+        a,b : numpy.ndarray
+            The near approximate vectors a, b to match the grid as numpy arrays (y, x).
+
+        Returns
+        -------
+
+        Match
+            :class:`~libertem.analysis.gridmatching.Match` object with the optimized
+            matching result.
+        '''
+        corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
+        filt = corr.peak_elevations >= self.min_weight
+
+        selection = PointSelection(correlation_result=corr, selector=filt)
+        # We match twice because we might catch more peaks in the second run with better parameters
+        try:
+            match1 = self._match_all(
+                point_selection=selection, zero=zero, a=a, b=b
+            )
+            if len(match1) >= self.min_match:
+                match1 = match1.weighted_optimize()
+            else:
+                raise np.linalg.LinAlgError("Not enough matched points")
+            match2 = self._match_all(
+                point_selection=selection, zero=match1.zero, a=match1.a, b=match1.b)
+            return match2.weighted_optimize()
+        except np.linalg.LinAlgError:
+            return Match.invalid(corr)
+
+    def affinematch(self, centers, indices, refineds=None, peak_values=None, peak_elevations=None):
+        '''
+        This function creates a Match object from correlation_result and
+        indices for all points. The indices can be non-integer and relative to any
+        base vectors zero, a, b, including virtual ones like zero=(0, 0), a=(1, 0), b=(0, 1).
+
+        Refined values for zero, a and b that match the correlated peaks are then derived.
+
+        This match method is very fast, can be robust against a distorted field of view and
+        works without determining a lattice. It matches the full CorrelationResult and does
+        not reject random points or other outliers.
+
+        It is mathematically equivalent to calculating
+        an affine transformation, as inspired by Giulio Guzzinati
+        https://arxiv.org/abs/1902.06979
+
+        Parameters
+        ----------
+        centers : numpy.ndarray
+            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks
+        refineds : numpy.ndarray
+            numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)
+        peak_values : numpy.ndarray
+            numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
+        peak_values : numpy.ndarray
+            numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
+            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+        indices : numpy.ndarray
+            The indices assigned to each point of the CorrelationResult.
+
+        Returns
+        -------
+        Match
+            :class:`~libertem.analysis.gridmatching.Match`
+        '''
+        corr = CorrelationResult(centers, refineds, peak_values, peak_elevations)
+        match = Match(corr, selector=None, zero=None, a=None, b=None, indices=indices)
+        try:
+            return match.weighted_optimize()
+        except np.linalg.LinAlgError:
+            return Match.invalid(corr)
+
+    def _match_all(self, point_selection: PointSelection, zero, a, b):
+        '''
+        Find points that can be generated from the lattice vectors with near integer indices
+
+        Returns
+        -------
+
+        :class:`~libertem.analysis.gridmatching.Match`
+
+        '''
+        indices = get_indices(point_selection.refineds, zero, a, b)
+        rounded = np.around(indices)
+        index_diffs = np.absolute(indices - rounded)
+        # We scale the difference from index dimension to the pixel dimension
+        diffs = index_diffs * (np.linalg.norm(a), np.linalg.norm(b))
+        # We scale far-out differences with the square root of the indices
+        # to be more tolerant to small errors of a and b that result in large deviations
+        # in absolute position at high indices
+        scaled_diffs = diffs / (np.maximum(1, np.abs(indices))**0.5)
+        errors = np.linalg.norm(scaled_diffs, axis=1)
+        matched_selector = errors < self.tolerance
+        matched_indices = rounded[matched_selector].astype(np.int)
+        # remove the ones that weren't matched
+        new_selector = point_selection.new_selector(matched_selector)
+        result = Match.from_point_selection(
+            point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices
+        )
+        return result
+
+
 class Match(PointSelection):
+    '''
+    Class that represents a lattice match to a subset of a correlation result
+
+    The attributes are not guaranteed to be correct or sensible for the given lattice.
+    The methods :meth:`weighted_optimize` and :meth:`optimize`
+    calculate a derived :class:`Match` with a best fit of :attr:`zero`,
+    :attr:`a` and :attr:`b` based on the points and the indices.
+
+    Attributes
+    ----------
+
+    zero : numpy.ndarray
+        Declared zero point (y, x) of the lattice
+    a : numpy.ndarray
+        Declared "a" vector (y, x) of the lattice
+    b : numpy.ndarray
+        Declared "b" vector (y, x) of the lattice
+    indices : numpy.ndarray
+        List of indices (i, j) that are declared to express the matched points as linear combination
+        of vectors :code:`a` and :code:`b` with reference to :code:`zero`. The indices
+        can be integers or floats, and they can be precise or approximate, depending on the
+        matching method.
+    '''
     def __init__(self, correlation_result: CorrelationResult,
-            selector, zero, a, b, indices, parameters={}):
+            selector, zero, a, b, indices):
         self.zero = zero
         self.a = a
         self.b = b
         self.indices = indices
-        self.parameters = self._make_parameters(parameters)
         super().__init__(correlation_result, selector)
         assert len(indices) == len(self)
 
     def __str__(self):
         result = "zero: %s\n"\
             "a: %s\n"\
-            "b: %s\n"
+            "b: %s"
         return result % (str(self.zero), str(self.a), str(self.b))
 
     @classmethod
     def from_point_selection(cls, point_selection: PointSelection,
-            zero, a, b, indices, selector=None, parameters={}):
+            zero, a, b, indices, selector=None):
         if selector is None:
             selector = point_selection.selector
         return Match(
             correlation_result=point_selection.correlation_result,
-            selector=selector, zero=zero, a=a, b=b, indices=indices, parameters=parameters)
+            selector=selector, zero=zero, a=a, b=b, indices=indices)
+
+    @classmethod
+    def invalid(cls, correlation_result):
+        '''
+        Match
+            A :class:`Match` instance with empty selector and all-'nan' attributes
+        '''
+        nanvec = np.array([np.float('nan'), np.float('nan')])
+        return cls(
+            correlation_result=correlation_result,
+            selector=np.zeros(len(correlation_result), dtype=np.bool),
+            zero=nanvec,
+            a=nanvec,
+            b=nanvec,
+            indices=np.array([]),
+        )
 
     @property
     def calculated_refineds(self):
+        '''
+        numpy.ndarray : Calculated peak positions based on lattice parameters and indices.
+        '''
         return calc_coords(self.zero, self.a, self.b, self.indices)
 
     def calc_coords(self, indices=None, drop_zero=False, frame_shape=None, r=0):
@@ -101,20 +306,27 @@ class Match(PointSelection):
         Parameters
         ----------
 
-        indices:
+        indices : numpy.ndarray
             Indices to calculate coordinates for. Both an array of (y, x) pairs
             and the output of np.mgrid are supported.
-        drop_zero:
+        drop_zero : bool
             Drop the zero order peak. This is important for virtual darkfield imaging.
-        frame_shape : tuple(fy, fx)
+        frame_shape : Tuple[int, int]
             If set, the peaks are filtered with :meth:`~libertem.analysis.gridmatching.within_frame`
-        r:
+        r : float
             Radius for :meth:`~libertem.analysis.gridmatching.within_frame`
 
         Returns
         -------
 
-        A list of (y, x) coordinate paris for peaks
+        numpy.ndarray
+            A list of (y, x) coordinate pairs for peaks
+
+        Raises
+        ------
+
+        ValueError
+            If the shape of :code:`indices` is not as expected.
         '''
         if indices is None:
             indices = self.indices
@@ -141,53 +353,17 @@ class Match(PointSelection):
 
     @property
     def error(self):
+        '''
+        float : Weighted average distance between calculated and given peak position.
+                numpy.float('inf') if match of length zero.
+        '''
         if len(self) > 0:
             diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
             return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
         else:
             return np.float('inf')
 
-    @classmethod
-    def _make_parameters(cls, p, a=None, b=None):
-        use_default = True
-        if a is None:
-            upper_a = np.float('inf')
-            lower_a = 0
-        else:
-            use_default = False
-            upper_a = np.linalg.norm(a)
-            lower_a = upper_a
-        if b is None:
-            upper_b = np.float('inf')
-            lower_b = 0
-        else:
-            use_default = False
-            upper_b = np.linalg.norm(a)
-            lower_b = upper_b
-
-        if use_default:
-            min_delta = 0
-            max_delta = np.float('inf')
-        else:
-            min_delta = min(upper_a, upper_b)
-            max_delta = max(lower_a, lower_b)
-
-        parameters = {
-            "min_angle": np.pi / 10,
-            "tolerance": 3,
-            "min_points": 10,
-            "min_match": 3,
-            "min_cluster_size_fraction": 4,
-            "min_samples_fraction": 20,
-            "num_candidates": 7,
-            "min_delta": min_delta / 2,
-            "max_delta": max_delta * 2,
-            "min_weight": 0.1
-        }
-        parameters.update(p)
-        return parameters
-
-    def derive(self, selector=None, zero=None, a=None, b=None, indices=None, parameters={}):
+    def derive(self, selector=None, zero=None, a=None, b=None, indices=None):
         if zero is None:
             zero = self.zero
         if a is None:
@@ -198,12 +374,27 @@ class Match(PointSelection):
             indices = self.indices
         if selector is None:
             selector = self.selector
-        new_parameters = dict(self.parameters)
-        new_parameters.update(parameters)
         return Match(correlation_result=self.correlation_result, selector=selector,
-            zero=zero, a=a, b=b, indices=indices, parameters=parameters)
+            zero=zero, a=a, b=b, indices=indices)
 
     def weighted_optimize(self):
+        '''
+        Weighted least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Optimization to match the given points and indices using :attr:`peak_elevation` as weight.
+
+        Returns
+        -------
+
+        Match
+            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Raises
+        ------
+
+        np.linalg.LinAlgError
+            If the solver didn't find a solution.
+        '''
 
         # Following
         # https://stackoverflow.com/questions/27128688/how-to-use-least-squares-with-weight-matrix-in-python
@@ -228,6 +419,23 @@ class Match(PointSelection):
         return self.derive(zero=zero, a=a, b=b)
 
     def optimize(self):
+        '''
+        Least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Optimization to match the given points and indices.
+
+        Returns
+        -------
+
+        Match
+            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`
+
+        Raises
+        ------
+
+        np.linalg.LinAlgError
+            If the solver didn't find a solution.
+        '''
         # We stack an index of 1 to the index list for the zero component
         indices = np.hstack([
             np.ones((len(self.indices), 1)),
@@ -241,267 +449,6 @@ class Match(PointSelection):
             raise np.linalg.LinAlgError("Optimizing returned empty result")
         zero, a, b = x
         return self.derive(zero=zero, a=a, b=b)
-
-    @classmethod
-    def invalid(cls, correlation_result):
-        nanvec = np.array([np.float('nan'), np.float('nan')])
-        return cls(
-            correlation_result=correlation_result,
-            selector=np.zeros(len(correlation_result), dtype=np.bool),
-            zero=nanvec,
-            a=nanvec,
-            b=nanvec,
-            indices=np.array([]),
-            parameters={}
-        )
-
-    @classmethod
-    def fastmatch(cls, correlation_result: CorrelationResult, zero, a, b, parameters={}):
-        # FIXME check formatting when included in documentation
-        '''
-        This function creates a Match object from correlation_result and approximates
-        for zero point and lattice vectors a and b.
-        This function is much, much faster than the full match.
-        It works well to match a large number of point sets
-        that share the same lattice vectors, for example from a
-        larger grain or monocrystalline material. It rejects
-        random points or other lattices in the CorrelationResult,
-        provided they are not on near-integer positions of zero, a, b.
-
-        Parameters
-        ----------
-        correlation_result
-            CorrelationResult object with coordinates and weights
-        zero
-            The near approximate zero point as numpy array (y, x).
-        a, b
-            The near approximate vectors a, b to match the grid as numpy arrays (y, x).
-        parameters
-            Parameters for the matching.
-            tolerance: Position tolerance in px for peaks to be considered matches
-            min_delta: Minimum length of a potential grid vector
-            max_delta: Maximum length of a potential grid vector
-
-        returns:
-            Match
-        '''
-        p = cls._make_parameters(parameters, a, b)
-
-        filt = correlation_result.peak_elevations >= p['min_weight']
-
-        selection = PointSelection(correlation_result=correlation_result, selector=filt)
-        # We match twice because we might catch more peaks in the second run with better parameters
-        try:
-            match1 = cls._match_all(
-                point_selection=selection, zero=zero, a=a, b=b, parameters=p
-            )
-            if len(match1) >= p['min_match']:
-                match1 = match1.weighted_optimize()
-            else:
-                raise np.linalg.LinAlgError("Not enough matched points")
-            match2 = cls._match_all(
-                point_selection=selection, zero=match1.zero, a=match1.a, b=match1.b, parameters=p)
-            return match2.weighted_optimize()
-        # FIXME proper error handling strategy
-        except np.linalg.LinAlgError:
-            return cls.invalid(correlation_result)
-
-    @classmethod
-    def affinematch(cls, correlation_result: CorrelationResult, indices):
-        # FIXME check formatting when included in documentation
-        '''
-        This function creates a Match object from correlation_result and
-        indices for all points. The indices can be non-integer and relative to any
-        base vectors zero, a, b, including virtual ones like zero=(0, 0), a=(1, 0), b=(0, 1).
-
-        Refined values for zero, a and b that match the correlated peaks are then derived.
-
-        This match method is very fast, can be robust against a distorted field of view and
-        works without determining a lattice. It matches the full CorrelationResult and does
-        not reject random points or other outliers.
-
-        It is mathematically equivalent to calculating
-        an affine transformation, as inspired by Giulio Guzzinati
-        https://arxiv.org/abs/1902.06979
-
-        Parameters
-        ----------
-        correlation_result
-            CorrelationResult object with coordinates and weights
-        indices
-            The indices assigned to each point of the CorrelationResult.
-
-        returns:
-            Match
-        '''
-
-        match = Match(correlation_result, selector=None, zero=None, a=None, b=None, indices=indices)
-        try:
-            return match.weighted_optimize()
-        # FIXME proper error handling strategy
-        except np.linalg.LinAlgError:
-            return cls.invalid(correlation_result)
-
-    @classmethod
-    def _match_all(cls, point_selection: PointSelection, zero, a, b, parameters):
-        '''
-        Find points that can be generated from the lattice vectors with near integer indices
-
-        Return match
-        '''
-        try:
-            indices = get_indices(point_selection.refineds, zero, a, b)
-        # FIXME proper error handling strategy
-        except np.linalg.LinAlgError:
-            raise
-        rounded = np.around(indices)
-        index_diffs = np.absolute(indices - rounded)
-        # We scale the difference from index dimension to the pixel dimension
-        diffs = index_diffs * (np.linalg.norm(a), np.linalg.norm(b))
-        # We scale far-out differences with the square root of the indices
-        # to be more tolerant to small errors of a and b that result in large deviations
-        # in absolute position at high indices
-        scaled_diffs = diffs / (np.maximum(1, np.abs(indices))**0.5)
-        errors = np.linalg.norm(scaled_diffs, axis=1)
-        matched_selector = errors < parameters["tolerance"]
-        matched_indices = rounded[matched_selector].astype(np.int)
-        # remove the ones that weren't matched
-        new_selector = point_selection.new_selector(matched_selector)
-        result = cls.from_point_selection(
-            point_selection, selector=new_selector, zero=zero, a=a, b=b, indices=matched_indices
-        )
-        return result
-
-    @classmethod
-    def _do_match(cls, point_selection: PointSelection, zero, polar_vectors, parameters):
-        '''
-        Return a matrix with matches of all pairwise combinations of polar_vectors
-        '''
-        match_matrix = {}
-        # we test all pairs of candidate vectors
-        # and populate match_matrix
-        for i in range(len(polar_vectors)):
-            for j in range(i + 1, len(polar_vectors)):
-                a = polar_vectors[i]
-                b = polar_vectors[j]
-                # too parallel, not good lattice vectors
-                if not angle_check(np.array([a]), np.array([b]), parameters['min_angle']):
-                    continue
-                if a[0] > b[0]:
-                    bb = a
-                    aa = b
-                    ii = j
-                    jj = i
-                else:
-                    aa = a
-                    bb = b
-                    ii = i
-                    jj = j
-                aa, bb = make_cartesian(np.array([aa, bb]))
-
-                match = cls._match_all(
-                    point_selection=point_selection, zero=zero, a=aa, b=bb, parameters=parameters)
-                # At least three points matched
-                if len(match) > 2:
-                    match_matrix[(ii, jj)] = match
-        return match_matrix
-
-    @classmethod
-    def _find_best_vector_match(cls, point_selection: PointSelection, zero, candidates, parameters):
-        '''
-        Return the match that matches with the best figure of merit
-
-        Good properties for vectors are
-        * Matching many points in the result
-        * Orthogonal
-        * Equal length
-        * Short
-
-        The function implements a heuristic to calculate a figure of merit that boosts
-        candidates for each of the criteria that they fulfill or nearly fulfill.
-
-        FIXME the figure of merit is currently determined heuristically based on discrete
-        thresholds. A smooth function would be more elegant.
-
-        FIXME improve this on more real-world examples; define test cases.
-        '''
-        def fom(d):
-            m = d[1]
-            na = np.linalg.norm(m.a)
-            nb = np.linalg.norm(m.b)
-            # Matching many points is good
-            res = len(m)**2
-            # Boost for orthogonality
-            if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
-                res *= 5
-            elif np.abs(np.dot(m.a, m.b)) < 0.3 * na * nb:
-                res *= 2
-            # Boost fo nearly equal length
-            if np.abs(na - nb) < 0.1 * max(na, nb):
-                res *= 2
-            # The division favors short vectors
-            res /= na
-            res /= nb
-            return res
-
-        match_matrix = cls._do_match(point_selection, zero, candidates, parameters)
-        if match_matrix:
-            # we select the entry with highest figure of merit (fom)
-            candidate_index, match = max(match_matrix.items(), key=fom)
-            return match
-        else:
-            raise NotFoundException
-
-
-def calc_coords(zero, a, b, indices):
-    '''
-    Calculate coordinates from lattice vectors a, b and indices
-    '''
-    coefficients = np.array((a, b))
-    return zero + np.dot(indices, coefficients)
-
-
-def within_frame(peaks, r, fy, fx):
-    '''
-    Return a boolean vector indicating peaks that are within (r, r) and (fy - r, fx - r)
-    '''
-    selector = (peaks >= (r, r)) * (peaks < (fy - r, fx - r))
-    return selector.all(axis=-1)
-
-
-def size_filter(polar, min_delta, max_delta):
-    '''
-    Accept a list of polar vectors
-    Return a list of polar vectors with length between min_delta and max_delta
-    '''
-    select = (polar[:, 0] >= min_delta) * (polar[:, 0] <= max_delta)
-    return polar[select]
-
-
-def angle_check(p1, p2, limit):
-    '''
-    Check if p1 and p2 have an angle difference of at least limit,
-    both parallel or antiparallel
-    '''
-    diff = np.absolute(p1[:, 1] - p2[:, 1]) % np.pi
-    return (diff > limit) * (diff < (np.pi - limit))
-
-
-def make_polar_vectors(coords, parameters):
-    '''
-    Calculate all unique pairwise connecting vectors between points in coords.
-
-    The vectors are filtered with parameters["min_delta"] and parameters["max_delta"]
-    to avoid calculating for unwanted higher order or random smaller vectors
-    '''
-    # sort by x coordinate so that we have always positive x difference vectors
-    sort_indices = np.argsort(coords[:, 1])
-    coords = coords[sort_indices]
-    i, j = np.mgrid[0: len(coords), 0: len(coords)]
-    selector = j > i
-    deltas = coords[j[selector]] - coords[i[selector]]
-    polar = make_polar(deltas)
-    return size_filter(polar, parameters["min_delta"], parameters["max_delta"])
 
 
 def get_indices(points, zero, a, b):
@@ -556,7 +503,3 @@ def find_center(matrix):
     # Find neutral point: solve a*m = a
     result = np.linalg.solve((matrix - diff).T, target)
     return result[0:2]
-
-
-class NotFoundException(Exception):
-    pass

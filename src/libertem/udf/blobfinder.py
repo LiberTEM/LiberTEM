@@ -6,8 +6,9 @@ import scipy.ndimage as nd
 import matplotlib.pyplot as plt
 
 from libertem.udf import UDF
-from libertem.masks import radial_gradient, background_subtraction, sparse_template_multi_stack
+import libertem.masks as masks
 from libertem.job.masks import MaskContainer
+from libertem.utils import frame_peaks
 
 import libertem.analysis.gridmatching as grm
 
@@ -28,11 +29,25 @@ except ImportError:
 
 
 class MatchPattern:
-    def __init__(self, parameters):
-        pass
+    '''
+    Abstract base class for correlation patterns.
+
+    This class provides an API to provide a template for fast correlation-based peak finding.
+    '''
+    def __init__(self, search):
+        '''
+        Parameters
+        ----------
+
+        search : float
+            Range from the center point in px to include in the correlation, defining the size
+            of the square correlation pattern.
+            Will be ceiled to the next int for performing the correlation.
+        '''
+        self.search = search
 
     def get_crop_size(self):
-        raise NotImplementedError
+        return int(np.ceil(self.search))
 
     def get_mask(self, sig_shape):
         raise NotImplementedError
@@ -42,15 +57,29 @@ class MatchPattern:
 
 
 class RadialGradient(MatchPattern):
-    def __init__(self, parameters):
-        self.radius = parameters['radius']
-        self.padding = parameters['padding']
+    '''
+    Radial gradient from zero in the center to one at :code:`radius`.
 
-    def get_crop_size(self):
-        return int(np.ceil(self.radius * (1 + self.padding)))
+    This pattern rejects the influence of internal intensity variations of the CBED disk.
+    '''
+    def __init__(self, radius, search=None):
+        '''
+        Parameters
+        ----------
+
+        radius : float
+            Radius of the circular pattern in px
+        search : float, optional
+            Range from the center point in px to include in the correlation, 2x radius by default.
+            Defining the size of the square correlation pattern.
+        '''
+        if search is None:
+            search = 2*radius
+        self.radius = radius
+        super().__init__(search=search)
 
     def get_mask(self, sig_shape):
-        return radial_gradient(
+        return masks.radial_gradient(
             centerY=sig_shape[0] // 2,
             centerX=sig_shape[1] // 2,
             imageSizeY=sig_shape[0],
@@ -61,16 +90,35 @@ class RadialGradient(MatchPattern):
 
 
 class BackgroundSubtraction(MatchPattern):
-    def __init__(self, parameters):
-        self.radius = parameters['radius']
-        self.padding = parameters['padding']
-        self.radius_outer = parameters.get('radius_outer', self.radius*1.5)
+    '''
+    Solid circular disk surrounded with a balancing negative area
 
-    def get_crop_size(self):
-        return int(np.ceil(max(self.radius, self.radius_outer) * (1 + self.padding)))
+    This pattern rejects background and avoids false positives at positions between peaks
+    '''
+    def __init__(self, radius, search=None, radius_outer=None):
+        '''
+        Parameters
+        ----------
+
+        radius : float
+            Radius of the circular pattern in px
+        search : float, optional
+            Range from the center point in px to include in the correlation.
+            :code:`max(2*radius, radius_outer)` by default.
+            Defining the size of the square correlation pattern.
+        radius_outer : float, optional
+            Radius of the negative region in px. 1.5x radius by default.
+        '''
+        if radius_outer is None:
+            radius_outer = radius * 1.5
+        if search is None:
+            search = max(2*radius, radius_outer)
+        self.radius = radius
+        self.radius_outer = radius_outer
+        super().__init__(search=search)
 
     def get_mask(self, sig_shape):
-        return background_subtraction(
+        return masks.background_subtraction(
             centerY=sig_shape[0] // 2,
             centerX=sig_shape[1] // 2,
             imageSizeY=sig_shape[0],
@@ -82,12 +130,26 @@ class BackgroundSubtraction(MatchPattern):
 
 
 class UserTemplate(MatchPattern):
-    def __init__(self, parameters):
-        self.template = parameters['template']
-        self.padding = parameters['padding']
+    '''
+    User-defined template
+    '''
+    def __init__(self, template, search=None):
+        '''
+        Parameters
+        ----------
 
-    def get_crop_size(self):
-        return int(np.ceil(np.max(self.template.shape) / 2 * (1 + self.padding)))
+        template : numpy.ndarray
+            Correlation template as 2D numpy.ndarray
+        search : float, optional
+            Range from the center point in px to include in the correlation.
+            Half diagonal of the template by default.
+            Defining the size of the square correlation pattern.
+        '''
+        if search is None:
+            # Half diagonal
+            search = np.sqrt(template.shape[0]**2 + template.shape[1]**2) / 2
+        self.template = template
+        super().__init__(search=search)
 
     def get_mask(self, sig_shape):
         result = np.zeros((sig_shape), dtype=self.template.dtype)
@@ -119,32 +181,127 @@ class UserTemplate(MatchPattern):
         return result
 
 
-def mask_maker(parameters):
-    if parameters['mask_type'] == 'radial_gradient':
-        return RadialGradient(parameters)
-    elif parameters['mask_type'] == 'background_subtraction':
-        return BackgroundSubtraction(parameters)
-    elif parameters['mask_type'] == 'template':
-        return UserTemplate(parameters)
-    else:
-        raise ValueError("unknown mask type: %s" % parameters['mask_type'])
+class RadialGradientBackgroundSubtraction(UserTemplate):
+    '''
+    Combination of radial gradient with background subtraction
+    '''
+    def __init__(self, radius, search=None, radius_outer=None, delta=1, radial_map=None):
+        '''
+        See :meth:`~libertem.masks.radial_gradient_background_subtraction` for details.
+
+        Parameters
+        ----------
+
+        radius : float
+            Radius of the circular pattern in px
+        search : float, optional
+            Range from the center point in px to include in the correlation.
+            :code:`max(2*radius, radius_outer)` by default
+            Defining the size of the square correlation pattern.
+        radius_outer : float, optional
+            Radius of the negative region in px. 1.5x radius by default.
+        delta : float, optional
+            Width of the transition region between positive and negative in px
+        radial_map : numpy.ndarray, optional
+            Radius value of each pixel in px. This can be used to distort the shape as needed
+            or work in physical coordinates instead of pixels.
+            A suitable map can be generated with :meth:`libertem.masks.polar_map`.
+
+        Example
+        -------
+
+        >>> import matplotlib.pyplot as plt
+
+        >>> (radius, phi) = libertem.masks.polar_map(
+        ...     centerX=64, centerY=64,
+        ...     imageSizeX=128, imageSizeY=128,
+        ...     stretchY=2., angle=np.pi/4
+        ... )
+
+        >>> template = RadialGradientBackgroundSubtraction(
+        ...     radius=30, radial_map=radius)
+
+        >>> # This shows an elliptical template that is stretched
+        >>> # along the 45 ° bottom-left top-right diagonal
+        >>> plt.imshow(template.get_mask(sig_shape=(128, 128)))
+        <matplotlib.image.AxesImage object at ...>
+        >>> plt.show() # doctest: +SKIP
+        '''
+        if radius_outer is None:
+            radius_outer = radius * 1.5
+        if search is None:
+            search = max(2*radius, radius_outer)
+        if radial_map is None:
+            r = max(radius, radius_outer)
+            radial_map, _ = masks.polar_map(
+                centerX=r + 1,
+                centerY=r + 1,
+                imageSizeX=int(np.ceil(2*r + 2)),
+                imageSizeY=int(np.ceil(2*r + 2)),
+            )
+        self.radius = radius
+        self.radius_outer = radius_outer
+        self.delta = delta
+        self.radial_map = radial_map
+        template = masks.radial_gradient_background_subtraction(
+            r=self.radial_map,
+            r0=self.radius,
+            r_outer=self.radius_outer,
+            delta=self.delta
+        )
+        super().__init__(template=template, search=search)
+
+    def get_mask(self, sig_shape):
+        # Recalculate in case someone has changed parameters
+        self.template = masks.radial_gradient_background_subtraction(
+            r=self.radial_map,
+            r0=self.radius,
+            r_outer=self.radius_outer,
+            delta=self.delta
+        )
+        return super().get_mask(sig_shape)
 
 
-def get_peaks(parameters, sum_result):
-    """
-    executed on master node, calculate crop rects from average image
+def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
+    '''
+    Find peaks of the correlation between :code:`sum_result` and :code:`match_pattern`
 
-    padding : float
-        to prevent very close disks from interfering with another,
-        we add only a small fraction of radius to area that will be cropped
-    """
-    mask = mask_maker(parameters)
-    num_disks = parameters['num_disks']
-    spec_mask = mask.get_template(sig_shape=sum_result.shape)
+    This can then be used in :meth:`~libertem.analysis.fullmatch.FullMatcher.full_match`
+    to extract grid parameters, :meth:`~libertem.udf.blobfinder.run_fastcorrelation` to find
+    the position in each frame or to construct a mask to extract feature vectors with
+    :meth:`~libertem.udf.blobfinder.feature_vector`.
+
+    Parameters
+    ----------
+
+    sum_result: numpy.ndarray
+        2D result frame as correlation input
+    match_pattern : MatchPattern
+        Instance of :class:`~libertem.udf.blobfinder.MatchPattern` to correlate
+        :code:`sum_result` with
+    num_peaks : int
+        Number of peaks to find
+
+    Example
+    -------
+
+    >>> frame, _, _ = libertem.utils.generate.cbed_frame(radius=4)
+    >>> pattern = RadialGradient(radius=4)
+    >>> peaks = get_peaks(frame[0], pattern, 7)
+    >>> print(peaks)
+    [[64 64]
+     [64 80]
+     [80 80]
+     [80 64]
+     [48 80]
+     [48 64]
+     [64 96]]
+    '''
+    spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
     spec_sum = fft.rfft2(sum_result)
     corrspec = spec_mask * spec_sum
     corr = fft.fftshift(fft.irfft2(corrspec))
-    peaks = peak_local_max(corr, num_peaks=num_disks)
+    peaks = peak_local_max(corr, num_peaks=num_peaks)
     return peaks
 
 
@@ -215,8 +372,8 @@ def log_scale(data, out):
     return np.log(data - np.min(data) + 1, out=out)
 
 
-def crop_disks_from_frame(peaks, frame, mask):
-    crop_size = mask.get_crop_size()
+def crop_disks_from_frame(peaks, frame, match_pattern: MatchPattern):
+    crop_size = match_pattern.get_crop_size()
     for peak in peaks:
         slice_ = (
             slice(max(peak[0] - crop_size, 0), min(peak[0] + crop_size, frame.shape[0])),
@@ -275,44 +432,41 @@ class CorrelationUDF(UDF):
 
 
 class FastCorrelationUDF(CorrelationUDF):
+    '''
+    Fourier-based fast correlation-based refinement of peak positions within a search frame
+    for each peak.
+    '''
     def __init__(self, *args, **kwargs):
         '''
+        Parameters
+        ----------
+
         peaks : numpy.ndarray
-            Numpy array of (y, x) coordinates with peak positions to correlate
-        mask_type : str
-            Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_subtraction'
-        radius:
-            Radius of the CBED disks in px
-        padding:
-            Extra space around radius as a fraction of radius, which defines the search
-            area around a peak
-        radius_outer:
-            Only with 'background_subtraction': Radius of outer region with negative values.
-            For calculating the padding, the maximum of radius and radius_outer is used.
+            Numpy array of (y, x) coordinates with peak positions in px to correlate
+        match_pattern : MatchPattern
+            Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
-        mask = mask_maker(self.params)
+        mask = self.params.match_pattern
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
         crop_buf = zeros((2 * crop_size, 2 * crop_size), dtype="float32")
         kwargs = {
-            'mask': mask,
             'crop_buf': crop_buf,
             'template': template,
         }
         return kwargs
 
     def process_frame(self, frame):
-        mask = self.task_data.mask
+        match_pattern = self.params.match_pattern
         peaks = self.params.peaks
         crop_buf = self.task_data.crop_buf
-        crop_size = mask.get_crop_size()
+        crop_size = match_pattern.get_crop_size()
         r = self.results
         for disk_idx, (crop_part, crop_buf_slice) in enumerate(
-                crop_disks_from_frame(peaks=peaks, frame=frame, mask=mask)):
+                crop_disks_from_frame(peaks=peaks, frame=frame, match_pattern=match_pattern)):
 
             crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
             log_scale(crop_part, out=crop_buf[crop_buf_slice])
@@ -337,20 +491,14 @@ class SparseCorrelationUDF(CorrelationUDF):
     '''
     def __init__(self, *args, **kwargs):
         '''
+        Parameters
+        ----------
+
         peaks : numpy.ndarray
-            Numpy array of (y, x) coordinates with peak positions to correlate
-        mask_type : str
-            Mask to use for correlation. Currently one of 'radial_gradient' and
-            'background_subtraction'
-        radius:
-            Radius of the CBED disks in px
-        padding:
-            Extra space around radius as a fraction of radius. Can be zero for this method
-            since the shifting is performed independently of the template size.
-        radius_outer:
-            Only with 'background_subtraction': Radius of outer region with negative values.
-            For calculating the padding, the maximum of radius and radius_outer is used.
-        steps:
+            Numpy array of (y, x) coordinates with peak positions in px to correlate
+        match_pattern : MatchPattern
+            Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
+        steps : int
             The template is correlated with 2 * steps + 1 symmetrically around the peak position
             in x and y direction. This defines the maximum shift that can be
             detected. The number of calculations grows with the square of this value, that means
@@ -371,10 +519,10 @@ class SparseCorrelationUDF(CorrelationUDF):
         return super_buffers
 
     def get_task_data(self):
-        mask = mask_maker(self.params)
-        crop_size = mask.get_crop_size()
+        match_pattern = self.params.match_pattern
+        crop_size = match_pattern.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
-        template = mask.get_mask(sig_shape=size)
+        template = match_pattern.get_mask(sig_shape=size)
         steps = self.params.steps
         peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
 
@@ -385,7 +533,7 @@ class SparseCorrelationUDF(CorrelationUDF):
         offsetX = offsetX.flatten()
 
         stack = functools.partial(
-            sparse_template_multi_stack,
+            masks.sparse_template_multi_stack,
             mask_index=range(len(offsetY)),
             offsetX=offsetX,
             offsetY=offsetY,
@@ -404,7 +552,7 @@ class SparseCorrelationUDF(CorrelationUDF):
         return kwargs
 
     def process_tile(self, tile, tile_slice):
-        c = self.task_data['mask_container']
+        c = self.task_data.mask_container
         tile_t = np.zeros(
             (np.prod(tile.shape[1:]), tile.shape[0]),
             dtype=tile.dtype
@@ -436,29 +584,28 @@ class SparseCorrelationUDF(CorrelationUDF):
                 r.peak_elevations[f, p] = peak_elevation
 
 
-def run_fastcorrelation(ctx, dataset, peaks, parameters, roi=None):
+def run_fastcorrelation(ctx, dataset, peaks, match_pattern: MatchPattern, roi=None):
     peaks = peaks.astype(np.int)
-    udf = FastCorrelationUDF(peaks=peaks, **parameters)
+    udf = FastCorrelationUDF(peaks=peaks, match_pattern=match_pattern)
     return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
 
-def run_blobfinder(ctx, dataset, parameters, roi=None):
-    # FIXME implement ROI for sum analysis
+def run_blobfinder(ctx, dataset, match_pattern: MatchPattern, num_peaks, roi=None):
     sum_analysis = ctx.create_sum_analysis(dataset=dataset)
     sum_result = ctx.run(sum_analysis)
 
     sum_result = log_scale(sum_result.intensity.raw_data, out=None)
-
     peaks = get_peaks(
-        parameters=parameters,
         sum_result=sum_result,
+        match_pattern=match_pattern,
+        num_peaks=num_peaks,
     )
 
     pass_2_results = run_fastcorrelation(
         ctx=ctx,
         dataset=dataset,
         peaks=peaks,
-        parameters=parameters,
+        match_pattern=match_pattern,
         roi=roi
     )
 
@@ -482,7 +629,6 @@ class RefinementMixin():
     This allows combining arbitrary implementations of correlation-based matching with
     arbitrary implementations of the refinement by declaring an ad-hoc class that inherits from one
     subclass of RefinementMixin and one subclass of CorrelationUDF.
-
     '''
     def get_result_buffers(self):
         super_buffers = super().get_result_buffers()
@@ -519,24 +665,21 @@ class RefinementMixin():
 
 class FastmatchMixin(RefinementMixin):
     '''
-    Refinement using gridmatching.fastmatch()
+    Refinement using :meth:`~libertem.analysis.gridmatching.Matcher.fastmatch`
     '''
     def __init__(self, *args, **kwargs):
         '''
-        Parameters for gridmatching.fastmatch():
+        Parameters
+        ----------
 
-        start_a : (y, x)
-            Approximate value for "a" vector.
-        start_b : (y, x)
-            Approximate value for "b" vector.
-        start_zero : (y, x)
-            Approximate value for "zero" point (origin, zero order peak)
-        tolerance (optional):
-            Relative position tolerance for peaks to be considered matches
-        min_delta (optional):
-            Minimum length of a potential grid vector
-        max_delta:
-            Maximum length of a potential grid vector
+        matcher : libertem.analysis.gridmatching.Matcher
+            Instance of :class:`~libertem.analysis.gridmatching.Matcher`
+        start_zero : numpy.ndarray
+            Approximate value (y, x) in px for "zero" point (origin, zero order peak)
+        start_a : numpy.ndarray
+            Approximate value (y, x) in px for "a" vector.
+        start_b : numpy.ndarray
+            Approximate value (y, x) in px for "b" vector.
         '''
         super().__init__(*args, **kwargs)
 
@@ -545,7 +688,7 @@ class FastmatchMixin(RefinementMixin):
         p = self.params
         r = self.results
         for index in range(len(self.results.centers)):
-            match = grm.fastmatch(
+            match = p.matcher.fastmatch(
                 centers=r.centers[index],
                 refineds=r.refineds[index],
                 peak_values=r.peak_values[index],
@@ -553,23 +696,26 @@ class FastmatchMixin(RefinementMixin):
                 zero=p.start_zero,
                 a=p.start_a,
                 b=p.start_b,
-                parameters=p,
             )
             self.apply_match(index, match)
 
 
 class AffineMixin(RefinementMixin):
     '''
-    Refinement using gridmatching.affinematch()
+    Refinement using :meth:`~libertem.analysis.gridmatching.Matcher.affinematch`
     '''
     def __init__(self, *args, **kwargs):
         '''
-        Parameters for gridmatching.affinematch():
+        Parameters
+        ----------
 
+        matcher : libertem.analysis.gridmatching.Matcher
+            Instance of :class:`~libertem.analysis.gridmatching.Matcher`
         indices : numpy.ndarray
             List of indices [(h1, k1), (h2, k2), ...] of all peaks. The indices can be
             non-integer and relative to any base vectors, including virtual ones like
-            (1, 0); (0, 1). See documentation of gridmatching.affinematch() for details.
+            (1, 0); (0, 1). See documentation of
+            :meth:`~libertem.analysis.gridmatching.Matcher.affinematch` for details.
         '''
         super().__init__(*args, **kwargs)
 
@@ -578,7 +724,7 @@ class AffineMixin(RefinementMixin):
         p = self.params
         r = self.results
         for index in range(len(self.results.centers)):
-            match = grm.affinematch(
+            match = p.matcher.affinematch(
                 centers=r.centers[index],
                 refineds=r.refineds[index],
                 peak_values=r.peak_values[index],
@@ -588,22 +734,50 @@ class AffineMixin(RefinementMixin):
             self.apply_match(index, match)
 
 
-def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
+def run_refine(
+        ctx, dataset, zero, a, b, match_pattern: MatchPattern, matcher: grm.Matcher,
+        correlation='fast', match='fast', indices=None, steps=5, roi=None):
     '''
     Refine the given lattice for each frame by calculating approximate peak positions and refining
-    them for each frame by using the blobcorrelation and gridmatching.fastmatch().
+    them for each frame by using the blobcorrelation and methods of
+    :class:`~libertem.analysis.gridmatching.Matcher`.
 
-    indices:
+    Parameters
+    ----------
+
+    ctx : libertem.api.Context
+        Instance of a LiberTEM :class:`~libertem.api.Context`
+    dataset : libertem.io.dataset.base.DataSet
+        Instance of a :class:`~libertem.io.dataset.base.DataSet`
+    zero : numpy.ndarray
+        Approximate value for "zero" point (y, x) in px (origin, zero order peak)
+    a : numpy.ndarray
+        Approximate value for "a" vector (y, x) in px.
+    b : numpy.ndarray
+        Approximate value for "b" vector (y, x) in px.
+    match_pattern : MatchPattern
+        Instance of :class:`~MatchPattern`
+    matcher : libertem.analysis.gridmatching.Matcher
+        Instance of :class:`~libertem.analysis.gridmatching.Matcher` to perform the matching
+    correlation : {'fast', 'sparse'}, optional
+        'fast' or 'sparse' to select :class:`~FastCorrelationUDF` or :class:`~SparseCorrelationUDF`
+    match : {'fast', 'affine'}, optional
+        'fast' or 'affine' to select :class:`~FastmatchMixin` or :class:`~AffineMixin`
+    indices : numpy.ndarray, optional
         Indices to refine. This is trimmed down to positions within the frame.
         As a convenience, for the indices parameter this function accepts both shape
         (n, 2) and (2, n, m) so that numpy.mgrid[h:k, i:j] works directly to specify indices.
         This saves boilerplate code when using this function. Default: numpy.mgrid[-10:10, -10:10].
-    params['affine']:
-        If True, use affine transformation matching. This is robust against a
-        distorted field of view, but doesn't exclude outliers and requires the indices of the
-        peaks to be known. See documentation of gridmatching.affinematch() for details.
+    steps : int, optional
+        Only for correlation == 'sparse': Correlation steps.
+        See :meth:`~SparseCorelationUDF.__init__` for details.
+    roi : numpy.ndarray, optional
+        ROI for :meth:`~libertem.api.Context.run_udf`
 
-    returns:
+    Returns
+    -------
+
+    Tuple[libertem.udf.UDFData, numpy.ndarray]
         :code:`(result, used_indices)` where :code:`result` is a :class:`~libertem.udf.UDFData`
         instance based on
 
@@ -640,38 +814,50 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
             }
 
         and :code:`used_indices` are the indices that were within the frame.
+
+    Examples
+    --------
+
+    >>> dataset = ctx.load(
+    ...     filetype="memory",
+    ...     data=np.zeros(shape=(2, 2, 128, 128), dtype=np.float32)
+    ... )
+    >>> (result, used_indices) = run_refine(
+    ...     ctx, dataset,
+    ...     zero=(64, 64), a=(1, 0), b=(0, 1),
+    ...     match_pattern=RadialGradient(radius=4),
+    ...     matcher=grm.Matcher()
+    ... )
+
     '''
     if indices is None:
-        indices = np.mgrid[-10:10, -10:10]
-    s = indices.shape
-    # Output of mgrid
-    if (len(s) == 3) and (s[0] == 2):
-        indices = np.concatenate(indices.T)
-    # List of (i, j) pairs
-    elif (len(s) == 2) and (s[1] == 2):
-        pass
-    else:
-        raise ValueError(
-            "Shape of indices is %s, expected (n, 2) or (2, n, m)" % str(indices.shape))
+        indices = np.mgrid[-10:11, -10:11]
 
     (fy, fx) = tuple(dataset.shape.sig)
 
-    peaks = grm.calc_coords(zero, a, b, indices).astype('int')
+    indices, peaks = frame_peaks(
+        fy=fy, fx=fx, zero=zero, a=a, b=b,
+        r=match_pattern.search, indices=indices
+    )
+    peaks = peaks.astype('int')
 
-    selector = grm.within_frame(peaks, params['radius'], fy, fx)
-
-    peaks = peaks[selector]
-    indices = indices[selector]
-
-    if params.get('method', 'fastcorrelation') == 'fastcorrelation':
+    if correlation == 'fast':
         method = FastCorrelationUDF
-    elif params['method'] == 'sparse':
+    elif correlation == 'sparse':
         method = SparseCorrelationUDF
-
-    if params.get('affine', False):
-        mixin = AffineMixin
     else:
+        raise ValueError(
+            "Unknown correlation method %s. Supported are 'fast' and 'sparse'" % correlation
+        )
+
+    if match == 'affine':
+        mixin = AffineMixin
+    elif match == 'fast':
         mixin = FastmatchMixin
+    else:
+        raise ValueError(
+            "Unknown match method %s. Supported are 'fast' and 'affine'" % match
+        )
 
     # The inheritance order matters: FIRST the mixin, which calls
     # the super class methods.
@@ -684,7 +870,9 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
         start_zero=zero,
         start_a=a,
         start_b=b,
-        **params
+        match_pattern=match_pattern,
+        matcher=matcher,
+        steps=steps
     )
 
     result = ctx.run_udf(
@@ -695,7 +883,7 @@ def run_refine(ctx, dataset, zero, a, b, params, indices=None, roi=None):
     return (result, indices)
 
 
-def feature_vector(imageSizeX, imageSizeY, peaks, parameters):
+def feature_vector(imageSizeX, imageSizeY, peaks, match_pattern: MatchPattern):
     '''
     This function generates a sparse mask stack to extract a feature vector.
 
@@ -710,20 +898,19 @@ def feature_vector(imageSizeX, imageSizeY, peaks, parameters):
     Parameters
     ----------
 
-    imageSizeX, imageSizeY : int
-        Frame size
-    peaks : numpy.ndarray of shape (n, 2) with integer type
-        Peak positions
-    parameters : dict
-        Dictionary with blobfinder parameters. Relevant are parameters that control the template.
+    imageSizeX,imageSizeY : int
+        Frame size in px
+    peaks : numpy.ndarray
+        Peak positions in px as numpy.ndarray of shape (n, 2) with integer type
+    match_pattern : MatchPattern
+        Instance of :class:`~MatchPattern`
     '''
-    mask = mask_maker(parameters)
-    crop_size = mask.get_crop_size()
-    return sparse_template_multi_stack(
+    crop_size = match_pattern.get_crop_size()
+    return masks.sparse_template_multi_stack(
         mask_index=range(len(peaks)),
         offsetX=peaks[:, 1] - crop_size,
         offsetY=peaks[:, 0] - crop_size,
-        template=mask.get_mask((2*crop_size + 1, 2*crop_size + 1)),
+        template=match_pattern.get_mask((2*crop_size + 1, 2*crop_size + 1)),
         imageSizeX=imageSizeX,
         imageSizeY=imageSizeY,
     )

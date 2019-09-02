@@ -4,7 +4,7 @@ User-defined functions
 ======================
 
 A common case for analyzing big EM data sets is running a reduction operation
-on each individual detector frame or other small subsets of a data set and then
+on each individual detector frame (or other small subsets) of a data set and then
 combining the results of these reductions to form the complete result. This should
 cover a wide range of use cases, from simple mathematical operations (for
 example statistics) to complex image processing and analysis, like feature extraction.
@@ -491,12 +491,11 @@ You can also access a flat array that is not filled up with :code:`nan` using
    res['buf1'].raw_data
 
 
-Debugging
----------
+More about UDFs
+---------------
 
-See also the :ref:`general section on debugging <debugging udfs>`.
-
-TODO: document common pitfalls here.
+Now would be a good time to :doc:`read about advanced UDF functionality <udf/advanced>`
+or the :ref:`general section on debugging <debugging udfs>`.
 
 See also
 --------

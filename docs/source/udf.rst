@@ -180,7 +180,7 @@ large buffers can lead to significant decline in performance.
 Implementing the processing function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now to the actual "meat" of the processing: implementing
+Now to the actual core of the processing: implementing
 :meth:`~libertem.udf.UDFFrameMixin.process_frame`. The method signature looks like this:
 
 .. code-block:: python

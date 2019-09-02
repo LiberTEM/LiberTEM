@@ -485,9 +485,9 @@ class UDF(UDFBase):
         >>> udf = MyUDF(aux_data=aux1)
         >>> res = ctx.run_udf(dataset=dataset, udf=udf)
 
-        process_frame for frame 7 received a view of aux_data with values [21., 22., 23.]:
+        process_frame for frame (0, 7) received a view of aux_data with values [21., 22., 23.]:
 
-        >>> res.aux_dump[7]
+        >>> res['aux_dump'].data[0, 7]
         '[21. 22. 23.]'
         """
         buf = BufferWrapper(kind, extra_shape, dtype)

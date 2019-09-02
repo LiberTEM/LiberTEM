@@ -494,7 +494,7 @@ class Context:
 
         Returns
         -------
-        UDFData:
+        dict:
             Return value of the UDF containing the result buffers
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)

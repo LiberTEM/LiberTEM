@@ -1,6 +1,8 @@
 User-defined functions: advanced topics
 =======================================
 
+.. _tiled:
+
 Tiled processing
 ----------------
 
@@ -124,4 +126,116 @@ Precedence
 ----------
 
 The UDF interface looks for methods in the order :meth:`~libertem.udf.UDFTileMixin.process_tile`, :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. For now, the first in that order is executed. In the future, composition of UDFs may allow to use different methods depending on the circumstances. :meth:`~libertem.udf.UDFTileMixin.process_tile` is the most general method and allows by-frame and by-partition processing as well.
+
+AUX data
+--------
+
+If a parameter is an instance of
+:class:`~libertem.common.buffers.BufferWrapper`, the UDF interface will
+interpret it as auxiliary data. It will set the views for each
+tile/frame/partition accordingly so that accessing the parameter returns a view
+of the auxiliary data matching the data portion that is currently being
+processed. That way, it is possible to pass parameters individually for each
+frame or to mask the signal dimension. The :meth:`~libertem.udf.UDF.aux_data`
+class method helps to wrap data into a suitable
+:class:`~libertem.common.buffers.BufferWrapper`.
+
+For masks in the signal dimension that are used for dot products in combination
+with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows
+to use more advanced slicing and transformation methods targeted at preparing
+mask stacks for optimal dot product performance.
+
+Task data
+---------
+
+A UDF can generate task-specific intermediate data on the worker nodes by
+defining a :meth:`~libertem.udf.UDF.get_task_data` method. The result is
+available as an instance of :class:`~libertem.udf.UDFData` in
+:code:`self.task_data`. Depending on the circumstances, this can be more
+efficient than making the data available as a parameter since it avoids
+pickling, network transport and unpickling.
+
+This non-trivial example from
+:class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates
+a :class:`~libertem.job.masks.MaskContainer` based on the parameters in
+:code:`self.params`. This :class:`~libertem.job.masks.MaskContainer` is then
+available as :code:`self.task_data['mask_container']` within the processing
+functions.
+
+.. code-block:: python
+
+    def get_task_data(self):
+        mask = mask_maker(self.params)
+        crop_size = mask.get_crop_size()
+        size = (2 * crop_size + 1, 2 * crop_size + 1)
+        template = mask.get_mask(sig_shape=size)
+        steps = self.params.steps
+        peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
+
+        offsetY = self.params.peaks[:, 0, np.newaxis, np.newaxis] + peak_offsetY - crop_size
+        offsetX = self.params.peaks[:, 1, np.newaxis, np.newaxis] + peak_offsetX - crop_size
+
+        offsetY = offsetY.flatten()
+        offsetX = offsetX.flatten()
+
+        stack = functools.partial(
+            sparse_template_multi_stack,
+            mask_index=range(len(offsetY)),
+            offsetX=offsetX,
+            offsetY=offsetY,
+            template=template,
+            imageSizeX=self.meta.dataset_shape.sig[1],
+            imageSizeY=self.meta.dataset_shape.sig[0]
+        )
+        # CSC matrices in combination with transposed data are fastest
+        container = MaskContainer(mask_factories=stack, dtype=np.float32,
+            use_sparse='scipy.sparse.csc')
+
+        kwargs = {
+            'mask_container': container,
+            'crop_size': crop_size,
+        }
+        return kwargs
+
+.. _auto UDF:
+
+Auto UDF
+--------
+
+The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map`
+method allow to run simple functions that accept a frame as the only parameter
+with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc
+without defining an UDF class. For more advanced processing, such as custom
+merge functions, post-processing or performance optimization through tiled
+processing, defining an UDF class is required.
+
+As an alternative to Auto UDF, you can use the
+:meth:`~libertem.contrib.daskadapter.make_dask_array` method to create
+a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from
+a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See
+:ref:`Integration with Dask arrays<daskarray>` for more details.
+
+The :class:`~libertem.udf.AutoUDF` class determines the output shape and type
+by calling the function with a mock-up frame of the same type and shape as
+a real detector frame and converting the return value to a numpy array. The
+:code:`extra_shape` and :code:`dtype` parameters for the result buffer are
+derived automatically from this numpy array.
+
+Additional constant parameters can be passed to the function via
+:meth:`functools.partial`, for example. The return value should be much smaller
+than the input size for this to work efficiently.
+
+Example: Calculate sum over the last signal axis.
+
+.. code-block:: python
+
+   result = ctx.map(
+      dataset=dataset,
+      f=functools.partial(np.sum, axis=-1)
+   )
+
+   # or alternatively:
+   udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
+   result = self.run_udf(dataset=dataset, udf=udf)
+
 

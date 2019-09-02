@@ -36,11 +36,13 @@ For example, to calculate the sum over the last signal axis:
 
 The function specified via the :code:`f` parameter is called for each frame / diffraction pattern.
 
-See `Auto UDF`_ below for details. This is most suited for simple functions; once you have
+See :ref:`auto UDF` for details. This is most suited for simple functions; once you have
 parameters or want to re-use some data across function calls, you should create a
 :class:`~libertem.udf.UDF` subclass instead.
 
 Read on for a more in-detail view of UDFs and their capabilities.
+
+.. _`how UDFs work`:
 
 How UDFs works
 --------------
@@ -74,7 +76,7 @@ run in the worker processes, and the merge function is run in the main process, 
 results, every time the results for a partition are available. 
 
 In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two more methods
-available for overriding, to work on larger units of data at the same time:
+available for overriding, to work on larger/different units of data at the same time:
 :meth:`~libertem.udf.UDFTileMixin.process_tile`
 and :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. They can be used for optimizing
 some operations, and are documented in the :doc:`advanced topics <udf/advanced>` section.
@@ -114,7 +116,7 @@ The buffer name is later used to access the buffer via :code:`self.results.<buff
 which returns a view into a numpy array. For this to work, the name has to be a valid Python
 identifier.
 
-Examples of buffer declarations (this is a :code:`dict` as it would be returned by
+Examples of buffer declarations (this is a :code:`dict` as it should be returned by
 :meth:`~libertem.udf.UDF.get_result_buffers`):
 
 .. code-block:: python
@@ -199,7 +201,7 @@ in the signal dimensions:
     from libertem.executor.inline import InlineJobExecutor
 
     ctx = api.Context(executor=InlineJobExecutor())
-    dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
+    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
    
 .. testcode::
 
@@ -235,23 +237,103 @@ in the signal dimensions:
       dataset=dataset,
    )
 
-   print(res['pixelsum'].shape)
+   # to access the named buffer as a numpy array:
+   res['pixelsum'].data
+
+On a 4D data set, this operation is roughly equivalent to :code:`np.sum(arr, axis=(2, 3))`.
+
+As :ref:`described above <how UDFs work>`, data from multiple partitions is
+processed in parallel. That also means that we need a way of merging partial
+results into the final result. In the example above, we didn't need to do anything:
+we only have a :code:`kind="nav"` buffer, where merging just means assigning the
+result of one partition to the right slice in the final result. This is done by
+the default implementation of :meth:`~libertem.udf.UDF.merge`. 
+
+In case of :code:`kind="sig"` buffers and the corresponding reduction, assignment would
+just overwrite the result from the previous partition with the one from the current partition,
+and is not the correct operation. So let's have a look at the merge method:
+
+.. code-block:: python
+
+   class YourUDF(UDF):
+      def merge(self, dest, src):
+         pass
+
+:code:`dest` is the result of all previous merge calls, and :code:`src` is the
+result from a single new partition. Your :code:`merge` implementation should read from both
+:code:`dest` and :code:`src` and write the result back to :code:`dest`.
+
+Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge` function:
+
+.. testsetup:: *
+
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
+   
+.. testcode::
+
+   import numpy as np
+   from libertem.udf import UDF
 
 
-Here is another example, demonstrating :code:`kind="sig"` buffers and the merge function:
+   class MaxUDF(UDF):
+      def get_result_buffers(self):
+         """
+         Describe the buffers we need to store our results:
+         kind="sig" means we want to have a value for each coordinate
+         in the signal dimensions (i.e. a value for each pixel of the diffraction patterns).
+         We name our buffer 'maxbuf'.
+         """
+         return {
+            'maxbuf': self.buffer(
+               kind="sig", dtype=self.meta.dataset_dtype
+            )
+         }
+
+      def process_frame(self, frame):
+         """
+         In this function, we have a frame and the buffer `maxbuf` available, which we declared
+         above. This function is called for all frames / diffraction patterns in the data set.
+         The maxbuf is a partial result, and all partial results will later be merged (see below).
+
+         In this case, we determine the maximum from the current maximum and the current frame, for
+         each pixel in the diffraction pattern.
+
+         Notes:
+
+         - You cannot rely on any particular order of frames this function is called in.
+         - Your function should be pure, that is, it should not have side effects and should
+         only depend on it's input parameters.
+         """
+         self.results.maxbuf[:] = np.maximum(frame, self.results.maxbuf)
+
+      def merge(self, dest, src):
+         """
+         merge two partial results, from src into dest
+         """
+         dest['maxbuf'][:] = np.maximum(dest['maxbuf'], src['maxbuf'])
+
+   res = ctx.run_udf(
+      udf=MaxUDF(),
+      dataset=dataset,
+   )
+
+   # to access the named buffer as a numpy array:
+   res['maxbuf'].data
 
 
-.. include:: udf/max.py
-   :code:
-
-
-For a more complete example, please have a look at the functions implemented in the sub-modules of :code:`libertem.udf`,
+For more complete examples, you can also have a look at the functions
+implemented in the sub-modules of :code:`libertem.udf`,
 for example :code:`libertem.udf.blobfinder`.
 
 Passing parameters
-------------------
+~~~~~~~~~~~~~~~~~~
 
-By default, keyword arguments that are passed to the constructor of a UDF are available as properties of :code:`self.params`:
+By default, keyword arguments that are passed to the constructor of a UDF are
+available as properties of :code:`self.params`:
 
 .. code-block:: python
 
@@ -263,83 +345,136 @@ By default, keyword arguments that are passed to the constructor of a UDF are av
 
     udf = MyUDF(peaks=peaks, ...)
 
+Running UDFs
+------------
 
-AUX data
-~~~~~~~~
+As shown in the examples above, the :meth:`~libertem.api.Context.run_udf` method
+of :class:`~libertem.api.Context` is used to run UDFs. Usually, you only need to
+pass an instance of your UDF and the dataset you want to run on:
 
-If a parameter is an instance of :class:`~libertem.common.buffers.BufferWrapper`, the UDF interface will interpret it as auxiliary data. It will set the views for each tile/frame/partition accordingly so that accessing the parameter returns a view of the auxiliary data matching the data portion that is currently being processed. That way, it is possible to pass parameters individually for each frame or to mask the signal dimension. The :meth:`~libertem.udf.UDF.aux_data` class method helps to wrap data into a suitable :class:`~libertem.common.buffers.BufferWrapper`.
+.. testsetup:: *
 
-For masks in the signal dimension that are used for dot products in combination with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows to use more advanced slicing and transformation methods targeted at preparing mask stacks for optimal dot product performance.
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+   from libertem.udf import UDF
 
-Task data
----------
+   ctx = api.Context(executor=InlineJobExecutor())
+   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
 
-A UDF can generate task-specific intermediate data on the worker nodes by defining a :meth:`~libertem.udf.UDF.get_task_data` method. The result is available as an instance of :class:`~libertem.udf.UDFData` in :code:`self.task_data`. Depending on the circumstances, this can be more efficient than making the data available as a parameter since it avoids pickling, network transport and unpickling.
+   class YourUDF(UDF):
+      def get_result_buffers(self):
+         return {'buf1': self.buffer(kind="nav")}
 
-This non-trivial example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates a :class:`~libertem.job.masks.MaskContainer` based on the parameters in :code:`self.params`. This :class:`~libertem.job.masks.MaskContainer` is then available as :code:`self.task_data['mask_container']` within the processing functions.
+      def process_frame(self, frame):
+         self.results.buf1[:] = 42
+   
+.. testcode::
 
-.. code-block:: python
+    udf = YourUDF(param1="value1")
+    res = ctx.run_udf(udf=udf, dataset=dataset)
 
-    def get_task_data(self):
-        mask = mask_maker(self.params)
-        crop_size = mask.get_crop_size()
-        size = (2 * crop_size + 1, 2 * crop_size + 1)
-        template = mask.get_mask(sig_shape=size)
-        steps = self.params.steps
-        peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
-
-        offsetY = self.params.peaks[:, 0, np.newaxis, np.newaxis] + peak_offsetY - crop_size
-        offsetX = self.params.peaks[:, 1, np.newaxis, np.newaxis] + peak_offsetX - crop_size
-
-        offsetY = offsetY.flatten()
-        offsetX = offsetX.flatten()
-
-        stack = functools.partial(
-            sparse_template_multi_stack,
-            mask_index=range(len(offsetY)),
-            offsetX=offsetX,
-            offsetY=offsetY,
-            template=template,
-            imageSizeX=self.meta.dataset_shape.sig[1],
-            imageSizeY=self.meta.dataset_shape.sig[0]
-        )
-        # CSC matrices in combination with transposed data are fastest
-        container = MaskContainer(mask_factories=stack, dtype=np.float32,
-            use_sparse='scipy.sparse.csc')
-
-        kwargs = {
-            'mask_container': container,
-            'crop_size': crop_size,
-        }
-        return kwargs
+:meth:`~libertem.api.Context.run_udf` returns a :code:`dict`, having the buffer
+names as keys (as defined in :meth:`~libertem.udf.UDF.get_result_buffers`) and
+:class:`~libertem.common.buffers.BufferWrapper` instances as values. You
+can use these in any place you would use a numpy array, for example as an argument to
+numpy functions, or you can explicitly convert them to numpy arrays by accessing
+the :code:`.data` attribute, or by calling `numpy.array`:
 
 
-Auto UDF
---------
+.. testsetup:: *
 
-The :class:`~libertem.udf.AutoUDF` class and :meth:`~libertem.api.Context.map` method allow to run simple functions that accept a frame as the only parameter with an auto-generated :code:`kind="nav"` result buffer over a dataset ad-hoc without defining an UDF class. For more advanced processing, such as custom merge functions, post-processing or performance optimization through tiled processing, defining an UDF class is required.
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+   from libertem.udf import UDF
 
-As an alternative to Auto UDF, you can use the :meth:`~libertem.contrib.daskadapter.make_dask_array` method to create a `dask.array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See :ref:`Integration with Dask arrays<daskarray>` for more details.
+   ctx = api.Context(executor=InlineJobExecutor())
+   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
 
-The :class:`~libertem.udf.AutoUDF` class determines the output shape and type by calling the function with a mock-up frame of the same type and shape as a real detector frame and converting the return value to a numpy array. The :code:`extra_shape` and :code:`dtype` parameters for the result buffer are derived automatically from this numpy array.
+   class YourUDF(UDF):
+      def get_result_buffers(self):
+         return {'buf1': self.buffer(kind="nav")}
 
-Additional constant parameters can be passed to the function via :meth:`functools.partial`, for example. The return value should be much smaller than the input size for this to work efficiently.
+      def process_frame(self, frame):
+         self.results.buf1[:] = 42
 
-Example: Calculate sum over the last signal axis.
+   udf = YourUDF()
+   
+.. testcode::
 
-.. code-block:: python
+   import numpy as np
 
-      result = ctx.map(
-            dataset=dataset,
-            f=functools.partial(np.sum, axis=-1)
-      )
+   res = ctx.run_udf(udf=udf, dataset=dataset)
+   # convert to numpy array, assuming we declared a buffer with name `buf1`:
+   arr = res['buf1'].data
+   arr = np.array(res['buf1'])
 
-      # or alternatively:
+   # or directly treat as array:
+   np.sum(res['buf1'])
 
-      udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
-      result = self.run_udf(dataset=dataset, udf=udf)
+In addition, you can pass the :code:`roi` (region of interest) parameter, to
+run your UDF on a selected subset of data. :code:`roi` should be a numpy array
+containing a bool mask, having the shape of the navigation axes of the dataset.
+For example, to process a random subset of a 4D-STEM dataset with shape
+:code:`(16, 16, 32, 32)`:
 
-.. _tiled:
+.. testsetup:: *
+
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+   from libertem.udf import UDF
+
+   ctx = api.Context(executor=InlineJobExecutor())
+   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
+
+   class YourUDF(UDF):
+      def get_result_buffers(self):
+         return {'buf1': self.buffer(kind="nav")}
+
+      def process_frame(self, frame):
+         self.results.buf1[:] = 42
+
+   udf = YourUDF()
+   
+.. testcode::
+
+   import numpy as np
+
+   roi = np.random.choice(a=[0, 1], size=(16, 16))
+   ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
+
+Note that the result array only contains values for the selected indices, all
+other indices are set to :code:`nan` (or, if the dtype doesn't support nan,
+some other, not further defined value). It is best to limit further processing
+to the same :code:`roi`.
+
+You can also access a flat array that is not filled up with :code:`nan` using
+:code:`.raw_data`:
+
+.. testsetup:: *
+
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+   from libertem.udf import UDF
+
+   ctx = api.Context(executor=InlineJobExecutor())
+   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
+
+   class YourUDF(UDF):
+      def get_result_buffers(self):
+         return {'buf1': self.buffer(kind="nav")}
+
+      def process_frame(self, frame):
+         self.results.buf1[:] = 42
+
+   udf = YourUDF()
+   
+   import numpy as np
+   roi = np.random.choice(a=[0, 1], size=(16, 16))
+
+.. testcode::
+
+   res = ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
+   res['buf1'].raw_data
 
 
 Debugging

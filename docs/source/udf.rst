@@ -26,13 +26,27 @@ The easiest way of running a function over your data is using the
 
 For example, to calculate the sum over the last signal axis:
 
-.. code-block:: python
+.. testsetup:: *
 
-      >>>result = ctx.map(
-      >>>      dataset=dataset,
-      >>>      f=functools.partial(np.sum, axis=-1)
-      >>>)
-      >>>result
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+
+   ctx = api.Context(executor=InlineJobExecutor())
+   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
+
+.. testcode::
+
+   import functools
+   import numpy as np
+
+   result = ctx.map(
+      dataset=dataset,
+      f=functools.partial(np.sum, axis=-1)
+   )
+   # access the result as numpy array:
+   np.array(result)
+   # or, alternatively:
+   result.data
 
 The function specified via the :code:`f` parameter is called for each frame / diffraction pattern.
 

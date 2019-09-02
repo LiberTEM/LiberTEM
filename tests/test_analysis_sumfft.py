@@ -1,8 +1,7 @@
 import numpy as np
 
 from libertem.analysis.sumfft import SumfftAnalysis
-
-from utils import MemoryDataSet
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 def test_sum_fft_analysis_defaults(lt_ctx):

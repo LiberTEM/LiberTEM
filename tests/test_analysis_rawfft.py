@@ -1,8 +1,7 @@
 import numpy as np
 
 from libertem.analysis.rawfft import PickFFTFrameAnalysis
-
-from utils import MemoryDataSet
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 def test_pick_fft_defaults(lt_ctx):

@@ -1,11 +1,11 @@
 GSoC 2019 ideas
 ===============
 
-LiberTEM is participating in the `Google Summer of Code <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python Software Foundation <http://python-gsoc.org/>`_. As a student, you can get paid by Google for three months, have fun working on an interesting open source software project, gain real-world development experience, and do something that looks nice on your CV!
+LiberTEM is participating in the `Google Summer of Code <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python Software Foundation <https://python-gsoc.org/>`_. As a student, you can get paid by Google for three months, have fun working on an interesting open source software project, gain real-world development experience, and do something that looks nice on your CV!
 
 * Check out our description and project ideas below
 * Contact us if you'd like to work on LiberTEM
-* Prepare a `proposal <http://python-gsoc.org/index.html#apply>`_ together with us
+* Prepare a `proposal <https://python-gsoc.org/index.html#apply>`_ together with us
 * You submit your application at the Google Summer of Code homepage to the Python Software Foundation organization, naming LiberTEM as the sub-organization.
 
 Why LiberTEM
@@ -78,7 +78,7 @@ Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/Li
 Writing your GSoC application
 -----------------------------
 
-The PYTHON GSOC website has a good overview for the application process: http://python-gsoc.org/index.html#apply http://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal! 
+The PYTHON GSOC website has a good overview for the application process: https://python-gsoc.org/index.html#apply https://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal! 
 
 To write your application, `Mailman <https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt>`_ gives a few general ideas. For us it is most important to know why you'd like to contribute to LiberTEM, what your experience level is and what you'd like to learn in order to find a good match for a project. Generally, we like targeted applications and applicants who contact us directly early-on.
 
@@ -117,7 +117,7 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     *Primary contact:* Alex (@sk1p)
 
 4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
-    Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like http://fatiherikli.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
+    Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like https://react-designer.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
 
     *Skills:* Programming in TypeScript, GUI development.
     

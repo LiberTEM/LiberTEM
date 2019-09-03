@@ -161,7 +161,7 @@ Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment 
     REM with the same command line
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
-See also: http://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
+See also: https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
 
 Code Style
 ----------

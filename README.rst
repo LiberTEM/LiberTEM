@@ -50,7 +50,7 @@ Applications
 
 Please see `the applications section <https://libertem.github.io/LiberTEM/applications.html>`_ of our documentation for details!
 
-The Python API and user-defined functions (UDFs) can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory <https://github.com/LiberTEM/LiberTEM/blob/master/examples>`_.
+The Python API and user-defined functions (UDFs) can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory < https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 If you are having trouble running the examples, please let us know, either by filing an issue
 or by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 
@@ -71,7 +71,7 @@ LiberTEM currently opens most file formats used for pixelated STEM:
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files
 - `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
 - Nanomegas .blo block files
-- `Gatan K2 IS <http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
+- `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Gatan DM3 and DM4: See `Issue #291 <https://github.com/LiberTEM/LiberTEM/issues/291>`_ Please contact us if you would like to process such data!
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)

@@ -23,11 +23,11 @@ The following people in alphabetical order contributed to the LiberTEM project i
 Notable Upstream Projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `Numpy <https://www.numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <http://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
+`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `Numpy <https://numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React <https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic UI <https://semantic-ui.com/>`_
 
-Not dependencies, but notable related projects or useful tools: `Hyperspy <http://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, `pyXem <https://pyxem.github.io/pyxem/>`_
+Not dependencies, but notable related projects or useful tools: `Hyperspy <https://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, `pyXem <https://pyxem.github.io/pyxem-website/>`_
 
 Funding
 ~~~~~~~
@@ -97,6 +97,6 @@ Forschungszentrum Jülich, Ernst-Ruska Centrum
     :align: left
     :width: 100px
     :alt: Forschungszentrum Jülich GmbH
-    :target: http://www.fz-juelich.de/er-c/DE/Home/home_node.html
+    :target: https://www.fz-juelich.de/er-c/EN/Home/home_node.html
 
 Forschungszentrum Jülich is supporting LiberTEM with funding for personnel, access to its infrastructure and administrative support.

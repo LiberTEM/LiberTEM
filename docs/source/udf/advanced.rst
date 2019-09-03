@@ -14,8 +14,11 @@ You can often perform `loop nest optimization <https://en.wikipedia.org/wiki/Loo
 to improve the `locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
 for example using `numba <https://numba.pydata.org/>`_, or using an optimized numpy function.
 
-These optimizations are only possible if you have access to data from more than one frame. For
-very large frames, another problem arises: a stack of frames would be too large to efficiently handle,
+As an example, applying a gain map and substracting dark frames can be up to an order of magnitude
+faster when properly optimized. These optimizations are only possible if you have access to data
+from more than one frame.
+
+For very large frames, another problem arises: a stack of frames would be too large to efficiently handle,
 as it would no longer fit into even the L3 cache, which is the largest cache in most CPUs. For these
 cases, we support a tiled reading and processing strategy. Tiled means we slice the frame into
 disjoint rectangular regions. A tile then is the data from a single rectangular region

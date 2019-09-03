@@ -17,9 +17,9 @@ class FEMAnalysis(BaseAnalysis):
     def get_udf_results(self, udf_results):
 
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results.intensity,
+            AnalysisResult(raw_data=udf_results['intensity'].data,
                            visualized=visualize_simple(
-                               udf_results.intensity.reshape(self.dataset.shape.nav)),
+                               udf_results['intensity'].data.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
                            desc="result from SD calculation over ring"),
         ])

@@ -50,6 +50,8 @@ class AnalysisResultSet(object):
         ))
 
     def __getitem__(self, k):
+        if isinstance(k, str):
+            return self.__getattr__(k)
         return self.results[k]
 
     def __len__(self):

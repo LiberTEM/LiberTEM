@@ -777,9 +777,9 @@ def run_refine(
     Returns
     -------
 
-    Tuple[libertem.udf.UDFData, numpy.ndarray]
-        :code:`(result, used_indices)` where :code:`result` is a :class:`~libertem.udf.UDFData`
-        instance based on
+    Tuple[Dict[str, BufferWrapper], numpy.ndarray]
+        :code:`(result, used_indices)` where :code:`result` is a :code:`dict`
+        mapping buffer names to result buffers based on
 
         .. code-block:: python
 
@@ -828,6 +828,8 @@ def run_refine(
     ...     match_pattern=RadialGradient(radius=4),
     ...     matcher=grm.Matcher()
     ... )
+    >>> result['centers'].data  #doctest: +ELLIPSIS
+    array(...)
 
     '''
     if indices is None:

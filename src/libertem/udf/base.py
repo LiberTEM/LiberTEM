@@ -122,6 +122,9 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
+    def as_dict(self):
+        return dict(self.items())
+
     def get_proxy(self):
         return MappingProxyType({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
@@ -482,9 +485,9 @@ class UDF(UDFBase):
         >>> udf = MyUDF(aux_data=aux1)
         >>> res = ctx.run_udf(dataset=dataset, udf=udf)
 
-        process_frame for frame 7 received a view of aux_data with values [21., 22., 23.]:
+        process_frame for frame (0, 7) received a view of aux_data with values [21., 22., 23.]:
 
-        >>> res.aux_dump[7]
+        >>> res['aux_dump'].data[0, 7]
         '[21. 22. 23.]'
         """
         buf = BufferWrapper(kind, extra_shape, dtype)
@@ -598,7 +601,7 @@ class UDFRunner:
 
         self._udf.clear_views()
 
-        return self._udf.results
+        return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         meta = UDFMeta(
@@ -621,11 +624,11 @@ class UDFRunner:
                 src=part_results.get_proxy()
             )
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
         else:
             # yield at least one result (which should be empty):
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
 
     def _roi_for_partition(self, roi, partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

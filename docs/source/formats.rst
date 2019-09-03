@@ -38,6 +38,8 @@ dimension last, so a value of "42, 21" would mean the same as specifying (42, 21
 Python API, setting y=42 and x=21. Note that the GUI currently only support 4D data sets,
 while the scripting API should handle more general n-dimensional data.
 
+See also :doc:`the concepts section <concepts>`.
+
 Common parameters
 ~~~~~~~~~~~~~~~~~
 

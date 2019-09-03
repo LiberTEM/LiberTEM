@@ -34,6 +34,8 @@ in the output of `libertem-server`. You can also try
 If an analysis based on the exception alone is inconclusive,
 you can try to reproduce the problem using the Python API and follow the instructions below.
 
+.. _`debugging udfs`:
+
 Debugging UDFs or other Python code
 -----------------------------------
 

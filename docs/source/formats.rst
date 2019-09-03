@@ -24,7 +24,7 @@ pattern is:
 So, you need to specify the data set type, the path, and dataset-specific arguments. These
 arguments are documented below.
 
-For the full list of supported file formats and type names, see the documentation of :meth:`libertem.api.Context.load`.
+For the full list of supported file formats and type names, see the documentation of :meth:`libertem.api.Context.load` or `Supported Formats`_ below.
 
 .. _`Loading using the GUI`:
 

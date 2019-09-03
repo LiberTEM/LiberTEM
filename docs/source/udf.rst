@@ -108,7 +108,7 @@ into a common accumulator for all frames, keeping the shape of a single frame,
 or reducing over the signal axes and keeping the navigation axes.
 
 A UDF can implement one of these reductions, or even combinations. To handle indexing for you,
-LiberTEM needs to know about the sturcture of your reduction. You can build this structure in the
+LiberTEM needs to know about the structure of your reduction. You can build this structure in the
 :meth:`~libertem.udf.UDF.get_result_buffers` method, by declaring one or more buffers.
 
 Declaring buffers

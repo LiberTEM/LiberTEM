@@ -497,10 +497,13 @@ More about UDFs
 Now would be a good time to :doc:`read about advanced UDF functionality <udf/advanced>`
 or the :ref:`general section on debugging <debugging udfs>`.
 
-See also
---------
-
 .. toctree::
-   concepts
-   udf/reference
+   :hidden:
+
    udf/advanced
+   udf/reference
+
+.. seealso::
+
+   :doc:`udf/reference`
+      API documentation for UDFs

@@ -50,7 +50,7 @@ Applications
 
 Please see `the applications section <https://libertem.github.io/LiberTEM/applications.html>`_ of our documentation for details!
 
-The Python API and user-defined functions (UDFs) can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory < https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
+The Python API and user-defined functions (UDFs) can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 If you are having trouble running the examples, please let us know, either by filing an issue
 or by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 

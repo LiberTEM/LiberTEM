@@ -38,7 +38,7 @@ dimension last, so a value of "42, 21" would mean the same as specifying (42, 21
 Python API, setting y=42 and x=21. Note that the GUI currently only support 4D data sets,
 while the scripting API should handle more general n-dimensional data.
 
-See also :doc:`the concepts section <concepts>`.
+See also :ref:`the concepts section <concepts>`.
 
 Common parameters
 ~~~~~~~~~~~~~~~~~
@@ -58,44 +58,7 @@ There are some common parameters across data set types:
 Supported Formats
 ~~~~~~~~~~~~~~~~~
 
-LiberTEM supports the following file formats out of the box:
+LiberTEM supports the following file formats out of the box, see links for details:
 
-Merlin Medipix (MIB)
---------------------
-
-.. autoclass:: libertem.io.dataset.mib.MIBDataSet
-
-Raw binary files
-----------------
-
-.. autoclass:: libertem.io.dataset.raw.RawFileDataSet
-
-EMPAD
------
-
-.. autoclass:: libertem.io.dataset.empad.EMPADDataSet
-
-K2IS
-----
-
-.. autoclass:: libertem.io.dataset.k2is.K2ISDataSet
-
-FRMS6
------
-
-.. autoclass:: libertem.io.dataset.frms6.FRMS6DataSet
-
-BLO
----
-
-.. autoclass:: libertem.io.dataset.blo.BloDataSet
-
-SER
----
-
-.. autoclass:: libertem.io.dataset.ser.SERDataSet
-
-HDF5
-----
-
-.. autoclass:: libertem.io.dataset.hdf5.H5DataSet
+:ref:`mib`, :ref:`raw binary`, :ref:`empad`, :ref:`k2is`, :ref:`frms6`, :ref:`blo`,
+:ref:`ser`, :ref:`hdf5`.

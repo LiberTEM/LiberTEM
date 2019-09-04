@@ -62,12 +62,4 @@ Having a fine-grained analysis with many orders calculated as a function of radi
 Reference
 ~~~~~~~~~
 
-.. automodule:: libertem.udf.FEM
-   :members:
-   :undoc-members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.radialfourier
-   :members:
-   :undoc-members:
-   :special-members: __init__
+See :ref:`fem api` and :ref:`radial fourier api` for API references!

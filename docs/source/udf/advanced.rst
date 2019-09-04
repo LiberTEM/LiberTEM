@@ -1,3 +1,5 @@
+.. _`advanced udf`:
+
 User-defined functions: advanced topics
 =======================================
 

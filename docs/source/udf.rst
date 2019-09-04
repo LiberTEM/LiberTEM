@@ -15,7 +15,7 @@ I/O, the details of buffer management and so on. This corresponds to
 a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_,
 where the intermediate re-keying and shuffling step is omitted.
 
-It can be helpful to review :doc:`some general concepts <concepts>` before
+It can be helpful to review :ref:`some general concepts <concepts>` before
 reading the following sections.
 
 Getting started
@@ -85,7 +85,7 @@ In pseudocode, data is processed in the following way:
       merge(dest=result, src=partition_result)
 
 In reality, the loop over partitions is run in parallel using multiple worker processes,
-potentially :doc:`on multiple computers <architecture>`. The loop over individual frames is
+potentially :ref:`on multiple computers <architecture>`. The loop over individual frames is
 run in the worker processes, and the merge function is run in the main process, accumulating the
 results, every time the results for a partition are available. 
 
@@ -93,7 +93,7 @@ In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two 
 available for overriding, to work on larger/different units of data at the same time:
 :meth:`~libertem.udf.UDFTileMixin.process_tile`
 and :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. They can be used for optimizing
-some operations, and are documented in the :doc:`advanced topics <udf/advanced>` section.
+some operations, and are documented in the :ref:`advanced topics <advanced udf>` section.
 
 Implementing a UDF
 ------------------
@@ -494,16 +494,15 @@ You can also access a flat array that is not filled up with :code:`nan` using
 More about UDFs
 ---------------
 
-Now would be a good time to :doc:`read about advanced UDF functionality <udf/advanced>`
+Now would be a good time to :ref:`read about advanced UDF functionality <advanced udf>`
 or the :ref:`general section on debugging <debugging udfs>`.
 
 .. toctree::
    :hidden:
 
    udf/advanced
-   udf/reference
 
 .. seealso::
 
-   :doc:`udf/reference`
+   :ref:`udf reference`
       API documentation for UDFs

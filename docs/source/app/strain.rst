@@ -46,20 +46,4 @@ Karina Ruzaeva implemented the correlation routines and introduced feature vecto
 Reference
 ~~~~~~~~~
 
-.. automodule:: libertem.udf.blobfinder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.gridmatching
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.fullmatch
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :special-members: __init__
+See :ref:`blobfinder API reference <blobfinder api>` and :ref:`matching API reference <matching api>` for details!

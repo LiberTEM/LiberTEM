@@ -271,7 +271,8 @@ Before (using a release candidate package)
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
-* Install release candidate packages from GitHub in a clean environment
+* Install release candidate packages in a clean environment
+  (for example: :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue

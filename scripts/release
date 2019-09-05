@@ -210,6 +210,7 @@ def upload_to_zenodo(verbose, parent, token, sandbox_token):
         "--tarball=%s" % sdist,
         "--url=%s" % url,
         "--parent=%s" % parent,
+        "--mask-zenodo-exception",
     ])
 
     if verbose and out:

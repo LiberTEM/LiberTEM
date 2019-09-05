@@ -65,7 +65,8 @@ and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>
 File formats
 ------------
 
-LiberTEM currently opens most file formats used for pixelated STEM:
+LiberTEM currently opens most file formats used for pixelated STEM. See `our general information on loading data <https://libertem.github.io/LiberTEM/formats.html>`_
+and `format-specific documentation <https://libertem.github.io/LiberTEM/reference/dataset.html#formats>`_ for more information!
 
 - Raw binary files
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files

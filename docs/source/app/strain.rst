@@ -43,7 +43,6 @@ Acknowledgments
 
 Karina Ruzaeva implemented the correlation routines and introduced feature vectors and clustering. Alexander Clausen developed the architecture, in particular the interface for user-defined functions that allows to implement such complex processing schemes on a distributed system easily and at the same time with optimal performance. Dieter Weber implemented the grid matching and refinement code.
 
-Reference
-~~~~~~~~~
+.. rubric:: Reference
 
 See :ref:`blobfinder API reference <blobfinder api>` and :ref:`matching API reference <matching api>` for details!

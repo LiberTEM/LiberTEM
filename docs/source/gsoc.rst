@@ -84,7 +84,7 @@ To write your application, `Mailman <https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM
 
 We are happy to work with you for writing up a project idea! For Python GSoC it is a general requirement to already contribute a pull request to a sub-organization before submitting a project idea. Please contact us if you'd like some help with that! `Improving our examples <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_ in code, description and presentation would be both relatively easy and quite useful for us. The examples are currently lagging a bit behind recent changes in the `API <https://github.com/LiberTEM/LiberTEM/blob/master/src/libertem/api.py>`_. You could hunt down discrepancies and suggest updates. Please contact us for the corresponding data to run the examples!
 
-Project Ideas
+Project ideas
 -------------
 
 These are somewhat larger work items. Some of them can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
@@ -92,7 +92,7 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
 1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one.
     We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
 
-    *Skills:* Communication, software development methodology, Python and numpy programming.
+    *Skills:* Communication, software development methodology, Python and NumPy programming.
     
     *Domain knowledge:* Math, statistics, image processing and physics are of advantage.
 
@@ -137,14 +137,14 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
 6. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
-    *Skills:* Python and numpy programming, profiling. 
+    *Skills:* Python and NumPy programming, profiling. 
     
     *Domain knowledge:* --
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
 7. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
-    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
+    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require NumPy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
 
     *Skills:* Systematic thinking and abstraction, Python and TypeScript programming, web development. 
     

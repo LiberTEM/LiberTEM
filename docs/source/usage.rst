@@ -1,11 +1,11 @@
 .. _`usage documentation`:
 
-GUI Usage
+GUI usage
 =========
 
 .. include:: _single_node.rst
 
-Starting the LiberTEM Server
+Starting the LiberTEM server
 ----------------------------
 
 LiberTEM is based on a client-server architecture. To use the LiberTEM GUI, you need to

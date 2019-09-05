@@ -32,23 +32,23 @@ or conda environments.
 Using virtualenv
 ################
 
-You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system wide Python 3.6 or 3.7 installation. For Mac OS X, using conda
+You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system-wide Python 3.6 or 3.7 installation. For Mac OS X, using conda
 is recommended.
 
 To create a new virtualenv for LiberTEM, you can use the following command:
 
 .. code-block:: shell
 
-    $ virtualenv -p python3.6 ~/libertem-venv/
+    $ virtualenv -p python3.7 ~/libertem-venv/
 
-Replace `~/libertem-venv/` with any path where you would like to create the venv. You can then activate
+Replace :code:`~/libertem-venv/` with any path where you would like to create the venv. You can then activate
 the virtualenv with
 
 .. code-block:: shell
     
     $ source ~/libertem-venv/bin/activate
 
-Afterwards, your shell prompt should be prefixed with `(libertem)` to indicate that the environment is active:
+Afterwards, your shell prompt should be prefixed with :code:`(libertem)` to indicate that the environment is active:
 
 .. code-block:: shell
 
@@ -62,7 +62,7 @@ If you are often working with virtualenvs, using a convenience wrapper like
 Using conda
 ###########
 
-If you are already using conda, or if you don't have a system-wide Python 3.6 installation,
+If you are already using conda, or if you don't have a system-wide Python 3.6 or 3.7 installation,
 you can create a conda environment for LiberTEM.
 
 This section assumes that you have `installed conda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
@@ -72,7 +72,7 @@ You can create a new conda environment to install LiberTEM with the following co
 
 .. code-block:: shell
 
-    $ conda create -n libertem python=3.6
+    $ conda create -n libertem python=3.7
 
 To install or later run LiberTEM, activate the environment with the following command:
 
@@ -80,7 +80,7 @@ To install or later run LiberTEM, activate the environment with the following co
 
     $ source activate libertem
 
-Afterwards, your shell prompt should be prefixed with `(libertem)` to indicate that the environment is active:
+Afterwards, your shell prompt should be prefixed with :code:`(libertem)` to indicate that the environment is active:
 
 .. code-block:: shell
 
@@ -127,7 +127,7 @@ continue by reading the :ref:`usage documentation`.
 PyTorch
 ~~~~~~~
 
-LiberTEM can use `PyTorch <https://pytorch.org/>`_ for processing if it is available. Otherwise it uses numpy as a fallback. We've experienced up to 2x speed-ups with PyTorch compared to a default numpy installation. For that reason we recommend `installing PyTorch <https://pytorch.org/>`_. We currently use PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
+LiberTEM can use `PyTorch <https://pytorch.org/>`_ for processing if it is available. Otherwise it uses NumPy as a fallback. We've experienced up to 2x speed-ups with PyTorch compared to a default NumPy installation. For that reason we recommend `installing PyTorch <https://pytorch.org/>`_. We currently use PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
 
 You can let pip install PyTorch automatically by using the torch variant, for example from PyPi:
 

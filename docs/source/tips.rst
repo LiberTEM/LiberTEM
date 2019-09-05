@@ -3,7 +3,7 @@ Tips and tricks
 
 .. _`ssh forwarding`:
 
-Using SSH Forwarding
+Using SSH forwarding
 --------------------
 
 To securely connect to a remote instance of LiberTEM, you can use SSH forwarding. For example with conda:

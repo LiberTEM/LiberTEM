@@ -39,7 +39,7 @@ be merged and you can delete the branch you created for the pull request.
 
 See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
 
-Running the Tests
+Running the tests
 -----------------
 
 Our tests are written using pytest. For running them in a repeatable manner, we are using tox.
@@ -163,7 +163,7 @@ Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment 
 
 See also: https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
 
-Code Style
+Code style
 ----------
 
 We try to keep our code `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ -compliant, with
@@ -184,7 +184,7 @@ Docstrings
 
 The `NumPy docstring guide <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_ is our guideline for formatting docstrings. We are testing docstring code examples in Continuous Integration using `doctest <https://docs.python.org/3/library/doctest.html>`_. You can test files by hand by running :code:`pytest --doctest-modules <pathspec>`.
 
-Building the Documentation
+Building the documentation
 --------------------------
 
 Documentation building is also done with tox, see above for the basics. It requires manual `installation of pandoc <https://pandoc.org/installing.html>`_ on the build system since pandoc can't be installed reliably using pip.

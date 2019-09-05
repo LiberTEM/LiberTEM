@@ -20,10 +20,10 @@ The following people in alphabetical order contributed to the LiberTEM project i
 
 .. include:: contributors.rst
 
-Notable Upstream Projects
+Notable upstream projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `Numpy <https://numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
+`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `NumPy <https://numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React <https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic UI <https://semantic-ui.com/>`_
 

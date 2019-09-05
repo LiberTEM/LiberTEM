@@ -1,14 +1,14 @@
-.. _`application API`:
+.. _`application api`:
 
 Application-specific API
 ========================
 
 This section documents application-specific code.
 
-.. _`fem api`:
-
 Amorphous materials
 -------------------
+
+.. _`fem api`:
 
 Fluctuation EM
 ~~~~~~~~~~~~~~

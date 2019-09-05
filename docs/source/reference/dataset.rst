@@ -1,3 +1,5 @@
+.. _`dataset api`:
+
 Data Set API
 ------------
 
@@ -10,6 +12,7 @@ See :ref:`our documentation on loading data <loading data>` for a high-level int
    :undoc-members:
    :special-members: __init__
 
+.. _`formats`:
 .. _`mib`:
 
 Merlin Medipix (MIB)

@@ -13,3 +13,10 @@ Reference
    masks
    internals
    dask
+
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

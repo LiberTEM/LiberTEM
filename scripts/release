@@ -324,21 +324,10 @@ def prepare_upload(verbose):
     """
     Prepare for upload. This includes:
 
-     * running readme_to_html.py
      * building sdist and wheel
     """
     if verbose:
         print("preparing for upload")
-        print("calling readme_to_html.py")
-
-    out = subprocess.check_output([
-        "python", join(HERE, "readme_to_html.py"),
-        join(BASE_DIR, 'README.rst'),  # src
-        join(BASE_DIR, 'packaging', 'README.rst'),  # dest
-    ])
-
-    if verbose and out:
-        print(out.decode("utf-8"))
 
     if verbose:
         print("building wheel and sdist")
@@ -346,6 +335,9 @@ def prepare_upload(verbose):
     out = subprocess.check_output([
         "python", "setup.py", "sdist", "bdist_wheel"
     ], cwd=BASE_DIR)
+
+    if verbose and out:
+        print(out.decode("utf-8"))
 
 
 def upload_to_pypi(verbose, user, password):

@@ -8,6 +8,7 @@ import click
 import html5lib
 from docutils.core import publish_string
 from docutils.parsers.rst import roles
+import xml
 
 
 def fake_cite(name, rawtext, text, lineno, inliner,
@@ -24,10 +25,29 @@ roles.register_local_role("cite", fake_cite)
 def extract(html_string):
     document = html5lib.parse(html_string, namespaceHTMLElements=False)
     elem = document.find(".//div[@class='document']")
-    res = []
-    for child in elem:
-        res.append(html5lib.serialize(child))
-    return "\n".join(res)
+
+    def walk(elem, drop_first_p):
+        # Convert <h1></h1> to <p><strong></strong></p>
+        if elem.tag == 'h1':
+            text = elem.text
+            elem.clear()
+            elem.tag = 'p'
+            strong = xml.etree.ElementTree.Element('strong')
+            strong.text = text
+            elem.append(strong)
+        # recurse
+        for child in elem:
+            # The first <p> contains the badges which don't work well on zenodo
+            # FIXME removing the first <p> in the document is fragile, but for now the easiest path.
+            # Do a proper solution if this stops working.
+            if drop_first_p and child.tag == 'p':
+                elem.remove(child)
+                drop_first_p = False
+            walk(child, drop_first_p)
+
+    walk(elem, True)
+    res = html5lib.serialize(elem)
+    return res
 
 
 @click.command()

@@ -32,9 +32,14 @@ Not dependencies, but notable related projects or useful tools: `Hyperspy <http:
 Funding
 ~~~~~~~
 
+.. |clearfloat|  raw:: html
+
+    <div class="clearer"></div>
+
 LiberTEM kindly acknowledges funding and support from the following sources:
 
-**ERC Proof-of-Concept grant VIDEO**
+ERC Proof-of-Concept grant VIDEO
+................................
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -46,7 +51,10 @@ This project has received funding from the European Research Council (ERC) under
 2020 research and innovation programme 
 (`grant agreement No 780487 <https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics>`_).
 
-**CritCat**
+|clearfloat|
+
+CritCat
+.......
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -55,7 +63,10 @@ This project has received funding from the European Research Council (ERC) under
 
 This project has received funding from the European Union's Horizon 2020 research and innovation programme under `grant agreement No 686053 <http://www.critcat.eu/>`_.
 
-**ESTEEM3**
+|clearfloat|
+
+ESTEEM3
+.......
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -65,8 +76,22 @@ This project has received funding from the European Union's Horizon 2020 researc
 This project has received funding from the European Union's Horizon 2020 
 research and innovation programme under grant agreement No 823717 – `ESTEEM3 <https://cordis.europa.eu/project/rcn/220936/factsheet/en>`_.
 
+|clearfloat|
 
-**Forschungszentrum Jülich, Ernst-Ruska Centrum**
+Google Summer of Code
+.....................
+
+.. image:: images/GSoC-icon-192.png
+    :align: left
+    :width: 100px
+    :alt: Google Summer of Code logo
+
+We kindly acknowledge funding from `Google Summer of Code 2019 <https://summerofcode.withgoogle.com/>`_ under the `umbrella of the Python software foundation <https://python-gsoc.org/>`_.
+
+|clearfloat|
+
+Forschungszentrum Jülich, Ernst-Ruska Centrum
+.............................................
 
 .. image:: ./images/FZJ.jpg
     :align: left

@@ -78,7 +78,7 @@ Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/Li
 Writing your GSoC application
 -----------------------------
 
-The PYTHON GSOC website has a good overview for the application process: https://python-gsoc.org/index.html#apply https://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal! 
+The PYTHON GSOC website has a good overview for the application process: https://python-gsoc.org/index.html#apply https://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal!
 
 To write your application, `Mailman <https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt>`_ gives a few general ideas. For us it is most important to know why you'd like to contribute to LiberTEM, what your experience level is and what you'd like to learn in order to find a good match for a project. Generally, we like targeted applications and applicants who contact us directly early-on.
 

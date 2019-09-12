@@ -15,7 +15,7 @@ class PixelsumUDF(UDF):
             )
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         # the last tile contains only two frames:
         assert tile.shape[0] in (7, 2)
 
@@ -49,7 +49,7 @@ class PixelsumForCropped(UDF):
             )
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         # the last tile contains only two frames:
         assert tile.shape[0] in (7, 2)
         assert len(tile.shape) == 3
@@ -121,7 +121,8 @@ def test_roi_extra_dimension_shape(lt_ctx):
                 # )
             }
 
-        def process_tile(self, tile, tile_slice):
+        def process_tile(self, tile):
+            tile_slice = self.meta.slice
             self.results.test[:] = np.ones(tuple(tile_slice.shape.nav)) * (1, 2)
             framecount = np.prod(tuple(tile_slice.shape.nav))
             self.results.test2[:] += np.ones(tuple(tile_slice.shape.sig) + (2, )) * framecount
@@ -154,7 +155,7 @@ class FrameCounter(UDF):
             'counter': self.buffer(kind="by_tile_position", dtype="int64"),
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         self.results.counter += 1
 
     def merge(self, dest, src):

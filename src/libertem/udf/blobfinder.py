@@ -554,7 +554,8 @@ class SparseCorrelationUDF(CorrelationUDF):
         }
         return kwargs
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
+        tile_slice = self.meta.slice
         c = self.task_data.mask_container
         tile_t = np.zeros(
             (np.prod(tile.shape[1:]), tile.shape[0]),

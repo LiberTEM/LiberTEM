@@ -34,7 +34,7 @@ class EchoTiledUDF(UDF):
             )
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         self.results.echo[:] = self.params.aux
         w = np.sum(tile, axis=(-1, -2)) * self.params.aux[..., 0]
         self.results.weighted[:] = w

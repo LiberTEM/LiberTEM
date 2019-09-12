@@ -7,7 +7,7 @@ import numpy as np
 
 from libertem.job.base import Task
 from libertem.common.buffers import BufferWrapper
-from libertem.common import Shape
+from libertem.common import Shape, Slice
 
 
 class UDFMeta:
@@ -22,6 +22,22 @@ class UDFMeta:
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
+        self._slice = None
+
+    @property
+    def slice(self):
+        """
+        Returns
+        -------
+        Slice
+            A libertem.common.Slice instance that describes the location within the
+            dataset with navigation dimension flattened and reduced to the ROI.
+        """
+        return self._slice
+
+    @slice.setter
+    def slice(self, new_slice):
+        self._slice = new_slice
 
     @property
     def partition_shape(self) -> Shape:
@@ -183,6 +199,7 @@ class UDFFrameMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Parameters
         ----------
@@ -198,7 +215,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -207,6 +224,7 @@ class UDFTileMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Parameters
         ----------
@@ -214,10 +232,6 @@ class UDFTileMixin:
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
-
-        tile_slice : Slice
-            A libertem.common.Slice instance that describes the location within the
-            dataset with navigation dimension flattened and reduced to the ROI.
         """
         raise NotImplementedError()
 
@@ -236,6 +250,7 @@ class UDFPartitionMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Note
         ----
@@ -312,6 +327,9 @@ class UDFBase:
 
     def set_meta(self, meta):
         self.meta = meta
+
+    def set_slice(self, slice_):
+        self.meta.slice = slice_
 
     def get_method(self):
         if hasattr(self, 'process_tile'):
@@ -550,13 +568,22 @@ class UDFRunner:
         for tile in tiles:
             if method == 'tile':
                 self._udf.set_views_for_tile(partition, tile)
-                self._udf.process_tile(tile.data, tile.tile_slice)
+                self._udf.set_slice(tile.tile_slice)
+                self._udf.process_tile(tile.data)
             elif method == 'frame':
+                tile_slice = tile.tile_slice
                 for frame_idx, frame in enumerate(tile.data):
+                    frame_slice = Slice(
+                        origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
+                        shape=Shape((1,) + tuple(tile_slice.shape)[1:],
+                                    sig_dims=tile_slice.shape.sig.dims),
+                    )
+                    self._udf.set_slice(frame_slice)
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
             elif method == 'partition':
                 self._udf.set_views_for_tile(partition, tile)
+                self._udf.set_slice(partition.slice)
                 self._udf.process_partition(tile.data)
 
         if hasattr(self._udf, 'postprocess'):

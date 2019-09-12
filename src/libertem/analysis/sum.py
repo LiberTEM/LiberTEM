@@ -12,7 +12,7 @@ class SumUDF(UDF):
             'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         self.results.intensity[:] += np.sum(tile, axis=0)
 
     def merge(self, dest, src):

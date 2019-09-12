@@ -6,7 +6,7 @@ import cloudpickle
 import numpy as np
 
 from libertem.job.base import Task
-from libertem.common.buffers import BufferWrapper
+from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 
 
@@ -140,10 +140,12 @@ class UDFData:
 
     def allocate_for_part(self, partition, roi):
         """
-        allocate all BufferWrapper instances in this namespace
+        allocate all BufferWrapper instances in this namespace.
+        for pre-allocated buffers (i.e. aux data), only set shape and roi
         """
-        for k, buf in self._get_buffers(filter_allocated=True):
+        for k, buf in self._get_buffers():
             buf.set_shape_partition(partition, roi)
+        for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
     def allocate_for_full(self, dataset, roi):
@@ -166,6 +168,10 @@ class UDFData:
                 raise ValueError("should not happen")
             else:
                 self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
+
+    def new_for_partition(self, partition, roi):
+        for k, buf in self._get_buffers():
+            self._data[k] = buf.new_for_partition(partition, roi)
 
     def clear_views(self):
         self._views = {}
@@ -371,6 +377,15 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
+    def copy_for_partition(self, partition, roi):
+        """
+        create a copy of the UDF, specifically slicing aux data to the
+        specified pratition and roi
+        """
+        new_instance = self.__class__(**self._kwargs)
+        new_instance.params.new_for_partition(partition, roi)
+        return new_instance
+
     def get_task_data(self):
         """
         Initialize per-task data.
@@ -493,7 +508,7 @@ class UDF(UDFBase):
         >>> res['aux_dump'].data[0, 7]
         '[21. 22. 23.]'
         """
-        buf = BufferWrapper(kind, extra_shape, dtype)
+        buf = AuxBufferWrapper(kind, extra_shape, dtype)
         buf.set_buffer(data)
         return buf
 
@@ -647,7 +662,7 @@ class UDFRunner:
 
     def _make_udf_tasks(self, dataset, roi):
         for idx, partition in enumerate(dataset.get_partitions()):
-            udf = self._udf.copy()
+            udf = self._udf.copy_for_partition(partition, roi)
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
                 if np.count_nonzero(roi_for_part) == 0:

@@ -4,7 +4,9 @@
             "title": "LiberTEM/LiberTEM: ",
             "upload_type": "software",
             "grants": [
-                {"id": "10.13039/501100000780::780487"}
+                {"id": "10.13039/501100000780::780487"},
+                {"id": "10.13039/501100000780::686053"},
+                {"id": "10.13039/501100000780::823717"}
             ],
             "keywords": ["STEM", "TEM", "pixelated STEM", "4D STEM", "high-throughput", "electron microscopy"],
             "related_identifiers": [
@@ -14,7 +16,8 @@
                 }
             ],
             "access_right": "open",
-            "license": "GPL-3.0"
+            "license": "GPL-3.0",
+            "notes": "We kindly acknowledge funding from Google Summer of Code 2019 under the umbrella of the Python software foundation.\n\nForschungszentrum Jülich is supporting LiberTEM with funding for personnel, access to its infrastructure and administrative support."
         }
 
     }

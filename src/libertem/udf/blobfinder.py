@@ -312,6 +312,9 @@ def refine_center(center, r, corrmap):
     if r <= 0:
         return (y, x)
     else:
+        # FIXME See and compare with Extension of Phase Correlation to Subpixel Registration
+        # Hassan Foroosh
+        # That one or a close/similar/cited one
         cutout = corrmap[y-r:y+r+1, x-r:x+r+1]
         m = np.min(cutout)
         ry, rx = nd.measurements.center_of_mass(cutout - m)

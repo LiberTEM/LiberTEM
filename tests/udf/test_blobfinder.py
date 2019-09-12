@@ -119,6 +119,10 @@ def test_run_refine_fastmatch(lt_ctx):
         blobfinder.UserTemplate(template=template)
     ]
 
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
     for match_pattern in match_patterns:
         print("refining using template %s" % type(match_pattern))
         (res, real_indices) = blobfinder.run_refine(
@@ -162,6 +166,10 @@ def test_run_refine_affinematch(lt_ctx):
 
     affine_indices = peaks - zero
 
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
         dataset=dataset,
@@ -196,6 +204,10 @@ def test_run_refine_sparse(lt_ctx):
 
     matcher = grm.Matcher()
     match_pattern = blobfinder.RadialGradient(radius=radius)
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
 
     (res, real_indices) = blobfinder.run_refine(
         ctx=lt_ctx,
@@ -250,6 +262,15 @@ def test_custom_template_fuzz():
 
         mask_y = np.random.choice(integers)
         mask_x = np.random.choice(integers)
+
+        print("center_y:", center_y)
+        print("center_x:", center_x)
+        print("size_y:", size_y)
+        print("size_x:", size_x)
+        print("radius:", radius)
+        print("search:", search)
+        print("mask_y:", mask_y)
+        print("mask_x:", mask_x)
 
         template = m.radial_gradient(
             centerX=center_x, centerY=center_y,

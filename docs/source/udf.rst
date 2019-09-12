@@ -9,13 +9,13 @@ combining the results of these reductions to form the complete result. This shou
 cover a wide range of use cases, from simple mathematical operations (for
 example statistics) to complex image processing and analysis, like feature extraction.
 
-The user-defined functions (UDF) interface of LiberTEM allows users to run their
+The user-defined functions (UDF) interface of LiberTEM allows you to run your
 own reduction functions easily, without having to worry about parallelizing,
 I/O, the details of buffer management and so on. This corresponds to
 a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_,
 where the intermediate re-keying and shuffling step is omitted.
 
-It can be helpful to review :doc:`some general concepts <concepts>` before
+It can be helpful to review :ref:`some general concepts <concepts>` before
 reading the following sections.
 
 Getting started
@@ -43,7 +43,7 @@ For example, to calculate the sum over the last signal axis:
       dataset=dataset,
       f=functools.partial(np.sum, axis=-1)
    )
-   # access the result as numpy array:
+   # access the result as NumPy array:
    np.array(result)
    # or, alternatively:
    result.data
@@ -53,8 +53,6 @@ The function specified via the :code:`f` parameter is called for each frame / di
 See :ref:`auto UDF` for details. This is most suited for simple functions; once you have
 parameters or want to re-use some data across function calls, you should create a
 :class:`~libertem.udf.UDF` subclass instead.
-
-Read on for a more in-detail view of UDFs and their capabilities.
 
 .. _`how UDFs work`:
 
@@ -85,7 +83,7 @@ In pseudocode, data is processed in the following way:
       merge(dest=result, src=partition_result)
 
 In reality, the loop over partitions is run in parallel using multiple worker processes,
-potentially :doc:`on multiple computers <architecture>`. The loop over individual frames is
+potentially :ref:`on multiple computers <architecture>`. The loop over individual frames is
 run in the worker processes, and the merge function is run in the main process, accumulating the
 results, every time the results for a partition are available. 
 
@@ -93,7 +91,7 @@ In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two 
 available for overriding, to work on larger/different units of data at the same time:
 :meth:`~libertem.udf.UDFTileMixin.process_tile`
 and :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. They can be used for optimizing
-some operations, and are documented in the :doc:`advanced topics <udf/advanced>` section.
+some operations, and are documented in the :ref:`advanced topics <advanced udf>` section.
 
 Implementing a UDF
 ------------------
@@ -103,11 +101,11 @@ The workflow for implementing a UDF starts with subclassing
 :meth:`~libertem.udf.UDF.get_result_buffers` method and 
 :meth:`~libertem.udf.UDFFrameMixin.process_frame`.
 
-There are two very common patterns for reductions, either reducing over the navigation axes
+There are two very common patterns for reductions, reducing over the navigation axes
 into a common accumulator for all frames, keeping the shape of a single frame,
 or reducing over the signal axes and keeping the navigation axes.
 
-A UDF can implement one of these reductions, or even combinations. To handle indexing for you,
+A UDF can implement one of these reductions or combinations. To handle indexing for you,
 LiberTEM needs to know about the structure of your reduction. You can build this structure in the
 :meth:`~libertem.udf.UDF.get_result_buffers` method, by declaring one or more buffers.
 
@@ -127,7 +125,7 @@ buffer names to buffer declarations. You can create a buffer declaration by call
 the :meth:`~libertem.udf.UDF.buffer` method.
 
 The buffer name is later used to access the buffer via :code:`self.results.<buffername>`,
-which returns a view into a numpy array. For this to work, the name has to be a valid Python
+which returns a view into a NumPy array. For this to work, the name has to be a valid Python
 identifier.
 
 Examples of buffer declarations (this is a :code:`dict` as it should be returned by
@@ -169,7 +167,7 @@ Examples of buffer declarations (this is a :code:`dict` as it should be returned
 
 See below for some more real-world examples.
 
-All numpy dtypes are supported for buffers. That includes the :code:`object`
+All NumPy dtypes are supported for buffers. That includes the :code:`object`
 dtype for arbitrary Python variables. The item just has to be pickleable with
 :code:`cloudpickle`.
 
@@ -251,7 +249,7 @@ in the signal dimensions:
       dataset=dataset,
    )
 
-   # to access the named buffer as a numpy array:
+   # to access the named buffer as a NumPy array:
    res['pixelsum'].data
 
 On a 4D data set, this operation is roughly equivalent to :code:`np.sum(arr, axis=(2, 3))`.
@@ -335,7 +333,7 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
       dataset=dataset,
    )
 
-   # to access the named buffer as a numpy array:
+   # to access the named buffer as a NumPy array:
    res['maxbuf'].data
 
 
@@ -390,9 +388,9 @@ pass an instance of your UDF and the dataset you want to run on:
 :meth:`~libertem.api.Context.run_udf` returns a :code:`dict`, having the buffer
 names as keys (as defined in :meth:`~libertem.udf.UDF.get_result_buffers`) and
 :class:`~libertem.common.buffers.BufferWrapper` instances as values. You
-can use these in any place you would use a numpy array, for example as an argument to
-numpy functions, or you can explicitly convert them to numpy arrays by accessing
-the :code:`.data` attribute, or by calling `numpy.array`:
+can use these in any place you would use a NumPy array, for example as an argument to
+NumPy functions, or you can explicitly convert them to NumPy arrays by accessing
+the :code:`.data` attribute, or by calling :meth:`numpy.array`:
 
 
 .. testsetup:: *
@@ -418,7 +416,7 @@ the :code:`.data` attribute, or by calling `numpy.array`:
    import numpy as np
 
    res = ctx.run_udf(udf=udf, dataset=dataset)
-   # convert to numpy array, assuming we declared a buffer with name `buf1`:
+   # convert to NumPy array, assuming we declared a buffer with name `buf1`:
    arr = res['buf1'].data
    arr = np.array(res['buf1'])
 
@@ -426,7 +424,7 @@ the :code:`.data` attribute, or by calling `numpy.array`:
    np.sum(res['buf1'])
 
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
-run your UDF on a selected subset of data. :code:`roi` should be a numpy array
+run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
 containing a bool mask, having the shape of the navigation axes of the dataset.
 For example, to process a random subset of a 4D-STEM dataset with shape
 :code:`(16, 16, 32, 32)`:
@@ -494,16 +492,15 @@ You can also access a flat array that is not filled up with :code:`nan` using
 More about UDFs
 ---------------
 
-Now would be a good time to :doc:`read about advanced UDF functionality <udf/advanced>`
+Now would be a good time to :ref:`read about advanced UDF functionality <advanced udf>`
 or the :ref:`general section on debugging <debugging udfs>`.
 
 .. toctree::
    :hidden:
 
    udf/advanced
-   udf/reference
 
 .. seealso::
 
-   :doc:`udf/reference`
+   :ref:`udf reference`
       API documentation for UDFs

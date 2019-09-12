@@ -20,21 +20,26 @@ The following people in alphabetical order contributed to the LiberTEM project i
 
 .. include:: contributors.rst
 
-Notable Upstream Projects
+Notable upstream projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `Numpy <https://www.numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <http://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
+`Python <https://www.python.org>`_, `PyData universe <https://pydata.org/>`_, `Dask.distributed <https://distributed.dask.org/>`_, `PyTorch <https://pytorch.org/>`_, `NumPy <https://numpy.org/>`_, `OpenBLAS <https://www.openblas.net/>`_, `Click <https://click.palletsprojects.com/>`_, `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil <https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_, `Ncempy`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React <https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic UI <https://semantic-ui.com/>`_
 
-Not dependencies, but notable related projects or useful tools: `Hyperspy <http://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, `pyXem <https://pyxem.github.io/pyxem/>`_
+Not dependencies, but notable related projects or useful tools: `Hyperspy <https://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache Spark <https://spark.apache.org/>`_, `Hadoop file system <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_, `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO <https://github.com/axboe/fio>`_, `pyXem <https://pyxem.github.io/pyxem-website/>`_
 
 Funding
 ~~~~~~~
 
+.. |clearfloat|  raw:: html
+
+    <div class="clearer"></div>
+
 LiberTEM kindly acknowledges funding and support from the following sources:
 
-**ERC Proof-of-Concept grant VIDEO**
+ERC Proof-of-Concept grant VIDEO
+................................
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -46,7 +51,10 @@ This project has received funding from the European Research Council (ERC) under
 2020 research and innovation programme 
 (`grant agreement No 780487 <https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics>`_).
 
-**CritCat**
+|clearfloat|
+
+CritCat
+.......
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -55,7 +63,10 @@ This project has received funding from the European Research Council (ERC) under
 
 This project has received funding from the European Union's Horizon 2020 research and innovation programme under `grant agreement No 686053 <http://www.critcat.eu/>`_.
 
-**ESTEEM3**
+|clearfloat|
+
+ESTEEM3
+.......
 
 .. image:: ./images/EU.jpg
     :align: left
@@ -65,13 +76,27 @@ This project has received funding from the European Union's Horizon 2020 researc
 This project has received funding from the European Union's Horizon 2020 
 research and innovation programme under grant agreement No 823717 – `ESTEEM3 <https://cordis.europa.eu/project/rcn/220936/factsheet/en>`_.
 
+|clearfloat|
 
-**Forschungszentrum Jülich, Ernst-Ruska Centrum**
+Google Summer of Code
+.....................
+
+.. image:: images/GSoC-icon-192.png
+    :align: left
+    :width: 100px
+    :alt: Google Summer of Code logo
+
+We kindly acknowledge funding from `Google Summer of Code 2019 <https://summerofcode.withgoogle.com/>`_ under the `umbrella of the Python software foundation <https://python-gsoc.org/>`_.
+
+|clearfloat|
+
+Forschungszentrum Jülich, Ernst-Ruska Centrum
+.............................................
 
 .. image:: ./images/FZJ.jpg
     :align: left
     :width: 100px
     :alt: Forschungszentrum Jülich GmbH
-    :target: http://www.fz-juelich.de/er-c/DE/Home/home_node.html
+    :target: https://www.fz-juelich.de/er-c/EN/Home/home_node.html
 
 Forschungszentrum Jülich is supporting LiberTEM with funding for personnel, access to its infrastructure and administrative support.

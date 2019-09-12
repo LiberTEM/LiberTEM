@@ -30,7 +30,7 @@ Documentation
    performance
    contributing
    debugging
-   reference
+   reference/index
    tips
    why_python
    gsoc

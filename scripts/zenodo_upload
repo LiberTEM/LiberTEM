@@ -1,14 +1,24 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+try:
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
+except Exception:
+    pass
+
 import os
 import json
 import pprint
 import traceback
+import xml
 
 import click
 import requests
 import bibtexparser
+import html5lib
+from docutils.core import publish_string
+from docutils.parsers.rst import roles
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.normpath(os.path.join(HERE, '..'))
@@ -18,9 +28,24 @@ ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 BASE_URL = ''
 VERBOSE = False
 
-CONF = 'packaging/zenodo-upload.json'
-bibtexfile = 'docs/source/references-libertem.bib'
+CONF = os.path.join(BASE_DIR, 'packaging/zenodo-upload.json')
+bibtexfile = os.path.join(BASE_DIR, 'docs/source/references-libertem.bib')
+readmefile = os.path.join(BASE_DIR, 'README.rst')
+creatorsfile = os.path.join(BASE_DIR, 'packaging/creators.json')
+contributorsfile = os.path.join(BASE_DIR, 'packaging/contributors.json')
+
 idkeys = ['doi', 'eprint', 'url']
+
+
+def fake_cite(name, rawtext, text, lineno, inliner,
+              options={}, content=[]):
+    """
+    to prevent errors with sphinxcontrib bibtex roles, we register a fake here
+    """
+    return [], []
+
+
+roles.register_local_role("cite", fake_cite)
 
 config = json.load(open(CONF))
 
@@ -176,7 +201,7 @@ def upload_file(deposition_id, filename, remote_filename=None):
 
 
 def make_creators():
-    with open('packaging/creators.json', 'r', encoding='utf-8') as f:
+    with open(creatorsfile, 'r', encoding='utf-8') as f:
         raw_creators = json.load(f)
 
     result = []
@@ -194,7 +219,7 @@ def make_creators():
 
 
 def make_contributors():
-    with open('packaging/contributors.json', 'r', encoding='utf-8') as f:
+    with open(contributorsfile, 'r', encoding='utf-8') as f:
         raw_contributors = json.load(f)
 
     result = []
@@ -213,11 +238,39 @@ def make_contributors():
     return result
 
 
-# Work in progress, see also https://github.com/zenodo/zenodo/issues/1736
+def extract(html_string):
+    document = html5lib.parse(html_string, namespaceHTMLElements=False)
+    elem = document.find(".//div[@class='document']")
+
+    def walk(elem, drop_first_p):
+        # Convert <h1></h1> to <p><strong></strong></p>
+        if elem.tag == 'h1':
+            text = elem.text
+            elem.clear()
+            elem.tag = 'p'
+            strong = xml.etree.ElementTree.Element('strong')
+            strong.text = text
+            elem.append(strong)
+        # recurse
+        for child in elem:
+            # The first <p> contains the badges which don't work well on zenodo
+            # FIXME removing the first <p> in the document is fragile, but for now the easiest path.
+            # Do a proper solution if this stops working.
+            if drop_first_p and child.tag == 'p':
+                elem.remove(child)
+                drop_first_p = False
+            walk(child, drop_first_p)
+
+    walk(elem, True)
+    res = html5lib.serialize(elem)
+    return res
+
+
 def make_description():
-    with open('packaging/README.html', 'r', encoding='utf-8') as f:
-        readme = f.read()
-    return readme
+    with open(readmefile, "r") as srcf:
+        readme_html = publish_string(srcf.read(), writer_name="html")
+        extracted = extract(readme_html)
+        return extracted
 
 
 def make_related(db):

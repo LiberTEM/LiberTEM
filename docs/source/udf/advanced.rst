@@ -1,21 +1,23 @@
+.. _`advanced udf`:
+
 User-defined functions: advanced topics
 =======================================
+
+See :ref:`user-defined functions` for an introduction to basic topics.
 
 .. _tiled:
 
 Tiled processing
 ----------------
 
-Motivation
-~~~~~~~~~~
-
 Many operations operations can be significantly optimized by working on stacks of frames.
 You can often perform `loop nest optimization <https://en.wikipedia.org/wiki/Loop_nest_optimization>`_
 to improve the `locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
-for example using `numba <https://numba.pydata.org/>`_, or using an optimized numpy function.
+for example using `numba <https://numba.pydata.org/>`_, or using an optimized NumPy function.
 
-As an example, applying a gain map and substracting dark frames can be up to an order of magnitude
-faster when properly optimized. These optimizations are only possible if you have access to data
+As an example, applying a gain map and subtracting dark frames can be up to an order of magnitude
+faster when properly optimized compared to a naive NumPy implementation.
+These optimizations are only possible if you have access to data
 from more than one frame.
 
 For very large frames, another problem arises: a stack of frames would be too large to efficiently handle,
@@ -26,8 +28,8 @@ for multiple frames.
 
 For example, in case of K2IS data, frames have a shape of :code:`(1860, 2048)`. When reading them
 with the tiled strategy, a single tile will contain data from 16 subsequent frames, and each
-rectangle has a shape of :code:`(930, 16)` (which happens to be the natural block size for K2IS data).
-So the tiles will have a shape of :code:`(16, 930, 16)`, and processing 16 frames from the data set
+rectangle has a shape of :code:`(930, 16)`, which is the natural block size for K2IS data.
+That means the tiles will have a shape of :code:`(16, 930, 16)`, and processing 16 frames from the data set
 means reading 256 individual tiles.
 
 Loading a tile of this size as float32 data
@@ -35,9 +37,10 @@ still fits comfortably into usual L3 CPU caches (~1MB), and thus enables efficie
 As a comparison, a whole :code:`(1860, 2048)` frame is about 15MB large, and accessing it repeatedly
 means having to load data from the slower main memory.
 
-Note: you may have noticed that we talk about block sizes of 1MB as efficient in the L3 cache,
-but many CPUs have larger L3 caches. As the L3 cache is shared between cores, and LiberTEM tries
-to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
+.. note::
+    You may have noticed that we talk about block sizes of 1MB as efficient in the L3 cache,
+    but many CPUs have larger L3 caches. As the L3 cache is shared between cores, and LiberTEM tries
+    to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
 
 Real-world example
 ~~~~~~~~~~~~~~~~~~
@@ -188,9 +191,9 @@ a :class:`~libertem.io.dataset.base.DataSet` to perform calculations. See
 
 The :class:`~libertem.udf.AutoUDF` class determines the output shape and type
 by calling the function with a mock-up frame of the same type and shape as
-a real detector frame and converting the return value to a numpy array. The
+a real detector frame and converting the return value to a NumPy array. The
 :code:`extra_shape` and :code:`dtype` parameters for the result buffer are
-derived automatically from this numpy array.
+derived automatically from this NumPy array.
 
 Additional constant parameters can be passed to the function via
 :meth:`functools.partial`, for example. The return value should be much smaller

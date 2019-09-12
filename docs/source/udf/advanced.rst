@@ -47,7 +47,20 @@ means having to load data from the slower main memory.
 Real-world example
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :code:`self.meta.slice` property of type :class:`~libertem.common.Slice` is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
+The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses
+:meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of
+a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The
+mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of
+the task data. Note how the :code:`self.meta.slice` property of type
+:class:`~libertem.common.Slice` is used to extract the region from the mask
+stack that matches the tile using the facilities of a
+:class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log
+scaling the tile data into the right memory layout, the mask stack is applied to
+the data with a dot product. The result is *added* to the buffer in order to
+merge it with the results of the other tiles because addition is the correct
+merge function for a dot product. Other operations would require a different
+merge function here, for example :meth:`numpy.max()` if a global maximum is to
+be calculated.
 
 .. code-block:: python
 
@@ -66,9 +79,20 @@ The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem
 Post-processing
 ---------------
 
-Post-processing allows to perform additional processing steps once the data of a partition is completely processed with :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFTileMixin.process_tile` or :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is particularly relevant for tiled processing since that allows to combine the performance benefits of tiled processing for a first reduction step with subsequent steps that require reduced data from complete frames or even a complete partition.
+Post-processing allows to perform additional processing steps once the data of a
+partition is completely processed with
+:meth:`~libertem.udf.UDFFrameMixin.process_frame`,
+:meth:`~libertem.udf.UDFTileMixin.process_tile` or
+:meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is
+particularly relevant for tiled processing since that allows to combine the
+performance benefits of tiled processing for a first reduction step with
+subsequent steps that require reduced data from complete frames or even a
+complete partition.
 
-Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` which evaluates the correlation maps that have been generated with the dot product in the previous processing step and places the results in additional result buffers:
+Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF`
+which evaluates the correlation maps that have been generated with the dot
+product in the previous processing step and places the results in additional
+result buffers:
 
 .. code-block:: python
 
@@ -97,12 +121,25 @@ Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` w
 Partition processing
 --------------------
 
-Some algorithms can benefit from processing entire partitions, for example if they require several passes over the data. In most cases, :ref:`tiled processing<tiled>` will be faster because it uses the L3 cache more efficiently. For that reason, per-partition processing should only be used if there are clear indications for it. Implementing :meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates per-partition processing for an UDF.
+Some algorithms can benefit from processing entire partitions, for example if
+they require several passes over the data. In most cases, :ref:`tiled
+processing<tiled>` will be faster because it uses the L3 cache more efficiently.
+For that reason, per-partition processing should only be used if there are clear
+indications for it. Implementing
+:meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates
+per-partition processing for an UDF.
 
 Precedence
 ----------
 
-The UDF interface looks for methods in the order :meth:`~libertem.udf.UDFTileMixin.process_tile`, :meth:`~libertem.udf.UDFFrameMixin.process_frame`, :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. For now, the first in that order is executed. In the future, composition of UDFs may allow to use different methods depending on the circumstances. :meth:`~libertem.udf.UDFTileMixin.process_tile` is the most general method and allows by-frame and by-partition processing as well.
+The UDF interface looks for methods in the order
+:meth:`~libertem.udf.UDFTileMixin.process_tile`,
+:meth:`~libertem.udf.UDFFrameMixin.process_frame`,
+:meth:`~libertem.udf.UDFPartitionMixin.process_partition`. For now, the first in
+that order is executed. In the future, composition of UDFs may allow to use
+different methods depending on the circumstances.
+:meth:`~libertem.udf.UDFTileMixin.process_tile` is the most general method and
+allows by-frame and by-partition processing as well.
 
 AUX data
 --------
@@ -177,13 +214,31 @@ functions.
 Meta information
 ----------------
 
-Advanced processing routines may require context information about the processed data set, ROI and current data portion being processed. This information is available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type :class:`~libertem.udf.UDFMeta`.
+Advanced processing routines may require context information about the processed
+data set, ROI and current data portion being processed. This information is
+available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type
+:class:`~libertem.udf.UDFMeta`.
 
-Common applications include allocating buffers with a :code:`dtype` or shape that matches the dataset or partition via :attr:`libertem.udf.UDFMeta.dataset_dtype`, :attr:`libertem.udf.UDFMeta.dataset_shape` and :attr:`libertem.udf.UDFMeta.partition_shape`.
+Common applications include allocating buffers with a :code:`dtype` or shape
+that matches the dataset or partition via
+:attr:`libertem.udf.UDFMeta.dataset_dtype`,
+:attr:`libertem.udf.UDFMeta.dataset_shape` and
+:attr:`libertem.udf.UDFMeta.partition_shape`.
 
-For more advanced applications, the ROI and currently processed data portion are available as :attr:`libertem.udf.UDFMeta.roi` and :attr:`libertem.udf.UDFMeta.slice`. This allows to replace the built-in masking behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers and aux data with a custom implementation. The :ref:`mask container for tiled processing example<slice example>` makes use of these attributes to employ a :class:`libertem.job.masks.MaskContainer` instead of a :code:`shape="sig"` buffer in order to optimize dot product performance and support sparse masks.
+For more advanced applications, the ROI and currently processed data portion are
+available as :attr:`libertem.udf.UDFMeta.roi` and
+:attr:`libertem.udf.UDFMeta.slice`. This allows to replace the built-in masking
+behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers
+and aux data with a custom implementation. The :ref:`mask container for tiled
+processing example<slice example>` makes use of these attributes to employ a
+:class:`libertem.job.masks.MaskContainer` instead of a :code:`shape="sig"`
+buffer in order to optimize dot product performance and support sparse masks.
 
-The slice is in the reference frame of the dataset, masked by the current ROI, with flattened navigation dimension. This example illustrates the behavior by implementing a custom version of the :ref:`simple "sum over sig" example <sumsig>`. It allocates a custom result buffer that matches the navigation dimension as it appears in processing:
+The slice is in the reference frame of the dataset, masked by the current ROI,
+with flattened navigation dimension. This example illustrates the behavior by
+implementing a custom version of the :ref:`simple "sum over sig" example
+<sumsig>`. It allocates a custom result buffer that matches the navigation
+dimension as it appears in processing:
 
 .. testsetup::
 

@@ -1,6 +1,5 @@
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
 from libertem.io.dataset.memory import MemoryDataSet
 
@@ -120,11 +119,9 @@ def test_aux_roi(lt_ctx):
 
 def test_aux_2(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    aux_data = BufferWrapper(
-        kind="nav", dtype="float32", extra_shape=(2,)
-    )
-    aux_data.set_buffer(
-        _mk_random(size=(16, 16, 2), dtype="float32")
+    aux_data = EchoUDF.aux_data(
+        kind="nav", dtype="float32", extra_shape=(2,),
+        data=_mk_random(size=(16, 16, 2), dtype="float32"),
     )
     dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
                             num_partitions=2, sig_dims=2)

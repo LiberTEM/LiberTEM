@@ -27,11 +27,8 @@ class UDFMeta:
     @property
     def slice(self):
         """
-        Returns
-        -------
-        Slice
-            A libertem.common.Slice instance that describes the location within the
-            dataset with navigation dimension flattened and reduced to the ROI.
+        Slice : A :class:`~libertem.common.slice.Slice` instance that describes the location
+                within the dataset with navigation dimension flattened and reduced to the ROI.
         """
         return self._slice
 
@@ -42,42 +39,30 @@ class UDFMeta:
     @property
     def partition_shape(self) -> Shape:
         """
-        Returns
-        -------
-        Shape
-            The shape of the partition this UDF currently works on.\
-            If a ROI was applied, the shape will be modified accordingly.
+        Shape : The shape of the partition this UDF currently works on.
+                If a ROI was applied, the shape will be modified accordingly.
         """
         return self._partition_shape
 
     @property
     def dataset_shape(self) -> Shape:
         """
-        Returns
-        -------
-        Shape
-            The original shape of the whole dataset, not influenced by the ROI
+        Shape : The original shape of the whole dataset, not influenced by the ROI
         """
         return self._dataset_shape
 
     @property
     def roi(self) -> np.ndarray:
         """
-        Returns
-        -------
-        np.ndarray
-            boolean array which limits the elements the UDF is working on.\
-            Has a shape of `dataset_shape.nav`.
+        numpy.ndarray : Boolean array which limits the elements the UDF is working on.
+                     Has a shape of :attr:`dataset_shape.nav`.
         """
         return self._roi
 
     @property
     def dataset_dtype(self) -> np.dtype:
         """
-        Returns
-        -------
-        np.dtype
-            Native dtype of the dataset
+        numpy.dtype : Native dtype of the dataset
         """
         return self._dataset_dtype
 

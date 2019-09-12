@@ -207,6 +207,8 @@ As an easy example, let's have a look at a function that simply sums up each fra
 to a single value. This is a :code:`kind="nav"` reduction, as we sum over all values
 in the signal dimensions:
 
+.. _`sumsig`:
+
 .. testsetup:: *
 
     from libertem import api

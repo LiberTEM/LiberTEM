@@ -42,14 +42,17 @@ means having to load data from the slower main memory.
     but many CPUs have larger L3 caches. As the L3 cache is shared between cores, and LiberTEM tries
     to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
 
+.. _`slice example`:
+
 Real-world example
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :class:`~libertem.common.Slice` :code:`tile_slice` argument is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
+The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of the task data. Note how the :code:`self.meta.slice` property of type :class:`~libertem.common.Slice` is used to extract the region from the mask stack that matches the tile using the facilities of a :class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log scaling the tile data into the right memory layout, the mask stack is applied to the data with a dot product. The result is *added* to the buffer in order to merge it with the results of the other tiles because addition is the correct merge function for a dot product. Other operations would require a different merge function here, for example :meth:`numpy.max()` if a global maximum is to be calculated.
 
 .. code-block:: python
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
+        tile_slice = self.meta.slice
         c = self.task_data['mask_container']
         tile_t = np.zeros(
             (np.prod(tile.shape[1:]), tile.shape[0]),
@@ -170,6 +173,61 @@ functions.
             'crop_size': crop_size,
         }
         return kwargs
+
+Meta information
+----------------
+
+Advanced processing routines may require context information about the processed data set, ROI and current data portion being processed. This information is available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type :class:`~libertem.udf.UDFMeta`.
+
+Common applications include allocating buffers with a :code:`dtype` or shape that matches the dataset or partition via :attr:`libertem.udf.UDFMeta.dataset_dtype`, :attr:`libertem.udf.UDFMeta.dataset_shape` and :attr:`libertem.udf.UDFMeta.partition_shape`.
+
+For more advanced applications, the ROI and currently processed data portion are available as :attr:`libertem.udf.UDFMeta.roi` and :attr:`libertem.udf.UDFMeta.slice`. This allows to replace the built-in masking behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers and aux data with a custom implementation. The :ref:`mask container for tiled processing example<slice example>` makes use of these attributes to employ a :class:`libertem.job.masks.MaskContainer` instead of a :code:`shape="sig"` buffer in order to optimize dot product performance and support sparse masks.
+
+The slice is in the reference frame of the dataset, masked by the current ROI, with flattened navigation dimension. This example illustrates the behavior by implementing a custom version of the :ref:`simple "sum over sig" example <sumsig>`. It allocates a custom result buffer that matches the navigation dimension as it appears in processing:
+
+.. testsetup::
+
+    import numpy as np
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
+    roi = np.random.choice([True, False], dataset.shape.nav)
+
+.. testcode::
+
+    import numpy as np
+
+    from libertem.udf import UDF
+
+    class PixelsumUDF(UDF):
+        def get_result_buffers(self):
+            if self.meta.roi is not None:
+                navsize = self.meta.roi.sum()
+            else:
+                navsize = np.prod(self.meta.dataset_shape.nav)
+            return {
+                'pixelsum_nav_raw': self.buffer(
+                    kind="single",
+                    dtype=self.meta.dataset_dtype,
+                    extra_shape=(navsize, ),
+                )
+            }
+
+        def merge(self, dest, src):
+            dest['pixelsum_nav_raw'][:] += src['pixelsum_nav_raw']
+
+        def process_frame(self, frame):
+            np_slice = self.meta.slice.get(nav_only=True)
+            self.results.pixelsum_nav_raw[np_slice] = np.sum(frame)
+
+.. testcleanup::
+
+    pixelsum = PixelsumUDF()
+    res = ctx.run_udf(dataset=dataset, udf=pixelsum, roi=roi)
+
+    assert np.allclose(res['pixelsum_nav_raw'].data, dataset.data[roi].sum(axis=(1, 2)))
 
 .. _auto UDF:
 

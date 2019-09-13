@@ -263,10 +263,10 @@ class AuxBufferWrapper(BufferWrapper):
         # actually properly scatter and share data, this becomes obsolete anyways,
         # as we would scatter most likely for all partitions (to be flexible in node
         # assignment, for example for availability)
+        assert self._data_coords_global
         ps = partition.slice.get(nav_only=True)
         buf = self.__class__(self._kind, self._extra_shape, self._dtype)
         if roi is not None:
-            print(ps)
             roi_part = roi.reshape(-1)[ps]
             new_data = self._data[ps][roi_part]
         else:
@@ -275,7 +275,6 @@ class AuxBufferWrapper(BufferWrapper):
         buf.set_roi(roi)
         assert np.product(new_data.shape) > 0
         assert not buf._data_coords_global
-        assert self._data_coords_global
         return buf
 
     def set_buffer(self, buf, is_global=True):

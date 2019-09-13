@@ -662,10 +662,10 @@ class UDFRunner:
 
     def _make_udf_tasks(self, dataset, roi):
         for idx, partition in enumerate(dataset.get_partitions()):
-            udf = self._udf.copy_for_partition(partition, roi)
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
                 if np.count_nonzero(roi_for_part) == 0:
                     # roi is empty for this partition, ignore
                     continue
+            udf = self._udf.copy_for_partition(partition, roi)
             yield UDFTask(partition=partition, idx=idx, udf=udf, roi=roi)

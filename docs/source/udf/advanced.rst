@@ -144,15 +144,19 @@ allows by-frame and by-partition processing as well.
 AUX data
 --------
 
-If a parameter is an instance of
-:class:`~libertem.common.buffers.BufferWrapper`, the UDF interface will
-interpret it as auxiliary data. It will set the views for each
-tile/frame/partition accordingly so that accessing the parameter returns a view
-of the auxiliary data matching the data portion that is currently being
+If a parameter is an instance of :class:`~libertem.common.buffers.BufferWrapper`
+that was created using the :meth:`~libertem.udf.UDF.aux_data` class method, the
+UDF interface will interpret it as auxiliary data. It will set the views for
+each tile/frame/partition accordingly so that accessing the parameter returns a
+view of the auxiliary data matching the data portion that is currently being
 processed. That way, it is possible to pass parameters individually for each
-frame or to mask the signal dimension. The :meth:`~libertem.udf.UDF.aux_data`
-class method helps to wrap data into a suitable
-:class:`~libertem.common.buffers.BufferWrapper`.
+frame or to mask the signal dimension.
+
+Note that the :class:`~libertem.common.buffers.BufferWrapper` instance for AUX
+data should always be created using the :meth:`~libertem.udf.UDF.aux_data` class
+method and not directly by instantiating a
+:class:`~libertem.common.buffers.BufferWrapper` since
+:meth:`~libertem.udf.UDF.aux_data` ensures that it is set up correctly.
 
 For masks in the signal dimension that are used for dot products in combination
 with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows

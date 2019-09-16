@@ -21,6 +21,21 @@ Using the UDF interface of LiberTEM, PCA requires two parameters: the data with 
 
 The above code then returns a projected matrix with reduced dimension. A row of this projected matrix represents an image and a column of this projected matrix represents feature vectors that comprise the image. 
 
+
+Testing schemes for validity of PCA (In progress)
+-------------------------------------------------
+To test strengths and weaknesses of our PCA method, multiple testing schemes were implemented.
+
+Firstly, we devised several perturbation schemes in which the data matrix was perturbed, to confirm the robustness of the implemented PCA. As a benchmark dataset, we first generated a data set with dimension `1024 x 1024` using 100 component vectors. To check the robustness, we 1) added random noise to the matrix, 2) replaced some proportion of rows (i.e., images) with pure noise, and 3) altered the intensity, or scale, of each component vector. Then we compared the reconstruction error, which is the difference between the original data matrix and the data matrix reconstructed using the component vectors obtained from PCAs, of the implemented PCA and the standard PCA. As it turns out, the difference was negligible and the implemented PCA performed on par with the standard PCA. 
+
+Secondly, we tried to exploit the potential pitfalls of the `hyperbox` method of the implemented PCA. An intuitive interpretation of `hyperbox` method is that we are enclosing the high-dimensional data with a hypercube, which, by design, includes all the points in the data. Therefore, we attempted to generate a data with heavy tail distribution, so that data points are more clustered around the edges. To achieve this, we fixed the component matrix and designed the loading matrix in such a way that each entry of the matrix is drawm from 1) exponential distribution, 2) gamma distribution, and 3) hand-crafted bimodal distribution. The result of this experiment was that none of the distributions led to the failure of the implemented PCA over the standard PCA, thereby showing the versatility of the implemented PCA.
+
+Lastly, we compare the relative efficiency of the new PCA method with the standard PCA on full batch data. As can be seen in the plot below, the new PCA performs worse than the standard PCA in terms of performance time. This is an expected outcome since the primary purpose of the new PCA is to handle a large scale data where the standard PCA cannot perform matrix operations. To obtain scalability, some level of performance time was sunken, in particular as we incrementally perform PCA on a partitioned batch of data. 
+
+.. image:: ./images/scale.png
+
+As can be seen in the results above, the vulnerability of the PCA method need to be tested further, until either we obtain a mathematical guarantee that the implemented PCA converges to the standard PCA on full batch data or discover an edge case in which the implemented PCA fails while the standard PCA succeeds.
+
 Additional Information
 ----------------------
 For additional information on PCA, including its performance in comparison with standard PCA and various testing schemes to ensure the credibility of the method, please `follow this link to a jupyter notebook. <pca.ipynb>`_

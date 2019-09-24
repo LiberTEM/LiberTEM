@@ -3,6 +3,17 @@
 User-defined functions: advanced topics
 =======================================
 
+.. testsetup:: *
+
+    import numpy as np
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    data = np.random.random((16, 16, 32, 32)).astype(np.float32)
+    dataset = ctx.load("memory", data=data, sig_dims=2)
+    roi = np.random.choice([True, False], dataset.shape.nav)
+
 See :ref:`user-defined functions` for an introduction to basic topics.
 
 .. _tiled:
@@ -62,7 +73,11 @@ merge function for a dot product. Other operations would require a different
 merge function here, for example :meth:`numpy.max()` if a global maximum is to
 be calculated.
 
-.. code-block:: python
+.. testsetup::
+
+    from libertem.udf.blobfinder import log_scale
+
+.. testcode::
 
     def process_tile(self, tile):
         tile_slice = self.meta.slice
@@ -94,7 +109,11 @@ which evaluates the correlation maps that have been generated with the dot
 product in the previous processing step and places the results in additional
 result buffers:
 
-.. code-block:: python
+.. testsetup::
+
+    from libertem.udf.blobfinder import evaluate_correlation, _shift
+
+.. testcode::
 
     def postprocess(self):
         steps = 2 * self.params.steps + 1
@@ -116,7 +135,6 @@ result buffers:
                 r.refineds[f, p] = abs_refined
                 r.peak_values[f, p] = peak_value
                 r.peak_elevations[f, p] = peak_elevation
-
 
 Partition processing
 --------------------
@@ -180,13 +198,18 @@ a :class:`~libertem.job.masks.MaskContainer` based on the parameters in
 available as :code:`self.task_data['mask_container']` within the processing
 functions.
 
-.. code-block:: python
+.. testsetup::
+
+    from libertem.job.masks import MaskContainer
+    import libertem.masks as masks
+
+.. testcode::
 
     def get_task_data(self):
-        mask = mask_maker(self.params)
-        crop_size = mask.get_crop_size()
+        match_pattern = self.params.match_pattern
+        crop_size = match_pattern.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
-        template = mask.get_mask(sig_shape=size)
+        template = match_pattern.get_mask(sig_shape=size)
         steps = self.params.steps
         peak_offsetY, peak_offsetX = np.mgrid[-steps:steps + 1, -steps:steps + 1]
 
@@ -197,7 +220,7 @@ functions.
         offsetX = offsetX.flatten()
 
         stack = functools.partial(
-            sparse_template_multi_stack,
+            masks.sparse_template_multi_stack,
             mask_index=range(len(offsetY)),
             offsetX=offsetX,
             offsetY=offsetY,
@@ -214,6 +237,26 @@ functions.
             'crop_size': crop_size,
         }
         return kwargs
+
+.. testcleanup::
+
+    from libertem.udf.blobfinder import SparseCorrelationUDF, RadialGradient
+
+    class TestUDF(SparseCorrelationUDF):
+        pass
+
+    # Override methods with functions that are defined above
+
+    TestUDF.process_tile = process_tile
+    TestUDF.postprocess = postprocess
+    TestUDF.get_task_data = get_task_data
+
+    u = TestUDF(
+        peaks=np.array([(8, 8)]),
+        match_pattern=RadialGradient(2),
+        steps=3
+    )
+    ctx.run_udf(dataset=dataset, udf=u)
 
 Meta information
 ----------------
@@ -243,16 +286,6 @@ with flattened navigation dimension. This example illustrates the behavior by
 implementing a custom version of the :ref:`simple "sum over sig" example
 <sumsig>`. It allocates a custom result buffer that matches the navigation
 dimension as it appears in processing:
-
-.. testsetup::
-
-    import numpy as np
-    from libertem import api
-    from libertem.executor.inline import InlineJobExecutor
-
-    ctx = api.Context(executor=InlineJobExecutor())
-    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-    roi = np.random.choice([True, False], dataset.shape.nav)
 
 .. testcode::
 
@@ -318,15 +351,19 @@ than the input size for this to work efficiently.
 
 Example: Calculate sum over the last signal axis.
 
-.. code-block:: python
+.. testcode::
 
-   result = ctx.map(
-      dataset=dataset,
-      f=functools.partial(np.sum, axis=-1)
-   )
+    import functools
 
-   # or alternatively:
-   udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
-   result = self.run_udf(dataset=dataset, udf=udf)
+    result = ctx.map(
+        dataset=dataset,
+        f=functools.partial(np.sum, axis=-1)
+    )
+
+    # or alternatively:
+    from libertem.udf import AutoUDF
+
+    udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
+    result = ctx.run_udf(dataset=dataset, udf=udf)
 
 

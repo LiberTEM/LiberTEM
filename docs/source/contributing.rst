@@ -272,13 +272,17 @@ Not all aspects of LiberTEM are covered with automated unit tests. For that reas
 Before (using a release candidate package)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Full documentation review and update
+* Full documentation review and update, including link check using
+  ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
 * Update the JSON files in the ``packaging/`` folder with author and project information
-* Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
-* `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
+* Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source
+  files in ``packaging/`` using ``python scripts/build-authors-contributors``
+* `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
+  GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
 * Install release candidate packages in a clean environment
-  (for example: :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
+  (for example: 
+  :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
@@ -312,8 +316,8 @@ Before (using a release candidate package)
 * Check what happens when opening all file types with bad parameters by scripting
     * Proper understandable error message? TODO automate?
 * Run all examples
-* Check all examples in documentation, including API docstrings.
-* Run libertem-server on Windows, connect to a remote dask cluster running on Linux, open all file types and perform an analysis for each file type.
+* Run libertem-server on Windows, connect to a remote dask cluster running on Linux,
+  open all file types and perform an analysis for each file type.
 * Use the GUI while a long-running analysis is running
     * Still usable, decent response times?
 * Review open issues and pull requests

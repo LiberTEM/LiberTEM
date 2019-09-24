@@ -3,6 +3,36 @@
 User-defined functions
 ======================
 
+.. testsetup:: *
+
+   import numpy as np
+   from libertem import api
+   from libertem.executor.inline import InlineJobExecutor
+
+   from libertem.udf import UDF as RealUDF
+
+   # We override UDF in such a way that it can be used
+   # without implementing all methods
+   class UDF(RealUDF):
+      def get_result_buffers(self):
+         return {}
+
+      def process_frame(self, frame):
+         pass
+
+   class YourUDF(RealUDF):
+      def get_result_buffers(self):
+         return {'buf1': self.buffer(kind="nav")}
+
+      def process_frame(self, frame):
+         self.results.buf1[:] = 42
+
+   ctx = api.Context(executor=InlineJobExecutor())
+   data = np.random.random((16, 16, 32, 32)).astype(np.float32)
+   dataset = ctx.load("memory", data=data, sig_dims=2)
+   roi = np.random.choice([True, False], dataset.shape.nav)
+   udf = YourUDF()
+
 A common case for analyzing big EM data sets is running a reduction operation
 on each individual detector frame (or other small subsets) of a data set and then
 combining the results of these reductions to form the complete result. This should
@@ -26,15 +56,7 @@ The easiest way of running a function over your data is using the
 
 For example, to calculate the sum over the last signal axis:
 
-.. testsetup:: *
-
-   from libertem import api
-   from libertem.executor.inline import InlineJobExecutor
-
-   ctx = api.Context(executor=InlineJobExecutor())
-   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-
-.. testcode::
+.. testcode:: autoudf
 
    import functools
    import numpy as np
@@ -131,39 +153,55 @@ identifier.
 Examples of buffer declarations (this is a :code:`dict` as it should be returned by
 :meth:`~libertem.udf.UDF.get_result_buffers`):
 
-.. code-block:: python
+.. testcode:: getresultbuffers
 
-   # Suppose our dataset has the shape (14, 14, 32, 32),
-   # where the first two dimensions represent the navigation
-   # dimension and the last two dimensions represent the signal dimension.
+   def get_result_buffers(self):
+      # Suppose our dataset has the shape (14, 14, 32, 32),
+      # where the first two dimensions represent the navigation
+      # dimension and the last two dimensions represent the signal
+      # dimension.
 
-   buffers = {
-      # same shape as navigation dimensions of dataset, plus two extra dimensions of
-      # shape (3, 2). The full shape is (14, 14, 3, 2) in this example.
-      # This means this buffer can store an array of shape (3, 2) for each frame in the dataset.
-      "nav_buffer": self.buffer(
-          kind="nav",
-          extra_shape=(3, 2),
-          dtype="float32",
-      ),
+      buffers = {
+         # same shape as navigation dimensions of dataset, plus two
+         # extra dimensions of shape (3, 2). The full shape is
+         # (14, 14, 3, 2) in this example. This means this buffer can
+         # store an array of shape (3, 2) for each frame in the dataset.
+         "nav_buffer": self.buffer(
+               kind="nav",
+               extra_shape=(3, 2),
+               dtype="float32",
+         ),
 
-      # same shape as signal dimensions of dataset, plus an extra dimension of shape (2,).
-      # so the full shape is (32, 32, 2) in this example. That means we can store two
-      # float32 values for each pixel of the signal dimensions.
-      "sig_buffer": self.buffer(
-          kind="sig",
-          extra_shape=(2,),
-          dtype="float32",
-      ),
+         # same shape as signal dimensions of dataset, plus an extra
+         # dimension of shape (2,). Consequently, the full shape is
+         # (32, 32, 2) in this example. That means we can store two
+         # float32 values for each pixel of the signal dimensions.
+         "sig_buffer": self.buffer(
+               kind="sig",
+               extra_shape=(2,),
+               dtype="float32",
+         ),
 
-      # buffer of shape (16, 16); shape is unrelated to dataset shape
-      "single_buffer": self.buffer(
-          kind="single",
-          extra_shape=(16, 16),
-          dtype="float32",
-      ),
+         # buffer of shape (16, 16); shape is unrelated to dataset shape
+         "single_buffer": self.buffer(
+               kind="single",
+               extra_shape=(16, 16),
+               dtype="float32",
+         ),
 
-   }
+      }
+
+      return buffers
+
+.. testcleanup:: getresultbuffers
+
+   class TestUDF(UDF):
+      pass
+
+   TestUDF.get_result_buffers = get_result_buffers
+
+   u = TestUDF()
+   ctx.run_udf(dataset=dataset, udf=u)
 
 See below for some more real-world examples.
 
@@ -181,11 +219,16 @@ Implementing the processing function
 Now to the actual core of the processing: implementing
 :meth:`~libertem.udf.UDFFrameMixin.process_frame`. The method signature looks like this:
 
-.. code-block:: python
+.. testcode:: processing
 
-   class YourUDF(UDF):
+   class ExampleUDF(UDF):
       def process_frame(self, frame):
          pass
+
+.. testcleanup:: processing
+
+   u = ExampleUDF()
+   ctx.run_udf(dataset=dataset, udf=u)
 
 The general idea is that you get a single frame from the data set, do your processing,
 and write the results to one of the previously declared buffers, via :code:`self.results.<buffername>`.
@@ -208,16 +251,8 @@ to a single value. This is a :code:`kind="nav"` reduction, as we sum over all va
 in the signal dimensions:
 
 .. _`sumsig`:
-
-.. testsetup:: *
-
-    from libertem import api
-    from libertem.executor.inline import InlineJobExecutor
-
-    ctx = api.Context(executor=InlineJobExecutor())
-    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
    
-.. testcode::
+.. testcode:: sumsig
 
    import numpy as np   
    from libertem.udf import UDF
@@ -238,11 +273,12 @@ in the signal dimensions:
 
       def process_frame(self, frame):
          """
-         Sum up all pixels in this frame and store the result in the `pixelsum`
-         buffer. `self.results.pixelsum` is a view into the result buffer we
-         defined above, and corresponds to the entry for the current frame we
-         work on. We don't have to take care of finding the correct index for
-         the frame we are processing ourselves.
+         Sum up all pixels in this frame and store the result in the
+         `pixelsum` buffer. `self.results.pixelsum` is a view into the
+         result buffer we defined above, and corresponds to the entry
+         for the current frame we work on. We don't have to take care
+         of finding the correct index for the frame we are processing
+         ourselves.
          """
          self.results.pixelsum[:] = np.sum(frame)
 
@@ -267,27 +303,24 @@ In case of :code:`kind="sig"` buffers and the corresponding reduction, assignmen
 just overwrite the result from the previous partition with the one from the current partition,
 and is not the correct operation. So let's have a look at the merge method:
 
-.. code-block:: python
+.. testcode:: merge
 
-   class YourUDF(UDF):
+   class ExampleUDF(UDF):
       def merge(self, dest, src):
          pass
+
+.. testcleanup:: merge
+
+   u = ExampleUDF()
+   ctx.run_udf(dataset=dataset, udf=u)
 
 :code:`dest` is the result of all previous merge calls, and :code:`src` is the
 result from a single new partition. Your :code:`merge` implementation should read from both
 :code:`dest` and :code:`src` and write the result back to :code:`dest`.
 
 Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge` function:
-
-.. testsetup:: *
-
-    from libertem import api
-    from libertem.executor.inline import InlineJobExecutor
-
-    ctx = api.Context(executor=InlineJobExecutor())
-    dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
    
-.. testcode::
+.. testcode:: realmerge
 
    import numpy as np
    from libertem.udf import UDF
@@ -298,8 +331,8 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          """
          Describe the buffers we need to store our results:
          kind="sig" means we want to have a value for each coordinate
-         in the signal dimensions (i.e. a value for each pixel of the diffraction patterns).
-         We name our buffer 'maxbuf'.
+         in the signal dimensions (i.e. a value for each pixel of the
+         diffraction patterns). We name our buffer 'maxbuf'.
          """
          return {
             'maxbuf': self.buffer(
@@ -309,18 +342,22 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
 
       def process_frame(self, frame):
          """
-         In this function, we have a frame and the buffer `maxbuf` available, which we declared
-         above. This function is called for all frames / diffraction patterns in the data set.
-         The maxbuf is a partial result, and all partial results will later be merged (see below).
+         In this function, we have a frame and the buffer `maxbuf`
+         available, which we declared above. This function is called
+         for all frames / diffraction patterns in the data set. The
+         maxbuf is a partial result, and all partial results will
+         later be merged (see below).
 
-         In this case, we determine the maximum from the current maximum and the current frame, for
-         each pixel in the diffraction pattern.
+         In this case, we determine the maximum from the current
+         maximum and the current frame, for each pixel in the
+         diffraction pattern.
 
          Notes:
 
-         - You cannot rely on any particular order of frames this function is called in.
-         - Your function should be pure, that is, it should not have side effects and should
-         only depend on it's input parameters.
+         - You cannot rely on any particular order of frames this function
+           is called in.
+         - Your function should be pure, that is, it should not have side
+           effects and should only depend on it's input parameters.
          """
          self.results.maxbuf[:] = np.maximum(frame, self.results.maxbuf)
 
@@ -349,7 +386,14 @@ Passing parameters
 By default, keyword arguments that are passed to the constructor of a UDF are
 available as properties of :code:`self.params`:
 
-.. code-block:: python
+.. testsetup:: params
+
+   def correlate_peaks(frame, peaks):
+      pass
+
+   peaks = None
+
+.. testcode:: params
 
     class MyUDF(UDF):
 
@@ -357,7 +401,17 @@ available as properties of :code:`self.params`:
             result = correlate_peaks(frame, self.params.peaks)
             ...
 
-    udf = MyUDF(peaks=peaks, ...)
+    udf = MyUDF(peaks=peaks, other=...)
+
+.. testcleanup:: params
+
+   def get_result_buffers():
+      return {}
+
+   udf.get_result_buffers = get_result_buffers
+
+   ctx.run_udf(dataset=dataset, udf=udf)
+
 
 Running UDFs
 ------------
@@ -365,24 +419,8 @@ Running UDFs
 As shown in the examples above, the :meth:`~libertem.api.Context.run_udf` method
 of :class:`~libertem.api.Context` is used to run UDFs. Usually, you only need to
 pass an instance of your UDF and the dataset you want to run on:
-
-.. testsetup:: *
-
-   from libertem import api
-   from libertem.executor.inline import InlineJobExecutor
-   from libertem.udf import UDF
-
-   ctx = api.Context(executor=InlineJobExecutor())
-   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-
-   class YourUDF(UDF):
-      def get_result_buffers(self):
-         return {'buf1': self.buffer(kind="nav")}
-
-      def process_frame(self, frame):
-         self.results.buf1[:] = 42
    
-.. testcode::
+.. testcode:: run
 
     udf = YourUDF(param1="value1")
     res = ctx.run_udf(udf=udf, dataset=dataset)
@@ -393,32 +431,14 @@ names as keys (as defined in :meth:`~libertem.udf.UDF.get_result_buffers`) and
 can use these in any place you would use a NumPy array, for example as an argument to
 NumPy functions, or you can explicitly convert them to NumPy arrays by accessing
 the :code:`.data` attribute, or by calling :meth:`numpy.array`:
-
-
-.. testsetup:: *
-
-   from libertem import api
-   from libertem.executor.inline import InlineJobExecutor
-   from libertem.udf import UDF
-
-   ctx = api.Context(executor=InlineJobExecutor())
-   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-
-   class YourUDF(UDF):
-      def get_result_buffers(self):
-         return {'buf1': self.buffer(kind="nav")}
-
-      def process_frame(self, frame):
-         self.results.buf1[:] = 42
-
-   udf = YourUDF()
    
-.. testcode::
+.. testcode:: run
 
    import numpy as np
 
    res = ctx.run_udf(udf=udf, dataset=dataset)
-   # convert to NumPy array, assuming we declared a buffer with name `buf1`:
+   # convert to NumPy array, assuming we declared a buffer
+   # with name `buf1`:
    arr = res['buf1'].data
    arr = np.array(res['buf1'])
 
@@ -428,32 +448,13 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
 run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
 containing a bool mask, having the shape of the navigation axes of the dataset.
-For example, to process a random subset of a 4D-STEM dataset with shape
-:code:`(16, 16, 32, 32)`:
-
-.. testsetup:: *
-
-   from libertem import api
-   from libertem.executor.inline import InlineJobExecutor
-   from libertem.udf import UDF
-
-   ctx = api.Context(executor=InlineJobExecutor())
-   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-
-   class YourUDF(UDF):
-      def get_result_buffers(self):
-         return {'buf1': self.buffer(kind="nav")}
-
-      def process_frame(self, frame):
-         self.results.buf1[:] = 42
-
-   udf = YourUDF()
+For example, to process a random subset of a 4D-STEM dataset:
    
-.. testcode::
+.. testcode:: run
 
    import numpy as np
 
-   roi = np.random.choice(a=[0, 1], size=(16, 16))
+   roi = np.random.choice(a=[False, True], size=dataset.shape.nav)
    ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
 
 Note that the result array only contains values for the selected indices, all
@@ -464,28 +465,7 @@ to the same :code:`roi`.
 You can also access a flat array that is not filled up with :code:`nan` using
 :code:`.raw_data`:
 
-.. testsetup:: *
-
-   from libertem import api
-   from libertem.executor.inline import InlineJobExecutor
-   from libertem.udf import UDF
-
-   ctx = api.Context(executor=InlineJobExecutor())
-   dataset = ctx.load("memory", datashape=(16, 16, 32, 32), sig_dims=2)
-
-   class YourUDF(UDF):
-      def get_result_buffers(self):
-         return {'buf1': self.buffer(kind="nav")}
-
-      def process_frame(self, frame):
-         self.results.buf1[:] = 42
-
-   udf = YourUDF()
-   
-   import numpy as np
-   roi = np.random.choice(a=[0, 1], size=(16, 16))
-
-.. testcode::
+.. testcode:: run
 
    res = ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
    res['buf1'].raw_data

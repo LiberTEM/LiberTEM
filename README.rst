@@ -9,8 +9,8 @@
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/wokeo6ee2frq481m/branch/master?svg=true
 .. _appveyor: https://ci.appveyor.com/project/sk1p/libertem
 
-.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1478763.svg
-.. _zenodo: https://doi.org/10.5281/zenodo.1478763
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg
+.. _zenodo: https://doi.org/10.5281/zenodo.1477847
 
 
 

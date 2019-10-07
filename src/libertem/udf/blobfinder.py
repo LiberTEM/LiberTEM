@@ -352,7 +352,7 @@ def peak_elevation(center, corrmap, height, r_min=1.5, r_max=np.float('inf')):
     select = (dist >= r_min) * (dist < r_max)
     diff = height - corrmap[select]
 
-    return np.min(diff / dist[select])
+    return max(0, np.min(diff / dist[select]))
 
 
 def do_correlation(template, crop_part):

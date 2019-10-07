@@ -504,16 +504,17 @@ def bump(new_version, tag, commit, force):
     if match is None:
         raise click.UsageError("could not parse version, may not conform to our scheme")
     new_version = match['noprefix']
-    version_file = get_version_fn()
-    old_version = read_version(version_file)
-    render_version(version_file, new_version)
-    version_tag = "v{}".format(new_version)
 
     if tag and match.groupdict()['dev'] is not None:
         if not force:
             raise click.ClickException("dev releases should not be tagged, use --force to override")
         else:
             print("NOTE: tagging a dev release because of --force")
+
+    version_file = get_version_fn()
+    old_version = read_version(version_file)
+    render_version(version_file, new_version)
+    version_tag = "v{}".format(new_version)
 
     if commit:
         do_git_commit(old_version=old_version, new_version=new_version,

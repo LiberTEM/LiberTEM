@@ -310,11 +310,13 @@ Before (using a release candidate package)
 * Run libertem-server on Windows, connect to a remote dask cluster running on Linux, open all file types and perform an analysis for each file type.
 * Use the GUI while a long-running analysis is running
     * Still usable, decent response times?
+* Review open issues and pull requests
+* Create and review release notes
 
 After releasing on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Confirm that all release packages are built
+* Confirm that all release packages are built and release notes are up-to-date
 * Install release package
 * Confirm correct version info
 * confirm package upload to PyPi

@@ -147,44 +147,58 @@ def test_run_refine_fastmatch(lt_ctx):
 
 
 def test_run_refine_affinematch(lt_ctx):
-    shape = np.array([256, 256])
-    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
-    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
-    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
-    indices = np.mgrid[-3:4, -3:4]
-    indices = np.concatenate(indices.T)
+    for i in range(5):
+        try:
+            shape = np.array([256, 256])
 
-    radius = 10
+            zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+            a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+            b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
 
-    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+            indices = np.mgrid[-3:4, -3:4]
+            indices = np.concatenate(indices.T)
 
-    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
-                            num_partitions=1, sig_dims=2)
+            radius = 10
 
-    matcher = grm.Matcher()
-    match_pattern = blobfinder.RadialGradient(radius=radius)
+            data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
-    affine_indices = peaks - zero
+            dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                                    num_partitions=1, sig_dims=2)
 
-    print("zero: ", zero)
-    print("a: ", a)
-    print("b: ", b)
+            matcher = grm.Matcher(tolerance=0.5)
+            match_pattern = blobfinder.RadialGradient(radius=radius)
 
-    (res, real_indices) = blobfinder.run_refine(
-        ctx=lt_ctx,
-        dataset=dataset,
-        zero=zero + np.random.uniform(-1, 1, size=2),
-        a=np.array([1, 0]) + np.random.uniform(-0.05, 0.05, size=2),
-        b=np.array([0, 1]) + np.random.uniform(-0.05, 0.05, size=2),
-        indices=affine_indices,
-        matcher=matcher,
-        match_pattern=match_pattern,
-        match='affine'
-    )
+            affine_indices = peaks - zero
 
-    assert np.allclose(res['zero'].data[0], zero, atol=0.5)
-    assert np.allclose(res['a'].data[0], [1, 0], atol=0.05)
-    assert np.allclose(res['b'].data[0], [0, 1], atol=0.05)
+            for j in range(5):
+                zzero = zero + np.random.uniform(-1, 1, size=2)
+                aa = np.array([1, 0]) + np.random.uniform(-0.05, 0.05, size=2)
+                bb = np.array([0, 1]) + np.random.uniform(-0.05, 0.05, size=2)
+
+                (res, real_indices) = blobfinder.run_refine(
+                    ctx=lt_ctx,
+                    dataset=dataset,
+                    zero=zzero,
+                    a=aa,
+                    b=bb,
+                    indices=affine_indices,
+                    matcher=matcher,
+                    match_pattern=match_pattern,
+                    match='affine'
+                )
+
+                assert np.allclose(res['zero'].data[0], zero, atol=0.5)
+                assert np.allclose(res['a'].data[0], [1, 0], atol=0.05)
+                assert np.allclose(res['b'].data[0], [0, 1], atol=0.05)
+        except Exception:
+            print("zero = np.array([%s, %s])" % tuple(zero))
+            print("a = np.array([%s, %s])" % tuple(a))
+            print("b = np.array([%s, %s])" % tuple(b))
+
+            print("zzero = np.array([%s, %s])" % tuple(zzero))
+            print("aa = np.array([%s, %s])" % tuple(aa))
+            print("bb = np.array([%s, %s])" % tuple(bb))
+            raise
 
 
 def test_run_refine_sparse(lt_ctx):

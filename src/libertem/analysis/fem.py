@@ -14,7 +14,7 @@ class FEMAnalysis(BaseAnalysis):
         rad_out = self.parameters["ro"]
         return FEM.FEMUDF(center=center, rad_in=rad_in, rad_out=rad_out)
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'].data,

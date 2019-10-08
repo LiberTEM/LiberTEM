@@ -463,7 +463,7 @@ class Context:
                 udf_results = self.run_udf(
                     dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
                 )
-                return analysis.get_udf_results(udf_results)
+                return analysis.get_udf_results(udf_results, roi)
         else:
             job_to_run = job
 

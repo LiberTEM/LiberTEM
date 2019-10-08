@@ -2,10 +2,26 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import { useDiskROI } from "./DiskROI";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
+import { useRectROI } from "./RectROI";
 import { useRoiPicker } from "./RoiPicker";
-import useSumFrames from "./SumFrames";
+
+
+export enum DefaultModes {
+    SUM = "SUM",
+    SD = "SD",
+    PICK = "PICK",
+}
+
+export enum DefaultRois {
+
+    ALL = "ALL",
+    DISK = "DISK",
+    RECT = "RECT",
+
+}
 
 const useDefaultFrameView = ({
     scanWidth, scanHeight, analysisId,
@@ -15,74 +31,112 @@ const useDefaultFrameView = ({
     const availableModes = [
         {
             text: "Average",
-            value: AnalysisTypes.SUM_FRAMES,
+            value: DefaultModes.SUM,
+        },
+        {
+            text: "Standard Deviation",
+            value: DefaultModes.SD,
         },
         {
             text: "Pick",
-            value: AnalysisTypes.PICK_FRAME,
+            value: DefaultModes.PICK,
+        },
+    ]
+
+    const availableRois = [
+        {
+            text: "All",
+            value: DefaultRois.ALL,
         },
         {
-            text: "Average over ROI (disk)",
-            value: AnalysisTypes.SUM_FRAMES_ROI,
-        }
-    ];
+            text: "Disk",
+            value: DefaultRois.DISK,
+        },
+        {
+            text: "Rect",
+            value: DefaultRois.RECT,
+        },
+    ]
 
-    const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
+    const [frameMode, setMode] = useState(DefaultModes.SUM);
+    const [roi, setRoi] = useState(DefaultRois.ALL)
 
-    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} />
+    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode"/>
+
+    const roiSelector = <ModeSelector modes={availableRois} currentMode={roi} onModeChange={setRoi} label="ROI"/>
 
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
 
+
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
-        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        enabled: frameMode === DefaultModes.PICK,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
         cx, cy, setCx, setCy
     });
 
-    const { sumRoiHandles, sumRoiWidgets } = useRoiPicker({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES_ROI,
+
+    const { rectRoiHandles, rectRoiWidgets, rectRoiParameters }  = useRectROI({ scanHeight, scanWidth })
+    const { diskRoiHandles, diskRoiWidgets, diskRoiParameters}  = useDiskROI({ scanHeight, scanWidth })
+
+    const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
+    let handles = nullHandles;
+
+
+
+    let widgets;
+    let params = {roi:{}};
+    switch (roi) {
+        case DefaultRois.DISK:
+            handles = diskRoiHandles;
+            widgets = diskRoiWidgets;
+            params = diskRoiParameters;
+            break;
+        case DefaultRois.RECT:
+            handles = rectRoiHandles;
+            widgets = rectRoiWidgets;
+            params = rectRoiParameters;
+            break;
+    }
+
+    switch (frameMode) {
+        case DefaultModes.PICK:
+            handles = pickHandles;
+            widgets = undefined;
+            break;
+    }   
+
+    useRoiPicker({
+        enabled: frameMode === DefaultModes.SD,
         scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
+        roiParameters: params,
+        analysis: AnalysisTypes.SD_FRAMES
     })
 
-    useSumFrames({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+    
+
+    useRoiPicker({
+        enabled: frameMode === DefaultModes.SUM,
+        scanWidth, scanHeight,
         jobIndex: 0,
         analysisId,
+        roiParameters: params,
+        analysis: AnalysisTypes.SUM_FRAMES,
     })
 
+
     const frameViewTitle = (
-        frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
+        frameMode !== DefaultModes.PICK ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
-
-    const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
-
-    let handles = nullHandles;
-
-    switch (frameMode) {
-        case AnalysisTypes.PICK_FRAME:
-            handles = pickHandles;
-            break;
-        case AnalysisTypes.SUM_FRAMES_ROI:
-            handles = sumRoiHandles;
-            break;
-    }
-
-    let widgets;
-
-    switch (frameMode) {
-        case AnalysisTypes.SUM_FRAMES_ROI:
-            widgets = sumRoiWidgets;
-            break;
-    }
 
     return {
         frameViewTitle,
-        frameModeSelector,
+        frameModeSelector: (<>{frameModeSelector} {roiSelector}</>),
+        roiSelector,
         handles,
         widgets,
     }

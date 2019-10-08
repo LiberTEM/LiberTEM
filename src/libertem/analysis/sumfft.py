@@ -9,10 +9,11 @@ import numpy as np
 class SumfftAnalysis(SumAnalysis):
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results):
+    def get_udf_results(self, udf_results, roi):
         job_results = np.array(udf_results['intensity'])
         real_rad = self.parameters.get("real_rad")
         real_center = (self.parameters.get("real_centery"), self.parameters.get("real_centerx"))
+
         if not (real_center is None or real_rad is None):
             sigshape = job_results.shape
             real_mask = 1-1*_make_circular_mask(

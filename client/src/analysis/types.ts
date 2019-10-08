@@ -1,11 +1,13 @@
 import { AnalysisTypes, DatasetOpen, PickFrameDetails, SumFramesDetails } from "../messages";
 import CenterOfMassAnalysis from "./components/CenterOfMassAnalysis";
+import ClustAnalysis from "./components/Clustering";
 import DiskMaskAnalysis from "./components/DiskMaskAnalysis";
 import FEM from "./components/FEM";
 import FFTAnalysis from "./components/FFTAnalysis";
 import PointSelectionAnalysis from "./components/PointSelectionAnalysis";
 import RadialFourierAnalysis from "./components/RadialFourierAnalysis";
 import RingMaskAnalysis from "./components/RingMaskAnalysis";
+
 
 
 export type AnalysisStatus = "busy" | "idle";
@@ -84,10 +86,12 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         desc: "Create a sum of all detector frames",
         title: "Sum all frames",
     },
-    [AnalysisTypes.SUM_FRAMES_ROI]: {
-        desc: "Create a sum of ROI",
-        title: "Sum over ROI",
+
+    [AnalysisTypes.SD_FRAMES]: {
+        desc: "Create a SD of all detector frames",
+        title: "SD all frames",
     },
+
     [AnalysisTypes.PICK_FRAME]: {
         desc: "Pick a single frame",
         title: "Pick frame",
@@ -113,5 +117,16 @@ export const AnalysisMetadata: { [s: string]: AnalysisMetadataItem } = {
         desc: "Compute a radial Fourier analysis",
         title: "Radial Fourier",
         component: RadialFourierAnalysis,
+    },
+
+    [AnalysisTypes.CLUST]: {
+        desc: "Region clustering based on non-zero order diffraction peaks positions",
+        title: "Clustering",
+        component: ClustAnalysis,
+    },
+
+    [AnalysisTypes.SUM_SIG]: {
+        desc: "Frame integration",
+        title: "Sum",
     },
 }

@@ -315,3 +315,27 @@ def test_udf_pickle(lt_ctx):
     pixelsum.init_result_buffers()
     pixelsum.allocate_for_part(partition, None)
     pickle.loads(pickle.dumps(pixelsum))
+
+
+class InvalidBuffer(UDF):
+    def get_result_buffers(self):
+        return {
+            'wrong': self.buffer(
+                kind="nav", dtype="float32", extra_shape=(0,),
+            )
+        }
+
+    def process_frame(self, frame):
+        pass
+
+
+def test_invalid_extra_shape(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    udf = InvalidBuffer()
+    with pytest.raises(ValueError) as e:
+        lt_ctx.run_udf(dataset=dataset, udf=udf)
+
+    assert e.match("invalid extra_shape")

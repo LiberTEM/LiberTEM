@@ -70,6 +70,8 @@ class BufferWrapper(object):
             The dtype of this buffer
         """
         self._kind = kind
+        if np.product(extra_shape) == 0:
+            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (extra_shape,))
         self._extra_shape = extra_shape
         self._dtype = np.dtype(dtype)
         self._data = None

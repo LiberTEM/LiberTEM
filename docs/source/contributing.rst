@@ -33,6 +33,12 @@ If you are changing parts of LiberTEM that are currently not covered by tests, p
 new tests! When changing example code, which is not run as part of the tests, make sure the example
 still runs.
 
+When adding or changing a feature, you should also update the corresponding documentation, or add
+a new section for your feature. Follow the current documentation structure, or ask the maintainers
+where your new documentation should end up. When introducing a feature, it is okay to start with
+a draft documentation in the first PR, if it will be completed later. Changes of APIs should
+update the corresponding docstrings.
+
 When you have submitted your pull request, someone from the LiberTEM organization will review your
 pull request, and may add comments or ask questions. If everything is good to go, your changes will
 be merged and you can delete the branch you created for the pull request.

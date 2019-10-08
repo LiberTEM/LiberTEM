@@ -15,9 +15,9 @@ class SDAnalysis(BaseAnalysis):
 
     def get_udf_results(self, udf_results, roi):
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results.var,
+            AnalysisResult(raw_data=udf_results['var'].data,
                            visualized=visualize_simple(
-                               udf_results.var, logarithmic=True),
+                               udf_results['var'].data, logarithmic=True),
                            key="intensity", title="intensity",
                            desc="SD of frames"),
         ])

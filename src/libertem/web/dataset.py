@@ -33,8 +33,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         cls = get_dataset_cls(ds_type)
         ConverterCls = cls.get_msg_converter()
         converter = ConverterCls()
-        dataset_params = converter.to_python(params)
         try:
+            dataset_params = converter.to_python(params)
             executor = self.data.get_executor()
             ds = await executor.run_function(load, filetype=cls, **dataset_params)
             ds = await executor.run_function(ds.initialize)

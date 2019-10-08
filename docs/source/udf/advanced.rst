@@ -296,7 +296,7 @@ dimension as it appears in processing:
     class PixelsumUDF(UDF):
         def get_result_buffers(self):
             if self.meta.roi is not None:
-                navsize = self.meta.roi.sum()
+                navsize = np.count_nonzero(self.meta.roi)
             else:
                 navsize = np.prod(self.meta.dataset_shape.nav)
             return {
@@ -365,5 +365,3 @@ Example: Calculate sum over the last signal axis.
 
     udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
     result = ctx.run_udf(dataset=dataset, udf=udf)
-
-

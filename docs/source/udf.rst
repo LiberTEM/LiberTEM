@@ -150,8 +150,7 @@ The buffer name is later used to access the buffer via :code:`self.results.<buff
 which returns a view into a NumPy array. For this to work, the name has to be a valid Python
 identifier.
 
-Examples of buffer declarations (this is a :code:`dict` as it should be returned by
-:meth:`~libertem.udf.UDF.get_result_buffers`):
+Examples of buffer declarations:
 
 .. testcode:: getresultbuffers
 
@@ -454,6 +453,9 @@ For example, to process a random subset of a 4D-STEM dataset:
 
    import numpy as np
 
+   # If your dataset has shape `(14, 14, 32, 32)` with two signal
+   # and two navigation dimensions, `dataset.shape.nav`
+   # translates to `(14, 14)`.
    roi = np.random.choice(a=[False, True], size=dataset.shape.nav)
    ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
 

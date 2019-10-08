@@ -15,6 +15,7 @@ class ApplyFFTMask(BaseAnalysis):
          real_rad=real_rad)
 
     def get_udf_results(self, udf_results, roi):
+        data = udf_results['intensity'].data
         return AnalysisResultSet([
             AnalysisResult(raw_data=data,
                            visualized=visualize_simple(data.reshape(self.dataset.shape.nav)),

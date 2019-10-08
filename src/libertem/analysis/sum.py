@@ -32,7 +32,7 @@ class SumAnalysis(BaseAnalysis):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
     def get_udf_results(self, udf_results, roi):
-        if udf_results.intensity.dtype.kind == 'c':
+        if udf_results['intensity'].data.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(
                     udf_results['intensity'].data,
@@ -43,7 +43,9 @@ class SumAnalysis(BaseAnalysis):
             )
 
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results.intensity,
-                           visualized=visualize_simple(udf_results['intensity'].data, logarithmic=True),
+            AnalysisResult(raw_data=udf_results['intensity'].data,
+                           visualized=visualize_simple(
+                               udf_results['intensity'].data, logarithmic=True
+                           ),
                            key="intensity", title="intensity", desc="sum of frames"),
         ])

@@ -31,10 +31,11 @@ class ClusterAnalysis(BaseAnalysis):
     def get_udf_results(self, udf_results, roi):
         n_clust = self.parameters["n_clust"]
         clustering = AgglomerativeClustering(
-            affinity='euclidean', n_clusters=n_clust, linkage='ward').fit(udf_results.feature_vec)
+            affinity='euclidean', n_clusters=n_clust, linkage='ward'
+        ).fit(udf_results['feature_vec'].raw_data)
         labels = np.array(clustering.labels_+1)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results.feature_vec,
+            AnalysisResult(raw_data=udf_results['feature_vec'].data,
                            visualized=visualize_simple(
                                labels.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",

@@ -71,6 +71,7 @@ export class HandleParent extends React.Component<HandleParentProps> {
             if (React.isValidElement(elem)) {
                 return React.cloneElement(elem, { key: i });
             }
+            return null;
         });
     }
 }

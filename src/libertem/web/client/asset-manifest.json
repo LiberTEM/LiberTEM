@@ -1,17 +1,26 @@
 {
-  "main.css": "/static/static/css/main.9642ac5b.chunk.css",
-  "main.js": "/static/static/js/main.71d6682d.chunk.js",
-  "main.js.map": "/static/static/js/main.71d6682d.chunk.js.map",
-  "static/css/1.06105066.chunk.css": "/static/static/css/1.06105066.chunk.css",
-  "static/js/1.813ffb7f.chunk.js": "/static/static/js/1.813ffb7f.chunk.js",
-  "static/js/1.813ffb7f.chunk.js.map": "/static/static/js/1.813ffb7f.chunk.js.map",
-  "runtime~main.js": "/static/static/js/runtime~main.22d3d44b.js",
-  "runtime~main.js.map": "/static/static/js/runtime~main.22d3d44b.js.map",
-  "static/media/semantic.min.css": "/static/static/media/brand-icons.a1a749e8.svg",
-  "static/media/LiberTEM logo-medium.png": "/static/static/media/LiberTEM logo-medium.7999e0dc.png",
-  "static/css/main.9642ac5b.chunk.css.map": "/static/static/css/main.9642ac5b.chunk.css.map",
-  "static/css/1.06105066.chunk.css.map": "/static/static/css/1.06105066.chunk.css.map",
-  "index.html": "/static/index.html",
-  "precache-manifest.1ff773f2e3802c91c4b8109804f7ad22.js": "/static/precache-manifest.1ff773f2e3802c91c4b8109804f7ad22.js",
-  "service-worker.js": "/static/service-worker.js"
+  "files": {
+    "main.css": "/static/static/css/main.fbce021b.chunk.css",
+    "main.js": "/static/static/js/main.c17f1910.chunk.js",
+    "main.js.map": "/static/static/js/main.c17f1910.chunk.js.map",
+    "runtime-main.js": "/static/static/js/runtime-main.2741c88e.js",
+    "runtime-main.js.map": "/static/static/js/runtime-main.2741c88e.js.map",
+    "static/css/2.541cf838.chunk.css": "/static/static/css/2.541cf838.chunk.css",
+    "static/js/2.1968f82c.chunk.js": "/static/static/js/2.1968f82c.chunk.js",
+    "static/js/2.1968f82c.chunk.js.map": "/static/static/js/2.1968f82c.chunk.js.map",
+    "index.html": "/static/index.html",
+    "precache-manifest.d0def7172ae1e3e2dc4b2eee863040c8.js": "/static/precache-manifest.d0def7172ae1e3e2dc4b2eee863040c8.js",
+    "service-worker.js": "/static/service-worker.js",
+    "static/css/2.541cf838.chunk.css.map": "/static/static/css/2.541cf838.chunk.css.map",
+    "static/css/main.fbce021b.chunk.css.map": "/static/static/css/main.fbce021b.chunk.css.map",
+    "static/media/LiberTEM logo-medium.png": "/static/static/media/LiberTEM logo-medium.7999e0dc.png",
+    "static/media/semantic.min.css": "/static/static/media/outline-icons.ef60a4f6.woff"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.2741c88e.js",
+    "static/css/2.541cf838.chunk.css",
+    "static/js/2.1968f82c.chunk.js",
+    "static/css/main.fbce021b.chunk.css",
+    "static/js/main.c17f1910.chunk.js"
+  ]
 }

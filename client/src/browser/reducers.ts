@@ -20,25 +20,21 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             return Object.assign({}, state, {
                 path: action.payload.config.cwd,
             })
-            break;
         }
         case browserActions.ActionTypes.OPEN: {
             return Object.assign({}, state, {
                 isOpen: true,
             })
-            break;
         }
         case browserActions.ActionTypes.CANCEL: {
             return Object.assign({}, state, {
                 isOpen: false,
             })
-            break;
         }
         case browserActions.ActionTypes.LIST_DIRECTORY: {
             return Object.assign({}, state, {
                 isLoading: true,
             })
-            break;
         }
         case browserActions.ActionTypes.DIRECTORY_LISTING: {
             const places = action.payload.places.reduce((acc, place: FSPlace) => {
@@ -54,7 +50,6 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
                 drives: action.payload.drives,
                 places,
             })
-            break;
         }
         case browserActions.ActionTypes.SELECT_FULL_PATH:
         case browserActions.ActionTypes.SELECT: {

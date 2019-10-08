@@ -20,7 +20,7 @@ import Toolbar from "./Toolbar";
 
 
 const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
- 
+
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -97,28 +97,28 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     )
 
     const dispatch = useDispatch();
-    const {rectRoiParameters, rectRoiHandles, rectRoiWidgets}=useRectROI({scanWidth, scanHeight});
-    
+    const { rectRoiParameters, rectRoiHandles, rectRoiWidgets } = useRectROI({ scanWidth, scanHeight });
+
     React.useEffect(() => {
         dispatch(analysisActions.Actions.run(analysis.id, 1, {
             type: AnalysisTypes.SUM_SIG,
-            parameters:{},
+            parameters: {},
         }))
-    }, [analysis.id]);
-    
+    }, [analysis.id, dispatch]);
+
     const runAnalysis = () => {
         dispatch(analysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.CLUST,
-            parameters:{
-            roi: rectRoiParameters.roi,
-            cx,
-            cy,
-            ri,
-            ro,
-            delta,
-            n_clust,
-            n_peaks,
-            min_dist
+            parameters: {
+                roi: rectRoiParameters.roi,
+                cx,
+                cy,
+                ri,
+                ro,
+                delta,
+                n_clust,
+                n_peaks,
+                min_dist
             }
         }));
     };
@@ -137,37 +137,37 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
     const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
-    
+
     const [paramsVisible, setParamsVisible] = React.useState(false);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
         setParamsVisible(!paramsVisible);
     }
-    
+
     const clustparams =
-    <Accordion>
-    <Accordion.Title active={paramsVisible} index={0} onClick={handleClick}>
-          <Icon name='dropdown' />
-          Parameters
+        <Accordion>
+            <Accordion.Title active={paramsVisible} index={0} onClick={handleClick}>
+                <Icon name='dropdown' />
+                Parameters
     </Accordion.Title>
-    <Accordion.Content active={paramsVisible}>
-    <Form>
-        <Form.Field> 
-            <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) <input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange}/> </label>
-        </Form.Field>
-        <Form.Field>
-            <label> Number of clusters  <input type="number" value={n_clust}  step="1" min="2" max="100" onChange={clustChange}/> </label>
-        </Form.Field>    
-        <Form.Field>
-            <label>  Maximal number of possible peak positions to detect (better put higher value,
-        the output is limited to the number of peaks the algorithm could find)  <input type="number" value={n_peaks}  step="1" min="5" max="200" onChange={peakChange}/> </label>   
-        </Form.Field>
-        <Form.Field>
-            <label>  Minimal distance in pixels between peaks  <input type="number" value={min_dist}  step="1" min="0" max="100" onChange={min_distChange}/>  </label>  
-        </Form.Field>
-    </Form>
-    </Accordion.Content>
-    </Accordion>
+            <Accordion.Content active={paramsVisible}>
+                <Form>
+                    <Form.Field>
+                        <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) <input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange} /> </label>
+                    </Form.Field>
+                    <Form.Field>
+                        <label> Number of clusters  <input type="number" value={n_clust} step="1" min="2" max="100" onChange={clustChange} /> </label>
+                    </Form.Field>
+                    <Form.Field>
+                        <label>  Maximal number of possible peak positions to detect (better put higher value,
+        the output is limited to the number of peaks the algorithm could find)  <input type="number" value={n_peaks} step="1" min="5" max="200" onChange={peakChange} /> </label>
+                    </Form.Field>
+                    <Form.Field>
+                        <label>  Minimal distance in pixels between peaks  <input type="number" value={min_dist} step="1" min="0" max="100" onChange={min_distChange} />  </label>
+                    </Form.Field>
+                </Form>
+            </Accordion.Content>
+        </Accordion>
     return (
         <AnalysisLayoutTwoRes
             title="Region clustering" subtitle={subtitle}
@@ -197,7 +197,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                 />
             </>}
             toolbar={toolbar}
-            clustparams= {clustparams}
+            clustparams={clustparams}
 
             title1="Peaks inside the ring will be considered"
             title2="Choose specimen region"

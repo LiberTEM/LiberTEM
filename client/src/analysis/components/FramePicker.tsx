@@ -28,7 +28,7 @@ const useFramePicker = ({
                 parameters: params,
             }))
         }
-    }, [analysisId, cx, cy, enabled, jobIndex]);
+    }, [analysisId, cx, cy, enabled, jobIndex, dispatch]);
 
     const onPickChange = (pickX: number, pickY: number) => {
         const newX = Math.round(pickX);

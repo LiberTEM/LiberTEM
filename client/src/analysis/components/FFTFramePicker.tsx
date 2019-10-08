@@ -26,7 +26,7 @@ const useFFTFramePicker = ({
             }))
 
         }
-    }, [analysisId, cx, cy, enabled, jobIndex, real_rad, real_centerx, real_centery]);
+    }, [analysisId, cx, cy, enabled, jobIndex, real_rad, real_centerx, real_centery, dispatch]);
 
     const onPickChange = (pickX: number, pickY: number) => {
         const newX = Math.round(pickX);

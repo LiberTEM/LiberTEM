@@ -5,7 +5,9 @@ import pytest
 
 from libertem.udf import UDF
 from libertem.udf.base import UDFMeta
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 class PixelsumUDF(UDF):

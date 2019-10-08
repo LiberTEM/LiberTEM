@@ -1,12 +1,34 @@
 Amorphous materials
 ===================
 
-Methods to determine the local order or crystallinity of amorphous and nanocrystalline materials.
+LiberTEM offers methods to determine the local order or crystallinity of amorphous and nanocrystalline materials.
 
 Fluctuation EM
 ~~~~~~~~~~~~~~
 
-TODO
+The diffraction pattern of amorphous materials show a characteristic ring of intensity around the zero-order diffraction peak that is a result of near-range ordering of the atoms in the material. Any local ordering within the interaction volume of beam and sample will lead to increased "speckle", i.e. intensity fluctuations within this ring, since regions with local ordering will diffract the beam to preferred directions similar to a crystal. For Fluctuation EM :cite:`Gibson1997`, the standard deviation within this ring is calculated to obtain a measure of this local ordering.
+
+GUI use
+-------
+
+You can select `FEM` from the "Add Analysis" menu in the GUI to add a Fluctuation EM Analysis.
+
+..  figure:: ./images/fem/fem-select.png
+
+Use the controls on the left to position the ring-shaped selector over the region you'd like to analyze and then click "Apply".
+
+..  figure:: ./images/fem/fem.png
+
+Pick mode or average over ROI comes in handy to inspect individual frames or regions of interest:
+
+..  figure:: ./images/fem/fem-pick.png
+
+Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.de>, RWTH Aachen; Alexander Kuball, Universität des Saarlandes; Hongchu Du <h.du@fz-juelich.de>, ER-C, Forschungszentrum Jülich.
+
+Scripting interface
+-------------------
+
+LiberTEM supports this with the :class:`~libertem.udf.FEM.FEMUDF` and :meth:`~libertem.udf.FEM.run_fem` method.
 
 Radial Fourier Series
 ~~~~~~~~~~~~~~~~~~~~~
@@ -27,8 +49,8 @@ The phase angle of selected coefficients, for example first or second order, can
 
 Please note that this method is new and experimental and still needs to be validated further. If you are interested in helping us with applications and validations, that would be highly appreciated!
 
-GUI use:
---------
+GUI use
+-------
 
 You can select "Radial Fourier" from the "Add Analysis" menu in the GUI to add a Radial Fourier Series Analysis.
 
@@ -53,6 +75,10 @@ Sample data: Metallic glass courtesy of Shuai Wei <shuai.wei@physik.rwth-aachen.
 Scripting interface
 -------------------
 
-The scripting interface allows to calculate more than one bin at a time and influence the number of orders that are calculated. It relies on the sparse matrix back-end for MaskJob and allows to calculate many orders for many bins at once with acceptable efficiency.
+The scripting interface :meth:`~libertem.api.Context.create_radial_fourier_analysis` and :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` allows to calculate more than one bin at a time and influence the number of orders that are calculated. It relies on the sparse matrix back-end for MaskJob and allows to calculate many orders for many bins at once with acceptable efficiency.
 
 Having a fine-grained analysis with many orders calculated as a function of radius allows for a number of additional processing and analysis steps. `Follow this link to a Jupyter notebook. <radialfourier.ipynb>`_
+
+.. rubric:: Reference
+
+See :ref:`fem api` and :ref:`radial fourier api` for API references!

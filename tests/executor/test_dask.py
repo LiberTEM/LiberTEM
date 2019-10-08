@@ -9,7 +9,9 @@ from libertem.executor.dask import (
 from libertem.common import Shape, Slice
 from libertem.executor.base import AsyncAdapter
 from libertem.job.raw import PickFrameJob
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 @pytest.fixture

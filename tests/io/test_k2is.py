@@ -152,7 +152,8 @@ def test_udf_on_k2is(lt_ctx, default_k2is):
         dataset=default_k2is,
         f=np.sum,
     )
-    assert 'result' in res
+    res.data
+    res.raw_data
     # print(data.shape, res['pixelsum'].data.shape)
     # assert np.allclose(res['pixelsum'].data, np.sum(data, axis=(2, 3)))
 

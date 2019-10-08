@@ -59,7 +59,7 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
         (y,x) - pixels, coordinates of a ring to mask region of interest of SD image
         to delete outliers for peak finding
 
-    roi: np.ndarray, optional
+    roi: numpy.ndarray, optional
         boolean array which limits the elements the UDF is working on.
         Has a shape of dataset_shape.nav
 

@@ -53,7 +53,7 @@ class EMPADFile(RawFile):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._frame_size = int(np.product(EMPAD_DETECTOR_SIZE_RAW)) * int(
-            self._meta.raw_dtype.itemsize)
+            self._dtype.itemsize)
 
     def readinto(self, start, stop, out, crop_to=None):
         """
@@ -77,7 +77,7 @@ class EMPADFile(RawFile):
             offset=self.start_idx * self.num_frames,
             access=mmap.ACCESS_READ,
         )
-        self._mmap = np.frombuffer(raw_data, dtype=self._meta.raw_dtype).reshape(
+        self._mmap = np.frombuffer(raw_data, dtype=self._dtype).reshape(
             (self.num_frames,) + EMPAD_DETECTOR_SIZE_RAW
         )[..., :128, :]
 
@@ -190,12 +190,17 @@ class EMPADDataSet(DataSet):
         return self._meta.shape
 
     def _get_fileset(self):
+        frame_shape = tuple(self._meta.shape.sig)
+        num_frames = self._meta.shape.flatten_nav()[0]
         return EMPADFileSet([
             EMPADFile(
-                meta=self._meta,
                 path=self._path_raw,
+                num_frames=num_frames,
+                frame_shape=frame_shape,
                 enable_direct=False,
                 enable_mmap=True,
+                dtype=self._meta.raw_dtype,
+                start_idx=0,
             )
         ])
 

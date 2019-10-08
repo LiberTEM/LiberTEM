@@ -1,24 +1,51 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+try:
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
+except Exception:
+    pass
+
 import os
 import json
 import pprint
+import traceback
+import xml
 
 import click
 import requests
 import bibtexparser
+import html5lib
+from docutils.core import publish_string
+from docutils.parsers.rst import roles
 
-import libertem
+HERE = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.normpath(os.path.join(HERE, '..'))
 
 ACCESS_TOKEN = os.environ['ZENODO_OAUTH_TOKEN']
 
 BASE_URL = ''
 VERBOSE = False
 
-CONF = 'packaging/zenodo-upload.json'
-bibtexfile = 'docs/source/references-libertem.bib'
+CONF = os.path.join(BASE_DIR, 'packaging/zenodo-upload.json')
+bibtexfile = os.path.join(BASE_DIR, 'docs/source/references-libertem.bib')
+readmefile = os.path.join(BASE_DIR, 'README.rst')
+creatorsfile = os.path.join(BASE_DIR, 'packaging/creators.json')
+contributorsfile = os.path.join(BASE_DIR, 'packaging/contributors.json')
+
 idkeys = ['doi', 'eprint', 'url']
+
+
+def fake_cite(name, rawtext, text, lineno, inliner,
+              options={}, content=[]):
+    """
+    to prevent errors with sphinxcontrib bibtex roles, we register a fake here
+    """
+    return [], []
+
+
+roles.register_local_role("cite", fake_cite)
 
 config = json.load(open(CONF))
 
@@ -174,7 +201,7 @@ def upload_file(deposition_id, filename, remote_filename=None):
 
 
 def make_creators():
-    with open('packaging/creators.json', 'r', encoding='utf-8') as f:
+    with open(creatorsfile, 'r', encoding='utf-8') as f:
         raw_creators = json.load(f)
 
     result = []
@@ -192,7 +219,7 @@ def make_creators():
 
 
 def make_contributors():
-    with open('packaging/contributors.json', 'r', encoding='utf-8') as f:
+    with open(contributorsfile, 'r', encoding='utf-8') as f:
         raw_contributors = json.load(f)
 
     result = []
@@ -211,11 +238,39 @@ def make_contributors():
     return result
 
 
-# Work in progress, see also https://github.com/zenodo/zenodo/issues/1736
+def extract(html_string):
+    document = html5lib.parse(html_string, namespaceHTMLElements=False)
+    elem = document.find(".//div[@class='document']")
+
+    def walk(elem, drop_first_p):
+        # Convert <h1></h1> to <p><strong></strong></p>
+        if elem.tag == 'h1':
+            text = elem.text
+            elem.clear()
+            elem.tag = 'p'
+            strong = xml.etree.ElementTree.Element('strong')
+            strong.text = text
+            elem.append(strong)
+        # recurse
+        for child in elem:
+            # The first <p> contains the badges which don't work well on zenodo
+            # FIXME removing the first <p> in the document is fragile, but for now the easiest path.
+            # Do a proper solution if this stops working.
+            if drop_first_p and child.tag == 'p':
+                elem.remove(child)
+                drop_first_p = False
+            walk(child, drop_first_p)
+
+    walk(elem, True)
+    res = html5lib.serialize(elem)
+    return res
+
+
 def make_description():
-    with open('packaging/README.html', 'r', encoding='utf-8') as f:
-        readme = f.read()
-    return readme
+    with open(readmefile, "r") as srcf:
+        readme_html = publish_string(srcf.read(), writer_name="html")
+        extracted = extract(readme_html)
+        return extracted
 
 
 def make_related(db):
@@ -274,17 +329,29 @@ def make_references(db):
     return references
 
 
+def read_version(version_file):
+    res = {}
+    with open(version_file) as f:
+        exec(f.read(), res)
+    return res['__version__']
+
+
+def get_version_fn():
+    return os.path.join(BASE_DIR, 'src', 'libertem', '__version__.py')
+
+
 def make_data():
     db = load_bibtex()
     data = config['template']
     metadata = data['metadata']
+    version = read_version(get_version_fn())
     metadata['creators'] = make_creators()
     metadata['contributors'] = make_contributors()
     metadata['description'] = make_description()
     metadata['related_identifiers'] = make_related(db)
     metadata['references'] = make_references(db)
-    metadata['version'] = libertem.__version__
-    metadata['title'] += libertem.__version__
+    metadata['version'] = version
+    metadata['title'] += version
     return data
 
 
@@ -294,36 +361,45 @@ def make_data():
 @click.option('--parent', default="264899")
 @click.option('--url', default='https://sandbox.zenodo.org/api/')
 @click.option('--verbose', '-v', is_flag=True)
-def main(wheel, tarball, parent, url, verbose):
-    global BASE_URL
-    BASE_URL = url
+@click.option('--mask-zenodo-exception', is_flag=True)
+def main(wheel, tarball, parent, url, verbose, mask_zenodo_exception):
+    try:
+        # raise ZenodoException("Test")
+        global BASE_URL
+        BASE_URL = url
 
-    global VERBOSE
-    VERBOSE = verbose
-    
-    log("Creating new version of deposition %s..." % parent)
-    r = new_version(parent_id=parent)
-    prettylog(r)
+        global VERBOSE
+        VERBOSE = verbose
 
-    deposition_id = get_latest_draft(r)
-    log("Updating draft deposition %s..." % deposition_id)
-    r = update_deposition(deposition_id=deposition_id, data=make_data())
-    prettylog(r)
-
-    for file_id in get_file_ids(r):
-        log("Deleting inherited file %s..." % file_id)
-        r = delete_file(deposition_id, file_id)
+        log("Creating new version of deposition %s..." % parent)
+        r = new_version(parent_id=parent)
         prettylog(r)
 
-    log("Uploading wheel as new file...")
-    wheel_upload = upload_file(deposition_id=deposition_id, filename=wheel.name)
-    prettylog(wheel_upload)
+        deposition_id = get_latest_draft(r)
+        log("Updating draft deposition %s..." % deposition_id)
+        r = update_deposition(deposition_id=deposition_id, data=make_data())
+        prettylog(r)
 
-    log("Uploading tarball as new file...")
-    tar_upload = upload_file(deposition_id=deposition_id, filename=tarball.name)
-    prettylog(tar_upload)
+        for file_id in get_file_ids(r):
+            log("Deleting inherited file %s..." % file_id)
+            r = delete_file(deposition_id, file_id)
+            prettylog(r)
 
-    log("Finished!")
+        log("Uploading wheel as new file...")
+        wheel_upload = upload_file(deposition_id=deposition_id, filename=wheel.name)
+        prettylog(wheel_upload)
+
+        log("Uploading tarball as new file...")
+        tar_upload = upload_file(deposition_id=deposition_id, filename=tarball.name)
+        prettylog(tar_upload)
+
+        log("Finished!")
+    except ZenodoException as e:
+        if mask_zenodo_exception:
+            print("Masking Zenodo exception:")
+            traceback.print_exception(type(e), e, e.__traceback__)
+        else:
+            raise
 
 
 if __name__ == '__main__':

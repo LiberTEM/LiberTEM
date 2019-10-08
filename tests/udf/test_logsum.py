@@ -2,7 +2,9 @@ import numpy as np
 
 import libertem.udf.logsum as logsum
 
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_logsum(lt_ctx):

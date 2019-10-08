@@ -50,6 +50,9 @@ class BufferWrapper(object):
     Usually, as a user, you only need to instantiate this class, specifying `kind`,
     `dtype` and sometimes `extra_shape` parameters. Most methods are meant to be called
     from LiberTEM-internal code, for example the UDF functionality.
+
+    This class is array_like, so you can directly use it, for example, as argument
+    for numpy functions.
     """
     def __init__(self, kind, extra_shape=(), dtype="float32"):
         """
@@ -121,7 +124,7 @@ class BufferWrapper(object):
         """
         Get the buffer contents in shape that corresponds to the
         original dataset shape. If a ROI is set, embed the result into a new
-        array; unset values have nan value.
+        array; unset values have nan value, if supported by the underlying dtype.
         """
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
@@ -138,6 +141,12 @@ class BufferWrapper(object):
         """
         return self._data
 
+    def __array__(self):
+        """
+        returns the "wrapped"/reshaped array, see above
+        """
+        return self.data
+
     def allocate(self):
         """
         Allocate a new buffer, in the shape previously set
@@ -149,22 +158,6 @@ class BufferWrapper(object):
             self._data = zeros_aligned(1, dtype=self._dtype)
         else:
             self._data = zeros_aligned(self._shape, dtype=self._dtype)
-
-    def set_buffer(self, buf):
-        """
-        Set the underlying buffer to an existing numpy array. The
-        shape must match with the shape of nav or sig of the dataset,
-        plus extra_shape, as determined by the `kind` and `extra_shape`
-        constructor arguments.
-        """
-        assert self._data is None
-        assert buf.dtype == self._dtype
-        extra = self._extra_shape
-        if not extra:
-            extra = (1,)
-        shape = (buf.size // np.product(extra),) + extra
-        self._data = buf.reshape(shape).squeeze()
-        self._data_coords_global = True
 
     def has_data(self):
         return self._data is not None
@@ -184,9 +177,7 @@ class BufferWrapper(object):
 
     def get_view_for_partition(self, partition):
         """
-        get a view for a single partition in a dataset-sized buffer
-        (dataset-sized here means the reduced result for a whole dataset,
-        not the dataset itself!)
+        get a view for a single partition in a whole-result-sized buffer
         """
         if self._kind == "nav":
             slice_ = self._slice_for_partition(partition)
@@ -249,3 +240,61 @@ class BufferWrapper(object):
                 return self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
             return self._data
+
+    def __repr__(self):
+        return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (
+            self._kind, self._dtype, self._extra_shape
+        )
+
+
+class AuxBufferWrapper(BufferWrapper):
+    def new_for_partition(self, partition, roi):
+        """
+        Return a new AuxBufferWrapper for a specific partition,
+        slicing the data accordingly and reducing it to the selected roi.
+
+        This assumes to be called on an AuxBufferWrapper that was not created
+        by this method, that is, it should have global coordinates without
+        having the ROI applied.
+        """
+        # FIXME: right now creates a view for the partition slice, which
+        # AFAIK means we serialize the whole array; we could optimize here
+        # and only send over the partition slice. But maybe, later, when we
+        # actually properly scatter and share data, this becomes obsolete anyways,
+        # as we would scatter most likely for all partitions (to be flexible in node
+        # assignment, for example for availability)
+        assert self._data_coords_global
+        ps = partition.slice.get(nav_only=True)
+        buf = self.__class__(self._kind, self._extra_shape, self._dtype)
+        if roi is not None:
+            roi_part = roi.reshape(-1)[ps]
+            new_data = self._data[ps][roi_part]
+        else:
+            new_data = self._data[ps]
+        buf.set_buffer(new_data, is_global=False)
+        buf.set_roi(roi)
+        assert np.product(new_data.shape) > 0
+        assert not buf._data_coords_global
+        return buf
+
+    def set_buffer(self, buf, is_global=True):
+        """
+        Set the underlying buffer to an existing numpy array.
+
+        If is_global is True, the shape must match with the shape of nav or sig
+        of the dataset, plus extra_shape, as determined by the `kind` and
+        `extra_shape` constructor arguments.
+        """
+        assert self._data is None
+        assert buf.dtype == self._dtype
+        extra = self._extra_shape
+        if not extra:
+            extra = (1,)
+        shape = (-1,) + extra
+        self._data = buf.reshape(shape).squeeze()
+        self._data_coords_global = is_global
+
+    def __repr__(self):
+        return "<AuxBufferWrapper kind=%s dtype=%s extra_shape=%s>" % (
+            self._kind, self._dtype, self._extra_shape
+        )

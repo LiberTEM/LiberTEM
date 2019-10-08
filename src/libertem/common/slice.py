@@ -107,7 +107,7 @@ class Slice(object):
     def get(self, arr=None, sig_only=False, nav_only=False):
         """
         Get a standard python tuple-of-slice-object which can be used
-        to slice any compatible ndarray
+        to slice any compatible numpy.ndarray
 
         Parameters
         ----------

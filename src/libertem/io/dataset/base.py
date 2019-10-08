@@ -11,7 +11,7 @@ def _roi_to_indices(roi, start, stop):
     """
     helper function to calculate indices from roi mask
 
-    roi : np.ndarray of type bool, matching the navigation shape of the dataset
+    roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
 
     start : int
         start frame index, relative to dataset start
@@ -291,7 +291,7 @@ class Partition(object):
         dest_dtype : numpy dtype
             convert data to this dtype when reading
 
-        roi : np.ndarray
+        roi : numpy.ndarray
             1d mask that matches the dataset navigation shape to limit the region to work on.
             With a ROI, we yield tiles from a "compressed" navigation axis, relative to
             the beginning of the dataset. Compressed means, only frames that have a 1
@@ -547,7 +547,8 @@ class Partition3D(Partition):
             How many frames this partition should contain
 
         stackheight : int
-            How many frames per tile?
+            How many frames per tile? Default value, can be overridden by
+            `target_size` in `get_tiles`.
         """
         self._fileset = fileset
         self._start_frame = start_frame

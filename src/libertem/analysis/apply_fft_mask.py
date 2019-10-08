@@ -15,11 +15,9 @@ class ApplyFFTMask(BaseAnalysis):
          real_rad=real_rad)
 
     def get_udf_results(self, udf_results, roi):
-
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results.intensity,
-                           visualized=visualize_simple(
-                               udf_results.intensity.reshape(self.dataset.shape.nav)),
+            AnalysisResult(raw_data=data,
+                           visualized=visualize_simple(data.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
                            desc="result from integration over mask in Fourier space"),
         ])

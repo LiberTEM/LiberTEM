@@ -1,7 +1,8 @@
 import numpy as np
 
+from libertem.io.dataset.memory import MemoryDataSet
 
-from utils import MemoryDataSet, _mk_random
+from utils import _mk_random
 
 
 def test_partition3d_correct_slices():

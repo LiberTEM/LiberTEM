@@ -5,7 +5,9 @@ from libertem.job.raw import PickFrameJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common import Slice, Shape
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 def test_get_single_frame(lt_ctx):

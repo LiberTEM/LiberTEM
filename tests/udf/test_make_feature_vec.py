@@ -2,7 +2,7 @@ import numpy as np
 
 import libertem.udf.feature_vector_maker as feature
 
-from utils import MemoryDataSet
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 def test_simple_example(lt_ctx):

@@ -6,8 +6,8 @@ import cloudpickle
 import numpy as np
 
 from libertem.job.base import Task
-from libertem.common.buffers import BufferWrapper
-from libertem.common import Shape
+from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
+from libertem.common import Shape, Slice
 
 
 class UDFMeta:
@@ -22,46 +22,47 @@ class UDFMeta:
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
+        self._slice = None
+
+    @property
+    def slice(self):
+        """
+        Slice : A :class:`~libertem.common.slice.Slice` instance that describes the location
+                within the dataset with navigation dimension flattened and reduced to the ROI.
+        """
+        return self._slice
+
+    @slice.setter
+    def slice(self, new_slice):
+        self._slice = new_slice
 
     @property
     def partition_shape(self) -> Shape:
         """
-        Returns
-        -------
-        Shape
-            The shape of the partition this UDF currently works on.\
-            If a ROI was applied, the shape will be modified accordingly.
+        Shape : The shape of the partition this UDF currently works on.
+                If a ROI was applied, the shape will be modified accordingly.
         """
         return self._partition_shape
 
     @property
     def dataset_shape(self) -> Shape:
         """
-        Returns
-        -------
-        Shape
-            The original shape of the whole dataset, not influenced by the ROI
+        Shape : The original shape of the whole dataset, not influenced by the ROI
         """
         return self._dataset_shape
 
     @property
     def roi(self) -> np.ndarray:
         """
-        Returns
-        -------
-        np.ndarray
-            boolean array which limits the elements the UDF is working on.\
-            Has a shape of `dataset_shape.nav`.
+        numpy.ndarray : Boolean array which limits the elements the UDF is working on.
+                     Has a shape of :attr:`dataset_shape.nav`.
         """
         return self._roi
 
     @property
     def dataset_dtype(self) -> np.dtype:
         """
-        Returns
-        -------
-        np.dtype
-            Native dtype of the dataset
+        numpy.dtype : Native dtype of the dataset
         """
         return self._dataset_dtype
 
@@ -122,6 +123,9 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
+    def as_dict(self):
+        return dict(self.items())
+
     def get_proxy(self):
         return MappingProxyType({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
@@ -136,10 +140,12 @@ class UDFData:
 
     def allocate_for_part(self, partition, roi):
         """
-        allocate all BufferWrapper instances in this namespace
+        allocate all BufferWrapper instances in this namespace.
+        for pre-allocated buffers (i.e. aux data), only set shape and roi
         """
-        for k, buf in self._get_buffers(filter_allocated=True):
+        for k, buf in self._get_buffers():
             buf.set_shape_partition(partition, roi)
+        for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
     def allocate_for_full(self, dataset, roi):
@@ -163,6 +169,10 @@ class UDFData:
             else:
                 self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
+    def new_for_partition(self, partition, roi):
+        for k, buf in self._get_buffers():
+            self._data[k] = buf.new_for_partition(partition, roi)
+
     def clear_views(self):
         self._views = {}
 
@@ -180,10 +190,11 @@ class UDFFrameMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Parameters
         ----------
-        frame : ndarray
+        frame : numpy.ndarray
             A single frame or signal element from the dataset.
             The shape is the same as `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 2D, for spectra 1D etc.
@@ -195,7 +206,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -204,17 +215,14 @@ class UDFTileMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Parameters
         ----------
-        tile : ndarray
+        tile : numpy.ndarray
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
-
-        tile_slice : Slice
-            A libertem.common.Slice instance that describes the location within the
-            dataset with navigation dimension flattened and reduced to the ROI.
         """
         raise NotImplementedError()
 
@@ -233,6 +241,7 @@ class UDFPartitionMixin:
         - `self.params`    - the parameters of this UDF
         - `self.task_data` - task data created by `get_task_data`
         - `self.results`   - the result buffer instances
+        - `self.meta`      - meta data about the current operation and data set
 
         Note
         ----
@@ -243,7 +252,7 @@ class UDFPartitionMixin:
 
         Parameters
         ----------
-        partition : ndarray
+        partition : numpy.ndarray
             A large number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
@@ -310,6 +319,9 @@ class UDFBase:
     def set_meta(self, meta):
         self.meta = meta
 
+    def set_slice(self, slice_):
+        self.meta.slice = slice_
+
     def get_method(self):
         if hasattr(self, 'process_tile'):
             method = 'tile'
@@ -341,11 +353,11 @@ class UDF(UDFBase):
         -------
 
         >>> class MyUDF(UDF):
-        >>>     def __init__(self, param1, param2="def2", **kwargs):
-        >>>         param1 = int(param1)
-        >>>         if "param3" not in kwargs:
-        >>>             raise TypeError("missing argument param3")
-        >>>         super().__init__(param1=param1, param2=param2, **kwargs)
+        ...     def __init__(self, param1, param2="def2", **kwargs):
+        ...         param1 = int(param1)
+        ...         if "param3" not in kwargs:
+        ...             raise TypeError("missing argument param3")
+        ...         super().__init__(param1=param1, param2=param2, **kwargs)
 
         Parameters
         ----------
@@ -364,6 +376,15 @@ class UDF(UDFBase):
 
     def copy(self):
         return self.__class__(**self._kwargs)
+
+    def copy_for_partition(self, partition, roi):
+        """
+        create a copy of the UDF, specifically slicing aux data to the
+        specified pratition and roi
+        """
+        new_instance = self.__class__(**self._kwargs)
+        new_instance.params.new_for_partition(partition, roi)
+        return new_instance
 
     def get_task_data(self):
         """
@@ -462,15 +483,32 @@ class UDF(UDFBase):
 
         Example
         -------
-        >>> # for each frame, provide 7 random values:
+
+        We create a UDF to demonstrate the behavior:
+
+        >>> class MyUDF(UDF):
+        ...     def get_result_buffers(self):
+        ...         # Result buffer for debug output
+        ...         return {'aux_dump': self.buffer(kind='nav', dtype='object')}
+        ...
+        ...     def process_frame(self, frame):
+        ...         # Extract value of aux data for demonstration
+        ...         self.results.aux_dump[:] = str(self.params.aux_data[:])
+        ...
+        >>> # for each frame, provide three values from a sequential series:
         >>> aux1 = MyUDF.aux_data(
-        >>>     data=np.random.randn(*(tuple(dataset.shape.nav) + (7,))).astype("float32"),
-        >>>     kind="nav", extra_shape=(7,), dtype="float32"
-        >>> )
-        >>> udf = MyUDF(random_data=aux1)
-        >>> ctx.run_udf(dataset=dataset, udf=udf)
+        ...     data=np.arange(np.prod(dataset.shape.nav) * 3, dtype=np.float32),
+        ...     kind="nav", extra_shape=(3,), dtype="float32"
+        ... )
+        >>> udf = MyUDF(aux_data=aux1)
+        >>> res = ctx.run_udf(dataset=dataset, udf=udf)
+
+        process_frame for frame (0, 7) received a view of aux_data with values [21., 22., 23.]:
+
+        >>> res['aux_dump'].data[0, 7]
+        '[21. 22. 23.]'
         """
-        buf = BufferWrapper(kind, extra_shape, dtype)
+        buf = AuxBufferWrapper(kind, extra_shape, dtype)
         buf.set_buffer(data)
         return buf
 
@@ -530,13 +568,22 @@ class UDFRunner:
         for tile in tiles:
             if method == 'tile':
                 self._udf.set_views_for_tile(partition, tile)
-                self._udf.process_tile(tile.data, tile.tile_slice)
+                self._udf.set_slice(tile.tile_slice)
+                self._udf.process_tile(tile.data)
             elif method == 'frame':
+                tile_slice = tile.tile_slice
                 for frame_idx, frame in enumerate(tile.data):
+                    frame_slice = Slice(
+                        origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
+                        shape=Shape((1,) + tuple(tile_slice.shape)[1:],
+                                    sig_dims=tile_slice.shape.sig.dims),
+                    )
+                    self._udf.set_slice(frame_slice)
                     self._udf.set_views_for_frame(partition, tile, frame_idx)
                     self._udf.process_frame(frame)
             elif method == 'partition':
                 self._udf.set_views_for_tile(partition, tile)
+                self._udf.set_slice(partition.slice)
                 self._udf.process_partition(tile.data)
 
         if hasattr(self._udf, 'postprocess'):
@@ -581,7 +628,7 @@ class UDFRunner:
 
         self._udf.clear_views()
 
-        return self._udf.results
+        return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         meta = UDFMeta(
@@ -604,21 +651,21 @@ class UDFRunner:
                 src=part_results.get_proxy()
             )
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
         else:
             # yield at least one result (which should be empty):
             self._udf.clear_views()
-            yield self._udf.results
+            yield self._udf.results.as_dict()
 
     def _roi_for_partition(self, roi, partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
     def _make_udf_tasks(self, dataset, roi):
         for idx, partition in enumerate(dataset.get_partitions()):
-            udf = self._udf.copy()
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
                 if np.count_nonzero(roi_for_part) == 0:
                     # roi is empty for this partition, ignore
                     continue
+            udf = self._udf.copy_for_partition(partition, roi)
             yield UDFTask(partition=partition, idx=idx, udf=udf, roi=roi)

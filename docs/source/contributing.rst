@@ -1,12 +1,23 @@
+.. _contributing:
+
 Contributing
 ============
 
-TODO: introduction
+LiberTEM is intended and designed as a collaboratively developed platform for data analysis. That means all our development is coordinated openly, mostly on our `GitHub repository <https://github.com/LiberTEM/LiberTEM/>`_ where our code is hosted. Any suggestions, Issues, bug reports, discussions and code contributions are highly appreciated! Please let us know if you think we can improve on something, be it code, communication or other aspects.
 
-Our code is hosted `on GitHub <https://github.com/libertem/libertem/>`_, and we are using 
-`pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions.
+Development principles
+----------------------
 
-Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
+We have a `rather extensive and growing list of things to work on <https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize our limited resources to work on items with the largest benefit for our user base and project. Supporting users who contribute code is most important to us. Please contact us for help! Furthermore, we prioritize features that create direct benefits for many current users or open significant new applications. Generally, we follow user demand with our developments.
+
+For design of new features we roughly follow the `lead user method <https://en.wikipedia.org/wiki/Lead_user>`_, which means that we develop new features closely along a non-trivial real-world application in order to make sure the developments are appropriate and easy to use in practice. The interface for :ref:`user-defined functions`, as an example, follows the requirements around implementing and running complex algorithms like :ref:`strain mapping` for distributed systems.
+
+Furthermore we value a systematic approach to development with requirements analysis and evaluation of design options as well as iterative design with fast test and review cycles.
+
+Code contributions
+------------------
+
+We are using `pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions. Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
 To keep your changes organized and to prevent unrelated changes from disturbing your pull request,
 create a new branch for each pull request. 
 
@@ -14,7 +25,7 @@ Before creating a pull request, please make sure all tests still pass. See `Runn
 information. You should also update the test suite and add test cases for your contribution. See the section
 `Code coverage`_ below on how to check if your new code is covered by tests.
 
-To make sure our code base stays readable, we have follow a `Code Style`_.
+To make sure our code base stays readable, we follow a `Code Style`_.
 
 Please update ``packaging/creators.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited. ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` are generated from the JSON files with ``python scripts/build-authors-contributors``.
 
@@ -22,15 +33,19 @@ If you are changing parts of LiberTEM that are currently not covered by tests, p
 new tests! When changing example code, which is not run as part of the tests, make sure the example
 still runs.
 
+When adding or changing a feature, you should also update the corresponding documentation, or add
+a new section for your feature. Follow the current documentation structure, or ask the maintainers
+where your new documentation should end up. When introducing a feature, it is okay to start with
+a draft documentation in the first PR, if it will be completed later. Changes of APIs should
+update the corresponding docstrings.
+
 When you have submitted your pull request, someone from the LiberTEM organization will review your
 pull request, and may add comments or ask questions. If everything is good to go, your changes will
 be merged and you can delete the branch you created for the pull request.
 
 See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
 
-
-
-Running the Tests
+Running the tests
 -----------------
 
 Our tests are written using pytest. For running them in a repeatable manner, we are using tox.
@@ -94,7 +109,7 @@ List of marks used in our test suite:
 - `functional`: tests that spin up a local dask cluster
 
 Code coverage
--------------
+~~~~~~~~~~~~~
 
 After running the tests, you can inspect the test coverage by opening `htmlcov/index.html` in a web browser. When
 creating a pull request, the change in coverage is also reported by the codecov bot. Ideally, the test coverage
@@ -152,9 +167,9 @@ Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment 
     REM with the same command line
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
-See also: http://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
+See also: https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
 
-Code Style
+Code style
 ----------
 
 We try to keep our code `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ -compliant, with
@@ -168,8 +183,14 @@ You can check the code style by running:
    
    $ tox -e flake8
 
+We recommend using an editor that can check code style on the fly, such as `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
 
-Building the Documentation
+Docstrings
+~~~~~~~~~~
+
+The `NumPy docstring guide <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_ is our guideline for formatting docstrings. We are testing docstring code examples in Continuous Integration using `doctest <https://docs.python.org/3/library/doctest.html>`_. You can test files by hand by running :code:`pytest --doctest-modules <pathspec>`.
+
+Building the documentation
 --------------------------
 
 Documentation building is also done with tox, see above for the basics. It requires manual `installation of pandoc <https://pandoc.org/installing.html>`_ on the build system since pandoc can't be installed reliably using pip.
@@ -180,6 +201,14 @@ To start the live building process:
     $ tox -e docs
 
 You can then view a live-built version at http://localhost:8008
+
+You can include code samples with the `doctest sphinx extension <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ and test them with
+
+.. code-block:: shell
+
+    $ tox -e docs-check
+
+.. _`building the client`:
 
 Building the client
 -------------------
@@ -222,7 +251,7 @@ Run it on the default port (9000) to allow proxying from the front-end server to
 To learn more about the build process, please see `the README in the client directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
 
 You can then use any editor you like to change the client source files, in the client/src directory.
-We recommend `visual studio code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
+We recommend `Visual Studio Code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
 
 To simplify development and installing from a git checkout, we currently always ship a production build
 of the client in the git repository. When you are creating a pull request for the client, please always
@@ -246,10 +275,10 @@ Before (using a release candidate package)
 * Full documentation review and update
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source files in ``packaging/`` using ``python scripts/build-authors-contributors``
-* Update ``packaging/README.html`` with ``python scripts/readme_to_html.py README.rst packaging/README.html`` (needs html5lib). This is used as a description on Zenodo.org
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
 * Confirm that a new version is created on Zenodo.org that is ready for submission.
-* Install release candidate packages from GitHub in a clean environment
+* Install release candidate packages in a clean environment
+  (for example: :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
@@ -287,14 +316,16 @@ Before (using a release candidate package)
 * Run libertem-server on Windows, connect to a remote dask cluster running on Linux, open all file types and perform an analysis for each file type.
 * Use the GUI while a long-running analysis is running
     * Still usable, decent response times?
+* Review open issues and pull requests
+* Create and review release notes
 
 After releasing on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Confirm that all release packages are built
+* Confirm that all release packages are built and release notes are up-to-date
 * Install release package
 * Confirm correct version info
-* Upload to PyPi
+* confirm package upload to PyPi
 * Publish new version on zenodo.org
 * Update documentation with new links, if necessary
 * Send announcement message on mailing list

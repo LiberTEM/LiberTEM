@@ -1,14 +1,18 @@
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
-from utils import MemoryDataSet, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _mk_random
 
 
 class EchoUDF(UDF):
     def get_result_buffers(self):
         return {
             'echo': self.buffer(
+                kind="nav", dtype="float32", extra_shape=(2,)
+            ),
+            'echo_postprocess': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
             ),
             'weighted': self.buffer(
@@ -19,6 +23,9 @@ class EchoUDF(UDF):
     def process_frame(self, frame):
         self.results.echo[:] = self.params.aux
         self.results.weighted[:] = np.sum(frame) * self.params.aux[0]
+
+    def postprocess(self):
+        self.results.echo_postprocess[:] = self.params.aux
 
 
 class EchoTiledUDF(UDF):
@@ -32,7 +39,7 @@ class EchoTiledUDF(UDF):
             )
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         self.results.echo[:] = self.params.aux
         w = np.sum(tile, axis=(-1, -2)) * self.params.aux[..., 0]
         self.results.weighted[:] = w
@@ -40,29 +47,81 @@ class EchoTiledUDF(UDF):
 
 def test_aux_1(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    aux_data = BufferWrapper(
-        kind="nav", dtype="float32", extra_shape=(2,)
+    aux_data = EchoUDF.aux_data(
+        kind="nav",
+        data=_mk_random(size=(16, 16, 2), dtype="float32"),
+        dtype="float32", extra_shape=(2,)
     )
-    aux_data.set_buffer(
-        _mk_random(size=(16, 16, 2), dtype="float32")
+    dataset = lt_ctx.load(
+        "memory", data=data, tileshape=(7, 16, 16),
+        num_partitions=2, sig_dims=2
     )
-    dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
-                            num_partitions=2, sig_dims=2)
 
     echo_udf = EchoUDF(aux=aux_data)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)
     assert 'echo' in res
     print(data.shape, res['echo'].data.shape)
     assert np.allclose(res['echo'].raw_data, aux_data.raw_data)
+    assert 'echo_postprocess' in res
+    print(data.shape, res['echo_postprocess'].data.shape)
+    assert np.allclose(res['echo_postprocess'].raw_data, aux_data.raw_data)
+
+
+def test_aux_roi_dummy(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    aux_input = _mk_random(size=(16, 16, 2), dtype="float32")
+    aux_data = EchoUDF.aux_data(
+        kind="nav",
+        data=aux_input,
+        dtype="float32", extra_shape=(2,)
+    )
+    dataset = lt_ctx.load(
+        "memory", data=data, tileshape=(7, 16, 16),
+        num_partitions=2, sig_dims=2
+    )
+
+    roi = np.ones(dataset.shape.nav, dtype="bool")
+
+    echo_udf = EchoUDF(aux=aux_data)
+    res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf, roi=roi)
+    assert 'echo' in res
+    print(data.shape, res['echo'].data.shape)
+    assert np.allclose(res['echo'].data[roi], aux_input[roi])
+    assert 'echo_postprocess' in res
+    print(data.shape, res['echo_postprocess'].data.shape)
+    assert np.allclose(res['echo_postprocess'].data[roi], aux_input[roi])
+
+
+def test_aux_roi(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    aux_input = _mk_random(size=(16, 16, 2), dtype="float32")
+    aux_data = EchoUDF.aux_data(
+        kind="nav",
+        data=aux_input,
+        dtype="float32", extra_shape=(2,)
+    )
+    dataset = lt_ctx.load(
+        "memory", data=data, tileshape=(7, 16, 16),
+        num_partitions=2, sig_dims=2
+    )
+
+    roi = _mk_random(size=dataset.shape.nav, dtype="bool")
+
+    echo_udf = EchoUDF(aux=aux_data)
+    res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf, roi=roi)
+    assert 'echo' in res
+    print(data.shape, res['echo'].data.shape)
+    assert np.allclose(res['echo'].data[roi], aux_input[roi])
+    assert 'echo_postprocess' in res
+    print(data.shape, res['echo_postprocess'].data.shape)
+    assert np.allclose(res['echo_postprocess'].data[roi], aux_input[roi])
 
 
 def test_aux_2(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    aux_data = BufferWrapper(
-        kind="nav", dtype="float32", extra_shape=(2,)
-    )
-    aux_data.set_buffer(
-        _mk_random(size=(16, 16, 2), dtype="float32")
+    aux_data = EchoUDF.aux_data(
+        kind="nav", dtype="float32", extra_shape=(2,),
+        data=_mk_random(size=(16, 16, 2), dtype="float32"),
     )
     dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
                             num_partitions=2, sig_dims=2)

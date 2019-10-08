@@ -109,16 +109,15 @@ class Context:
 
         Examples
         --------
-        >>> from libertem.api import Context
-        >>> ctx = Context()
-        >>> ds = ctx.load("...")
+
         >>> # Use intermediate variables instead of referencing
         >>> # large complex objects like a dataset within the
         >>> # factory function
         >>> shape = dataset.shape.sig
         >>> job = ctx.create_mask_job(
-        ... factories=[lambda: np.ones(shape)],
-        ... dataset=dataset)
+        ...     factories=[lambda: np.ones(shape)],
+        ...     dataset=dataset
+        ... )
         >>> result = ctx.run(job)
         """
         return ApplyMasksJob(
@@ -171,18 +170,18 @@ class Context:
 
         Examples
         --------
-        >>> from libertem.api import Context
-        >>> ctx = Context()
-        >>> ds = ctx.load("...")
+
         >>> # Use intermediate variables instead of referencing
         >>> # large complex objects like a dataset within the
         >>> # factory function
         >>> shape = dataset.shape.sig
         >>> job = ctx.create_mask_analysis(
-        ... factories=[lambda: np.ones(shape)],
-        ... dataset=dataset)
+        ...     factories=[lambda: np.ones(shape)],
+        ...     dataset=dataset
+        ... )
         >>> result = ctx.run(job)
-        >>> result.mask_0.raw_data
+        >>> result.mask_0.raw_data.shape
+        (16, 16)
         """
         return MasksAnalysis(
             dataset=dataset,
@@ -227,6 +226,8 @@ class Context:
             use_sparse: bool = None):
         """
         Calculate the Fourier transform of rings around the center.
+
+        See :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` for details!
 
         Parameters
         ----------
@@ -361,13 +362,16 @@ class Context:
 
         Examples
         --------
-        >>> from libertem.api import Context
-        >>> ctx = Context()
-        >>> ds = ctx.load("...")
+
+        >>> dataset = ctx.load(
+        ...     filetype="memory",
+        ...     data=np.zeros([16, 16, 16, 16, 16], dtype=np.float32),
+        ...     sig_dims=2
+        ... )
         >>> origin = (7, 8, 9)
-        >>> job = create_pick_job(dataset=ds, origin=origin)
+        >>> job = ctx.create_pick_job(dataset=dataset, origin=origin)
         >>> result = ctx.run(job)
-        >>> assert result.shape == ds.shape.sig
+        >>> assert result.shape == tuple(dataset.shape.sig)
 
         """
         # FIXME: this method works well if we can flatten to 3D
@@ -425,13 +429,15 @@ class Context:
 
         Examples
         --------
-        >>> from libertem.api import Context
-        >>> ctx = Context()
-        >>> ds = ctx.load("...")
-        >>> origin = (7, 8, 9)
-        >>> job = create_pick_analysis(dataset=ds, x=9, y=8, z=7)
+
+        >>> dataset = ctx.load(
+        ...     filetype="memory",
+        ...     data=np.zeros([16, 16, 16, 16, 16], dtype=np.float32),
+        ...     sig_dims=2
+        ... )
+        >>> job = ctx.create_pick_analysis(dataset=dataset, x=9, y=8, z=7)
         >>> result = ctx.run(job)
-        >>> assert result.intensity.raw_data.shape == ds.shape.sig
+        >>> assert result.intensity.raw_data.shape == tuple(dataset.shape.sig)
         """
         loc = locals()
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
@@ -483,12 +489,12 @@ class Context:
         udf
             UDF instance you want to run
 
-        roi : np.ndarray
+        roi : numpy.ndarray
             region of interest as bool mask over the navigation axes of the dataset
 
         Returns
         -------
-        UDFData:
+        dict:
             Return value of the UDF containing the result buffers
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
@@ -505,19 +511,19 @@ class Context:
         f:
             Function that accepts a frame as the only parameter. It should return a strongly
             reduced output compared to the size of a frame.
-        roi : np.ndarray
+        roi : numpy.ndarray
             region of interest as bool mask over the navigation axes of the dataset
 
         Returns
         -------
 
-        UDFData:
-            The result of the UDF with a single buffer named "result" with :code:`extra_shape`
-            and :code:`dtype` set to contain all return values of :meth:`f` converted to a numpy
-            array
+        BufferWrapper:
+            The result of the UDF. Access the underlying numpy array using the `data` attribute.
+            Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        return self.run_udf(dataset=dataset, udf=udf, roi=roi)
+        results = self.run_udf(dataset=dataset, udf=udf, roi=roi)
+        return results['result']
 
     def _create_local_executor(self):
         cores = psutil.cpu_count(logical=False)

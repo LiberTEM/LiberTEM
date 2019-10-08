@@ -116,14 +116,14 @@ class BloFileSet(FileSet3D):
 
 
 class BloDataSet(DataSet):
+    # FIXME include sample file for doctest, see Issue #86
     """
-    Read nanomegas .blo files
+    Read Nanomegas .blo files
 
     Examples
     --------
-    >>> from libertem.api import Context
-    >>> ctx = Context()
-    >>> ds = ctx.load("blo", path="/path/to/file.blo")
+
+    >>> ds = ctx.load("blo", path="/path/to/file.blo")  # doctest: +SKIP
 
     Parameters
     ----------

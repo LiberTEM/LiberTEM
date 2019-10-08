@@ -12,7 +12,7 @@ class SumUDF(UDF):
             'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
         }
 
-    def process_tile(self, tile, tile_slice):
+    def process_tile(self, tile):
         self.results.intensity[:] += np.sum(tile, axis=0)
 
     def merge(self, dest, src):
@@ -35,7 +35,7 @@ class SumAnalysis(BaseAnalysis):
         if udf_results.intensity.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(
-                    udf_results.intensity,
+                    udf_results['intensity'].data,
                     key_prefix="intensity",
                     title="intensity",
                     desc="sum of all frames",
@@ -44,6 +44,6 @@ class SumAnalysis(BaseAnalysis):
 
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results.intensity,
-                           visualized=visualize_simple(udf_results.intensity, logarithmic=True),
+                           visualized=visualize_simple(udf_results['intensity'].data, logarithmic=True),
                            key="intensity", title="intensity", desc="sum of frames"),
         ])

@@ -25,9 +25,9 @@ def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius, antial
 
     Examples
     --------
-    >>> import numpy as np
+
     >>> image = np.ones((9, 9))
-    >>> mask = make_circular_mask(4, 4, 9, 9, 2)
+    >>> mask = _make_circular_mask(4, 4, 9, 9, 2)
     >>> image_masked = image*mask
     >>> import matplotlib.pyplot as plt
     >>> cax = plt.imshow(image_masked)
@@ -172,6 +172,29 @@ def radial_gradient_background_subtraction(r, r0, r_outer, delta=1):
 
     The function accepts the radius for each pixel as a parameter so that a distorted version can
     be generated with the stretchY and angle parameters of :meth:`~libertem.masks.polar_map`.
+
+    Parameters
+    ----------
+
+    r : numpy.ndarray
+        Map of radius for each pixel, typically 2D. This allows to work in distorted coordinate
+        systems by assigning arbitrary radius values to each pixel.
+        :meth:`~libertem.masks.polar_map` can generate elliptical maps as an example.
+    r0 : float
+        Inner radius to fill with a linear gradient in units of r
+    r_outer : float
+        Outer radius of ring from r0 to fill with -1 in units of r
+    delta : float, optional
+        Width of transition region between inner and outer in units of r
+        with linear gradient for antialiasing or smoothening. Defaults to 1.
+
+    Returns
+    -------
+
+    numpy.ndarray
+        NumPy numpy.ndarray with the same shape and type of r with mask values assigned as
+        described in the description.
+
     '''
     result = np.zeros_like(r)
     within = r < r0 - delta/2
@@ -193,6 +216,23 @@ def polar_map(centerX, centerY, imageSizeX, imageSizeY, stretchY=1., angle=0.):
     The optional parameters stretchY and angle allow to stretch and rotate the coordinate system
     into an elliptical form. This is useful to generate modified input data for functions that
     generate a template as a function of radius and angle.
+
+    Parameters
+    ----------
+
+    centerX,centerY : float
+        Center of the coordinate system in pixel coordinates
+    imageSizeX,imageSizeY : int
+        Size of the map to generate in px
+    stretchY,angle : float, optional
+        Stretch the radius elliptically by amount :code:`stretchY` in direction
+        :code:`angle` in radians. :code:`angle = 0` means in Y direction.
+
+    Returns
+    -------
+
+    Tuple[numpy.ndarray, numpy.ndarray]
+        Map of radius and angle of shape :code:`(imageSizeY, imageSizeX)`
     '''
     y, x = np.mgrid[0:imageSizeY, 0:imageSizeX]
     dy = y - centerY

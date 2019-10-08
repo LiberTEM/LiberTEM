@@ -1,19 +1,22 @@
 #!/bin/sh
-set -x
+set -ex
 BASE_DIR=$(dirname "$(readlink -f "${0}")")/../../
-mkdir -p AppDir
+
+CONDA_PKGS_DIRS=$BASE_DIR/conda-pkgs/
+
 
 MC_NAME=Miniconda3-latest-Linux-x86_64.sh
 [ ! -f $MC_NAME ] && wget -c -q https://repo.continuum.io/miniconda/$MC_NAME
 
-cd AppDir || exit 1
-HERE=$(dirname "$(readlink -f "${0}")")
+APPDIR=$(dirname "$(readlink -f "${0}")")/AppDir
+mkdir -p $APPDIR
+cd $APPDIR || exit 1
 
 bash ../$MC_NAME -b -p ./usr || exit 1
-PATH="${HERE}"/usr/bin:$PATH
+PATH="${APPDIR}"/usr/bin:$PATH
 # conda config --add channels conda-forge
 conda create -n libertem python=3.6 -y || exit 1
-# FIXME: install specific version (for example from pypi, or continuous build, ...)n s
+# FIXME: install specific version (for example from pypi, or continuous build, ...)
 
 # Build wheel & sdist
 ( cd "$BASE_DIR" && python setup.py bdist_wheel )
@@ -64,6 +67,6 @@ cd .. || exit 1
 wget -c -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
 chmod a+x appimagetool-x86_64.AppImage
 export VERSION=$(git rev-parse --short HEAD) # linuxdeployqt uses this for naming the file
-./appimagetool-x86_64.AppImage AppDir -g --no-appstream
+./appimagetool-x86_64.AppImage "$APPDIR" -g --no-appstream
 
 echo "done"

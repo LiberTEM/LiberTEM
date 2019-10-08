@@ -5,6 +5,25 @@ from libertem.udf import UDF
 
 
 class FEMUDF(UDF):
+    '''
+    Perform Fluctuation EM :cite:`Gibson1997`
+
+    This UDF calculates the standard deviation within a ring around the zero order diffraction peak.
+    '''
+    def __init__(self, *args, **kwargs):
+        '''
+        center: tuple
+            (x,y) - coordinates of a center of a ring for a masking region of interest to
+            calculate SD
+
+        rad_in: int
+            Inner radius of a ring mask
+
+        rad_out: int
+            Outer radius of a ring mask
+        '''
+        super().__init__(*args, **kwargs)
+
     def get_result_buffers(self):
         return {
             'intensity': self.buffer(
@@ -40,8 +59,10 @@ class FEMUDF(UDF):
 def run_fem(ctx, dataset, center, rad_in, rad_out, roi=None):
     """
     Return a standard deviation(SD) value for each frame of pixels which belong to ring mask.
+
     Parameters
     ----------
+
     ctx: Context
         Context class that contains methods for loading datasets,
         creating jobs on them and running them
@@ -60,6 +81,7 @@ def run_fem(ctx, dataset, center, rad_in, rad_out, roi=None):
 
     Returns
     -------
+
     pass_results: dict
         Returns a standard deviation(SD) value for each frame of pixels which belong to ring mask.
         To return 2-D array use pass_results['intensity'].data

@@ -1,10 +1,12 @@
+.. _`strain mapping`:
+
 Strain mapping
 ==============
 
 LiberTEM can evaluate the position of convergent beam electron diffraction disks or precession electron diffraction peaks to generate input data for strain maps in three automated steps:
 
 1. Identify peaks using :meth:`~libertem.udf.blobfinder.get_peaks`
-2. Extract a probable lattice from the peak positions using :meth:`~libertem.analysis.fullmatch.full_match`
+2. Extract a probable lattice from the peak positions using :meth:`~libertem.analysis.fullmatch.FullMatcher.full_match`
 3. Refine the lattice for each frame using :meth:`~libertem.udf.blobfinder.run_refine`
 
 The algorithms are currently focused on the initial data extraction step, i.e. they work purely in pixels in frame coordinates and derive only parameters for each individual peak and for a 2D lattice in the detector reference frame. They don't try to index peaks in crystallographic indices of the sample or to derive a 3D orientation. However, they can extract relevant input data such as peak positions and intensities very efficiently for such subsequent processing steps.
@@ -13,15 +15,13 @@ The algorithms are designed to be robust against intensity variations across a d
 
 Relevant input parameters are
 
-* Type and parameters for the diffraction disk
-    * Background subtraction with positive center and negative ring for small, uniform disks such as diffraction patterns recorded with precession
-        * Parameters are inner and outer radius
-    * Radial gradient for larger disks with internal structure, i.e. CBED
-        * Parameter is radius
-    * Custom matching template. See for example :meth:`~libertem.masks.radial_gradient_background_subtraction`
+* Matching template
+    * Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
+    * Available options are :class:`~libertem.udf.blobfinder.RadialGradient`, :class:`~libertem.udf.blobfinder.BackgroundSubtraction`, :class:`~libertem.udf.blobfinder.RadialGradientBackgroundSubtraction`, and :class:`~libertem.udf.blobfinder.UserTemplate`
+    * :code:`search` parameter to define the search area around the expected position
+* Matcher: Instance of :class:`~libertem.analysis.gridmatching.Matcher`.
+    * :code:`tolerance` for position errors in the matching routine
 * Number of disks to find in the initial step
-* Padding to define the search area around the expected position
-* Tolerance for position errors in the matching routine
 
 This example shows a typical strain map of a transistor with strained silicon.
 
@@ -43,20 +43,6 @@ Acknowledgments
 
 Karina Ruzaeva implemented the correlation routines and introduced feature vectors and clustering. Alexander Clausen developed the architecture, in particular the interface for user-defined functions that allows to implement such complex processing schemes on a distributed system easily and at the same time with optimal performance. Dieter Weber implemented the grid matching and refinement code.
 
-Reference
-~~~~~~~~~
+.. rubric:: Reference
 
-.. automodule:: libertem.udf.blobfinder
-   :members:
-   :undoc-members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.gridmatching
-   :members:
-   :undoc-members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.fullmatch
-   :members:
-   :undoc-members:
-   :special-members: __init__
+See :ref:`blobfinder API reference <blobfinder api>` and :ref:`matching API reference <matching api>` for details!

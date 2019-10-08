@@ -50,6 +50,8 @@ class AnalysisResultSet(object):
         ))
 
     def __getitem__(self, k):
+        if isinstance(k, str):
+            return self.__getattr__(k)
         return self.results[k]
 
     def __len__(self):
@@ -104,7 +106,7 @@ class BaseAnalysis(object):
         """
         Returns
         -------
-        ndarray or None
+        numpy.ndarray or None
             region of interest for which we want to run our analysis
         """
         return None

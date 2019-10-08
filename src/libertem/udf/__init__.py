@@ -1,4 +1,3 @@
-# FIXME include UDFPartitionMixin as soon as it is implemented
 from .base import UDF, UDFMeta, UDFData, UDFFrameMixin, UDFTileMixin, UDFPartitionMixin,\
     UDFPostprocessMixin, check_cast
 from .auto import AutoUDF

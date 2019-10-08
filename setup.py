@@ -89,6 +89,10 @@ def read(*parts):
     return codecs.open(os.path.join(here, *parts), 'r').read()
 
 
+def remove_rst_roles(txt):
+    return re.sub(':(cite|doc):`[^`]+`', '', txt)
+
+
 def get_git_rev():
     # NOTE: this is a copy from src/libertem/versioning.py
     # this is because it is not guaranteed that we can import our own packages
@@ -142,7 +146,9 @@ setup(
         "pillow",
         "h5py",
         "psutil",
-        "numba",
+        # Pinned due to https://github.com/pydata/sparse/issues/257
+        # Ensure compatibility with numpy 1.17
+        "numba>=0.45.1",
         "ncempy>=1.4",
         'pypiwin32;platform_system=="Windows"',
         # FIXME pull request #259
@@ -153,7 +159,7 @@ setup(
         'scikit-learn'
     ],
     extras_require={
-        'hdfs': 'hfds3',
+        'hdfs': 'hdfs3',
         'torch': 'torch',
         'hdbscan': 'hdbscan',
         'pyfftw': 'pyfftw',
@@ -183,7 +189,7 @@ setup(
     },
     keywords="electron microscopy",
     description="Open pixelated STEM framework",
-    long_description=read("README.rst"),
+    long_description=remove_rst_roles(read("README.rst")),
     long_description_content_type="text/x-rst",
     url="https://libertem.github.io/LiberTEM/",
     author_email="libertem-dev@googlegroups.com",

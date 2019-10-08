@@ -90,12 +90,8 @@ class H5DataSet(DataSet):
 
     Examples
     --------
-    >>> from libertem.api import Context
-    >>> ctx = Context()
-    >>> ds = ctx.load(
-    ...     "hdf5", path="/path/to/file.h5", ds_path="/experimental/data",
-    ...     tileshape=(3, 256, 256),
-    ... )
+
+    >>> ds = ctx.load("hdf5", path=path_to_hdf5, ds_path="/data", tileshape=(5, 16, 16))
 
     Parameters
     ----------

@@ -255,6 +255,7 @@ class MIBFileSet(FileSet3D):
 
 
 class MIBDataSet(DataSet):
+    # FIXME include sample file for doctest, see Issue #86
     """
     MIB data sets consist of one or more `.mib` files, and optionally
     a `.hdr` file. The HDR file is used to automatically set the
@@ -270,11 +271,10 @@ class MIBDataSet(DataSet):
 
     Examples
     --------
-    >>> from libertem.api import Context
-    >>> ctx = Context()
+
     >>> # both examples look for files matching /path/to/default*.mib:
-    >>> ds1 = ctx.load("mib", path="/path/to/default.hdr")
-    >>> ds2 = ctx.load("mib", path="/path/to/default64.mib")
+    >>> ds1 = ctx.load("mib", path="/path/to/default.hdr")  # doctest: +SKIP
+    >>> ds2 = ctx.load("mib", path="/path/to/default64.mib")  # doctest: +SKIP
 
     Parameters
     ----------

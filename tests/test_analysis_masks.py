@@ -3,7 +3,9 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 from libertem.masks import to_dense, to_sparse, is_sparse
-from utils import MemoryDataSet, _naive_mask_apply, _mk_random
+from libertem.io.dataset.memory import MemoryDataSet
+
+from utils import _naive_mask_apply, _mk_random
 
 import libertem.api as api
 
@@ -36,6 +38,7 @@ def _run_mask_test_program(lt_ctx, dataset, mask, expected):
     )
 
 
+@pytest.mark.xfail
 @pytest.mark.slow
 def test_weird_partition_shapes_1_slow(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")

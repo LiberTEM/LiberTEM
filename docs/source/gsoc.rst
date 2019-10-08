@@ -1,17 +1,17 @@
 GSoC 2019 ideas
 ===============
 
-LiberTEM is participating in the `Google Summer of Code <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python Software Foundation <http://python-gsoc.org/>`_. As a student, you can get paid by Google for three months, have fun working on an interesting open source software project, gain real-world development experience, and do something that looks nice on your CV!
+LiberTEM is participating in the `Google Summer of Code <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python Software Foundation <https://python-gsoc.org/>`_. As a student, you can get paid by Google for three months, have fun working on an interesting open source software project, gain real-world development experience, and do something that looks nice on your CV!
 
 * Check out our description and project ideas below
 * Contact us if you'd like to work on LiberTEM
-* Prepare a `proposal <http://python-gsoc.org/index.html#apply>`_ together with us
+* Prepare a `proposal <https://python-gsoc.org/index.html#apply>`_ together with us
 * You submit your application at the Google Summer of Code homepage to the Python Software Foundation organization, naming LiberTEM as the sub-organization.
 
 Why LiberTEM
 --------------
 
-`LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our `architecture <architecture.html>`_ page describes in more detail how exactly it works.
+`LiberTEM <.>`_ is an open source platform for high-throughput distributed processing of pixelated scanning transmission electron microscopy (STEM) data. It is created to deal with the terabytes of data that modern high-speed high-resolution detectors for electron microscopy can produce. Our :doc:`architecture` page describes in more detail how exactly it works.
 
 ..  figure:: ./images/Principle.png
     :scale: 50%
@@ -65,7 +65,7 @@ If you have questions, please ask freely: Supporting users and contributors has 
 Installation
 ~~~~~~~~~~~~
 
-Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details! Forking our repository, cloning the fork and `installing the clone <https://libertem.github.io/LiberTEM/install.html#installing-from-a-git-clone>`_ are the recommended setup if you will be contributing significant amounts of code. Our `page on contributing <contributing.html>`_ has some -- still incomplete -- information that can help you get started with development. 
+Please see our :ref:`installation` instructions for details! Forking our repository, cloning the fork and :ref:`installing from a git clone` are the recommended setup if you will be contributing significant amounts of code. Our :ref:`contributing` page has some -- still incomplete -- information that can help you get started with development.
 
 Currently, we are still working on getting suitable sample files online. Please contact us to get interesting sample data to work on!
 
@@ -78,13 +78,13 @@ Our `issue tracker can give you a broad overview <https://github.com/LiberTEM/Li
 Writing your GSoC application
 -----------------------------
 
-The PYTHON GSOC website has a good overview for the application process: http://python-gsoc.org/index.html#apply http://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal! 
+The PYTHON GSOC website has a good overview for the application process: https://python-gsoc.org/index.html#apply https://python-gsoc.org/students.html with links to additional resources. Please remember to name the sub-organization *LiberTEM* in your proposal!
 
 To write your application, `Mailman <https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt>`_ gives a few general ideas. For us it is most important to know why you'd like to contribute to LiberTEM, what your experience level is and what you'd like to learn in order to find a good match for a project. Generally, we like targeted applications and applicants who contact us directly early-on.
 
 We are happy to work with you for writing up a project idea! For Python GSoC it is a general requirement to already contribute a pull request to a sub-organization before submitting a project idea. Please contact us if you'd like some help with that! `Improving our examples <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_ in code, description and presentation would be both relatively easy and quite useful for us. The examples are currently lagging a bit behind recent changes in the `API <https://github.com/LiberTEM/LiberTEM/blob/master/src/libertem/api.py>`_. You could hunt down discrepancies and suggest updates. Please contact us for the corresponding data to run the examples!
 
-Project Ideas
+Project ideas
 -------------
 
 These are somewhat larger work items. Some of them can keep you busy for the entire time. Please feel free to suggest your own ideas as well! Just working on a number of smaller features and getting a good cross-sectional experience of LiberTEM can work as well.
@@ -92,7 +92,7 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
 1. Beginner/Intermediate/Advanced: Implement new analysis workflows or improve an existing one.
     We have a number of them from easy to hard on our waiting list. This can give you experience with the product development, design and application side of software engineering, and applied data science. A major part of the work is first figuring out *what* to implement together with our users, and then *how* to implement it. You can decide how far you take it: A detailed requirements document, a technical specification, a prototype, or a full production-grade implementation? All of that is useful for us.
 
-    *Skills:* Communication, software development methodology, Python and numpy programming.
+    *Skills:* Communication, software development methodology, Python and NumPy programming.
     
     *Domain knowledge:* Math, statistics, image processing and physics are of advantage.
 
@@ -117,7 +117,7 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
     *Primary contact:* Alex (@sk1p)
 
 4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
-    Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like http://fatiherikli.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
+    Currently, the masks in the GUI are limited to a few simple shapes, while the back-end allows arbitrary masks. You could implement an online mask editor to give users more flexibility on designing masks. Part of the task would be a requirements analysis with experts for the scientific application, and an analysis if any existing code like https://react-designer.github.io/react-designer/ https://two.js.org/examples/ or http://fabricjs.com/controls-customization can possibly be used. This project would be mostly implemented in TypeScript.
 
     *Skills:* Programming in TypeScript, GUI development.
     
@@ -137,14 +137,14 @@ These are somewhat larger work items. Some of them can keep you busy for the ent
 6. Intermediate/Advanced: `Cloud caching layer <https://github.com/LiberTEM/LiberTEM/issues/136>`_.
     Since LiberTEM can achieve a staggering throughput with its standard analysis, reading data from network can quickly become a major bottleneck and create heavy load on any network-based storage system. We have started with the Hadoop File System for local storage on the nodes to avoid sending data through the network repeatedly, but that comes with a number of disadvantages. For that reason we'd like to include a transparent caching layer on the nodes that keeps portions of a data set in local SSD storage.
 
-    *Skills:* Python and numpy programming, profiling. 
+    *Skills:* Python and NumPy programming, profiling. 
     
     *Domain knowledge:* --
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
 7. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
-    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require numpy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
+    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require NumPy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
 
     *Skills:* Systematic thinking and abstraction, Python and TypeScript programming, web development. 
     

@@ -20,7 +20,7 @@ class HDFSDatasetParams(MessageConverter):
         "title": "HDFSDatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "hdfs"},
+            "type": {"const": "HDFS"},
             "path": {"type": "string"},
             "tileshape": {
                 "type": "array",

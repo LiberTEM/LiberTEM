@@ -218,6 +218,20 @@ export interface DetectDatasetErrorResponse {
 
 export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
 
+export interface DataSetOpenSchemaSuccessResponse {
+    status: "ok",
+    ds_type: string,
+    schema: object,
+}
+
+export interface DataSetOpenSchemaErrorResponse {
+    status: "error",
+    ds_type: string,
+    msg: string,
+}
+
+export type DataSetOpenSchemaResponse = DataSetOpenSchemaSuccessResponse | DataSetOpenSchemaErrorResponse;
+
 export type MsgPartInitialDataset = DatasetOpen
 
 // type alias to add client-side state to datasets

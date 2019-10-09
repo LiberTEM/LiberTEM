@@ -21,17 +21,17 @@ class MemDatasetParams(MessageConverter):
         "title": "MEMDatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "memory"},
+            "type": {"const": "MEMORY"},
             "tileshape": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
             },
             "datashape": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
             },
-            "num_partitions": {"type": "number"},
-            "sig_dims": {"type": "number"},
+            "num_partitions": {"type": "number", "minimum": 1},
+            "sig_dims": {"type": "number", "minimum": 1},
             "check_cast": {"type": "boolean"},
             "crop_frames": {"type": "boolean"},
             "tiledelay": {"type": "number"},

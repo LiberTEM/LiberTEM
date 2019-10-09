@@ -54,7 +54,7 @@ class FRMS6DatasetParams(MessageConverter):
       "title": "FRMS6DatasetParams",
       "type": "object",
       "properties": {
-          "type": {"const": "frms6"},
+          "type": {"const": "FRMS6"},
           "path": {"type": "string"},
       },
       "required": ["type", "path"]

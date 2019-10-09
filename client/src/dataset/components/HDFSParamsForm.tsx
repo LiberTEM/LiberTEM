@@ -1,18 +1,16 @@
-import { FormikProps, withFormik } from "formik";
+import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDFS, DatasetTypes } from "../../messages";
-import { getInitial } from "../helpers";
+import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
-type RawDatasetParamsHDFS = Omit<DatasetParamsHDFS, "path" | "type" | "tileshape"> & {
+type DatasetParamsHDFForForm = Omit<DatasetParamsHDFS, "path" | "type" | "tileshape"> & {
     tileshape: string,
 };
 
-type FormValues = RawDatasetParamsHDFS
-
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsHDFS>;
+type MergedProps = FormikProps<DatasetParamsHDFForForm> & OpenFormProps<DatasetParamsHDFS>;
 
 const HDFSParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -30,15 +28,13 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
         <Form onSubmit={handleSubmit}>
             <Form.Field>
                 <label htmlFor="id_name">Name:</label>
-                <input type="text" name="name" id="id_name" value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.name && touched.name && errors.name}
+                <ErrorMessage name="name" />
+                <Field name="name" id="id_name" />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
-                    onChange={handleChange} onBlur={handleBlur} />
+                <ErrorMessage name="tileshape" />
+                <Field name="tileshape" id="id_tileshape" />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
@@ -47,19 +43,18 @@ const HDFSParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<OpenFormProps<DatasetParamsHDFS>, FormValues>({
+export default withValidation<DatasetParamsHDFS, DatasetParamsHDFForForm>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
-    handleSubmit: (values, formikBag) => {
-        const { onSubmit, path } = formikBag.props;
-        onSubmit({
+    formToJson: (values, path) => {
+        return {
             path,
             type: DatasetTypes.HDFS,
             name: values.name,
-            tileshape: values.tileshape.split(",").map(part => +part),
-        });
+            tileshape: parseNumList(values.tileshape),
+        };
     },
-    enableReinitialize: true,
+    type: DatasetTypes.HDFS,
 })(HDFSParamsForm);

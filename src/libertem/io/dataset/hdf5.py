@@ -35,7 +35,7 @@ class HDF5DatasetParams(MessageConverter):
         "title": "HDF5DatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "hdf5"},
+            "type": {"const": "HDF5"},
             "path": {"type": "string"},
             "ds_path": {"type": "string"},
             "tileshape": {

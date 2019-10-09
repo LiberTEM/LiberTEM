@@ -19,11 +19,11 @@ class BLODatasetParams(MessageConverter):
       "title": "BLODatasetParams",
       "type": "object",
       "properties": {
-        "type": {"const": "blo"},
+        "type": {"const": "BLO"},
         "path": {"type": "string"},
         "tileshape": {
             "type": "array",
-            "items": {"type": "number"},
+            "items": {"type": "number", "minimum": 1},
             "minItems": 4,
             "maxItems": 4
         },

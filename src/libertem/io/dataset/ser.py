@@ -20,7 +20,7 @@ class SERDatasetParams(MessageConverter):
       "title": "SERDatasetParams",
       "type": "object",
       "properties": {
-          "type": {"const": "ser"},
+          "type": {"const": "SER"},
           "path": {"type": "string"},
       },
       "required": ["type", "path"]

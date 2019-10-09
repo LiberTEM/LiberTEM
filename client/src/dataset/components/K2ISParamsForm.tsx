@@ -1,19 +1,16 @@
-import { FormikProps, withFormik } from "formik";
+import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
-import { getInitial } from "../helpers";
+import { getInitial, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
     "path" | "type">;
 
-type FormValues = DatasetParamsK2ISForForm
-
-
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsK2IS>;
+type MergedProps = FormikProps<DatasetParamsK2ISForForm> & OpenFormProps<DatasetParamsK2IS>;
 
 const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -31,10 +28,8 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
         <Form onSubmit={handleSubmit}>
             <Form.Field>
                 <label htmlFor="id_name">Name:</label>
-                <input type="text" name="name" id="id_name" value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.name && touched.name && errors.name}
+                <ErrorMessage name="name" />
+                <Field name="name" id="id_name" />
             </Form.Field>
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -44,18 +39,16 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
+export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
     }),
-    handleSubmit: (values, formikBag) => {
-        const { onSubmit, path } = formikBag.props;
-        onSubmit({
+    formToJson: (values, path) => {
+        return {
             path,
             type: DatasetTypes.K2IS,
             name: values.name,
-        });
+        }
     },
-    enableReinitialize: true,
+    type: DatasetTypes.K2IS,
 })(K2ISFileParamsForm);
-

@@ -39,7 +39,7 @@ class K2ISDatasetParams(MessageConverter):
       "title": "K2ISDatasetParams",
       "type": "object",
       "properties": {
-          "type": {"const": "k2is"},
+          "type": {"const": "K2IS"},
           "path": {"type": "string"},
       },
       "required": ["type", "path"]

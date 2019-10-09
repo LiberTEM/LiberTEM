@@ -1,9 +1,9 @@
-import { FormikProps, withFormik } from "formik";
+import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsBLO, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList } from "../helpers";
+import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -14,10 +14,7 @@ type DatasetParamsBLOForForm = Omit<DatasetParamsBLO,
         tileshape: string,
     };
 
-type FormValues = DatasetParamsBLOForForm
-
-
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsBLO>;
+type MergedProps = FormikProps<DatasetParamsBLOForForm> & OpenFormProps<DatasetParamsBLO>;
 
 const BLOFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -29,43 +26,41 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
     handleBlur,
     handleSubmit,
     handleReset,
+    isValidating,
     onCancel,
 }) => {
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
                 <label htmlFor="id_name">Name:</label>
-                <input type="text" name="name" id="id_name" value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.name && touched.name && errors.name}
+                <ErrorMessage name="name" />
+                <Field name="name" id="id_name" />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_tileshape">Tileshape:</label>
-                <input type="text" name="tileshape" id="id_tileshape" value={values.tileshape}
-                    onChange={handleChange} onBlur={handleBlur} />
+                <ErrorMessage name="tileshape" />
+                <Field name="tileshape" id="id_tileshape" />
             </Form.Field>
 
-            <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
+            <Button primary={true} type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
 
-export default withFormik<OpenFormProps<DatasetParamsBLO>, FormValues>({
+export default withValidation<DatasetParamsBLO, DatasetParamsBLOForForm>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
-    handleSubmit: (values, formikBag) => {
-        const { onSubmit, path } = formikBag.props;
-        onSubmit({
+    formToJson: (values, path) => {
+        return {
             path,
             type: DatasetTypes.BLO,
             name: values.name,
             tileshape: parseNumList(values.tileshape),
-        });
+        };
     },
-    enableReinitialize: true,
+    type: DatasetTypes.BLO,
 })(BLOFileParamsForm);

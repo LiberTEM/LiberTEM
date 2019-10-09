@@ -1,4 +1,4 @@
-import { DeleteDatasetResponse, DetectDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
+import { DataSetOpenSchemaResponse, DeleteDatasetResponse, DetectDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
 export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
     return fetch(`/api/datasets/${id}/`, {
@@ -21,4 +21,25 @@ export function detectDataset(path: string): Promise<DetectDatasetResponse> {
         credentials: "same-origin",
         method: "GET",
     }).then(r => r.json());
+}
+
+interface SchemaCache {
+    [type: string]: DataSetOpenSchemaResponse,
+}
+
+const schemaCache: SchemaCache = {};
+
+export async function getSchema(type: string): Promise<DataSetOpenSchemaResponse> {
+    const cached = schemaCache[type];
+    if (cached) {
+        return new Promise((resolve) => resolve(cached));
+    } else {
+        const r = await fetch(`/api/datasets/schema/?type=${encodeURIComponent(type)}`, {
+            credentials: "same-origin",
+            method: "GET",
+        });
+        const schemaResponse = await r.json();
+        schemaCache[type] = schemaResponse;
+        return schemaResponse;
+    }
 }

@@ -1,21 +1,17 @@
-import { DatasetParamsFRMS6 } from "../../messages";
-
-import { FormikProps, withFormik } from "formik";
+import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetTypes } from "../../messages";
-import { getInitial } from "../helpers";
+import { DatasetParamsFRMS6, DatasetTypes } from "../../messages";
+import { getInitial, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsFRMS6ForForm = Omit<DatasetParamsFRMS6,
     "path" | "type">;
 
-type FormValues = DatasetParamsFRMS6ForForm
-
-
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsFRMS6>;
+type MergedProps = FormikProps<DatasetParamsFRMS6ForForm> & OpenFormProps<DatasetParamsFRMS6>;
 const FRMS6ParamsForm: React.SFC<MergedProps> = ({
     values,
     touched,
@@ -32,10 +28,8 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
         <Form onSubmit={handleSubmit}>
             <Form.Field>
                 <label htmlFor="id_name">Name:</label>
-                <input type="text" name="name" id="id_name" value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.name && touched.name && errors.name}
+                <ErrorMessage name="name" />
+                <Field name="name" id="id_name" />
             </Form.Field>
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
@@ -45,17 +39,16 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withFormik<OpenFormProps<DatasetParamsFRMS6>, FormValues>({
+export default withValidation<DatasetParamsFRMS6, DatasetParamsFRMS6ForForm>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
     }),
-    handleSubmit: (values, formikBag) => {
-        const { onSubmit, path } = formikBag.props;
-        onSubmit({
+    formToJson: (values, path) => {
+        return {
             path,
             type: DatasetTypes.FRMS6,
             name: values.name,
-        });
+        };
     },
-    enableReinitialize: true,
+    type: DatasetTypes.FRMS6,
 })(FRMS6ParamsForm);

@@ -19,18 +19,18 @@ class RAWDatasetParams(MessageConverter):
         "title": "RAWDatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "raw"},
+            "type": {"const": "RAW"},
             "path": {"type": "string"},
             "dtype": {"type": "string"},
             "scan_size": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
                 "maxItems": 2
             },
             "detector_size": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
                 "maxItems": 2
             },

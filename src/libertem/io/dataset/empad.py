@@ -29,11 +29,11 @@ class EMPADDatasetParams(MessageConverter):
       "title": "EMPADDatasetParams",
       "type": "object",
       "properties": {
-        "type": {"const": "empad"},
+        "type": {"const": "EMPAD"},
         "path": {"type": "string"},
         "scan_size": {
             "type": "array",
-            "items": {"type": "number"},
+            "items": {"type": "number", "minimum": 1},
             "minItems": 2,
             "maxItems": 2
         },

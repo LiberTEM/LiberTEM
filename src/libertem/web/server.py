@@ -12,7 +12,7 @@ import tornado.escape
 
 from .base import SharedData
 from .config import ConfigHandler
-from .dataset import DataSetDetailHandler, DataSetDetectHandler
+from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
 from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
@@ -38,6 +38,10 @@ def make_app(event_registry, shared_data):
     return tornado.web.Application([
         (r"/", IndexHandler, {"data": shared_data, "event_registry": event_registry}),
         (r"/api/datasets/detect/", DataSetDetectHandler, {
+            "data": shared_data,
+            "event_registry": event_registry
+        }),
+        (r"/api/datasets/schema/", DataSetOpenSchema, {
             "data": shared_data,
             "event_registry": event_registry
         }),

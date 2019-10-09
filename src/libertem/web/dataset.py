@@ -29,7 +29,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
-        params["type"] = ds_type = params["type"].lower()
+        params["type"] = ds_type = params["type"].upper()
         cls = get_dataset_cls(ds_type)
         ConverterCls = cls.get_msg_converter()
         converter = ConverterCls()
@@ -53,6 +53,28 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.event_registry.broadcast_event(msg)
         except Exception as e:
             msg = Message(self.data).create_dataset_error(uuid, str(e))
+            log_message(msg, exception=True)
+            self.write(msg)
+            return
+
+
+class DataSetOpenSchema(tornado.web.RequestHandler):
+    def initialize(self, data, event_registry):
+        self.data = data
+        self.event_registry = event_registry
+
+    def get(self):
+        try:
+            ds_type = self.request.arguments['type'][0].decode("utf8")
+            cls = get_dataset_cls(ds_type)
+            ConverterCls = cls.get_msg_converter()
+            converter = ConverterCls()
+            schema = converter.SCHEMA
+            msg = Message(self.data).dataset_schema(ds_type, schema)
+            log_message(msg)
+            self.write(msg)
+        except Exception as e:
+            msg = Message(self.data).dataset_schema_failed(ds_type, str(e))
             log_message(msg, exception=True)
             self.write(msg)
             return

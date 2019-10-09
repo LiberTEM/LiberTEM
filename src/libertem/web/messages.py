@@ -159,6 +159,22 @@ class Message(object):
             "alternative": alternative,
         }
 
+    def dataset_schema(self, ds_type, schema):
+        return {
+            "status": "ok",
+            "messageType": "DATASET_SCHEMA",
+            "schema": schema,
+            "ds_type": ds_type,
+        }
+
+    def dataset_schema_failed(self, ds_type, msg):
+        return {
+            "status": "error",
+            "messageType": "DATASET_SCHEMA_FAILED",
+            "msg": "failed to get schema for type %s: %s" % (ds_type, msg),
+            "ds_type": ds_type,
+        }
+
 
 class MessageConverter:
     SCHEMA = None

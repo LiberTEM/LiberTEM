@@ -23,17 +23,17 @@ class MIBDatasetParams(MessageConverter):
         "title": "MIBDatasetParams",
         "type": "object",
         "properties": {
-            "type": {"const": "mib"},
+            "type": {"const": "MIB"},
             "path": {"type": "string"},
             "scan_size": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
                 "maxItems": 2,
             },
             "tileshape": {
                 "type": "array",
-                "items": {"type": "number"},
+                "items": {"type": "number", "minimum": 1},
                 "minItems": 4,
                 "maxItems": 4,
             },

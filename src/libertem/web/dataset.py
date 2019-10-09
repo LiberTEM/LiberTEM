@@ -52,6 +52,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.write(msg)
             self.event_registry.broadcast_event(msg)
         except Exception as e:
+            if self.data.has_dataset(uuid):
+                await self.data.remove_dataset(uuid)
             msg = Message(self.data).create_dataset_error(uuid, str(e))
             log_message(msg, exception=True)
             self.write(msg)

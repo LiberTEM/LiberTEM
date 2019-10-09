@@ -125,6 +125,9 @@ class SharedData(object):
     def get_dataset(self, uuid):
         return self.datasets[uuid]["dataset"]
 
+    def has_dataset(self, uuid):
+        return uuid in self.datasets
+
     async def verify_datasets(self):
         executor = self.get_executor()
         for uuid, params in self.datasets.items():

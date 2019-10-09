@@ -89,11 +89,11 @@ def test_crop_disks_from_frame():
 
 
 def test_run_refine_fastmatch(lt_ctx):
-    shape = np.array([256, 256])
+    shape = np.array([128, 128])
     zero = shape / 2 + np.random.uniform(-1, 1, size=2)
     a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
     b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
-    indices = np.mgrid[-3:4, -3:4]
+    indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
 
     radius = 10
@@ -147,15 +147,15 @@ def test_run_refine_fastmatch(lt_ctx):
 
 
 def test_run_refine_affinematch(lt_ctx):
-    for i in range(5):
+    for i in range(1):
         try:
-            shape = np.array([256, 256])
+            shape = np.array([128, 128])
 
             zero = shape / 2 + np.random.uniform(-1, 1, size=2)
             a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
             b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
 
-            indices = np.mgrid[-3:4, -3:4]
+            indices = np.mgrid[-2:3, -2:3]
             indices = np.concatenate(indices.T)
 
             radius = 10
@@ -165,7 +165,7 @@ def test_run_refine_affinematch(lt_ctx):
             dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                                     num_partitions=1, sig_dims=2)
 
-            matcher = grm.Matcher(tolerance=0.5)
+            matcher = grm.Matcher()
             match_pattern = blobfinder.RadialGradient(radius=radius)
 
             affine_indices = peaks - zero
@@ -202,11 +202,11 @@ def test_run_refine_affinematch(lt_ctx):
 
 
 def test_run_refine_sparse(lt_ctx):
-    shape = np.array([256, 256])
+    shape = np.array([128, 128])
     zero = shape / 2 + np.random.uniform(-1, 1, size=2)
     a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
     b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
-    indices = np.mgrid[-3:4, -3:4]
+    indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
 
     radius = 10
@@ -232,7 +232,7 @@ def test_run_refine_sparse(lt_ctx):
         matcher=matcher,
         match_pattern=match_pattern,
         correlation='sparse',
-        steps=5
+        steps=3
     )
 
     print(peaks - grm.calc_coords(
@@ -297,11 +297,11 @@ def test_custom_template_fuzz():
 
 
 def test_featurevector(lt_ctx):
-    shape = np.array([256, 256])
+    shape = np.array([128, 128])
     zero = shape // 2
     a = np.array([24, 0.])
     b = np.array([0., 30])
-    indices = np.mgrid[-3:4, -3:4]
+    indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
 
     radius = 5

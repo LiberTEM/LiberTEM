@@ -457,7 +457,8 @@ def test_multi_mask_force_dtype_bad(lt_ctx):
 @pytest.mark.functional
 def test_avoid_calculating_masks_on_client(hdf5_ds_1):
     mask = _mk_random(size=(16, 16))
-
+    # We have to start a local cluster so that the masks are
+    # computed in a different process
     with api.Context() as ctx:
         analysis = ctx.create_mask_analysis(
             dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
@@ -760,12 +761,12 @@ def test_numerics_fail(lt_ctx):
     # default value for all cells
     VAL = 1.1
 
-    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
+    data = np.full((2, 1, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
     data[0, 0, 0, 0] += VAL * RANGE
     dataset = MemoryDataSet(
         data=data,
         tileshape=(2, RESOLUTION, RESOLUTION),
-        num_partitions=2,
+        num_partitions=1,
         sig_dims=2,
     )
     mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float64)
@@ -775,8 +776,8 @@ def test_numerics_fail(lt_ctx):
 
     results = lt_ctx.run(analysis)
     expected = np.array([[
-        [VAL*RESOLUTION**2 + VAL*RANGE, VAL*RESOLUTION**2],
-        [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
+        [VAL*RESOLUTION**2 + VAL*RANGE],
+        [VAL*RESOLUTION**2]
     ]])
     naive = _naive_mask_apply([mask0], data)
     naive_32 = _naive_mask_apply([mask0.astype(dtype)], data)
@@ -799,12 +800,12 @@ def test_numerics_succeed(lt_ctx):
     # default value for all cells
     VAL = 1.1
 
-    data = np.full((2, 2, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
+    data = np.full((2, 1, RESOLUTION, RESOLUTION), VAL, dtype=np.float32)
     data[0, 0, 0, 0] += VAL * RANGE
     dataset = MemoryDataSet(
         data=data,
         tileshape=(2, RESOLUTION, RESOLUTION),
-        num_partitions=2,
+        num_partitions=1,
         sig_dims=2,
     )
     mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float32)
@@ -814,8 +815,8 @@ def test_numerics_succeed(lt_ctx):
 
     results = lt_ctx.run(analysis)
     expected = np.array([[
-        [VAL*RESOLUTION**2 + VAL*RANGE, VAL*RESOLUTION**2],
-        [VAL*RESOLUTION**2, VAL*RESOLUTION**2]
+        [VAL*RESOLUTION**2 + VAL*RANGE],
+        [VAL*RESOLUTION**2]
     ]])
     naive = _naive_mask_apply([mask0.astype(dtype)], data.astype(dtype))
 

@@ -3,59 +3,92 @@
 Contributing
 ============
 
-LiberTEM is intended and designed as a collaboratively developed platform for data analysis. That means all our development is coordinated openly, mostly on our `GitHub repository <https://github.com/LiberTEM/LiberTEM/>`_ where our code is hosted. Any suggestions, Issues, bug reports, discussions and code contributions are highly appreciated! Please let us know if you think we can improve on something, be it code, communication or other aspects.
+LiberTEM is intended and designed as a collaboratively developed platform for
+data analysis. That means all our development is coordinated openly, mostly on
+our `GitHub repository <https://github.com/LiberTEM/LiberTEM/>`_ where our code
+is hosted. Any suggestions, Issues, bug reports, discussions and code
+contributions are highly appreciated! Please let us know if you think we can
+improve on something, be it code, communication or other aspects.
 
 Development principles
 ----------------------
 
-We have a `rather extensive and growing list of things to work on <https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize our limited resources to work on items with the largest benefit for our user base and project. Supporting users who contribute code is most important to us. Please contact us for help! Furthermore, we prioritize features that create direct benefits for many current users or open significant new applications. Generally, we follow user demand with our developments.
+We have a `rather extensive and growing list of things to work on
+<https://github.com/LiberTEM/LiberTEM/issues>`_ and therefore have to prioritize
+our limited resources to work on items with the largest benefit for our user
+base and project. Supporting users who contribute code is most important to us.
+Please contact us for help! Furthermore, we prioritize features that create
+direct benefits for many current users or open significant new applications.
+Generally, we follow user demand with our developments.
 
-For design of new features we roughly follow the `lead user method <https://en.wikipedia.org/wiki/Lead_user>`_, which means that we develop new features closely along a non-trivial real-world application in order to make sure the developments are appropriate and easy to use in practice. The interface for :ref:`user-defined functions`, as an example, follows the requirements around implementing and running complex algorithms like :ref:`strain mapping` for distributed systems.
+For design of new features we roughly follow the `lead user method
+<https://en.wikipedia.org/wiki/Lead_user>`_, which means that we develop new
+features closely along a non-trivial real-world application in order to make
+sure the developments are appropriate and easy to use in practice. The interface
+for :ref:`user-defined functions`, as an example, follows the requirements
+around implementing and running complex algorithms like :ref:`strain mapping`
+for distributed systems.
 
-Furthermore we value a systematic approach to development with requirements analysis and evaluation of design options as well as iterative design with fast test and review cycles.
+Furthermore we value a systematic approach to development with requirements
+analysis and evaluation of design options as well as iterative design with fast
+test and review cycles.
 
 Code contributions
 ------------------
 
-We are using `pull requests <https://help.github.com/en/articles/about-pull-requests>`_ to accept contributions. Each pull request should focus on a single issue, to keep the number of changes small and reviewable.
-To keep your changes organized and to prevent unrelated changes from disturbing your pull request,
-create a new branch for each pull request. 
+We are using `pull requests
+<https://help.github.com/en/articles/about-pull-requests>`_ to accept
+contributions. Each pull request should focus on a single issue, to keep the
+number of changes small and reviewable. To keep your changes organized and to
+prevent unrelated changes from disturbing your pull request, create a new branch
+for each pull request.
 
-Before creating a pull request, please make sure all tests still pass. See `Running the Tests`_ for more
-information. You should also update the test suite and add test cases for your contribution. See the section
-`Code coverage`_ below on how to check if your new code is covered by tests.
+Before creating a pull request, please make sure all tests still pass. See
+`Running the Tests`_ for more information. You should also update the test suite
+and add test cases for your contribution. See the section `Code coverage`_ below
+on how to check if your new code is covered by tests.
 
 To make sure our code base stays readable, we follow a `Code Style`_.
 
-Please update ``packaging/creators.json`` with your author information when you contribute to LiberTEM for the first time. This helps us to keep track of all contributors and give credit where credit is due! Please let us know if you wouldn't like to be credited. ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` are generated from the JSON files with ``python scripts/build-authors-contributors``.
+Please update ``packaging/creators.json`` with your author information when you
+contribute to LiberTEM for the first time. This helps us to keep track of all
+contributors and give credit where credit is due! Please let us know if you
+wouldn't like to be credited. ``contributors.rst`` and  ``creators.rst`` in
+``docs/source`` are generated from the JSON files with ``python
+scripts/build-authors-contributors``.
 
-If you are changing parts of LiberTEM that are currently not covered by tests, please consider writing
-new tests! When changing example code, which is not run as part of the tests, make sure the example
-still runs.
+If you are changing parts of LiberTEM that are currently not covered by tests,
+please consider writing new tests! When changing example code, which is not run
+as part of the tests, make sure the example still runs.
 
-When adding or changing a feature, you should also update the corresponding documentation, or add
-a new section for your feature. Follow the current documentation structure, or ask the maintainers
-where your new documentation should end up. When introducing a feature, it is okay to start with
-a draft documentation in the first PR, if it will be completed later. Changes of APIs should
-update the corresponding docstrings.
+When adding or changing a feature, you should also update the corresponding
+documentation, or add a new section for your feature. Follow the current
+documentation structure, or ask the maintainers where your new documentation
+should end up. When introducing a feature, it is okay to start with a draft
+documentation in the first PR, if it will be completed later. Changes of APIs
+should update the corresponding docstrings.
 
-When you have submitted your pull request, someone from the LiberTEM organization will review your
-pull request, and may add comments or ask questions. If everything is good to go, your changes will
-be merged and you can delete the branch you created for the pull request.
+When you have submitted your pull request, someone from the LiberTEM
+organization will review your pull request, and may add comments or ask
+questions. If everything is good to go, your changes will be merged and you can
+delete the branch you created for the pull request.
 
 See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
+
+.. _`running tests`:
 
 Running the tests
 -----------------
 
-Our tests are written using pytest. For running them in a repeatable manner, we are using tox.
-Tox automatically manages virtualenvs and allows testing on different Python versions and interpreter
-implementations.
+Our tests are written using pytest. For running them in a repeatable manner, we
+are using tox. Tox automatically manages virtualenvs and allows testing on
+different Python versions and interpreter implementations.
 
-This makes sure that you can run the tests locally the same way as they are run in continuous integration.
+This makes sure that you can run the tests locally the same way as they are run
+in continuous integration.
 
-After `installing tox <https://tox.readthedocs.io/en/latest/install.html>`_, you can run the tests on
-all Python versions by simply running tox:
+After `installing tox <https://tox.readthedocs.io/en/latest/install.html>`_, you
+can run the tests on all Python versions by simply running tox:
 
 .. code-block:: shell
 
@@ -80,10 +113,15 @@ Now you can run pytest on a subset of tests, for example:
 
    (libertem) $ pytest tests/test_analysis_masks.py
 
-See the `pytest documentation <https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_ for details on how to select which tests to run. Before submitting a pull request, you should always run the whole test suite.
+See the `pytest documentation
+<https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
+for details on how to select which tests to run. Before submitting a pull
+request, you should always run the whole test suite.
 
-Some tests are marked with `custom markers <https://docs.pytest.org/en/latest/example/markers.html>`_, for example we have some tests that take many seconds to complete.
-To select tests to run by these marks, you can use the `-m` switch. For example, to only run the slow tests:
+Some tests are marked with `custom markers
+<https://docs.pytest.org/en/latest/example/markers.html>`_, for example we have
+some tests that take many seconds to complete. To select tests to run by these
+marks, you can use the `-m` switch. For example, to only run the slow tests:
 
 .. code-block:: shell
 

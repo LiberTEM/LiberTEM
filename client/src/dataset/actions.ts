@@ -15,7 +15,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    open: (path: string, initialParams?: DatasetFormParams) => createAction(ActionTypes.OPEN, { path, initialParams }),
+    open: (path: string, cachedParams?: DatasetFormParams, detectedParams?: DatasetFormParams) => createAction(ActionTypes.OPEN, { path, cachedParams, detectedParams }),
     cancelOpen: () => createAction(ActionTypes.CANCEL_OPEN),
     create: (dataset: DatasetCreateParams) => createAction(ActionTypes.CREATE, { dataset }),
     created: (dataset: DatasetState) => createAction(ActionTypes.CREATED, { dataset }),

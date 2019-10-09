@@ -40,6 +40,7 @@ const SERParamsForm: React.SFC<MergedProps> = ({
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -55,5 +56,6 @@ export default withFormik<OpenFormProps<DatasetParamsSER>, FormValues>({
             type: DatasetTypes.SER,
             name: values.name,
         });
-    }
+    },
+    enableReinitialize: true,
 })(SERParamsForm);

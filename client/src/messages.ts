@@ -267,7 +267,7 @@ export interface PickFrameParams {
 }
 
 export interface FFTSumFramesParams {
-    real_rad: number | null ,
+    real_rad: number | null,
     real_centerx: number | null,
     real_centery: number | null,
 }
@@ -275,7 +275,7 @@ export interface FFTSumFramesParams {
 export interface PickFFTFrameParams {
     x: number,
     y: number,
-    real_rad: number | null ,
+    real_rad: number | null,
     real_centerx: number | null,
     real_centery: number | null,
 }
@@ -289,10 +289,10 @@ export interface RadialFourierParams {
     max_order: number
 }
 
-export interface FFTParams{
-    rad_in:number,
-    rad_out:number,
-    real_rad: number | null ,
+export interface FFTParams {
+    rad_in: number,
+    rad_out: number,
+    real_rad: number | null,
     real_centerx: number | null,
     real_centery: number | null,
 }
@@ -305,12 +305,12 @@ export interface FrameParams {
         y: number,
         width: number,
         height: number,
-    }|{
+    } | {
         shape: "disk",
         cx: number,
         cy: number,
         r: number,
-    }|
+    } |
     {}
 }
 
@@ -321,7 +321,7 @@ export interface ClustParams {
         y: number,
         width: number,
         height: number,
-    }|{}
+    } | {}
     cx: number,
     cy: number,
     ri: number,
@@ -352,7 +352,7 @@ export enum AnalysisTypes {
 export interface RingMaskDetails {
     type: AnalysisTypes.APPLY_RING_MASK,
     parameters: MaskDefRing,
-    
+
 }
 
 export interface FFTDetails {
@@ -425,7 +425,7 @@ export interface ClustDetails {
     parameters: ClustParams,
 }
 
-export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams| FFTParams | PickFFTFrameParams | FFTSumFramesParams | ClustParams;
+export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams | FFTParams | PickFFTFrameParams | FFTSumFramesParams | ClustParams;
 export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | SumSigDetails | ClustDetails;
 
 export interface StartJobRequest {

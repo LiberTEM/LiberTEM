@@ -45,6 +45,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button onClick={onCancel} >Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -64,5 +65,6 @@ export default withFormik<OpenFormProps<DatasetParamsHDF5>, FormValues>({
             ds_path: values.ds_path,
             tileshape: values.tileshape.split(",").map(part => +part),
         });
-    }
+    },
+    enableReinitialize: true,
 })(HDF5ParamsForm);

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MsgPartConfig } from "../messages";
 import { ConfigParams, ConfigState, LocalConfig } from "./reducers";
 
@@ -21,16 +21,13 @@ export function mergeLocalStorage(serverConfig: MsgPartConfig): ConfigParams {
     return mergedConfig;
 }
 
-type ConfigKeys = Array<Partial<keyof ConfigState>>;
-
 export function setLocalStorage(config: ConfigState): void {
-    
-    const keys: ConfigKeys = ["cwd", "lastOpened", "fileHistory"];
-    const localSettings = keys.reduce((acc, item) => {
-        const configItem = config[item];
-        acc[item] = configItem;
-        return acc;
-    }, {} as ConfigState);
+    const localSettings: LocalConfig = {
+        cwd: config.cwd,
+        lastOpened: config.lastOpened,
+        fileHistory: config.fileHistory,
+    }
+
     window.localStorage.setItem(CONFIG_KEY, JSON.stringify(localSettings));
 }
 
@@ -42,6 +39,7 @@ export function getDefaultLocalConfig(config: MsgPartConfig): LocalConfig {
     return {
         lastOpened: {},
         fileHistory: [],
+        cwd: "/",
     };
 }
 

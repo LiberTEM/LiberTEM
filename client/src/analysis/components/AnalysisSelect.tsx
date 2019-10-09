@@ -2,10 +2,14 @@ import * as React from "react";
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
 import { getEnumValues } from "../../helpers";
 import { AnalysisTypes } from "../../messages";
-import { AnalysisMetadata } from "../types";
+import { AnalysisMetadata, AnalysisMetadataItem } from "../types";
 
+// keyof typeof: https://stackoverflow.com/a/42623905/540644
+const getMetadata = (typeName: keyof typeof AnalysisTypes): AnalysisMetadataItem => {
+    const type: AnalysisTypes = AnalysisTypes[typeName];
+    return AnalysisMetadata[type]
+}
 
-const getMetadata = (t: any) => AnalysisMetadata[AnalysisTypes[t]];
 const analysisTypeKeys = getEnumValues(AnalysisTypes);
 const analysisTypeOptions = analysisTypeKeys.filter(t => getMetadata(t).component !== undefined).map(t => ({
     text: getMetadata(t).title,

@@ -39,6 +39,7 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -54,6 +55,7 @@ export default withFormik<OpenFormProps<DatasetParamsK2IS>, FormValues>({
             type: DatasetTypes.K2IS,
             name: values.name,
         });
-    }
+    },
+    enableReinitialize: true,
 })(K2ISFileParamsForm);
 

@@ -40,6 +40,7 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -55,5 +56,6 @@ export default withFormik<OpenFormProps<DatasetParamsFRMS6>, FormValues>({
             type: DatasetTypes.FRMS6,
             name: values.name,
         });
-    }
+    },
+    enableReinitialize: true,
 })(FRMS6ParamsForm);

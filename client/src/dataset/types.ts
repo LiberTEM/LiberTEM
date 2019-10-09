@@ -8,7 +8,8 @@ export interface OpenDatasetState {
     busyPath: string,
     formVisible: boolean,
     formPath: string,
-    formInitialParams?: DatasetFormParams,
+    formCachedParams?: DatasetFormParams,
+    formDetectedParams?: DatasetFormParams,
 }
 
 export interface OpenFormProps<P> {

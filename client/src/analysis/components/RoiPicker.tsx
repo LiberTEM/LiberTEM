@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useDispatch } from "react-redux";
-import { AnalysisDetails, AnalysisTypes, FrameParams } from "../../messages";
+import { AnalysisTypes, FrameParams } from "../../messages";
 import * as analysisActions from "../actions";
 
 
@@ -18,12 +18,10 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis }
     React.useEffect(() => {
         const handle = setTimeout(() => {
             if (enabled) {
-                // work around typescript bug in 3.2.X
-                // explicit cast should be removed when upgrading ts
                 const analysisDetails = {
                     type: analysis,
                     parameters: roiParameters,
-                } as AnalysisDetails
+                };
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, analysisDetails))
             }
         }, 100);

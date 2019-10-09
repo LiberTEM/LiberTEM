@@ -6,6 +6,7 @@ import * as configActions from './actions';
 import { makeUnique } from "./helpers";
 
 export interface LocalConfig {
+    cwd: string,
     fileHistory: string[],
     lastOpened: {
         [path: string]: DatasetFormParams

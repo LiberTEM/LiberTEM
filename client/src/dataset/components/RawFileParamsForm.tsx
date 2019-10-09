@@ -71,6 +71,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -96,5 +97,6 @@ export default withFormik<OpenFormProps<DatasetParamsRaw>, FormValues>({
             scan_size: parseNumList(values.scan_size),
             detector_size: parseNumList(values.detector_size),
         });
-    }
+    },
+    enableReinitialize: true,
 })(RawFileParamsForm);

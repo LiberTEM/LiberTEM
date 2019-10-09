@@ -48,6 +48,7 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
 
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }
@@ -65,5 +66,6 @@ export default withFormik<OpenFormProps<DatasetParamsBLO>, FormValues>({
             name: values.name,
             tileshape: parseNumList(values.tileshape),
         });
-    }
+    },
+    enableReinitialize: true,
 })(BLOFileParamsForm);

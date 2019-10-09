@@ -30,7 +30,11 @@ def test_simple_open(default_blo):
 
 
 def test_check_valid(default_blo):
-    default_blo.check_valid()
+    assert default_blo.check_valid()
+
+
+def test_detect():
+    assert BloDataSet.detect_params(path=str(BLO_TESTDATA_PATH))
 
 
 def test_read(default_blo):

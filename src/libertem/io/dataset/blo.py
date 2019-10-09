@@ -168,11 +168,12 @@ class BloDataSet(DataSet):
     def detect_params(cls, path):
         try:
             ds = cls(path, endianess='<')
+            ds = ds.initialize()
             if not ds.check_valid():
                 return False
             return {
                 "path": path,
-                "tileshape": (1, 8) + ds.shape.sig,
+                "tileshape": (1, 8) + tuple(ds.shape.sig),
                 "endianess": "<",
             }
         except Exception:

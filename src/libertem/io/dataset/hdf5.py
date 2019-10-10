@@ -1,4 +1,5 @@
 import contextlib
+import time
 
 import numpy as np
 import h5py
@@ -59,7 +60,12 @@ class HDF5DatasetParams(MessageConverter):
 def _get_datasets(path):
     datasets = []
 
+    timeout = 3
+    t0 = time.time()
+
     def _make_list(name, obj):
+        if time.time() - t0 > timeout:
+            raise TimeoutError
         if hasattr(obj, 'size') and hasattr(obj, 'shape'):
             datasets.append((name, obj.size, obj.shape, obj.dtype))
 
@@ -161,15 +167,21 @@ class H5DataSet(DataSet):
         # try to guess the hdf5 dataset path:
         datasets = []
 
+        timeout = 3
+        t0 = time.time()
+
         def _make_list(name, obj):
+            if time.time() - t0 > timeout:
+                raise TimeoutError
             if hasattr(obj, 'size') and hasattr(obj, 'shape'):
                 datasets.append((name, obj.size, obj.shape, obj.dtype))
+
         with h5py.File(path, 'r') as f:
             f.visititems(_make_list)
         try:
             largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
             name, size, shape, dtype = largest_ds
-        except IndexError:
+        except (IndexError, TimeoutError):
             return {"path": path}
 
         return {

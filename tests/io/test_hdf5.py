@@ -1,4 +1,5 @@
 import pickle
+from unittest import mock
 
 import cloudpickle
 import numpy as np
@@ -149,6 +150,48 @@ def test_pick(hdf5, lt_ctx):
     print(ds.shape)
     pick = lt_ctx.create_pick_analysis(dataset=ds, x=2, y=3)
     lt_ctx.run(pick)
+
+
+def test_diags(hdf5):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+    )
+    ds = ds.initialize()
+    print(ds.diagnostics)
+
+
+def test_check_valid(hdf5):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+    )
+    ds = ds.initialize()
+    assert ds.check_valid()
+
+
+def test_timeout_1(hdf5):
+    with mock.patch('h5py.File.visititems', side_effect=TimeoutError("too slow")):
+        params = H5DataSet.detect_params(hdf5.filename)
+        assert list(params.keys()) == ["path"]
+
+        ds = H5DataSet(
+            path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        )
+        ds = ds.initialize()
+        diags = ds.diagnostics
+        print(diags)
+
+
+def test_timeout_2(hdf5):
+    with mock.patch('time.time', side_effect=[1, 30, 30, 60]):
+        params = H5DataSet.detect_params(hdf5.filename)
+        assert list(params.keys()) == ["path"]
+
+        ds = H5DataSet(
+            path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        )
+        ds = ds.initialize()
+        diags = ds.diagnostics
+        print(diags)
 
 
 @pytest.mark.parametrize("mnp", [None, 1, 4])

@@ -71,12 +71,7 @@ def _get_datasets(path):
 
     with h5py.File(path, 'r') as f:
         f.visititems(_make_list)
-        for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0]):
-            yield {"name": name, "value": [
-                {"name": "Size", "value": str(size)},
-                {"name": "Shape", "value": str(shape)},
-                {"name": "Datatype", "value": str(dtype)},
-            ]}
+    return datasets
 
 
 class H5Reader(object):
@@ -165,20 +160,8 @@ class H5DataSet(DataSet):
             return False
 
         # try to guess the hdf5 dataset path:
-        datasets = []
-
-        timeout = 3
-        t0 = time.time()
-
-        def _make_list(name, obj):
-            if time.time() - t0 > timeout:
-                raise TimeoutError
-            if hasattr(obj, 'size') and hasattr(obj, 'shape'):
-                datasets.append((name, obj.size, obj.shape, obj.dtype))
-
-        with h5py.File(path, 'r') as f:
-            f.visititems(_make_list)
         try:
+            datasets = _get_datasets(path)
             largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
             name, size, shape, dtype = largest_ds
         except (IndexError, TimeoutError):
@@ -213,11 +196,23 @@ class H5DataSet(DataSet):
 
     def get_diagnostics(self):
         with self.get_reader().get_h5ds() as ds:
+            try:
+                datasets =  _get_datasets(self.path)
+            except TimeoutError:
+                datasets = []
+            datasets = [
+                {"name": name, "value": [
+                    {"name": "Size", "value": str(size)},
+                    {"name": "Shape", "value": str(shape)},
+                    {"name": "Datatype", "value": str(dtype)},
+                ]}
+                for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0])
+            ]
             return [
                 {"name": "dtype", "value": str(ds.dtype)},
                 {"name": "chunks", "value": str(ds.chunks)},
                 {"name": "compression", "value": str(ds.compression)},
-                {"name": "datasets", "value": list(_get_datasets(self.path))},
+                {"name": "datasets", "value": datasets},
             ]
 
     def get_partitions(self):

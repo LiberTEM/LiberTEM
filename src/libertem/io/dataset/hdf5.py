@@ -197,7 +197,7 @@ class H5DataSet(DataSet):
     def get_diagnostics(self):
         with self.get_reader().get_h5ds() as ds:
             try:
-                datasets =  _get_datasets(self.path)
+                datasets = _get_datasets(self.path)
             except TimeoutError:
                 datasets = []
             datasets = [

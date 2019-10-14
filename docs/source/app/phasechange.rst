@@ -64,9 +64,15 @@ Amorphous frame:
 
 Clustering
 ~~~~~~~~~~
-To further categorize the crystalline regions according to their lattice orientation, clustering, based on non-zero diffraction peaks positions, can be used.
-The scripting interface allows to cluster membrane, amorphous and crystalline regions with different lattice orientation in a more efficient way, taking into account regions of interests.
-To look at full analysis `follow this link to a Jupyter notebook <pcmclustering.ipynb>`_.
+
+*This feature was added in version 0.3.0.dev0*
+
+To further categorize the crystalline regions according to their lattice
+orientation, clustering, based on non-zero diffraction peaks positions, can be
+used. The scripting interface allows to cluster membrane, amorphous and
+crystalline regions with different lattice orientation in a more efficient way,
+taking into account regions of interests. To look at full analysis `follow this
+link to a Jupyter notebook <pcmclustering.ipynb>`_.
 
 .. toctree::
 

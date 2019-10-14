@@ -68,6 +68,18 @@ should end up. When introducing a feature, it is okay to start with a draft
 documentation in the first PR, if it will be completed later. Changes of APIs
 should update the corresponding docstrings.
 
+Please include version information if you add or change a feature in order to
+track and document changes. We use a rolling documentation that documents
+previous behavior as well, for example *This feature was added in Version
+0.3.0.dev0* or *This describes the behavior from Version 0.3.0.dev0 and onwards.
+The previous behavior was this and that*. The following items might require an
+update upon introducing or changing a feature:
+
+* Changelog in :code:`docs/source/changelog.rst`
+* Docstrings
+* Examples
+* Main Documentation
+
 When you have submitted your pull request, someone from the LiberTEM
 organization will review your pull request, and may add comments or ask
 questions. If everything is good to go, your changes will be merged and you can

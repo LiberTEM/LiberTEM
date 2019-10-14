@@ -66,6 +66,7 @@ extensions = [
     'nbsphinx',
     'nbsphinx_link',
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx_issues',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -188,6 +189,11 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
+# -- Options for sphinx_issues -----------------------------------------------
+# GitHub repo
+issues_github_path = "LiberTEM/LiberTEM"
+
+# -- Options for doctest -----------------------------------------------------
 # Disable standard doctest block testing since that would run it for
 # docstrings in API reference, leading to failures because the test environment
 # is not set up correctly

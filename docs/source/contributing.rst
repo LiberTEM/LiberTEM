@@ -324,6 +324,8 @@ Before (using a release candidate package)
 
 * Full documentation review and update, including link check using
   ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
+* Update the expected version in notes on changes, i.e. from :code:`0.3.0.dev0`
+  to :code:`0.3` when releasing version 0.3.
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source
   files in ``packaging/`` using ``python scripts/build-authors-contributors``

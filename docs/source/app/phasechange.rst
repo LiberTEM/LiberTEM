@@ -7,6 +7,8 @@ Detection of the positions of additional peaks for all frames of crystalline reg
 
 Next, methods to distinguish crystalline and amorphous regions in phase-change materials will be described.
 
+.. _`crystallinity map`:
+
 Crystallinity map
 ~~~~~~~~~~~~~~~~~
 First, two different types of the regions, crystalline (low resistance) and amorphous (high resistance), should be distinguished.
@@ -58,7 +60,7 @@ Amorphous frame:
 
 .. figure:: ./images/phasechange/pickam.PNG
 
-
+.. _clustering:
 
 Clustering
 ~~~~~~~~~~

@@ -1,6 +1,9 @@
 Changelog
 =========
 
+.. _continuous:
+.. _`v0-3-0`:
+
 0.3.0.dev0 (continuous)
 #######################
 
@@ -31,6 +34,9 @@ Miscellaneous
 
 * Performance improvements for unit tests (:issue:`447`, :pr:`448`)
 
+.. _latest:
+.. _`v0-2-2`:
+
 0.2.2
 #####
 
@@ -46,6 +52,8 @@ Bug fixes
 * Fixed a glitch where negative peak elevations were possible (:pr:`446`)
 * Update examples to match 0.2 release (:pr:`439`)
 
+.. _`v0-2-1`:
+
 0.2.1
 #####
 
@@ -53,6 +61,8 @@ Bug fixes
    :target: https://doi.org/10.5281/zenodo.3474968
 
 Point release to fix a bug in the Zenodo upload for production releases.
+
+.. _`v0-2-0`:
 
 0.2.0
 #####
@@ -129,6 +139,8 @@ File formats
 
 Support for various file formats has improved. More details:
 https://libertem.github.io/LiberTEM/formats.html
+
+.. _`v0-1-0`:
 
 0.1.0
 #####

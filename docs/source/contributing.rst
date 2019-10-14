@@ -329,9 +329,11 @@ Before (using a release candidate package)
 * Update the JSON files in the ``packaging/`` folder with author and project information
 * Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source
   files in ``packaging/`` using ``python scripts/build-authors-contributors``
+* Create a release candidate using :code:`scripts/release`. See :code:`scripts/release --help` for details.
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
   GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
-* Confirm that a new version is created on Zenodo.org that is ready for submission.
+* Confirm that a new version with the most recent release candidate is created in the
+  `Zenodo.org sandbox <https://sandbox.zenodo.org/record/367108>`_ that is ready for submission.
 * Install release candidate packages in a clean environment
   (for example: 
   :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)

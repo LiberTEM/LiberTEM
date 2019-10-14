@@ -22,6 +22,11 @@ VERSION_PAT = re.compile(
     r'(?P<rc>rc\d+)?(?P<dev>\.dev0)?))$'
 )
 
+# matches things like v0.2.x or v1.x
+STABLE_VERSION_PAT = re.compile(
+    r'^v\d+\.(\d+|x)(\.(\d+|x))?$'
+)
+
 
 def render_version(version_file, new_version):
     version_stm = '__version__ = "{}"\n'.format(new_version)
@@ -447,10 +452,13 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
     github_files = get_py_release_files()
     github_files.extend(appimage_files)
 
-    is_master = os.environ['TRAVIS_BRANCH'] == "master"
+    branch = os.environ['TRAVIS_BRANCH']
+
+    is_master = branch == "master"
+    is_stable_branch = STABLE_VERSION_PAT.match(branch) is not None
     is_pull_request = os.environ['TRAVIS_PULL_REQUEST'] != "false"
 
-    if is_master and not is_pull_request:
+    if (is_master or is_stable_branch) and not is_pull_request:
         if dry_run:
             print("would upload the following files to github:")
             for f in github_files:
@@ -458,7 +466,10 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
         else:
             upload_to_github(ctx.obj['verbose'], github_files, token=token, release=release)
     else:
-        print("branch is not master (or is PR), not uploading to github (files=%s)" % github_files)
+        print(
+            "branch is not master or stable (or CI run is for PR)"
+            ", not uploading to github (files=%s)" % github_files
+        )
 
 
 @cli.command()

@@ -31,6 +31,7 @@ Documentation
    contributing
    debugging
    reference/index
+   changelog
    tips
    why_python
    gsoc

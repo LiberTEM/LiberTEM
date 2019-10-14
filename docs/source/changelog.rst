@@ -22,8 +22,8 @@ Documentation
 
 * Documentation for :ref:`crystallinity map` and :ref:`clustering` analysis (:pr:`408` by :user:`kruzaeva`)
 * Instructions for profiling slow tests (:issue:`447`, :pr:`448`)
-* Include review of issues, PRs and release notes in release checklist (:pr:`445`)
-* Change management (:issue:`443`, :pr:`451`)
+* Include review of issues, PRs and release notes in release checklist (:pr:`445,453`)
+* Change management (:issue:`443`, :pr:`451,453`)
 
 .. Commented out
    Obsolescence

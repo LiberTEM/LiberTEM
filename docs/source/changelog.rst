@@ -40,6 +40,9 @@ Miscellaneous
 0.2.2
 #####
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3489385.svg
+   :target: https://doi.org/10.5281/zenodo.3489385
+
 Point release to fix a number of minor issues, most notably PR :pr:`439` that
 should have been merged for version 0.2.
 

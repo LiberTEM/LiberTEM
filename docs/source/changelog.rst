@@ -4,17 +4,20 @@ Changelog
 0.3.0.dev0 (continuous)
 #######################
 
-.. Commented out
-   Features
-   --------
+Features
+--------
 
-.. Commented out
-   Bug fixes
-   ---------
+* :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
+
+Bug fixes
+---------
+
+* Improved error and validation handling when opening files with GUI (:issue:`433,442`)
 
 Documentation
 -------------
 
+* Documentation for :ref:`crystallinity map` and :ref:`clustering` analysis (:pr:`408` by :user:`kruzaeva`)
 * Instructions for profiling slow tests (:issue:`447`, :pr:`448`)
 * Include review of issues, PRs and release notes in release checklist (:pr:`445`)
 * Change management (:issue:`443`, :pr:`451`)
@@ -38,7 +41,7 @@ Bug fixes
 ---------
 
 * Trigger a timeout when guessing parameters for HDF5 takes too long (:issue:`440` , :pr:`449`)
-* Improved error and validation handling when opening files with GUI (:issue:`433,442`)
+* Slightly improved error and validation handling when opening files with GUI (:commit:`ec74c1346d93eff58d9e2201a7ead5af7aa7cf44`)
 * Recognize BLO file type (:issue:`432`)
 * Fixed a glitch where negative peak elevations were possible (:pr:`446`)
 * Update examples to match 0.2 release (:pr:`439`)

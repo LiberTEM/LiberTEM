@@ -262,7 +262,22 @@ def extract(html_string):
             walk(child, drop_first_p)
 
     walk(elem, True)
-    res = html5lib.serialize(elem)
+
+    quicklinks = [
+        ("Homepage", "https://libertem.github.io/LiberTEM/"),
+        ("GitHub repository", "https://github.com/LiberTEM/LiberTEM/"),
+        ("PyPI", "https://pypi.org/project/libertem/"),
+    ]
+    for i, (label, url) in enumerate(quicklinks):
+        e = xml.etree.ElementTree.Element('strong')
+        e.text = "%s: " % label
+        link = xml.etree.ElementTree.SubElement(e, "a", attrib={'href': url})
+        link.text = url
+        xml.etree.ElementTree.SubElement(e, "br")
+
+        elem.insert(i, e)
+
+    res = html5lib.serialize(elem, omit_optional_tags=False)
     return res
 
 

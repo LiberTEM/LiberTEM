@@ -1,4 +1,4 @@
-|gitter|_ |travis|_ |appveyor|_ |zenodo|_
+|gitter|_ |travis|_ |appveyor|_ |zenodo|_ |github|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
@@ -12,7 +12,8 @@
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg
 .. _zenodo: https://doi.org/10.5281/zenodo.1477847
 
-
+.. |github| image:: https://img.shields.io/badge/GitHub-GPL--3.0-informational
+.. _github: http://github.com/LiberTEM/LiberTEM/
 
 LiberTEM is an open source platform for high-throughput distributed processing of large-scale binary data sets using a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_. The current focus is `pixelated <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_ scanning transmission electron microscopy (`STEM <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_) :cite:`doi:10.1002/9783527808465.EMC2016.6284` and scanning electron beam diffraction data.
 

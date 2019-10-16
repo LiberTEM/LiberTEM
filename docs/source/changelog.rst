@@ -11,6 +11,7 @@ Features
 --------
 
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
+* Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (FIXME PR)
 
 Bug fixes
 ---------

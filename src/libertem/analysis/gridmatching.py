@@ -292,6 +292,9 @@ class Match(PointSelection):
             indices=np.array([]),
         )
 
+    def isnan(self):
+        return np.any(np.isnan(np.array([self.zero, self.a, self.b])))
+
     @property
     def calculated_refineds(self):
         '''

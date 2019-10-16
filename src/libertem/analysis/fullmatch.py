@@ -1,6 +1,4 @@
 import logging
-import sys
-import traceback
 
 import numpy as np
 import hdbscan
@@ -172,78 +170,52 @@ class FullMatcher(grm.Matcher):
             for i in range(len(corr))
         ], dtype=np.bool)
 
-        attempts = 1
+        def listed(working_set, polar_cand):
+            return polar_cand
 
-        if cand:
-            try:
-                polar_cand = polar_candidate_vectors = size_filter(
-                    make_polar(np.array(cand)),
-                    min_delta=self.min_delta,
-                    max_delta=self.max_delta
-                )
-                attempts += 1
-            except:
-                pass
+        def guess(working_set, polar_cand):
+            return self._candidates(working_set.refineds)
+
+        if cand is not None:
+            polar_cand = size_filter(
+                make_polar(np.array(cand)),
+                min_delta=self.min_delta,
+                max_delta=self.max_delta
+            )
+            candidate_methods = [listed, guess]
         else:
             polar_cand = None
+            candidate_methods = [guess]
 
         while True:
-            match = None
+            new_selector = np.copy(working_set.selector)
             # First, find good candidate
             # Expensive operation, should be done on smaller sample
             # or sum frame result, at least for first passes to match majority
             # of peaks
-            if polar_cand is not None:
-                polar_candidate_vectors = polar_cand
-            else:
-                polar_candidate_vectors = self._candidates(working_set.refineds)
+            polar_candidate_vectors = candidate_methods[0](working_set, polar_cand)
 
-            try:
-                mmms = self._find_best_vector_match(
-                    point_selection=working_set, zero=zero,
-                    candidates=polar_candidate_vectors)
-                # Continue going through the best matches until
-                # finding one that doesn't raise a LinAlgError
-                for m in mmms:
-                    try:
-                        mm = m.weighted_optimize()
-                        match = self._match_all(
-                            point_selection=working_set, zero=mm.zero,
-                            a=mm.a, b=mm.b
-                        )
-                    except np.linalg.LinAlgError:
-                        continue
-                    # We found one, break out of the loop
+            match = self._find_best_vector_match(
+                point_selection=working_set, zero=zero,
+                candidates=polar_candidate_vectors)
+            if match is None:
+                candidate_methods = candidate_methods[1:]
+                if len(candidate_methods) == 0:
                     break
-                if match is None or len(match) == 0:
-                    attempts -= 1
-                    polar_cand = None
-                    if attempts <= 0:
-                        raise ExitException()
-                    else:
-                        continue
-            except (NotFoundException, np.linalg.LinAlgError, ExitException):
-                new_selector = np.copy(working_set.selector)
-                new_selector[zero_selector] = False
-                unmatched = working_set.derive(selector=new_selector)
-                break
-            if len(match) >= 3:
-                match = match.weighted_optimize()
-            if len(match) > 0:
-                matches.append(match)
-            new_selector = np.copy(working_set.selector)
+                else:
+                    continue
+            matches.append(match)
             # remove the ones that have been matched
             new_selector[match.selector] = False
-            # Test if it spans a lattice
-            if sum(new_selector) >= 3:
+            if np.count_nonzero(new_selector) >= self.min_match:
                 # Add zero point that is shared by all patterns
                 new_selector[zero_selector] = True
                 working_set = working_set.derive(selector=new_selector)
             else:
-                # print("doesn't span a lattice")
-                new_selector[zero_selector] = False
-                unmatched = working_set.derive(selector=new_selector)
                 break
+        if matches:
+            new_selector[zero_selector] = False
+        unmatched = working_set.derive(selector=new_selector)
         weak = grm.PointSelection(corr, selector=np.logical_not(filt))
         return (matches, unmatched, weak)
 
@@ -266,6 +238,30 @@ class FullMatcher(grm.Matcher):
         polar = make_polar(deltas)
         return size_filter(polar, self.min_delta, self.max_delta)
 
+    def check(self, match):
+        if len(match) < self.min_match:
+            return False
+        papb = make_polar(np.array([match.a, match.b]))
+        if len(size_filter(papb, self.min_delta, self.max_delta)) != 2:
+            return False
+        return angle_check(papb[0:1], papb[1:2], self.min_angle)
+
+    def _tumble(self, point_selection, match):
+        if not self.check(match):
+            return None
+        match = match.weighted_optimize()
+        if not self.check(match):
+            return None
+        match = self._match_all(
+            point_selection=point_selection, zero=match.zero, a=match.a, b=match.b)
+        if not self.check(match):
+            return None
+        match = match.weighted_optimize()
+        if not self.check(match):
+            return None
+        else:
+            return match
+
     def _do_match(self, point_selection: grm.PointSelection, zero, polar_vectors):
         '''
         Return a list with matches of all pairwise combinations of polar_vectors
@@ -280,6 +276,7 @@ class FullMatcher(grm.Matcher):
                 # too parallel, not good lattice vectors
                 if not angle_check(np.array([a]), np.array([b]), self.min_angle):
                     continue
+
                 if a[0] > b[0]:
                     bb = a
                     aa = b
@@ -290,10 +287,10 @@ class FullMatcher(grm.Matcher):
                 try:
                     match = self._match_all(
                         point_selection=point_selection, zero=zero, a=aa, b=bb)
+                    match = self._tumble(point_selection, match)
                 except np.linalg.LinAlgError:
                     continue
-                # At least three points matched
-                if len(match) > 2:
+                if match is not None:
                     match_list.append(match)
         return match_list
 
@@ -310,9 +307,6 @@ class FullMatcher(grm.Matcher):
         The function implements a heuristic to calculate a figure of merit that boosts
         candidates for each of the criteria that they fulfill or nearly fulfill.
 
-        FIXME the figure of merit is currently determined heuristically based on discrete
-        thresholds. A smooth function would be more elegant.
-
         FIXME improve this on more real-world examples; define test cases.
         '''
         def fom(m):
@@ -320,24 +314,23 @@ class FullMatcher(grm.Matcher):
             nb = np.linalg.norm(m.b)
             # Matching many high-quality points is good
             res = np.sum(m.peak_elevations)**2
-            # Boost for orthogonality
-            if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
-                res *= 5
-            elif np.abs(np.dot(m.a, m.b)) < 0.3 * na * nb:
-                res *= 2
-            # Boost fo nearly equal length
-            if np.abs(na - nb) < 0.1 * max(na, nb):
-                res *= 2
-            # The division favors short vectors
-            res /= na
-            res /= nb
+
+            # favor orthogonality
+            res *= (np.abs(np.cross(m.a, m.b)) / (na * nb))
+
+            # favor equal length
+            res *= ((na * nb) / (na**2 + nb**2))
+
+            # Favor short
+            # res /= na * nb
+
             return res
 
         match_list = self._do_match(point_selection, zero, candidates)
         if match_list:
-            return sorted(match_list, key=fom, reverse=True)
+            return max(match_list, key=fom)
         else:
-            raise NotFoundException
+            return None
 
     def _make_hdbscan_config(self, points):
         # This is handled here because the defaults depend on the number of points

@@ -12,6 +12,7 @@ Features
 
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
 * Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (FIXME PR)
+* Introduce plain circular match pattern :class:`libertem.udf.blobfinder.Circular`(FIXME PR)
 
 Bug fixes
 ---------

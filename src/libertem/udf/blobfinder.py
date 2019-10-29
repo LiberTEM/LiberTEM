@@ -486,7 +486,7 @@ class FastCorrelationUDF(CorrelationUDF):
     Fourier-based fast correlation-based refinement of peak positions within a search frame
     for each peak.
     '''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, peaks, *args, **kwargs):
         '''
         Parameters
         ----------
@@ -496,7 +496,7 @@ class FastCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        super().__init__(*args, **kwargs)
+        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
 
     def get_task_data(self):
         mask = self.get_pattern()
@@ -529,6 +529,78 @@ class FastCorrelationUDF(CorrelationUDF):
             log_scale(crop_part, out=crop_buf[crop_buf_slice])
             center, refined, peak_value, peak_elevation = do_correlation(
                 self.get_template(), crop_buf)
+            abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
+            abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
+            self.save_result(disk_idx, abs_center, abs_refined, peak_value, peak_elevation)
+
+    def save_result(self, disk_idx, center, refined, peak_value, peak_elevation):
+        r = self.results
+        r.centers[disk_idx] = center
+        r.refineds[disk_idx] = refined
+        r.peak_values[disk_idx] = peak_value
+        r.peak_elevations[disk_idx] = peak_elevation
+
+    def postprocess(self):
+        pass
+
+
+class FullFrameCorrelationUDF(CorrelationUDF):
+    '''
+    Fourier-based correlation-based refinement of peak positions within a search frame
+    for each peak using a single correlation step. This can be faster for correlating a
+    large number of peaks in small frames in comparison to :class:`FastCorrelationUDF`.
+
+    .. versionadded:: 0.3.0.dev0
+    '''
+    def __init__(self, peaks, *args, **kwargs):
+        '''
+        Parameters
+        ----------
+
+        peaks : numpy.ndarray
+            Numpy array of (y, x) coordinates with peak positions in px to correlate
+        match_pattern : MatchPattern
+            Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
+        '''
+        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
+
+    def get_task_data(self):
+        mask = self.get_pattern()
+        template = mask.get_template(sig_shape=self.meta.dataset_shape.sig)
+        frame_buf = zeros(shape=self.meta.dataset_shape.sig, dtype=np.float32)
+        kwargs = {
+            'template': template,
+            'frame_buf': frame_buf,
+        }
+        return kwargs
+
+    def get_peaks(self):
+        return self.params.peaks
+
+    def get_pattern(self):
+        return self.params.match_pattern
+
+    def get_template(self):
+        return self.task_data.template
+
+    def process_frame(self, frame):
+        match_pattern = self.get_pattern()
+        peaks = self.get_peaks()
+        crop_size = match_pattern.get_crop_size()
+        template = self.get_template()
+        frame_buf = self.task_data.frame_buf
+        log_scale(frame, out=frame_buf)
+        spec_part = fft.rfft2(frame_buf)
+        corrspec = template * spec_part
+        corr = fft.fftshift(fft.irfft2(corrspec))
+        crop_buf = np.zeros((2 * crop_size, 2 * crop_size), dtype="float32")
+        # FIXME profile this -- this might benefit significantly from a Numba implementation
+        # since it deals with a large number of small buffers
+        for disk_idx, (crop_part, crop_buf_slice) in enumerate(
+                crop_disks_from_frame(peaks=peaks, frame=corr, match_pattern=match_pattern)):
+            crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
+            crop_buf[crop_buf_slice] = crop_part
+            center, refined, peak_value, peak_elevation = evaluate_correlation(crop_buf)
             abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
             abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
             self.save_result(disk_idx, abs_center, abs_refined, peak_value, peak_elevation)
@@ -821,8 +893,9 @@ def run_refine(
         Instance of :class:`~MatchPattern`
     matcher : libertem.analysis.gridmatching.Matcher
         Instance of :class:`~libertem.analysis.gridmatching.Matcher` to perform the matching
-    correlation : {'fast', 'sparse'}, optional
-        'fast' or 'sparse' to select :class:`~FastCorrelationUDF` or :class:`~SparseCorrelationUDF`
+    correlation : {'fast', 'sparse', 'fullframe'}, optional
+        'fast', 'sparse' or 'fullframe' to select :class:`~FastCorrelationUDF`,
+        :class:`~SparseCorrelationUDF` or :class:`~FullFrameCorrelationUDF`
     match : {'fast', 'affine'}, optional
         'fast' or 'affine' to select :class:`~FastmatchMixin` or :class:`~AffineMixin`
     indices : numpy.ndarray, optional
@@ -835,6 +908,10 @@ def run_refine(
         See :meth:`~SparseCorelationUDF.__init__` for details.
     roi : numpy.ndarray, optional
         ROI for :meth:`~libertem.api.Context.run_udf`
+
+    .. versionchanged:: 0.3.0.dev0
+        Support for :class:`FullFrameCorrelationUDF` through parameter
+        :code:`correlation = 'fullframe'`
 
     Returns
     -------
@@ -909,6 +986,8 @@ def run_refine(
         method = FastCorrelationUDF
     elif correlation == 'sparse':
         method = SparseCorrelationUDF
+    elif correlation == 'fullframe':
+        method = FullFrameCorrelationUDF
     else:
         raise ValueError(
             "Unknown correlation method %s. Supported are 'fast' and 'sparse'" % correlation

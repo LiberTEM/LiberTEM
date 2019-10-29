@@ -17,6 +17,7 @@ Features
   number (several hundred) of small peaks (10x10) on small frames (256x256) faster than
   :class:`libertem.udf.blobfinde.FastCorrelationUDF`
   and :class:`libertem.udf.blobfinde.SparseCorrelationUDF`
+* Introduce :class:`libertem.udf.UDFPreprocessMixin`
 
 Bug fixes
 ---------

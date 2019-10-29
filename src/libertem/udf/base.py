@@ -632,6 +632,13 @@ class UDFRunner:
         return self._udf.results, partition
 
     def run_for_dataset(self, dataset, executor, roi=None):
+        if roi is not None:
+            if np.product(roi.shape) != np.product(dataset.shape.nav):
+                raise ValueError(
+                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                        roi.shape, dataset.shape.nav
+                    )
+                )
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -645,6 +652,10 @@ class UDFRunner:
         tasks = self._make_udf_tasks(dataset, roi)
         cancel_id = str(uuid.uuid4())
 
+        if self._debug:
+            tasks = list(tasks)
+            cloudpickle.loads(cloudpickle.dumps(tasks))
+
         for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)
             self._udf.merge(
@@ -657,6 +668,14 @@ class UDFRunner:
         return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
+        # FIXME: code duplication?
+        if roi is not None:
+            if np.product(roi.shape) != np.product(dataset.shape.nav):
+                raise ValueError(
+                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                        roi.shape, dataset.shape.nav
+                    )
+                )
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -664,7 +683,6 @@ class UDFRunner:
             dataset_dtype=dataset.dtype
         )
         self._udf.set_meta(meta)
-        # FIXME: code duplication?
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 

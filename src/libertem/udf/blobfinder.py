@@ -486,7 +486,7 @@ class FastCorrelationUDF(CorrelationUDF):
     Fourier-based fast correlation-based refinement of peak positions within a search frame
     for each peak.
     '''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, peaks, *args, **kwargs):
         '''
         Parameters
         ----------
@@ -496,7 +496,7 @@ class FastCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        super().__init__(*args, **kwargs)
+        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
 
     def get_task_data(self):
         mask = self.get_pattern()
@@ -552,7 +552,11 @@ class FullFrameCorrelationUDF(CorrelationUDF):
 
     .. versionadded:: 0.3.0.dev0
     '''
+<<<<<<< HEAD
     def __init__(self, *args, **kwargs):
+=======
+    def __init__(self, peaks, *args, **kwargs):
+>>>>>>> Support for full frame correlation
         '''
         Parameters
         ----------
@@ -562,7 +566,11 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
+<<<<<<< HEAD
         super().__init__(*args, **kwargs)
+=======
+        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
+>>>>>>> Support for full frame correlation
 
     def get_task_data(self):
         mask = self.get_pattern()
@@ -912,6 +920,10 @@ def run_refine(
         See :meth:`~SparseCorelationUDF.__init__` for details.
     roi : numpy.ndarray, optional
         ROI for :meth:`~libertem.api.Context.run_udf`
+
+    .. versionchanged:: 0.3.0.dev0
+        Support for :class:`FullFrameCorrelationUDF` through parameter
+        :code:`correlation = 'fullframe'`
 
     Returns
     -------

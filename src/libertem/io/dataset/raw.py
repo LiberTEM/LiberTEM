@@ -192,7 +192,7 @@ class RawFileDataSet(DataSet):
 
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
-                          "please specify detecros_size instead or use EMPAD DataSet",
+                          "please specify detector_size instead or use EMPAD DataSet",
                           DeprecationWarning)
             if detector_size is not None:
                 raise ValueError("cannot specify both detector_size and crop_detector_to")

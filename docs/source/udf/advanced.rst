@@ -140,10 +140,13 @@ Pre-processing
 ---------------
 
 Pre-processing allows to initialize result buffers by implementing
-:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed after all
-buffers are allocated, but before the partition data is processed, with views set for
-the whole partition masked by the current ROI. This is particularly useful to set up
-:code:`dtype=object` buffers, for example ragged arrays.
+:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed
+after all buffers are allocated, but before the partition data is processed,
+with views set for the whole partition masked by the current ROI. This is
+particularly useful to set up :code:`dtype=object` buffers, for example ragged
+arrays.
+
+.. versionadded:: 0.3.0.dev0
 
 Partition processing
 --------------------
@@ -155,8 +158,6 @@ For that reason, per-partition processing should only be used if there are clear
 indications for it. Implementing
 :meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates
 per-partition processing for an UDF.
-
-.. versionadded:: 0.3.0.dev0
 
 Precedence
 ----------

@@ -247,6 +247,51 @@ def test_run_refine_sparse(lt_ctx):
     assert np.allclose(res['b'].data[0], b, atol=0.2)
 
 
+def test_run_refine_fullframe(lt_ctx):
+    shape = np.array([128, 128])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 10
+
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    matcher = grm.Matcher()
+    match_pattern = blobfinder.RadialGradient(radius=radius)
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
+    (res, real_indices) = blobfinder.run_refine(
+        ctx=lt_ctx,
+        dataset=dataset,
+        zero=zero + np.random.uniform(-0.5, 0.5, size=2),
+        a=a + np.random.uniform(-0.5, 0.5, size=2),
+        b=b + np.random.uniform(-0.5, 0.5, size=2),
+        matcher=matcher,
+        match_pattern=match_pattern,
+        correlation='fullframe',
+    )
+
+    print(peaks - grm.calc_coords(
+        res['zero'].data[0],
+        res['a'].data[0],
+        res['b'].data[0],
+        indices)
+    )
+
+    assert np.allclose(res['zero'].data[0], zero, atol=0.5)
+    assert np.allclose(res['a'].data[0], a, atol=0.2)
+    assert np.allclose(res['b'].data[0], b, atol=0.2)
+
+
 def test_custom_template():
     template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
     custom = blobfinder.UserTemplate(template=template, search=18)

@@ -11,13 +11,13 @@ Features
 --------
 
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
-* Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (FIXME PR)
-* Introduce plain circular match pattern :class:`libertem.udf.blobfinder.Circular` (FIXME PR)
+* Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (:pr:`458`)
+* Introduce plain circular match pattern :class:`libertem.udf.blobfinder.Circular` (:pr:`458`)
 * Introduce :class:`libertem.udf.blobfinder.FullFrameCorrelationUDF` which correlates a large
   number (several hundred) of small peaks (10x10) on small frames (256x256)
   faster than :class:`libertem.udf.blobfinder.FastCorrelationUDF` and
-  :class:`libertem.udf.blobfinder.SparseCorrelationUDF`
-* Introduce :class:`libertem.udf.UDFPreprocessMixin`
+  :class:`libertem.udf.blobfinder.SparseCorrelationUDF` (:pr:`458`)
+* Introduce :class:`libertem.udf.UDFPreprocessMixin` (:pr:`458`)
 
 Bug fixes
 ---------

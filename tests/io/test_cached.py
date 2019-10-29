@@ -4,13 +4,18 @@ import pickle
 import numpy as np
 import pytest
 
-from libertem.io.dataset.cached import CachedDataSet
+from libertem.io.dataset.cached import CachedDataSet, LRUCacheStrategy
 
 
 @pytest.fixture
 def default_cached_ds(tmpdir_factory, default_raw, lt_ctx):
-    datadir = tmpdir_factory.mktemp('draw_directory')
-    ds = CachedDataSet(source_ds=default_raw, cache_path=datadir)
+    datadir = tmpdir_factory.mktemp('cached_ds_directory')
+    strategy = LRUCacheStrategy(capacity=1024*1024*1024)
+    ds = CachedDataSet(
+        source_ds=default_raw,
+        cache_path=datadir,
+        strategy=strategy,
+    )
     ds = ds.initialize(executor=lt_ctx.executor)
     yield ds
 
@@ -51,8 +56,13 @@ async def test_with_dask_executor(tmpdir_factory, default_raw, dask_executor):
     """
     integration test with the dask executor
     """
-    datadir = tmpdir_factory.mktemp('draw_directory')
-    ds = CachedDataSet(source_ds=default_raw, cache_path=datadir)
+    datadir = tmpdir_factory.mktemp('cached_ds_directory')
+    strategy = LRUCacheStrategy(capacity=1024*1024*1024)
+    ds = CachedDataSet(
+        source_ds=default_raw,
+        cache_path=datadir,
+        strategy=strategy,
+    )
     ds = ds.initialize(executor=dask_executor)
     list(ds.get_partitions())  # trigger data locality queries
 

@@ -121,7 +121,7 @@ class AsyncJobExecutor(object):
 
     async def close(self):
         """
-        cleanup resources used by this executor, if any
+        Cleanup resources used by this executor, if any.
         """
 
     async def cancel(self, cancel_id):
@@ -215,8 +215,7 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def close(self):
         """
-        Cleanup resources used by this executor, if any. Also calls close on the
-        wrapped executor.
+        Cleanup resources used by this executor, if any, including the wrapped executor.
         """
         res = await sync_to_async(self._wrapped.close, self._pool)
         if self._pool:

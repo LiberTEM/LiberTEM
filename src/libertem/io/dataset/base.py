@@ -276,6 +276,9 @@ class WritablePartition:
     def get_write_handle(self):
         raise NotImplementedError()
 
+    def delete(self):
+        raise NotImplementedError()
+
 
 class Partition(object):
     def __init__(self, meta, partition_slice):
@@ -381,6 +384,9 @@ class DataTile(object):
         assert tile_slice.shape.nav.dims == 1, "DataTile should have flat nav"
         assert data.shape == tuple(tile_slice.shape),\
             "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
+
+    def astype(self, dtype):
+        return DataTile(data=self.data.astype(dtype), tile_slice=self.tile_slice)
 
     @property
     def flat_data(self):

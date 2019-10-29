@@ -1,19 +1,3 @@
-"""
-ClusterDataSet: a distributed RAW data set
-
- - to be used for the cache, for live acquisition, and for simulation integration
- - each node has a directory for a ClusterDataSet dataset
- - the directory contains partitions, each its own raw file
- - information about the structure is saved as a json sidecar file
- - A ClusterDataSet dataset can be incomplete, that is, it can miss complete partitions
-   (but partitions themselves are guaranteed to be complete once they have their final filename)
-   use cases:
-    * each node only caches the partitions it is responsible for
-    * partial acquisitions support
- - missing partitions can later be written
- - file names and structure/partitioning are deterministic
- - assumption: all workers on a single host share the dataset
-"""
 import os
 import json
 from collections import defaultdict
@@ -32,6 +16,21 @@ from libertem.common import Shape, Slice
 
 class ClusterDataSet(WritableDataSet, DataSet):
     """
+    ClusterDataSet: a distributed RAW data set
+
+     - to be used for the cache, for live acquisition, and for simulation integration
+     - each node has a directory for a ClusterDataSet
+     - the directory contains partitions, each its own raw file
+     - information about the structure is saved as a json sidecar file
+     - A ClusterDataSet dataset can be incomplete, that is, it can miss complete partitions
+       (but partitions themselves are guaranteed to be complete once they have their final filename)
+       use cases:
+        * each node only caches the partitions it is responsible for
+        * partial acquisitions support
+     - missing partitions can later be written
+     - file names and structure/partitioning are deterministic
+     - assumption: all workers on a single host share the dataset
+
     Parameters
     ----------
 
@@ -40,9 +39,9 @@ class ClusterDataSet(WritableDataSet, DataSet):
         Assumes a uniform setup (same absolute path used on all nodes)
 
     enable_direct : bool
-        Enable direct I/O. This bypasses the filesystem cache and is useful for
+        Enable direct I/O for reading. This bypasses the filesystem cache and is useful for
         systems with very fast I/O and for data sets that are much larger than the
-        main memory.
+        main memory. Support for direct I/O writing TODO.
 
     structure : PartitionStructure
         Partitioning structure instance. Must be specified when creating a new dataset.
@@ -63,7 +62,8 @@ class ClusterDataSet(WritableDataSet, DataSet):
 
     def initialize(self, executor):
         """
-        initialize is running on a random worker node
+        Initialize is running on the master node, but we have
+        access to the executor.
         """
         # 1) create sidecar files on hosts that don't have them yet
         executor.run_each_host(self._ensure_sidecar)
@@ -94,7 +94,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
 
     def _get_path_for_idx(self, idx):
         # FIXME: possibly different paths per node
-        return os.path.join(self._path, "partition-%08d" % idx)
+        return os.path.join(self._path, "parts", "partition-%08d" % idx)
 
     @property
     def dtype(self):
@@ -112,6 +112,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
         """
         run on each node on initialization
         """
+        os.makedirs(os.path.join(self._path, "parts"), exist_ok=True)
         if not os.path.exists(self._sidecar_path()):
             self._write_sidecar()
 
@@ -205,6 +206,8 @@ class ClusterDSPartition(WritablePartition, Partition3D):
         self._workers = workers
 
     def get_write_handle(self):
+        # FIXME: make example executable? involves temporary directory, source dataset, ...
+        # TODO: Direct I/O writing support
         """
         Get a handle to write to this partition. Current rules:
 
@@ -217,8 +220,7 @@ class ClusterDSPartition(WritablePartition, Partition3D):
 
         Example
         -------
-
-        >>> with dest_part.get_write_handle() as wh:
+        >>> with dest_part.get_write_handle() as wh:  #  doctest: +SKIP
         ...     for tile in wh.write_tiles(source_part.get_tiles()):
         ...         pass  # do something with `tile`
         """
@@ -242,3 +244,6 @@ class ClusterDSPartition(WritablePartition, Partition3D):
 
     def get_locations(self):
         return self._workers
+
+    def get_canonical_path(self):
+        return os.path.realpath(self._path)

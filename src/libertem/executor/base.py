@@ -27,6 +27,46 @@ class JobExecutor(object):
         """
         raise NotImplementedError()
 
+    def run_each_partition(self, partitions, fn, all_nodes=False):
+        """
+        Run `fn` for all partitions. Yields results in order of completion.
+
+        Parameters
+        ----------
+
+        partitions : List[Partition]
+            List of relevant partitions.
+
+        fn : callable
+            Function to call, will get the partition as first and only argument.
+
+        all_nodes : bool
+            If all_nodes is True, run the function on all nodes that have this partition,
+            otherwise run on any node that has the partition. If a partition has no location,
+            the function will not be run for that partition if `all_nodes` is True, otherwise
+            it will be run on any node.
+        """
+        raise NotImplementedError()
+
+    def run_each_host(self, fn, *args, **kwargs):
+        """
+        Run a callable `fn` once on each host, gathering all results into a dict host -> result
+
+
+        Parameters
+        ----------
+
+        fn : callable
+            Function to call
+
+        *args
+            Arguments for fn
+
+        **kwargs
+            Keyword arguments for fn
+        """
+        raise NotImplementedError()
+
     def close(self):
         """
         cleanup resources used by this executor, if any
@@ -71,6 +111,12 @@ class AsyncJobExecutor(object):
         """
         run a callable `fn`
         """
+        raise NotImplementedError()
+
+    async def run_each_partition(self, partitions, fn, all_nodes=False):
+        raise NotImplementedError()
+
+    async def run_each_host(self, fn, *args, **kwargs):
         raise NotImplementedError()
 
     async def close(self):
@@ -155,6 +201,16 @@ class AsyncAdapter(AsyncJobExecutor):
         run a callable `fn`
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def run_each_partition(self, partitions, fn, all_nodes=False):
+        fn_with_args = functools.partial(
+            self._wrapped.run_each_partition, partitions, fn, all_nodes
+        )
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def run_each_host(self, fn, *args, **kwargs):
+        fn_with_args = functools.partial(self._wrapped.run_each_host, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
 
     async def close(self):

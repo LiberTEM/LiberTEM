@@ -72,7 +72,11 @@ Please include version information if you add or change a feature in order to
 track and document changes. We use a rolling documentation that documents
 previous behavior as well, for example *This feature was added in Version
 0.3.0.dev0* or *This describes the behavior from Version 0.3.0.dev0 and onwards.
-The previous behavior was this and that*. The following items might require an
+The previous behavior was this and that*. If applicable, use
+`versionadded <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-versionadded>`_
+and related directives.
+
+The following items might require an
 update upon introducing or changing a feature:
 
 * Changelog in :code:`docs/source/changelog.rst`

@@ -4,6 +4,6 @@ from .auto import AutoUDF
 
 
 __all__ = [
-    'UDF', 'UDFFrameMixin', 'UDFTileMixin', 'UDFPartitionMixin', 'UDFPostprocessMixin', 'UDFMeta',
-    'UDFData', 'check_cast', 'AutoUDF',
+    'UDF', 'UDFFrameMixin', 'UDFTileMixin', 'UDFPartitionMixin', 'UDFPostprocessMixin',
+    'UDFPreprocessMixin', 'UDFMeta', 'UDFData', 'check_cast', 'AutoUDF',
 ]

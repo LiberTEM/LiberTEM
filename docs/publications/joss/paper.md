@@ -42,13 +42,13 @@ match the growing performance requirements of EM data processing.
 The data rate of current detectors like the Gatan K3 camera exceeds 50 GB/s,
 which is faster than the memory bandwidth of typical PCs. Applications that
 would run smoothly on a typical PC ten years ago require distributed processing
-on special hardware to offer the same user experience today. That requires
-fundamental changes in the architecture and programming model of data handling
-and processing systems for electron microscopy, and consequently in the
-implementation of algorithms and user interfaces for electron microscopy
-applications. Furthermore, electron microscopy is interactive and visual. As a consequence,
-processing systems should be designed for interactive GUI use with fast response
-times.
+on special hardware to offer the same user experience today. Furthermore,
+electron microscopy is interactive and visual. As a consequence, processing
+systems should be designed for very high throughput in combination with fast
+response times for interactive GUI use. That requires fundamental changes in the
+architecture and programming model of data handling and processing systems for
+electron microscopy, and consequently in the implementation of algorithms and
+user interfaces for electron microscopy applications.
 
 # Description
 

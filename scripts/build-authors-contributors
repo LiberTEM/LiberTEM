@@ -21,9 +21,9 @@ def format_entry(a):
         entry += " (%s)" % a['affiliation']
     entry += "**"
     if 'orcid' in a:
-        entry += " `ORCID <https://orcid.org/%s>`_" % a['orcid']
+        entry += " `ORCID <https://orcid.org/%s>`__" % a['orcid']
     if 'github' in a:
-        entry += " `GitHub <https://github.com/%s>`_" % a['github']
+        entry += " `GitHub <https://github.com/%s>`__" % a['github']
 
     if 'contribution' in a:
         entry += "\n    %s" % a['contribution']

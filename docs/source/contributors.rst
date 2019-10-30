@@ -1,4 +1,4 @@
-**@theassassin** `GitHub <https://github.com/theassassin>`_
+**@theassassin** `GitHub <https://github.com/theassassin>`__
     Help with setting up AppImage building and Continuous Integration
 
 **Juri Barthel (FZ Jülich)**

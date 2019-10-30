@@ -307,7 +307,7 @@
     },
     {
         "displayname": "@theassassin",
-        "github": "@theassassin",
+        "github": "theassassin",
         "authorname": "@theassassin",
         "contribution": "Help with setting up AppImage building and Continuous Integration"
     }

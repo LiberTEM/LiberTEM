@@ -14,10 +14,22 @@ contributors = sorted(contributors, key=lambda c: c['authorname'])
 
 
 def format_entry(a):
+    entry = "**"
+    if 'displayname' in a:
+        entry += a['displayname']
     if 'affiliation' in a:
-        return "**%s (%s)**\n    %s\n\n" % (a['displayname'], a['affiliation'], a['contribution'])
-    else:
-        return "**%s**\n    %s\n\n" % (a['displayname'], a['contribution'])
+        entry += " (%s)" % a['affiliation']
+    entry += "**"
+    if 'orcid' in a:
+        entry += " `ORCID <https://orcid.org/%s>`_" % a['orcid']
+    if 'github' in a:
+        entry += " `GitHub <https://github.com/%s>`_" % a['github']
+
+    if 'contribution' in a:
+        entry += "\n    %s" % a['contribution']
+
+    entry += "\n\n"
+    return entry
 
 
 with open('docs/source/creators.rst', 'w', encoding='utf-8') as f:

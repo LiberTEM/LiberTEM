@@ -1076,4 +1076,12 @@
   publisher = {Zenodo},
 }
 
+@Misc{Johnstone2019,
+  author    = {Johnstone, Duncan N. and Crout, Phillip and Høgås, Simon and Martineau, Ben and Smeets, Stef and {Joonatan Laulainen} and Collins, Sean and {Jędrzej Morzy} and Prestat, Eric and Ånes, Håkon and {Phillipcrout} and {Tiarnan Doherty} and Ostasevicius, Tomas and Bergh, Tina},
+  title     = {pyxem/pyxem: pyXem 0.9.2},
+  year      = {2019},
+  doi       = {10.5281/ZENODO.2649351},
+  publisher = {Zenodo},
+}
+
 @Comment{jabref-meta: databaseType:bibtex;}

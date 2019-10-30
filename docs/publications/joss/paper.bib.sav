@@ -32,15 +32,6 @@
   url          = {https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera},
 }
 
-@Misc{Clausen2018,
-  author    = {Clausen, Alexander and Weber, Dieter and {Probonopd} and Caron, Jan and Nord, Magnus and Müller-Caspary, Knut and Ophus, Colin and Dunin-Borkowski, Rafal},
-  title     = {Libertem/Libertem: 0.1.0},
-  year      = {2018},
-  doi       = {10.5281/zenodo.1477847},
-  keywords  = {STEM, TEM, pixelated STEM, 4D STEM, high-throughput, electron microscopy},
-  publisher = {Zenodo},
-}
-
 @Article{Sauter2013,
   author    = {Nicholas K. Sauter and Johan Hattne and Ralf W. Grosse-Kunstleve and Nathaniel Echols},
   title     = {New Python-based methods for data processing},
@@ -611,15 +602,6 @@
   publisher = {Institute of Electrical and Electronics Engineers ({IEEE})},
 }
 
-@Misc{Clausen2018a,
-  author    = {Clausen, Alexander and Weber, Dieter and {Probonopd} and Caron, Jan and Nord, Magnus and Müller-Caspary, Knut and Ophus, Colin and Dunin-Borkowski, Rafal},
-  title     = {Libertem/Libertem: 0.1.0},
-  year      = {2018},
-  doi       = {10.5281/zenodo.1478763},
-  keywords  = {STEM, TEM, pixelated STEM, 4D STEM, high-throughput, electron microscopy},
-  publisher = {Zenodo},
-}
-
 @Misc{IntelLustre,
   author = {{Intel High Performance Data Division}},
   title  = {Architecting a High Performance Storage System},
@@ -1081,6 +1063,15 @@
   title     = {pyxem/pyxem: pyXem 0.9.2},
   year      = {2019},
   doi       = {10.5281/ZENODO.2649351},
+  publisher = {Zenodo},
+}
+
+@Misc{Clausen2019,
+  author    = {Clausen, Alexander and Weber, Dieter and {@Probonopd} and Caron, Jan and Nord, Magnus and Müller-Caspary, Knut and Ophus, Colin and Dunin-Borkowski, Rafal and Ruzaeva, Karina and Chandra, Rahul and Shin, Jaeweon and van Schyndel, Jay},
+  title     = {LiberTEM/LiberTEM: 0.2.2},
+  year      = {2019},
+  doi       = {10.5281/ZENODO.1477847},
+  keywords  = {STEM, TEM, pixelated STEM, 4D STEM, high-throughput, electron microscopy},
   publisher = {Zenodo},
 }
 

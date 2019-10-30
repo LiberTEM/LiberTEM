@@ -90,7 +90,7 @@ def read(*parts):
 
 
 def remove_rst_roles(txt):
-    return re.sub(':(cite|doc):`[^`]+`', '', txt)
+    return re.sub(':(cite|doc):`[^`]+` ?', '', txt)
 
 
 def get_git_rev():

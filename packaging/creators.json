@@ -3,82 +3,89 @@
         "displayname": "Alexander Clausen",
         "authorname": "Clausen, Alexander",
         "affiliation": "Jülich Research Centre",
-        "github": "@sk1p",
-        "contribution": "System design, engineering, implementation, documentation, management, majority of the code"
+        "github": "sk1p",
+        "contribution": "System design, engineering, implementation, documentation, management, majority of the code",
+        "orcid": "0000-0002-9555-7455"
     }, 
     {
         "displayname": "Dieter Weber",
         "authorname": "Weber, Dieter",
         "affiliation": "Jülich Research Centre",
-        "github": "@uellue",
-        "contribution": "Management, requirements analysis, system design, testing, documentation, communication" ,
+        "github": "uellue",
+        "contribution": "Management, requirements analysis, system design, testing, documentation, communication",
         "orcid": "0000-0001-6635-9567"
     }, 
     {
         "displayname": "probonopd",
         "authorname": "@probonopd",
-        "github": "@probonopd",
+        "github": "probonopd",
         "contribution": "Help with setting up AppImage building and Continuous Integration"
     }, 
     {
         "displayname": "Jan Caron",
         "authorname": "Caron, Jan",
         "affiliation": "Jülich Research Centre",
-        "github": "@jan-car",
-        "contribution": "Discussions, advanced color wheel for vector field visualization"            
+        "github": "jan-car",
+        "contribution": "Discussions, advanced color wheel for vector field visualization",
+        "orcid": "0000-0002-0873-889X"
     }, 
     {
         "displayname": "Magnus Nord",
         "authorname": "Nord, Magnus",
         "affiliation": "University of Antwerp",
-        "github": "@magnunor",
-        "contribution": "Discussions, tests, code in related projects" 
+        "github": "magnunor",
+        "contribution": "Discussions, tests, code in related projects",
+        "orcid": "0000-0001-7981-5293"
     },
     {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
         "affiliation": "Jülich Research Centre",
-        "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader"
+        "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader",
+        "orcid": "0000-0002-2588-7993"
     },
     {
         "displayname": "Colin Ophus",
         "authorname": "Ophus, Colin",
         "affiliation": "Lawrence Livermore National Lab",
-        "github": "@cophus",
-        "contribution": "Discussions, sample code for K2 reader, overview of related projects"
+        "github": "cophus",
+        "contribution": "Discussions, sample code for K2 reader, overview of related projects",
+        "orcid": "0000-0003-2348-8558"
     },
     {
         "displayname": "Rafal Dunin-Borkowski",
         "authorname": "Dunin-Borkowski, Rafal",
         "affiliation": "Jülich Research Centre",
-        "contribution": "Scientific advisory, resources, discussion, publications"
+        "contribution": "Scientific advisory, resources, discussion, publications",
+        "orcid": "0000-0001-8082-0647"
     },
     {
         "displayname": "Karina Ruzaeva",
         "authorname": "Ruzaeva, Karina",
         "affiliation": "Jülich Research Centre" ,
-        "github": "@kruzaeva",
-        "contribution": "Fast diffraction analysis"
+        "github": "kruzaeva",
+        "contribution": "Fast diffraction analysis",
+        "orcid": "0000-0003-3610-0989"
     },
     {
         "displayname": "Rahul Chandra",
         "authorname": "Chandra, Rahul",
         "affiliation": "Chandigarh University" ,
-        "github": "@irahulcse",
+        "github": "irahulcse",
         "contribution": "Test and update of examples"
     },
     {
         "displayname": "Jaeweon Shin",
         "authorname": "Shin, Jaeweon",
         "affiliation": "ETH Zürich" ,
-        "github": "@jaewshin",
+        "github": "jaewshin",
         "contribution": "Single pass numerically stable standard deviation"
     },
     {
         "displayname": "Jay van Schyndel",
         "authorname": "van Schyndel, Jay",
         "affiliation": "Monash University eResearch Centre" ,
-        "github": "@ozej8y",
+        "github": "ozej8y",
         "contribution": "Fix issue 80 to allow container deployment"
     }
 ]

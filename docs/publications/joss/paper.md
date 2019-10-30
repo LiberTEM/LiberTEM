@@ -60,12 +60,12 @@ focus for application development is electron microscopy. Nevertheless, LiberTEM
 is suitable for any kind of large-scale binary data that has a hyper-rectangular
 array layout.
 
-LiberTEM uses a simplified MapReduce programming model. It is designed to run
-and perform well on PCs, single server nodes, clusters and cloud services. On
-clusters it can use fast distributed local storage on high-performance SSDs.
-That way it achieves very high aggregate IO performance on a compact and
-cost-efficient system built from stock components. Benchmarking results can be
-found at https://libertem.github.io/LiberTEM/performance.html
+LiberTEM uses a simplified MapReduce [@Dean2008] programming model. It is
+designed to run and perform well on PCs, single server nodes, clusters and cloud
+services. On clusters it can use fast distributed local storage on
+high-performance SSDs. That way it achieves very high aggregate IO performance
+on a compact and cost-efficient system built from stock components. Benchmarking
+results can be found at https://libertem.github.io/LiberTEM/performance.html
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
 installation of Python 3 and the required packages will likely work as well. The
@@ -79,14 +79,14 @@ materials and phase change materials. More details can be found at
 https://libertem.github.io/LiberTEM/applications.html
 
 Compared to established MapReduce-like systems like Apache Spark [@Zaharia2016]
-or Apache Hadoop [@Patel2012], it offers a data model that is similar to NumPy,
-suitable for typical binary data from area detectors, as opposed to tabular data
-in the case of Spark and Hadoop. It includes interfaces to the established
-Python-based numerical processing tools, supports a number of relevant file
-formats for EM data, and features optimized data paths for numerical data that
-eliminate unnecessary copies and allow cache-efficient processing. As a result,
-it can reach more than four times the throughput of Spark-based processing for
-the same operations on typical data sets.
+or Apache Hadoop [@Patel2012], it offers a data model that is similar to NumPy
+[@Walt2011], suitable for typical binary data from area detectors, as opposed to
+tabular data in the case of Spark and Hadoop. It includes interfaces to the
+established Python-based numerical processing tools, supports a number of
+relevant file formats for EM data, and features optimized data paths for
+numerical data that eliminate unnecessary copies and allow cache-efficient
+processing. As a result, it can reach more than four times the throughput of
+Spark-based processing for the same operations on typical data sets.
 
 Compared to tools like Dask and Dask.Distributed for NumPy-based distributed
 computations [@Rocklin2015], LiberTEM is developed towards low-latency

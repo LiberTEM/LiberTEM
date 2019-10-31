@@ -7,11 +7,11 @@ tags:
   - big data
   - MapReduce
 authors:
-  - name: Dieter Weber
-    orcid: 0000-0001-6635-9567
-    affiliation: 1
   - name: Alexander Clausen
     orcid: 0000-0002-9555-7455
+    affiliation: 1
+  - name: Dieter Weber
+    orcid: 0000-0001-6635-9567
     affiliation: 1
   - name: Karina Ruzaeva
     affiliation: 1

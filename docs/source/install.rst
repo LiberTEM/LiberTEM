@@ -14,7 +14,7 @@ Installation
     installs from the local directory in editable mode. "Editable mode" means
     that the source directory is linked into the current Python environment
     rather than copied. That means changes in the source directory are
-    immediately active in the Python environment. 
+    immediately active in the Python environment.
     
     Installing from a git clone in editable mode is the correct setup for
     development work and currently the preferred setup to run LiberTEM until the
@@ -222,16 +222,16 @@ Differences:
 
 * The command to activate a conda environment on Windows is
 
-.. code-block:: shell  
+.. code-block:: shell
 
     > conda activate libertem
     
 * You might have to install pip into your local LiberTEM conda environment to
-make sure that ``pip install`` installs packages into your local environment and
-not into the global Anaconda base environment. This helps to avoid permission
-issues and interference between environments.
+  make sure that ``pip install`` installs packages into your local environment and
+  not into the global Anaconda base environment. This helps to avoid permission
+  issues and interference between environments.
 
-.. code-block:: shell  
+.. code-block:: shell
 
     (libertem) > conda install pip
 

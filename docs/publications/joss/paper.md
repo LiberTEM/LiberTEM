@@ -87,10 +87,11 @@ tabular data in the case of Spark and Hadoop. It includes interfaces to the
 established Python-based numerical processing tools, supports a number of
 relevant file formats for EM data, and features optimized data paths for
 numerical data that eliminate unnecessary copies and allow cache-efficient
-processing. As a result, it can reach more than four times the throughput of
-Spark-based processing for the same operations on typical data sets.
+processing. As a result, [it can reach more than four times the throughput of
+Spark-based processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the
+same operations on typical data sets.
 
-Compared to tools like Dask and Dask.Distributed for NumPy-based distributed
+Compared to tools like Dask arrays for NumPy-based distributed
 computations [@Rocklin2015], LiberTEM is developed towards low-latency
 interactive feedback for GUI display as well as future applications for
 high-throughput distributed live data processing. As a consequence, data
@@ -116,12 +117,12 @@ requirements resulted in a distinctive way of handling data in combination with
 an adapted programming model. Ensuring compatibility and interoperability with
 other solutions like [Gatan Microscopy Suite
 (GMS)](http://www.gatan.com/products/tem-analysis/gatan-microscopy-suite-software),
-Dask, Hyperspy [@Pena2019], PyXem [@Johnstone2019],
-[Pixstem](https://pixstem.org/) and others is work in progress. They use a
+Dask, HyperSpy [@Pena2019], pyXem [@Johnstone2019],
+[pixStem](https://pixstem.org/) and others is work in progress. They use a
 similar data model, which makes integration possible, in principle. As an
 example, LiberTEM can be run from within development versions of an upcoming GMS
 release that includes an embedded Python interpreter, and it can already generate
-efficient Dask.Distributed arrays from the data formats it supports.
+efficient Dask.distributed arrays from the data formats it supports.
 
 # Acknowledgements
 

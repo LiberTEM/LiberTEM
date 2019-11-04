@@ -1,8 +1,8 @@
 ---
-title: 'LiberTEM: Open platform for pixelated scanning transmission electron microscopy'
+title: 'LiberTEM: Software platform for scalable data processing in transmission electron microscopy'
 tags:
   - Python
-  - scanning transmission electron microscopy
+  - transmission electron microscopy
   - distributed
   - big data
   - MapReduce
@@ -33,19 +33,20 @@ bibliography: paper.bib
 
 The data rate of detectors for electron microscopy (EM) has grown by two orders
 of magnitude faster compared to the performance improvements of essential IT
-components such as CPU, memory, mass storage and network over the last ten years
+components such as CPU, memory, mass storage and network between 2009 and 2019
 [@Weber2018]. The LiberTEM open source platform [@Clausen2019] is designed to
 match the growing performance requirements of EM data processing [@Weber2020].
 
 # Motivation
 
-The data rate of current detectors like the Gatan K3 camera exceeds 50 GB/s,
-which is faster than the memory bandwidth of typical PCs. Applications that
-would run smoothly on a typical PC ten years ago require distributed processing
-on special hardware to offer the same user experience today. Furthermore,
-electron microscopy is interactive and visual. As a consequence, processing
-systems should be designed for very high throughput in combination with fast
-response times for interactive GUI use. That requires fundamental changes in the
+The data rate of the fastest detectors for electron microscopy that are
+available in 2019 exceeds 50 GB/s, which is faster than the memory bandwidth of
+typical personal computers (PCs) at this time. Applications that would run
+smoothly on a typical PC ten years before require distributed processing on
+special hardware to offer the same user experience. Furthermore, electron
+microscopy is interactive and visual. As a consequence, processing systems
+should be designed for very high throughput in combination with fast response
+times for interactive GUI use. That requires fundamental changes in the
 architecture and programming model of data handling and processing systems for
 electron microscopy, and consequently in the implementation of algorithms and
 user interfaces for electron microscopy applications.
@@ -71,12 +72,13 @@ LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
 installation of Python 3 and the required packages will likely work as well. The
 GUI is running in a web browser.
 
-LiberTEM offers implementations for various applications of diffraction data.
-That includes basic capabilities such as integrating over ranges of the input
-data (virtual detectors and virtual darkfield imaging, for example), and
-advanced applications such as data processing for strain mapping, amorphous
-materials and phase change materials. More details can be found at
-https://libertem.github.io/LiberTEM/applications.html
+Based on its processing architecture, LiberTEM offers implementations for
+various applications of electron microscopy data. That includes basic
+capabilities such as integrating over ranges of the input data (virtual
+detectors and virtual darkfield imaging, for example), and advanced applications
+such as data processing for strain mapping, amorphous materials and phase change
+materials. More applications will be added as development progresses. More
+details can be found at https://libertem.github.io/LiberTEM/applications.html
 
 Compared to established MapReduce-like systems like Apache Spark [@Zaharia2016]
 or Apache Hadoop [@Patel2012], it offers a data model that is similar to NumPy

@@ -188,7 +188,7 @@ class DMDataSet(DataSet):
             # FIXME: sort numerically
             # (try to match a pattern of .*[0-9]+\.dm[34] and extract the number as
             # integer and sort)
-            return glob.glob(self._path)
+            return list(sorted(glob.glob(self._path)))
         else:
             return [self.path]
 

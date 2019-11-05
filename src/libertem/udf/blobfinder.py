@@ -60,9 +60,10 @@ class Circular(MatchPattern):
     '''
     Circular pattern with radius :code:`radius`.
 
-    This pattern rejects the influence of internal intensity variations of the CBED disk.
+    This pattern is useful for constructing feature vectors using
+    :meth:`~libertem.udf.blobfinder.feature_vector`.
 
-    Introduced in version 0.3.0.dev0
+    .. versionadded:: 0.3.0.dev0
     '''
     def __init__(self, radius, search=None):
         '''

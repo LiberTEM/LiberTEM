@@ -7,32 +7,10 @@ Changelog
 0.3.0.dev0 (continuous)
 #######################
 
-Features
---------
+.. toctree::
+   :glob:
 
-* :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
-
-Bug fixes
----------
-
-* Improved error and validation handling when opening files with GUI (:issue:`433,442`)
-
-Documentation
--------------
-
-* Documentation for :ref:`crystallinity map` and :ref:`clustering` analysis (:pr:`408` by :user:`kruzaeva`)
-* Instructions for profiling slow tests (:issue:`447`, :pr:`448`)
-* Include review of issues, PRs and release notes in release checklist (:pr:`445,453`)
-* Change management (:issue:`443`, :pr:`451,453`)
-
-.. Commented out
-   Obsolescence
-   ------------
-
-Miscellaneous
--------------
-
-* Performance improvements for unit tests (:issue:`447`, :pr:`448`)
+   changelog/*/*
 
 .. _latest:
 .. _`v0-2-2`:

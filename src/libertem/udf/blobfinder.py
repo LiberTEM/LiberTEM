@@ -410,6 +410,17 @@ class CorrelationUDF(UDF):
     '''
     Abstract base class for peak correlation implementations
     '''
+
+    def __init__(self, peaks, *args, **kwargs):
+        '''
+        Parameters
+        ----------
+
+        peaks : numpy.ndarray
+            Numpy array of (y, x) coordinates with peak positions in px to correlate
+        '''
+        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
+
     def get_result_buffers(self):
         """
         we 'declare' what kind of result buffers we need, without concrete shapes

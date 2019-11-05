@@ -14,6 +14,18 @@ from .base import (
 log = logging.getLogger(__name__)
 
 
+def _get_offset(path):
+    fh = fileDM(path, on_memory=True)
+    if fh.numObjects == 1:
+        idx = 0
+    else:
+        idx = 1
+    # raw_dtype = fh._DM2NPDataType(fh.dataType[idx])
+    offset = fh.dataOffset[idx]
+    # shape = (fh.ySize[idx], fh.xSize[idx])
+    return offset
+
+
 class DMFile(File3D):
     def __init__(self, path, start_idx):
         super().__init__()
@@ -58,9 +70,6 @@ class StackedDMFile(File3D):
     """
     A single file from a stack of dm files; this class reads directly
     using offset and size, bypassing the reading of tag structures etc.
-
-    FIXME: Currently assumes on same offsets for all files, which is not
-    true for all data sets!
     """
     def __init__(self, path, start_idx, offset, shape, dtype):
         """
@@ -118,8 +127,10 @@ class StackedDMFile(File3D):
         # buf = self.get_buffer("readbuf", readsize)
         # FIXME: can we get rid of this buffer? maybe only if dtype matches?
         buf = np.zeros(self._size, dtype=self._dtype)
-        self._fh.readinto(buf)
-        return np.frombuffer(buf, dtype=self._dtype)
+        self._fh.seek(self._offset)
+        size_read = self._fh.readinto(buf)
+        assert size_read == self._size * self._dtype.itemsize
+        return buf
 
     def readinto(self, start, stop, out, crop_to=None):
         """
@@ -128,7 +139,7 @@ class StackedDMFile(File3D):
         assert stop - start == 1
         data = self._read_frame()
 
-        data = data.reshape((1,) + self.shape)
+        data = data.reshape((stop - start,) + self.shape)
 
         if crop_to is not None:
             # TODO: maybe limit I/O to the cropped region, too?
@@ -163,6 +174,7 @@ class DMDataSet(DataSet):
             raise DataSetException("`files` should only be specified for stacked reading")
         self._stack = stack
         self._files = files
+        self._fileset = None
 
     def _get_fileset(self):
         start_idx = 0
@@ -187,9 +199,10 @@ class DMDataSet(DataSet):
         start_idx = 0
         files = []
         for fn in self._get_files():
+            # FIXME: _get_offset is **expensive**!
             f = StackedDMFile(
                 path=fn, start_idx=start_idx,
-                offset=offset,
+                offset=_get_offset(fn),
                 shape=shape,
                 dtype=raw_dtype,
             )
@@ -216,15 +229,12 @@ class DMDataSet(DataSet):
         return self._scan_size
 
     def initialize(self):
+        # FIXME: convert to new API
         self._filesize = sum(
             os.stat(p).st_size
             for p in self._get_files()
         )
-        if self._stack:
-            fileset = self._get_stacked_fileset()
-        else:
-            fileset = self._get_fileset()
-        first_file = next(fileset.files_from(0))
+        first_file = next(self.fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
         sig_dims = len(first_file.shape)
@@ -234,6 +244,19 @@ class DMDataSet(DataSet):
             iocaps={"FULL_FRAMES"},
         )
         return self
+
+    @property
+    def fileset(self):
+        """
+        cached fileset, as creation is potentially very expensive
+        """
+        if self._fileset is None:
+            if self._stack:
+                fileset = self._get_stacked_fileset()
+            else:
+                fileset = self._get_fileset()
+            self._fileset = fileset
+        return self._fileset
 
     @classmethod
     def detect_params(cls, path):
@@ -270,17 +293,13 @@ class DMDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        if self._stack:
-            fileset = self._get_stacked_fileset()
-        else:
-            fileset = self._get_fileset()
         for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
             yield Partition3D(
                 meta=self._meta,
                 partition_slice=part_slice,
-                fileset=fileset,
+                fileset=self.fileset,
                 start_frame=start,
                 num_frames=stop - start,
             )

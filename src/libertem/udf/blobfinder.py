@@ -913,10 +913,6 @@ def run_refine(
     roi : numpy.ndarray, optional
         ROI for :meth:`~libertem.api.Context.run_udf`
 
-    .. versionchanged:: 0.3.0.dev0
-        Support for :class:`FullFrameCorrelationUDF` through parameter
-        :code:`correlation = 'fullframe'`
-
     Returns
     -------
 

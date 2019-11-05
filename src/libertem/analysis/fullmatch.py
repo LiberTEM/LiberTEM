@@ -170,48 +170,52 @@ class FullMatcher(grm.Matcher):
             for i in range(len(corr))
         ], dtype=np.bool)
 
+        def listed(working_set, polar_cand):
+            return polar_cand
+
+        def guess(working_set, polar_cand):
+            return self._candidates(working_set.refineds)
+
+        if cand is not None:
+            polar_cand = size_filter(
+                make_polar(np.array(cand)),
+                min_delta=self.min_delta,
+                max_delta=self.max_delta
+            )
+            candidate_methods = [listed, guess]
+        else:
+            polar_cand = None
+            candidate_methods = [guess]
+
         while True:
+            new_selector = np.copy(working_set.selector)
             # First, find good candidate
             # Expensive operation, should be done on smaller sample
             # or sum frame result, at least for first passes to match majority
             # of peaks
-            if cand is not None:
-                polar_candidate_vectors = make_polar(np.array(cand))
-                cand = None
-            else:
-                polar_candidate_vectors = self._candidates(working_set.refineds)
+            polar_candidate_vectors = candidate_methods[0](working_set, polar_cand)
 
-            try:
-                match = self._find_best_vector_match(
-                    point_selection=working_set, zero=zero,
-                    candidates=polar_candidate_vectors)
-                match = match.weighted_optimize()
-                match = self._match_all(
-                    point_selection=working_set, zero=match.zero,
-                    a=match.a, b=match.b
-                )
-                if len(match) == 0:
-                    raise ExitException()
-                match = match.weighted_optimize()
-            except (NotFoundException, np.linalg.LinAlgError, ExitException):
-                new_selector = np.copy(working_set.selector)
-                new_selector[zero_selector] = False
-                unmatched = working_set.derive(selector=new_selector)
-                break
+            match = self._find_best_vector_match(
+                point_selection=working_set, zero=zero,
+                candidates=polar_candidate_vectors)
+            if match is None:
+                candidate_methods = candidate_methods[1:]
+                if len(candidate_methods) == 0:
+                    break
+                else:
+                    continue
             matches.append(match)
-            new_selector = np.copy(working_set.selector)
             # remove the ones that have been matched
             new_selector[match.selector] = False
-            # Test if it spans a lattice
-            if sum(new_selector) >= 3:
+            if np.count_nonzero(new_selector) >= self.min_match:
                 # Add zero point that is shared by all patterns
                 new_selector[zero_selector] = True
                 working_set = working_set.derive(selector=new_selector)
             else:
-                # print("doesn't span a lattice")
-                new_selector[zero_selector] = False
-                unmatched = working_set.derive(selector=new_selector)
                 break
+        if matches:
+            new_selector[zero_selector] = False
+        unmatched = working_set.derive(selector=new_selector)
         weak = grm.PointSelection(corr, selector=np.logical_not(filt))
         return (matches, unmatched, weak)
 
@@ -234,11 +238,35 @@ class FullMatcher(grm.Matcher):
         polar = make_polar(deltas)
         return size_filter(polar, self.min_delta, self.max_delta)
 
+    def check(self, match):
+        if len(match) < self.min_match:
+            return False
+        papb = make_polar(np.array([match.a, match.b]))
+        if len(size_filter(papb, self.min_delta, self.max_delta)) != 2:
+            return False
+        return angle_check(papb[0:1], papb[1:2], self.min_angle)
+
+    def _tumble(self, point_selection, match):
+        if not self.check(match):
+            return None
+        match = match.weighted_optimize()
+        if not self.check(match):
+            return None
+        match = self._match_all(
+            point_selection=point_selection, zero=match.zero, a=match.a, b=match.b)
+        if not self.check(match):
+            return None
+        match = match.weighted_optimize()
+        if not self.check(match):
+            return None
+        else:
+            return match
+
     def _do_match(self, point_selection: grm.PointSelection, zero, polar_vectors):
         '''
-        Return a matrix with matches of all pairwise combinations of polar_vectors
+        Return a list with matches of all pairwise combinations of polar_vectors
         '''
-        match_matrix = {}
+        match_list = []
         # we test all pairs of candidate vectors
         # and populate match_matrix
         for i in range(len(polar_vectors)):
@@ -248,24 +276,23 @@ class FullMatcher(grm.Matcher):
                 # too parallel, not good lattice vectors
                 if not angle_check(np.array([a]), np.array([b]), self.min_angle):
                     continue
+
                 if a[0] > b[0]:
                     bb = a
                     aa = b
-                    ii = j
-                    jj = i
                 else:
                     aa = a
                     bb = b
-                    ii = i
-                    jj = j
                 aa, bb = make_cartesian(np.array([aa, bb]))
-
-                match = self._match_all(
-                    point_selection=point_selection, zero=zero, a=aa, b=bb)
-                # At least three points matched
-                if len(match) > 2:
-                    match_matrix[(ii, jj)] = match
-        return match_matrix
+                try:
+                    match = self._match_all(
+                        point_selection=point_selection, zero=zero, a=aa, b=bb)
+                    match = self._tumble(point_selection, match)
+                except np.linalg.LinAlgError:
+                    continue
+                if match is not None:
+                    match_list.append(match)
+        return match_list
 
     def _find_best_vector_match(self, point_selection: grm.PointSelection, zero, candidates):
         '''
@@ -280,37 +307,29 @@ class FullMatcher(grm.Matcher):
         The function implements a heuristic to calculate a figure of merit that boosts
         candidates for each of the criteria that they fulfill or nearly fulfill.
 
-        FIXME the figure of merit is currently determined heuristically based on discrete
-        thresholds. A smooth function would be more elegant.
-
         FIXME improve this on more real-world examples; define test cases.
+
+        FIXME The figure of merit function (fom) could be a parameter, implement if need arises.
         '''
-        def fom(d):
-            m = d[1]
+        def fom(m):
             na = np.linalg.norm(m.a)
             nb = np.linalg.norm(m.b)
             # Matching many high-quality points is good
             res = np.sum(m.peak_elevations)**2
-            # Boost for orthogonality
-            if np.abs(np.dot(m.a, m.b)) < 0.1 * na * nb:
-                res *= 5
-            elif np.abs(np.dot(m.a, m.b)) < 0.3 * na * nb:
-                res *= 2
-            # Boost fo nearly equal length
-            if np.abs(na - nb) < 0.1 * max(na, nb):
-                res *= 2
-            # The division favors short vectors
-            res /= na
-            res /= nb
+
+            # favor orthogonality
+            res *= (np.abs(np.cross(m.a, m.b)) / (na * nb))
+
+            # favor equal length
+            res *= ((na * nb) / (na**2 + nb**2))
+
             return res
 
-        match_matrix = self._do_match(point_selection, zero, candidates)
-        if match_matrix:
-            # we select the entry with highest figure of merit (fom)
-            candidate_index, match = max(match_matrix.items(), key=fom)
-            return match
+        match_list = self._do_match(point_selection, zero, candidates)
+        if match_list:
+            return max(match_list, key=fom)
         else:
-            raise NotFoundException
+            return None
 
     def _make_hdbscan_config(self, points):
         # This is handled here because the defaults depend on the number of points
@@ -326,12 +345,9 @@ class FullMatcher(grm.Matcher):
         Use hdbscan clustering to find potential candidates for lattice vectors.
 
         We rely on the clusterer and its settings to give us tight and well-populated clusters.
-        Then we calculate mean and standard deviation for each cluster
-        and then filter again for tightness.
+        Then we calculate a weighted mean for each cluster.
         In the end we return the shortest matches.
-
         '''
-        cutoff = self.tolerance
         # We have special tuning parameters for the default :class:`~hdbscan.HDBSCAN`
         if isinstance(self.clusterer, hdbscan.HDBSCAN):
             defaults = self._make_hdbscan_config(points)
@@ -348,10 +364,9 @@ class FullMatcher(grm.Matcher):
             std = v.std(axis=0)
             mean = np.average(v, axis=0, weights=weights)
             fom = np.linalg.norm(std)
-            if fom > cutoff:
+            if fom > self.tolerance:
                 # print("too fuzzy")
                 continue
-
             cand.append(mean)
         # return the shortest candidate vectors
         return np.array(sorted(cand, key=lambda d: d[0])[:self.max_candidates])
@@ -368,7 +383,7 @@ class FullMatcher(grm.Matcher):
         if len(polar_vectors) < self.min_candidates:
             if len(points) > self.min_points:
                 log.warn(
-                    "Matching many points directly, might be compuationally intensive: %s" %
+                    "Matching many points directly, might be computationally intensive: %s" %
                     len(points)
                 )
             polar_vectors = self.make_polar_vectors(points)

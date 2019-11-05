@@ -76,10 +76,15 @@ The previous behavior was this and that*. If applicable, use
 `versionadded <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-versionadded>`_
 and related directives.
 
+The changelog for the development branch is maintained as a collection of files
+in the :code:`docs/source/changelog/*/` folder structure. Each change should get
+a separate file to avoid merge conflicts. The files are merged into the
+master changelog when creating a release.
+
 The following items might require an
 update upon introducing or changing a feature:
 
-* Changelog in :code:`docs/source/changelog.rst`
+* Changelog snippet in :code:`docs/source/changelog/*/`
 * Docstrings
 * Examples
 * Main Documentation

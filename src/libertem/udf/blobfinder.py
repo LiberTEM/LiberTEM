@@ -876,6 +876,10 @@ def run_refine(
     them for each frame by using the blobcorrelation and methods of
     :class:`~libertem.analysis.gridmatching.Matcher`.
 
+    .. versionchanged:: 0.3.0.dev0
+        Support for :class:`FullFrameCorrelationUDF` through parameter
+        :code:`correlation = 'fullframe'`
+
     Parameters
     ----------
 
@@ -908,10 +912,6 @@ def run_refine(
         See :meth:`~SparseCorelationUDF.__init__` for details.
     roi : numpy.ndarray, optional
         ROI for :meth:`~libertem.api.Context.run_udf`
-
-    .. versionchanged:: 0.3.0.dev0
-        Support for :class:`FullFrameCorrelationUDF` through parameter
-        :code:`correlation = 'fullframe'`
 
     Returns
     -------

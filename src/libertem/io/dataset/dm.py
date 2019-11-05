@@ -56,8 +56,11 @@ class DMFile(File3D):
 
 class StackedDMFile(File3D):
     """
-    a single file from a stack of dm files; this class reads directly
+    A single file from a stack of dm files; this class reads directly
     using offset and size, bypassing the reading of tag structures etc.
+
+    FIXME: Currently assumes on same offsets for all files, which is not
+    true for all data sets!
     """
     def __init__(self, path, start_idx, offset, shape, dtype):
         """
@@ -110,9 +113,11 @@ class StackedDMFile(File3D):
         return self._start_idx
 
     def _read_frame(self):
-        readsize = self._size * self._dtype.itemsize
+        # FIXME: reusing the buffer only works if there are multiple frames per file.
+        # readsize = self._size * self._dtype.itemsize
+        # buf = self.get_buffer("readbuf", readsize)
         # FIXME: can we get rid of this buffer? maybe only if dtype matches?
-        buf = self.get_buffer("readbuf", readsize)
+        buf = np.zeros(self._size, dtype=self._dtype)
         self._fh.readinto(buf)
         return np.frombuffer(buf, dtype=self._dtype)
 
@@ -142,13 +147,22 @@ class DMFileSet(FileSet3D):
 
 
 class DMDataSet(DataSet):
-    def __init__(self, path, scan_size=None, stack=False):
+    def __init__(self, files=None, path=None, scan_size=None, stack=False):
         super().__init__()
+        # FIXME: can we avoid having multiple conflicting parameter configurations?
+        # maybe by breaking up the dataset in stacked and non-stacked variants?
+        if files is None and path is None:
+            raise DataSetException("either `path` or `files` should be specified")
         self._path = path
+        self._files = files
         self._meta = None
         self._scan_size = scan_size
         self._filesize = None
+        # FIXME: see above
+        if files is not None and not stack:
+            raise DataSetException("`files` should only be specified for stacked reading")
         self._stack = stack
+        self._files = files
 
     def _get_fileset(self):
         start_idx = 0
@@ -184,13 +198,15 @@ class DMDataSet(DataSet):
         return DMFileSet(files)
 
     def _get_files(self):
+        if self._files:
+            return self._files
         if self._stack:
             # FIXME: sort numerically
             # (try to match a pattern of .*[0-9]+\.dm[34] and extract the number as
             # integer and sort)
             return list(sorted(glob.glob(self._path)))
         else:
-            return [self.path]
+            return [self._path]
 
     def _get_scan_size(self):
         # TODO: in some cases, the scan size needs to be read

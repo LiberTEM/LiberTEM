@@ -17,8 +17,9 @@ Installation
     immediately active in the Python environment.
     
     Installing from a git clone in editable mode is the correct setup for
-    development work and currently the preferred setup to run LiberTEM until the
-    code base has stabilized and we offer maintenance releases.
+    development work and using :ref:`the latest features in the development
+    branch <continuous>`. Installing from PyPI is easier and preferred for new
+    users.
 
 .. include:: _single_node.rst
 

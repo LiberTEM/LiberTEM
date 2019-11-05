@@ -1,5 +1,5 @@
 from .base import UDF, UDFMeta, UDFData, UDFFrameMixin, UDFTileMixin, UDFPartitionMixin,\
-    UDFPostprocessMixin, check_cast
+    UDFPostprocessMixin, UDFPreprocessMixin, check_cast
 from .auto import AutoUDF
 
 

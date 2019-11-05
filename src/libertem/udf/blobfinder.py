@@ -452,7 +452,7 @@ class FastCorrelationUDF(CorrelationUDF):
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
-        mask = self.get_pattern()
+        mask = self.params.match_pattern
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
         crop_buf = zeros((2 * crop_size, 2 * crop_size), dtype="float32")
@@ -462,36 +462,25 @@ class FastCorrelationUDF(CorrelationUDF):
         }
         return kwargs
 
-    def get_peaks(self):
-        return self.params.peaks
-
-    def get_pattern(self):
-        return self.params.match_pattern
-
-    def get_template(self):
-        return self.task_data.template
-
     def process_frame(self, frame):
-        match_pattern = self.get_pattern()
-        peaks = self.get_peaks()
+        match_pattern = self.params.match_pattern
+        peaks = self.params.peaks
         crop_buf = self.task_data.crop_buf
         crop_size = match_pattern.get_crop_size()
+        r = self.results
         for disk_idx, (crop_part, crop_buf_slice) in enumerate(
                 crop_disks_from_frame(peaks=peaks, frame=frame, match_pattern=match_pattern)):
+
             crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
             log_scale(crop_part, out=crop_buf[crop_buf_slice])
             center, refined, peak_value, peak_elevation = do_correlation(
-                self.get_template(), crop_buf)
+                self.task_data.template, crop_buf)
             abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
             abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
-            self.save_result(disk_idx, abs_center, abs_refined, peak_value, peak_elevation)
-
-    def save_result(self, disk_idx, center, refined, peak_value, peak_elevation):
-        r = self.results
-        r.centers[disk_idx] = center
-        r.refineds[disk_idx] = refined
-        r.peak_values[disk_idx] = peak_value
-        r.peak_elevations[disk_idx] = peak_elevation
+            r.centers[disk_idx] = abs_center
+            r.refineds[disk_idx] = abs_refined
+            r.peak_values[disk_idx] = peak_value
+            r.peak_elevations[disk_idx] = peak_elevation
 
     def postprocess(self):
         pass

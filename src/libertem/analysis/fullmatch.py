@@ -308,6 +308,8 @@ class FullMatcher(grm.Matcher):
         candidates for each of the criteria that they fulfill or nearly fulfill.
 
         FIXME improve this on more real-world examples; define test cases.
+
+        FIXME The figure of merit function (fom) could be a parameter, implement if need arises.
         '''
         def fom(m):
             na = np.linalg.norm(m.a)
@@ -320,9 +322,6 @@ class FullMatcher(grm.Matcher):
 
             # favor equal length
             res *= ((na * nb) / (na**2 + nb**2))
-
-            # Favor short
-            # res /= na * nb
 
             return res
 

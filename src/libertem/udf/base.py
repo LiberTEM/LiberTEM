@@ -260,27 +260,6 @@ class UDFPartitionMixin:
         raise NotImplementedError()
 
 
-class UDFPreprocessMixin:
-    '''
-    Implement :code:`preprocess` to initialize the resulf buffers of a partition on the worker
-    before the partition data is processed. 
-    '''
-    def preprocess(self):
-        """
-        Implement this method to preprocess the result data for a partition.
-
-        This can be useful to initialize arrays of
-        :code:`dtype='object'` with the correct container types, for example.
-
-        Data available in this method:
-
-        - `self.params`    - the parameters of this UDF
-        - `self.task_data` - task data created by `get_task_data`
-        - `self.results`   - the result buffer instances
-        """
-        raise NotImplementedError()
-
-
 class UDFPostprocessMixin:
     '''
     Implement :code:`postprocess` to modify the resulf buffers of a partition on the worker
@@ -578,9 +557,6 @@ class UDFRunner:
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
         self._udf.init_task_data()
-        if hasattr(self._udf, 'preprocess'):
-            self._udf.clear_views()
-            self._udf.preprocess()
         method = self._udf.get_method()
         if method == 'tile':
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)

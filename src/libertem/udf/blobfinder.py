@@ -486,7 +486,7 @@ class FastCorrelationUDF(CorrelationUDF):
     Fourier-based fast correlation-based refinement of peak positions within a search frame
     for each peak.
     '''
-    def __init__(self, peaks, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         '''
         Parameters
         ----------
@@ -496,7 +496,7 @@ class FastCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_task_data(self):
         mask = self.get_pattern()
@@ -552,7 +552,7 @@ class FullFrameCorrelationUDF(CorrelationUDF):
 
     .. versionadded:: 0.3.0.dev0
     '''
-    def __init__(self, peaks, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         '''
         Parameters
         ----------
@@ -562,7 +562,7 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_task_data(self):
         mask = self.get_pattern()

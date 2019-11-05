@@ -20,7 +20,7 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
     data = np.zeros((1, fy, fx), dtype=np.float32)
 
     dists = np.linalg.norm(peaks - zero, axis=-1)
-    max_dist = dists.max()
+    max_val = max(dists.max() + 1, len(peaks) + 1)
 
     for i, p in enumerate(peaks):
         data += m.circular(
@@ -30,6 +30,6 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
             imageSizeY=fy,
             radius=radius,
             antialiased=True,
-        ) * (1 if all_equal else max_dist - dists[i] + i)
+        ) * (1 if all_equal else max(1, max_val - dists[i] + i))
 
     return (data, indices, peaks)

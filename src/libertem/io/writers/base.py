@@ -104,7 +104,11 @@ class WriteHandle:
          + call fsync on the destination directory
         """
         self._dest.flush()  # msync
-        del self._dest  # to make Windows™ happy
+
+        # to make Windows™ happy:
+        self._tmp_file.close()
+        del self._dest
+
         os.rename(self._tmp_file.name, self._path)
         dest_dir = os.path.dirname(self._path)
         self.sync_dir(dest_dir)

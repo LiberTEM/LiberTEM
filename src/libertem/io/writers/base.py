@@ -1,4 +1,5 @@
 import os
+import platform
 import tempfile
 
 import numpy as np
@@ -116,6 +117,12 @@ class WriteHandle:
         self._dest = None
 
     def sync_dir(self, path):
+        # noop on windows, as:
+        # "On Windows… err, there is no clear answer. You can not call FlushFileBuffers()
+        # on a directory handle as far as I can see."
+        # (from http://blog.httrack.com/blog/2013/11/15/everything-you-always-wanted-to-know-about-fsync/)  # NOQA
+        if platform.system() == "Windows":
+            return
         fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
         try:
             os.fsync(fd)

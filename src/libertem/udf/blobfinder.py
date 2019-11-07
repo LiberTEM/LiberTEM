@@ -546,9 +546,11 @@ class FastCorrelationUDF(CorrelationUDF):
 
 class FullFrameCorrelationUDF(CorrelationUDF):
     '''
-    Fourier-based correlation-based refinement of peak positions within a search frame
-    for each peak using a single correlation step. This can be faster for correlating a
-    large number of peaks in small frames in comparison to :class:`FastCorrelationUDF`.
+    Fourier-based correlation-based refinement of peak positions within a search
+    frame for each peak using a single correlation step. This can be faster for
+    correlating a large number of peaks in small frames in comparison to
+    :class:`FastCorrelationUDF`. However, it is more sensitive to interference
+    from strong peaks next to the peak of interest.
 
     .. versionadded:: 0.3.0.dev0
     '''

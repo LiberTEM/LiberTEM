@@ -51,7 +51,7 @@ def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
     -------
 
     >>> frame, _, _ = libertem.utils.generate.cbed_frame(radius=4)
-    >>> pattern = RadialGradient(radius=4)
+    >>> pattern = libertem.udf.blobfinder.RadialGradient(radius=4)
     >>> peaks = get_peaks(frame[0], pattern, 7)
     >>> print(peaks)
     [[64 64]

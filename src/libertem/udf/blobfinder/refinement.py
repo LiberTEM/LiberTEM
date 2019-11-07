@@ -238,7 +238,7 @@ def run_refine(
     >>> (result, used_indices) = run_refine(
     ...     ctx, dataset,
     ...     zero=(64, 64), a=(1, 0), b=(0, 1),
-    ...     match_pattern=RadialGradient(radius=4),
+    ...     match_pattern=libertem.udf.blobfinder.RadialGradient(radius=4),
     ...     matcher=grm.Matcher()
     ... )
     >>> result['centers'].data  #doctest: +ELLIPSIS

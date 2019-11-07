@@ -18,18 +18,18 @@ class ClusterDataSet(WritableDataSet, DataSet):
     """
     ClusterDataSet: a distributed RAW data set
 
-     - to be used for the cache, for live acquisition, and for simulation integration
-     - each node has a directory for a ClusterDataSet
-     - the directory contains partitions, each its own raw file
-     - information about the structure is saved as a json sidecar file
-     - A ClusterDataSet dataset can be incomplete, that is, it can miss complete partitions
+     * to be used for the cache, for live acquisition, and for simulation integration
+     * each node has a directory for a ClusterDataSet
+     * the directory contains partitions, each its own raw file
+     * information about the structure is saved as a json sidecar file
+     * A ClusterDataSet dataset can be incomplete, that is, it can miss complete partitions
        (but partitions themselves are guaranteed to be complete once they have their final filename)
-       use cases:
+     * use cases for incomplete datasets:
         * each node only caches the partitions it is responsible for
         * partial acquisitions support
-     - missing partitions can later be written
-     - file names and structure/partitioning are deterministic
-     - assumption: all workers on a single host share the dataset
+     * missing partitions can later be written
+     * file names and structure/partitioning are deterministic
+     * assumption: all workers on a single host share the dataset
 
     Parameters
     ----------

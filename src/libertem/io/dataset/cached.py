@@ -292,8 +292,8 @@ class LRUCacheStrategy(CacheStrategy):
 class Cache:
     def __init__(self, stats: CacheStats, strategy: CacheStrategy):
         """
-        Cache object, to be used on a worker node. The interface used by
-        `Partition`s to manage the cache. May directly remove files, directories, ...
+        Cache object, to be used on a worker node. The interface used by `Partition`\\ s
+        to manage the cache. May directly remove files, directories, etc.
         """
         self._stats = stats
         self.strategy = strategy
@@ -471,9 +471,10 @@ class CachedPartition(Partition):
         else:
             cache.evict(cache_key=self._cache_key, size=self._sizeof())
             # NOTE: source_tiles are in native dtype!
-            source_tiles = self._source_part.get_tiles(crop_to=crop_to, full_frames=full_frames,
-                                                       mmap=mmap, dest_dtype=self._cluster_part.dtype,
-                                                       roi=None, target_size=target_size)
+            source_tiles = self._source_part.get_tiles(
+                crop_to=crop_to, full_frames=full_frames, mmap=mmap,
+                dest_dtype=self._cluster_part.dtype, roi=None, target_size=target_size
+            )
             wh = self._cluster_part.get_write_handle()
             if roi is None:
                 with wh:

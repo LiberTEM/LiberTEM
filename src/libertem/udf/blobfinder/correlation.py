@@ -268,6 +268,7 @@ class FastCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
+        self.limit = 2**19  # 1/2 MB
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
@@ -275,7 +276,11 @@ class FastCorrelationUDF(CorrelationUDF):
         mask = self.get_pattern()
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
-        crop_bufs = zeros((n_peaks, 2 * crop_size, 2 * crop_size), dtype="float32")
+        dtype = np.float32
+        full_size = n_peaks * (2 * crop_size)**2 * dtype(1).nbytes
+        rounds = full_size // self.limit + 1
+        buf_count = n_peaks // rounds + 1
+        crop_bufs = zeros((buf_count, 2 * crop_size, 2 * crop_size), dtype=dtype)
         kwargs = {
             'crop_bufs': crop_bufs,
             'template': template,
@@ -292,21 +297,30 @@ class FastCorrelationUDF(CorrelationUDF):
         return self.task_data.template
 
     def process_frame(self, frame):
+
         match_pattern = self.get_pattern()
         peaks = self.get_peaks()
         crop_bufs = self.task_data.crop_bufs
         crop_size = match_pattern.get_crop_size()
         (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
         template = self.get_template()
-        crop_disks_from_frame(
-            peaks=peaks, frame=frame, crop_size=crop_size, out_crop_bufs=crop_bufs
-        )
-        log_scale_cropbufs_inplace(crop_bufs)
-        corrs = do_correlations(template, crop_bufs)
-        evaluate_correlations(
-            corrs=corrs, peaks=peaks, crop_size=crop_size, out_centers=centers,
-            out_refineds=refineds, out_heights=peak_values, out_elevations=peak_elevations
-        )
+        blocksize = len(crop_bufs)
+        block_count = len(peaks) // blocksize + 1
+        for block in range(block_count):
+            start = block * blocksize
+            stop = (block + 1) * blocksize
+            size = stop - start
+            crop_disks_from_frame(
+                peaks=peaks[start:stop], frame=frame, crop_size=crop_size,
+                out_crop_bufs=crop_bufs[:size]
+            )
+            log_scale_cropbufs_inplace(crop_bufs[:size])
+            corrs = do_correlations(template, crop_bufs[:size])
+            evaluate_correlations(
+                corrs=corrs, peaks=peaks[start:stop], crop_size=crop_size,
+                out_centers=centers[start:stop], out_refineds=refineds[start:stop],
+                out_heights=peak_values[start:stop], out_elevations=peak_elevations[start:stop]
+            )
 
 
 class FullFrameCorrelationUDF(CorrelationUDF):
@@ -329,15 +343,23 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
+        self.limit = 2**19  # 1/2 MB
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
         mask = self.get_pattern()
+        n_peaks = len(self.params.peaks)
         template = mask.get_template(sig_shape=self.meta.dataset_shape.sig)
-        frame_buf = zeros(shape=self.meta.dataset_shape.sig, dtype=np.float32)
+        dtype = np.float32
+        frame_buf = zeros(shape=self.meta.dataset_shape.sig, dtype=dtype)
+        crop_size = mask.get_crop_size()
+        full_size = n_peaks * (2 * crop_size)**2 * dtype(1).nbytes
+        rounds = full_size // self.limit + 1
+        buf_count = n_peaks // rounds + 1
         kwargs = {
             'template': template,
             'frame_buf': frame_buf,
+            'buf_count': buf_count,
         }
         return kwargs
 
@@ -361,12 +383,22 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         spec_part = fft.rfft2(frame_buf)
         corrspec = template * spec_part
         corr = fft.fftshift(fft.irfft2(corrspec))
-        crop_bufs = np.zeros((len(peaks), 2 * crop_size, 2 * crop_size), dtype="float32")
-        crop_disks_from_frame(peaks=peaks, frame=corr, crop_size=crop_size, out_crop_bufs=crop_bufs)
-        evaluate_correlations(
-            corrs=crop_bufs, peaks=peaks, crop_size=crop_size, out_centers=centers,
-            out_refineds=refineds, out_heights=peak_values, out_elevations=peak_elevations
-        )
+        blocksize = self.task_data.buf_count
+        crop_bufs = np.zeros((blocksize, 2 * crop_size, 2 * crop_size), dtype=np.float32)
+        block_count = len(peaks) // blocksize + 1
+        for block in range(block_count):
+            start = block * blocksize
+            stop = (block + 1) * blocksize
+            size = stop - start
+            crop_disks_from_frame(
+                peaks=peaks[start:stop], frame=corr, crop_size=crop_size,
+                out_crop_bufs=crop_bufs[:size]
+            )
+            evaluate_correlations(
+                corrs=crop_bufs[:size], peaks=peaks[start:stop], crop_size=crop_size,
+                out_centers=centers[start:stop], out_refineds=refineds[start:stop],
+                out_heights=peak_values[start:stop], out_elevations=peak_elevations[start:stop]
+            )
 
 
 class SparseCorrelationUDF(CorrelationUDF):

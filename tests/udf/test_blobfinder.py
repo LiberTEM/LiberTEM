@@ -401,7 +401,7 @@ def test_featurevector(lt_ctx):
         (blobfinder.SparseCorrelationUDF, np.float, {'steps': 3}),
     ]
 )
-def test_peak_input_types(lt_ctx, cls, dtype, kwargs):
+def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
     shape = np.array([128, 128])
     zero = shape / 2 + np.random.uniform(-1, 1, size=2)
     a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
@@ -430,6 +430,64 @@ def test_peak_input_types(lt_ctx, cls, dtype, kwargs):
         blobfinder.BackgroundSubtraction(radius=radius),
         blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
         blobfinder.UserTemplate(template=template)
+    ]
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
+    for match_pattern in match_patterns:
+        print("refining using template %s" % type(match_pattern))
+        udf = cls(match_pattern=match_pattern, peaks=peaks.astype(dtype), **kwargs)
+        res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+        print(peaks - res['refineds'].data[0])
+
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots()
+        # plt.imshow(data[0])
+        # for p in np.flip(res['refineds'].data[0], axis=-1):
+        #     ax.add_artist(plt.Circle(p, radius, fill=False, color='y'))
+        # plt.show()
+
+        assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
+
+
+@pytest.mark.parametrize(
+    "cls,dtype,kwargs",
+    [
+        (blobfinder.FullFrameCorrelationUDF, np.int, {}),
+        (blobfinder.FullFrameCorrelationUDF, np.float, {}),
+    ]
+)
+def test_correlation_method_fullframe(lt_ctx, cls, dtype, kwargs):
+    shape = np.array([128, 128])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([34.3, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 42.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 8
+
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    template = m.radial_gradient(
+        centerX=radius+1,
+        centerY=radius+1,
+        imageSizeX=2*radius+2,
+        imageSizeY=2*radius+2,
+        radius=radius
+    )
+
+    match_patterns = [
+        blobfinder.RadialGradient(radius=radius, search=radius*1.5),
+        blobfinder.BackgroundSubtraction(radius=radius, radius_outer=radius*1.5, search=radius*1.8),
+        blobfinder.RadialGradientBackgroundSubtraction(
+            radius=radius, radius_outer=radius*1.5, search=radius*1.8),
+        blobfinder.UserTemplate(template=template, search=radius*1.5)
     ]
 
     print("zero: ", zero)

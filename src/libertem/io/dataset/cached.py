@@ -112,27 +112,47 @@ class CacheStats:
         );""")
         self._conn.execute("PRAGMA user_version = 1;")
 
+    def _have_item(self, cache_item: CacheItem):
+        rows = self._conn.execute("""
+        SELECT hits FROM stats
+        WHERE dataset = ? AND partition = ?
+        """, [cache_item.dataset, cache_item.partition]).fetchall()
+        return len(rows) > 0
+
     def record_hit(self, cache_item: CacheItem):
         now = time.time()
-        self._conn.execute("""
-        INSERT INTO stats (partition, dataset, hits, size, last_access, path)
-        VALUES (?, ?, 1, ?, ?, ?)
-        ON CONFLICT (partition, dataset)
-        DO UPDATE SET hits = MAX(hits + 1, 1), last_access = ?;
-        """, [cache_item.partition, cache_item.dataset,
-              cache_item.size, now, cache_item.path, now])
+        self._conn.execute("BEGIN")
+        if not self._have_item(cache_item):
+            self._conn.execute("""
+            INSERT INTO stats (partition, dataset, hits, size, last_access, path)
+            VALUES (?, ?, 1, ?, ?, ?)
+            """, [cache_item.partition, cache_item.dataset,
+                  cache_item.size, now, cache_item.path])
+        else:
+            self._conn.execute("""
+            UPDATE stats
+            SET hits = MAX(hits + 1, 1), last_access = ?
+            WHERE dataset = ? AND partition = ?
+            """, [now, cache_item.dataset, cache_item.partition])
         self._conn.execute("DELETE FROM orphans WHERE path = ?", [cache_item.path])
         self._conn.commit()
 
     def record_miss(self, cache_item: CacheItem):
         now = time.time()
-        self._conn.execute("""
-        INSERT INTO stats (partition, dataset, hits, size, last_access, path)
-        VALUES (?, ?, 0, ?, ?, ?)
-        ON CONFLICT (partition, dataset)
-        DO UPDATE SET hits = 0, last_access = ?;
-        """, [cache_item.partition, cache_item.dataset, cache_item.size,
-              now, cache_item.path, now])
+
+        self._conn.execute("BEGIN")
+        if not self._have_item(cache_item):
+            self._conn.execute("""
+            INSERT INTO stats (partition, dataset, hits, size, last_access, path)
+            VALUES (?, ?, 0, ?, ?, ?)
+            """, [cache_item.partition, cache_item.dataset, cache_item.size,
+                  now, cache_item.path])
+        else:
+            self._conn.execute("""
+            UPDATE stats
+            SET hits = 0, last_access = ?
+            WHERE dataset = ? AND partition = ?
+            """, [now, cache_item.dataset, cache_item.partition])
         self._conn.execute("DELETE FROM orphans WHERE path = ?", [cache_item.path])
         self._conn.commit()
 

@@ -1,6 +1,7 @@
 import functools
 
 import numpy as np
+import scipy.ndimage
 import pytest
 
 import libertem.udf.blobfinder as blobfinder
@@ -101,6 +102,14 @@ def test_crop_disks_from_frame():
         [frame[5, 3], frame[5, 4], frame[5, 5], 0],
         [          0,           0,           0, 0],
     ])
+
+
+def test_com():
+    data = np.random.random((7, 9))
+    ref = scipy.ndimage.measurements.center_of_mass(data)
+    com = blobfinder.center_of_mass(data)
+    print(ref, com, np.array(ref) - np.array(com))
+    assert np.allclose(ref, com)
 
 
 def test_run_refine_fastmatch(lt_ctx):
@@ -454,7 +463,11 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
         print("refining using template %s" % type(match_pattern))
         udf = cls(match_pattern=match_pattern, peaks=peaks.astype(dtype), **kwargs)
         res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+        print(peaks)
+        print(res['refineds'].data[0])
         print(peaks - res['refineds'].data[0])
+        print(res['peak_values'].data[0])
+        print(res['peak_elevations'].data[0])
 
         # import matplotlib.pyplot as plt
         # fig, ax = plt.subplots()

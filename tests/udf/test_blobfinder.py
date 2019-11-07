@@ -53,17 +53,20 @@ def test_smoke(lt_ctx):
 
 def test_crop_disks_from_frame():
     match_pattern = blobfinder.RadialGradient(radius=2, search=2)
+    crop_size = match_pattern.get_crop_size()
     peaks = [
         [0, 0],
         [2, 2],
         [5, 5],
     ]
     frame = _mk_random(size=(6, 6), dtype="float32")
-    crop_disks = list(blobfinder.crop_disks_from_frame(
-        peaks,
-        frame,
-        match_pattern
-    ))
+    crop_buf = np.zeros((len(peaks), 2*crop_size, 2*crop_size))
+    blobfinder.crop_disks_from_frame(
+        peaks=np.array(peaks),
+        frame=frame,
+        crop_size=crop_size,
+        out_crop_bufs=crop_buf
+    )
 
     #
     # how is the region around the peak cropped? like this (x denotes the peak position),
@@ -80,13 +83,24 @@ def test_crop_disks_from_frame():
     # ---------
 
     # first peak: top-leftmost; only the bottom right part of the crop_buf should be filled:
-    assert crop_disks[0][1] == (slice(2, 4), slice(2, 4))
+    assert np.all(crop_buf[0] == [
+        [0, 0,           0,          0],
+        [0, 0,           0,          0],
+        [0, 0, frame[0, 0], frame[0, 1]],
+        [0, 0, frame[1, 0], frame[1, 1]],
+    ])
 
     # second peak: the whole crop area fits into the frame -> use full crop_buf
-    assert crop_disks[1][1] == (slice(0, 4), slice(0, 4))
+    assert np.all(crop_buf[1] == frame[0:4, 0:4])
 
     # third peak: bottom-rightmost; almost-symmetric to first case
-    assert crop_disks[2][1] == (slice(0, 3), slice(0, 3))
+    print(crop_buf[2])
+    assert np.all(crop_buf[2] == [
+        [frame[3, 3], frame[3, 4], frame[3, 5], 0],
+        [frame[4, 3], frame[4, 4], frame[4, 5], 0],
+        [frame[5, 3], frame[5, 4], frame[5, 5], 0],
+        [          0,           0,           0, 0],
+    ])
 
 
 def test_run_refine_fastmatch(lt_ctx):

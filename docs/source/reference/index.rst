@@ -13,6 +13,8 @@ Reference
    masks
    internals
    dask
+   cluster-ds
+   caching
 
 Indices and tables
 ------------------

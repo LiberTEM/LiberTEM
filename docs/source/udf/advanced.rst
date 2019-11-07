@@ -75,7 +75,7 @@ be calculated.
 
 .. testsetup::
 
-    from libertem.udf.blobfinder import log_scale
+    from libertem.udf.blobfinder.correlation import log_scale
 
 .. testcode::
 
@@ -111,7 +111,7 @@ result buffers:
 
 .. testsetup::
 
-    from libertem.udf.blobfinder import evaluate_correlations
+    from libertem.udf.blobfinder.correlation import evaluate_correlations
 
 .. testcode::
 

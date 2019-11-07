@@ -24,17 +24,17 @@ def test_refinement():
         (0, 2, 0, 0, 0, -10)
     ])
 
-    assert np.allclose(blobfinder.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
-    assert np.allclose(blobfinder.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
-    assert np.allclose(blobfinder.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
 
     y, x = (4, 1)
-    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.correlation.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry > y) and (ry < (y + 1))
     assert (rx < x) and (rx > (x - 1))
 
     y, x = (4, 4)
-    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.correlation.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry < y) and (ry > (y - 1))
     assert (rx < x) and (rx > (x - 1))
 
@@ -62,7 +62,7 @@ def test_crop_disks_from_frame():
     ]
     frame = _mk_random(size=(6, 6), dtype="float32")
     crop_buf = np.zeros((len(peaks), 2*crop_size, 2*crop_size))
-    blobfinder.crop_disks_from_frame(
+    blobfinder.correlation.crop_disks_from_frame(
         peaks=np.array(peaks),
         frame=frame,
         crop_size=crop_size,
@@ -107,7 +107,7 @@ def test_crop_disks_from_frame():
 def test_com():
     data = np.random.random((7, 9))
     ref = scipy.ndimage.measurements.center_of_mass(data)
-    com = blobfinder.center_of_mass(data)
+    com = blobfinder.correlation.center_of_mass(data)
     print(ref, com, np.array(ref) - np.array(com))
     assert np.allclose(ref, com)
 

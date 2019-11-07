@@ -2,8 +2,9 @@ import functools
 
 import numpy as np
 from skimage.feature import peak_local_max
-import scipy.ndimage as nd
 import matplotlib.pyplot as plt
+import numba
+from numba.unsafe.ndarray import to_fixed_tuple
 
 from libertem.udf import UDF
 import libertem.masks as masks
@@ -341,25 +342,38 @@ def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
     return peaks
 
 
+@numba.njit
+def center_of_mass(arr):
+    r_y = r_x = np.float32(0)
+    for y in range(arr.shape[0]):
+        for x in range(arr.shape[1]):
+            r_y += np.float32(arr[y, x]*y)
+            r_x += np.float32(arr[y, x]*x)
+    s = arr.sum()
+    return (np.float32(r_y/s), np.float32(r_x/s))
+
+
+@numba.njit
 def refine_center(center, r, corrmap):
     (y, x) = center
     s = corrmap.shape
     r = min(r, y, x, s[0] - y - 1, s[1] - x - 1)
     if r <= 0:
-        return (y, x)
+        return (np.float32(y), np.float32(x))
     else:
         # FIXME See and compare with Extension of Phase Correlation to Subpixel Registration
         # Hassan Foroosh
         # That one or a close/similar/cited one
         cutout = corrmap[y-r:y+r+1, x-r:x+r+1]
         m = np.min(cutout)
-        ry, rx = nd.measurements.center_of_mass(cutout - m)
+        ry, rx = center_of_mass(cutout - m)
         refined_y = y + ry - r
         refined_x = x + rx - r
         # print(y, x, refined_y, refined_x, "\n", cutout)
-        return np.array((refined_y, refined_x))
+        return (np.float32(refined_y), np.float32(refined_x))
 
 
+@numba.njit
 def peak_elevation(center, corrmap, height, r_min=1.5, r_max=np.float('inf')):
     '''
     Return the slope of the tightest cone around center with height height
@@ -382,64 +396,97 @@ def peak_elevation(center, corrmap, height, r_min=1.5, r_max=np.float('inf')):
     '''
     peak_y, peak_x = center
     (size_y, size_x) = corrmap.shape
-    y, x = np.mgrid[0:size_y, 0:size_x]
+    result = np.float32(np.inf)
 
-    dist = np.sqrt((y - peak_y)**2 + (x - peak_x)**2)
-    select = (dist >= r_min) * (dist < r_max)
-    diff = height - corrmap[select]
+    for y in range(size_y):
+        for x in range(size_x):
+            dist = np.sqrt((y - peak_y)**2 + (x - peak_x)**2)
+            if (dist >= r_min) and (dist < r_max):
+                result = min((result, np.float32((corrmap[y, x] - height) / dist)))
 
-    return max(0, np.min(diff / dist[select]))
-
-
-def do_correlation(template, crop_part):
-    spec_part = fft.rfft2(crop_part)
-    corrspec = template * spec_part
-    corr = fft.fftshift(fft.irfft2(corrspec))
-    return evaluate_correlation(corr)
+    return max(0, result)
 
 
-def evaluate_correlation(corr):
-    center = np.unravel_index(np.argmax(corr), corr.shape)
-    refined = np.array(refine_center(center, 2, corr), dtype='float32')
-    height = np.float32(corr[center])
-    elevation = np.float32(peak_elevation(refined, corr, height))
-    center = np.array(center, dtype='u2')
-    return center, refined, height, elevation
+def do_correlations(template, crop_parts):
+    spec_parts = fft.rfft2(crop_parts)
+    corrspecs = template * spec_parts
+    corrs = fft.fftshift(fft.irfft2(corrspecs))
+    return corrs
 
 
+@numba.njit
+def unravel_index(index, shape):
+    sizes = np.zeros(len(shape), dtype=np.int64)
+    result = np.zeros(len(shape), dtype=np.int64)
+    sizes[-1] = 1
+    for i in range(len(shape) - 2, -1, -1):
+        sizes[i] = sizes[i + 1] * shape[i + 1]
+    remainder = index
+    for i in range(len(shape)):
+        result[i] = remainder // sizes[i]
+        remainder %= sizes[i]
+    return to_fixed_tuple(result, len(shape))
+
+
+@numba.njit
+def evaluate_correlations(corrs, peaks, crop_size,
+        out_centers, out_refineds, out_heights, out_elevations):
+    for i in range(len(corrs)):
+        corr = corrs[i]
+        center = unravel_index(np.argmax(corr), corr.shape)
+        refined = np.array(refine_center(center, 2, corr), dtype=np.float32)
+        height = np.float32(corr[center])
+        out_centers[i] = _shift(np.array(center), peaks[i], crop_size)
+        out_refineds[i] = _shift(refined, peaks[i], crop_size)
+        out_heights[i] = height
+        out_elevations[i] = np.float32(peak_elevation(refined, corr, height))
+
+
+@numba.njit
 def log_scale(data, out):
-    return np.log(data - np.min(data) + 1, out=out)
+    l_data = data.flatten()
+    if out is None:
+        l_out = np.zeros_like(l_data)
+    else:
+        l_out = out.flatten()
+    m = np.min(data)
+    for i in range(len(l_out)):
+        l_out[i] = np.log(l_data[i] - m + 1)
+    return l_out.reshape(data.shape)
 
 
-def crop_disks_from_frame(peaks, frame, match_pattern: MatchPattern):
-    crop_size = match_pattern.get_crop_size()
-    for peak in peaks:
-        slice_ = (
-            slice(max(peak[0] - crop_size, 0), min(peak[0] + crop_size, frame.shape[0])),
-            slice(max(peak[1] - crop_size, 0), min(peak[1] + crop_size, frame.shape[1])),
-        )
-
-        # also calculate the slice into the crop buffer, which may be smaller
-        # than the buffer if we are operating on peaks near edges:
-        size = (
-            slice_[0].stop - slice_[0].start,
-            slice_[1].stop - slice_[1].start,
-        )
-        crop_buf_slice = (
-            slice(
-                max(crop_size - peak[0], 0),
-                max(crop_size - peak[0], 0) + size[0]
-            ),
-            slice(
-                max(crop_size - peak[1], 0),
-                max(crop_size - peak[1], 0) + size[1]
-            ),
-        )
-        yield frame[slice_], crop_buf_slice
+def log_scale_cropbufs_inplace(crop_bufs):
+    m = np.min(crop_bufs, axis=(-1, -2)) + 1
+    np.log(crop_bufs - m[:, np.newaxis, np.newaxis], out=crop_bufs)
 
 
+@numba.njit
+def crop_disks_from_frame(peaks, frame, crop_size, out_crop_bufs):
+
+    def frame_coord_y(peak, y):
+        return y + peak[0] - crop_size
+
+    def frame_coord_x(peak, x):
+        return x + peak[1] - crop_size
+
+    fy, fx = frame.shape
+    for i in range(len(peaks)):
+        peak = peaks[i]
+        for y in range(out_crop_bufs.shape[1]):
+            yy = frame_coord_y(peak, y)
+            y_outside = yy < 0 or yy >= fy
+            for x in range(out_crop_bufs.shape[2]):
+                xx = frame_coord_x(peak, x)
+                x_outside = xx < 0 or xx >= fx
+                if y_outside or x_outside:
+                    out_crop_bufs[i, y, x] = 0
+                else:
+                    out_crop_bufs[i, y, x] = frame[yy, xx]
+
+
+@numba.njit
 def _shift(relative_center, anchor, crop_size):
-    return relative_center + anchor - [crop_size, crop_size]
+    return relative_center + anchor - np.array((crop_size, crop_size))
 
 
 class CorrelationUDF(UDF):
@@ -480,6 +527,13 @@ class CorrelationUDF(UDF):
             ),
         }
 
+    def output_buffers(self):
+        r = self.results
+        return (r.centers, r.refineds, r.peak_values, r.peak_elevations)
+
+    def postprocess(self):
+        pass
+
 
 class FastCorrelationUDF(CorrelationUDF):
     '''
@@ -499,12 +553,13 @@ class FastCorrelationUDF(CorrelationUDF):
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
+        n_peaks = len(self.params.peaks)
         mask = self.get_pattern()
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
-        crop_buf = zeros((2 * crop_size, 2 * crop_size), dtype="float32")
+        crop_bufs = zeros((n_peaks, 2 * crop_size, 2 * crop_size), dtype="float32")
         kwargs = {
-            'crop_buf': crop_buf,
+            'crop_bufs': crop_bufs,
             'template': template,
         }
         return kwargs
@@ -521,27 +576,19 @@ class FastCorrelationUDF(CorrelationUDF):
     def process_frame(self, frame):
         match_pattern = self.get_pattern()
         peaks = self.get_peaks()
-        crop_buf = self.task_data.crop_buf
+        crop_bufs = self.task_data.crop_bufs
         crop_size = match_pattern.get_crop_size()
-        for disk_idx, (crop_part, crop_buf_slice) in enumerate(
-                crop_disks_from_frame(peaks=peaks, frame=frame, match_pattern=match_pattern)):
-            crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
-            log_scale(crop_part, out=crop_buf[crop_buf_slice])
-            center, refined, peak_value, peak_elevation = do_correlation(
-                self.get_template(), crop_buf)
-            abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
-            abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
-            self.save_result(disk_idx, abs_center, abs_refined, peak_value, peak_elevation)
-
-    def save_result(self, disk_idx, center, refined, peak_value, peak_elevation):
-        r = self.results
-        r.centers[disk_idx] = center
-        r.refineds[disk_idx] = refined
-        r.peak_values[disk_idx] = peak_value
-        r.peak_elevations[disk_idx] = peak_elevation
-
-    def postprocess(self):
-        pass
+        (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
+        template = self.get_template()
+        crop_disks_from_frame(
+            peaks=peaks, frame=frame, crop_size=crop_size, out_crop_bufs=crop_bufs
+        )
+        log_scale_cropbufs_inplace(crop_bufs)
+        corrs = do_correlations(template, crop_bufs)
+        evaluate_correlations(
+            corrs=corrs, peaks=peaks, crop_size=crop_size, out_centers=centers,
+            out_refineds=refineds, out_heights=peak_values, out_elevations=peak_elevations
+        )
 
 
 class FullFrameCorrelationUDF(CorrelationUDF):
@@ -590,32 +637,18 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         peaks = self.get_peaks()
         crop_size = match_pattern.get_crop_size()
         template = self.get_template()
+        (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
         frame_buf = self.task_data.frame_buf
         log_scale(frame, out=frame_buf)
         spec_part = fft.rfft2(frame_buf)
         corrspec = template * spec_part
         corr = fft.fftshift(fft.irfft2(corrspec))
-        crop_buf = np.zeros((2 * crop_size, 2 * crop_size), dtype="float32")
-        # FIXME profile this -- this might benefit significantly from a Numba implementation
-        # since it deals with a large number of small buffers
-        for disk_idx, (crop_part, crop_buf_slice) in enumerate(
-                crop_disks_from_frame(peaks=peaks, frame=corr, match_pattern=match_pattern)):
-            crop_buf[:] = 0  # FIXME: we need to do this only for edge cases
-            crop_buf[crop_buf_slice] = crop_part
-            center, refined, peak_value, peak_elevation = evaluate_correlation(crop_buf)
-            abs_center = _shift(center, peaks[disk_idx], crop_size).astype('u2')
-            abs_refined = _shift(refined, peaks[disk_idx], crop_size).astype('float32')
-            self.save_result(disk_idx, abs_center, abs_refined, peak_value, peak_elevation)
-
-    def save_result(self, disk_idx, center, refined, peak_value, peak_elevation):
-        r = self.results
-        r.centers[disk_idx] = center
-        r.refineds[disk_idx] = refined
-        r.peak_values[disk_idx] = peak_value
-        r.peak_elevations[disk_idx] = peak_elevation
-
-    def postprocess(self):
-        pass
+        crop_bufs = np.zeros((len(peaks), 2 * crop_size, 2 * crop_size), dtype="float32")
+        crop_disks_from_frame(peaks=peaks, frame=corr, crop_size=crop_size, out_crop_bufs=crop_bufs)
+        evaluate_correlations(
+            corrs=crop_bufs, peaks=peaks, crop_size=crop_size, out_centers=centers,
+            out_refineds=refineds, out_heights=peak_values, out_elevations=peak_elevations
+        )
 
 
 class SparseCorrelationUDF(CorrelationUDF):
@@ -707,17 +740,14 @@ class SparseCorrelationUDF(CorrelationUDF):
             steps,  # X steps
         ))
         peaks = self.params.peaks
-        r = self.results
+        crop_size = self.params.match_pattern.get_crop_size()
+        (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
         for f in range(corrmaps.shape[0]):
-            for p in range(len(self.params.peaks)):
-                corr = corrmaps[f, p]
-                center, refined, peak_value, peak_elevation = evaluate_correlation(corr)
-                abs_center = _shift(center, peaks[p], self.params.steps).astype('u2')
-                abs_refined = _shift(refined, peaks[p], self.params.steps).astype('float32')
-                r.centers[f, p] = abs_center
-                r.refineds[f, p] = abs_refined
-                r.peak_values[f, p] = peak_value
-                r.peak_elevations[f, p] = peak_elevation
+            evaluate_correlations(
+                corrs=corrmaps[f], peaks=peaks, crop_size=crop_size,
+                out_centers=centers[f], out_refineds=refineds[f],
+                out_heights=peak_values[f], out_elevations=peak_elevations[f]
+            )
 
 
 def run_fastcorrelation(ctx, dataset, peaks, match_pattern: MatchPattern, roi=None):

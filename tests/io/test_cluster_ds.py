@@ -41,7 +41,7 @@ def test_initialization(draw_directory, lt_ctx):
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
-    assert os.listdir(draw_directory) == ["structure.json", "parts"]
+    assert set(os.listdir(draw_directory)) == {"parts", "structure.json"}
 
 
 def test_inconsistent_sidecars_raise_error():

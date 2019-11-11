@@ -76,9 +76,6 @@
 **Heide Meissner (HZDR)**
     Discussions, funding applications 
 
-**Vadim Migunov (FZ Jülich)**
-    Scientific advisory, discussion, sample data
-
 **Grigore Moldovan (Point Electronic)**
     Discussions
 

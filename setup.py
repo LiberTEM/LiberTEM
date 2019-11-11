@@ -148,7 +148,7 @@ setup(
         # Ensure compatibility with numpy 1.17
         "numba>=0.45.1",
         "ncempy>=1.4",
-        'pypiwin32;platform_system=="Windows"',
+        'pywin32;platform_system=="Windows"',
         # FIXME pull request #259
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
         'scikit-image',

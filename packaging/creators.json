@@ -30,12 +30,10 @@
         "orcid": "0000-0002-0873-889X"
     }, 
     {
-        "displayname": "Magnus Nord",
-        "authorname": "Nord, Magnus",
-        "affiliation": "University of Antwerp",
-        "github": "magnunor",
-        "contribution": "Discussions, tests, code in related projects",
-        "orcid": "0000-0001-7981-5293"
+        "displayname": "Vadim Migunov",
+        "authorname": "Migunov, Vadim",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Scientific advisory, discussion, sample data, binning prototype"
     },
     {
         "displayname": "Knut Müller-Caspary",
@@ -43,6 +41,14 @@
         "affiliation": "Jülich Research Centre",
         "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader",
         "orcid": "0000-0002-2588-7993"
+    },
+    {
+        "displayname": "Magnus Nord",
+        "authorname": "Nord, Magnus",
+        "affiliation": "University of Antwerp",
+        "github": "magnunor",
+        "contribution": "Discussions, tests, code in related projects",
+        "orcid": "0000-0001-7981-5293"
     },
     {
         "displayname": "Colin Ophus",

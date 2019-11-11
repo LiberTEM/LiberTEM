@@ -3,6 +3,7 @@ import pickle
 
 import numpy as np
 import pytest
+import dask.distributed as dd
 
 from libertem.io.dataset.cached import CachedDataSet, LRUCacheStrategy
 
@@ -18,6 +19,14 @@ def default_cached_ds(tmpdir_factory, default_raw, lt_ctx):
     )
     ds = ds.initialize(executor=lt_ctx.executor)
     yield ds
+
+
+# A running Dask client can introduce a timing issue
+# between automatic closing of a numpy.memmap object and renaming
+# the underlying file
+def test_start_client():
+    with dd.LocalCluster() as cluster:
+        client = dd.Client(cluster, set_as_default=False)
 
 
 def test_simple(default_cached_ds):

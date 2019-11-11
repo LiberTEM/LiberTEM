@@ -108,7 +108,12 @@ class WriteHandle:
 
         # to make Windows™ happy:
         self._tmp_file.close()
-        del self._dest
+
+        # FIXME temporary workaround, see if fixed upstream:
+        # https://github.com/numpy/numpy/issues/13510
+        mm = self._dest._mmap
+        if mm is not None:
+            mm.close()
 
         os.rename(self._tmp_file.name, self._path)
         dest_dir = os.path.dirname(self._path)

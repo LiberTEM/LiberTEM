@@ -1,4 +1,4 @@
-**probonopd** `GitHub <https://github.com/probonopd>`__
+**@probonopd** `GitHub <https://github.com/probonopd>`__
     Help with setting up AppImage building and Continuous Integration
 
 **Jan Caron (Jülich Research Centre)** `ORCID <https://orcid.org/0000-0002-0873-889X>`__ `GitHub <https://github.com/jan-car>`__
@@ -12,6 +12,9 @@
 
 **Rafal Dunin-Borkowski (Jülich Research Centre)** `ORCID <https://orcid.org/0000-0001-8082-0647>`__
     Scientific advisory, resources, discussion, publications
+
+**Vadim Migunov (FZ Jülich)**
+    Scientific advisory, discussion, sample data, binning prototype
 
 **Knut Müller-Caspary (Jülich Research Centre)** `ORCID <https://orcid.org/0000-0002-2588-7993>`__
     Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader

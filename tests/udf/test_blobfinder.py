@@ -115,6 +115,7 @@ def test_run_refine_fastmatch(lt_ctx):
 
     match_patterns = [
         blobfinder.RadialGradient(radius=radius),
+        blobfinder.Circular(radius=radius),
         blobfinder.BackgroundSubtraction(radius=radius),
         blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
         blobfinder.UserTemplate(template=template)
@@ -380,6 +381,7 @@ def test_peak_input_types(lt_ctx, cls, dtype, kwargs):
 
     match_patterns = [
         blobfinder.RadialGradient(radius=radius),
+        blobfinder.Circular(radius=radius),
         blobfinder.BackgroundSubtraction(radius=radius),
         blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
         blobfinder.UserTemplate(template=template)

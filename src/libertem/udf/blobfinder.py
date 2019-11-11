@@ -56,6 +56,42 @@ class MatchPattern:
         return fft.rfft2(self.get_mask(sig_shape))
 
 
+class Circular(MatchPattern):
+    '''
+    Circular pattern with radius :code:`radius`.
+
+    This pattern is useful for constructing feature vectors using
+    :meth:`~libertem.udf.blobfinder.feature_vector`.
+
+    .. versionadded:: 0.3.0.dev0
+    '''
+    def __init__(self, radius, search=None):
+        '''
+        Parameters
+        ----------
+
+        radius : float
+            Radius of the circular pattern in px
+        search : float, optional
+            Range from the center point in px to include in the correlation, 2x radius by default.
+            Defining the size of the square correlation pattern.
+        '''
+        if search is None:
+            search = 2*radius
+        self.radius = radius
+        super().__init__(search=search)
+
+    def get_mask(self, sig_shape):
+        return masks.circular(
+            centerY=sig_shape[0] // 2,
+            centerX=sig_shape[1] // 2,
+            imageSizeY=sig_shape[0],
+            imageSizeX=sig_shape[1],
+            radius=self.radius,
+            antialiased=True,
+        )
+
+
 class RadialGradient(MatchPattern):
     '''
     Radial gradient from zero in the center to one at :code:`radius`.

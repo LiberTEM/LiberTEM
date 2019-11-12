@@ -33,7 +33,9 @@
         "displayname": "Vadim Migunov",
         "authorname": "Migunov, Vadim",
         "affiliation": "FZ J\u00fclich",
-        "contribution": "Scientific advisory, discussion, sample data, binning prototype"
+        "github": "woozey",
+        "contribution": "Scientific advisory, discussion, sample data, binning prototype",
+        "orcid": "0000-0002-6296-4492"
     },
     {
         "displayname": "Knut Müller-Caspary",

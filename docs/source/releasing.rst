@@ -22,8 +22,6 @@ Before (using a release candidate package)
 * Update and review change log in :code:`docs/source/changelog.rst`, merging
   snippets in :code:`docs/source/changelog/*/` as appropriate.
 * Update the JSON files in the ``packaging/`` folder with author and project information
-* Update ``contributors.rst`` and  ``creators.rst`` in ``docs/source`` from the JSON source
-  files in ``packaging/`` using ``python scripts/build-authors-contributors``
 * Create a release candidate using :code:`scripts/release`. See :code:`scripts/release --help` for details.
 * `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
   GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_

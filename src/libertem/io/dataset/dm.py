@@ -165,7 +165,6 @@ class DMDataSet(DataSet):
         if files is None and path is None:
             raise DataSetException("either `path` or `files` should be specified")
         self._path = path
-        self._files = files
         self._meta = None
         self._scan_size = scan_size
         self._filesize = None
@@ -175,6 +174,7 @@ class DMDataSet(DataSet):
         self._stack = stack
         self._files = files
         self._fileset = None
+        self._offsets = {}
 
     def _get_fileset(self):
         start_idx = 0
@@ -199,10 +199,9 @@ class DMDataSet(DataSet):
         start_idx = 0
         files = []
         for fn in self._get_files():
-            # FIXME: _get_offset is **expensive**!
             f = StackedDMFile(
                 path=fn, start_idx=start_idx,
-                offset=_get_offset(fn),
+                offset=self._offsets[fn],
                 shape=shape,
                 dtype=raw_dtype,
             )
@@ -228,12 +227,20 @@ class DMDataSet(DataSet):
             return (len(self._get_files()),)
         return self._scan_size
 
-    def initialize(self):
-        # FIXME: convert to new API
+    def initialize(self, executor):
         self._filesize = sum(
             os.stat(p).st_size
             for p in self._get_files()
         )
+        
+        self._offsets = {
+            fn: offset
+            for offset, fn in zip(
+                executor.map(_get_offset, self._get_files()),
+                self._get_files()
+            )
+        }
+
         first_file = next(self.fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
@@ -274,12 +281,17 @@ class DMDataSet(DataSet):
         return self._meta.shape
 
     def check_valid(self):
+        first_fn = self._get_files()[0]
         try:
-            with fileDM(self._path, on_memory=True) as f1:
+            with fileDM(first_fn, on_memory=True) as f1:
+                pass
+                # FIXME: these items are no longer available in current ncempy.io.dm?
+                """
                 if f1.head['ValidNumberElements'] == 0:
                     raise DataSetException("no data found in file")
                 if f1.head['DataTypeID'] not in (0x4120, 0x4122):
                     raise DataSetException("unknown datatype id: %s" % f1.head['DataTypeID'])
+                """
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)

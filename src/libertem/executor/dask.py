@@ -136,6 +136,10 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         future = self.client.submit(fn_with_args, priority=1)
         return future.result()
 
+    def map(self, fn, iterable):
+        return [future.result()
+                for future in self.client.map(fn, iterable)]
+
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable `fn` once on each host, gathering all results into a dict host -> result

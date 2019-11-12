@@ -432,7 +432,7 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
     indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
 
-    radius = 10
+    radius = 8
 
     data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 

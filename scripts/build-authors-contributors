@@ -40,9 +40,6 @@ def main(creators, contributors, creators_out, contributors_out):
     creators_list = sorted(json.load(creators), key=author)
     contributors_list = sorted(json.load(contributors), key=author)
 
-    creators_out.write(':orphan:\n\n')
-    contributors_out.write(':orphan:\n\n')
-
     for c in creators_list:
         creators_out.write(format_entry(c))
 

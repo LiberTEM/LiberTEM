@@ -13,7 +13,7 @@
 **Rafal Dunin-Borkowski (Jülich Research Centre)** `ORCID <https://orcid.org/0000-0001-8082-0647>`__
     Scientific advisory, resources, discussion, publications
 
-**Vadim Migunov (FZ Jülich)**
+**Vadim Migunov (FZ Jülich)** `ORCID <https://orcid.org/0000-0002-6296-4492>`__ `GitHub <https://github.com/woozey>`__
     Scientific advisory, discussion, sample data, binning prototype
 
 **Knut Müller-Caspary (Jülich Research Centre)** `ORCID <https://orcid.org/0000-0002-2588-7993>`__

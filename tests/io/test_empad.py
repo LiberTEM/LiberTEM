@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 
 import pytest
 import numpy as np
@@ -23,15 +24,17 @@ pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD test
 
 @pytest.fixture
 def default_empad():
+    executor = InlineJobExecutor()
     ds = EMPADDataSet(
         path=EMPAD_XML,
     )
-    ds = ds.initialize()
+    ds = ds.initialize(executor)
     yield ds
 
 
 @pytest.fixture(scope='session')
 def random_empad(tmpdir_factory):
+    executor = InlineJobExecutor()
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/empad-test-default.raw'
     data = _mk_random(size=(16, 16, 130, 128), dtype='float32')
@@ -41,7 +44,7 @@ def random_empad(tmpdir_factory):
         path=str(filename),
         scan_size=(16, 16),
     )
-    ds = ds.initialize()
+    ds = ds.initialize(executor)
     yield ds
 
 
@@ -140,7 +143,7 @@ def test_invalid_size():
         path=EMPAD_RAW,
         scan_size=(4, 5),
     )
-    ds = ds.initialize()
+    ds = ds.initialize(InlineJobExecutor())
     with pytest.raises(DataSetException) as einfo:
         ds.check_valid()
 
@@ -153,15 +156,16 @@ def test_nonexistent():
         scan_size=(4, 4),
     )
     with pytest.raises(DataSetException) as einfo:
-        ds = ds.initialize()
+        ds = ds.initialize(InlineJobExecutor())
     assert einfo.match("No such file or directory")
 
 
 def test_detect_fail():
+    executor = InlineJobExecutor()
     # does not exist:
-    assert not EMPADDataSet.detect_params("/does/not/exist.raw")
+    assert not EMPADDataSet.detect_params("/does/not/exist.raw", executor=executor)
     # exists but we can't detect any parameters (and we don't know if it even is an EMPAD file)
-    assert not EMPADDataSet.detect_params(EMPAD_RAW)
+    assert not EMPADDataSet.detect_params(EMPAD_RAW, executor=executor)
 
 
 def test_crop_to(default_empad, lt_ctx):
@@ -170,3 +174,7 @@ def test_crop_to(default_empad, lt_ctx):
     res = lt_ctx.run(job)
     assert res.shape == (4, 64, 64)
     assert np.count_nonzero(res) > 0
+
+
+def test_cache_key_json_serializable(default_empad):
+    json.dumps(default_empad.get_cache_key())

@@ -75,7 +75,7 @@ be calculated.
 
 .. testsetup::
 
-    from libertem.udf.blobfinder import log_scale
+    from libertem.udf.blobfinder.correlation import log_scale
 
 .. testcode::
 
@@ -111,7 +111,7 @@ result buffers:
 
 .. testsetup::
 
-    from libertem.udf.blobfinder import evaluate_correlation, _shift
+    from libertem.udf.blobfinder.correlation import evaluate_correlations
 
 .. testcode::
 
@@ -124,17 +124,24 @@ result buffers:
             steps,  # X steps
         ))
         peaks = self.params.peaks
-        r = self.results
+        (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
         for f in range(corrmaps.shape[0]):
-            for p in range(len(self.params.peaks)):
-                corr = corrmaps[f, p]
-                center, refined, peak_value, peak_elevation = evaluate_correlation(corr)
-                abs_center = _shift(center, peaks[p], self.params.steps).astype('u2')
-                abs_refined = _shift(refined, peaks[p], self.params.steps).astype('float32')
-                r.centers[f, p] = abs_center
-                r.refineds[f, p] = abs_refined
-                r.peak_values[f, p] = peak_value
-                r.peak_elevations[f, p] = peak_elevation
+            evaluate_correlations(
+                corrs=corrmaps[f], peaks=peaks, crop_size=self.params.steps,
+                out_centers=centers[f], out_refineds=refineds[f],
+                out_heights=peak_values[f], out_elevations=peak_elevations[f]
+            )
+
+Pre-processing
+---------------
+
+Pre-processing allows to initialize result buffers by implementing
+:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed after all
+buffers are allocated, but before the partition data is processed, with views set for
+the whole partition masked by the current ROI. This is particularly useful to set up
+:code:`dtype=object` buffers, for example ragged arrays.
+
+.. versionadded:: 0.3.0.dev0
 
 Partition processing
 --------------------

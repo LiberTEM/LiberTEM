@@ -149,9 +149,8 @@ class BloDataSet(DataSet):
         self._shape = None
         self._filesize = None
 
-    def initialize(self):
-        self._read_header()
-        h = self.header
+    def initialize(self, executor):
+        self._header = h = executor.run_function(self._read_header)
         NY = int(h['NY'])
         NX = int(h['NX'])
         DP_SZ = int(h['DP_SZ'])
@@ -165,10 +164,10 @@ class BloDataSet(DataSet):
         return self
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         try:
             ds = cls(path, endianess='<')
-            ds = ds.initialize()
+            ds = ds.initialize(executor)
             if not ds.check_valid():
                 return False
             return {
@@ -195,7 +194,7 @@ class BloDataSet(DataSet):
 
     def _read_header(self):
         with open(self._path, 'rb') as f:
-            self._header = np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
+            return np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
 
     @property
     def header(self):
@@ -205,13 +204,19 @@ class BloDataSet(DataSet):
 
     def check_valid(self):
         try:
-            self._read_header()
-            magic = self.header['MAGIC'][0]
+            header = self._read_header()
+            magic = header['MAGIC'][0]
             if magic != MAGIC_EXPECT:
                 raise DataSetException("invalid magic number: %x != %x" % (magic, MAGIC_EXPECT))
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e) from e
+
+    def get_cache_key(self):
+        return {
+            "path": self._path,
+            "endianess": self._endianess,
+        }
 
     def _get_num_partitions(self):
         """

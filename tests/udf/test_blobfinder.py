@@ -1,6 +1,8 @@
 import functools
 
 import numpy as np
+import scipy.ndimage
+import pytest
 
 import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
@@ -22,17 +24,17 @@ def test_refinement():
         (0, 2, 0, 0, 0, -10)
     ])
 
-    assert np.allclose(blobfinder.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
-    assert np.allclose(blobfinder.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
-    assert np.allclose(blobfinder.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(1, 1), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(2, 2), r=1, corrmap=data), (1, 1))
+    assert np.allclose(blobfinder.correlation.refine_center(center=(1, 4), r=1, corrmap=data), (0.5, 4.5))
 
     y, x = (4, 1)
-    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.correlation.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry > y) and (ry < (y + 1))
     assert (rx < x) and (rx > (x - 1))
 
     y, x = (4, 4)
-    ry, rx = blobfinder.refine_center(center=(y, x), r=1, corrmap=data)
+    ry, rx = blobfinder.correlation.refine_center(center=(y, x), r=1, corrmap=data)
     assert (ry < y) and (ry > (y - 1))
     assert (rx < x) and (rx > (x - 1))
 
@@ -52,17 +54,20 @@ def test_smoke(lt_ctx):
 
 def test_crop_disks_from_frame():
     match_pattern = blobfinder.RadialGradient(radius=2, search=2)
+    crop_size = match_pattern.get_crop_size()
     peaks = [
         [0, 0],
         [2, 2],
         [5, 5],
     ]
     frame = _mk_random(size=(6, 6), dtype="float32")
-    crop_disks = list(blobfinder.crop_disks_from_frame(
-        peaks,
-        frame,
-        match_pattern
-    ))
+    crop_buf = np.zeros((len(peaks), 2*crop_size, 2*crop_size))
+    blobfinder.correlation.crop_disks_from_frame(
+        peaks=np.array(peaks),
+        frame=frame,
+        crop_size=crop_size,
+        out_crop_bufs=crop_buf
+    )
 
     #
     # how is the region around the peak cropped? like this (x denotes the peak position),
@@ -79,13 +84,32 @@ def test_crop_disks_from_frame():
     # ---------
 
     # first peak: top-leftmost; only the bottom right part of the crop_buf should be filled:
-    assert crop_disks[0][1] == (slice(2, 4), slice(2, 4))
+    assert np.all(crop_buf[0] == [
+        [0, 0,           0,          0],
+        [0, 0,           0,          0],
+        [0, 0, frame[0, 0], frame[0, 1]],
+        [0, 0, frame[1, 0], frame[1, 1]],
+    ])
 
     # second peak: the whole crop area fits into the frame -> use full crop_buf
-    assert crop_disks[1][1] == (slice(0, 4), slice(0, 4))
+    assert np.all(crop_buf[1] == frame[0:4, 0:4])
 
     # third peak: bottom-rightmost; almost-symmetric to first case
-    assert crop_disks[2][1] == (slice(0, 3), slice(0, 3))
+    print(crop_buf[2])
+    assert np.all(crop_buf[2] == [
+        [frame[3, 3], frame[3, 4], frame[3, 5], 0],
+        [frame[4, 3], frame[4, 4], frame[4, 5], 0],
+        [frame[5, 3], frame[5, 4], frame[5, 5], 0],
+        [          0,           0,           0, 0],
+    ])
+
+
+def test_com():
+    data = np.random.random((7, 9))
+    ref = scipy.ndimage.measurements.center_of_mass(data)
+    com = blobfinder.correlation.center_of_mass(data)
+    print(ref, com, np.array(ref) - np.array(com))
+    assert np.allclose(ref, com)
 
 
 def test_run_refine_fastmatch(lt_ctx):
@@ -114,6 +138,7 @@ def test_run_refine_fastmatch(lt_ctx):
 
     match_patterns = [
         blobfinder.RadialGradient(radius=radius),
+        blobfinder.Circular(radius=radius),
         blobfinder.BackgroundSubtraction(radius=radius),
         blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
         blobfinder.UserTemplate(template=template)
@@ -247,6 +272,51 @@ def test_run_refine_sparse(lt_ctx):
     assert np.allclose(res['b'].data[0], b, atol=0.2)
 
 
+def test_run_refine_fullframe(lt_ctx):
+    shape = np.array([128, 128])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 10
+
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    matcher = grm.Matcher()
+    match_pattern = blobfinder.RadialGradient(radius=radius)
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
+    (res, real_indices) = blobfinder.run_refine(
+        ctx=lt_ctx,
+        dataset=dataset,
+        zero=zero + np.random.uniform(-0.5, 0.5, size=2),
+        a=a + np.random.uniform(-0.5, 0.5, size=2),
+        b=b + np.random.uniform(-0.5, 0.5, size=2),
+        matcher=matcher,
+        match_pattern=match_pattern,
+        correlation='fullframe',
+    )
+
+    print(peaks - grm.calc_coords(
+        res['zero'].data[0],
+        res['a'].data[0],
+        res['b'].data[0],
+        indices)
+    )
+
+    assert np.allclose(res['zero'].data[0], zero, atol=0.5)
+    assert np.allclose(res['a'].data[0], a, atol=0.2)
+    assert np.allclose(res['b'].data[0], b, atol=0.2)
+
+
 def test_custom_template():
     template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
     custom = blobfinder.UserTemplate(template=template, search=18)
@@ -343,3 +413,125 @@ def test_featurevector(lt_ctx):
 
     assert np.allclose(res.sum(), data.sum())
     assert np.allclose(res, peak_sum)
+
+
+@pytest.mark.parametrize(
+    "cls,dtype,kwargs",
+    [
+        (blobfinder.FastCorrelationUDF, np.int, {}),
+        (blobfinder.FastCorrelationUDF, np.float, {}),
+        (blobfinder.SparseCorrelationUDF, np.int, {'steps': 3}),
+        (blobfinder.SparseCorrelationUDF, np.float, {'steps': 3}),
+    ]
+)
+def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
+    shape = np.array([128, 128])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([27.17, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 10
+
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    template = m.radial_gradient(
+        centerX=radius+1,
+        centerY=radius+1,
+        imageSizeX=2*radius+2,
+        imageSizeY=2*radius+2,
+        radius=radius
+    )
+
+    match_patterns = [
+        blobfinder.RadialGradient(radius=radius),
+        blobfinder.Circular(radius=radius),
+        blobfinder.BackgroundSubtraction(radius=radius),
+        blobfinder.RadialGradientBackgroundSubtraction(radius=radius),
+        blobfinder.UserTemplate(template=template)
+    ]
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
+    for match_pattern in match_patterns:
+        print("refining using template %s" % type(match_pattern))
+        udf = cls(match_pattern=match_pattern, peaks=peaks.astype(dtype), **kwargs)
+        res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+        print(peaks)
+        print(res['refineds'].data[0])
+        print(peaks - res['refineds'].data[0])
+        print(res['peak_values'].data[0])
+        print(res['peak_elevations'].data[0])
+
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots()
+        # plt.imshow(data[0])
+        # for p in np.flip(res['refineds'].data[0], axis=-1):
+        #     ax.add_artist(plt.Circle(p, radius, fill=False, color='y'))
+        # plt.show()
+
+        assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
+
+
+@pytest.mark.parametrize(
+    "cls,dtype,kwargs",
+    [
+        (blobfinder.FullFrameCorrelationUDF, np.int, {}),
+        (blobfinder.FullFrameCorrelationUDF, np.float, {}),
+    ]
+)
+def test_correlation_method_fullframe(lt_ctx, cls, dtype, kwargs):
+    shape = np.array([128, 128])
+    zero = shape / 2 + np.random.uniform(-1, 1, size=2)
+    a = np.array([34.3, 0.]) + np.random.uniform(-1, 1, size=2)
+    b = np.array([0., 42.19]) + np.random.uniform(-1, 1, size=2)
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 8
+
+    data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    template = m.radial_gradient(
+        centerX=radius+1,
+        centerY=radius+1,
+        imageSizeX=2*radius+2,
+        imageSizeY=2*radius+2,
+        radius=radius
+    )
+
+    match_patterns = [
+        blobfinder.RadialGradient(radius=radius, search=radius*1.5),
+        blobfinder.BackgroundSubtraction(radius=radius, radius_outer=radius*1.5, search=radius*1.8),
+        blobfinder.RadialGradientBackgroundSubtraction(
+            radius=radius, radius_outer=radius*1.5, search=radius*1.8),
+        blobfinder.UserTemplate(template=template, search=radius*1.5)
+    ]
+
+    print("zero: ", zero)
+    print("a: ", a)
+    print("b: ", b)
+
+    for match_pattern in match_patterns:
+        print("refining using template %s" % type(match_pattern))
+        udf = cls(match_pattern=match_pattern, peaks=peaks.astype(dtype), **kwargs)
+        res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+        print(peaks - res['refineds'].data[0])
+
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots()
+        # plt.imshow(data[0])
+        # for p in np.flip(res['refineds'].data[0], axis=-1):
+        #     ax.add_artist(plt.Circle(p, radius, fill=False, color='y'))
+        # plt.show()
+
+        assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)

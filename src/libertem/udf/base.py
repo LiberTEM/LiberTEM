@@ -260,6 +260,29 @@ class UDFPartitionMixin:
         raise NotImplementedError()
 
 
+class UDFPreprocessMixin:
+    '''
+    Implement :code:`preprocess` to initialize the result buffers of a partition on the worker
+    before the partition data is processed.
+
+    .. versionadded:: 0.3.0.dev0
+    '''
+    def preprocess(self):
+        """
+        Implement this method to preprocess the result data for a partition.
+
+        This can be useful to initialize arrays of
+        :code:`dtype='object'` with the correct container types, for example.
+
+        Data available in this method:
+
+        - `self.params`    - the parameters of this UDF
+        - `self.task_data` - task data created by `get_task_data`
+        - `self.results`   - the result buffer instances
+        """
+        raise NotImplementedError()
+
+
 class UDFPostprocessMixin:
     '''
     Implement :code:`postprocess` to modify the resulf buffers of a partition on the worker
@@ -557,6 +580,9 @@ class UDFRunner:
         self._udf.init_result_buffers()
         self._udf.allocate_for_part(partition, roi)
         self._udf.init_task_data()
+        if hasattr(self._udf, 'preprocess'):
+            self._udf.clear_views()
+            self._udf.preprocess()
         method = self._udf.get_method()
         if method == 'tile':
             tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
@@ -606,6 +632,13 @@ class UDFRunner:
         return self._udf.results, partition
 
     def run_for_dataset(self, dataset, executor, roi=None):
+        if roi is not None:
+            if np.product(roi.shape) != np.product(dataset.shape.nav):
+                raise ValueError(
+                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                        roi.shape, dataset.shape.nav
+                    )
+                )
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -619,6 +652,10 @@ class UDFRunner:
         tasks = self._make_udf_tasks(dataset, roi)
         cancel_id = str(uuid.uuid4())
 
+        if self._debug:
+            tasks = list(tasks)
+            cloudpickle.loads(cloudpickle.dumps(tasks))
+
         for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)
             self._udf.merge(
@@ -631,6 +668,14 @@ class UDFRunner:
         return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
+        # FIXME: code duplication?
+        if roi is not None:
+            if np.product(roi.shape) != np.product(dataset.shape.nav):
+                raise ValueError(
+                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                        roi.shape, dataset.shape.nav
+                    )
+                )
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -638,7 +683,6 @@ class UDFRunner:
             dataset_dtype=dataset.dtype
         )
         self._udf.set_meta(meta)
-        # FIXME: code duplication?
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 

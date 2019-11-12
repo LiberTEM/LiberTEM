@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 
 import numpy as np
 import pytest
@@ -21,7 +22,7 @@ def default_blo():
         path=str(BLO_TESTDATA_PATH),
         tileshape=(1, 8, 144, 144),
     )
-    ds.initialize()
+    ds.initialize(InlineJobExecutor())
     return ds
 
 
@@ -34,7 +35,10 @@ def test_check_valid(default_blo):
 
 
 def test_detect():
-    assert BloDataSet.detect_params(path=str(BLO_TESTDATA_PATH))
+    assert BloDataSet.detect_params(
+        path=str(BLO_TESTDATA_PATH),
+        executor=InlineJobExecutor()
+    )
 
 
 def test_read(default_blo):
@@ -98,3 +102,7 @@ def test_pick_analysis(default_blo, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_blo, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (144, 144)
+
+
+def test_cache_key_json_serializable(default_blo):
+    json.dumps(default_blo.get_cache_key())

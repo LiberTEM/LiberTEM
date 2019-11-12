@@ -39,6 +39,13 @@ async def async_executor():
 
 
 @pytest.fixture
+def dask_executor():
+    sync_executor = DaskJobExecutor.make_local()
+    yield sync_executor
+    sync_executor.close()
+
+
+@pytest.fixture
 async def http_client():
     # FIXME: maybe re-scope to module, but would also need
     # adjusted event_loop scope. if we have many API tests

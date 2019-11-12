@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 
 import pytest
 
@@ -15,14 +16,18 @@ pytestmark = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 test
 
 
 @pytest.fixture
-def default_frms6():
+def default_frms6(lt_ctx):
     ds = FRMS6DataSet(path=FRMS6_TESTDATA_PATH)
-    ds = ds.initialize()
+    ds = ds.initialize(lt_ctx.executor)
     return ds
 
 
 def test_simple_open(default_frms6):
     assert tuple(default_frms6.shape) == (256, 256, 264, 264)
+
+
+def test_detetct(lt_ctx):
+    assert FRMS6DataSet.detect_params(FRMS6_TESTDATA_PATH, lt_ctx.executor) is not False
 
 
 def test_check_valid(default_frms6):
@@ -61,6 +66,10 @@ def test_pickle_is_small(default_frms6):
 
     # because of the dark frame stuff, the dataset is actually quite large:
     assert len(pickled) < 80 * 1024
+
+
+def test_cache_key_json_serializable(default_frms6):
+    json.dumps(default_frms6.get_cache_key())
 
 
 # TODO: gain map tests

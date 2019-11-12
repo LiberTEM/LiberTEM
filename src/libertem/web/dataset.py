@@ -3,7 +3,7 @@ import logging
 import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
-from .base import CORSMixin, log_message
+from .base import CORSMixin, log_message, run_blocking
 from .messages import Message
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset_params = converter.to_python(params)
             executor = self.data.get_executor()
             ds = await executor.run_function(load, filetype=cls, **dataset_params)
-            ds = await executor.run_function(ds.initialize)
+            ds = await run_blocking(ds.initialize, executor=executor.ensure_sync())
             available_workers = await executor.get_available_workers()
             ds.set_num_cores(len(available_workers))
             await executor.run_function(ds.check_valid)
@@ -91,7 +91,8 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = self.data.get_executor()
 
-        params = await executor.run_function(detect, path=path)
+        params = await run_blocking(detect, path=path, executor=executor.ensure_sync())
+
         if not params:
             msg = Message(self.data).dataset_detect_failed(path=path)
             log_message(msg)

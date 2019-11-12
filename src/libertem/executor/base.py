@@ -27,6 +27,46 @@ class JobExecutor(object):
         """
         raise NotImplementedError()
 
+    def run_each_partition(self, partitions, fn, all_nodes=False):
+        """
+        Run `fn` for all partitions. Yields results in order of completion.
+
+        Parameters
+        ----------
+
+        partitions : List[Partition]
+            List of relevant partitions.
+
+        fn : callable
+            Function to call, will get the partition as first and only argument.
+
+        all_nodes : bool
+            If all_nodes is True, run the function on all nodes that have this partition,
+            otherwise run on any node that has the partition. If a partition has no location,
+            the function will not be run for that partition if `all_nodes` is True, otherwise
+            it will be run on any node.
+        """
+        raise NotImplementedError()
+
+    def run_each_host(self, fn, *args, **kwargs):
+        """
+        Run a callable `fn` once on each host, gathering all results into a dict host -> result
+
+
+        Parameters
+        ----------
+
+        fn : callable
+            Function to call
+
+        *args
+            Arguments for fn
+
+        **kwargs
+            Keyword arguments for fn
+        """
+        raise NotImplementedError()
+
     def close(self):
         """
         cleanup resources used by this executor, if any
@@ -45,6 +85,13 @@ class JobExecutor(object):
         included in this list.
         """
         raise NotImplementedError()
+
+    def ensure_sync(self):
+        """
+        Returns a synchronous executor, incase of a `JobExecutor` we just
+        return `self; in case of `AsyncJobExecutor` below more work is needed!
+        """
+        return self
 
 
 class AsyncJobExecutor(object):
@@ -66,9 +113,15 @@ class AsyncJobExecutor(object):
         """
         raise NotImplementedError()
 
+    async def run_each_partition(self, partitions, fn, all_nodes=False):
+        raise NotImplementedError()
+
+    async def run_each_host(self, fn, *args, **kwargs):
+        raise NotImplementedError()
+
     async def close(self):
         """
-        cleanup resources used by this executor, if any
+        Cleanup resources used by this executor, if any.
         """
 
     async def cancel(self, cancel_id):
@@ -78,6 +131,9 @@ class AsyncJobExecutor(object):
         pass
 
     async def get_available_workers(self):
+        raise NotImplementedError()
+
+    def ensure_sync(self):
         raise NotImplementedError()
 
 
@@ -119,6 +175,9 @@ class AsyncAdapter(AsyncJobExecutor):
         self._wrapped = wrapped
         self._pool = concurrent.futures.ThreadPoolExecutor(1)
 
+    def ensure_sync(self):
+        return self._wrapped
+
     async def run_job(self, job, cancel_id):
         """
         run a Job
@@ -144,9 +203,19 @@ class AsyncAdapter(AsyncJobExecutor):
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
 
+    async def run_each_partition(self, partitions, fn, all_nodes=False):
+        fn_with_args = functools.partial(
+            self._wrapped.run_each_partition, partitions, fn, all_nodes
+        )
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def run_each_host(self, fn, *args, **kwargs):
+        fn_with_args = functools.partial(self._wrapped.run_each_host, fn, *args, **kwargs)
+        return await sync_to_async(fn_with_args, self._pool)
+
     async def close(self):
         """
-        cleanup resources used by this executor, if any
+        Cleanup resources used by this executor, if any, including the wrapped executor.
         """
         res = await sync_to_async(self._wrapped.close, self._pool)
         if self._pool:

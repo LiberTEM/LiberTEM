@@ -1,5 +1,6 @@
 import itertools
 
+import jsonschema
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
@@ -129,9 +130,20 @@ class DataSet(object):
     def __init__(self):
         self._cores = 1
 
-    def initialize(self):
+    def initialize(self, executor):
         """
-        pre-load metadata. this will be executed on a worker node. should return self.
+        Perform possibly expensive initialization, like pre-loading metadata.
+
+        This is run on the master node, but can execute parts on workers, for example
+        if they need to access the data stored on worker nodes, using the passed executor
+        instance.
+
+        If you need the executor around for later operations, for example when creating
+        the partitioning, save a reference here!
+
+        Should return the possibly modified `DataSet` instance (if a method running
+        on a worker is changing `self`, these changes won't automatically be transferred back
+        to the master node)
         """
         raise NotImplementedError()
 
@@ -140,7 +152,8 @@ class DataSet(object):
 
     def get_partitions(self):
         """
-        Return a generator over all Partitions in this DataSet
+        Return a generator over all Partitions in this DataSet. Should only
+        be called on the master node.
         """
         raise NotImplementedError()
 
@@ -167,10 +180,14 @@ class DataSet(object):
         raise NotImplementedError()
 
     def check_valid(self):
+        """
+        check validity of the DataSet. this will be executed (after initialize) on a worker node.
+        should raise DataSetException in case of errors, return True otherwise.
+        """
         raise NotImplementedError()
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         """
         Guess if path can be opened using this DataSet implementation and
         detect parameters.
@@ -234,6 +251,9 @@ class DataSet(object):
         return get_partition_shape(datashape, framesize, dtype, target_size,
                                    min_num_partitions)
 
+    def get_cache_key(self):
+        raise NotImplementedError()
+
 
 class DataSetMeta(object):
     def __init__(self, shape, raw_dtype=None, metadata=None, iocaps=None):
@@ -246,6 +266,18 @@ class DataSetMeta(object):
 
     def __getitem__(self, key):
         return self.metadata[key]
+
+
+class WritableDataSet:
+    pass
+
+
+class WritablePartition:
+    def get_write_handle(self):
+        raise NotImplementedError()
+
+    def delete(self):
+        raise NotImplementedError()
 
 
 class Partition(object):
@@ -353,6 +385,9 @@ class DataTile(object):
         assert data.shape == tuple(tile_slice.shape),\
             "shape mismatch: data=%s, tile_slice=%s" % (data.shape, tile_slice.shape)
 
+    def astype(self, dtype):
+        return DataTile(data=self.data.astype(dtype), tile_slice=self.tile_slice)
+
     @property
     def flat_data(self):
         """
@@ -401,6 +436,10 @@ class File3D(object):
         """
         raise NotImplementedError()
 
+    @property
+    def end_idx(self):
+        return self.start_idx + self.num_frames
+
     def readinto(self, start, stop, out, crop_to=None):
         """
         Read a number of frames into an existing buffer
@@ -426,10 +465,6 @@ class File3D(object):
         return a memory mapped array of this file
         """
         raise NotImplementedError()
-
-    @property
-    def end_idx(self):
-        return self.start_idx + self.num_frames
 
     def open(self):
         pass
@@ -475,13 +510,20 @@ class FileSet3D(object):
         """
         return new FileSet3D filtered for files having frames in the [start, stop) range
         """
+        files = self._get_files_for_range(start, stop)
+        return self.__class__(files=files)
+
+    def _get_files_for_range(self, start, stop):
+        """
+        return new list of files filtered for files having frames in the [start, stop) range
+        """
         files = []
         for f in self.files_from(start):
             if f.start_idx > stop:
                 break
             files.append(f)
         assert len(files) > 0
-        return self.__class__(files=files)
+        return files
 
     def files_from(self, start):
         lower_bound, f = self._tree.search_start(start)
@@ -551,7 +593,7 @@ class Partition3D(Partition):
             How many frames per tile? Default value, can be overridden by
             `target_size` in `get_tiles`.
         """
-        self._fileset = fileset
+        self._fileset = fileset.get_for_range(start_frame, start_frame + num_frames - 1)
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
@@ -797,3 +839,92 @@ class Partition3D(Partition):
                     data=arr,
                     tile_slice=tile_slice
                 )
+
+
+class PartitionStructure:
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/PartitionStructure.schema.json",
+        "title": "PartitionStructure",
+        "type": "object",
+        "properties": {
+            "version": {"const": 1},
+            "slices": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "number", "minItems": 2, "maxItems": 2,
+                    }
+                },
+                "minItems": 1,
+            },
+            "shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+            },
+            "sig_dims": {"type": "number"},
+            "dtype": {"type": "string"},
+        },
+        "required": ["version", "slices", "shape", "sig_dims", "dtype"]
+    }
+
+    def __init__(self, shape, slices, dtype):
+        """
+        Structure of the dataset.
+
+        Assumed to be contiguous on the flattened navigation axis.
+
+        Parameters
+        ----------
+
+        slices : List[Tuple[Int]]
+            List of tuples [start_idx, end_idx) that partition the data set by the flattened
+            navigation axis
+
+        shape : Shape
+            shape of the whole dataset
+
+        dtype : numpy dtype
+            The dtype of the data as it is on disk. Can contain endian indicator, for
+            example >u2 for big-endian 16bit data.
+        """
+        self.slices = slices
+        self.shape = shape
+        self.dtype = np.dtype(dtype)
+
+    def serialize(self):
+        data = {
+            "version": 1,
+            "slices": [[s[0], s[1]] for s in self.slices],
+            "shape": list(self.shape),
+            "sig_dims": self.shape.sig.dims,
+            "dtype": str(self.dtype),
+        }
+        jsonschema.validate(schema=self.SCHEMA, instance=data)
+        return data
+
+    @classmethod
+    def from_json(cls, data):
+        jsonschema.validate(schema=cls.SCHEMA, instance=data)
+        shape = Shape(tuple(data["shape"]), sig_dims=data["sig_dims"])
+        return PartitionStructure(
+            slices=[tuple(item) for item in data["slices"]],
+            shape=shape,
+            dtype=np.dtype(data["dtype"]),
+        )
+
+    @classmethod
+    def from_ds(cls, ds):
+        data = {
+            "version": 1,
+            "slices": [
+                [p.slice.origin[0], p.slice.origin[0] + p.slice.shape[0]]
+                for p in ds.get_partitions()
+            ],
+            "shape": list(ds.shape),
+            "sig_dims": ds.shape.sig.dims,
+            "dtype": str(ds.dtype),
+        }
+        return cls.from_json(data)

@@ -74,7 +74,7 @@ class RawFile(File3D):
             dtype on disk
 
         start_idx : int
-            at which frame index should we start reading?
+            which is the first frame index (of the whole dataset) in this file?
         """
         super().__init__()
 
@@ -109,7 +109,7 @@ class RawFile(File3D):
             raw_data = mmap.mmap(
                 fileno=f.fileno(),
                 length=self.num_frames * self._frame_size,
-                offset=self.start_idx * self.num_frames,
+                offset=0,
                 access=mmap.ACCESS_READ,
             )
             self._mmap = np.frombuffer(raw_data, dtype=self._dtype).reshape(
@@ -192,7 +192,7 @@ class RawFileDataSet(DataSet):
 
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
-                          "please specify detecros_size instead or use EMPAD DataSet",
+                          "please specify detector_size instead or use EMPAD DataSet",
                           DeprecationWarning)
             if detector_size is not None:
                 raise ValueError("cannot specify both detector_size and crop_detector_to")
@@ -221,8 +221,8 @@ class RawFileDataSet(DataSet):
         self._filesize = None
         self._enable_direct = enable_direct
 
-    def initialize(self):
-        self._filesize = os.stat(self._path).st_size
+    def initialize(self, executor):
+        self._filesize = executor.run_function(os.stat, self._path).st_size
         return self
 
     @property
@@ -259,6 +259,15 @@ class RawFileDataSet(DataSet):
                 return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_cache_key(self):
+        return {
+            "path": self._path,
+            # scan_size + detector_size; included because changing scan_size will change
+            # the partition structure and cause errors
+            "shape": tuple(self.shape),
+            "dtype": str(self.dtype),
+        }
 
     def _get_num_partitions(self):
         """

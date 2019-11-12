@@ -102,7 +102,7 @@ class SERDataSet(DataSet):
             SERFile(path=self._path, emipath=self._emipath)
         ])
 
-    def initialize(self):
+    def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
         reader = SERFile(path=self._path, emipath=self._emipath)
 
@@ -127,12 +127,15 @@ class SERDataSet(DataSet):
             )
         return self
 
+    def initialize(self, executor):
+        return executor.run_function(self._do_initialize)
+
     @classmethod
     def get_msg_converter(cls):
         return SERDatasetParams
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         if path.lower().endswith(".ser"):
             return {"path": path}
         return False
@@ -155,6 +158,11 @@ class SERDataSet(DataSet):
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e) from e
+
+    def get_cache_key(self):
+        return {
+            "path": self._path,
+        }
 
     def _get_num_partitions(self):
         """

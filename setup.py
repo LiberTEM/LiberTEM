@@ -90,7 +90,7 @@ def read(*parts):
 
 
 def remove_rst_roles(txt):
-    return re.sub(':(cite|doc):`[^`]+`', '', txt)
+    return re.sub(':(cite|doc):`[^`]+` ?', '', txt)
 
 
 def get_git_rev():
@@ -137,7 +137,7 @@ setup(
         "numpy",
         "scipy",
         "sparse",
-        "distributed>=1.23.3,<1.28",
+        "distributed>=1.23.3",
         "click",
         "tornado>=5",
         "matplotlib",
@@ -148,7 +148,9 @@ setup(
         # Ensure compatibility with numpy 1.17
         "numba>=0.45.1",
         "ncempy>=1.4",
-        'pypiwin32;platform_system=="Windows"',
+        # FIXME pin for https://github.com/mhammond/pywin32/issues/1439
+        # Revisit if fix is released
+        'pywin32<=225;platform_system=="Windows"',
         # FIXME pull request #259
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
         'scikit-image',

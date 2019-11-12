@@ -1,0 +1,12 @@
+## Contributor Checklist:
+
+* [ ] I have added myself to [the creators.json file](https://github.com/LiberTEM/LiberTEM/blob/master/packaging/creators.json)
+* [ ] I have added [a changelog entry](https://github.com/LiberTEM/LiberTEM/tree/master/docs/source/changelog) for my contribution
+* [ ] I have added/updated documentation for all user-facing changes
+* [ ] I have added/updated test cases
+
+## Please remove this section
+
+Before submitting your PR, please have a look at [our contributing docs](https://libertem.github.io/LiberTEM/contributing.html).
+
+Thank you for your contribution!

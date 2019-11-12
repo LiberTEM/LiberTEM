@@ -12,6 +12,9 @@ class EchoUDF(UDF):
             'echo': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
             ),
+            'echo_preprocess': self.buffer(
+                kind="nav", dtype="float32", extra_shape=(2,)
+            ),
             'echo_postprocess': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
             ),
@@ -19,6 +22,9 @@ class EchoUDF(UDF):
                 kind="nav", dtype="float32",
             )
         }
+
+    def preprocess(self):
+        self.results.echo_preprocess[:] = self.params.aux
 
     def process_frame(self, frame):
         self.results.echo[:] = self.params.aux
@@ -59,6 +65,9 @@ def test_aux_1(lt_ctx):
 
     echo_udf = EchoUDF(aux=aux_data)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)
+    assert 'echo_preprocess' in res
+    print(data.shape, res['echo_preprocess'].data.shape)
+    assert np.allclose(res['echo_preprocess'].raw_data, aux_data.raw_data)
     assert 'echo' in res
     print(data.shape, res['echo'].data.shape)
     assert np.allclose(res['echo'].raw_data, aux_data.raw_data)
@@ -84,6 +93,9 @@ def test_aux_roi_dummy(lt_ctx):
 
     echo_udf = EchoUDF(aux=aux_data)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf, roi=roi)
+    assert 'echo_preprocess' in res
+    print(data.shape, res['echo_preprocess'].data.shape)
+    assert np.allclose(res['echo_preprocess'].data[roi], aux_input[roi])
     assert 'echo' in res
     print(data.shape, res['echo'].data.shape)
     assert np.allclose(res['echo'].data[roi], aux_input[roi])
@@ -109,6 +121,9 @@ def test_aux_roi(lt_ctx):
 
     echo_udf = EchoUDF(aux=aux_data)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf, roi=roi)
+    assert 'echo_preprocess' in res
+    print(data.shape, res['echo_preprocess'].data.shape)
+    assert np.allclose(res['echo_preprocess'].data[roi], aux_input[roi])
     assert 'echo' in res
     print(data.shape, res['echo'].data.shape)
     assert np.allclose(res['echo'].data[roi], aux_input[roi])

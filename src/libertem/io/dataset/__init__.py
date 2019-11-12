@@ -59,11 +59,13 @@ def get_dataset_cls(filetype):
     return cls
 
 
-def detect(path):
+def detect(path, executor=None):
+    if executor is None:
+        raise TypeError("FIXME")
     for filetype in filetypes.keys():
         try:
             cls = get_dataset_cls(filetype)
-            maybe_params = cls.detect_params(path)
+            maybe_params = cls.detect_params(path, executor)
         except (NotImplementedError, DataSetException):
             continue
         if not maybe_params:

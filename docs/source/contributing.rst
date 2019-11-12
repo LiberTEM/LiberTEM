@@ -53,9 +53,7 @@ To make sure our code base stays readable, we follow a `Code Style`_.
 Please update ``packaging/creators.json`` with your author information when you
 contribute to LiberTEM for the first time. This helps us to keep track of all
 contributors and give credit where credit is due! Please let us know if you
-wouldn't like to be credited. ``contributors.rst`` and  ``creators.rst`` in
-``docs/source`` are generated from the JSON files with ``python
-scripts/build-authors-contributors``.
+wouldn't like to be credited.
 
 If you are changing parts of LiberTEM that are currently not covered by tests,
 please consider writing new tests! When changing example code, which is not run
@@ -76,10 +74,15 @@ The previous behavior was this and that*. If applicable, use
 `versionadded <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-versionadded>`_
 and related directives.
 
+The changelog for the development branch is maintained as a collection of files
+in the :code:`docs/source/changelog/*/` folder structure. Each change should get
+a separate file to avoid merge conflicts. The files are merged into the
+master changelog when creating a release.
+
 The following items might require an
 update upon introducing or changing a feature:
 
-* Changelog in :code:`docs/source/changelog.rst`
+* Changelog snippet in :code:`docs/source/changelog/*/`
 * Docstrings
 * Examples
 * Main Documentation

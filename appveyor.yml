@@ -11,6 +11,11 @@ environment:
       PYTHON_ARCH: "64"
       TOXENV: "py37"
 
+    - PYTHON: "C:\\Python38"
+      PYTHON_VERSION: "3.8"
+      PYTHON_ARCH: "64"
+      TOXENV: "py38"
+
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 

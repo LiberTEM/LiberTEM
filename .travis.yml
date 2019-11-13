@@ -14,8 +14,8 @@ before_script:
   - ls -la build_env
   - ls -la build_env/bin/
   - ./build_env/bin/python --version
-  - ./build_env/bin/pip install numpy
-  - ./build_env/bin/pip install -e .
+  - ./build_env/bin/python -m pip install numpy
+  - ./build_env/bin/python -m pip install -e .
 
 script:
   - tox

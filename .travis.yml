@@ -11,6 +11,9 @@ install:
 before_script:
   - python --version
   - python -m venv build_env
+  - ls -la build_env
+  - ls -la build_env/bin/
+  - ./build_env/bin/python --version
   - ./build_env/bin/pip install numpy
   - ./build_env/bin/pip install -e .
 

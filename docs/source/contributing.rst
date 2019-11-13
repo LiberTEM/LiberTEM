@@ -96,7 +96,7 @@ considered to select creators who will be offered co-authorship.
 Co-authors who are not creators of LiberTEM can be included in publications
 about LiberTEM following established practices for authorship, for example as
 contributors to the content of the publication or to other presented material,
-such as a scientific applications.
+such as scientific applications.
 
 If you have questions or would like to suggest changes to this policy, please
 contact us! See :pr:`460` for the initial discussion that lead to establishing

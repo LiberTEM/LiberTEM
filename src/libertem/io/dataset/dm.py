@@ -20,9 +20,7 @@ def _get_offset(path):
         idx = 0
     else:
         idx = 1
-    # raw_dtype = fh._DM2NPDataType(fh.dataType[idx])
     offset = fh.dataOffset[idx]
-    # shape = (fh.ySize[idx], fh.xSize[idx])
     return offset
 
 
@@ -193,7 +191,6 @@ class DMDataSet(DataSet):
         else:
             idx = 1
         raw_dtype = first_file._DM2NPDataType(first_file.dataType[idx])
-        offset = first_file.dataOffset[idx]
         shape = (first_file.ySize[idx], first_file.xSize[idx])
 
         start_idx = 0
@@ -232,7 +229,7 @@ class DMDataSet(DataSet):
             os.stat(p).st_size
             for p in self._get_files()
         )
-        
+
         self._offsets = {
             fn: offset
             for offset, fn in zip(
@@ -266,7 +263,7 @@ class DMDataSet(DataSet):
         return self._fileset
 
     @classmethod
-    def detect_params(cls, path):
+    def detect_params(cls, path, executor):
         pl = path.lower()
         if pl.endswith(".dm3") or pl.endswith(".dm4"):
             return {"path": path}
@@ -283,7 +280,7 @@ class DMDataSet(DataSet):
     def check_valid(self):
         first_fn = self._get_files()[0]
         try:
-            with fileDM(first_fn, on_memory=True) as f1:
+            with fileDM(first_fn, on_memory=True):
                 pass
                 # FIXME: these items are no longer available in current ncempy.io.dm?
                 """

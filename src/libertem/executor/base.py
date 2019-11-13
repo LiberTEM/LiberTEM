@@ -48,6 +48,21 @@ class JobExecutor(object):
         """
         raise NotImplementedError()
 
+    def map(self, fn, iterable):
+        """
+        Run a callable `fn` for each element in `iterable`, on arbitrary worker nodes.
+
+        Parameters
+        ----------
+
+        fn : callable
+            Function to call. Should accept exactly one parameter.
+
+        iterable : Iterable
+            Which elements to call the function on.
+        """
+        raise NotImplementedError()
+
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable `fn` once on each host, gathering all results into a dict host -> result
@@ -114,6 +129,21 @@ class AsyncJobExecutor(object):
         raise NotImplementedError()
 
     async def run_each_partition(self, partitions, fn, all_nodes=False):
+        raise NotImplementedError()
+
+    async def map(self, fn, iterable):
+        """
+        Run a callable `fn` for each item in iterable, on arbitrary worker nodes
+
+        Parameters
+        ----------
+
+        fn : callable
+            Function to call. Should accept exactly one parameter.
+
+        iterable : Iterable
+            Which elements to call the function on.
+        """
         raise NotImplementedError()
 
     async def run_each_host(self, fn, *args, **kwargs):
@@ -198,7 +228,7 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def run_function(self, fn, *args, **kwargs):
         """
-        run a callable `fn`
+        run a callable `fn` on an arbitrary worker node
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
@@ -206,6 +236,24 @@ class AsyncAdapter(AsyncJobExecutor):
     async def run_each_partition(self, partitions, fn, all_nodes=False):
         fn_with_args = functools.partial(
             self._wrapped.run_each_partition, partitions, fn, all_nodes
+        )
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def map(self, fn, iterable):
+        """
+        Run a callable `fn` for each item in iterable, on arbitrary worker nodes
+
+        Parameters
+        ----------
+
+        fn : callable
+            Function to call. Should accept exactly one parameter.
+
+        iterable : Iterable
+            Which elements to call the function on.
+        """
+        fn_with_args = functools.partial(
+            self._wrapped.map, fn, iterable,
         )
         return await sync_to_async(fn_with_args, self._pool)
 

@@ -31,6 +31,10 @@ class InlineJobExecutor(JobExecutor):
             cloudpickle.loads(cloudpickle.dumps(result))
         return result
 
+    def map(self, fn, iterable):
+        return [fn(item)
+                for item in iterable]
+
     def run_each_host(self, fn, *args, **kwargs):
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps((fn, args, kwargs)))

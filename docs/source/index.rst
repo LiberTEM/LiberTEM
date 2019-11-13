@@ -28,7 +28,6 @@ Documentation
    applications
    architecture
    performance
-
    debugging
    reference/index
    changelog

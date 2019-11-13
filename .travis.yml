@@ -33,8 +33,10 @@ jobs:
         - ls -la build_env
         - ls -la build_env/bin/
         - ./build_env/bin/python --version
-        - ./build_env/bin/python -m pip install numpy
+        - ./build_env/bin/python -m pip install numpy cython
         - ./build_env/bin/python -m pip install -e .
+      before_install:
+        - sudo apt-get -y install libhdf5-dev
     - stage: test
       env: TOXENV=flake8
       python: 3.7

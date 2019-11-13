@@ -8,6 +8,12 @@ cache:
 install:
   - pip install tox
 
+before_script:
+  - python --version
+  - python -m venv build_env
+  - ./build_env/bin/pip install numpy
+  - ./build_env/bin/pip install -e .
+
 script:
   - tox
 

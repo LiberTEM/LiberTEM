@@ -139,7 +139,7 @@ class StackedDMFile(File3D):
         assert stop - start == 1
         data = self._read_frame()
 
-        data = data.reshape((stop - start,) + self.shape)
+        data = data.reshape(self.shape)
 
         if crop_to is not None:
             # TODO: maybe limit I/O to the cropped region, too?

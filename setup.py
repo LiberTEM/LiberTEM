@@ -148,15 +148,13 @@ setup(
         # Ensure compatibility with numpy 1.17
         "numba>=0.45.1",
         "ncempy>=1.4",
-        # FIXME pin for https://github.com/mhammond/pywin32/issues/1439
-        # Revisit if fix is released
-        'pywin32<=225;platform_system=="Windows"',
+        'pywin32!=226;platform_system=="Windows"',
         # FIXME pull request #259
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431
         'scikit-image',
         'cloudpickle',
         'jsonschema',
-        'scikit-learn'
+        'scikit-learn',
     ],
     extras_require={
         'hdfs': 'hdfs3',

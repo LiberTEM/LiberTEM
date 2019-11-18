@@ -103,6 +103,39 @@ research and innovation programme under grant agreement No 823717 – `ESTEEM3
 
 |clearfloat|
 
+moreSTEM
+........
+
+.. image:: ./images/Helmholtz.png
+    :align: left
+    :width: 100px
+    :alt: Helmholtz Gemeinschaft Deutscher Forschungszentren
+
+We gratefully acknowledge funding from the `Initiative and Networking Fund of
+the Helmholtz Association
+<https://www.helmholtz.de/en/about_us/the_association/initiating_and_networking/>`_
+within the `Helmholtz Young Investigator Group moreSTEM
+<https://morestem.fz-juelich.de/>`_ under Contract No. VH-NG-1317 at
+Forschungszentrum Jülich in Germany.
+
+|clearfloat|
+
+Ptychography 4.0
+................
+
+.. image:: ./images/Helmholtz-lower.png
+    :align: left
+    :width: 100px
+    :alt: Helmholtz Gemeinschaft Deutscher Forschungszentren
+
+We gratefully acknowledge funding from the `Information & Data Science Pilot
+Project
+<https://www.helmholtz.de/en/research/information-data-science/information-data-science-pilot-projects/pilot-projects-2/>`_
+"Ptychography 4.0" of the Helmholtz Association.
+
+|clearfloat|
+
+
 Google Summer of Code
 .....................
 

@@ -17,7 +17,7 @@
             ],
             "access_right": "open",
             "license": "GPL-3.0",
-            "notes": "We kindly acknowledge funding from Google Summer of Code 2019 under the umbrella of the Python software foundation.\n\nForschungszentrum Jülich is supporting LiberTEM with funding for personnel, access to its infrastructure and administrative support."
+            "notes": "We gratefully acknowledge funding from the Initiative and Network Fund of the Helmholtz Association within the Helmholtz Young Investigator Group moreSTEM under Contract No. VH-NG-1317 at Forschungszentrum Jülich in Germany.\n\nWe gratefully acknowledge funding from the Information & Data Science Pilot Project 'Ptychography 4.0' of the Helmholtz Association.\n\nWe kindly acknowledge funding from Google Summer of Code 2019 under the umbrella of the Python software foundation.\n\nSTEMx equipment and software for 4D STEM data acquisition with K2 IS camera courtesy of Gatan Inc.\n\nForschungszentrum Jülich is supporting LiberTEM with funding for personnel, access to its infrastructure and administrative support."
         }
 
     }

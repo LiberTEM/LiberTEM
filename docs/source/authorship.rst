@@ -42,6 +42,9 @@ All people listed in ``creators.json`` are included as authors in publications
 of the software itself, for example `uploads on Zenodo
 <https://doi.org/10.5281/zenodo.1477847>`_.
 
+Publications about LiberTEM
+---------------------------
+
 For other publications about LiberTEM, such as scientific papers, all
 persons with at least one contribution within the past 18 months that qualifies
 them for being a creator of LiberTEM will be contacted during the drafting

@@ -1,5 +1,5 @@
 ---
-title: 'LiberTEM: Software platform for scalable data processing in transmission electron microscopy'
+title: 'LiberTEM: Software platform for scalable multidimensional data processing in transmission electron microscopy'
 tags:
   - Python
   - transmission electron microscopy
@@ -41,32 +41,35 @@ match the growing performance requirements of EM data processing [@Weber2020].
 
 The data rate of the fastest detectors for electron microscopy that are
 available in 2019 exceeds 50 GB/s, which is faster than the memory bandwidth of
-typical personal computers (PCs) at this time. Applications that would run
-smoothly on a typical PC ten years before require distributed processing on
-special hardware to offer the same user experience. Furthermore, electron
-microscopy is interactive and visual. As a consequence, processing systems
-should be designed for very high throughput in combination with fast response
+typical personal computers (PCs) at this time. Applications from ten years
+before that ran smoothly on a typical PC have evolved into numerical analysis of
+complex multidimensional datasets that require distributed processing on
+high-performance systems. Furthermore, electron microscopy is interactive and
+visual. As a consequence, modern data processing systems for electron microscopy
+should be designed for very high throughput in combination with short response
 times for interactive GUI use. That requires fundamental changes in the
-architecture and programming model of data handling and processing systems for
-electron microscopy, and consequently in the implementation of algorithms and
-user interfaces for electron microscopy applications.
+architecture and programming model, and consequently in the implementation of
+algorithms and user interfaces for electron microscopy applications.
 
 # Description
 
-The LiberTEM open source platform for high-throughput distributed
-processing of large-scale binary data sets is developed to
-fulfill these demanding requirements: Very high throughput on distributed
-systems, in combination with a responsive, interactive interface. The current
-focus for application development is electron microscopy. Nevertheless, LiberTEM
-is suitable for any kind of large-scale binary data that has a hyper-rectangular
-array layout.
+The LiberTEM open source platform for high-throughput distributed processing of
+large-scale binary data sets is developed to fulfill these demanding
+requirements: Very high throughput on distributed systems, in combination with a
+responsive, interactive interface. The current focus for application development
+is electron microscopy. Nevertheless, LiberTEM is suitable for any kind of
+large-scale binary data that has a hyper-rectangular array layout, notably data
+from synchrotrons and neutron sources.
 
-LiberTEM uses a simplified MapReduce [@Dean2008] programming model. It is
-designed to run and perform well on PCs, single server nodes, clusters and cloud
-services. On clusters it can use fast distributed local storage on
-high-performance SSDs. That way it achieves very high aggregate IO performance
-on a compact and cost-efficient system built from stock components. Benchmarking
-results can be found at https://libertem.github.io/LiberTEM/performance.html
+LiberTEM uses a simplified MapReduce [@Dean2008] programming model. A
+description of the architecture can be found at
+https://libertem.github.io/LiberTEM/architecture.html. It is designed to run and
+perform well on PCs, single server nodes, clusters and cloud services. On
+clusters it can use fast distributed local storage on high-performance SSDs.
+That way it achieves very high aggregate IO performance on a compact and
+cost-efficient system built from stock components. Benchmarking results that
+show 46 GB/s aggregate throughput on a cluster with eight microblade nodes can
+be found at https://libertem.github.io/LiberTEM/performance.html
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
 installation of Python 3 and the required packages will likely work as well. The
@@ -85,13 +88,15 @@ or Apache Hadoop [@Patel2012], it offers a data model that is similar to NumPy
 [@Walt2011], suitable for typical binary data from area detectors, as opposed to
 tabular data in the case of Spark and Hadoop. It includes interfaces to the
 established Python-based numerical processing tools, supports a number of
-relevant file formats for EM data, and features optimized data paths for
-numerical data that eliminate unnecessary copies and allow cache-efficient
-processing. As a result, [it can reach more than four times the throughput of
-Spark-based processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the
-same operations on typical data sets.
+relevant file formats for EM data
+<https://libertem.github.io/LiberTEM/formats.html#supported-formats>, and
+features optimized data paths for numerical data that eliminate unnecessary
+copies and allow cache-efficient processing. As a result, [it can reach more
+than four times the throughput of Spark-based
+processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the same
+operations on typical data sets.
 
-Compared to tools like Dask arrays for NumPy-based distributed
+Compared to tools such as Dask arrays for NumPy-based distributed
 computations [@Rocklin2015], LiberTEM is developed towards low-latency
 interactive feedback for GUI display as well as future applications for
 high-throughput distributed live data processing. As a consequence, data
@@ -136,14 +141,25 @@ research and innovation programme under grant agreement No 686053.
 This project has received funding from the European Union’s Horizon 2020
 research and innovation programme under grant agreement No 823717 – ESTEEM3.
 
+We gratefully acknowledge funding from the Initiative and Networking Fund of the
+Helmholtz Association within the Helmholtz Young Investigator Group moreSTEM
+under Contract No. VH-NG-1317 at Forschungszentrum Jülich in Germany.
+
+We gratefully acknowledge funding from the Information & Data Science Pilot
+Project "Ptychography 4.0" of the Helmholtz Association.
+
 We kindly acknowledge funding from Google Summer of Code 2019 under the umbrella
 of the Python software foundation.
+
+STEMx equipment and software for 4D STEM data acquisition with K2 IS camera
+courtesy of Gatan Inc.
 
 Forschungszentrum Jülich is supporting LiberTEM with funding for personnel,
 access to its infrastructure and administrative support.
 
 Furthermore, we wish to thank a large number of people who contributed in
-various ways to LiberTEM. A full list of creators and contributors can be found
-at https://libertem.github.io/LiberTEM/acknowledgments.html
+various ways to LiberTEM. A full and continuously updated list of creators and
+contributors can be found at
+https://libertem.github.io/LiberTEM/acknowledgments.html
 
 # References

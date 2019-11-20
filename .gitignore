@@ -1,5 +1,6 @@
 *.swp
 *.pyc
+*.bib.bak
 __pycache__
 .tox
 docs/build/

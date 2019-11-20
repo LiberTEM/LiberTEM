@@ -15,14 +15,26 @@
 .. |github| image:: https://img.shields.io/badge/GitHub-GPL--3.0-informational
 .. _github: http://github.com/LiberTEM/LiberTEM/
 
-LiberTEM is an open source platform for high-throughput distributed processing of large-scale binary data sets using a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_. The current focus is `pixelated <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_ scanning transmission electron microscopy (`STEM <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_) :cite:`doi:10.1002/9783527808465.EMC2016.6284` and scanning electron beam diffraction data.
+LiberTEM is an open source platform for high-throughput distributed processing
+of large-scale binary data sets using a simplified `MapReduce programming model
+<https://en.wikipedia.org/wiki/MapReduce>`_. The current focus is `pixelated
+<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_
+scanning transmission electron microscopy (`STEM
+<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_)
+:cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus2019` and scanning electron beam
+diffraction data.
 
-It is `designed for high throughput and scalability <https://libertem.github.io/LiberTEM/architecture.html>`_ on PCs, single server nodes, clusters and cloud services. On clusters it can use fast distributed
-local storage on high-performance SSDs. That way it achieves `very high aggregate IO performance <https://libertem.github.io/LiberTEM/performance.html>`_ on a compact and cost-efficient system built from stock components.
+It is `designed for high throughput and scalability
+<https://libertem.github.io/LiberTEM/architecture.html>`_ on PCs, single server
+nodes, clusters and cloud services. On clusters it can use fast distributed
+local storage on high-performance SSDs. That way it achieves `very high
+aggregate IO performance
+<https://libertem.github.io/LiberTEM/performance.html>`_ on a compact and
+cost-efficient system built from stock components.
 
-LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms
-that allow installation of Python 3 and the required packages will likely work as well. The GUI is running
-in a web browser.
+LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
+installation of Python 3 and the required packages will likely work as well. The
+GUI is running in a web browser.
 
 Installation
 ------------

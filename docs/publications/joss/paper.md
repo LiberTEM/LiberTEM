@@ -16,11 +16,11 @@ authors:
   - name: Karina Ruzaeva
     affiliation: 1
     orcid: 0000-0003-3610-0989
+  - name: Jan Caron
+    affiliation: 1
+    orcid: 0000-0002-0873-889X
   - name: Rahul Chandra
     affiliation: TODO
-    orcid: TODO
-  - name: Jay van Schyndel
-    affiliation: 2
     orcid: TODO
   - name: Vadim Migunov
     affiliation: 1
@@ -28,6 +28,9 @@ authors:
   - name: Magnus Nord
     affiliation: TODO
     orcid: 0000-0001-7981-5293
+  - name: Jay van Schyndel
+    affiliation: 2
+    orcid: TODO
   - name: Knut Müller-Caspary
     affiliation: 1
     orcid: 0000-0002-2588-7993

@@ -77,20 +77,23 @@ Instead, the position on the author list is used to indicate the relative amount
 of contribution of an author. The author that contributed most of the content is
 listed first and the author that contributed most guidance is listed last.
 Casual readers, in particular encountering an abbreviated author list in a
-reference from a citing paper, will assign most credit to the first author. An
+reference within a citing paper, will assign most credit to the first author. An
 alphabetical author list would therefore be unfair towards main contributors
 with a name in the middle of the alphabet.
 
 In order to resolve this issue and assign prestigious author positions to the
-people who deserve them in a transparent fashion, the people who contributed 80
-% of the development work hours and 80 % of the management and guidance work
-hours that went into the material of a publication agree among each other about
-their authorship positions. The remaining authors are included in no particular
-order in the middle of the author list.
+people who deserve them in a transparent fashion, the authors agree among each
+other about their authorship positions for each publication individually.
 
 Since Zenodo assigns DOIs and allows to export a citation for reference managers
 that are commonly used in scientific publishing, a Zenodo upload is treated as a
-scientific publication.
+scientific publication and the authors are included in the order of
+``packaging/creators.json``. This allows to assign prestigious first author
+positions to main contributors when LiberTEM is cited in scientific papers.
+
+Authorship questions should be resolved through discussion in Issues and change
+proposals in the form of Pull Requests. Our goal is amicable cooperation and
+proper credit for all contributions.
 
 If you have questions or would like to suggest changes to this policy, please
 contact us! See :pr:`460` for the initial discussion that lead to establishing

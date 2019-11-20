@@ -16,6 +16,18 @@ authors:
   - name: Karina Ruzaeva
     affiliation: 1
     orcid: 0000-0003-3610-0989
+  - name: Rahul Chandra
+    affiliation: TODO
+    orcid: TODO
+  - name: Jay van Schyndel
+    affiliation: 2
+    orcid: TODO
+  - name: Vadim Migunov
+    affiliation: 1
+    orcid: 0000-0002-6296-4492
+  - name: Magnus Nord
+    affiliation: TODO
+    orcid: 0000-0001-7981-5293
   - name: Knut Müller-Caspary
     affiliation: 1
     orcid: 0000-0002-2588-7993
@@ -25,6 +37,8 @@ authors:
 affiliations:
  - name: Forschungszentrum Jülich, Ernst Ruska-Centre for Microscopy and Spectroscopy with Electrons
    index: 1
+ - name: Monash University eResearch Centre
+   index: 2
 date: 30 October 2019
 bibliography: paper.bib
 ---
@@ -43,7 +57,7 @@ The data rate of the fastest detectors for electron microscopy that are
 available in 2019 exceeds 50 GB/s, which is faster than the memory bandwidth of
 typical personal computers (PCs) at this time. Applications from ten years
 before that ran smoothly on a typical PC have evolved into numerical analysis of
-complex multidimensional datasets that require distributed processing on
+complex multidimensional datasets [@Ophus2019] that require distributed processing on
 high-performance systems. Furthermore, electron microscopy is interactive and
 visual. As a consequence, modern data processing systems for electron microscopy
 should be designed for very high throughput in combination with short response

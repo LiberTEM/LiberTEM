@@ -1,3 +1,5 @@
+.. _`acknowledgments`:
+
 Acknowledgments
 ===============
 

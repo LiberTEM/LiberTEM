@@ -66,6 +66,32 @@ about LiberTEM following established practices for authorship, for example as
 contributors to the content of the publication or to other presented material,
 such as scientific applications.
 
+Ordering of author lists
+------------------------
+
+The creators and contributors are listed alphabetically in
+:ref:`acknowledgments` with a short statement about their contribution.
+
+Alphabetical ordering of author lists is uncommon for scientific papers.
+Instead, the position on the author list is used to indicate the relative amount
+of contribution of an author. The author that contributed most of the content is
+listed first and the author that contributed most guidance is listed last.
+Casual readers, in particular encountering an abbreviated author list in a
+reference from a citing paper, will assign most credit to the first author. An
+alphabetical author list would therefore be unfair towards main contributors
+with a name in the middle of the alphabet.
+
+In order to resolve this issue and assign prestigious author positions to the
+people who deserve them in a transparent fashion, the people who contributed 80
+% of the development work hours and 80 % of the management and guidance work
+hours that went into the material of a publication agree among each other about
+their authorship positions. The remaining authors are included in no particular
+order in the middle of the author list.
+
+Since Zenodo assigns DOIs and allows to export a citation for reference managers
+that are commonly used in scientific publishing, a Zenodo upload is treated as a
+scientific publication.
+
 If you have questions or would like to suggest changes to this policy, please
 contact us! See :pr:`460` for the initial discussion that lead to establishing
 this policy.

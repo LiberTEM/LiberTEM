@@ -21,7 +21,7 @@ of large-scale binary data sets using a simplified `MapReduce programming model
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_
 scanning transmission electron microscopy (`STEM
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_)
-:cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus2019` and scanning electron beam
+:cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus_2019` and scanning electron beam
 diffraction data.
 
 It is `designed for high throughput and scalability

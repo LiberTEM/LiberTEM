@@ -26,7 +26,7 @@ authors:
     affiliation: 1
     orcid: 0000-0002-6296-4492
   - name: Magnus Nord
-    affiliation: TODO
+    affiliation: 4
     orcid: 0000-0001-7981-5293
   - name: Jay van Schyndel
     affiliation: 2
@@ -44,6 +44,9 @@ affiliations:
    index: 2
  - name: Chandigarh University
    index: 3
+ - name: University of Antwerp, EMAT
+   index: 4
+
 date: 30 October 2019
 bibliography: paper.bib
 ---

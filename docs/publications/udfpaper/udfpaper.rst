@@ -185,9 +185,10 @@ transforms and TODO in preliminary tests with real-world CBED patterns.
 
 The performance of cross-correlation-based refinement can be boosted by a number of optimizations:
 
-* Use fast correlation based on fast Fourier transforms and the correlation theorem TODO reference
-* Re-use the Fourier transform of the template
-* Limit the correlation to tight regions around the approximate peak positions since strain only leads to small shifts
+* Use fast correlation based on fast Fourier transforms and the correlation theorem TODO reference.
+* Re-use the Fourier transform of the template.
+* Limit the correlation to tight regions around the approximate peak positions in signal space since strain only leads to small shifts.
+* Limit the analysis to tight regions of interest in the navigation space.
 * Use optimized FFT implementations and ensure a data layout with optimal alignment.
 
 Since LiberTEM is based on Python, a number of Python-specific optimizations were applied as well:

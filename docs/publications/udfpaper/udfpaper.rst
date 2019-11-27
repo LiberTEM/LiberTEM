@@ -156,15 +156,12 @@ cluster, and it can process both distributed live data streams and distributed
 offline data. In each case, it can produce fine-grained live-updating results to
 visualize a progressing calculation or display live data.
 
-Development process
--------------------
+Optimized strain mapping as a lead application
+----------------------------------------------
 
 Since practicality and performance for real-world applications was a key
 requirement, we co-developed the UDF API with an optimized implementation for
 strain mapping, which is a major application in 4D STEM data analysis.
-
-Optimized Strain mapping
-........................
 
 TODO merge with Karina's text
 
@@ -185,18 +182,141 @@ transforms and TODO in preliminary tests with real-world CBED patterns.
 
 The performance of cross-correlation-based refinement can be boosted by a number of optimizations:
 
-* Use fast correlation based on fast Fourier transforms and the correlation theorem TODO reference.
+* Use fast correlation based on fast Fourier transforms and the correlation
+  theorem TODO reference.
 * Re-use the Fourier transform of the template.
-* Limit the correlation to tight regions around the approximate peak positions in signal space since strain only leads to small shifts.
+* Limit the correlation to tight regions around the approximate peak positions in
+  signal space since strain only leads to small shifts.
 * Limit the analysis to tight regions of interest in the navigation space.
-* Use optimized FFT implementations and ensure a data layout with optimal alignment.
+* Use optimized FFT implementations and ensure an optimal input data layout for that implementation.
 
 Since LiberTEM is based on Python, a number of Python-specific optimizations were applied as well:
 
-* Optimized result buffer handling using larger arrays for many frames to avoid frequent allocation and garbage collection of small units of memory
-* Minimize overheads by processing several peaks at a time in each step using array programming techniques, in combination with a block size that is optimized for L3 CPU cache efficiency.
-* Targeted optimization of bottlenecks with Numba-based implementations where array programming is inefficient or complicated.
+* Optimized result buffer handling using larger arrays for many frames to avoid frequent allocation
+  and garbage collection of small units of memory
+* Minimize overheads by processing several peaks at a time in each step using array programming
+  techniques, in combination with a block size that is optimized for L3 CPU cache efficiency.
+* Targeted optimization of bottlenecks with Numba-based implementations where array programming
+  is inefficient or complicated.
 
-On the LiberTEM back-end side we handle parallelization, distribution and optimized input/output, which were already in place before developing the UDF API.
+On the LiberTEM back-end side we handle parallelization, distribution and
+optimized input/output, which were already in place before developing the UDF
+API. Since some types of input data has to be decoded, for example the packed 12
+bit integers of the K2 IS raw format, the data should be processed in chunks
+that fit the CPU cache. A size of 1 MB has proven effective since many CPUs that
+are used in numerical processing have at least 1 MB of L3 cache per core.
+
+API design
+----------
+
+LiberTEM divides input data into partitions that can be processed independently
+on many CPU cores and processing nodes. In a MapReduce context, this implies a
+two-stage reduction: First, the data of a partition is reduced into a partial
+result buffer on individual worker processes, and then the partial result
+buffers are transferred to the central node and merged there.
+
+Furthermore, the API should allow both very simple and highly complex
+applications. That means many of its features are optional and will not
+complicate any code that doesn't make use of them.
+
+The API for LiberTEM UDFs is class-based to allow composition and extension
+through object-oriented programming and to combine the various aspects of a UDF
+into a self-contained package. Furthermore, using attributes of a UDF class to
+pass parameters and meta information allows to make a rich portfolio of optional
+features available to member functions without cluttering the interface for
+simple applications that don't require them.
+
+In order to allow the optimizations and features described above, the API offers
+the following interfaces:
+
+Context.map()
+.............
+
+Many basic operations such as calculating sums or other statistics on the data
+can be expressed calling a function for each frame and creating a result array
+with the same shape as the navigation dimension that contains the individual
+results for each frame. The merge function is a simple assignment in this case.
+LiberTEM UDFs support such an interface by determining the shape and type of
+result buffers automatically by calling the function with a mock-up frame. This
+interface is exposed through a simple map function that accepts a dataset and a
+function as parameters and returns an array that matches the navigation
+dimension of the dataset. The Blobfinder uses more advanced features of the
+LiberTEM UDF API that go beyond a simple map().
+
+get_result_buffers()
+....................
+
+The LiberTEM UDF API offers convenience functions for creating and assigning to
+buffers with dimensions that match navigation or signal space. Furthermore,
+buffers with custom dimensions that are not tied to the dataset are possible.
+Buffers are defined by implementing the get_result_buffers() method that returns
+a descriptor for all the required buffers. Based on this declaration, the UDF
+back-end can allocate the appropriate buffers on the worker processes and on the
+merging node(s). Strain mapping uses these capabilities, preserving signal space
+for creating a sum or standard deviation map for finding approximate peak
+positions, and preserving navigation space for the per-frame refinement of these
+peak positions positions.
+
+process_frame()
+...............
+
+Frame-by-frame processing is the simplest interface and allows to implement
+algorithms that require full frames. It works by implementing the
+process_frame() function (UDFFrameMixin) in an UDF class.  Behind the scenes,
+the UDF back-end can assemble full frames from tiled datasets as required.
+Single frames from smaller detectors often fit into the L3 cache, which means
+this interface can be reasonably efficient. This is used for the default
+Blobfinder implementation.
+
+process_tile()
+..............
+
+This interface offers tiled processing, i.e. processing stacks of partial frames
+from a contiguous region of navigation and signal space by implementing the
+process_tile() method (UDFTileMixin) in an UDF class. This allows to benefit
+from CPU caches through loop nest optimization, in particular when applying
+signal space masks to large frames. This is used for an alternative
+implementation of the correlation engine that relies on sparse matrix products.
+
+merge()
+.......
+
+Overriding merge() in a UDF class allows to implement custom merge functions that merge partial result buffers into the complete result. Reductions that preserve navigation space can use the default merge() implementation, which is a simple assignment. Reductions that preserve signal space or use buffers of type "single" require a merge implementation that is appropriate for the application.
+
+* Allow passing parameters for an analysis. The Blobfinder uses this to pass the list of
+  expected peak positions and parameters of the template.
+* 
+* Allocate only those parts of navigation space buffers that are required for each partition.
+* Allocate result buffers for a whole partition and assign output data directly
+  to these buffers using views for the currently processed data portion. This
+  avoids creating and discarding many small data structures.
+* Allow specifying task data that is re-used for each data portion of a partition.
+  The blobfinder keeps the Fourier transform of the correlation template and an
+  intermediate buffer with special alignment for optimal PyFFTw performance.
+* Allow specifying a ROI in navigation space where only values set to True in a
+  masking Boolean array are calculated. The blobfinder uses this feature to restrict calculations only to relevant portions of a dataset.
+* Offer preprocessing functions that are executed once for each partition.
+  This can be used to allocate custom data structures in result buffers, such as
+  lists for ragged arrays.
+* Offer postprocessing functions that are executed once for each partition.
+  This allows to implement two-stage reductions where the per-frame or per-tile
+  function aggregates data into some of the result buffers, and postprocessing
+  then performs an additional analysis or transformation step. This is
+  particularly useful for per-tile processing if the second step requires
+  complete data from all parts of each frame. The blobfinder uses this for an
+  additional lattice refinement step after correlation.
+* Allow extension and composition through object-oriented programming. The
+  blobfinder allows arbitrary combinations of correlation and refinement
+  implementation through this feature.
+* Allow passing auxiliary data in navigation or signal space. This allows to set parameters
+  for each frame or for each pixel in signal space individually. Advanced
+  blobfinder applications use this feature to first cluster frames into separate
+  classes and the aggregate results individually for each cluster class. Other
+  applications can include per-frame intensity normalization using a beam
+  current monitor when processing data from synchrotrons, or applying a detector
+  dark frame and gain map "on the fly" without creating an intermediate
+  corrected dataset.
 
 
+
+The functions to allocate result buffers 

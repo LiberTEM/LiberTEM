@@ -17,15 +17,3 @@ a high-level introduction.
    :members:
    :undoc-members:
    :special-members: __init__
-
-MaskContainer and ApplyMaskjob
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-:class:`libertem.job.masks.MaskContainer` and :class:`libertem.job.masks.ApplyMaskJob` allow to implement
-highly efficient mask application operations, such as virtual detector, center of mass or
-feature vector calculations. In the future, they might be migrated to the :ref:`user-defined functions` API.
-
-.. automodule:: libertem.job.masks
-   :members: MaskContainer,ApplyMasksJob
-   :undoc-members:
-   :special-members: __init__

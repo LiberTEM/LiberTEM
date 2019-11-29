@@ -33,6 +33,23 @@ class Context:
         """
         Create a new context. In the background, this creates a suitable
         executor and spins up a local Dask cluster.
+
+        Parameters
+        ----------
+
+        executor : ~libertem.executor.base.JobExecutor or None
+            If None, create a
+            :class:`~libertem.executor.dask.DaskJobExecutor` that uses all cores
+            on the local system.
+
+        Examples
+        --------
+
+        >>> ctx = libertem.api.Context()
+
+        >>> # Create a Context using an inline executor for debugging
+        >>> from libertem.executor.inline import InlineJobExecutor
+        >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
         """
         if executor is None:
             executor = self._create_local_executor()
@@ -55,13 +72,14 @@ class Context:
 
         Returns
         -------
-        DataSet
+        DataSet : libertem.io.dataset.base.DataSet
             the loaded dataset
 
         Note
         ----
 
-        Additional parameters are passed to the concrete DataSet implementation
+        Additional parameters are passed to the concrete
+        :class:`~libertem.io.dataset.base.DataSet` implementation
         """
         # delegate to libertem.io.dataset.load:
         ds = self.executor.run_function(load, filetype, *args, **kwargs)
@@ -106,6 +124,10 @@ class Context:
         dtype (optional)
             Specify the dtype to do the calculation in. Integer dtypes are possible if the numpy
             casting rules allow this for source and mask data.
+
+        Returns
+        -------
+        Job : libertem.job.masks.ApplyMasksJob
 
         Examples
         --------

@@ -58,6 +58,10 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
 class ApplyMasksJob(Job):
     """
     Apply masks to signals/frames in the dataset.
+
+    Running a :class:`ApplyMaskJob` with
+    :meth:`~libertem.api.Context,run` returns a :class:`numpy.ndarray`
+    with shape (n_masks, prod(ds.shape.nav)).
     """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, dtype=None, *args, **kwargs):

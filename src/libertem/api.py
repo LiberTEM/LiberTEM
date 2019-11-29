@@ -73,13 +73,17 @@ class Context:
         Returns
         -------
         DataSet : libertem.io.dataset.base.DataSet
-            the loaded dataset
+            The loaded dataset
 
         Note
         ----
 
         Additional parameters are passed to the concrete
-        :class:`~libertem.io.dataset.base.DataSet` implementation
+        :class:`~libertem.io.dataset.base.DataSet` implementation.
+
+        Note
+        ----
+        See :ref:`dataset api` for format-specific documentation.
         """
         # delegate to libertem.io.dataset.load:
         ds = self.executor.run_function(load, filetype, *args, **kwargs)
@@ -112,22 +116,24 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        mask_count (optional)
-            Specify the number of masks if a single factory function is used so that the number of
-            masks can be determined without calling the factory function.
-        mask_dtype (optional)
-            Specify the dtype of the masks so that mask dtype
+        mask_count
+            (optional) Specify the number of masks if a single factory function is used so that the
+            number of masks can be determined without calling the factory function.
+        mask_dtype
+            (optional) Specify the dtype of the masks so that mask dtype
             can be determined without calling the mask factory functions. This can be used to
             override the mask dtype in the result dtype determination. As an example, setting
             this to np.float32 means that masks of type float64 will not switch the calculation
             and result dtype to float64 or complex128.
-        dtype (optional)
-            Specify the dtype to do the calculation in. Integer dtypes are possible if the numpy
-            casting rules allow this for source and mask data.
+        dtype
+            (optional) Specify the dtype to do the calculation in. Integer dtypes are possible if
+            the numpy casting rules allow this for source and mask data.
 
         Returns
         -------
         Job : libertem.job.masks.ApplyMasksJob
+            When run by the Context, this Job creates a :class:`numpy.ndarray` of
+            shape (n_masks, prod(ds.shape.nav))
 
         Examples
         --------
@@ -177,18 +183,26 @@ class Context:
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        mask_count (optional)
-            Specify the number of masks if a single factory function is used so that the number of
-            masks can be determined without calling the factory function.
-        mask_dtype (optional)
-            Specify the dtype of the masks so that mask dtype
+        mask_count
+            (optional) Specify the number of masks if a single factory function is used so that the
+            number of masks can be determined without calling the factory function.
+        mask_dtype
+            (optional) Specify the dtype of the masks so that mask dtype
             can be determined without calling the mask factory functions. This can be used to
             override the mask dtype in the result dtype determination. As an example, setting
             this to np.float32 means that masks of type float64 will not switch the calculation
             and result dtype to float64 or complex128.
-        dtype (optional)
-            Specify the dtype to do the calculation in. Integer dtypes are possible if the numpy
-            casting rules allow this for source and mask data.
+        dtype
+            (optional) Specify the dtype to do the calculation in. Integer dtypes are possible if
+            the numpy casting rules allow this for source and mask data.
+
+        Returns
+        -------
+        MasksAnalysis : libertem.analysis.masks.MasksAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with keys :code:`"mask_0"`, :code:`"mask_1"`, ... and shape of the
+            navigation dimension
 
         Examples
         --------
@@ -229,6 +243,12 @@ class Context:
             reference center y value
         mask_radius
             mask out intensity outside of mask_radius from (cy, cx)
+
+        Returns
+        -------
+        COMAnalysis : libertem.analysis.com.COMAnalysis
+            See source code of :meth:`libertem.analysis.com.COMAnalysis.get_results`
+            for the definition of the :class:`~libertem.analysis.base.AnalysisResultSet`.
         """
         if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
@@ -267,6 +287,21 @@ class Context:
             number of bins
         max_order
             maximum order of calculated Fourier component
+
+        Returns
+        -------
+        RadialFourierAnalysis : libertem.analysis.radialfourier.RadialFourierAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with shape of the navigation dimension and the following keys:
+
+            * :code:`"dominant_0"`, :code:`"dominant_1"`, ..., :code:`"dominant_<nbins-1>"`
+            * :code:`"absolute_0_0"`, :code:`"absolute_0_1"`, ...,
+              :code:`"absolute_<nbins-1>_<max_order>"`
+            * :code:`"phase_0_0"`, :code:`"phase_0_1"`, ...,
+              :code:`"phase_<nbins-1>_<max_order>"`
+            * :code:`"complex_0_0"`, :code:`"complex_0_1"`, ...,
+              :code:`"complex_<nbins-1>_<max_order>"`
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -295,6 +330,13 @@ class Context:
             center y value
         r
             radius of the disk
+
+        Returns
+        -------
+        DiskMaskAnalysis : libertem.analysis.disk.DiskMaskAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with key :code:`"intensity"` and shape of the navigation dimension
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -321,6 +363,13 @@ class Context:
             inner radius
         ro
             outer radius
+
+        Returns
+        -------
+        RingMaskAnalysis : libertem.analysis.ring.RingMaskAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with key :code:`"intensity"` and shape of the navigation dimension
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -333,6 +382,13 @@ class Context:
     def create_point_analysis(self, dataset, x: int = None, y: int = None):
         """
         Select the pixel with coords (y, x) from each frame
+
+        Returns
+        -------
+        PointMaskAnalysis : libertem.analysis.point.PointMaskAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with key :code:`"intensity"` and shape of the navigation dimension
         """
         if dataset.shape.nav.dims > 2:
             raise ValueError("incompatible dataset: need at most two navigation dimensions")
@@ -355,6 +411,13 @@ class Context:
         ----------
         dataset
             the dataset to work on
+
+        Returns
+        -------
+        SumAnalysis : libertem.analysis.sum.SumAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with key :code:`"intensity"` and shape of the signal dimension
         """
         return SumAnalysis(dataset=dataset, parameters={})
 
@@ -362,9 +425,14 @@ class Context:
         """
         Pick raw data from `origin` with the size defined in `shape`.
 
-        NOTE: if you just want to read single frames, it is easier to use `create_pick_analysis`.
+        Note
+        ----
+        if you just want to read single frames, it is easier to use
+        :meth:`create_pick_analysis`.
 
-        NOTE: It is not efficient to use this method on large parts of datasets, please consider
+        Note
+        ----
+        It is not efficient to use this method on large parts of datasets, please consider
         implementing a UDF instead.
 
         Parameters
@@ -379,8 +447,8 @@ class Context:
 
         Returns
         -------
-        :py:class:`numpy.ndarray`
-            the raw data as numpy array
+        PickFrameJob : libertem.job.raw.PickFrameJob
+            A job that returns the specified raw data as :class:`numpy.ndarray`
 
         Examples
         --------
@@ -446,8 +514,10 @@ class Context:
 
         Returns
         -------
-        :py:class:`numpy.ndarray`
-            the frame as numpy array
+        PickFrameAnalysis : libertem.analysis.raw.PickFrameAnalysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.base.AnalysisResultSet`
+            with key :code:`"intensity"` and shape of the signal dimension
 
         Examples
         --------
@@ -473,6 +543,12 @@ class Context:
         ----------
         job
             the job or analysis to run
+
+        Returns
+        -------
+        result : numpy.ndarray or libertem.analysis.base.AnalysisResultSet
+            Running a Job returns a :class:`numpy.ndarray`, running
+            an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`
         """
         analysis = None
         if hasattr(job, "get_job"):
@@ -516,8 +592,11 @@ class Context:
 
         Returns
         -------
-        dict:
-            Return value of the UDF containing the result buffers
+        dict
+            Return value of the UDF containing the result buffers of
+            type :class:`libertem.common.buffers.BufferWrapper`.
+            Access the underlying numpy array using the
+            :attr:`~libertem.common.buffers.BufferWrapper.data` property.
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
 
@@ -539,8 +618,9 @@ class Context:
         Returns
         -------
 
-        BufferWrapper:
-            The result of the UDF. Access the underlying numpy array using the `data` attribute.
+        BufferWrapper : libertem.common.buffers.BufferWrapper
+            The result of the UDF. Access the underlying numpy array using the
+            :attr:`~libertem.common.buffers.BufferWrapper.data` property.
             Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)

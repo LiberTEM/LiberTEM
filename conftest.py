@@ -129,6 +129,8 @@ def large_raw(tmpdir_factory):
     else:
         with open(filename, 'wb') as f:
             f.truncate(size)
+        stat = os.stat(filename)
+        assert stat.st_blocks == 0
     ds = RawFileDataSet(
         path=str(filename),
         scan_size=shape[:2],

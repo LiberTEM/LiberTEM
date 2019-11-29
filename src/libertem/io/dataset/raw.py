@@ -80,7 +80,7 @@ class RawFile(File3D):
 
         self._num_frames = num_frames
         self._dtype = np.dtype(dtype)
-        self._frame_size = np.product(frame_shape) * self._dtype.itemsize
+        self._frame_size = np.product(np.int64(frame_shape)) * self._dtype.itemsize
         self._frame_shape = frame_shape
         self._start_idx = start_idx
 

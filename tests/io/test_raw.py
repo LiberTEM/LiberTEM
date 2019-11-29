@@ -12,6 +12,14 @@ def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
 
 
+def test_large_pick(large_raw, lt_ctx):
+    y, x = large_raw.shape.nav
+    dy, dx = large_raw.shape.sig
+    analysis = lt_ctx.create_pick_analysis(large_raw, y=y-1, x=x-1)
+    result = lt_ctx.run(analysis)
+    assert result.intensity.raw_data.shape == tuple(large_raw.shape.sig)
+
+
 def test_check_valid(default_raw):
     default_raw.check_valid()
 

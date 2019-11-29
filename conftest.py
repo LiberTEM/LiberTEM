@@ -1,5 +1,6 @@
 import os
 import importlib.util
+import platform
 
 import numpy as np
 import pytest
@@ -108,6 +109,31 @@ def default_raw(tmpdir_factory):
         scan_size=(16, 16),
         dtype="float32",
         detector_size=(128, 128),
+    )
+    ds.set_num_cores(2)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
+@pytest.fixture(scope='session')
+def large_raw(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-large-sparse'
+    shape = (100, 100, 1216, 1216)
+    dtype = np.uint16
+    size = np.prod(np.int64(shape)) * np.dtype(dtype).itemsize
+    if platform.system() == "Windows":
+        os.system('FSUtil File CreateNew "%s" 0x%X' % (filename, size))
+        os.system('FSUtil Sparse SetFlag "%s"' % filename)
+        os.system('FSUtil Sparse SetRange "%s" 0 0x%X' % (filename, size))
+    else:
+        with open(filename, 'wb') as f:
+            f.truncate(size)
+    ds = RawFileDataSet(
+        path=str(filename),
+        scan_size=shape[:2],
+        dtype=dtype,
+        detector_size=shape[2:],
     )
     ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())

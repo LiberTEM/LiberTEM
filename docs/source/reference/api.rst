@@ -34,3 +34,35 @@ PickFrameJob
 .. automodule:: libertem.job.raw
    :members:
    :special-members: __init__
+
+Analysis API
+~~~~~~~~~~~~
+
+.. automodule:: libertem.analysis.base
+   :members:
+   :undoc-members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.com
+   :members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.disk
+   :members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.ring
+   :members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.point
+   :members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.sum
+   :members:
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.raw
+   :members:
+   :special-members: __init__

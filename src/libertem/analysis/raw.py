@@ -6,6 +6,9 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 
 class PickFrameAnalysis(BaseAnalysis):
+    """
+    Pick a single, complete frame from a dataset
+    """
     def get_job(self):
         assert self.dataset.shape.nav.dims in (1, 2, 3), "can only handle 1D/2D/3D nav currently"
         x, y, z = (

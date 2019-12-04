@@ -146,7 +146,7 @@ setup(
         "psutil",
         # Pinned due to https://github.com/pydata/sparse/issues/257
         # Ensure compatibility with numpy 1.17
-        "numba>=0.45.1",
+        "numba>=0.46",
         "ncempy>=1.4",
         # FIXME pin for https://github.com/mhammond/pywin32/issues/1439
         # Revisit if fix is released

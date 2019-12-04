@@ -113,6 +113,11 @@ class DMDataSet(DataSet):
 
     Note
     ----
+    This DataSet is not supported in the GUI yet, as the file dialog needs to be
+    updated to properly handle opening series.
+
+    Note
+    ----
     Single-file 4D DM files are not yet supported. The use-case would be
     to read DM4 files from the conversion of K2 data, but those data sets
     are actually transposed (nav/sig are swapped), so it is very slow to

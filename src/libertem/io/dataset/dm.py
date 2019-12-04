@@ -108,13 +108,46 @@ class DMFileSet(FileSet3D):
 
 
 class DMDataSet(DataSet):
-    def __init__(self, files=None, scan_size=None, same_offset=False):
+    def __init__(self, files=None, scan_size=None, sig_dims=None, same_offset=False):
         """
+        Reader for stacks of DM3/DM4 files. Each file should contain a single frame.
+
+        Note
+        ----
+        Single-file 4D DM files are not yet supported. The use-case would be
+        to read DM4 files from the conversion of K2 data, but those data sets
+        are actually transposed (nav/sig are swapped), so it is very slow to
+        read single diffraction patterns / frames. Please let us know if you have
+        a use-case for single-file 4D DM files and we may add support!
+
+        Parameters
+        ----------
+
+        files : List[str]
+            Which files should be loaded? If more than one file is
+            specified, loads the files as a 3D stack.
+
+        scan_size : Tuple[int] or None
+            Reshape in navigation dimensions. Raises a `DataSetException`
+            if the shape is incompatible with the data that is loaded
+            (the exception may be delayed until initialization, as the check
+            may depend on data that is only available on worker nodes)
+
+        sig_dims : int or None
+            Number of signal dimensions. Defaults to the shape of a single image.
+
+        same_offset : bool
+            When reading a stack of dm3/dm4 files, it can be expensive to read in all
+            the metadata from all files, which we currently only use for getting the
+            offsets to the main data in each file. If you absolutely know that the offsets
+            are the same for all files, you can set this parameter and we will skip reading
+            all offsets but the one from the first file.
         """
         super().__init__()
         self._meta = None
         self._same_offset = same_offset
         self._scan_size = tuple(scan_size) if scan_size else scan_size
+        self._sig_dims = sig_dims
         self._filesize = None
         self._files = files
         self._fileset = None
@@ -175,7 +208,7 @@ class DMDataSet(DataSet):
         first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
-        sig_dims = len(first_file.shape)
+        sig_dims = self._sig_dims or len(first_file.shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),
             raw_dtype=first_file.dtype,

@@ -24,7 +24,9 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
 
     This analysis doesn't use fast Fourier transforms, but calculates the Fourier coefficients
     using sparse matrices in a dot product following the `definition of Fourier series
-    <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>_`.
+    <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>`_.
+
+    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for available parameters!
     '''
     def get_results(self, job_results):
         '''

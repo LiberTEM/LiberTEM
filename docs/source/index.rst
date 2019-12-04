@@ -28,13 +28,14 @@ Documentation
    applications
    architecture
    performance
-   contributing
    debugging
    reference/index
    changelog
    tips
    why_python
    gsoc
+   contributing
+   authorship
    citing
    acknowledgments
 

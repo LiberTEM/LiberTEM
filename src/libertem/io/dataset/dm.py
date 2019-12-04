@@ -1,7 +1,5 @@
 import os
-import glob
 import logging
-import contextlib
 
 from ncempy.io.dm import fileDM
 import numpy as np
@@ -22,46 +20,6 @@ def _get_offset(path):
         idx = 1
     offset = fh.dataOffset[idx]
     return offset
-
-
-class DMFile(File3D):
-    def __init__(self, path, start_idx):
-        super().__init__()
-        self._path = path
-        self._start_idx = start_idx
-
-    def _get_handle(self):
-        return fileDM(self._path, on_memory=True)
-
-    @contextlib.contextmanager
-    def get_handle(self):
-        with self._get_handle() as f:
-            yield f
-
-    @property
-    def num_frames(self):
-        with self._get_handle() as f1:
-            return max(f1.numObjects - 1, 1)
-
-    @property
-    def start_idx(self):
-        return self._start_idx
-
-    def readinto(self, start, stop, out, crop_to=None):
-        """
-        Read [`start`, `stop`) images from this file into `out`
-        """
-        with self._get_handle() as f1:
-            num_images = max(f1.numObjects - 1, 1)
-            assert start < num_images
-            assert stop <= num_images
-            assert stop >= start
-            for ii in range(start, stop):
-                data = f1.getDataset(ii)['data']
-                if crop_to is not None:
-                    # TODO: maybe limit I/O to the cropped region, too?
-                    data = data[crop_to.get(sig_only=True)]
-                out[ii - start, ...] = data
 
 
 class StackedDMFile(File3D):
@@ -146,44 +104,23 @@ class StackedDMFile(File3D):
 
 
 class DMFileSet(FileSet3D):
-    # NOTE: we disable opening all files in the fileset, as it can cause file handle exhaustion
-    # on data sets with many files
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        pass
+    pass
 
 
 class DMDataSet(DataSet):
-    def __init__(self, files=None, path=None, scan_size=None, stack=False):
+    def __init__(self, files=None, scan_size=None, same_offset=False):
+        """
+        """
         super().__init__()
-        # FIXME: can we avoid having multiple conflicting parameter configurations?
-        # maybe by breaking up the dataset in stacked and non-stacked variants?
-        if files is None and path is None:
-            raise DataSetException("either `path` or `files` should be specified")
-        self._path = path
         self._meta = None
-        self._scan_size = scan_size
+        self._same_offset = same_offset
+        self._scan_size = tuple(scan_size) if scan_size else scan_size
         self._filesize = None
-        # FIXME: see above
-        if files is not None and not stack:
-            raise DataSetException("`files` should only be specified for stacked reading")
-        self._stack = stack
         self._files = files
         self._fileset = None
         self._offsets = {}
 
     def _get_fileset(self):
-        start_idx = 0
-        files = []
-        for fn in self._get_files():
-            f = DMFile(path=fn, start_idx=start_idx)
-            files.append(f)
-            start_idx += f.num_frames
-        return DMFileSet(files)
-
-    def _get_stacked_fileset(self):
         first_fn = self._get_files()[0]
         first_file = fileDM(first_fn, on_memory=True)
         if first_file.numObjects == 1:
@@ -207,22 +144,12 @@ class DMDataSet(DataSet):
         return DMFileSet(files)
 
     def _get_files(self):
-        if self._files:
-            return self._files
-        if self._stack:
-            # FIXME: sort numerically
-            # (try to match a pattern of .*[0-9]+\.dm[34] and extract the number as
-            # integer and sort)
-            return list(sorted(glob.glob(self._path)))
-        else:
-            return [self._path]
+        return self._files
 
     def _get_scan_size(self):
-        # TODO: in some cases, the scan size needs to be read
-        # from the dm file (see k2is reader for details, needs testing!)
-        if self._stack:
-            return (len(self._get_files()),)
-        return self._scan_size
+        if self._scan_size:
+            return self._scan_size
+        return (len(self._get_files()),)
 
     def initialize(self, executor):
         self._filesize = sum(
@@ -230,15 +157,22 @@ class DMDataSet(DataSet):
             for p in self._get_files()
         )
 
-        self._offsets = {
-            fn: offset
-            for offset, fn in zip(
-                executor.map(_get_offset, self._get_files()),
-                self._get_files()
-            )
-        }
-
-        first_file = next(self.fileset.files_from(0))
+        if self._same_offset:
+            offset = executor.run_function(_get_offset, self._get_files()[0])
+            self._offsets = {
+                fn: offset
+                for fn in self._get_files()
+            }
+        else:
+            self._offsets = {
+                fn: offset
+                for offset, fn in zip(
+                    executor.map(_get_offset, self._get_files()),
+                    self._get_files()
+                )
+            }
+        self._fileset = self._get_fileset()
+        first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
         sig_dims = len(first_file.shape)
@@ -248,19 +182,6 @@ class DMDataSet(DataSet):
             iocaps={"FULL_FRAMES"},
         )
         return self
-
-    @property
-    def fileset(self):
-        """
-        cached fileset, as creation is potentially very expensive
-        """
-        if self._fileset is None:
-            if self._stack:
-                fileset = self._get_stacked_fileset()
-            else:
-                fileset = self._get_fileset()
-            self._fileset = fileset
-        return self._fileset
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -282,13 +203,9 @@ class DMDataSet(DataSet):
         try:
             with fileDM(first_fn, on_memory=True):
                 pass
-                # FIXME: these items are no longer available in current ncempy.io.dm?
-                """
-                if f1.head['ValidNumberElements'] == 0:
-                    raise DataSetException("no data found in file")
-                if f1.head['DataTypeID'] not in (0x4120, 0x4122):
-                    raise DataSetException("unknown datatype id: %s" % f1.head['DataTypeID'])
-                """
+            if (self._scan_size is not None
+                    and np.product(self._scan_size) != len(self._get_files())):
+                raise DataSetException("incompatible scan_size")
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)
@@ -308,7 +225,7 @@ class DMDataSet(DataSet):
             yield Partition3D(
                 meta=self._meta,
                 partition_slice=part_slice,
-                fileset=self.fileset,
+                fileset=self._fileset,
                 start_frame=start,
                 num_frames=stop - start,
             )

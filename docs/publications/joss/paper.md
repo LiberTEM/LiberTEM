@@ -67,13 +67,17 @@ The data rate of the fastest detectors for electron microscopy that are
 available in 2019 exceeds 50 GB/s, which is faster than the memory bandwidth of
 typical personal computers (PCs) at this time. Applications from ten years
 before that ran smoothly on a typical PC have evolved into numerical analysis of
-complex multidimensional datasets [@Ophus2019] that require distributed processing on
-high-performance systems. Furthermore, electron microscopy is interactive and
-visual. As a consequence, modern data processing systems for electron microscopy
-should be designed for very high throughput in combination with short response
-times for interactive GUI use. That requires fundamental changes in the
-architecture and programming model, and consequently in the implementation of
-algorithms and user interfaces for electron microscopy applications.
+complex multidimensional datasets [@Ophus2019] that require distributed
+processing on high-performance systems. Furthermore, electron microscopy is
+interactive and visual, and experiments done inside electron microscope
+(so-called in situ experiments) often rely on fast on-line data processing as
+the experimental parameters need to be adjusted based on the observation
+results. As a consequence, modern data processing systems for electron
+microscopy should be designed for very high throughput in combination with short
+response times for interactive GUI use and closed-loop feedback. That requires
+fundamental changes in the architecture and programming model, and consequently
+in the implementation of algorithms and user interfaces for electron microscopy
+applications.
 
 # Description
 
@@ -92,7 +96,7 @@ perform well on PCs, single server nodes, clusters and cloud services. On
 clusters it can use fast distributed local storage on high-performance SSDs.
 That way it achieves very high aggregate IO performance on a compact and
 cost-efficient system built from stock components. Benchmarking results that
-show 46 GB/s aggregate throughput on a cluster with eight microblade nodes can
+show 46 GB/s throughput on a cluster with eight microblade nodes can
 be found at https://libertem.github.io/LiberTEM/performance.html
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow

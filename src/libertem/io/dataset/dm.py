@@ -204,7 +204,7 @@ class DMDataSet(DataSet):
                     self._get_files()
                 )
             }
-        self._fileset = self._get_fileset()
+        self._fileset = executor.run_function(self._get_fileset)
         first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)

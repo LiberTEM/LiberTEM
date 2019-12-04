@@ -86,7 +86,7 @@ and `format-specific documentation <https://libertem.github.io/LiberTEM/referenc
 - `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
 - Nanomegas .blo block files
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
-- Gatan DM3 and DM4: See `Issue #291 <https://github.com/LiberTEM/LiberTEM/issues/291>`_ Please contact us if you would like to process such data!
+- Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD

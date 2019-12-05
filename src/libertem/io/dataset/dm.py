@@ -114,30 +114,45 @@ class DMDataSet(DataSet):
     Note
     ----
     This DataSet is not supported in the GUI yet, as the file dialog needs to be
-    updated to properly handle opening series.
+    updated to `properly handle opening series
+    <https://github.com/LiberTEM/LiberTEM/issues/498>`_.
 
     Note
     ----
     Single-file 4D DM files are not yet supported. The use-case would be
     to read DM4 files from the conversion of K2 data, but those data sets
-    are actually transposed (nav/sig are swapped), so it is very slow to
-    read single diffraction patterns / frames. Please let us know if you have
-    a use-case for single-file 4D DM files and we may add support!
+    are actually transposed (nav/sig are swapped).
+
+    That means the data would have to be transposed back into the usual shape,
+    which is slow, or algorithms would have to be adapted to work directly on
+    transposed data. As an example, applying a mask in the conventional layout
+    corresponds to calculating a weighted sum frame along the navigation
+    dimension in the transposed layout.
+
+    Since the transposed layout corresponds to a TEM tilt series, support for
+    transposed 4D STEM data could have more general applications beyond
+    supporting 4D DM4 files. Please contact us if you have a use-case for
+    single-file 4D DM files or other applications that process stacks of TEM
+    files, and we may add support!
+
+    Note
+    ----
+    You can use the PyPi package `natsort <https://pypi.org/project/natsort/>`_
+    to sort the filenames by their numerical components, this is especially useful
+    for filenames without leading zeros.
 
     Parameters
     ----------
 
     files : List[str]
-        Which files should be loaded? Loads the files as a 3D stack.
+        List of paths to the files that should be loaded. The order is important,
+        as it determines the order in the navigation axis.
 
     scan_size : Tuple[int] or None
-        Reshape in navigation dimensions. Raises a `DataSetException`
-        if the shape is incompatible with the data that is loaded
-        (the exception may be delayed until initialization, as the check
-        may depend on data that is only available on worker nodes)
-
-    sig_dims : int or None
-        Number of signal dimensions. Defaults to the number of dimensions of a single image.
+        By default, the files are loaded as a 3D stack. You can change this
+        by specifying the scan size, which reshapes the navigation dimensions.
+        Raises a `DataSetException` if the shape is incompatible with the data
+        that is loaded.
 
     same_offset : bool
         When reading a stack of dm3/dm4 files, it can be expensive to read in all
@@ -146,12 +161,11 @@ class DMDataSet(DataSet):
         are the same for all files, you can set this parameter and we will skip reading
         all offsets but the one from the first file.
     """
-    def __init__(self, files=None, scan_size=None, sig_dims=None, same_offset=False):
+    def __init__(self, files=None, scan_size=None, same_offset=False):
         super().__init__()
         self._meta = None
         self._same_offset = same_offset
         self._scan_size = tuple(scan_size) if scan_size else scan_size
-        self._sig_dims = sig_dims
         self._filesize = None
         self._files = files
         self._fileset = None
@@ -212,7 +226,7 @@ class DMDataSet(DataSet):
         first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
-        sig_dims = self._sig_dims or len(first_file.shape)
+        sig_dims = len(first_file.shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),
             raw_dtype=first_file.dtype,

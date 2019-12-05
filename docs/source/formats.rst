@@ -46,7 +46,7 @@ Common parameters
 There are some common parameters across data set types:
 
 `name`
-  The name of the data set, for display purposes.
+  The name of the data set, for display purposes. Only used in the GUI.
 `tileshape`
   Some data set types support setting a tile shape, which is
   a tuning parameter. It can mostly be ignored and left to the default value,
@@ -54,9 +54,10 @@ There are some common parameters across data set types:
   sets). The tile shape is the smallest unit of data we are reading and
   working on.
 `scan_size`
-  We generally support data containing rectangular 2D scans. For
+  In the GUI, we generally support visualizing data containing rectangular 2D scans. For
   some data set types, you can specify a scan_size as a tuple `(y, x)`; for
-  others it is even required.
+  others it is even required. When using the Python API, you are free to use n-dimensional
+  `scan_size`, if the chosen analysis supports it.
 
 Supported formats
 ~~~~~~~~~~~~~~~~~
@@ -65,6 +66,7 @@ LiberTEM supports the following file formats out of the box, see links for detai
 
 * :ref:`mib`
 * :ref:`raw binary`
+* :ref:`dm format`
 * :ref:`empad`
 * :ref:`k2is`
 * :ref:`frms6`

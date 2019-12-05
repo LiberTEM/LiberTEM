@@ -596,6 +596,7 @@ class Partition3D(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
+        assert num_frames > 0, "invalid number of frames: %d" % num_frames
         super().__init__(*args, **kwargs)
 
     def _get_stackheight(self, sig_shape, dest_dtype, target_size=None):

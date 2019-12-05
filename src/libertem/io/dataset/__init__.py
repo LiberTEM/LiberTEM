@@ -13,6 +13,7 @@ filetypes = {
     "frms6": "libertem.io.dataset.frms6.FRMS6DataSet",
     "empad": "libertem.io.dataset.empad.EMPADDataSet",
     "memory": "libertem.io.dataset.memory.MemoryDataSet",
+    "dm": "libertem.io.dataset.dm.DMDataSet",
 }
 
 

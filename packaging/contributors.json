@@ -51,7 +51,7 @@
         "displayname": "Peter Ercius",
         "authorname": "Ercius, Peter",
         "affiliation": "Berkeley Lab",
-        "contribution": "Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file and SER support."
+        "contribution": "Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file, DM3/DM4, and SER support."
     },
     {
         "displayname": "Caroline Fuery",

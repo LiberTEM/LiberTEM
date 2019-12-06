@@ -1,6 +1,17 @@
 Internal API
 ------------
 
+MaskContainer
+~~~~~~~~~~~~~
+
+:class:`libertem.job.masks.MaskContainer` helps to implement highly efficient
+mask application operations, such as virtual detector, center of mass or feature
+vector calculations.
+
+.. automodule:: libertem.job.masks
+   :members: MaskContainer
+   :special-members: __init__
+
 Shapes and slices
 ~~~~~~~~~~~~~~~~~
 

@@ -11,7 +11,7 @@ import numpy as np
 import cloudpickle
 
 from libertem.io.dataset.base import DataTile, Partition
-from .base import Job, Task, ResultTile
+from .base import BaseJob, Task, ResultTile
 from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
 from libertem.common.buffers import zeros_aligned
@@ -55,7 +55,7 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
     return _get_masks_for_slice
 
 
-class ApplyMasksJob(Job):
+class ApplyMasksJob(BaseJob):
     """
     Apply masks to signals/frames in the dataset.
 

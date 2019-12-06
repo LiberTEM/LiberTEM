@@ -19,6 +19,42 @@ class SumUDF(UDF):
         dest['intensity'][:] += src['intensity']
 
 
+class SumResultSet(AnalysisResultSet):
+    """
+    Running a :class:`SumAnalysis` vial :meth:`libertem.api.Context.run`
+    returns an instance of this class.
+
+    If the dataset contains complex numbers, the regular result attribute carries the
+    absolute value of the result and additional attributes with real part, imaginary part,
+    phase and full complex result are available.
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    intensity : libertem.analysis.base.AnalysisResult
+        Sum of all detector frames along the navigation dimension,
+        preserving the signal dimension.
+    intensity_real : libertem.analysis.base.AnalysisResult
+        Real part of the sum of all detector frames along the navigation dimension,
+        preserving the signal dimension. This is only available if the dataset
+        contains complex numbers.
+    intensity_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of the sum of all detector frames along the navigation dimension,
+        preserving the signal dimension. This is only available if the dataset
+        contains complex numbers.
+    intensity_angle : libertem.analysis.base.AnalysisResult
+        Phase angle of the sum of all detector frames along the navigation dimension,
+        preserving the signal dimension. This is only available if the dataset
+        contains complex numbers.
+    intensity_complex : libertem.analysis.base.AnalysisResult
+        Complex result of the sum of all detector frames along the navigation dimension,
+        preserving the signal dimension. This is only available if the dataset
+        contains complex numbers.
+    """
+    pass
+
+
 class SumAnalysis(BaseAnalysis):
     TYPE = 'UDF'
 
@@ -42,7 +78,7 @@ class SumAnalysis(BaseAnalysis):
                 )
             )
 
-        return AnalysisResultSet([
+        return SumResultSet([
             AnalysisResult(raw_data=udf_results['intensity'].data,
                            visualized=visualize_simple(
                                udf_results['intensity'].data, logarithmic=True

@@ -41,6 +41,75 @@ class BaseMasksAnalysis(BaseAnalysis):
         return self.parameters.get('dtype', None)
 
 
+class MasksResultSet(AnalysisResultSet):
+    """
+    Running a :class:`MasksAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    returns an instance of this class.
+
+    If any of the masks or the dataset contain complex numbers, the regular mask results
+    attributes carry the absolute value of the results, and additional attributes with real
+    part, imaginary part, phase and full complex result are available.
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    mask_0, mask_1, ..., mask_<n> : libertem.analysis.base.AnalysisResult
+        Results of the element-wise multiplication and sum of an individual mask with
+        each detector frame. Each mask result has the shape of the navigation dimension. This
+        contains the absolute value of the result if dataset or masks contain complex numbers.
+    mask_0_real, mask_1_real, ..., mask_<n>_real : libertem.analysis.base.AnalysisResult
+        Real part of the element-wise multiplication and sum of an individual mask with each
+        detector frame. Each mask result has the shape of the navigation dimension. This is
+        only available if masks or dataset contain complex numbers.
+    mask_0_imag, mask_1_imag, ..., mask_<n>_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of the element-wise multiplication and sum of an individual mask with each
+        detector frame. Each mask result has the shape of the navigation dimension. This is
+        only available if masks or dataset contain complex numbers.
+    mask_0_angle, mask_1_angle, ..., mask_<n>_angle : libertem.analysis.base.AnalysisResult
+        Phase angle of the element-wise multiplication and sum of an individual mask with each
+        detector frame. Each mask result has the shape of the navigation dimension. This is
+        only available if masks or dataset contain complex numbers.
+    mask_0_complex, mask_1_complex, ..., mask_<n>_complex : libertem.analysis.base.AnalysisResult
+        Complex result of the element-wise multiplication and sum of an individual mask with each
+        detector frame, visualized with a colorwheel. Each mask result has the shape of the
+        navigation dimension. This is only available if masks or dataset contain complex numbers.
+    """
+    pass
+
+
+class SingleMaskResultSet(AnalysisResultSet):
+    """
+    A number of Analyses that are based on applying a single mask create an instance of this class
+    as a result when executed via :meth:`libertem.api.Context.run`.
+
+    If the dataset contains complex numbers, the regular result attribute carries the
+    absolute value of the result, and additional attributes with real part, imaginary part,
+    phase and full complex result are available.
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    intensity : libertem.analysis.base.AnalysisResult
+        Sum of the selected region for each detector frame, with shape of
+        the navigation dimension.
+    intensity_real : libertem.analysis.base.AnalysisResult
+        Real part of the sum of the selected region. This is only available if the dataset
+        contains complex numbers.
+    intensity_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of the sum of the selected region. This is only available if the dataset
+        contains complex numbers.
+    intensity_angle : libertem.analysis.base.AnalysisResult
+        Phase angle of the sum of the selected region. This is only available if the dataset
+        contains complex numbers.
+    intensity_complex : libertem.analysis.base.AnalysisResult
+        Complex result of the sum of the selected region. This is only available if the dataset
+        contains complex numbers.
+    """
+    pass
+
+
 class MasksAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         return self.parameters['factories']
@@ -58,8 +127,8 @@ class MasksAnalysis(BaseMasksAnalysis):
                         desc="integrated intensity for mask %d" % idx,
                     )
                 )
-            return AnalysisResultSet(results)
-        return AnalysisResultSet([
+            return MasksResultSet(results)
+        return MasksResultSet([
             AnalysisResult(
                 raw_data=mask_result.reshape(shape),
                 visualized=visualize_simple(mask_result.reshape(shape)),

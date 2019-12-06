@@ -3,8 +3,28 @@ import numpy as np
 
 class Job(object):
     """
+    Abstract base class for Job classes.
+
+    Passing an instance of an :code:`Job` sub-class to
+    :meth:`libertem.api.Context.run` will generate a :class:`numpy.ndarray`. The
+    shape, type and content of this array is governed by the specific
+    implementation of the :code:`Job` sub-class.
+
+    .. versionchanged:: 0.3.0.dev0
+        :code:`Job` is now an abstract base job for documentation purposes
+        to hide any implementation details from the user. The previous
+        :code:`Job` base class is now called :class:`BaseJob`.
+    """
+    pass
+
+
+class BaseJob(object):
+    """
     A computation on a DataSet. Inherit from this class and implement ``get_tasks``
     to yield tasks for your specific computation.
+
+    .. versionadded:: 0.3.0.dev0
+        Renamed :code:`Job` to :code:`BaseJob`
     """
 
     def __init__(self, dataset):

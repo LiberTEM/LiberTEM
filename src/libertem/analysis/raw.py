@@ -5,6 +5,37 @@ from libertem.job.raw import PickFrameJob
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 
+class PickResultSet(AnalysisResultSet):
+    """
+    Running a :class:`PickFrameAnalysis` vial :meth:`libertem.api.Context.run`
+    returns an instance of this class.
+
+    If the dataset contains complex numbers, the regular result attribute carries the
+    absolute value of the result and additional attributes with real part, imaginary part,
+    phase and full complex result are available.
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    intensity : libertem.analysis.base.AnalysisResult
+        The specified detector frame.
+    intensity_real : libertem.analysis.base.AnalysisResult
+        Real part of the specified detector frame. This is only available if the dataset
+        contains complex numbers.
+    intensity_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of the specified detector frame. This is only available if the dataset
+        contains complex numbers.
+    intensity_angle : libertem.analysis.base.AnalysisResult
+        Phase angle of the specified detector frame. This is only available if the dataset
+        contains complex numbers.
+    intensity_complex : libertem.analysis.base.AnalysisResult
+        Complex result of the specified detector frame. This is only available if the dataset
+        contains complex numbers.
+    """
+    pass
+
+
 class PickFrameAnalysis(BaseAnalysis):
     """
     Pick a single, complete frame from a dataset

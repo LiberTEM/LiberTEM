@@ -5,7 +5,22 @@ from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
 
 class AnalysisResult(object):
     """
-    this class represents a single 2D image result
+    This class represents a single 2D image result from an Analysis.
+
+    Instances of this class are contained in an :class:`AnalysisResultSet`.
+
+    Attributes
+    ----------
+    raw_data : numpy.ndarray
+        The raw numerical data of this result
+    visualized : numpy.ndarray
+        Visualized result as :class:`numpy.ndarray` with RGB values
+    title : str
+        Title for the GUI
+    desc : str
+        Short description in the GUI
+    key : str
+        Key to identify the result in a :class:`AnalysisResultSet`
     """
     def __init__(self, raw_data, visualized, title, desc, key):
         self.raw_data = raw_data
@@ -34,6 +49,12 @@ class AnalysisResult(object):
 
 
 class AnalysisResultSet(object):
+    """
+    Base class for Analysis result sets. :meth:`libertem.api.Context.run`
+    returns an instance of this class or a subclass. Many of the subclasses are
+    just introduced to document the Analysis-specific results (keys) of the
+    result set and don't introduce new functionality.
+    """
     def __init__(self, results, raw_results=None):
         self._results = results
         self.raw_results = raw_results
@@ -64,7 +85,21 @@ class AnalysisResultSet(object):
         return self._results
 
 
-class BaseAnalysis(object):
+class Analysis(object):
+    """
+    Abstract base class for Analysis classes.
+
+    Passing an instance of an :class:`Analysis` sub-class to
+    :meth:`libertem.api.Context.run` will generate an :class:`AnalysisResultSet`.
+    The content of this result set is governed by the specific implementation of
+    the :code:`Analysis` sub-class.
+
+    .. versionadded:: 0.3.0.dev0
+    """
+    pass
+
+
+class BaseAnalysis(Analysis):
     TYPE = 'JOB'
 
     def __init__(self, dataset, parameters):

@@ -14,10 +14,34 @@ from .masks import BaseMasksAnalysis
 log = logging.getLogger(__name__)
 
 
+class RadialFourierResultSet(AnalysisResultSet):
+    """
+    Result set of a :class:`RadialFourierAnalysis`
+
+    Running a :class:`RadialFourierAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    returns an instance of this class. It contains the Fourier coefficients
+    for each bin. See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
+    available parametersand :ref:`radialfourier app` for a description of the application!
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    dominant_0, dominant_1, ..., dominant_<nbins-1> : libertem.analysis.base.AnalysisResult
+        Dominant Fourier coefficient (indicates symmetry) of the bin
+        with shape of the navigation dimension.
+    absolute_0_0, ...,absolute_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+        Absolute value of a Fourier coefficient in a given bin.
+    phase_0_0, ..., phase_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+        Phase value of a Fourier coefficient in a given bin.
+    complex_0_0, ..., complex_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+        Complex value of a Fourier coefficient in a given bin.
+    """
+    pass
+
+
 class RadialFourierAnalysis(BaseMasksAnalysis):
     '''
-    Analysis to calculate Fourier transforms of rings around the center.
-
     This can be used to characterize atomic ordering in materials, in particular for
     low intensities where Fluctualtion EM :cite:`Gibson1997` has a hard time to
     distinguish speckle from shot noise.
@@ -26,7 +50,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
     using sparse matrices in a dot product following the `definition of Fourier series
     <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>`_.
 
-    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for available parameters!
+    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for available parameters
+    and :ref:`radialfourier app` for a description of the application!
     '''
     def get_results(self, job_results):
         '''
@@ -125,7 +150,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                         )
                     )
             return sets
-        return AnalysisResultSet(resultlist, raw_results=job_results)
+        return RadialFourierResultSet(resultlist, raw_results=job_results)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

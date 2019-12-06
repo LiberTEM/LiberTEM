@@ -17,7 +17,7 @@ from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
-from libertem.analysis.base import BaseAnalysis
+from libertem.analysis.base import Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
 
@@ -131,7 +131,7 @@ class Context:
 
         Returns
         -------
-        Job : libertem.job.masks.ApplyMasksJob
+        ApplyMasksJob : libertem.job.base.Job
             When run by the Context, this Job creates a :class:`numpy.ndarray` of
             shape (n_masks, prod(ds.shape.nav))
 
@@ -198,11 +198,9 @@ class Context:
 
         Returns
         -------
-        MasksAnalysis : libertem.analysis.masks.MasksAnalysis
+        MasksAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with keys :code:`"mask_0"`, :code:`"mask_1"`, ... and shape of the
-            navigation dimension
+            :class:`libertem.analysis.masks.MasksResultSet`.
 
         Examples
         --------
@@ -231,7 +229,7 @@ class Context:
 
     def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):
         """
-        Perform a center-of-mass (first moment) analysis, possibly masked.
+        Create a center-of-mass (first moment) analysis, possibly masked.
 
         Parameters
         ----------
@@ -246,9 +244,9 @@ class Context:
 
         Returns
         -------
-        COMAnalysis : libertem.analysis.com.COMAnalysis
-            See source code of :meth:`libertem.analysis.com.COMAnalysis.get_results`
-            for the definition of the :class:`~libertem.analysis.base.AnalysisResultSet`.
+        COMAnalysis : libertem.analysis.base.Analysis
+            When run by the Context, this Analysis generates a
+            :class:`libertem.analysis.com.COMResultSet`.
         """
         if dataset.shape.nav.dims != 2:
             raise ValueError("incompatible dataset: need two navigation dimensions")
@@ -267,9 +265,9 @@ class Context:
             ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None,
             use_sparse: bool = None):
         """
-        Calculate the Fourier transform of rings around the center.
+        Create an Analysis that calculates the Fourier transform of rings around the center.
 
-        See :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` for details!
+        See :ref:`radialfourier app` for details on the method!
 
         Parameters
         ----------
@@ -290,18 +288,9 @@ class Context:
 
         Returns
         -------
-        RadialFourierAnalysis : libertem.analysis.radialfourier.RadialFourierAnalysis
+        RadialFourierAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with shape of the navigation dimension and the following keys:
-
-            * :code:`"dominant_0"`, :code:`"dominant_1"`, ..., :code:`"dominant_<nbins-1>"`
-            * :code:`"absolute_0_0"`, :code:`"absolute_0_1"`, ...,
-              :code:`"absolute_<nbins-1>_<max_order>"`
-            * :code:`"phase_0_0"`, :code:`"phase_0_1"`, ...,
-              :code:`"phase_<nbins-1>_<max_order>"`
-            * :code:`"complex_0_0"`, :code:`"complex_0_1"`, ...,
-              :code:`"complex_<nbins-1>_<max_order>"`
+            :class:`libertem.analysis.radialfourier.RadialFourierResultSet`.
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -318,7 +307,7 @@ class Context:
 
     def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None):
         """
-        Integrate over a disk (i.e. filled circle)
+        Create an Analysis that integrates over a disk (i.e. filled circle).
 
         Parameters
         ----------
@@ -333,10 +322,9 @@ class Context:
 
         Returns
         -------
-        DiskMaskAnalysis : libertem.analysis.disk.DiskMaskAnalysis
+        DiskMaskAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with key :code:`"intensity"` and shape of the navigation dimension
+            :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -349,7 +337,7 @@ class Context:
     def create_ring_analysis(
             self, dataset, cx: int = None, cy: int = None, ri: int = None, ro: int = None):
         """
-        Integrate over a ring
+        Create an Analysis that integrates over a ring.
 
         Parameters
         ----------
@@ -366,10 +354,9 @@ class Context:
 
         Returns
         -------
-        RingMaskAnalysis : libertem.analysis.ring.RingMaskAnalysis
+        RingMaskAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with key :code:`"intensity"` and shape of the navigation dimension
+            :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
@@ -381,14 +368,13 @@ class Context:
 
     def create_point_analysis(self, dataset, x: int = None, y: int = None):
         """
-        Select the pixel with coords (y, x) from each frame
+        Create an Analysis that selects the pixel with coords (y, x) from each frame
 
         Returns
         -------
-        PointMaskAnalysis : libertem.analysis.point.PointMaskAnalysis
+        PointMaskAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with key :code:`"intensity"` and shape of the navigation dimension
+            :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
         if dataset.shape.nav.dims > 2:
             raise ValueError("incompatible dataset: need at most two navigation dimensions")
@@ -405,7 +391,8 @@ class Context:
 
     def create_sum_analysis(self, dataset):
         """
-        Sum of all signal elements
+        Create an Analysis that sums all signal elements along the navigation
+        dimension, preserving the signal dimension.
 
         Parameters
         ----------
@@ -414,16 +401,15 @@ class Context:
 
         Returns
         -------
-        SumAnalysis : libertem.analysis.sum.SumAnalysis
+        SumAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with key :code:`"intensity"` and shape of the signal dimension
+            :class:`libertem.analysis.sum.SumResultSet`.
         """
         return SumAnalysis(dataset=dataset, parameters={})
 
     def create_pick_job(self, dataset, origin: Tuple[int], shape: Tuple[int] = None) -> np.ndarray:
         """
-        Pick raw data from `origin` with the size defined in `shape`.
+        Create a job that picks raw data from `origin` with the size defined in `shape`.
 
         Note
         ----
@@ -447,7 +433,7 @@ class Context:
 
         Returns
         -------
-        PickFrameJob : libertem.job.raw.PickFrameJob
+        PickFrameJob : libertem.job.base.Job
             A job that returns the specified raw data as :class:`numpy.ndarray`
 
         Examples
@@ -496,10 +482,10 @@ class Context:
 
     def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None):
         """
-        Pick a single frame / signal element from (z, y, x). Number of parameters
-        must match number of navigation dimensions in the dataset, for example if
-        you have a 4D dataset with two signal dimensions and two navigation dimensions,
-        you need to specify x and y.
+        Create an Analysis that picks a single frame / signal element from (z, y, x).
+        The number of parameters must match number of navigation dimensions in the dataset,
+        for example if you have a 4D dataset with two signal dimensions and two navigation
+        dimensions, you need to specify x and y.
 
         Parameters
         ----------
@@ -514,10 +500,9 @@ class Context:
 
         Returns
         -------
-        PickFrameAnalysis : libertem.analysis.raw.PickFrameAnalysis
+        PickFrameAnalysis : libertem.analysis.base.Analysis
             When run by the Context, this Analysis generates a
-            :class:`libertem.analysis.base.AnalysisResultSet`
-            with key :code:`"intensity"` and shape of the signal dimension
+            :class:`libertem.analysis.raw.PickResultSet`.
 
         Examples
         --------
@@ -535,9 +520,10 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, BaseAnalysis], roi=None):
+    def run(self, job: Union[Job, Analysis], roi=None):
         """
-        Run the given `Job` or `Analysis` and return the result data.
+        Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
+        and return the result data.
 
         Parameters
         ----------

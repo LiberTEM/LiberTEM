@@ -14,7 +14,7 @@ Job API
 ~~~~~~~
 
 .. automodule:: libertem.job.base
-   :members:
+   :members: Job
    :special-members: __init__
 
 MaskContainer and ApplyMaskjob
@@ -25,44 +25,28 @@ highly efficient mask application operations, such as virtual detector, center o
 feature vector calculations. In the future, they might be migrated to the :ref:`user-defined functions` API.
 
 .. automodule:: libertem.job.masks
-   :members:
-   :special-members: __init__
-
-PickFrameJob
-............
-
-.. automodule:: libertem.job.raw
-   :members:
+   :members: MaskContainer
    :special-members: __init__
 
 Analysis API
 ~~~~~~~~~~~~
 
 .. automodule:: libertem.analysis.base
-   :members:
-   :undoc-members:
+   :members: Analysis, AnalysisResult, AnalysisResultSet
+   :special-members: __init__
+
+.. automodule:: libertem.analysis.masks
+   :members: MasksResultSet, SingleMaskResultSet
    :special-members: __init__
 
 .. automodule:: libertem.analysis.com
-   :members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.disk
-   :members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.ring
-   :members:
-   :special-members: __init__
-
-.. automodule:: libertem.analysis.point
-   :members:
+   :members: COMResultSet
    :special-members: __init__
 
 .. automodule:: libertem.analysis.sum
-   :members:
+   :members: SumResultSet
    :special-members: __init__
 
 .. automodule:: libertem.analysis.raw
-   :members:
+   :members: PickResultSet
    :special-members: __init__

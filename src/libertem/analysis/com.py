@@ -17,6 +17,43 @@ def divergence(arr):
                            for i in range(len(arr))])
 
 
+class COMResultSet(AnalysisResultSet):
+    """
+    Running a :class:`COMAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    returns an instance of this class.
+
+    This analysis is usually applied to datasets with real values. If the dataset contains
+    complex numbers, this result contains the keys :attr:`x_real`, :attr:`y_real`,
+    :attr:`x_imag`, :attr:`y_imag` instead of the vector field.
+
+    .. versionadded:: 0.3.0.dev0
+
+    Attributes
+    ----------
+    field : libertem.analysis.base.AnalysisResult
+        Center of mass shift relative to the center given to the analysis within the given radius
+        as a vector field with components (x, y). The visualized result uses a
+        cubehelix color wheel.
+    magnitude : libertem.analysis.base.AnalysisResult
+        Magnitude of the center of mass shift.
+    divergence : libertem.analysis.base.AnalysisResult
+        Divergence of the center of mass vector field at a given point
+    x : libertem.analysis.base.AnalysisResult
+        X component of the center of mass shift
+    y : libertem.analysis.base.AnalysisResult
+        Y component of the center of mass shift
+    x_real : libertem.analysis.base.AnalysisResult
+        Real part of the x component of the center of mass shift (complex dataset only)
+    y_real : libertem.analysis.base.AnalysisResult
+        Real part of y component of the center of mass shift (complex dataset only)
+    x_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of the x component of the center of mass shift (complex dataset only)
+    y_imag : libertem.analysis.base.AnalysisResult
+        Imaginary part of y component of the center of mass shift (complex dataset only)
+    """
+    pass
+
+
 class COMAnalysis(BaseMasksAnalysis):
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
@@ -38,7 +75,7 @@ class COMAnalysis(BaseMasksAnalysis):
             x_real, x_imag = np.real(x_centers), np.imag(x_centers)
             y_real, y_imag = np.real(y_centers), np.imag(y_centers)
 
-            return AnalysisResultSet([
+            return COMResultSet([
                 AnalysisResult(raw_data=x_real, visualized=visualize_simple(x_real),
                        key="x_real", title="x [real]", desc="x component of the center"),
                 AnalysisResult(raw_data=y_real, visualized=visualize_simple(y_real),
@@ -53,7 +90,7 @@ class COMAnalysis(BaseMasksAnalysis):
             d = divergence([x_centers, y_centers])
             m = np.sqrt(x_centers**2 + y_centers**2)
 
-            return AnalysisResultSet([
+            return COMResultSet([
                 AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
                        key="field", title="field", desc="cubehelix colorwheel visualization"),
                 AnalysisResult(raw_data=m, visualized=visualize_simple(m),

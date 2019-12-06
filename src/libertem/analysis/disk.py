@@ -2,8 +2,8 @@ import numpy as np
 
 from libertem import masks
 from libertem.viz import visualize_simple
-from .base import AnalysisResult, AnalysisResultSet
-from .masks import BaseMasksAnalysis
+from .base import AnalysisResult
+from .masks import BaseMasksAnalysis, SingleMaskResultSet
 
 
 class DiskMaskAnalysis(BaseMasksAnalysis):
@@ -12,7 +12,7 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
         shape = tuple(self.dataset.shape.nav)
 
         if data.dtype.kind == 'c':
-            return AnalysisResultSet(
+            return SingleMaskResultSet(
                 self.get_complex_results(
                     data.reshape(shape),
                     key_prefix='intensity',
@@ -20,7 +20,7 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
                     desc="intensity of the integration over the selected disk",
                 )
             )
-        return AnalysisResultSet([
+        return SingleMaskResultSet([
             AnalysisResult(
                 raw_data=data.reshape(shape),
                 visualized=visualize_simple(data.reshape(shape)),

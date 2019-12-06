@@ -24,8 +24,7 @@ Radial Fourier Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: libertem.analysis.radialfourier
-   :members:
-   :undoc-members:
+   :members: RadialFourierResultSet
    :special-members: __init__
 
 Correlation-based peak finding and strain mapping

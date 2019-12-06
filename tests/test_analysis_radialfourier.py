@@ -39,6 +39,15 @@ def test_smoke_large(ds_random, lt_ctx):
     results = lt_ctx.run(analysis)
 
 
+def test_smoke_two(ds_random, lt_ctx):
+    analysis = lt_ctx.create_radial_fourier_analysis(
+        dataset=ds_random, cx=0, cy=0, ri=0, ro=2, n_bins=2, max_order=2
+    )
+    results = lt_ctx.run(analysis)
+    # access result to actually create result list:
+    results.complex_1_2
+
+
 def test_smoke_defaults(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random

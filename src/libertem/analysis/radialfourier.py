@@ -45,7 +45,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             angle = np.angle(job_results)
-            threshold_map = absolute[:, 1:, ...].reshape((n_bins, -1)).max(axis=1) * 0.5
+            threshold_map = absolute[:, 1:, ...].reshape((n_bins, -1)).max(axis=1) * 0.2
             below_threshold = np.all(
                 absolute[:, 1:, ...] < threshold_map[:, np.newaxis, np.newaxis, np.newaxis],
                 axis=1

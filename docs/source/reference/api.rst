@@ -17,12 +17,12 @@ Job API
    :members: Job
    :special-members: __init__
 
-MaskContainer and ApplyMaskjob
-..............................
+MaskContainer
+.............
 
-:class:`libertem.job.masks.MaskContainer` and :class:`libertem.job.masks.ApplyMasksJob` allow to implement
-highly efficient mask application operations, such as virtual detector, center of mass or
-feature vector calculations. In the future, they might be migrated to the :ref:`user-defined functions` API.
+:class:`libertem.job.masks.MaskContainer` helps to implement highly efficient
+mask application operations, such as virtual detector, center of mass or feature
+vector calculations.
 
 .. automodule:: libertem.job.masks
    :members: MaskContainer

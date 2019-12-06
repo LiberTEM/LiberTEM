@@ -534,7 +534,10 @@ class Context:
         -------
         result : numpy.ndarray or libertem.analysis.base.AnalysisResultSet
             Running a Job returns a :class:`numpy.ndarray`, running
-            an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`
+            an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`.
+            See the matching :code:`create_*_analysis` function for documentation
+            of the specific AnalysisResultSet subclass or :class:`numpy.ndarray` that
+            is being returned.
         """
         analysis = None
         if hasattr(job, "get_job"):
@@ -580,8 +583,10 @@ class Context:
         -------
         dict
             Return value of the UDF containing the result buffers of
-            type :class:`libertem.common.buffers.BufferWrapper`.
-            Access the underlying numpy array using the
+            type :class:`libertem.common.buffers.BufferWrapper`. Note that a
+            :class:`~libertem.common.buffers.BufferWrapper` can be used like
+            a :class:`numpy.ndarray` in many cases because it implements
+            :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)

@@ -60,3 +60,7 @@ def test_same_offset(lt_ctx):
     files = glob.glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))
     ds = lt_ctx.load("dm", files=files, same_offset=True)
     ds.check_valid()
+
+
+def test_repr(default_dm):
+    assert repr(default_dm) == "<DMDataSet for a stack of 10 files>"

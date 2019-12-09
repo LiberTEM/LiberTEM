@@ -283,4 +283,4 @@ class DMDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<DMDataSet for %s>" % (self._path,)
+        return "<DMDataSet for a stack of %d files>" % (len(self._get_files()),)

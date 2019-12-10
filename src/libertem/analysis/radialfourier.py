@@ -21,21 +21,23 @@ class RadialFourierResultSet(AnalysisResultSet):
     Running a :class:`RadialFourierAnalysis` via :meth:`libertem.api.Context.run` on a dataset
     returns an instance of this class. It contains the Fourier coefficients
     for each bin. See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
-    available parametersand :ref:`radialfourier app` for a description of the application!
+    available parameters and :ref:`radialfourier app` for a description of the application!
 
     .. versionadded:: 0.3.0.dev0
 
     Attributes
     ----------
-    dominant_0, dominant_1, ..., dominant_<nbins-1> : libertem.analysis.base.AnalysisResult
-        Dominant Fourier coefficient (indicates symmetry) of the bin
-        with shape of the navigation dimension.
-    absolute_0_0, ...,absolute_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
-        Absolute value of a Fourier coefficient in a given bin.
-    phase_0_0, ..., phase_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
-        Phase value of a Fourier coefficient in a given bin.
-    complex_0_0, ..., complex_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
-        Complex value of a Fourier coefficient in a given bin.
+    dominant_0, absolute_0_0, absolute_0_1, ..., absolute_0_<max_order>,\
+    phase_0_0, ..., phase_0_<max_order>,\
+    complex_0_0, ..., complex_0_<max_order>;\
+    dominant_1, absolute_1_0, ..., complex_1_<max_order>;\
+    dominant_<nbins-1>, ..., complex_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+        Results for each bin: dominant Fourier coefficient (indicates symmetry),
+        absolute values of each Fourier coefficient,
+        phase values of each Fourier coefficient, complex values of each Fourier coefficient.
+        The results have the shape of the navigation dimension.
+    raw_results : numpy.ndarray
+        Complex numbers, shape (<n_bins>, <max_order + 1>, *(<ds.shape.nav>))
     """
     pass
 

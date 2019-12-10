@@ -49,31 +49,24 @@ class MasksResultSet(AnalysisResultSet):
     If any of the masks or the dataset contain complex numbers, the regular mask results
     attributes carry the absolute value of the results, and additional attributes with real
     part, imaginary part, phase and full complex result are available.
+    .
 
     .. versionadded:: 0.3.0.dev0
 
     Attributes
     ----------
     mask_0, mask_1, ..., mask_<n> : libertem.analysis.base.AnalysisResult
-        Results of the element-wise multiplication and sum of an individual mask with
-        each detector frame. Each mask result has the shape of the navigation dimension. This
-        contains the absolute value of the result if dataset or masks contain complex numbers.
-    mask_0_real, mask_1_real, ..., mask_<n>_real : libertem.analysis.base.AnalysisResult
-        Real part of the element-wise multiplication and sum of an individual mask with each
-        detector frame. Each mask result has the shape of the navigation dimension. This is
-        only available if masks or dataset contain complex numbers.
-    mask_0_imag, mask_1_imag, ..., mask_<n>_imag : libertem.analysis.base.AnalysisResult
-        Imaginary part of the element-wise multiplication and sum of an individual mask with each
-        detector frame. Each mask result has the shape of the navigation dimension. This is
-        only available if masks or dataset contain complex numbers.
-    mask_0_angle, mask_1_angle, ..., mask_<n>_angle : libertem.analysis.base.AnalysisResult
-        Phase angle of the element-wise multiplication and sum of an individual mask with each
-        detector frame. Each mask result has the shape of the navigation dimension. This is
-        only available if masks or dataset contain complex numbers.
-    mask_0_complex, mask_1_complex, ..., mask_<n>_complex : libertem.analysis.base.AnalysisResult
-        Complex result of the element-wise multiplication and sum of an individual mask with each
-        detector frame, visualized with a colorwheel. Each mask result has the shape of the
-        navigation dimension. This is only available if masks or dataset contain complex numbers.
+        For dataset and masks containing only real numbers:
+        Results of the element-wise multiplication and sum of each individual mask with
+        each detector frame. Each mask result has the shape of the navigation dimension.
+        These keys contain the absolute value of the result if dataset or masks contain
+        complex numbers.
+    mask_0, mask_0_real, mask_0_imag, mask_0_angle, mask_0_complex,\
+    mask_1, mask_1_real, ...,\
+    mask_<n>, ..., mask_<n>_complex : libertem.analysis.base.AnalysisResult
+        If masks or dataset contain complex numbers: Absolute, real part, imaginary part,
+        phase angle, complex result of the element-wise multiplication and sum of each individual
+        mask with each detector frame. Each mask result has the shape of the navigation dimension.
     """
     pass
 
@@ -93,19 +86,20 @@ class SingleMaskResultSet(AnalysisResultSet):
     ----------
     intensity : libertem.analysis.base.AnalysisResult
         Sum of the selected region for each detector frame, with shape of
-        the navigation dimension.
+        the navigation dimension. Absolute of the result if the dataset or mask contains
+        complex numbers.
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of the selected region. This is only available if the dataset
-        contains complex numbers.
+        or mask contains complex numbers.
     intensity_imag : libertem.analysis.base.AnalysisResult
         Imaginary part of the sum of the selected region. This is only available if the dataset
         contains complex numbers.
     intensity_angle : libertem.analysis.base.AnalysisResult
         Phase angle of the sum of the selected region. This is only available if the dataset
-        contains complex numbers.
+        or mask contains complex numbers.
     intensity_complex : libertem.analysis.base.AnalysisResult
         Complex result of the sum of the selected region. This is only available if the dataset
-        contains complex numbers.
+        or mask contains complex numbers.
     """
     pass
 

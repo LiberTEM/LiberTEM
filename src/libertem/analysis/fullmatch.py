@@ -21,7 +21,7 @@ class FullMatcher(grm.Matcher):
     Include the ability to guess grid parameters from a point cloud. This is separated
     from the other code since it currently only works with :class:`~hdbscan.HDBSCAN`,
     which can be problematic
-    to install on some platforms. FOr that reason it is an optional dependency.
+    to install on some platforms. For that reason it is an optional dependency.
     '''
     def __init__(
             self, tolerance=3, min_weight=0.1, min_match=3, min_angle=np.pi/10,
@@ -91,7 +91,6 @@ class FullMatcher(grm.Matcher):
     def full_match(
             self, centers, zero=None, cand=None,
             refineds=None, peak_values=None, peak_elevations=None):
-        # FIXME check formatting when included in documentation
         '''
         This function extracts a list of Match objects as well two PointSelection objects
         for unmatched and weak points from correlation_result and zero point.
@@ -99,7 +98,6 @@ class FullMatcher(grm.Matcher):
 
         Parameters
         ----------
-
         centers : numpy.ndarray
             numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks. This would typically
             be extracted with :meth:`~libertem.udf.blobfinder.get_peaks`
@@ -118,7 +116,6 @@ class FullMatcher(grm.Matcher):
 
         Returns
         -------
-
         Tuple[List[libertem.analysis.gridmatching.Match, ...],\
         libertem.analysis.gridmatching.PointSelection,\
         libertem.analysis.gridmatching.PointSelection]

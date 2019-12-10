@@ -19,7 +19,8 @@ class PickResultSet(AnalysisResultSet):
     Attributes
     ----------
     intensity : libertem.analysis.base.AnalysisResult
-        The specified detector frame.
+        The specified detector frame. Absolute value if the dataset
+        contains complex numbers.
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the specified detector frame. This is only available if the dataset
         contains complex numbers.

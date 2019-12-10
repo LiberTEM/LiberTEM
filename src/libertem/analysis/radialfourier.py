@@ -44,16 +44,19 @@ class RadialFourierResultSet(AnalysisResultSet):
 
 class RadialFourierAnalysis(BaseMasksAnalysis):
     '''
-    This can be used to characterize atomic ordering in materials, in particular for
-    low intensities where Fluctualtion EM :cite:`Gibson1997` has a hard time to
-    distinguish speckle from shot noise.
+    The Radial Fourier Analysis :cite:`6980942` can be used to characterize
+    atomic ordering in materials, in particular for low intensities where
+    Fluctualtion EM :cite:`Gibson1997` has a hard time to distinguish speckle
+    from shot noise.
 
-    This analysis doesn't use fast Fourier transforms, but calculates the Fourier coefficients
-    using sparse matrices in a dot product following the `definition of Fourier series
+    This analysis doesn't use fast Fourier transforms, but calculates the
+    Fourier coefficients using sparse matrices in a dot product following the
+    `definition of Fourier series
     <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>`_.
 
-    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for available parameters
-    and :ref:`radialfourier app` for a description of the application!
+    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
+    available parameters and :ref:`radialfourier app` for a description of the
+    application!
     '''
     def get_results(self, job_results):
         '''

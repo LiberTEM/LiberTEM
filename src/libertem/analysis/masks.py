@@ -49,7 +49,6 @@ class MasksResultSet(AnalysisResultSet):
     If any of the masks or the dataset contain complex numbers, the regular mask results
     attributes carry the absolute value of the results, and additional attributes with real
     part, imaginary part, phase and full complex result are available.
-    .
 
     .. versionadded:: 0.3.0.dev0
 

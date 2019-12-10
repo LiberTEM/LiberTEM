@@ -7,7 +7,7 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 class PickResultSet(AnalysisResultSet):
     """
-    Running a :class:`PickFrameAnalysis` vial :meth:`libertem.api.Context.run`
+    Running a :class:`PickFrameAnalysis` via :meth:`libertem.api.Context.run`
     returns an instance of this class.
 
     If the dataset contains complex numbers, the regular result attribute carries the

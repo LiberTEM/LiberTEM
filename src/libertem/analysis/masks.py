@@ -43,7 +43,7 @@ class BaseMasksAnalysis(BaseAnalysis):
 
 class MasksResultSet(AnalysisResultSet):
     """
-    Running a :class:`MasksAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    Running a :class:`MasksAnalysis` via :meth:`libertem.api.Context.run` on a dataset
     returns an instance of this class.
 
     If any of the masks or the dataset contain complex numbers, the regular mask results

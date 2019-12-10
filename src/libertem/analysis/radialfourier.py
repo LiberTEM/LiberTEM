@@ -18,7 +18,7 @@ class RadialFourierResultSet(AnalysisResultSet):
     """
     Result set of a :class:`RadialFourierAnalysis`
 
-    Running a :class:`RadialFourierAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    Running a :class:`RadialFourierAnalysis` via :meth:`libertem.api.Context.run` on a dataset
     returns an instance of this class. It contains the Fourier coefficients
     for each bin. See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
     available parametersand :ref:`radialfourier app` for a description of the application!

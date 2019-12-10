@@ -60,7 +60,7 @@ class AnalysisResultSet(object):
     1. As a container class with the :attr:`AnalysisResult.key` properties as attributes
        of type :class:`AnalysisResult`.
     2. As a list of :class:`AnalysisResult` objects.
-    3. As an iterator of :class:`AnalysisResult` objects.
+    3. As an iterator of :class:`AnalysisResult` objects (since 0.3.0.dev0).
     4. As a dictionary of :class:`AnalysisResult` objects with the :attr:`AnalysisResult.key`
        properties as keys.
 
@@ -102,6 +102,7 @@ class AnalysisResultSet(object):
     mask 0
 
     >>> # As an iterator
+    >>> # New since 0.3.0.dev0
     >>> for m in result:
     ...     print(m.title)
     mask 0

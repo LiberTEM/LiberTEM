@@ -37,7 +37,7 @@ class RadialFourierResultSet(AnalysisResultSet):
         phase values of each Fourier coefficient, complex values of each Fourier coefficient.
         The results have the shape of the navigation dimension.
     raw_results : numpy.ndarray
-        Complex numbers, shape (<n_bins>, <max_order + 1>, *(<ds.shape.nav>))
+        Complex numbers, shape (<n_bins>, <max_order + 1>, \\*(<ds.shape.nav>))
     """
     pass
 

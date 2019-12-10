@@ -102,31 +102,31 @@ class Context:
 
         Parameters
         ----------
-        factories
+        factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
             Function or list of functions that take no arguments and create masks. The returned
             masks can be
             numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
             factories should not reference large objects because they can create significant
             overheads when they are pickled and unpickled.
-        dataset
+        dataset : libertem.io.dataset.base.DataSet
             dataset to work on
-        use_sparse
+        use_sparse : bool or None
             * None (default): Use sparse matrix multiplication if all factory functions return a \
             sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        mask_count
-            (optional) Specify the number of masks if a single factory function is used so that the
+        mask_count : int, optional
+            Specify the number of masks if a single factory function is used so that the
             number of masks can be determined without calling the factory function.
-        mask_dtype
-            (optional) Specify the dtype of the masks so that mask dtype
+        mask_dtype : numpy.dtype, optional
+            Specify the dtype of the masks so that mask dtype
             can be determined without calling the mask factory functions. This can be used to
             override the mask dtype in the result dtype determination. As an example, setting
             this to np.float32 means that masks of type float64 will not switch the calculation
             and result dtype to float64 or complex128.
-        dtype
-            (optional) Specify the dtype to do the calculation in. Integer dtypes are possible if
+        dtype : numpy.dtype, optional
+            Specify the dtype to do the calculation in. Integer dtypes are possible if
             the numpy casting rules allow this for source and mask data.
 
         Returns
@@ -169,31 +169,31 @@ class Context:
 
         Parameters
         ----------
-        factories
+        factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
             Function or list of functions that take no arguments and create masks. The returned
             masks can be numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices.
             The mask factories should not reference large objects because they can create
             significant overheads when they are pickled and unpickled.
             If a single function is specified, the first dimension is interpreted as the mask index.
-        dataset
+        dataset : libertem.io.dataset.base.DataSet
             dataset to work on
-        use_sparse
+        use_sparse : bool or None
             * None (default): Use sparse matrix multiplication if all factory functions return a \
             sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
             multiplication
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
-        mask_count
-            (optional) Specify the number of masks if a single factory function is used so that the
+        mask_count : int, optional
+            Specify the number of masks if a single factory function is used so that the
             number of masks can be determined without calling the factory function.
-        mask_dtype
-            (optional) Specify the dtype of the masks so that mask dtype
+        mask_dtype : numpy.dtype, optional
+            Specify the dtype of the masks so that mask dtype
             can be determined without calling the mask factory functions. This can be used to
             override the mask dtype in the result dtype determination. As an example, setting
             this to np.float32 means that masks of type float64 will not switch the calculation
             and result dtype to float64 or complex128.
-        dtype
-            (optional) Specify the dtype to do the calculation in. Integer dtypes are possible if
+        dtype : numpy.dtype, optional
+            Specify the dtype to do the calculation in. Integer dtypes are possible if
             the numpy casting rules allow this for source and mask data.
 
         Returns

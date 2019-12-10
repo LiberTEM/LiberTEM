@@ -19,7 +19,7 @@ def divergence(arr):
 
 class COMResultSet(AnalysisResultSet):
     """
-    Running a :class:`COMAnalysis` vial :meth:`libertem.api.Context.run` on a dataset
+    Running a :class:`COMAnalysis` via :meth:`libertem.api.Context.run` on a dataset
     returns an instance of this class.
 
     This analysis is usually applied to datasets with real values. If the dataset contains

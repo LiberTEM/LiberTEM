@@ -21,7 +21,7 @@ class SumUDF(UDF):
 
 class SumResultSet(AnalysisResultSet):
     """
-    Running a :class:`SumAnalysis` vial :meth:`libertem.api.Context.run`
+    Running a :class:`SumAnalysis` via :meth:`libertem.api.Context.run`
     returns an instance of this class.
 
     If the dataset contains complex numbers, the regular result attribute carries the

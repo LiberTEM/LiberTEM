@@ -14,7 +14,7 @@ class AnalysisResult(object):
     raw_data : numpy.ndarray
         The raw numerical data of this result
     visualized : numpy.ndarray
-        Visualized result as :class:`numpy.ndarray` with RGB values
+        Visualized result as :class:`numpy.ndarray` with RGB or RGBA values
     title : str
         Title for the GUI
     desc : str
@@ -54,6 +54,62 @@ class AnalysisResultSet(object):
     returns an instance of this class or a subclass. Many of the subclasses are
     just introduced to document the Analysis-specific results (keys) of the
     result set and don't introduce new functionality.
+
+    The contents of an :class:`AnalysisResultSet` can be addressed in four different ways:
+
+    1. As a container class with the :attr:`AnalysisResult.key` properties as attributes
+       of type :class:`AnalysisResult`.
+    2. As a list of :class:`AnalysisResult` objects.
+    3. As an iterator of :class:`AnalysisResult` objects.
+    4. As a dictionary of :class:`AnalysisResult` objects with the :attr:`AnalysisResult.key`
+       properties as keys.
+
+    This allows to implement generic result handling code for an Analysis, for example GUI display,
+    as well as specific code for particular Analysis subclasses.
+
+    Attributes
+    ----------
+    raw_results
+        Raw results from the underlying numerical processing, if available, otherwise None.
+
+    Examples
+    --------
+    >>> mask_shape = tuple(dataset.shape.sig)
+
+    >>> def m0():
+    ...    return np.ones(shape=mask_shape)
+
+    >>> def m1():
+    ...     result = np.zeros(shape=mask_shape)
+    ...     result[0,0] = 1
+    ...     return result
+
+    >>> job = ctx.create_mask_analysis(
+    ...     dataset=dataset, factories=[m0, m1]
+    ... )
+
+    >>> result = ctx.run(job)
+
+    >>> # As an object with attributes
+    >>> print(result.mask_0.title)
+    mask 0
+
+    >>> print(result.mask_1.title)
+    mask 1
+
+    >>> # As a list
+    >>> print(result[0].title)
+    mask 0
+
+    >>> # As an iterator
+    >>> for m in result:
+    ...     print(m.title)
+    mask 0
+    mask 1
+
+    >>> # As a dictionary
+    >>> print(result['mask_1'].title)
+    mask 1
     """
     def __init__(self, results, raw_results=None):
         self._results = results
@@ -83,6 +139,9 @@ class AnalysisResultSet(object):
         if callable(self._results):
             self._results = self._results()
         return self._results
+
+    def __iter__(self):
+        return iter(self.results)
 
 
 class Analysis(object):

@@ -22,3 +22,5 @@ def test_result_set():
     assert results.test == result
     assert len(results) == 1
     assert results[0] == result
+    for item in results:
+        assert item == result

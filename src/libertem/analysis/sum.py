@@ -34,7 +34,8 @@ class SumResultSet(AnalysisResultSet):
     ----------
     intensity : libertem.analysis.base.AnalysisResult
         Sum of all detector frames along the navigation dimension,
-        preserving the signal dimension.
+        preserving the signal dimension. Absolute value of the sum if the dataset
+        contains complex numbers.
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of all detector frames along the navigation dimension,
         preserving the signal dimension. This is only available if the dataset

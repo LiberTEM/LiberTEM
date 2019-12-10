@@ -67,10 +67,11 @@ contrast between amorphous and crystalline regions if the detector has a high
 resolution, and/or if only low intensity is scattered into the region of
 interest.
 
-The Radial Fourier Series Analysis solves this problem by calculating a Fourier
-series in a ring-shaped region instead of just evaluating the standard
-deviation. The angle of a pixel relative to the user-defined center point of the
-diffraction pattern is used as a phase angle for the Fourier series.
+The Radial Fourier Series Analysis :cite:`6980942` solves this problem by
+calculating a Fourier series in a ring-shaped region instead of just evaluating
+the standard deviation. The angle of a pixel relative to the user-defined center
+point of the diffraction pattern is used as a phase angle for the Fourier
+series.
 
 Since `diffraction patterns usually show characteristic
 <http://xrayweb.chem.ou.edu/notes/symmetry.html>`_ `symmetries

@@ -124,9 +124,8 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
         min_dist = 1
     coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
     udf = FeatureVecMakerUDF(
-        delta=delta, n_peaks=n_peaks, center=center, rad_in=rad_in, rad_out=rad_out,
-        min_dist=min_dist, savg=savg, coordinates=coordinates
-        )
+        delta=delta, savg=savg, coordinates=coordinates
+    )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     return (pass_results, coordinates)

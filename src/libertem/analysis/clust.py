@@ -18,15 +18,10 @@ class ClusterAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
     def get_udf(self):
-        n_peaks = self.parameters["n_peaks"]
-        center = (self.parameters["cy"], self.parameters["cx"])
-        rad_in = self.parameters["ri"]
-        rad_out = self.parameters["ro"]
-        delta = self.parameters["delta"]
-        min_dist = self.parameters["min_dist"]
-        return feature.FeatureVecMakerUDF(
-            n_peaks=n_peaks,  delta=delta, min_dist=min_dist,
-            center=center, rad_in=rad_in, rad_out=rad_out)
+        # FIXME: we don't have all parameters available here to actually construct
+        # a useful udf instance - this should be optional for Analysis subclasses
+        # that implement the `controller` method
+        return None
 
     def get_udf_results(self, udf_results, roi):
         n_clust = self.parameters["n_clust"]
@@ -103,8 +98,8 @@ class ClusterAnalysis(BaseAnalysis):
         coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
 
         udf = feature.FeatureVecMakerUDF(
-            delta=delta, savg=savg, coordinates=coordinates,
-            center=center, rad_in=rad_in, rad_out=rad_out, n_peaks=n_peaks, min_dist=min_dist)
+            delta=delta, savg=savg, coordinates=coordinates
+        )
 
         result_iter = UDFRunner(udf).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id

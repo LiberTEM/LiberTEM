@@ -172,6 +172,11 @@ def auto_ds(doctest_namespace):
 
 
 @pytest.fixture(autouse=True)
+def auto_libs(doctest_namespace):
+    doctest_namespace["np"] = np
+
+
+@pytest.fixture(autouse=True)
 def auto_libertem(doctest_namespace):
     import libertem
     import libertem.utils

@@ -15,7 +15,8 @@ class AutoUDF(UDF):
     '''
     def __init__(self, *args, **kwargs):
         '''
-        Parameters:
+        Parameters
+        ----------
 
         f:
             Function that accepts a frame as a single parameter. It will

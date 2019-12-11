@@ -15,7 +15,7 @@ Fluctuation EM
 
 .. automodule:: libertem.udf.FEM
    :members:
-   :undoc-members:
+   :exclude-members: get_result_buffers, get_task_data
    :special-members: __init__
 
 .. _`radial fourier api`:
@@ -40,8 +40,6 @@ using the :ref:`user-defined functions` interface.
 
 .. automodule:: libertem.udf.blobfinder
    :members:
-   :undoc-members:
-   :inherited-members:
    :special-members: __init__
 
 .. _`matching api`:

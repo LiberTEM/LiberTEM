@@ -6,6 +6,39 @@ from skimage.feature import peak_local_max
 
 
 class FeatureVecMakerUDF(UDF):
+    """
+    Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
+    positions
+    """
+
+    def __init__(self, coordinates, delta, savg):
+        """
+        Parameters
+        ----------
+
+        coordinates: np.array
+            Array of frame coordinates (i.e. shape (N, 2) for N coords) which should be
+            checked for peak intensity
+
+        savg: np.array
+            Reference image, usually the mean of all frames (or mean of all frames in a ROI)
+
+        delta: float
+            Relative intensity difference between current frame and reference
+            image for decision making for feature vector value
+            (delta = (x-ref) / ref, so, normally, value should be in range [0,1])
+
+        Examples
+        --------
+        >>> coords = np.array([[1, 2], [3, 4], [5, 6]])
+        >>> savg = np.random.randn(16, 16)  # in real usage should be mean of all frames
+        >>> udf = FeatureVecMakerUDF(delta=0.5, coordinates=coords, savg=savg)
+        >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+        >>> np.array(result["feature_vec"]).shape
+        (16, 16, 3)
+        """
+        super().__init__(coordinates=coordinates, delta=delta, savg=savg)
+
     def get_result_buffers(self):
         coordinates = self.params.coordinates
         return {
@@ -30,6 +63,7 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
     """
     Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
     positions
+
     Parameters
     ----------
     ctx: Context

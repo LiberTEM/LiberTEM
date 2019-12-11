@@ -4,7 +4,20 @@ from libertem.udf import UDF
 
 
 class LogsumUDF(UDF):
-    # FIXME dummy __init__ for docstring
+    """
+    Sum up logscaled frames
+
+    In comparison to log-scaling the sum, this highlights regions with slightly higher
+    intensity that appear in may frames in relation to very high intensity in a few frames.
+
+    Examples
+    --------
+    >>> udf = LogsumUDF()
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+    >>> np.array(result["logsum"]).shape
+    (16, 16)
+    """
+
     def get_result_buffers(self):
         return {
             'logsum': self.buffer(

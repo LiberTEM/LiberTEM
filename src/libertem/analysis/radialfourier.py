@@ -44,10 +44,11 @@ class RadialFourierResultSet(AnalysisResultSet):
 
 class RadialFourierAnalysis(BaseMasksAnalysis):
     '''
-    The Radial Fourier Analysis :cite:`6980942` can be used to characterize
+    The Radial Fourier Analysis can be used to characterize
     atomic ordering in materials, in particular for low intensities where
     Fluctualtion EM :cite:`Gibson1997` has a hard time to distinguish speckle
-    from shot noise.
+    from shot noise. Reference :cite:`6980942` describes a previous application
+    of this method to characterize features in images.
 
     This analysis doesn't use fast Fourier transforms, but calculates the
     Fourier coefficients using sparse matrices in a dot product following the

@@ -223,6 +223,11 @@ class CorrelationUDF(UDF):
         super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
 
     def get_result_buffers(self):
+        '''
+        The common buffers for all correlation methods are :code:`centers`,
+        :code:`refineds`, :code:`peak_values`, :code:`peak_elevations`. See
+        source code for details of the buffer declaration.
+        '''
         num_disks = len(self.params.peaks)
 
         return {
@@ -241,6 +246,13 @@ class CorrelationUDF(UDF):
         }
 
     def output_buffers(self):
+        '''
+        This function allows abstraction of the result buffers from
+        the default implementation in :meth:`get_result_buffers`.
+
+        Override this function if you wish to redirect the results to different
+        buffers, for example ragged arrays or binned processing.
+        '''
         r = self.results
         return (r.centers, r.refineds, r.peak_values, r.peak_elevations)
 
@@ -267,6 +279,7 @@ class FastCorrelationUDF(CorrelationUDF):
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
+        ""
         n_peaks = len(self.params.peaks)
         mask = self.get_pattern()
         crop_size = mask.get_crop_size()
@@ -292,7 +305,6 @@ class FastCorrelationUDF(CorrelationUDF):
         return self.task_data.template
 
     def process_frame(self, frame):
-
         match_pattern = self.get_pattern()
         peaks = self.get_peaks()
         crop_bufs = self.task_data.crop_bufs
@@ -342,6 +354,7 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
+        ""
         mask = self.get_pattern()
         n_peaks = len(self.params.peaks)
         template = mask.get_template(sig_shape=self.meta.dataset_shape.sig)
@@ -420,6 +433,11 @@ class SparseCorrelationUDF(CorrelationUDF):
         super().__init__(*args, **kwargs)
 
     def get_result_buffers(self):
+        """
+        This method adds the :code:`corr` buffer to the result of
+        :meth:`CorrelationUDF.get_result_buffers`. See source code for the
+        exact buffer declaration.
+        """
         super_buffers = super().get_result_buffers()
         num_disks = len(self.params.peaks)
         steps = self.params.steps * 2 + 1
@@ -432,6 +450,7 @@ class SparseCorrelationUDF(CorrelationUDF):
         return super_buffers
 
     def get_task_data(self):
+        ""
         match_pattern = self.params.match_pattern
         crop_size = match_pattern.get_crop_size()
         size = (2 * crop_size + 1, 2 * crop_size + 1)
@@ -477,6 +496,11 @@ class SparseCorrelationUDF(CorrelationUDF):
         self.results.corr[:] += sl.dot(tile_t).T
 
     def postprocess(self):
+        """
+        The correlation results are evaluated during postprocessing since this
+        implementation uses tiled processing where the correlations are
+        incomplete in :meth:`process_tile`.
+        """
         steps = 2 * self.params.steps + 1
         corrmaps = self.results.corr.reshape((
             -1,  # frames
@@ -495,12 +519,34 @@ class SparseCorrelationUDF(CorrelationUDF):
 
 
 def run_fastcorrelation(ctx, dataset, peaks, match_pattern: MatchPattern, roi=None):
+    """
+    Wrapper function to construct and run a :class:`FastCorrelationUDF`
+
+    Returns
+    -------
+    buffers : Dict[libertem.common.buffers.BufferWrapper]
+        See :meth:`CorrelationUDF.get_result_buffers` for details.
+    """
     peaks = peaks.astype(np.int)
     udf = FastCorrelationUDF(peaks=peaks, match_pattern=match_pattern)
     return ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
 
 def run_blobfinder(ctx, dataset, match_pattern: MatchPattern, num_peaks, roi=None):
+    """
+    Wrapper function to find peaks in a dataset and refine their position using
+    :class:`FastCorrelationUDF`
+
+    Returns
+    -------
+    sum_result : numpy.ndarray
+        Log-scaled sum frame of the dataset
+    centers, refineds, peak_values, peak_elevations : libertem.common.buffers.BufferWrapper
+        See :meth:`CorrelationUDF.get_result_buffers` for details.
+    peaks : numpy.ndarray
+        List of found peaks
+    """
+    # FIXME use ROI for sum!
     sum_analysis = ctx.create_sum_analysis(dataset=dataset)
     sum_result = ctx.run(sum_analysis)
 

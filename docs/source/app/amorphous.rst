@@ -1,6 +1,11 @@
 Amorphous materials
 ===================
 
+.. note::
+
+    See :ref:`fem api` and :ref:`radial fourier api` for API references
+
+
 LiberTEM offers methods to determine the local order or crystallinity of
 amorphous and nanocrystalline materials.
 

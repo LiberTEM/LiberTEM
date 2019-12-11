@@ -1,3 +1,5 @@
+.. _`amorphous app`:
+
 Amorphous materials
 ===================
 

@@ -223,11 +223,6 @@ class CorrelationUDF(UDF):
         super().__init__(peaks=np.round(peaks).astype(int), *args, **kwargs)
 
     def get_result_buffers(self):
-        """
-        we 'declare' what kind of result buffers we need, without concrete shapes
-
-        concrete shapes come later, either for partition or whole dataset
-        """
         num_disks = len(self.params.peaks)
 
         return {

@@ -1,5 +1,9 @@
-Amorphous materials
-===================
+Amorphous materials reference
+=============================
+
+.. note::
+
+    See :ref:`amorphous app` for an overview and description of the amorphous applications.
 
 .. _`fem api`:
 

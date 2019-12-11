@@ -54,6 +54,26 @@ def merge(p0, p1):
 
 
 class StdDevUDF(UDF):
+    """
+    Compute sum of variances and sum of pixels from the given dataset
+
+    One-pass algorithm used in this code is taken from the following paper:
+    "Numerically Stable Parallel Computation of (Co-) Variance"
+    DOI : https://doi.org/10.1145/3221269.3223036
+
+    Examples
+    --------
+
+    >>> udf = StdDevUDF()
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+    >>> np.array(result["var"])        # variance
+    array(...)
+    >>> np.array(result["num_frame"])  # number of frames
+    array(...)
+    >>> np.array(result["sum_frame"])  # sum of all frames
+    array(...)
+    """
+
     def get_result_buffers(self):
         """
         Initializes BufferWrapper objects for sum of variances,

@@ -8,7 +8,7 @@ class LogsumUDF(UDF):
     Sum up logscaled frames
 
     In comparison to log-scaling the sum, this highlights regions with slightly higher
-    intensity that appear in may frames in relation to very high intensity in a few frames.
+    intensity that appear in many frames in relation to very high intensity in a few frames.
 
     Examples
     --------
@@ -19,6 +19,7 @@ class LogsumUDF(UDF):
     """
 
     def get_result_buffers(self):
+        ""
         return {
             'logsum': self.buffer(
                 kind='sig', dtype='float32'
@@ -26,9 +27,11 @@ class LogsumUDF(UDF):
         }
 
     def merge(self, dest, src):
+        ""
         dest['logsum'][:] += src['logsum'][:]
 
     def process_frame(self, frame):
+        ""
         self.results.logsum[:] += np.log(frame - np.min(frame) + 1)
 
 
@@ -37,7 +40,7 @@ def run_logsum(ctx, dataset, roi=None):
     Sum up logscaled frames
 
     In comparison to log-scaling the sum, this highlights regions with slightly higher
-    intensity that appear in may frames in relation to very high intensity in a few frames.
+    intensity that appear in many frames in relation to very high intensity in a few frames.
 
     Example:
 

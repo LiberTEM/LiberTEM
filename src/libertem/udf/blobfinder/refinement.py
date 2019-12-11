@@ -216,7 +216,7 @@ def run_refine(
     -------
     result : Dict[str, BufferWrapper]
         Result buffers of the UDF. See
-        :meth:`libertem.udf.blobfinder.CorrelationUDF.get_result_buffers` and
+        :meth:`libertem.udf.blobfinder.correlation.CorrelationUDF.get_result_buffers` and
         :meth:`RefinementMixin.get_result_buffers` for details on the available
         buffers.
     used_indices : numpy.ndarray

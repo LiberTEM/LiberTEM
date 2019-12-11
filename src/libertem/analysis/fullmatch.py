@@ -62,7 +62,7 @@ class FullMatcher(grm.Matcher):
             matched.
             Set this to :code:`None` to disable dynamic adjustment of :code:`min_cluster_size`.
             If you like to set :code:`min_cluster_size` to a constant value, you can
-            set this to :code:`None`and additionally set the :code:`clusterer` parameter with
+            set this to :code:`None` and additionally set the :code:`clusterer` parameter with
             your own clusterer object to have direct control over all parameters.
         min_samples_fraction : float
             Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.

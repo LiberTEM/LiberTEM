@@ -23,7 +23,7 @@ class RadialFourierResultSet(AnalysisResultSet):
     for each bin. See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
     available parameters and :ref:`radialfourier app` for a description of the application!
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3
 
     Attributes
     ----------

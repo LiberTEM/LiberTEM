@@ -26,7 +26,7 @@ class COMResultSet(AnalysisResultSet):
     complex numbers, this result contains the keys :attr:`x_real`, :attr:`y_real`,
     :attr:`x_imag`, :attr:`y_imag` instead of the vector field.
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3
 
     Attributes
     ----------

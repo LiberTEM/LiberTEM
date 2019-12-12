@@ -1,8 +1,9 @@
 Changelog
 =========
 
-.. Continuous commented out because of no entries yet
-.. .. _continuous:
+.. _continuous:
+
+.. Other parts of Continuous section commented out because of no entries yet
 .. .. _`v0-4-0`:
 
 .. 0.4.0.dev0 (continuous)

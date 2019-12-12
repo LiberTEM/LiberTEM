@@ -54,7 +54,7 @@ class Circular(MatchPattern):
     This pattern is useful for constructing feature vectors using
     :meth:`~libertem.udf.blobfinder.feature_vector`.
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3
     '''
     def __init__(self, radius, search=None):
         '''

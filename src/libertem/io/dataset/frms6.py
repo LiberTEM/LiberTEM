@@ -195,7 +195,7 @@ class FRMS6File(File3D):
         out[:] = self.data[slice_]
 
     def _get_mmapped_array(self):
-        raw_data = np.memmap(self._path, dtype=self.dtype)
+        raw_data = np.memmap(self._path, dtype=self.dtype, mode='r')
         # cut off the file header:
         header_size_px = self.header['header_size'] // self.dtype.itemsize
         frames = raw_data[header_size_px:]

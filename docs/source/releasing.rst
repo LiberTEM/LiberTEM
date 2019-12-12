@@ -11,6 +11,22 @@ Release checklist
 Not all aspects of LiberTEM are covered with automated unit tests. For that
 reason we should perform some manual tests before and after a release.
 
+Tagging a version
+~~~~~~~~~~~~~~~~~
+
+Install :code:`pygithub`, which is used by :code:`scripts/release`. Then call the script with
+the :code:`bump` command, with the new version as parameter:
+
+.. code-block:: shell
+
+    $ ./scripts/release bump v0.3.0.rc0 --tag
+
+If you are bumping to a .dev0 suffix, omit :code:`--tag` and only pass :code:`--commit`:
+
+.. code-block:: shell
+
+    $ ./scripts/release bump v0.4.0.dev0 --commit
+
 Before (using a release candidate package)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

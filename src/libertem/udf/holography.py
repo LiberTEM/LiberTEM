@@ -98,7 +98,8 @@ class HoloReconstructUDF(UDF):
                  precision=True):
         """
         out_shape : (int, int)
-            Shape of the returned complex wave image
+            Shape of the returned complex wave image. Note that the result should fit into the main memory.
+            See :ref:`holography app` for more details
 
         sb_position : tuple, or vector
             Coordinates of sideband position with respect to non-shifted FFT of a hologram
@@ -141,10 +142,11 @@ class HoloReconstructUDF(UDF):
     def get_task_data(self):
         """
         Updates `task_data`
+
         Returns
         -------
         kwargs : dict
-            A dictionary with the following keys:
+        A dictionary with the following keys:
             kwargs['aperture'] : array-like
             Side band filter aperture (mask)
             kwargs['slice'] : slice

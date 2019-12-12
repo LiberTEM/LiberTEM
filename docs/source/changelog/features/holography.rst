@@ -2,5 +2,6 @@
 ==========================================
 
 * Add hologram simulation
-* Make OOP based composition and subclassing easier for
-  :class:`libertem.udf.blobfinder.FastCorrelationUDF` (:pr:`466`)
+  :func:`libertem.utils.generate.hologram_frame` (:pr:`475`)
+* Hologram reconstruction UDF
+  :class:`libertem.udf.holography.HoloReconstructUDF` (:pr:`475`)

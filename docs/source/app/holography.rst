@@ -97,7 +97,7 @@ To demonstrate reconstruction capability two datasets can be created from the ho
                                num_partitions=1, sig_dims=2)
 
 The reconstruction requires knowledge about position of the sideband and size of sideband filter which will be used
-in the reconstruction. The position of teh sideband can be estimated from the Fourier transform of the
+in the reconstruction. The position of the sideband can be estimated from the Fourier transform of the
 vacuum reference hologram:
 
 .. testcode::

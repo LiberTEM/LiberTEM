@@ -46,16 +46,16 @@ def hologram_frame(amp, phi,
     """
     Generates holograms using phase and amplitude as an input
 
+    See :ref:`holography app` for detailed application example
+
+    .. versionadded:: 0.3
+
     Notes
     -----
     Theoretical basis for hologram simulations see in:
     Lichte, H., and M. Lehmann. Rep. Prog. Phys. 71 (2008): 016102.
     doi:10.1088/0034-4885/71/1/016102
     :cite:`Lichte2008`
-
-    See :ref:`holography app` for detailed application example
-
-    .. versionadded:: 0.3
 
     Parameters
     ----------

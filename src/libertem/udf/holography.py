@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with  HyperSpy.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 # Copyright 2019 The LiberTEM developers
-# 
-#  LiberTEM is distributed under the terms of the GNU General 
+#
+#  LiberTEM is distributed under the terms of the GNU General
 # Public License as published by the Free Software Foundation,
 # version 3 of the License.
 # see: https://github.com/LiberTEM/LiberTEM
@@ -75,6 +75,10 @@ class HoloReconstructUDF(UDF):
     Running `Context.run_udf` on instance of this class will a complex electron wave.
     Use `wave` key to access raw data.
 
+    See :ref:`holography app` for detailed application example
+
+    .. versionadded:: 0.3
+
     Examples
     --------
     >>> shape = tuple(dataset.shape.sig)
@@ -94,7 +98,7 @@ class HoloReconstructUDF(UDF):
                  precision=True):
         """
         out_shape : (int, int)
-            Shape of the outputted complex wave image
+            Shape of the returned complex wave image
 
         sb_position : tuple, or vector
             Coordinates of sideband position with respect to non-shifted FFT of a hologram
@@ -117,11 +121,13 @@ class HoloReconstructUDF(UDF):
 
     def get_result_buffers(self):
         """
-        Initializes BufferWrapper objects for reconstructed wave function
+        Initializes :class:`~libertem.common.buffers.BufferWrapper` objects for reconstructed
+        wave function
 
         Returns
         -------
-        A dictionary that maps 'wave' to the corresponding BufferWrapper objects
+        A dictionary that maps 'wave' to the corresponding
+        :class:`~libertem.common.buffers.BufferWrapper` objects
         """
         extra_shape = self.params.out_shape
         if not self.params.precision:
@@ -140,9 +146,9 @@ class HoloReconstructUDF(UDF):
         kwargs : dict
             A dictionary with the following keys:
             kwargs['aperture'] : array-like
-                Side band filter aperture (mask)
+            Side band filter aperture (mask)
             kwargs['slice'] : slice
-                Slice for slicing FFT of the hologram
+            Slice for slicing FFT of the hologram
         """
 
         out_shape = self.params.out_shape
@@ -193,52 +199,3 @@ class HoloReconstructUDF(UDF):
 
         wav = ifft2(fft_frame) * np.prod(frame_size)
         self.results.wave[:] = wav
-
-
-def reconstruct_holograms(ctx, dataset,
-                          out_shape,
-                          sb_position,
-                          sb_size,
-                          sb_smoothness=0.05,
-                          precision=True):
-    """
-    Reconstruct hologram using standard Fourier method
-
-    Parameters
-    ----------
-    ctx
-        Context class that contains methods for loading datasets, creating jobs on them
-        and running them
-
-    dataset
-        dataset to work on
-
-    out_shape : (int, int)
-        Shape of the outputted complex wave image
-
-    sb_position : tuple, or vector
-        Coordinates of sideband position with respect to non-shifted FFT of a hologram
-
-    sb_size : float
-        Radius of side band filter in pixels
-
-    sb_smoothness : float, optional (Default: 0.05)
-        Fraction of `sb_size` over which the edge of the filter aperture to be smoothed
-
-    precision : bool, optional, (Default: True)
-        Defines precision of the reconstruction, True for complex128 for the resulting
-        complex wave, otherwise results will be complex64
-    Returns
-    -------
-    wave : ndarray
-        Reconstructed complex wave function
-    """
-
-    holo_job = HoloReconstructUDF(out_shape=out_shape,
-                                  sb_position=sb_position,
-                                  sb_size=sb_size,
-                                  sb_smoothness=sb_smoothness,
-                                  precision=precision)
-    res = ctx.run_udf(dataset=dataset, udf=holo_job)
-
-    return res['wave'].data

@@ -60,6 +60,7 @@ Applications
 - `Analysis of amorphous materials <https://libertem.github.io/LiberTEM/app/amorphous.html>`_
 - `Strain mapping <https://libertem.github.io/LiberTEM/app/strain.html>`_
 - `Custom analysis functions (user-defined functions) <https://libertem.github.io/LiberTEM/udf.html>`_
+- `Off-axis electron holography reconstruction <https://libertem.github.io/LiberTEM/app/holography.html>`_
 
 Please see `the applications section <https://libertem.github.io/LiberTEM/applications.html>`_ of our documentation for details!
 

@@ -13,7 +13,7 @@
 .. _zenodo: https://doi.org/10.5281/zenodo.1477847
 
 .. |github| image:: https://img.shields.io/badge/GitHub-GPL--3.0-informational
-.. _github: http://github.com/LiberTEM/LiberTEM/
+.. _github: https://github.com/LiberTEM/LiberTEM/
 
 LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets using a simplified `MapReduce programming model

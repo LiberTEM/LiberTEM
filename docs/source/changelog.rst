@@ -17,8 +17,11 @@ Changelog
 .. _latest:
 .. _`v0-3-0`:
 
-0.3
-###
+0.3.0
+#####
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3572855.svg
+   :target: https://doi.org/10.5281/zenodo.3572855
 
 New features
 ------------

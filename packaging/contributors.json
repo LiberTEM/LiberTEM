@@ -78,6 +78,13 @@
         "contribution": "Discussions and publication https://arxiv.org/abs/1902.06979 leading to the affine transformation strain map"
     },
     {
+        "displayname": "Benedikt Haas",
+        "authorname": "Haas, Benedikt",
+        "github": "unsimulatable",
+        "affiliation": "HU Berlin",
+        "contribution": "Discussions, bug reports"
+    },
+    {
         "displayname": "Chris Hines",
         "authorname": "Hines, Chris",
         "affiliation": "Monash",
@@ -162,6 +169,12 @@
         "contribution": "Discussions"
     },
     {
+        "displayname": "Johannes Müller",
+        "authorname": "Müller, Johannes",
+        "affiliation": "HU Berlin",
+        "contribution": "Discussions"
+    },
+    {
         "displayname": "Eduardo Nebot",
         "authorname": "Nebot, Eduardo",
         "affiliation": "Quantum Detectors",
@@ -183,7 +196,7 @@
         "displayname": "Colin Ophus",
         "authorname": "Ophus, Colin",
         "affiliation": "Lawrence Berkeley National Lab",
-        "contribution": "Discussions, sample code for K2 reader, overview of related projects"
+        "contribution": "Discussions, sample code for K2 reader, overview of related projects, reference files"
     },
     {
         "displayname": "Ana Pakzad",

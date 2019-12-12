@@ -14,6 +14,13 @@ calculated as in example below in which for amplitude a sphere is assumed, the s
 for the mean inner potential (MIP) contribution to the phase and in addition to the quadratic long-range
 phase shift originating from the centre of the sphere:
 
+.. testsetup:: *
+
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+
 .. testcode::
 
    import numpy as np

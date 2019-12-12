@@ -98,7 +98,8 @@ class HoloReconstructUDF(UDF):
                  precision=True):
         """
         out_shape : (int, int)
-            Shape of the returned complex wave image. Note that the result should fit into the main memory.
+            Shape of the returned complex wave image. Note that the result should fit into the
+            main memory.
             See :ref:`holography app` for more details
 
         sb_position : tuple, or vector

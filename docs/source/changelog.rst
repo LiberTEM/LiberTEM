@@ -52,6 +52,7 @@ Bug fixes
 * Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (:pr:`463`)
 * Ensure that RAW dataset sizes are calculated as int64 to avoid integer overflows (:pr:`495`, :issue:`493`)
 * Resolve shape mismatch issue and simplify dominant order calculation in Radial Fourier Analysis (:pr:`502`)
+* Actually pass the :code:`enable_direct` parameter from web API to the DataSet
 
 Documentation
 -------------

@@ -160,7 +160,7 @@ class BloDataSet(DataSet):
             raw_dtype=np.dtype("u1"),
             iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
-        self._filesize = os.stat(self._path).st_size
+        self._filesize = executor.run_function(os.stat, self._path).st_size
         return self
 
     @classmethod

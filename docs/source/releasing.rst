@@ -95,4 +95,5 @@ After releasing on GitHub
 * confirm package upload to PyPi
 * Publish new version on zenodo.org
 * Update documentation with new links, if necessary
+    * Add zenodo badge for the new release to Changelog page
 * Send announcement message on mailing list

@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from scipy.ndimage import rotate
 from scipy.ndimage.filters import gaussian_filter
 import libertem.utils as ut
 from libertem.utils.generate import hologram_frame
@@ -75,15 +76,29 @@ def test_hologram_frame(counts, sampling, visibility, f_angle, gauss, poisson, r
     assert np.allclose(holo, holo_test, rtol=rtol1)
 
     # test derived parameters:
+    # test if mean value equals to counts
     assert np.isclose(holo_test.mean(), counts, rtol=5e-3)
+
+    # test if calculated contrast is equals to teh input
     contrast = lambda a: (a.max(1).mean() - a.min(1).mean()) \
                          / (a.min(1).mean() + a.max(1).mean())
     assert np.isclose(contrast(holo_test), visibility, rtol=rtol2)
 
+    # test if fringe spacing equals to the input
+    holo_fft = np.abs(np.fft.rfft2(holo_test[:sx, :sx]))
+    holo_fft[:1, :1] = 0.
+    holo_max = np.unravel_index(holo_fft.argmax(), holo_fft.shape)
+    holo_max = np.hypot(holo_max[0], holo_max[1])
+    sampling_test = sx / holo_max
+    error_sampling = sampling_test * (1. / holo_max)
+    assert np.isclose(sampling_test, sampling, atol=error_sampling)
+
+
+def test_holo_frame_asserts():
     # test asserts:
     with pytest.raises(ValueError):
-        hologram_frame(amp, np.zeros((5, 7)))
+        hologram_frame(np.ones((7, 5)), np.zeros((5, 7)))
     with pytest.raises(ValueError):
-        hologram_frame(amp, phase, gaussian_noise='a lot')
+        hologram_frame(np.ones((5, 7)), np.zeros((5, 7)), gaussian_noise='a lot')
     with pytest.raises(ValueError):
-        hologram_frame(amp, phase, poisson_noise='a bit')
+        hologram_frame(np.ones((5, 7)), np.zeros((5, 7)), poisson_noise='a bit')

@@ -1,12 +1,16 @@
+.. _`holography app`:
+
 Off-axis electron holography
 ============================
 
+.. versionadded:: 0.3
+
 Hologram simulation
 -------------------
-Holograms can be simulated using the method described by Lichte et al.
+Holograms can be simulated using the method described by Lichte et al. :cite:`Lichte2008`
 The simulator includes simulation of holograms with Gaussian and Poisson noise, without effect of
 Fresnel fringes of biprism. The simulator requires amplitude and phase images being provided. Those can be
-calculated as in example bellow in which for amplitude a sphere is assumed, the same sphere is used
+calculated as in example below in which for amplitude a sphere is assumed, the same sphere is used
 for the mean inner potential (MIP) contribution to the phase and in addition to the quadratic long-range
 phase shift originating from the centre of the sphere:
 
@@ -22,10 +26,10 @@ phase shift originating from the centre of the sphere:
    # Define sphere region
    sphere = (mx - 33.)**2 + (my - 103.)**2 < 20.**2
    # Calculate long-range contribution to the phase
-   phase = ((mx - 33.)**2 + (my - 103.)**2) / sx / 10.
+   phase = ((mx - 33.)**2 + (my - 103.)**2) / sx / 40.
    # Add mean inner potential contribution to the phase
    phase[sphere] += (-((mx[sphere] - 33.)**2 \
-                      + (my[sphere] - 103.)**2) / sx / 3 + 0.5) * 5.
+                      + (my[sphere] - 103.)**2) / sx / 3 + 0.5) * 2.
    # Calculate amplitude of the phase
    amp = np.ones_like(phase)
    amp[sphere] = ((mx[sphere] - 33.)**2 \
@@ -36,7 +40,7 @@ phase shift originating from the centre of the sphere:
    ax[0].imshow(amp, cmap='gray')
    ax[0].title.set_text('Amplitude')
    ax[0].set_axis_off()
-   ax[1].imshow(phase, cmap='gray')
+   ax[1].imshow(phase, cmap='viridis')
    ax[1].title.set_text('Phase')
    ax[1].set_axis_off()
 
@@ -78,7 +82,7 @@ following steps:
 * Inverse Fourier transform.
 
 The reconstruction can be accessed through the :class:`~libertem.udf.holography.HoloReconstructUDF` class.
-To demonstrate reconstruction capability two datasets can be created from the simulated above holograms as follows:
+To demonstrate reconstruction capability two datasets can be created from the holograms simulated above as follows:
 
 .. testcode::
 
@@ -93,7 +97,7 @@ To demonstrate reconstruction capability two datasets can be created from the si
                                num_partitions=1, sig_dims=2)
 
 The reconstruction requires knowledge about position of the sideband and size of sideband filter which will be used
-in the reconstruction. The position of teh sideband can be estimated from Fourier transform of the
+in the reconstruction. The position of teh sideband can be estimated from the Fourier transform of the
 vacuum reference hologram:
 
 .. testcode::
@@ -109,8 +113,8 @@ vacuum reference hologram:
 
 .. image:: ./images/holography/FFT_reference.png
 
-The radius of sideband filter is typically chose as either half of the distance between the sideband and
-autocorrelation for strong phase objects or as one third of the distance for week phase objects. Assuming
+The radius of sideband filter is typically chosen as either half of the distance between the sideband and
+autocorrelation for strong phase objects or as one third of the distance for weak phase objects. Assuming
 strong phase object, one can proceed as follows:
 
 .. testcode::
@@ -118,8 +122,8 @@ strong phase object, one can proceed as follows:
    sb_size = np.hypot(sb_position[0], sb_position[1]) / 2.
 
 Since in the off-axis electron holography spatial resolution is determined by the interference fringe spacing rather
-than by the sampling of the original images, the reconstruction would typically involve changing of the shape of the
-data. For medium magnification holography the size of the reconstructed images can be typically set to the size
+than by the sampling of the original images, the reconstruction would typically involve changing the shape of the data.
+For medium magnification holography the size of the reconstructed images can be typically set to the size
 (diameter) of the sideband filter. (For high-resolution holography reconstruction typically binning factors of
 1-4 are used.) Therefore, the output shape can be defined as follows:
 
@@ -161,7 +165,7 @@ reference holograms:
 
 .. image:: ./images/holography/amp_comparison.png
 
-One sees that reconstructed amplitude have artifacts due to digital Fourier processing. Those are typical for
+One sees that the reconstructed amplitude has artifacts due to digital Fourier processing. Those are typical for
 synthetic data. One of the ways to get synthetic data closer to the experimental would be adding noise.
 Comparing phase images, one should keep in mind that phase is typically wrapped in an interval :math:`[0; 2\pi)`.
 To unwrap phase one can do the following:
@@ -175,21 +179,21 @@ To unwrap phase one can do the following:
 
    # Plot
    f, ax = plt.subplots(1, 3)
-   ax[0].imshow(phase)
+   ax[0].imshow(phase, cmap='viridis')
    ax[0].title.set_text('Input phase')
    ax[0].set_axis_off()
    ax[1].imshow(phase_r[0])
    ax[1].title.set_text('Reconstructed phase')
    ax[1].set_axis_off()
-   ax[2].imshow(phase_unwrapped)
+   ax[2].imshow(phase_unwrapped, cmap='viridis')
    ax[2].title.set_text('Reconstructed phase (unwrapped)')
    ax[2].set_axis_off()
 
 .. image:: ./images/holography/phase_comparison.png
 
 In addition to the capabilities demonstrated above, the :class:`~libertem.udf.holography.HoloReconstructUDF`
-class can take smoothness of sideband (SB) filter in percents of the SB size (:code:`sb_smoothness=0.05` is default)
-and precision used for calculation as boolean (:code:`precision=False` will reduce the calculation precision
-to :code:`float32` and :code:`complex64` for the output). Note that depending of NumPy backend even with reduced
+class can take smoothness of sideband (SB) filter as fraction of the SB size (:code:`sb_smoothness=0.05` is default).
+Also :code:`precision` argument can be used (:code:`precision=False`) to reduce the calculation precision
+to :code:`float32` and :code:`complex64` for the output. Note that depending of NumPy backend even with reduced
 precision FFT function used in the reconstruction may internally output results with double precision. In this case
 reducing precision will only affect the size of the output rather than the speed of processing.

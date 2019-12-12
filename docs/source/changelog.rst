@@ -2,9 +2,9 @@ Changelog
 =========
 
 .. _continuous:
-.. _`v0-3-0`:
+.. _`v0-4-0`:
 
-0.3.0.dev0 (continuous)
+0.4.0.dev0 (continuous)
 #######################
 
 .. toctree::
@@ -13,6 +13,63 @@ Changelog
    changelog/*/*
 
 .. _latest:
+.. _`v0-3-0`:
+
+0.3
+###
+
+New features
+------------
+
+* Make OOP based composition and subclassing easier for
+  :class:`libertem.udf.blobfinder.FastCorrelationUDF` (:pr:`466`)
+* Introduce plain circular match pattern :class:`libertem.udf.blobfinder.Circular` (:pr:`469`)
+* Distributed sharded dataset (:issue:`136`, :issue:`457`)
+* Support for caching data sets from slower storage (NFS, spinning
+  metal) on fast local storage (:pr:`471`)
+* :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
+* :class:`libertem.io.dataset.dm.DMDataSet` implementation based on ncempy (:pr:`497`)
+    * Adds a new :meth:`~libertem.executor.base.JobExecutor.map` executor primitive. Used to concurrently
+      read the metadata for DM3/DM4 files on initialization.
+    * Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
+      changes in the file dialog.
+* Speed up of up to 150x for correlation-based peak refinement in 
+  :mod:`libertem.udf.blobfinder` with a Numba-based pipeline (:pr:`468`)
+* Introduce :class:`libertem.udf.blobfinder.FullFrameCorrelationUDF` which
+  correlates a large number (several hundred) of small peaks (10x10) on small
+  frames (256x256) faster than
+  :class:`libertem.udf.blobfinder.FastCorrelationUDF` and
+  :class:`libertem.udf.blobfinder.SparseCorrelationUDF` (:pr:`468`)
+* Introduce :class:`libertem.udf.UDFPreprocessMixin` (:pr:`464`)
+* Implement iterator over :class:`libertem.analysis.base.AnalysisResultSet` (:pr:`496`)
+
+Bug fixes
+---------
+
+* Improved error and validation handling when opening files with GUI (:issue:`433,442`)
+* Clean-up and improvements of :class:`libertem.analysis.fullmatch.FullMatcher` (:pr:`463`)
+* Ensure that RAW dataset sizes are calculated as int64 to avoid integer overflows (:pr:`495`, :issue:`493`)
+* Resolve shape mismatch issue and simplify dominant order calculation in Radial Fourier Analysis (:pr:`502`)
+
+Documentation
+-------------
+
+* Created :ref:`authorship` (:pr:`460,483`)
+* Change management process (:issue:`443`, :pr:`451,453`)
+* Documentation for :ref:`crystallinity map` and :ref:`clustering` analysis (:pr:`408` by :user:`kruzaeva`)
+* Instructions for profiling slow tests (:issue:`447`, :pr:`448`)
+* Improve API reference on Analysis results (:issue:`494`, :pr:`496`)
+
+Obsolescence
+------------
+
+* The Job interface is planned to be replaced with an implementation based on UDFs in one of the upcoming releases.
+
+Misc
+----
+
+* Split up the bobfinder code between several files to reduce file size (:pr:`468`)
+
 .. _`v0-2-2`:
 
 0.2.2

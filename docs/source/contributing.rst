@@ -37,11 +37,11 @@ Code contributions
 ------------------
 
 We are using `pull requests
-<https://help.github.com/en/articles/about-pull-requests>`_ to accept
-contributions. Each pull request should focus on a single issue, to keep the
-number of changes small and reviewable. To keep your changes organized and to
-prevent unrelated changes from disturbing your pull request, create a new branch
-for each pull request.
+<https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests>`_
+to accept contributions. Each pull request should focus on a single issue, to
+keep the number of changes small and reviewable. To keep your changes organized
+and to prevent unrelated changes from disturbing your pull request, create a new
+branch for each pull request.
 
 Before creating a pull request, please make sure all tests still pass. See
 `Running the Tests`_ for more information. You should also update the test suite

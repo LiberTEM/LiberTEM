@@ -28,9 +28,6 @@ authors:
   - name: Magnus Nord
     affiliation: 4
     orcid: 0000-0001-7981-5293
-  - name: Jay van Schyndel
-    affiliation: 5
-    orcid: TODO
   - name: Knut Müller-Caspary
     affiliation: 1
     orcid: 0000-0002-2588-7993
@@ -46,10 +43,8 @@ affiliations:
    index: 3
  - name: University of Antwerp, EMAT
    index: 4
- - name: Monash University eResearch Centre
-   index: 5
 
-date: 30 October 2019
+date: 12 December 2019
 bibliography: paper.bib
 ---
 

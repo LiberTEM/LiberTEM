@@ -4,6 +4,11 @@ Installation
 ============
 
 .. note::
+    Installation of LiberTEM is currently not working smoothly with Python 3.8
+    because of installation issues with some dependencies. Python 3.6 and Python
+    3.7 are supported.
+
+.. note::
     Distinguish between installing a released version and installing the latest
     development version. Both `installing from PyPi`_ and `installing from a git
     clone`_ use pip, but they do fundamentally different things. :code:`pip

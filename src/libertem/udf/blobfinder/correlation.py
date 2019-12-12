@@ -359,7 +359,7 @@ class FullFrameCorrelationUDF(CorrelationUDF):
     :class:`FastCorrelationUDF`. However, it is more sensitive to interference
     from strong peaks next to the peak of interest.
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3
     '''
     def __init__(self, *args, **kwargs):
         '''

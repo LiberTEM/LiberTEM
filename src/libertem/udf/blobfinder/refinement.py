@@ -170,7 +170,7 @@ def run_refine(
     combination of :class:`libertem.udf.blobfinder.CorrelationUDF` and
     :class:`libertem.udf.blobfinder.RefinementMixin`.
 
-    .. versionchanged:: 0.3.0.dev0
+    .. versionchanged:: 0.3
         Support for :class:`FullFrameCorrelationUDF`
         through parameter :code:`correlation = 'fullframe'`
 

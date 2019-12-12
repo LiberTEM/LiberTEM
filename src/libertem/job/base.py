@@ -10,7 +10,7 @@ class Job(object):
     shape, type and content of this array is governed by the specific
     implementation of the :code:`Job` sub-class.
 
-    .. versionchanged:: 0.3.0.dev0
+    .. versionchanged:: 0.3
         :code:`Job` is now an abstract base job for documentation purposes
         to hide any implementation details from the user. The previous
         :code:`Job` base class is now called :class:`BaseJob`.
@@ -23,7 +23,7 @@ class BaseJob(object):
     A computation on a DataSet. Inherit from this class and implement ``get_tasks``
     to yield tasks for your specific computation.
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3
         Renamed :code:`Job` to :code:`BaseJob`
     """
 

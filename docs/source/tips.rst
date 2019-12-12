@@ -71,7 +71,7 @@ You find the five slowest tests in the output of Tox, see :ref:`running tests`
 for details. If you are using :code:`pytest` directly, you can use the
 :code:`--durations` parameter:
 
-.. code-block::
+.. code-block:: text
 
     (libertem) $ pytest --durations=10 tests/
     (...)
@@ -96,7 +96,7 @@ install the `pytest-profiling extension
 <https://github.com/manahl/pytest-plugins/tree/master/pytest-profiling>`_ and
 use it to profile individual slow tests that you identified before:
 
-.. code-block::
+.. code-block:: text
 
     (libertem) $ pytest --profile tests/udf/test_blobfinder.py::test_run_refine_affinematch
     (...)

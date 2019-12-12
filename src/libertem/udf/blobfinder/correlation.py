@@ -29,12 +29,13 @@ except ImportError:
 
 def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
     '''
-    Find peaks of the correlation between :code:`sum_result` and :code:`match_pattern`
+    Find peaks of the correlation between :code:`sum_result` and :code:`match_pattern`.
 
-    This can then be used in :meth:`~libertem.analysis.fullmatch.FullMatcher.full_match`
-    to extract grid parameters, :meth:`~libertem.udf.blobfinder.run_fastcorrelation` to find
-    the position in each frame or to construct a mask to extract feature vectors with
-    :meth:`~libertem.udf.blobfinder.feature_vector`.
+    The result  can then be used as input to
+    :meth:`~libertem.analysis.fullmatch.FullMatcher.full_match`
+    to extract grid parameters, :meth:`~libertem.udf.blobfinder.correlation.run_fastcorrelation`
+    to find the position in each frame or to construct a mask to extract feature vectors with
+    :meth:`~libertem.udf.blobfinder.utils.feature_vector`.
 
     Parameters
     ----------
@@ -104,23 +105,35 @@ def refine_center(center, r, corrmap):
 @numba.njit
 def peak_elevation(center, corrmap, height, r_min=1.5, r_max=np.float('inf')):
     '''
-    Return the slope of the tightest cone around center with height height
-        that touches corrmap between r_min and r_max.
+    Return the slope of the tightest cone around :code:`center` with height :code:`height`
+    that touches :code:`corrmap` between :code:`r_min` and :code:`r_max`.
 
     The correlation of two disks -- mask and perfect diffraction spot -- has the shape of a cone.
-
-    The height is provided as a parameter since center can be float values from refinement
-    and the height value is conveniently available from the calling function.
-
     The function's return value correlates with the quality of a correlation. Higher slope
     means a strong peak and
     no side maxima, while weak signal or side maxima lead to a flatter slope.
 
-    r_min masks out a small local plateau around the peak that would distort and dominate
-    the calculation.
+    Parameters
+    ----------
+    center : numpy.ndarray
+        (y, x) coordinates of the center within the :code:`corrmap`
+    corrmap : numpy.ndarray
+        Correlation map
+    height : float
+        The height is provided as a parameter since center can be float values from refinement
+        and the height value is conveniently available from the calling function.
+    r_min : float, optional
+        Masks out a small local plateau around the peak that would distort and dominate
+        the calculation.
+    r_max : float, optional
+        Mask out neighboring peaks if a large area with several legitimate peaks is
+        correlated.
 
-    r_max can mask out neighboring peaks if a large area with several legitimate peaks is
-    corellated.
+    Returns
+    -------
+    elevation : float
+        Elevation of the tightest cone that fits the correlation map within the given
+        parameter range.
     '''
     peak_y, peak_x = center
     (size_y, size_x) = corrmap.shape
@@ -211,7 +224,6 @@ class CorrelationUDF(UDF):
     '''
     Abstract base class for peak correlation implementations
     '''
-
     def __init__(self, peaks, *args, **kwargs):
         '''
         Parameters
@@ -224,9 +236,18 @@ class CorrelationUDF(UDF):
 
     def get_result_buffers(self):
         '''
-        The common buffers for all correlation methods are :code:`centers`,
-        :code:`refineds`, :code:`peak_values`, :code:`peak_elevations`. See
-        source code for details of the buffer declaration.
+        The common buffers for all correlation methods.
+
+        :code:`centers`:
+            (y, x) integer positions.
+        :code:`refineds`:
+            (y, x) positions with subpixel refinement.
+        :code:`peak_values`:
+            Peak height in the log scaled frame.
+        :code:`peak_elevations`:
+            Peak quality (result of :meth:`peak_elevation`).
+
+        See source code for details of the buffer declaration.
         '''
         num_disks = len(self.params.peaks)
 
@@ -522,6 +543,16 @@ def run_fastcorrelation(ctx, dataset, peaks, match_pattern: MatchPattern, roi=No
     """
     Wrapper function to construct and run a :class:`FastCorrelationUDF`
 
+    Parameters
+    ----------
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.base.DataSet
+    peaks : numpy.ndarray
+        List of peaks with (y, x) coordinates
+    match_pattern : libertem.udf.blobfinder.patterns.MatchPattern
+    roi : numpy.ndarray, optional
+        Boolean mask of the navigation dimension to select region of interest (ROI)
+
     Returns
     -------
     buffers : Dict[libertem.common.buffers.BufferWrapper]
@@ -537,18 +568,27 @@ def run_blobfinder(ctx, dataset, match_pattern: MatchPattern, num_peaks, roi=Non
     Wrapper function to find peaks in a dataset and refine their position using
     :class:`FastCorrelationUDF`
 
+    Parameters
+    ----------
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.base.DataSet
+    match_pattern : libertem.udf.blobfinder.patterns.MatchPattern
+    num_peaks : int
+        Number of peaks to look for
+    roi : numpy.ndarray, optional
+        Boolean mask of the navigation dimension to select region of interest (ROI)
+
     Returns
     -------
     sum_result : numpy.ndarray
-        Log-scaled sum frame of the dataset
+        Log-scaled sum frame of the dataset/ROI
     centers, refineds, peak_values, peak_elevations : libertem.common.buffers.BufferWrapper
         See :meth:`CorrelationUDF.get_result_buffers` for details.
     peaks : numpy.ndarray
-        List of found peaks
+        List of found peaks with (y, x) coordinates
     """
-    # FIXME use ROI for sum!
     sum_analysis = ctx.create_sum_analysis(dataset=dataset)
-    sum_result = ctx.run(sum_analysis)
+    sum_result = ctx.run(sum_analysis, roi=roi)
 
     sum_result = log_scale(sum_result.intensity.raw_data, out=None)
     peaks = get_peaks(

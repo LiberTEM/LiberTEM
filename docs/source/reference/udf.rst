@@ -31,3 +31,25 @@ Buffers
    :members:
    :undoc-members:
    :special-members: __init__
+
+.. _`utilify udfs`:
+
+Included utility UDFs
+~~~~~~~~~~~~~~~~~~~~~
+
+Some generally useful UDFs are included with LiberTEM:
+
+.. note::
+    See :ref:`application api` for application-specific UDFs and analyses.
+
+.. autoclass:: libertem.udf.logsum.LogsumUDF
+    :members:
+    :special-members: __init__
+
+.. autoclass:: libertem.udf.stddev.StdDevUDF
+    :members:
+    :special-members: __init__
+
+.. autoclass:: libertem.udf.sumsigudf.SumSigUDF
+    :members:
+    :special-members: __init__

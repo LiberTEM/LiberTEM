@@ -3,6 +3,10 @@ from libertem.utils import calc_coords, within_frame
 
 
 class CorrelationResult:
+    """
+    Container class for the result of correlation-based refinement of peak
+    positions within a frame.
+    """
     def __init__(self, centers, refineds=None, peak_values=None, peak_elevations=None):
         if refineds is None:
             refineds = centers
@@ -26,7 +30,6 @@ class PointSelection:
 
     Attributes
     ----------
-
     selector : numpy.ndarray
         Boolean mask for all points in the correlation result, :code:`True` indicating
         selected points.

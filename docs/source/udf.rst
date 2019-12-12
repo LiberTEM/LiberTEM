@@ -479,6 +479,10 @@ More about UDFs
 Now would be a good time to :ref:`read about advanced UDF functionality <advanced udf>`
 or the :ref:`general section on debugging <debugging udfs>`.
 
+LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement general functionality,
+like standard deviation or sum of log-scaled frames. Also, LiberTEM includes
+:ref:`ready-to-use application-specific UDFs <applications>`.
+
 .. toctree::
    :hidden:
 

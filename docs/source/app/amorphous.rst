@@ -76,8 +76,10 @@ interest.
 
 The Radial Fourier Series Analysis solves this problem by calculating a Fourier
 series in a ring-shaped region instead of just evaluating the standard
-deviation. The angle of a pixel relative to the user-defined center point of the
-diffraction pattern is used as a phase angle for the Fourier series.
+deviation. The reference :cite:`6980942` describes a previous application of
+this method as a descriptor for feature extraction from images. The angle of a
+pixel relative to the user-defined center point of the diffraction pattern is
+used as a phase angle for the Fourier series.
 
 Since `diffraction patterns usually show characteristic
 <http://xrayweb.chem.ou.edu/notes/symmetry.html>`_ `symmetries

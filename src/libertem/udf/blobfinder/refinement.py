@@ -24,21 +24,35 @@ except ImportError:
 
 class RefinementMixin():
     '''
-    To be combined with a CorrelationUDF using multiple inheritance.
+    To be combined with a :class:`libertem.udf.blobfinder.CorrelationUDF`
+    using multiple inheritance.
 
     The mixin must come before the UDF in the inheritance list.
 
-    It adds buffers zero, a, b, selector. A subclass of this mixin implements a
-    process_frame() method that will first call the superclass process_frame(), likely the
-    CorrelationUDF's, and expects that this will populate the CorrelationUDF result buffers.
-    It then calculates a refinement of start_zero, start_a and start_b based on the
-    correlation result and populates its own result buffers with this refinement result.
+    The subclasses implement a :code:`postprocess` method that calculates a
+    refinement of start_zero, start_a and start_b based on the correlation
+    result and populates the appropriate result buffers with this refinement
+    result.
 
-    This allows combining arbitrary implementations of correlation-based matching with
-    arbitrary implementations of the refinement by declaring an ad-hoc class that inherits from one
-    subclass of RefinementMixin and one subclass of CorrelationUDF.
+    This allows combining arbitrary implementations of correlation-based
+    matching with arbitrary implementations of the refinement by declaring an
+    ad-hoc class that inherits from one subclass of RefinementMixin and one
+    subclass of CorrelationUDF.
     '''
     def get_result_buffers(self):
+        """
+        This adds :code:`zero`, :code:`a`, :code:`b`, :code:`selector`,
+        :code:`error` to the superclass result buffer declaration.
+
+        :code:`zero`, :code:`a`, :code:`b`:
+            Grid refinement parameters for each frame.
+        :code:`selector`:
+            Boolean mask of the peaks that were used in the fit.
+        :code:`error`:
+            Residual of the fit.
+
+        See source code for the exact buffer declaration.
+        """
         super_buffers = super().get_result_buffers()
         num_disks = len(self.params.peaks)
         my_buffers = {
@@ -61,7 +75,12 @@ class RefinementMixin():
         super_buffers.update(my_buffers)
         return super_buffers
 
-    def apply_match(self, index,  match):
+    def apply_match(self, index, match):
+        """
+        Override this method to change how a match is saved in the result
+        buffers, for example to support binned processing or ragged result
+        arrays.
+        """
         r = self.results
         # We cast from float64 to float32 here
         r.zero[index] = match.zero
@@ -146,13 +165,14 @@ def run_refine(
         ctx, dataset, zero, a, b, match_pattern: MatchPattern, matcher: grm.Matcher,
         correlation='fast', match='fast', indices=None, steps=5, roi=None):
     '''
-    Refine the given lattice for each frame by calculating approximate peak positions and refining
-    them for each frame by using the blobcorrelation and methods of
-    :class:`~libertem.analysis.gridmatching.Matcher`.
+    Wrapper function to refine the given lattice for each frame by calculating
+    approximate peak positions and refining them for each frame using a
+    combination of :class:`libertem.udf.blobfinder.CorrelationUDF` and
+    :class:`libertem.udf.blobfinder.RefinementMixin`.
 
     .. versionchanged:: 0.3.0.dev0
-        Support for :class:`FullFrameCorrelationUDF` through parameter
-        :code:`correlation = 'fullframe'`
+        Support for :class:`FullFrameCorrelationUDF`
+        through parameter :code:`correlation = 'fullframe'`
 
     Parameters
     ----------
@@ -162,7 +182,8 @@ def run_refine(
     dataset : libertem.io.dataset.base.DataSet
         Instance of a :class:`~libertem.io.dataset.base.DataSet`
     zero : numpy.ndarray
-        Approximate value for "zero" point (y, x) in px (origin, zero order peak)
+        Approximate value for "zero" point (y, x) in px (origin, zero order
+        peak)
     a : numpy.ndarray
         Approximate value for "a" vector (y, x) in px.
     b : numpy.ndarray
@@ -175,58 +196,31 @@ def run_refine(
         'fast', 'sparse' or 'fullframe' to select :class:`~FastCorrelationUDF`,
         :class:`~SparseCorrelationUDF` or :class:`~FullFrameCorrelationUDF`
     match : {'fast', 'affine'}, optional
-        'fast' or 'affine' to select :class:`~FastmatchMixin` or :class:`~AffineMixin`
+        'fast' or 'affine' to select
+        :class:`~FastmatchMixin` or :class:`~AffineMixin`
     indices : numpy.ndarray, optional
-        Indices to refine. This is trimmed down to positions within the frame.
-        As a convenience, for the indices parameter this function accepts both shape
-        (n, 2) and (2, n, m) so that numpy.mgrid[h:k, i:j] works directly to specify indices.
-        This saves boilerplate code when using this function. Default: numpy.mgrid[-10:10, -10:10].
+        Indices to refine. This is trimmed down to
+        positions within the frame. As a convenience, for the indices parameter
+        this function accepts both shape (n, 2) and (2, n, m) so that
+        numpy.mgrid[h:k, i:j] works directly to specify indices. This saves
+        boilerplate code when using this function.
+        Default: numpy.mgrid[-10:10, -10:10].
     steps : int, optional
-        Only for correlation == 'sparse': Correlation steps.
-        See :meth:`~SparseCorelationUDF.__init__` for details.
+        Only for correlation == 'sparse': Correlation steps. See
+        :meth:`~SparseCorelationUDF.__init__` for
+        details.
     roi : numpy.ndarray, optional
         ROI for :meth:`~libertem.api.Context.run_udf`
 
     Returns
     -------
-
-    Tuple[Dict[str, BufferWrapper], numpy.ndarray]
-        :code:`(result, used_indices)` where :code:`result` is a :code:`dict`
-        mapping buffer names to result buffers based on
-
-        .. code-block:: python
-
-            {
-                'centers': BufferWrapper(
-                    kind="nav", extra_shape=(num_disks, 2), dtype="u2"
-                ),
-                'refineds': BufferWrapper(
-                    kind="nav", extra_shape=(num_disks, 2), dtype="float32"
-                ),
-                'peak_values': BufferWrapper(
-                    kind="nav", extra_shape=(num_disks,), dtype="float32"
-                ),
-                'peak_elevations': BufferWrapper(
-                    kind="nav", extra_shape=(num_disks,), dtype="float32"
-                ),
-                'zero': BufferWrapper(
-                    kind="nav", extra_shape=(2,), dtype="float32"
-                ),
-                'a': BufferWrapper(
-                    kind="nav", extra_shape=(2,), dtype="float32"
-                ),
-                'b': BufferWrapper(
-                    kind="nav", extra_shape=(2,), dtype="float32"
-                ),
-                'selector': BufferWrapper(
-                    kind="nav", extra_shape=(num_disks,), dtype="bool"
-                ),
-                'error': self.buffer(
-                    kind="nav", dtype="float32",
-                ),
-            }
-
-        and :code:`used_indices` are the indices that were within the frame.
+    result : Dict[str, BufferWrapper]
+        Result buffers of the UDF. See
+        :meth:`libertem.udf.blobfinder.correlation.CorrelationUDF.get_result_buffers` and
+        :meth:`RefinementMixin.get_result_buffers` for details on the available
+        buffers.
+    used_indices : numpy.ndarray
+        The peak indices that were within the frame.
 
     Examples
     --------
@@ -243,7 +237,6 @@ def run_refine(
     ... )
     >>> result['centers'].data  #doctest: +ELLIPSIS
     array(...)
-
     '''
     if indices is None:
         indices = np.mgrid[-10:11, -10:11]

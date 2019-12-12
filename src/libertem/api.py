@@ -529,6 +529,9 @@ class Context:
         ----------
         job
             the job or analysis to run
+        roi : numpy.ndarray, optional
+            Boolean mask of the navigation dimension. This is curently not supported for all
+            Analysis types and may raise a :class:`TypeError` in that case.
 
         Returns
         -------

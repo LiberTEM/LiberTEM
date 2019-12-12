@@ -1,11 +1,17 @@
+.. _`phasechange app`:
+
 Phase-change materials
 ======================
+
 Phase-change materials are some of the most promising materials for data-storage applications. In this application section, a pixelated STEM dataset from a AgInSbTe phase-change material specimen will be processed.
 Distinguishing between amorphous and crystalline regions can be hard in microstructure analysis with 4-D-STEM because of low contrast between them during the two most common method of visualization: bright and dark field imaging.
 The main difference of pixelated diffraction patterns for each of the beam positions the presence of additional (non zero-order) diffraction peaks in crystalline frames, while the amorphous frames have only the zero-order peak.
 Detection of the positions of additional peaks for all frames of crystalline regions will allow gaining information on the crystal structure.
 
 Next, methods to distinguish crystalline and amorphous regions in phase-change materials will be described.
+
+.. note::
+    See :ref:`phasechange` for the API reference.
 
 .. _`crystallinity map`:
 

@@ -133,6 +133,12 @@
         "contribution": "Discussions, Python support in GMS"
     },
     {
+        "displayname": "Anastasiia Lesnichaia",
+        "authorname": "Lesnichaia, Anastasiia",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Prototyping for scalable implementation of Single Side Band ptychography, WIP"
+    },
+    {
         "displayname": "Penghan Lu",
         "authorname": "Lu, Penghan",
         "affiliation": "FZ J\u00fclich",
@@ -160,7 +166,7 @@
         "displayname": "Heide Meissner",
         "authorname": "Meissner, Heide",
         "affiliation": "HZDR",
-        "contribution": "Discussions, funding applications "
+        "contribution": "Discussions, funding applications"
     },
     {
         "displayname": "Grigore Moldovan",

@@ -59,6 +59,8 @@ Documentation
 * Documentation for :ref:`crystallinity map` and :ref:`clustering` analysis (:pr:`408` by :user:`kruzaeva`)
 * Instructions for profiling slow tests (:issue:`447`, :pr:`448`)
 * Improve API reference on Analysis results (:issue:`494`, :pr:`496`)
+* Restructure and update the API reference for a number of UDFs and
+  other application-specific code (:issue:`503`, :pr:`507,508`)
 
 Obsolescence
 ------------

@@ -155,16 +155,18 @@ class H5DataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
+        def _do_detect():
             with h5py.File(path, 'r'):
                 pass
+        try:
+            executor.run_function(_do_detect)
         except (IOError, OSError, KeyError, ValueError):
             # not a h5py file or can't open for some reason:
             return False
 
         # try to guess the hdf5 dataset path:
         try:
-            datasets = _get_datasets(path)
+            datasets = executor.run_function(_get_datasets, path)
             largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
             name, size, shape, dtype = largest_ds
         except (IndexError, TimeoutError):

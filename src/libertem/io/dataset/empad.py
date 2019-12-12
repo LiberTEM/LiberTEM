@@ -175,7 +175,7 @@ class EMPADDataSet(DataSet):
         try:
             ds = cls(path)
             ds = ds.initialize(executor)
-            if not ds.check_valid():
+            if not executor.run_function(ds.check_valid):
                 return False
             return {
                 "path": path,

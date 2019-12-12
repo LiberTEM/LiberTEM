@@ -377,7 +377,7 @@ class FRMS6DataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        hdr_filename = "%s.hdr" % _get_base_filename(path)
+        hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
             executor.run_function(_read_hdr, hdr_filename)
         except Exception:

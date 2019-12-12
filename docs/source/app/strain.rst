@@ -3,6 +3,10 @@
 Strain mapping
 ==============
 
+.. note::
+
+    See :ref:`blobfinder API reference <blobfinder api>` and :ref:`matching API reference <matching api>` for API references
+
 LiberTEM can evaluate the position of convergent beam electron diffraction disks or precession electron diffraction peaks to generate input data for strain maps in three automated steps:
 
 1. Identify peaks using :meth:`~libertem.udf.blobfinder.get_peaks`

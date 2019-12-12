@@ -44,7 +44,7 @@ class RAWDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "dtype", "scan_size", "detector_size"]
+            for k in ["path", "dtype", "scan_size", "detector_size", "enable_direct"]
         }
         return data
 

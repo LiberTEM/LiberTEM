@@ -6,6 +6,7 @@ import numpy as np
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
+from libertem.io.dataset.raw import RAWDatasetParams
 
 
 def test_simple_open(default_raw):
@@ -156,3 +157,22 @@ def test_macrotile_roi_3(lt_ctx, default_raw):
 
 def test_cache_key_json_serializable(default_raw):
     json.dumps(default_raw.get_cache_key())
+
+
+def test_message_converter_direct():
+    src = {
+        "type": "RAW",
+        "path": "p",
+        "dtype": "d",
+        "scan_size": [16, 16],
+        "detector_size": [8, 8],
+        "enable_direct": True,
+    }
+    converted = RAWDatasetParams().convert_to_python(src)
+    assert converted == {
+        "path": "p",
+        "dtype": "d",
+        "scan_size": [16, 16],
+        "detector_size": [8, 8],
+        "enable_direct": True,
+    }

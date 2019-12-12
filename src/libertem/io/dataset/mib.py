@@ -370,7 +370,7 @@ class MIBDataSet(DataSet):
                 "path": path,
                 "tileshape": (1, 3, 256, 256),
             }
-        elif pathlow.endswith(".hdr") and is_valid_hdr(path):
+        elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
             hdr = executor.run_function(read_hdr_file, path)
             scan_size = scan_size_from_hdr(hdr)
             return {

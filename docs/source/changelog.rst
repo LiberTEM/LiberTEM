@@ -1,16 +1,17 @@
 Changelog
 =========
 
-.. _continuous:
-.. _`v0-4-0`:
+.. Continuous commented out because of no entries yet
+.. .. _continuous:
+.. .. _`v0-4-0`:
 
-0.4.0.dev0 (continuous)
-#######################
+.. 0.4.0.dev0 (continuous)
+.. #######################
 
-.. toctree::
+.. .. toctree::
    :glob:
 
-   changelog/*/*
+..   changelog/*/*
 
 .. _latest:
 .. _`v0-3-0`:
@@ -22,26 +23,26 @@ New features
 ------------
 
 * Make OOP based composition and subclassing easier for
-  :class:`libertem.udf.blobfinder.FastCorrelationUDF` (:pr:`466`)
-* Introduce plain circular match pattern :class:`libertem.udf.blobfinder.Circular` (:pr:`469`)
-* Distributed sharded dataset (:issue:`136`, :issue:`457`)
-* Support for caching data sets from slower storage (NFS, spinning
-  metal) on fast local storage (:pr:`471`)
+  :class:`~libertem.udf.blobfinder.correlation.CorrelationUDF` (:pr:`466`)
+* Introduce plain circular match pattern :class:`~libertem.udf.blobfinder.patterns.Circular` (:pr:`469`)
+* Distributed sharded dataset :class:`~libertem.io.dataset.cluster.ClusterDataSet` (:issue:`136`, :issue:`457`)
+* Support for caching data sets :class:`~libertem.io.dataset.cached.CachedDataSet`
+  from slower storage (NFS, spinning metal) on fast local storage (:pr:`471`)
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
 * :class:`libertem.io.dataset.dm.DMDataSet` implementation based on ncempy (:pr:`497`)
     * Adds a new :meth:`~libertem.executor.base.JobExecutor.map` executor primitive. Used to concurrently
       read the metadata for DM3/DM4 files on initialization.
     * Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
       changes in the file dialog.
-* Speed up of up to 150x for correlation-based peak refinement in 
-  :mod:`libertem.udf.blobfinder` with a Numba-based pipeline (:pr:`468`)
-* Introduce :class:`libertem.udf.blobfinder.FullFrameCorrelationUDF` which
+* Speed up of up to 150x for correlation-based peak refinement in
+  :mod:`libertem.udf.blobfinder.correlation` with a Numba-based pipeline (:pr:`468`)
+* Introduce :class:`~libertem.udf.blobfinder.correlation.FullFrameCorrelationUDF` which
   correlates a large number (several hundred) of small peaks (10x10) on small
   frames (256x256) faster than
-  :class:`libertem.udf.blobfinder.FastCorrelationUDF` and
-  :class:`libertem.udf.blobfinder.SparseCorrelationUDF` (:pr:`468`)
-* Introduce :class:`libertem.udf.UDFPreprocessMixin` (:pr:`464`)
-* Implement iterator over :class:`libertem.analysis.base.AnalysisResultSet` (:pr:`496`)
+  :class:`~libertem.udf.blobfinder.correlation.FastCorrelationUDF` and
+  :class:`~libertem.udf.blobfinder.correlation.SparseCorrelationUDF` (:pr:`468`)
+* Introduce :class:`~libertem.udf.UDFPreprocessMixin` (:pr:`464`)
+* Implement iterator over :class:`~libertem.analysis.base.AnalysisResultSet` (:pr:`496`)
 
 Bug fixes
 ---------

@@ -44,6 +44,10 @@ New features
   :class:`~libertem.udf.blobfinder.correlation.SparseCorrelationUDF` (:pr:`468`)
 * Introduce :class:`~libertem.udf.UDFPreprocessMixin` (:pr:`464`)
 * Implement iterator over :class:`~libertem.analysis.base.AnalysisResultSet` (:pr:`496`)
+* Add hologram simulation
+  :func:`libertem.utils.generate.hologram_frame` (:pr:`475`)
+* Implement Hologram reconstruction UDF
+  :class:`libertem.udf.holography.HoloReconstructUDF` (:pr:`475`)
 
 Bug fixes
 ---------

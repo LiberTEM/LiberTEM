@@ -1,7 +1,7 @@
 Off-axis electron holography
 ============================
 
-.. versionadded:: 0.3
+.. versionadded:: 0.3.0
 
 The off-axis holography applications (see :ref:`holography app` for the application examples) are realized in
 two modules: UDF for off axis electron holography reconstruction and utility function for hologram simulations.

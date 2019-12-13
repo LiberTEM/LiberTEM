@@ -50,7 +50,7 @@ class MasksResultSet(AnalysisResultSet):
     attributes carry the absolute value of the results, and additional attributes with real
     part, imaginary part, phase and full complex result are available.
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
 
     Attributes
     ----------
@@ -79,7 +79,7 @@ class SingleMaskResultSet(AnalysisResultSet):
     absolute value of the result, and additional attributes with real part, imaginary part,
     phase and full complex result are available.
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
 
     Attributes
     ----------

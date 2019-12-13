@@ -3,7 +3,7 @@
 Off-axis electron holography
 ============================
 
-.. versionadded:: 0.3
+.. versionadded:: 0.3.0
 
 Hologram simulation
 -------------------

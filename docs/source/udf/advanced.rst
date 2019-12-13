@@ -141,7 +141,7 @@ buffers are allocated, but before the partition data is processed, with views se
 the whole partition masked by the current ROI. This is particularly useful to set up
 :code:`dtype=object` buffers, for example ragged arrays.
 
-.. versionadded:: 0.3
+.. versionadded:: 0.3.0
 
 Partition processing
 --------------------

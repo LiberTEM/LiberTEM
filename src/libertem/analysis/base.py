@@ -102,7 +102,7 @@ class AnalysisResultSet(object):
     mask 0
 
     >>> # As an iterator
-    >>> # New since 0.3
+    >>> # New since 0.3.0
     >>> for m in result:
     ...     print(m.title)
     mask 0
@@ -154,7 +154,7 @@ class Analysis(object):
     The content of this result set is governed by the specific implementation of
     the :code:`Analysis` sub-class.
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
     """
     pass
 

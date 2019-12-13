@@ -28,7 +28,7 @@ class SumResultSet(AnalysisResultSet):
     absolute value of the result and additional attributes with real part, imaginary part,
     phase and full complex result are available.
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
 
     Attributes
     ----------

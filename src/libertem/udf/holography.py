@@ -71,9 +71,11 @@ def aperture_function(r, apradius, rsmooth):
 
 class HoloReconstructUDF(UDF):
     """
-    Reconstruct off-axis electron holograms using Fourier-based method
-    Running `Context.run_udf` on instance of this class will a complex electron wave.
-    Use `wave` key to access raw data.
+    Reconstruct off-axis electron holograms using a Fourier-based method.
+
+    Running :meth:`~libertem.api.Context.run_udf` on an instance of this class
+    will reconstruct a complex electron wave. Use the :code:`wave` key to access
+    the raw data in the result.
 
     See :ref:`holography app` for detailed application example
 

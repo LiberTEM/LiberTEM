@@ -77,7 +77,7 @@ class HoloReconstructUDF(UDF):
 
     See :ref:`holography app` for detailed application example
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
 
     Examples
     --------

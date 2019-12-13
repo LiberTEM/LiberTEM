@@ -34,7 +34,7 @@ Before (using a release candidate package)
 * Full documentation review and update, including link check using
   ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
 * Update the expected version in notes on changes, i.e. from :code:`0.3.0.dev0`
-  to :code:`0.3` when releasing version 0.3.
+  to :code:`0.3.0` when releasing version 0.3.0.
 * Update and review change log in :code:`docs/source/changelog.rst`, merging
   snippets in :code:`docs/source/changelog/*/` as appropriate.
 * Update the JSON files in the ``packaging/`` folder with author and project information

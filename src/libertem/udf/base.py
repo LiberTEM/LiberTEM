@@ -265,7 +265,7 @@ class UDFPreprocessMixin:
     Implement :code:`preprocess` to initialize the result buffers of a partition on the worker
     before the partition data is processed.
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.3.0
     '''
     def preprocess(self):
         """

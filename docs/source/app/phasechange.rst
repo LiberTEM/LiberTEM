@@ -71,7 +71,7 @@ Amorphous frame:
 Clustering
 ~~~~~~~~~~
 
-.. versionadded:: 0.3
+.. versionadded:: 0.3.0
 
 To further categorize the crystalline regions according to their lattice
 orientation, clustering, based on non-zero diffraction peaks positions, can be

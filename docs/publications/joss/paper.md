@@ -16,15 +16,15 @@ authors:
   - name: Karina Ruzaeva
     affiliation: 1
     orcid: 0000-0003-3610-0989
+  - name: Vadim Migunov
+    affiliation: "1, 3"
+    orcid: 0000-0002-6296-4492
   - name: Jan Caron
     affiliation: 1
     orcid: 0000-0002-0873-889X
   - name: Rahul Chandra
     affiliation: 2
     orcid: 0000-0003-2079-5368
-  - name: Vadim Migunov
-    affiliation: "1, 3"
-    orcid: 0000-0002-6296-4492
   - name: Magnus Nord
     affiliation: 4
     orcid: 0000-0001-7981-5293

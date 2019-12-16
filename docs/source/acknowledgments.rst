@@ -105,6 +105,20 @@ research and innovation programme under grant agreement No 823717 – `ESTEEM3
 
 |clearfloat|
 
+ERC Synergy grant 3D MAGiC
+..........................
+
+.. image:: ./images/EU.jpg
+    :align: left
+    :width: 100px
+    :alt: European Union flag
+
+This project has received funding from the European Research Council (ERC) under
+the European Union’s Horizon 2020 research and innovation programme (grant
+agreement No 856538).
+
+|clearfloat|
+
 moreSTEM
 ........
 

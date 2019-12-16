@@ -31,7 +31,7 @@ authors:
   - name: Knut Müller-Caspary
     affiliation: 1
     orcid: 0000-0002-2588-7993
-  - name: Rafal Dunin-Borkowski
+  - name: Rafal E. Dunin-Borkowski
     affiliation: 1
     orcid: 0000-0001-8082-0647
 affiliations:
@@ -64,7 +64,7 @@ typical personal computers (PCs) at this time. Applications from ten years
 before that ran smoothly on a typical PC have evolved into numerical analysis of
 complex multidimensional datasets [@Ophus2019] that require distributed
 processing on high-performance systems. Furthermore, electron microscopy is
-interactive and visual, and experiments done inside electron microscope
+interactive and visual, and experiments performed inside electron microscopes
 (so-called in situ experiments) often rely on fast on-line data processing as
 the experimental parameters need to be adjusted based on the observation
 results. As a consequence, modern data processing systems for electron
@@ -152,17 +152,20 @@ example, LiberTEM can be run from within development versions of an upcoming GMS
 release that includes an embedded Python interpreter, and it can already generate
 efficient Dask.distributed arrays from the data formats it supports.
 
+Live data processing for interactive microscopy and automation of experiments is
+currently under development. The architecture and programming model of LiberTEM
+are already developed in such a way that current applications will work on live
+data streams without modification as soon as back-end support is implemented.
+
 # Acknowledgements
 
 This project has received funding from the European Research Council (ERC) under
 the European Union’s Horizon 2020 research and innovation programme (grant
-agreement No 780487).
+agreements No 780487 - VIDEO and No 856538 - 3D MAGiC).
 
 This project has received funding from the European Union’s Horizon 2020
-research and innovation programme under grant agreement No 686053.
-
-This project has received funding from the European Union’s Horizon 2020
-research and innovation programme under grant agreement No 823717 – ESTEEM3.
+research and innovation programme under grant agreements No 686053 - CritCat and
+No 823717 – ESTEEM3.
 
 We gratefully acknowledge funding from the Initiative and Networking Fund of the
 Helmholtz Association within the Helmholtz Young Investigator Group moreSTEM

@@ -9,6 +9,10 @@ from libertem.web.messages import MessageConverter
 from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
 
 
+# alias for mocking:
+current_time = time.time
+
+
 def unravel_nav(slice_, containing_shape):
     """
     inverse of flatten_nav, currently limited to 1d -> 2d nav
@@ -61,10 +65,10 @@ def _get_datasets(path):
     datasets = []
 
     timeout = 3
-    t0 = time.time()
+    t0 = current_time()
 
     def _make_list(name, obj):
-        if time.time() - t0 > timeout:
+        if current_time() - t0 > timeout:
             raise TimeoutError
         if hasattr(obj, 'size') and hasattr(obj, 'shape'):
             datasets.append((name, obj.size, obj.shape, obj.dtype))

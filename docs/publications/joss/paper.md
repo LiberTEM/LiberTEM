@@ -53,7 +53,7 @@ bibliography: paper.bib
 The data rate of detectors for electron microscopy (EM) has grown by two orders
 of magnitude faster compared to the performance improvements of essential IT
 components such as CPU, memory, mass storage and network between 2009 and 2019
-[@Weber2018]. The LiberTEM open source platform [@Clausen2019] is designed to
+[@Weber2018]. The LiberTEM open source platform [@Clausen2019a] is designed to
 match the growing performance requirements of EM data processing [@Weber2020].
 
 # Motivation
@@ -84,15 +84,13 @@ is electron microscopy. Nevertheless, LiberTEM is suitable for any kind of
 large-scale binary data that has a hyper-rectangular array layout, notably data
 from synchrotrons and neutron sources.
 
-LiberTEM uses a simplified MapReduce [@Dean2008] programming model. A
-description of the architecture can be found at
-https://libertem.github.io/LiberTEM/architecture.html. It is designed to run and
-perform well on PCs, single server nodes, clusters and cloud services. On
-clusters it can use fast distributed local storage on high-performance SSDs.
-That way it achieves very high aggregate IO performance on a compact and
-cost-efficient system built from stock components. Benchmarking results that
-show 46 GB/s throughput on a cluster with eight microblade nodes can
-be found at https://libertem.github.io/LiberTEM/performance.html
+LiberTEM uses a simplified MapReduce [@Dean2008] programming model. It is
+designed to run and perform well on PCs, single server nodes, clusters and cloud
+services. On clusters it can use fast distributed local storage on
+high-performance SSDs. That way it achieves very high aggregate IO performance
+on a compact and cost-efficient system built from stock components. On a cluster
+with eight microblade nodes we could show a mass storage throughput of 46 GB/s
+for a virtual detector calculation.
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
 installation of Python 3 and the required packages will likely work as well. The
@@ -103,21 +101,18 @@ various applications of electron microscopy data. That includes basic
 capabilities such as integrating over ranges of the input data (virtual
 detectors and virtual darkfield imaging, for example), and advanced applications
 such as data processing for strain mapping, amorphous materials and phase change
-materials. More applications will be added as development progresses. More
-details can be found at https://libertem.github.io/LiberTEM/applications.html
+materials. More applications will be added as development progresses.
 
 Compared to established MapReduce-like systems like Apache Spark [@Zaharia2016]
 or Apache Hadoop [@Patel2012], it offers a data model that is similar to NumPy
 [@Walt2011], suitable for typical binary data from area detectors, as opposed to
 tabular data in the case of Spark and Hadoop. It includes interfaces to the
 established Python-based numerical processing tools, supports a number of
-relevant file formats for EM data
-<https://libertem.github.io/LiberTEM/formats.html#supported-formats>, and
-features optimized data paths for numerical data that eliminate unnecessary
-copies and allow cache-efficient processing. As a result, [it can reach more
-than four times the throughput of Spark-based
-processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the same
-operations on typical data sets.
+relevant file formats for EM data, and features optimized data paths for
+numerical data that eliminate unnecessary copies and allow cache-efficient
+processing. As a result, [it can reach more than four times the throughput of
+Spark-based processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the
+same operations on typical data sets.
 
 Compared to tools such as Dask arrays for NumPy-based distributed
 computations [@Rocklin2015], LiberTEM is developed towards low-latency
@@ -152,6 +147,10 @@ example, LiberTEM can be run from within development versions of an upcoming GMS
 release that includes an embedded Python interpreter, and it can already generate
 efficient Dask.distributed arrays from the data formats it supports.
 
+The online documentation with more details on installation, use, architecture,
+applications, supported formats, performance benchmarks and more can be found at
+<https://libertem.github.io/LiberTEM/>.
+
 Live data processing for interactive microscopy and automation of experiments is
 currently under development. The architecture and programming model of LiberTEM
 are already developed in such a way that current applications will work on live
@@ -184,8 +183,7 @@ Forschungszentrum Jülich is supporting LiberTEM with funding for personnel,
 access to its infrastructure and administrative support.
 
 Furthermore, we wish to thank a large number of people who contributed in
-various ways to LiberTEM. A full and continuously updated list of creators and
-contributors can be found at
-https://libertem.github.io/LiberTEM/acknowledgments.html
+various ways to LiberTEM. [We maintain a full and continuously updated list of creators and
+contributors online.](https://libertem.github.io/LiberTEM/acknowledgments.html)
 
 # References

@@ -159,14 +159,16 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         TODO: any cancellation/errors to handle?
         """
         available_workers = self.get_available_workers()
-        fn_with_args = functools.partial(fn, *args, **kwargs)
 
         future_map = {}
         for worker_set in available_workers.group_by_host():
             future_map[worker_set.example().host] = self.client.submit(
-                fn_with_args,
+                functools.partial(fn, *args, **kwargs),
                 priority=1,
                 workers=worker_set.names(),
+                # NOTE: need pure=False, otherwise the functions will all map to the same
+                # scheduler key and will only run once
+                pure=False,
             )
         result_map = {
             host: future.result()

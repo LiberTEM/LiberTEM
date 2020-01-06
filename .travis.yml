@@ -47,6 +47,7 @@ jobs:
       script:
         - cd packaging/docker/ && docker-compose up --build -d
         - tox -e py37 -- tests/ -m dist
+      env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
     - stage: test
       language: node_js
       node_js:

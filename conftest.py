@@ -1,6 +1,7 @@
 import os
 import importlib.util
 import platform
+import shutil
 
 import numpy as np
 import pytest
@@ -11,6 +12,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.executor.dask import DaskJobExecutor
 
 
 # A bit of gymnastics to import the test utilities since this
@@ -115,6 +117,58 @@ def default_raw(tmpdir_factory):
     yield ds
 
 
+@pytest.fixture
+def raw_on_workers(dist_ctx, tmpdir_factory):
+    """
+    copy raw dataset to each worker
+    """
+
+    datadir = tmpdir_factory.mktemp('data')
+    filename = str(datadir + '/raw-test-on-workers')
+
+    data = utils._mk_random(size=(16, 16, 128, 128), dtype='float32')
+
+    tmpdirpath = os.path.dirname(filename)
+
+    def _make_example_raw():
+        # workers don't automatically have the pytest tmp directory, create it:
+        if not os.path.exists(tmpdirpath):
+            os.makedirs(tmpdirpath)
+        print("creating %s" % filename)
+        data.tofile(filename)
+        print("created %s" % filename)
+        return tmpdirpath, os.listdir(tmpdirpath)
+
+    import cloudpickle
+    import pickle
+    dumped = cloudpickle.dumps(_make_example_raw)
+
+    hmm = pickle.loads(dumped)
+    # assert False
+
+    print("raw_on_workers _make_example_raw: %s" %
+          (dist_ctx.executor.run_each_host(_make_example_raw),))
+
+    ds = dist_ctx.load("raw",
+                       path=str(filename),
+                       scan_size=(16, 16),
+                       detector_size=(128, 128),
+                       dtype="float32")
+
+    yield ds
+
+    def _cleanup():
+        # FIXME: this may litter /tmp/ with empty directories, as we only remove our own
+        # tmpdirpath, but as we run these tests in docker containers, they are eventually
+        # cleaned up anyways:
+        files = os.listdir(tmpdirpath)
+        shutil.rmtree(tmpdirpath, ignore_errors=True)
+        print("removed %s" % tmpdirpath)
+        return tmpdirpath, files
+
+    print("raw_on_workers cleanup: %s" % (dist_ctx.executor.run_each_host(_cleanup),))
+
+
 @pytest.fixture(scope='session')
 def large_raw(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
@@ -157,6 +211,23 @@ def uint16_raw(tmpdir_factory):
     )
     ds = ds.initialize(InlineJobExecutor())
     yield ds
+
+
+@pytest.fixture
+def dist_ctx():
+    """
+    This Context needs to have an external dask cluster running, with the following
+    assumptions:
+
+     - two workers: hostnames worker-1 and worker-2
+     - one scheduler node
+     - data availability TBD
+     - the address of the dask scheduler is passed in as DASK_SCHEDULER_ADDRESS
+    """
+    scheduler_addr = os.environ['DASK_SCHEDULER_ADDRESS']
+    executor = DaskJobExecutor.connect(scheduler_addr)
+    with lt.Context(executor=executor) as ctx:
+        yield ctx
 
 
 @pytest.fixture(autouse=True)

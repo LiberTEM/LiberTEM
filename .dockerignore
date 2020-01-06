@@ -1,0 +1,15 @@
+benchmarks
+prototypes
+data
+packaging/appimage
+build
+dist
+htmlcov
+docs
+examples
+client
+.git
+.tox
+.dockerignore
+Dockerfile
+docker-compose.yml

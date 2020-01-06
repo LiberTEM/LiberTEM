@@ -1,7 +1,9 @@
-import pickle
+import os
 import json
+import pickle
 
 import numpy as np
+import pytest
 
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
@@ -176,3 +178,24 @@ def test_message_converter_direct():
         "detector_size": [8, 8],
         "enable_direct": True,
     }
+
+
+@pytest.mark.dist
+def test_raw_on_workers(raw_on_workers, dist_ctx):
+    # should not exist on the client node:
+    assert not os.path.exists(raw_on_workers._path)
+    res = dist_ctx.executor.run_each_host(os.path.exists, raw_on_workers._path)
+    assert len(res) == 2
+    assert all(res)
+
+
+@pytest.mark.dist
+def test_sum_on_dist(raw_on_workers, dist_ctx):
+    print(dist_ctx.executor.run_each_host(lambda: os.system("hostname")))
+    print(dist_ctx.executor.get_available_workers().group_by_host())
+    print(dist_ctx.executor.get_available_workers())
+    print(dist_ctx.executor.run_each_host(
+        lambda: os.listdir(os.path.dirname(raw_on_workers._path))))
+    analysis = dist_ctx.create_sum_analysis(dataset=raw_on_workers)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (128, 128)

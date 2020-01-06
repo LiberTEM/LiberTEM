@@ -42,6 +42,12 @@ jobs:
         - pip install tox
         - sudo apt-get install -y pandoc
     - stage: test
+      services:
+        - docker
+      script:
+        - cd packaging/docker/ && docker-compose up --build -d
+        - tox -e py37 -- tests/ -m dist
+    - stage: test
       language: node_js
       node_js:
         - 8

@@ -8,10 +8,10 @@ def test_holo_reconstruction(lt_ctx):
     # Prepare image parameters and mesh
     nx, ny = (5, 7)
     sx, sy = (64, 64)
-    slice_crop = [slice(None),
+    slice_crop = (slice(None),
                   slice(None),
                   slice(sx // 4, sx // 4 * 3),
-                  slice(sy // 4, sy // 4 * 3)]
+                  slice(sy // 4, sy // 4 * 3))
 
     lnx = np.arange(nx)
     lny = np.arange(ny)

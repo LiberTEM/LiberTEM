@@ -42,12 +42,14 @@ jobs:
         - pip install tox
         - sudo apt-get install -y pandoc
     - stage: test
+      env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
+      python: 3.7
+      dist: xenial
       services:
         - docker
       script:
         - cd packaging/docker/ && docker-compose up --build -d
         - tox -e py37 -- tests/ -m dist
-      env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
     - stage: test
       language: node_js
       node_js:

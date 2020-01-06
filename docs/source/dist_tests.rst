@@ -24,6 +24,18 @@ Note that you need to run the above command as a user that can access the docker
 for example by being in the :code:`docker` group. The containers are running as long as
 the :code:`docker-compose` command is running, so you can stop them using :code:`Ctrl-C`.
 
+You can then run the distributed tests using (from the repository root directory):
+
+.. code:: shell
+
+   $ DASK_SCHEDULER_ADDRESS=tcp://localhost:8786 pytest -m dist tests/
+
+Or via :code:`tox`:
+
+.. code:: shell
+
+   $ DASK_SCHEDULER_ADDRESS=tcp://localhost:8786 tox -e py37 -- -m dist tests/
+
 After changing LiberTEM code, you need to rebuild and restart the containers. This can be
 done by running:
 

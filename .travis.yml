@@ -49,9 +49,9 @@ jobs:
         - docker
       install:
         - pip install tox pip-tools
-        - cd packaging/docker/ && ./update_reqs.sh
+        - (cd packaging/docker/ && ./update_reqs.sh)
       script:
-        - cd packaging/docker/ && docker-compose up --build -d
+        - (cd packaging/docker/ && docker-compose up --build -d)
         - tox -e py37 -- tests/ -m dist
     - stage: test
       language: node_js

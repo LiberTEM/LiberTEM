@@ -331,3 +331,4 @@ See more:
    :maxdepth: 2
 
    releasing
+   dist_tests

@@ -36,7 +36,7 @@ Notable upstream projects
 `Tornado web <https://www.tornadoweb.org/>`_, `Matplotlib
 <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py
 <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil
-<https://psutil.readthedocs.io/>`_, `Hdfs3 <https://hdfs3.readthedocs.io/>`_,
+<https://psutil.readthedocs.io/>`_,
 `Ncempy`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React

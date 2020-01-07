@@ -1,0 +1,16 @@
+plugins:
+  tslint:
+    enabled: true
+    config: client/tslint.json
+  sonar-python:
+    enabled: true
+    config:
+      tests_patterns:
+        - tests/**
+      minimum_severity: major
+  radon:
+    enabled: true
+    config:
+      threshold: "B"
+  bandit:
+    enabled: true

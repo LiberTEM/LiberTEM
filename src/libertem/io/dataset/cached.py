@@ -473,6 +473,29 @@ class CachedPartition(Partition):
     def _sizeof(self):
         return self.slice.shape.size * np.dtype(self.dtype).itemsize
 
+    def _write_tiles_noroi(self, wh, source_tiles, dest_dtype):
+        """
+        Write tiles from source_tiles to the cache. After each tile is written, yield
+        it for further processing, potentially doing dtype conversion on the fly.
+        """
+        with wh:
+            miss_tiles = wh.write_tiles(source_tiles)
+            if np.dtype(dest_dtype) != np.dtype(self._cluster_part.dtype):
+                for tile in miss_tiles:
+                    yield tile.astype(dest_dtype)
+            else:
+                yield from miss_tiles
+
+    def _write_tiles_roi(self, wh, source_tiles, cached_tiles):
+        """
+        Get source tiles without roi, read and cache whole partition, then
+        read all tiles selected via roi from the cache (_cluster_part aka cached_tiles).
+        """
+        with wh:
+            for tile in wh.write_tiles(source_tiles):
+                pass
+        yield from cached_tiles
+
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False,
                   dest_dtype="float32", roi=None, target_size=None):
         cache = self._get_cache()
@@ -497,20 +520,9 @@ class CachedPartition(Partition):
             )
             wh = self._cluster_part.get_write_handle()
             if roi is None:
-                with wh:
-                    miss_tiles = wh.write_tiles(source_tiles)
-                    if np.dtype(dest_dtype) != np.dtype(self._cluster_part.dtype):
-                        for tile in miss_tiles:
-                            yield tile.astype(dest_dtype)
-                    else:
-                        yield from miss_tiles
+                yield from self._write_tiles_noroi(wh, source_tiles, dest_dtype)
             else:
-                with wh:
-                    # get source tiles without roi, read and cache whole partition, then
-                    # read from _cluster_part with roi
-                    for tile in wh.write_tiles(source_tiles):
-                        pass
-                yield from cached_tiles
+                yield from self._write_tiles_roi(wh, source_tiles, cached_tiles)
             cache.record_miss(cache_item)
 
     def get_locations(self):

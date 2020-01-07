@@ -1,4 +1,4 @@
-|gitter|_ |travis|_ |appveyor|_ |zenodo|_ |github|_
+|gitter|_ |travis|_ |appveyor|_ |zenodo|_ |github|_ |codeclimate|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
@@ -14,6 +14,10 @@
 
 .. |github| image:: https://img.shields.io/badge/GitHub-GPL--3.0-informational
 .. _github: https://github.com/LiberTEM/LiberTEM/
+
+
+.. |codeclimate| image:: https://api.codeclimate.com/v1/badges/dee042f64380f64737e5/maintainability
+.. _codeclimate: https://codeclimate.com/github/LiberTEM/LiberTEM/maintainability
 
 LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets using a simplified `MapReduce programming model

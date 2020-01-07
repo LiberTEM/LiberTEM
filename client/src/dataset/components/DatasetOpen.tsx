@@ -12,7 +12,6 @@ import DatasetTypeSelect from "./DatasetTypeSelect";
 import EMPADParamsForm from "./EMPADParamsForm";
 import FRMS6ParamsForm from "./FRMS6ParamsForm";
 import HDF5ParamsForm from "./HDF5ParamsForm";
-import HDFSParamsForm from './HDFSParamsForm';
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
@@ -88,7 +87,6 @@ const DatasetOpen = () => {
     // const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
     // const formComponentMap = {
     //     [DatasetTypes.HDF5]: HDF5ParamsForm,
-    //     [DatasetTypes.HDFS]: HDFSParamsForm,
     //     [DatasetTypes.RAW]: RawFileParamsForm,
     //     [DatasetTypes.MIB]: MIBParamsForm,
     //     [DatasetTypes.BLO]: BLOParamsForm,
@@ -128,10 +126,6 @@ const DatasetOpen = () => {
         case DatasetTypes.HDF5: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             return renderForm(<HDF5ParamsForm {...commonParams} initial={initial} />);
-        }
-        case DatasetTypes.HDFS: {
-            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<HDFSParamsForm {...commonParams} initial={initial} />);
         }
         case DatasetTypes.RAW: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;

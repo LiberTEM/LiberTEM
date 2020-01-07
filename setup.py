@@ -157,7 +157,6 @@ setup(
         'scikit-learn',
     ],
     extras_require={
-        'hdfs': 'hdfs3',
         'torch': 'torch',
         'hdbscan': 'hdbscan',
         'pyfftw': 'pyfftw',
@@ -175,7 +174,6 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'libertem-ingest=libertem.io.ingest.cli:main',
             'libertem-server=libertem.web.cli:main',
         ]
     },

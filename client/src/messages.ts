@@ -70,7 +70,6 @@ export type ConnectResponse = {
 
 export enum DatasetTypes {
     HDF5 = "HDF5",
-    HDFS = "HDFS",
     RAW = "RAW",
     MIB = "MIB",
     BLO = "BLO",
@@ -83,12 +82,6 @@ export enum DatasetTypes {
 export interface DatasetParamsCommon {
     name: string,
 }
-
-export type DatasetParamsHDFS = {
-    type: DatasetTypes.HDFS,
-    path: string,
-    tileshape: number[],
-} & DatasetParamsCommon;
 
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
@@ -141,7 +134,7 @@ export type DatasetParamsEMPAD = {
     scan_size: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsHDFS | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD
 
 export interface DatasetCreateParams {
     id: string,

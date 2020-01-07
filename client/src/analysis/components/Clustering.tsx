@@ -45,22 +45,22 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         setDelta(event.target.valueAsNumber);
     }
 
-    const [min_dist, setMin_dist] = React.useState(1);
+    const [minDist, setMinDist] = React.useState(1);
 
-    const min_distChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setMin_dist(event.target.valueAsNumber);
+    const minDistChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setMinDist(event.target.valueAsNumber);
     }
 
-    const [n_peaks, setPeak] = React.useState(50);
+    const [nPeaks, setNPeaks] = React.useState(50);
 
     const peakChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPeak(event.target.valueAsNumber);
+        setNPeaks(event.target.valueAsNumber);
     }
 
-    const [n_clust, setClust] = React.useState(20);
+    const [nClust, setNClust] = React.useState(20);
 
     const clustChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setClust(event.target.valueAsNumber);
+        setNClust(event.target.valueAsNumber);
     }
 
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
@@ -116,9 +116,9 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                 ri,
                 ro,
                 delta,
-                n_clust,
-                n_peaks,
-                min_dist
+                n_clust: nClust,
+                n_peaks: nPeaks,
+                min_dist: minDist
             }
         }));
     };
@@ -156,14 +156,14 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                         <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) <input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange} /> </label>
                     </Form.Field>
                     <Form.Field>
-                        <label> Number of clusters  <input type="number" value={n_clust} step="1" min="2" max="100" onChange={clustChange} /> </label>
+                        <label> Number of clusters  <input type="number" value={nClust} step="1" min="2" max="100" onChange={clustChange} /> </label>
                     </Form.Field>
                     <Form.Field>
                         <label>  Maximal number of possible peak positions to detect (better put higher value,
-        the output is limited to the number of peaks the algorithm could find)  <input type="number" value={n_peaks} step="1" min="5" max="200" onChange={peakChange} /> </label>
+        the output is limited to the number of peaks the algorithm could find)  <input type="number" value={nPeaks} step="1" min="5" max="200" onChange={peakChange} /> </label>
                     </Form.Field>
                     <Form.Field>
-                        <label>  Minimal distance in pixels between peaks  <input type="number" value={min_dist} step="1" min="0" max="100" onChange={min_distChange} />  </label>
+                        <label>  Minimal distance in pixels between peaks  <input type="number" value={minDist} step="1" min="0" max="100" onChange={minDistChange} />  </label>
                     </Form.Field>
                 </Form>
             </Accordion.Content>

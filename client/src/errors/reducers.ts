@@ -38,6 +38,9 @@ export function errorReducer(state = initialErrorState, action: AllActions): Err
         case errorActions.ActionTypes.DISMISS: {
             return filterWithPred(state, (r: ErrorMessage) => r.id !== action.payload.id);
         }
+        case errorActions.ActionTypes.DISMISS_ALL: {
+            return initialErrorState;
+        }
     }
     return state;
 }

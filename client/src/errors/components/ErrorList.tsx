@@ -2,8 +2,8 @@ import * as React from "react";
 import { connect, useDispatch } from "react-redux";
 import { Modal } from "semantic-ui-react";
 import { RootReducer } from "../../store";
-import Error from "./Error";
 import { Actions } from "../actions";
+import Error from "./Error";
 
 const mapStateToProps = (state: RootReducer) => {
     return {

@@ -1,5 +1,6 @@
 import math
 
+import pytest
 import numpy as np
 import numba
 
@@ -122,6 +123,7 @@ def encode_12_little_little(inp, out):
         out[encoded_remainder_offset + 1] = b
 
 
+@pytest.mark.with_numba
 def test_encode_decode_uint12_ref():
     mult = 45
     inp = np.arange(2*mult, dtype=np.uint16)
@@ -137,6 +139,7 @@ def test_encode_decode_uint12_ref():
     assert np.allclose(inp, result)
 
 
+@pytest.mark.with_numba
 def test_encode_decode_uint12():
     mult = 45
     inp = np.arange(2*mult, dtype=np.uint16)

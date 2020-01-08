@@ -14,6 +14,7 @@ from libertem.io.dataset.memory import MemoryDataSet
 from utils import _mk_random
 
 
+@pytest.mark.with_numba
 def test_refinement():
     data = np.array([
         (0, 0, 0, 0, 0, 1),
@@ -39,6 +40,8 @@ def test_refinement():
     assert (rx < x) and (rx > (x - 1))
 
 
+# FIXME: numba coverage disabled because of to_fixed_tuple issue:
+# @pytest.mark.with_numba
 def test_smoke(lt_ctx):
     """
     just check if the analysis runs without throwing exceptions:
@@ -52,6 +55,7 @@ def test_smoke(lt_ctx):
     )
 
 
+@pytest.mark.with_numba
 def test_crop_disks_from_frame():
     match_pattern = blobfinder.RadialGradient(radius=2, search=2)
     crop_size = match_pattern.get_crop_size()
@@ -104,6 +108,7 @@ def test_crop_disks_from_frame():
     ])
 
 
+@pytest.mark.with_numba
 def test_com():
     data = np.random.random((7, 9))
     ref = scipy.ndimage.measurements.center_of_mass(data)
@@ -415,6 +420,8 @@ def test_featurevector(lt_ctx):
     assert np.allclose(res, peak_sum)
 
 
+# FIXME: numba coverage disabled because of to_fixed_tuple issue:
+# @pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [
@@ -479,6 +486,8 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
         assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
 
 
+# FIXME: numba coverage disabled because of to_fixed_tuple issue:
+# @pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [

@@ -16,7 +16,7 @@ creators, who are persons that contributed in a way that establishes
 co-authorship of LiberTEM, and contributors, who are persons that contributed in
 other ways, for example through discussions or help.
 
-Creators are persons who
+Creators are persons who fulfill at least one of these criteria:
 
 * Contributed at least one commit to the repository.
 * Contributed material such as code or documentation in other ways that don't

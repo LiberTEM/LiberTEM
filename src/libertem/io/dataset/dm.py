@@ -172,14 +172,24 @@ class DMDataSet(DataSet):
         self._offsets = {}
 
     def _get_fileset(self):
-        first_fn = self._get_files()[0]
+        try:
+            first_fn = self._get_files()[0]
+        except IndexError:
+            raise DataSetException("need at least one file as input!")
         first_file = fileDM(first_fn, on_memory=True)
         if first_file.numObjects == 1:
             idx = 0
         else:
             idx = 1
-        raw_dtype = first_file._DM2NPDataType(first_file.dataType[idx])
-        shape = (first_file.ySize[idx], first_file.xSize[idx])
+        try:
+            raw_dtype = first_file._DM2NPDataType(first_file.dataType[idx])
+        except IndexError as e:
+            raise DataSetException("could not determine dtype") from e
+
+        try:
+            shape = (first_file.ySize[idx], first_file.xSize[idx])
+        except IndexError as e:
+            raise DataSetException("could not determine signal shape") from e
 
         start_idx = 0
         files = []
@@ -203,10 +213,10 @@ class DMDataSet(DataSet):
         return (len(self._get_files()),)
 
     def initialize(self, executor):
-        self._filesize = sum(
+        self._filesize = executor.run_function(lambda: sum(
             os.stat(p).st_size
             for p in self._get_files()
-        )
+        ))
 
         if self._same_offset:
             offset = executor.run_function(_get_offset, self._get_files()[0])

@@ -106,3 +106,12 @@ def test_pick_analysis(default_blo, lt_ctx):
 
 def test_cache_key_json_serializable(default_blo):
     json.dumps(default_blo.get_cache_key())
+
+
+@pytest.mark.dist
+def test_blo_dist(dist_ctx):
+    ds = BloDataSet(path="/data/default.blo")
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (144, 144)

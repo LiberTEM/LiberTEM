@@ -64,3 +64,15 @@ def test_same_offset(lt_ctx):
 
 def test_repr(default_dm):
     assert repr(default_dm) == "<DMDataSet for a stack of 10 files>"
+
+
+@pytest.mark.dist
+def test_dm_dist(dist_ctx):
+    files = dist_ctx.executor.run_function(lambda: list(sorted(glob.glob("/data/dm/*.dm4"))))
+    print(files)
+    ds = DMDataSet(files=files)
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    roi = np.random.choice([True, False], size=len(files))
+    results = dist_ctx.run(analysis, roi=roi)
+    assert results[0].raw_data.shape == (3838, 3710)

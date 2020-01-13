@@ -73,7 +73,11 @@ class ClusterDataSet(WritableDataSet, DataSet):
         if not all(s == given_structure for s in sidecars.values()):
             print(sidecars.values())
             print(given_structure)
-            raise DataSetException("inconsistent sidecars, what now?")
+            raise DataSetException(
+                "inconsistent sidecars, please inspect %s on each node" % (
+                    self._sidecar_path(),
+                )
+            )
         self._executor = executor
         return self
 

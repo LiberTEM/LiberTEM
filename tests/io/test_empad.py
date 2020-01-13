@@ -178,3 +178,12 @@ def test_crop_to(default_empad, lt_ctx):
 
 def test_cache_key_json_serializable(default_empad):
     json.dumps(default_empad.get_cache_key())
+
+
+@pytest.mark.dist
+def test_empad_dist(dist_ctx):
+    ds = EMPADDataSet(path="/data/EMPAD/acquisition_12_pretty.xml")
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (128, 128)

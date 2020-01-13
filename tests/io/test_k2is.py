@@ -231,3 +231,18 @@ def test_macrotile_roi_3(lt_ctx, default_k2is):
 
 def test_cache_key_json_serializable(default_k2is):
     json.dumps(default_k2is.get_cache_key())
+
+
+@pytest.mark.dist
+def test_k2is_dist(dist_ctx):
+    ds = K2ISDataSet(path="/data/Capture52/Capture52_.gtg")
+    import glob
+    print(dist_ctx.executor.run_function(lambda: os.listdir("/data/Capture52/")))
+    print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob("/data/Capture52/*")))))
+    ds = ds.initialize(dist_ctx.executor)
+    roi = np.zeros(ds.shape.nav, dtype=bool)
+    roi[0, 5] = 1
+    roi[0, 17] = 1
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis, roi=roi)
+    assert results[0].raw_data.shape == (1860, 2048)

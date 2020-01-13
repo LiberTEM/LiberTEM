@@ -168,3 +168,13 @@ def test_diagnostics(default_mib):
 
 def test_cache_key_json_serializable(default_mib):
     json.dumps(default_mib.get_cache_key())
+
+
+@pytest.mark.dist
+def test_mib_dist(dist_ctx):
+    scan_size = (32, 32)
+    ds = MIBDataSet(path="/data/default.mib", tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (256, 256)

@@ -138,10 +138,8 @@ class ClusterDataSet(WritableDataSet, DataSet):
             json.dump(self._structure.serialize(), fh)
 
     def check_valid(self):
-        if not os.path.exists(self._path):
-            raise DataSetException("path %s does not exist" % self._path)
-        if not os.path.isdir(self._path):
-            raise DataSetException("path %s is not a directory" % self._path)
+        if not os.path.exists(self._path) or not os.path.isdir(self._path):
+            raise DataSetException("path %s does not exist or is not a directory" % self._path)
 
     @classmethod
     def detect_params(cls, path, executor):

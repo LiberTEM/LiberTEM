@@ -138,9 +138,10 @@ class ClusterDataSet(WritableDataSet, DataSet):
             json.dump(self._structure.serialize(), fh)
 
     def check_valid(self):
-        # FIXME: assert -> DataSetException
-        assert os.path.exists(self._path)
-        assert os.path.isdir(self._path)
+        if not os.path.exists(self._path):
+            raise DataSetException("path %s does not exist" % self._path)
+        if not os.path.isdir(self._path):
+            raise DataSetException("path %s is not a directory" % self._path)
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -178,7 +179,10 @@ class ClusterDataSet(WritableDataSet, DataSet):
         """
         returns a mapping idx -> workers
         """
-        assert self._executor is not None
+        if self._executor is None:
+            raise RuntimeError(
+                "invalid state: _get_all_workers needs access to the executor"
+            )
 
         paths = [
             (idx, self._get_path_for_idx(idx))

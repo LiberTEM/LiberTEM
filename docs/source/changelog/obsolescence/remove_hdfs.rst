@@ -1,5 +1,5 @@
-Remove HDFS support
-===================
+[Obsolescence] Remove HDFS support
+==================================
 
  * Because HDFS support is right now not tested (and to my knowledge also not
    used) and the upstream :code:`hdfs3` project is not actively maintained, remove

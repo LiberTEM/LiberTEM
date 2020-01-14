@@ -40,8 +40,7 @@ def test_refinement():
     assert (rx < x) and (rx > (x - 1))
 
 
-# FIXME: numba coverage disabled because of to_fixed_tuple issue:
-# @pytest.mark.with_numba
+@pytest.mark.with_numba
 def test_smoke(lt_ctx):
     """
     just check if the analysis runs without throwing exceptions:
@@ -124,6 +123,9 @@ def test_run_refine_fastmatch(lt_ctx):
     b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
     indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
+
+    drop = np.random.choice([True, False], size=len(indices), p=[0.9, 0.1])
+    indices = indices[drop]
 
     radius = 10
 
@@ -322,6 +324,57 @@ def test_run_refine_fullframe(lt_ctx):
     assert np.allclose(res['b'].data[0], b, atol=0.2)
 
 
+@pytest.mark.with_numba
+def test_run_refine_blocktests(lt_ctx):
+    shape = np.array([128, 128])
+    zero = shape / 2
+    a = np.array([27.17, 0.])
+    b = np.array([0., 29.19])
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 7
+    match_pattern = blobfinder.RadialGradient(radius=radius)
+    crop_size = match_pattern.get_crop_size()
+
+    data, indices, peaks = cbed_frame(
+        *shape, zero=zero, a=a, b=b, indices=indices, radius=radius, margin=crop_size
+    )
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    template = match_pattern.get_template((2*crop_size, 2*crop_size))
+    nbytes = template.nbytes
+
+    udf_cs = (
+        blobfinder.FastCorrelationUDF,
+        blobfinder.FullFrameCorrelationUDF,
+    )
+
+    for udf_c in udf_cs:
+        for limit in (
+                1,
+                nbytes - 1,
+                nbytes,
+                nbytes + 1,
+                (len(peaks) - 1)*nbytes - 1,
+                (len(peaks) - 1)*nbytes,
+                (len(peaks) - 1)*nbytes + 1,
+                len(peaks)*nbytes - 1,
+                len(peaks)*nbytes,
+                len(peaks)*nbytes + 1,
+                *np.random.randint(low=1, high=len(peaks)*nbytes + 3, size=5)):
+            udf = udf_c(peaks=peaks, match_pattern=match_pattern, __limit=limit)
+            res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+            print(type(udf))
+            print(limit)
+            print(res['refineds'].data[0])
+            print(peaks)
+            print(peaks - res['refineds'].data[0])
+            assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
+
+
 def test_custom_template():
     template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
     custom = blobfinder.UserTemplate(template=template, search=18)
@@ -420,8 +473,7 @@ def test_featurevector(lt_ctx):
     assert np.allclose(res, peak_sum)
 
 
-# FIXME: numba coverage disabled because of to_fixed_tuple issue:
-# @pytest.mark.with_numba
+@pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [
@@ -486,8 +538,7 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
         assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
 
 
-# FIXME: numba coverage disabled because of to_fixed_tuple issue:
-# @pytest.mark.with_numba
+@pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [

@@ -4,7 +4,9 @@ from libertem.utils import make_cartesian, make_polar, frame_peaks
 import libertem.masks as m
 
 
-def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4, all_equal=False):
+def cbed_frame(
+        fy=128, fx=128, zero=None, a=None, b=None, indices=None,
+        radius=4, all_equal=False, margin=None):
     if zero is None:
         zero = (fy//2, fx//2)
     zero = np.array(zero)
@@ -16,7 +18,9 @@ def cbed_frame(fy=128, fx=128, zero=None, a=None, b=None, indices=None, radius=4
     b = np.array(b)
     if indices is None:
         indices = np.mgrid[-10:11, -10:11]
-    indices, peaks = frame_peaks(fy=fy, fx=fx, zero=zero, a=a, b=b, r=radius, indices=indices)
+    if margin is None:
+        margin = radius
+    indices, peaks = frame_peaks(fy=fy, fx=fx, zero=zero, a=a, b=b, r=margin, indices=indices)
 
     data = np.zeros((1, fy, fx), dtype=np.float32)
 

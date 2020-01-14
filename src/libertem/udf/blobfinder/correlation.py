@@ -1,9 +1,9 @@
 import functools
+import os
 
 import numpy as np
 from skimage.feature import peak_local_max
 import numba
-from numba.unsafe.ndarray import to_fixed_tuple
 
 from libertem.udf import UDF
 import libertem.masks as masks
@@ -25,6 +25,14 @@ try:
 except ImportError:
     fft = np.fft
     zeros = np.zeros
+
+# Necessary to work with JIT disabled for coverage and testing purposes
+# https://github.com/LiberTEM/LiberTEM/issues/539
+if os.getenv('NUMBA_DISABLE_JIT'):
+    def to_fixed_tuple(arr, l):
+        return tuple(arr)
+else:
+    from numba.unsafe.ndarray import to_fixed_tuple
 
 
 def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
@@ -296,7 +304,10 @@ class FastCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        self.limit = 2**19  # 1/2 MB
+        # For testing purposes, allow to inject a different limit via
+        # an internal kwarg
+        # It has to come through kwarg because of how UDFs are run
+        self.limit = kwargs.get('__limit', 2**19)  # 1/2 MB
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
@@ -306,9 +317,8 @@ class FastCorrelationUDF(CorrelationUDF):
         crop_size = mask.get_crop_size()
         template = mask.get_template(sig_shape=(2 * crop_size, 2 * crop_size))
         dtype = np.float32
-        full_size = n_peaks * (2 * crop_size)**2 * dtype(1).nbytes
-        rounds = full_size // self.limit + 1
-        buf_count = n_peaks // rounds + 1
+        full_size = (2 * crop_size)**2 * dtype(1).nbytes
+        buf_count = min(max(1, self.limit // full_size), n_peaks)
         crop_bufs = zeros((buf_count, 2 * crop_size, 2 * crop_size), dtype=dtype)
         kwargs = {
             'crop_bufs': crop_bufs,
@@ -332,11 +342,11 @@ class FastCorrelationUDF(CorrelationUDF):
         crop_size = match_pattern.get_crop_size()
         (centers, refineds, peak_values, peak_elevations) = self.output_buffers()
         template = self.get_template()
-        blocksize = len(crop_bufs)
-        block_count = len(peaks) // blocksize + 1
+        buf_count = len(crop_bufs)
+        block_count = (len(peaks) - 1) // buf_count + 1
         for block in range(block_count):
-            start = block * blocksize
-            stop = (block + 1) * blocksize
+            start = block * buf_count
+            stop = min((block + 1) * buf_count, len(peaks))
             size = stop - start
             crop_disks_from_frame(
                 peaks=peaks[start:stop], frame=frame, crop_size=crop_size,
@@ -371,7 +381,11 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         match_pattern : MatchPattern
             Instance of :class:`~libertem.udf.blobfinder.MatchPattern`
         '''
-        self.limit = 2**19  # 1/2 MB
+        # For testing purposes, allow to inject a different limit via
+        # an internal kwarg
+        # It has to come through kwarg because of how UDFs are run
+        self.limit = kwargs.get('__limit', 2**19)  # 1/2 MB
+
         super().__init__(*args, **kwargs)
 
     def get_task_data(self):
@@ -382,9 +396,8 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         dtype = np.float32
         frame_buf = zeros(shape=self.meta.dataset_shape.sig, dtype=dtype)
         crop_size = mask.get_crop_size()
-        full_size = n_peaks * (2 * crop_size)**2 * dtype(1).nbytes
-        rounds = full_size // self.limit + 1
-        buf_count = n_peaks // rounds + 1
+        full_size = (2 * crop_size)**2 * dtype(1).nbytes
+        buf_count = min(max(1, self.limit // full_size), n_peaks)
         kwargs = {
             'template': template,
             'frame_buf': frame_buf,
@@ -412,12 +425,12 @@ class FullFrameCorrelationUDF(CorrelationUDF):
         spec_part = fft.rfft2(frame_buf)
         corrspec = template * spec_part
         corr = fft.fftshift(fft.irfft2(corrspec))
-        blocksize = self.task_data.buf_count
-        crop_bufs = np.zeros((blocksize, 2 * crop_size, 2 * crop_size), dtype=np.float32)
-        block_count = len(peaks) // blocksize + 1
+        buf_count = self.task_data.buf_count
+        crop_bufs = np.zeros((buf_count, 2 * crop_size, 2 * crop_size), dtype=np.float32)
+        block_count = (len(peaks) - 1) // buf_count + 1
         for block in range(block_count):
-            start = block * blocksize
-            stop = (block + 1) * blocksize
+            start = block * buf_count
+            stop = min(len(peaks), (block + 1) * buf_count)
             size = stop - start
             crop_disks_from_frame(
                 peaks=peaks[start:stop], frame=corr, crop_size=crop_size,

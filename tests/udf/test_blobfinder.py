@@ -325,7 +325,14 @@ def test_run_refine_fullframe(lt_ctx):
 
 
 @pytest.mark.with_numba
-def test_run_refine_blocktests(lt_ctx):
+@pytest.mark.parametrize(
+    "cls",
+    [
+        blobfinder.FastCorrelationUDF,
+        blobfinder.FullFrameCorrelationUDF,
+    ]
+)
+def test_run_refine_blocktests(lt_ctx, cls):
     shape = np.array([128, 128])
     zero = shape / 2
     a = np.array([27.17, 0.])
@@ -344,35 +351,29 @@ def test_run_refine_blocktests(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
                             num_partitions=1, sig_dims=2)
 
-    template = match_pattern.get_template((2*crop_size, 2*crop_size))
-    nbytes = template.nbytes
+    # The crop buffer is float32
+    # FIXME adapt as soon as UDFs have dtype support
+    nbytes = (2*crop_size)**2 * np.dtype(np.float32).itemsize
 
-    udf_cs = (
-        blobfinder.FastCorrelationUDF,
-        blobfinder.FullFrameCorrelationUDF,
-    )
-
-    for udf_c in udf_cs:
-        for limit in (
-                1,
-                nbytes - 1,
-                nbytes,
-                nbytes + 1,
-                (len(peaks) - 1)*nbytes - 1,
-                (len(peaks) - 1)*nbytes,
-                (len(peaks) - 1)*nbytes + 1,
-                len(peaks)*nbytes - 1,
-                len(peaks)*nbytes,
-                len(peaks)*nbytes + 1,
-                *np.random.randint(low=1, high=len(peaks)*nbytes + 3, size=5)):
-            udf = udf_c(peaks=peaks, match_pattern=match_pattern, __limit=limit)
-            res = lt_ctx.run_udf(udf=udf, dataset=dataset)
-            print(type(udf))
-            print(limit)
-            print(res['refineds'].data[0])
-            print(peaks)
-            print(peaks - res['refineds'].data[0])
-            assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
+    for limit in (
+            1,
+            nbytes - 1,
+            nbytes,
+            nbytes + 1,
+            (len(peaks) - 1)*nbytes - 1,
+            (len(peaks) - 1)*nbytes,
+            (len(peaks) - 1)*nbytes + 1,
+            len(peaks)*nbytes - 1,
+            len(peaks)*nbytes,
+            len(peaks)*nbytes + 1,
+            *np.random.randint(low=1, high=len(peaks)*nbytes + 3, size=5)):
+        udf = cls(peaks=peaks, match_pattern=match_pattern, __limit=limit)
+        res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+        print(limit)
+        print(res['refineds'].data[0])
+        print(peaks)
+        print(peaks - res['refineds'].data[0])
+        assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
 
 
 def test_custom_template():

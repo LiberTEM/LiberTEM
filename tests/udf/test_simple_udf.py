@@ -340,3 +340,60 @@ def test_invalid_extra_shape(lt_ctx):
         lt_ctx.run_udf(dataset=dataset, udf=udf)
 
     assert e.match("invalid extra_shape")
+
+
+@pytest.mark.parametrize(
+    'preferred_dtype,data_dtype,expected_dtype',
+    [
+        (bool, np.uint16, None),
+        (None, bool, np.float32),
+        (None, np.complex64, np.complex64),
+        (None, np.complex128, np.complex128),
+        (np.int16, np.uint16, None)
+    ]
+)
+def test_dtypes(lt_ctx, preferred_dtype, data_dtype, expected_dtype):
+    class DebugDTypeUDF(UDF):
+        def __init__(self, preferred_dtype):
+            super().__init__(preferred_dtype=preferred_dtype)
+
+        def get_preferred_input_dtype(self):
+            if self.params.preferred_dtype is None:
+                return super().get_preferred_input_dtype()
+            else:
+                return self.params.preferred_dtype
+
+        def get_result_buffers(self):
+            return {
+                'dtype': self.buffer(
+                    kind='nav', dtype='object'
+                ),
+                'input_dtype': self.buffer(
+                    kind='single', dtype=self.meta.input_dtype
+                ),
+                'dataset_dtype': self.buffer(
+                    kind='single', dtype=self.meta.dataset_dtype
+                )
+            }
+
+        def process_frame(self, frame):
+            self.results.dtype[:] = frame.dtype
+            assert frame.dtype == self.meta.input_dtype
+            assert self.results.input_dtype.dtype == self.meta.input_dtype
+            assert self.results.dataset_dtype.dtype == self.meta.dataset_dtype
+
+    if expected_dtype is None:
+        expected_dtype = np.result_type(preferred_dtype, data_dtype)
+    data = np.zeros(shape=(1, 1), dtype=data_dtype)
+    dataset = MemoryDataSet(data=data, sig_dims=1)
+
+    udf = DebugDTypeUDF(preferred_dtype=preferred_dtype)
+
+    res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+
+    print(res['dtype'].data[0])
+    assert res['dtype'].data[0] == expected_dtype
+    assert udf.meta.dataset_dtype == data_dtype
+    assert udf.meta.input_dtype == expected_dtype
+    assert res['input_dtype'].data.dtype == expected_dtype
+    assert res['dataset_dtype'].data.dtype == data_dtype

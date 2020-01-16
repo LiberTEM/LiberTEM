@@ -7,7 +7,7 @@ import numba
 
 from libertem.udf import UDF
 import libertem.masks as masks
-from libertem.job.masks import MaskContainer
+from libertem.common.container import MaskContainer
 
 from .patterns import MatchPattern
 

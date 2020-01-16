@@ -2,23 +2,24 @@ import pytest
 import numpy as np
 import scipy.sparse as sp
 import sparse
-from libertem.masks import to_dense, to_sparse, is_sparse
-from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _naive_mask_apply, _mk_random
 
 import libertem.api as api
+from libertem.masks import to_dense, to_sparse, is_sparse
+from libertem.io.dataset.memory import MemoryDataSet
+from libertem.udf.masks import ApplyMasksUDF
 
 
-def _run_mask_test_program(lt_ctx, dataset, mask, expected):
+def _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf=False):
     analysis_default = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask]
+        dataset=dataset, factories=[lambda: mask], _use_udf=use_udf
     )
     analysis_sparse = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True
+        dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True, _use_udf=use_udf
     )
     analysis_dense = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: to_dense(mask)], use_sparse=False
+        dataset=dataset, factories=[lambda: to_dense(mask)], use_sparse=False, _use_udf=use_udf
     )
     results_default = lt_ctx.run(analysis_default)
     results_sparse = lt_ctx.run(analysis_sparse)
@@ -72,68 +73,96 @@ def test_weird_partition_shapes_1_fast(lt_ctx):
     assert tuple(t.tile_slice.shape) == (1, 8, 8, 8)
 
 
-def test_normal_partition_shape(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_normal_partition_shape(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_single_frame_tiles(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_single_frame_tiles(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
 @pytest.mark.slow
-def test_subframe_tiles_slow(lt_ctx):
+def test_subframe_tiles_slow(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(1, 4, 4), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_subframe_tiles_fast(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_subframe_tiles_fast(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(8, 4, 4), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_mask_uint(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_mask_uint(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask = _mk_random(size=(16, 16)).astype("uint16")
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_endian(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_endian(lt_ctx, use_udf):
     data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype(">u2")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_signed(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_signed(lt_ctx, use_udf):
     data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype("<i4")
     mask = _mk_random(size=(16, 16))
     expected = _naive_mask_apply([mask], data)
@@ -145,10 +174,14 @@ def test_signed(lt_ctx):
         check_cast=False,
     )
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+    _run_mask_test_program(lt_ctx, dataset, mask, expected, use_udf)
 
 
-def test_multi_masks(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_masks(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = _mk_random(size=(16, 16))
     mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
@@ -157,7 +190,8 @@ def test_multi_masks(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2]
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -175,14 +209,19 @@ def test_multi_masks(lt_ctx):
     )
 
 
-def test_multi_mask_stack_dense(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_dense(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_count=2
+        dataset=dataset, factories=lambda: masks, mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -196,14 +235,19 @@ def test_multi_mask_stack_dense(lt_ctx):
     )
 
 
-def test_multi_mask_stack_sparse(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_sparse(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_count=2
+        dataset=dataset, factories=lambda: masks, mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -217,14 +261,19 @@ def test_multi_mask_stack_sparse(lt_ctx):
     )
 
 
-def test_multi_mask_stack_force_sparse(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_force_sparse(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2
+        dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -238,14 +287,19 @@ def test_multi_mask_stack_force_sparse(lt_ctx):
     )
 
 
-def test_multi_mask_stack_force_scipy_sparse(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_force_scipy_sparse(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse', mask_count=2
+        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse', mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -259,14 +313,19 @@ def test_multi_mask_stack_force_scipy_sparse(lt_ctx):
     )
 
 
-def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse.csc', mask_count=2
+        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse.csc', mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -280,14 +339,19 @@ def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx):
     )
 
 
-def test_multi_mask_stack_force_sparse_pydata(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_force_sparse_pydata(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata', mask_count=2
+        dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata', mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -301,14 +365,19 @@ def test_multi_mask_stack_force_sparse_pydata(lt_ctx):
     )
 
 
-def test_multi_mask_stack_force_dense(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_stack_force_dense(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2
+        dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -322,14 +391,19 @@ def test_multi_mask_stack_force_dense(lt_ctx):
     )
 
 
-def test_multi_mask_autodtype(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_autodtype(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks
+        dataset=dataset, factories=lambda: masks,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -345,14 +419,19 @@ def test_multi_mask_autodtype(lt_ctx):
     )
 
 
-def test_multi_mask_autodtype_wide(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_autodtype_wide(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="int64")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks
+        dataset=dataset, factories=lambda: masks,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -368,14 +447,19 @@ def test_multi_mask_autodtype_wide(lt_ctx):
     )
 
 
-def test_multi_mask_autodtype_complex(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_autodtype_complex(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
     masks = _mk_random(size=(2, 16, 16))
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks
+        dataset=dataset, factories=lambda: masks,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -392,14 +476,19 @@ def test_multi_mask_autodtype_complex(lt_ctx):
     )
 
 
-def test_multi_mask_autodtype_complex_wide(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_autodtype_complex_wide(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16))
     masks = _mk_random(size=(2, 16, 16), dtype="complex128")
     expected = _naive_mask_apply(masks, data)
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks
+        dataset=dataset, factories=lambda: masks,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -416,7 +505,11 @@ def test_multi_mask_autodtype_complex_wide(lt_ctx):
     )
 
 
-def test_multi_mask_force_dtype(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_multi_mask_force_dtype(lt_ctx, use_udf):
     force_dtype = np.dtype(np.int32)
     data = _mk_random(size=(16, 16, 16, 16), dtype="int16")
     masks = _mk_random(size=(2, 16, 16), dtype="bool")
@@ -424,7 +517,8 @@ def test_multi_mask_force_dtype(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, dtype=force_dtype
+        dataset=dataset, factories=lambda: masks, dtype=force_dtype,
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -441,6 +535,7 @@ def test_multi_mask_force_dtype(lt_ctx):
     )
 
 
+# Job only since the UDF interface can't be forced to use incompatible types
 def test_multi_mask_force_dtype_bad(lt_ctx):
     force_dtype = np.dtype(np.int32)
     data = _mk_random(size=(16, 16, 16, 16), dtype="int16")
@@ -468,7 +563,26 @@ def test_avoid_calculating_masks_on_client(hdf5_ds_1):
         assert job.masks._computed_masks is None
 
 
-def test_override_mask_dtype(lt_ctx):
+@pytest.mark.functional
+def test_avoid_calculating_masks_on_client_udf(hdf5_ds_1):
+    mask = _mk_random(size=(16, 16))
+    # We have to start a local cluster so that the masks are
+    # computed in a different process
+    with api.Context() as ctx:
+        analysis = ctx.create_mask_analysis(
+            dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32,
+            _use_udf=True
+        )
+        udf = analysis.get_udf()
+        ctx.run_udf(udf=udf, dataset=hdf5_ds_1)
+        assert udf._mask_container is None
+
+
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_override_mask_dtype(lt_ctx, use_udf):
     mask_dtype = np.float32
     data = _mk_random(size=(16, 16, 16, 16), dtype=mask_dtype)
     masks = _mk_random(size=(2, 16, 16), dtype=np.float64)
@@ -476,7 +590,8 @@ def test_override_mask_dtype(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_dtype=mask_dtype, mask_count=len(masks)
+        dataset=dataset, factories=lambda: masks, mask_dtype=mask_dtype, mask_count=len(masks),
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -511,6 +626,24 @@ def test_mask_job(lt_ctx):
     )
 
 
+def test_mask_udf(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+    mask0 = _mk_random(size=(16, 16))
+    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+    mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+    # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
+    # different from ApplyMasksJob
+    expected = np.moveaxis(_naive_mask_apply([mask0, mask1, mask2], data), (0, 1), (2, 0))
+
+    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    udf = ApplyMasksUDF(
+        mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2]
+    )
+    results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+
+    assert np.allclose(results['intensity'].data, expected)
+
+
 def test_numpy_is_sparse():
     mask = _mk_random(size=(16, 16))
     assert not is_sparse(mask)
@@ -531,7 +664,11 @@ def test_sparse_dok_is_sparse():
     assert is_sparse(mask)
 
 
-def test_all_sparse_analysis(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_all_sparse_analysis(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
     mask0 = sp.csr_matrix(_mk_random(size=(16, 16)))
     mask1 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
@@ -539,7 +676,8 @@ def test_all_sparse_analysis(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0, lambda: mask1]
+        dataset=dataset, factories=[lambda: mask0, lambda: mask1],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
 
@@ -662,7 +800,11 @@ def test_uses_sparse_sparse_false(lt_ctx):
     assert not is_sparse(job.masks.get(tile, job.masks.dtype))
 
 
-def test_masks_timeseries_2d_frames(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_timeseries_2d_frames(lt_ctx, use_udf):
     data = _mk_random(size=(16 * 16, 16, 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
@@ -671,13 +813,18 @@ def test_masks_timeseries_2d_frames(lt_ctx):
     )
     mask0 = _mk_random(size=(16, 16))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0]
+        dataset=dataset, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (256,)
 
 
-def test_masks_spectrum_linescan(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_spectrum_linescan(lt_ctx, use_udf):
     data = _mk_random(size=(16 * 16, 16 * 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
@@ -687,13 +834,18 @@ def test_masks_spectrum_linescan(lt_ctx):
     )
     mask0 = _mk_random(size=(16 * 16, ))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0]
+        dataset=dataset, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16 * 16,)
 
 
-def test_masks_spectrum(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_spectrum(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16 * 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
@@ -703,13 +855,18 @@ def test_masks_spectrum(lt_ctx):
     )
     mask0 = _mk_random(size=(16 * 16, ))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0]
+        dataset=dataset, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
 
 
-def test_masks_hyperspectral(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_hyperspectral(lt_ctx, use_udf):
     data = _mk_random(size=(16, 16, 16, 16, 16), dtype="<u2")
     dataset = MemoryDataSet(
         data=data,
@@ -719,25 +876,36 @@ def test_masks_hyperspectral(lt_ctx):
     )
     mask0 = _mk_random(size=(16, 16, 16))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0]
+        dataset=dataset, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
 
 
-def test_masks_complex_ds(lt_ctx, ds_complex):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_complex_ds(lt_ctx, ds_complex, use_udf):
     mask0 = _mk_random(size=(16, 16))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=ds_complex, factories=[lambda: mask0]
+        dataset=ds_complex, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     results = lt_ctx.run(analysis)
     assert results.mask_0.raw_data.shape == (16, 16)
 
 
-def test_masks_complex_mask(lt_ctx, ds_complex):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_masks_complex_mask(lt_ctx, ds_complex, use_udf):
     mask0 = _mk_random(size=(16, 16), dtype="complex64")
     analysis = lt_ctx.create_mask_analysis(
-        dataset=ds_complex, factories=[lambda: mask0]
+        dataset=ds_complex, factories=[lambda: mask0],
+        _use_udf=use_udf
     )
     expected = _naive_mask_apply([mask0], ds_complex.data)
     results = lt_ctx.run(analysis)
@@ -752,7 +920,11 @@ def test_masks_complex_mask(lt_ctx, ds_complex):
     _run_mask_test_program(lt_ctx, ds_complex, mask0, np.abs(expected))
 
 
-def test_numerics_fail(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_numerics_fail(lt_ctx, use_udf):
     dtype = 'float32'
     # Highest expected detector resolution
     RESOLUTION = 4096
@@ -771,7 +943,8 @@ def test_numerics_fail(lt_ctx):
     )
     mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float64)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype
+        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype,
+        _use_udf=use_udf
     )
 
     results = lt_ctx.run(analysis)
@@ -791,7 +964,11 @@ def test_numerics_fail(lt_ctx):
     assert not np.allclose(results.mask_0.raw_data, expected[0])
 
 
-def test_numerics_succeed(lt_ctx):
+@pytest.mark.parametrize(
+    'use_udf',
+    [True, False]
+)
+def test_numerics_succeed(lt_ctx, use_udf):
     dtype = 'float64'
     # Highest expected detector resolution
     RESOLUTION = 4096
@@ -810,7 +987,8 @@ def test_numerics_succeed(lt_ctx):
     )
     mask0 = np.ones((RESOLUTION, RESOLUTION), dtype=np.float32)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype
+        dataset=dataset, factories=[lambda: mask0], mask_count=1, mask_dtype=dtype,
+        _use_udf=use_udf
     )
 
     results = lt_ctx.run(analysis)

@@ -276,6 +276,7 @@ available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type
 Common applications include allocating buffers with a :code:`dtype` or shape
 that matches the dataset or partition via
 :attr:`libertem.udf.UDFMeta.dataset_dtype`,
+:attr:`libertem.udf.UDFMeta.input_dtype`,
 :attr:`libertem.udf.UDFMeta.dataset_shape` and
 :attr:`libertem.udf.UDFMeta.partition_shape`.
 
@@ -327,6 +328,27 @@ dimension as it appears in processing:
     res = ctx.run_udf(dataset=dataset, udf=pixelsum, roi=roi)
 
     assert np.allclose(res['pixelsum_nav_raw'].data, dataset.data[roi].sum(axis=(1, 2)))
+
+.. _udf dtype:
+
+Dtype support
+-------------
+
+UDFs can override :meth:`~libertem.udf.UDF.get_preferred_input_dtype` to
+indicate a "lowest denominator" compatible dtype. The actual input dtype is
+determined by combining the indicated preferred dtype with the input dataset's
+native dtype using :func:`numpy.result_type`. The default preferred dtype is
+:attr:`numpy.float32`. Returning :code:`bool` will usually switch to the
+dataset's native dtype.
+
+If an UDF requires a specific dtype rather than only preferring it, it should
+override this method and additionally check the actual input type, throw an
+error when used incorrectly and/or implement a meaningful conversion in its
+processing routine since indicating a preferred dtype doesn't enforce it. That
+way, unsafe conversions are performed explicitly in the UDF rather than
+indirectly in the back-end.
+
+.. versionadded:: 0.4.0.dev0
 
 .. _auto UDF:
 

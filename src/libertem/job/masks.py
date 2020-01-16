@@ -74,20 +74,8 @@ class ApplyMasksJob(BaseJob):
         return (len(self.masks),) + tuple(self.dataset.shape.flatten_nav().nav)
 
     def get_result_dtype(self):
-        def is_wide(dtype):
-            dtype = np.dtype(dtype)
-            result = False
-            if dtype.kind != 'c' and dtype.itemsize > 4:
-                result = True
-            if dtype.kind == 'c' and dtype.itemsize > 8:
-                result = True
-            return result
-
         if self.dtype is None:
-            default_dtype = np.float32
-            if is_wide(self.dataset.dtype) or is_wide(self.masks.dtype):
-                default_dtype = np.float64
-            return np.result_type(default_dtype, self.dataset.dtype, self.masks.dtype)
+            return np.result_type(np.float32, self.dataset.dtype, self.masks.dtype)
         else:
             return self.dtype
 

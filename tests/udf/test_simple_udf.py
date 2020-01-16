@@ -309,7 +309,8 @@ def test_udf_pickle(lt_ctx):
         partition_shape=partition.slice.shape,
         dataset_shape=dataset.shape,
         roi=None,
-        dataset_dtype="float32"
+        dataset_dtype="float32",
+        input_dtype="float32"
     )
     pixelsum.set_meta(meta)
     pixelsum.init_result_buffers()

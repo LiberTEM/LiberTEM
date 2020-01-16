@@ -14,11 +14,15 @@ class UDFMeta:
     """
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
+
+    .. versionchanged:: 0.4.0.dev0
+        Added distinction of dataset_dtype and input_dtype
     """
-    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype):
+    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype, input_dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
+        self._input_dtype = input_dtype
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -65,6 +69,18 @@ class UDFMeta:
         numpy.dtype : Native dtype of the dataset
         """
         return self._dataset_dtype
+
+    @property
+    def input_dtype(self) -> np.dtype:
+        """
+        numpy.dtype : dtype of the data that will be passed to the UDF
+
+        This is determined from the dataset's native dtype and
+        :meth:`UDF.get_preferred_input_dtype` using :meth:`numpy.result_type`
+
+        .. versionadded:: 0.4.0.dev0
+        """
+        return self._input_dtype
 
 
 class UDFData:
@@ -489,6 +505,32 @@ class UDF(UDFBase):
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]
 
+    def get_preferred_input_dtype(self):
+        '''
+        Override this method to specify the preferred input dtype of the UDF.
+
+        The default is `float32` since most numerical processing tasks perform
+        best with this dtype, namely dot products.
+
+        The back-end uses this preferred input dtype in combination with the
+        dataset`s native dtype to determine the input dtype using
+        :meth:`numpy.result_type`. That means float data in a dataset switches
+        the dtype to float even if this method returns an `int` dtype, `int32`
+        or wider input data would switch from `float32` to `float64`,  and
+        complex data in the dataset will switch the input dtype to complex,
+        following the NumPy casting rules.
+
+        In case your UDF only works with specific input dtypes, it should throw
+        an error or warning if incompatible dtypes are used, and/or implement a
+        meaningful conversion in your UDF's `process_<...>` routine.
+
+        If you prefer to use the dataset's native dtype instead of floats, you
+        can return `bool`.
+
+        .. versionadded:: 0.4.0.dev0
+        '''
+        return np.float32
+
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
@@ -558,15 +600,7 @@ class UDFRunner:
         self._debug = debug
 
     def _get_dtype(self, dtype):
-        '''
-        FIXME replace with dtype switching logic and user control similar to MaskJob
-        '''
-        dtype = np.dtype(dtype)
-        # simple dtype logic for now: if data is complex or float, keep data dtype,
-        # otherwise convert to float32
-        if dtype.kind not in ('c', 'f'):
-            dtype = np.dtype("float32")
-        return dtype
+        return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
 
     def run_for_partition(self, partition, roi):
         dtype = self._get_dtype(partition.dtype)
@@ -574,7 +608,8 @@ class UDFRunner:
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
             roi=roi,
-            dataset_dtype=dtype
+            dataset_dtype=partition.dtype,
+            input_dtype=dtype,
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()
@@ -643,7 +678,8 @@ class UDFRunner:
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
-            dataset_dtype=self._get_dtype(dataset.dtype)
+            dataset_dtype=dataset.dtype,
+            input_dtype=self._get_dtype(dataset.dtype)
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()
@@ -680,7 +716,8 @@ class UDFRunner:
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
-            dataset_dtype=dataset.dtype
+            dataset_dtype=dataset.dtype,
+            input_dtype=self._get_dtype(dataset.dtype)
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()

@@ -1,13 +1,18 @@
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
 from libertem.job.masks import ApplyMasksJob
+from libertem.udf.masks import ApplyMasksUDF
+from libertem.analysis.getroi import get_roi
 
 
 class BaseMasksAnalysis(BaseAnalysis):
     """
     Base class for any masks-based analysis; you only need to implement
-    ``get_results`` and ``get_mask_factories``.
+    ``get_results``, ``get_udf_results`` and ``get_mask_factories``.
     Overwrite  ``get_use_sparse`` to return True to calculate with sparse mask matrices.
+
+    .. versionchanged:: 0.4.0.dev0
+        Add support to use this Analysis with both ApplyMasksJob and ApplyMasksUDF :issue:`549`
     """
 
     def get_job(self):
@@ -24,6 +29,15 @@ class BaseMasksAnalysis(BaseAnalysis):
             mask_dtype=mask_dtype,
             dtype=dtype)
         return job
+
+    def get_udf(self):
+        return ApplyMasksUDF(
+            mask_factories=self.get_mask_factories(),
+            use_sparse=self.get_use_sparse(),
+            mask_count=self.get_preset_mask_count(),
+            mask_dtype=self.get_preset_mask_dtype(),
+            preferred_dtype=self.get_preset_dtype()
+        )
 
     def get_mask_factories(self):
         raise NotImplementedError()
@@ -129,4 +143,31 @@ class MasksAnalysis(BaseMasksAnalysis):
                 title="mask %d" % i,
                 desc="integrated intensity for mask %d" % i)
             for i, mask_result in enumerate(job_results)
+        ])
+
+    def get_roi(self):
+        return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
+
+    def get_udf_results(self, udf_results, roi):
+        data = udf_results['intensity'].data
+        if data.dtype.kind == 'c':
+            results = []
+            for idx in range(data.shape[-1]):
+                results.extend(
+                    self.get_complex_results(
+                        data[..., idx],
+                        key_prefix="mask_%d" % idx,
+                        title="mask %d" % idx,
+                        desc="integrated intensity for mask %d" % idx,
+                    )
+                )
+            return MasksResultSet(results)
+        return MasksResultSet([
+            AnalysisResult(
+                raw_data=data[..., idx],
+                visualized=visualize_simple(data[..., idx]),
+                key="mask_%d" % idx,
+                title="mask %d" % idx,
+                desc="integrated intensity for mask %d" % idx)
+            for idx in range(data.shape[-1])
         ])

@@ -509,23 +509,23 @@ class UDF(UDFBase):
         '''
         Override this method to specify the preferred input dtype of the UDF.
 
-        The default is `float32` since most numerical processing tasks perform
+        The default is :code:`float32` since most numerical processing tasks perform
         best with this dtype, namely dot products.
 
         The back-end uses this preferred input dtype in combination with the
         dataset`s native dtype to determine the input dtype using
-        :meth:`numpy.result_type`. That means float data in a dataset switches
-        the dtype to float even if this method returns an `int` dtype, `int32`
-        or wider input data would switch from `float32` to `float64`,  and
-        complex data in the dataset will switch the input dtype to complex,
+        :meth:`numpy.result_type`. That means :code:`float` data in a dataset switches
+        the dtype to :code:`float` even if this method returns an :code:`int` dtype. :code:`int32`
+        or wider input data would switch from :code:`float32` to :code:`float64`, and
+        complex data in the dataset will switch the input dtype kind to :code:`complex`,
         following the NumPy casting rules.
 
         In case your UDF only works with specific input dtypes, it should throw
         an error or warning if incompatible dtypes are used, and/or implement a
-        meaningful conversion in your UDF's `process_<...>` routine.
+        meaningful conversion in your UDF's :code:`process_<...>` routine.
 
-        If you prefer to use the dataset's native dtype instead of floats, you
-        can return `bool`.
+        If you prefer to always use the dataset's native dtype instead of
+        floats, you can override this method to return :code:`bool`.
 
         .. versionadded:: 0.4.0.dev0
         '''

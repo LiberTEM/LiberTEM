@@ -158,7 +158,7 @@ class Context:
         )
 
     def create_mask_analysis(self, factories, dataset, use_sparse=None,
-                             mask_count=None, mask_dtype=None, dtype=None, _use_udf=False):
+                             mask_count=None, mask_dtype=None, dtype=None, _use_udf=True):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).

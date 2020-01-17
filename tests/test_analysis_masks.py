@@ -543,7 +543,7 @@ def test_multi_mask_force_dtype_bad(lt_ctx):
 
     dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
     analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, dtype=force_dtype
+        dataset=dataset, factories=lambda: masks, dtype=force_dtype, _use_udf=False
     )
     with pytest.raises(TypeError):
         lt_ctx.run(analysis)

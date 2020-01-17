@@ -7,14 +7,23 @@ from .masks import BaseMasksAnalysis, SingleMaskResultSet
 
 
 class DiskMaskAnalysis(BaseMasksAnalysis):
-    def get_results(self, job_results):
-        data = job_results[0]
-        shape = tuple(self.dataset.shape.nav)
+    TYPE = 'UDF'
 
+    # FIXME remove this after UDF version is final
+    def get_results(self, job_results):
+        shape = tuple(self.dataset.shape.nav)
+        data = job_results[0].reshape(shape)
+        return self.get_generic_results(data)
+
+    def get_udf_results(self, udf_results, roi):
+        data = udf_results['intensity'].data
+        return self.get_generic_results(data[..., 0])
+
+    def get_generic_results(self, data):
         if data.dtype.kind == 'c':
             return SingleMaskResultSet(
                 self.get_complex_results(
-                    data.reshape(shape),
+                    data,
                     key_prefix='intensity',
                     title='intensity',
                     desc="intensity of the integration over the selected disk",
@@ -22,8 +31,8 @@ class DiskMaskAnalysis(BaseMasksAnalysis):
             )
         return SingleMaskResultSet([
             AnalysisResult(
-                raw_data=data.reshape(shape),
-                visualized=visualize_simple(data.reshape(shape)),
+                raw_data=data,
+                visualized=visualize_simple(data),
                 key="intensity",
                 title="intensity",
                 desc="intensity of the integration over the selected disk"),

@@ -118,6 +118,8 @@ class SingleMaskResultSet(AnalysisResultSet):
 
 
 class MasksAnalysis(BaseMasksAnalysis):
+    TYPE = 'UDF'
+
     def get_mask_factories(self):
         return self.parameters['factories']
 
@@ -155,4 +157,3 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_udf_results(self, udf_results, roi):
         data = udf_results['intensity'].data
         return self.get_generic_results(data)
-        

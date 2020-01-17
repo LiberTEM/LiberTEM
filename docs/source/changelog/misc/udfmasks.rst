@@ -1,5 +1,4 @@
-[Misc] Optional UDF interface for MasksAnalysis
-===============================================
+[Misc] Default UDF interface for mask-based analyses
+====================================================
 
- * Add necessary infrastructure to use MasksAnalysis with ApplyMasksUDF instead of ApplyMasksJob back-end (:issue:`549`, :pr:`550`)
- 
+ * All mask-based analyses ported from ApplyMasksJob to ApplyMasksUDF back-end (:issue:`549`, :pr:`550`)

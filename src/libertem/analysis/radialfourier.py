@@ -59,6 +59,19 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
     available parameters and :ref:`radialfourier app` for a description of the
     application!
     '''
+
+    TYPE = 'UDF'
+
+    def get_udf_results(self, udf_results, roi):
+        # Here, we reconstruct the shape of the Job result
+        # so that we don't have to change the involved
+        # data processing in get_results
+        # FIXME port this to the native layout as soon as
+        # the Job interface is retired #550
+        data = udf_results['intensity'].data
+        job_results = data.reshape((-1, np.prod(self.dataset.shape.nav))).T
+        return self.get_results(job_results)
+
     def get_results(self, job_results):
         '''
         The AnalysisResults are calculated lazily in this function to reduce

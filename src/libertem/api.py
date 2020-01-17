@@ -552,7 +552,7 @@ class Context:
             is being returned.
         """
         analysis = None
-        if hasattr(job, "get_job"):
+        if hasattr(job, "get_job") or (hasattr(job, "get_udf") and hasattr(job, "get_roi")):
             analysis = job
             if analysis.TYPE == 'JOB':
                 job_to_run = analysis.get_job()

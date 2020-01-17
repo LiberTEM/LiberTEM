@@ -1,4 +1,4 @@
-[Misc] Default UDF interface for mask-based analyses
-====================================================
+[Misc] UDF interface for analyses
+=================================
 
- * All mask-based analyses ported from ApplyMasksJob to ApplyMasksUDF back-end (:issue:`549`, :pr:`550`)
+ * All analyses ported from Job to UDF back-end. The Job-related code remains for now for comparison purposes (:issue:`549`, :pr:`550`)

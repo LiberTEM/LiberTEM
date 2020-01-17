@@ -2,6 +2,7 @@ import numpy as np
 from libertem.viz import visualize_simple
 from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
+from libertem.udf.raw import PickUDF
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 
 
@@ -38,10 +39,12 @@ class PickResultSet(AnalysisResultSet):
 
 
 class PickFrameAnalysis(BaseAnalysis):
+    TYPE = 'UDF'
     """
     Pick a single, complete frame from a dataset
     """
-    def get_job(self):
+
+    def get_origin(self):
         assert self.dataset.shape.nav.dims in (1, 2, 3), "can only handle 1D/2D/3D nav currently"
         x, y, z = (
             self.parameters.get('x'),
@@ -67,7 +70,10 @@ class PickFrameAnalysis(BaseAnalysis):
             origin = (z, y, x)
         else:
             raise ValueError("cannot operate on datasets with more than 3 nav dims")
+        return origin
 
+    def get_job(self):
+        origin = self.get_origin()
         origin = (np.ravel_multi_index(origin, self.dataset.shape.nav),)
         shape = self.dataset.shape
 
@@ -83,25 +89,38 @@ class PickFrameAnalysis(BaseAnalysis):
             squeeze=True,
         )
 
-    def get_results_base(self, job_results):
+    def get_udf(self):
+        return PickUDF()
+
+    def get_roi(self):
+        roi = np.zeros(self.dataset.shape.nav, dtype=bool)
+        roi[self.get_origin()] = True
+        return roi
+
+    def get_results(self, job_results):
+        shape = tuple(self.dataset.shape.sig)
+        data = job_results.reshape(shape)
+        return self.get_generic_results(data)
+
+    def get_udf_results(self, udf_results, roi):
+        return self.get_generic_results(udf_results['intensity'].data[0])
+
+    def get_coords(self):
         parameters = self.parameters
         coords = [
             "%s=%d" % (axis, parameters.get(axis))
             for axis in ['x', 'y', 'z']
             if axis in parameters
         ]
-        coords = " ".join(coords)
-        shape = tuple(self.dataset.shape.sig)
-        data = job_results.reshape(shape)
-        return data, coords
+        return " ".join(coords)
 
-    def get_results(self, job_results):
-        data, coords = self.get_results_base(job_results)
+    def get_generic_results(self, data):
+        coords = self.get_coords()
 
         if data.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(
-                    job_results,
+                    data,
                     key_prefix="intensity",
                     title="intensity",
                     desc="the frame at %s" % (coords,),

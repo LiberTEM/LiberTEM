@@ -585,11 +585,11 @@ class UDFRunner:
             self._udf.preprocess()
         method = self._udf.get_method()
         if method == 'tile':
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
+            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype, mmap=True)
         elif method == 'frame':
-            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
+            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype, mmap=True)
         elif method == 'partition':
-            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype)]
+            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype, mmap=True)]
 
         for tile in tiles:
             if method == 'tile':

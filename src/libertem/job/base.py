@@ -18,7 +18,7 @@ class Job(object):
     pass
 
 
-class BaseJob(object):
+class BaseJob(Job):
     """
     A computation on a DataSet. Inherit from this class and implement ``get_tasks``
     to yield tasks for your specific computation.

@@ -121,35 +121,7 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         return self.parameters['factories']
 
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav)
-        if job_results.dtype.kind == 'c':
-            results = []
-            for idx, job_result in enumerate(job_results):
-                results.extend(
-                    self.get_complex_results(
-                        job_result.reshape(shape),
-                        key_prefix="mask_%d" % idx,
-                        title="mask %d" % idx,
-                        desc="integrated intensity for mask %d" % idx,
-                    )
-                )
-            return MasksResultSet(results)
-        return MasksResultSet([
-            AnalysisResult(
-                raw_data=mask_result.reshape(shape),
-                visualized=visualize_simple(mask_result.reshape(shape)),
-                key="mask_%d" % i,
-                title="mask %d" % i,
-                desc="integrated intensity for mask %d" % i)
-            for i, mask_result in enumerate(job_results)
-        ])
-
-    def get_roi(self):
-        return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
-
-    def get_udf_results(self, udf_results, roi):
-        data = udf_results['intensity'].data
+    def get_generic_results(self, data):
         if data.dtype.kind == 'c':
             results = []
             for idx in range(data.shape[-1]):
@@ -171,3 +143,16 @@ class MasksAnalysis(BaseMasksAnalysis):
                 desc="integrated intensity for mask %d" % idx)
             for idx in range(data.shape[-1])
         ])
+
+    def get_results(self, job_results):
+        shape = tuple(self.dataset.shape.nav) + (-1, )
+        data = job_results.T.reshape(shape)
+        return self.get_generic_results(data)
+
+    def get_roi(self):
+        return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
+
+    def get_udf_results(self, udf_results, roi):
+        data = udf_results['intensity'].data
+        return self.get_generic_results(data)
+        

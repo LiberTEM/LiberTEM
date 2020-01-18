@@ -9,11 +9,20 @@ log = logging.getLogger(__name__)
 
 
 class PickUDF(UDF):
+    '''
+    Load raw data from ROI
+
+    This UDF is meant for frame picking with a very small ROI, usually a single frame.
+
+    .. versionadded:: 0.4.0.dev0
+    '''
     def get_preferred_input_dtype(self):
+        ''
         # We load the native dtype
         return bool
 
     def get_result_buffers(self):
+        ''
         dtype = self.meta.input_dtype
         sigshape = tuple(self.meta.dataset_shape.sig)
         if self.meta.roi is not None:
@@ -37,11 +46,13 @@ class PickUDF(UDF):
         }
 
     def process_tile(self, tile):
+        ''
         # We work in flattened nav space with ROI applied
         sl = self.meta.slice.get()
         self.results.intensity[sl] = tile
 
     def merge(self, dest, src):
+        ''
         # We receive full-size buffers from each node that
         # contributes at least one frame and rely on the rest being filled
         # with zeros correctly.

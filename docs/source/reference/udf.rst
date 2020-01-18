@@ -57,3 +57,7 @@ Some generally useful UDFs are included with LiberTEM:
 .. autoclass:: libertem.udf.masks.ApplyMasksUDF
     :members:
     :special-members: __init__
+
+.. autoclass:: libertem.udf.raw.PickUDF
+    :members:
+    :special-members: __init__

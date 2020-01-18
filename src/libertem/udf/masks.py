@@ -13,6 +13,8 @@ from libertem.common.container import MaskContainer
 class ApplyMasksUDF(UDF):
     '''
     Apply masks to signals/frames in the dataset.
+
+    .. versionadded:: 0.4.0.dev0
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None, *args, **kwargs):
@@ -20,7 +22,7 @@ class ApplyMasksUDF(UDF):
         Parameters
         ----------
 
-        factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
+        mask_factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
             Function or list of functions that take no arguments and create masks. The returned
             masks can be
             numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
@@ -71,6 +73,7 @@ class ApplyMasksUDF(UDF):
         )
 
     def get_preferred_input_dtype(self):
+        ''
         if self.params.preferred_dtype is None:
             return super().get_preferred_input_dtype()
         else:
@@ -101,6 +104,7 @@ class ApplyMasksUDF(UDF):
         )
 
     def get_task_data(self):
+        ''
         if self._mask_container is None:
             self._mask_container = self._make_mask_container()
         mask_container = self._mask_container
@@ -114,6 +118,7 @@ class ApplyMasksUDF(UDF):
         }
 
     def get_result_buffers(self):
+        ''
         dtype = np.result_type(self.meta.input_dtype, self.get_mask_dtype())
         count = self.get_mask_count()
         return {
@@ -123,6 +128,7 @@ class ApplyMasksUDF(UDF):
         }
 
     def process_tile(self, tile):
+        ''
         masks = self.task_data.masks.get(self.meta.slice, transpose=True)
         flat_data = tile.reshape((tile.shape[0], -1))
         if isinstance(masks, sparse.SparseArray):

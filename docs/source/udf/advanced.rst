@@ -331,11 +331,11 @@ dimension as it appears in processing:
 
 .. _udf dtype:
 
-Dtype support
+dtype support
 -------------
 
 UDFs can override :meth:`~libertem.udf.UDF.get_preferred_input_dtype` to
-indicate a "lowest denominator" compatible dtype. The actual input dtype is
+indicate a "lowest common denominator" compatible dtype. The actual input dtype is
 determined by combining the indicated preferred dtype with the input dataset's
 native dtype using :func:`numpy.result_type`. The default preferred dtype is
 :attr:`numpy.float32`. Returning :code:`bool` will usually switch to the

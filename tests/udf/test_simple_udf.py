@@ -349,7 +349,8 @@ def test_invalid_extra_shape(lt_ctx):
         (None, bool, np.float32),
         (None, np.complex64, np.complex64),
         (None, np.complex128, np.complex128),
-        (np.int16, np.uint16, None)
+        (np.int16, np.uint16, None),
+        (UDF.USE_NATIVE_DTYPE, np.int32, np.int32)
     ]
 )
 def test_dtypes(lt_ctx, preferred_dtype, data_dtype, expected_dtype):

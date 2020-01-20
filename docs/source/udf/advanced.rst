@@ -335,11 +335,13 @@ dtype support
 -------------
 
 UDFs can override :meth:`~libertem.udf.UDF.get_preferred_input_dtype` to
-indicate a "lowest common denominator" compatible dtype. The actual input dtype is
-determined by combining the indicated preferred dtype with the input dataset's
-native dtype using :func:`numpy.result_type`. The default preferred dtype is
-:attr:`numpy.float32`. Returning :code:`bool` will usually switch to the
-dataset's native dtype.
+indicate a "lowest common denominator" compatible dtype. The actual input dtype
+is determined by combining the indicated preferred dtype with the input
+dataset's native dtype using :func:`numpy.result_type`. The default preferred
+dtype is :attr:`numpy.float32`. Returning :attr:`UDF.USE_NATIVE_DTYPE`, which is
+currently identical to :code:`numpy.bool`, will switch to the dataset's native
+dtype since :code:`numpy.bool` behaves as a neutral element in
+:func:`numpy.result_type`.
 
 If an UDF requires a specific dtype rather than only preferring it, it should
 override this method and additionally check the actual input type, throw an

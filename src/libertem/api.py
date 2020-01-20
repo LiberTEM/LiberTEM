@@ -158,7 +158,7 @@ class Context:
         )
 
     def create_mask_analysis(self, factories, dataset, use_sparse=None,
-                             mask_count=None, mask_dtype=None, dtype=None, _use_udf=True):
+                             mask_count=None, mask_dtype=None, dtype=None):
         """
         Create a mask application analysis. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -195,10 +195,6 @@ class Context:
         dtype : numpy.dtype, optional
             Specify the dtype to do the calculation in. Integer dtypes are possible if
             the numpy casting rules allow this for source and mask data.
-        _use_udf : bool, optional
-            This temporary inofficial parameter allows to switch between the Job and the UDF
-            implementations for testing and comparison purposes until the Job API is officially
-            deprecated and the UDF implementation is used exclusively. See :issue:`549`
 
         Returns
         -------
@@ -221,7 +217,7 @@ class Context:
         >>> result.mask_0.raw_data.shape
         (16, 16)
         """
-        a = MasksAnalysis(
+        return MasksAnalysis(
             dataset=dataset,
             parameters={
                 "factories": factories,
@@ -230,11 +226,6 @@ class Context:
                 "mask_dtype": mask_dtype,
                 "dtype": dtype},
         )
-        if _use_udf:
-            a.TYPE = 'UDF'
-        else:
-            a.TYPE = 'JOB'
-        return a
 
     def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):
         """

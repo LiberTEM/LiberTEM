@@ -52,25 +52,36 @@ class PickFrameAnalysis(BaseAnalysis):
             self.parameters.get('z'),
         )
 
-        if self.dataset.shape.nav.dims == 1:
-            if x is None:
-                raise ValueError("need x to index 1D nav datasets")
-            if y is not None or z is not None:
-                raise ValueError("y and z must not be specified for 1D nav dataset")
-            origin = (x,)
-        elif self.dataset.shape.nav.dims == 2:
-            if x is None or y is None:
-                raise ValueError("need x/y to index 2D nav datasets")
-            if z is not None:
-                raise ValueError("z must not be specified for 2D nav dataset")
-            origin = (y, x)
-        elif self.dataset.shape.nav.dims == 3:
-            if x is None or y is None or z is None:
-                raise ValueError("need x/y/z to index 3D nav datasets")
-            origin = (z, y, x)
-        else:
+        funcs = {
+            1: self.get_origin_1d,
+            2: self.get_origin_2d,
+            3: self.get_origin_3d,
+        }
+
+        def value_error(x, y, z):
             raise ValueError("cannot operate on datasets with more than 3 nav dims")
-        return origin
+
+        f = funcs.get(self.dataset.shape.nav.dims, value_error)
+        return f(x, y, z)
+
+    def get_origin_1d(self, x, y, z):
+        if x is None:
+            raise ValueError("need x to index 1D nav datasets")
+        if y is not None or z is not None:
+            raise ValueError("y and z must not be specified for 1D nav dataset")
+        return (x,)
+
+    def get_origin_2d(self, x, y, z):
+        if x is None or y is None:
+            raise ValueError("need x/y to index 2D nav datasets")
+        if z is not None:
+            raise ValueError("z must not be specified for 2D nav dataset")
+        return (y, x)
+
+    def get_origin_3d(self, x, y, z):
+        if x is None or y is None or z is None:
+            raise ValueError("need x/y/z to index 3D nav datasets")
+        return (z, y, x)
 
     def get_job(self):
         origin = self.get_origin()

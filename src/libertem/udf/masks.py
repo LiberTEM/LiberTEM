@@ -17,7 +17,7 @@ class ApplyMasksUDF(UDF):
     .. versionadded:: 0.4.0.dev0
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
-                mask_dtype=None, preferred_dtype=None, *args, **kwargs):
+                mask_dtype=None, preferred_dtype=None):
         '''
         Parameters
         ----------
@@ -68,8 +68,7 @@ class ApplyMasksUDF(UDF):
             use_sparse=use_sparse,
             mask_count=mask_count,
             mask_dtype=mask_dtype,
-            preferred_dtype=preferred_dtype,
-            *args, **kwargs
+            preferred_dtype=preferred_dtype
         )
 
     def get_preferred_input_dtype(self):
@@ -105,16 +104,13 @@ class ApplyMasksUDF(UDF):
 
     def get_task_data(self):
         ''
-        if self._mask_container is None:
-            self._mask_container = self._make_mask_container()
-        mask_container = self._mask_container
         m = self.meta
         use_torch = self.params.use_torch
         if torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype():
             use_torch = False
         return {
             'use_torch': use_torch,
-            'masks': mask_container
+            'masks': self.masks
         }
 
     def get_result_buffers(self):

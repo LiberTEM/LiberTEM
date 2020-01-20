@@ -1,4 +1,4 @@
-[Depreciation] Job API will be retired
+[Deprecation] Job API will be retired
 ======================================
 
  * ApplyMasksJob and PickFrameJob will be replaced with implementations based on

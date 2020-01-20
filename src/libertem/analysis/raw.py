@@ -45,43 +45,28 @@ class PickFrameAnalysis(BaseAnalysis):
     """
 
     def get_origin(self):
-        assert self.dataset.shape.nav.dims in (1, 2, 3), "can only handle 1D/2D/3D nav currently"
-        x, y, z = (
-            self.parameters.get('x'),
-            self.parameters.get('y'),
+        dims = self.dataset.shape.nav.dims
+        if dims not in (1, 2, 3):
+            raise ValueError(
+                "can only handle 1D/2D/3D nav currently, received %s dimensions" % dims
+            )
+        zyx = np.array([
             self.parameters.get('z'),
-        )
-
-        funcs = {
-            1: self.get_origin_1d,
-            2: self.get_origin_2d,
-            3: self.get_origin_3d,
+            self.parameters.get('y'),
+            self.parameters.get('x'),
+        ])
+        messages = {
+            1: "Need x, not y and not z to index 1D dataset, received z=%s, y=%s, x=%s",
+            2: "Need x, y and not z to index 2D dataset, received z=%s, y=%s, x=%s",
+            3: "Need x, y z to index 3D dataset, received z=%s, y=%s, x=%s",
         }
+        keep = zyx[-dims:]
+        drop = zyx[:-dims]
 
-        def value_error(x, y, z):
-            raise ValueError("cannot operate on datasets with more than 3 nav dims")
+        if (None in keep) or not all((d is None for d in drop)):
+            raise ValueError(messages[dims] % tuple(zyx))
 
-        f = funcs.get(self.dataset.shape.nav.dims, value_error)
-        return f(x, y, z)
-
-    def get_origin_1d(self, x, y, z):
-        if x is None:
-            raise ValueError("need x to index 1D nav datasets")
-        if y is not None or z is not None:
-            raise ValueError("y and z must not be specified for 1D nav dataset")
-        return (x,)
-
-    def get_origin_2d(self, x, y, z):
-        if x is None or y is None:
-            raise ValueError("need x/y to index 2D nav datasets")
-        if z is not None:
-            raise ValueError("z must not be specified for 2D nav dataset")
-        return (y, x)
-
-    def get_origin_3d(self, x, y, z):
-        if x is None or y is None or z is None:
-            raise ValueError("need x/y/z to index 3D nav datasets")
-        return (z, y, x)
+        return tuple(keep.astype(np.integer))
 
     def get_job(self):
         origin = self.get_origin()

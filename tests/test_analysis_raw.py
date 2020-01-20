@@ -296,22 +296,22 @@ def test_pick_analysis_via_api_3_3d_ds_fail_4(lt_ctx, TYPE):
 
     analysis = PickFrameAnalysis(dataset=dataset, parameters={})
     analysis.TYPE = TYPE
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         lt_ctx.run(analysis)
 
     analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 7})
     analysis.TYPE = TYPE
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         lt_ctx.run(analysis)
 
     analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 7, "y": 8})
     analysis.TYPE = TYPE
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         lt_ctx.run(analysis)
 
     analysis = PickFrameAnalysis(dataset=dataset, parameters={"x": 7, "y": 8, "z": 11})
     analysis.TYPE = TYPE
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         lt_ctx.run(analysis)
 
 

@@ -50,11 +50,11 @@ class PickFrameAnalysis(BaseAnalysis):
             raise ValueError(
                 "can only handle 1D/2D/3D nav currently, received %s dimensions" % dims
             )
-        zyx = np.array([
+        zyx = (
             self.parameters.get('z'),
             self.parameters.get('y'),
             self.parameters.get('x'),
-        ])
+        )
         messages = {
             1: "Need x, not y and not z to index 1D dataset, received z=%s, y=%s, x=%s",
             2: "Need x, y and not z to index 2D dataset, received z=%s, y=%s, x=%s",
@@ -63,10 +63,10 @@ class PickFrameAnalysis(BaseAnalysis):
         keep = zyx[-dims:]
         drop = zyx[:-dims]
 
-        if (None in keep) or not all((d is None for d in drop)):
-            raise ValueError(messages[dims] % tuple(zyx))
+        if (None in keep) or not all(d is None for d in drop):
+            raise ValueError(messages[dims] % zyx)
 
-        return tuple(keep.astype(np.integer))
+        return keep
 
     def get_job(self):
         origin = self.get_origin()

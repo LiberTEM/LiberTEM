@@ -18,8 +18,7 @@ class PickUDF(UDF):
     '''
     def get_preferred_input_dtype(self):
         ''
-        # We load the native dtype
-        return bool
+        return self.USE_NATIVE_DTYPE
 
     def get_result_buffers(self):
         ''

@@ -1,39 +1,14 @@
 import numpy as np
 import sparse
 
-from libertem.viz import visualize_simple
-from .base import AnalysisResult
-from .masks import BaseMasksAnalysis, SingleMaskResultSet
+from .masks import SingleMaskAnalysis
 
 
-class PointMaskAnalysis(BaseMasksAnalysis):
+class PointMaskAnalysis(SingleMaskAnalysis):
     TYPE = 'UDF'
 
-    # FIXME remove this after UDF version is final
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav)
-        data = job_results[0].reshape(shape)
-        return self.get_generic_results(data)
-
-    def get_udf_results(self, udf_results, roi):
-        data = udf_results['intensity'].data
-        return self.get_generic_results(data[..., 0])
-
-    def get_generic_results(self, data):
-        if data.dtype.kind == 'c':
-            return SingleMaskResultSet(
-                self.get_complex_results(
-                    data,
-                    key_prefix='intensity',
-                    title='intensity',
-                    desc="intensity of the integration over the selected point",
-                )
-            )
-        return SingleMaskResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
-                           key="intensity", title="intensity",
-                           desc="intensity of the integration over the selected point"),
-        ])
+    def get_description(self):
+        return "intensity of the integration over the selected point"
 
     def get_use_sparse(self):
         return 'sparse.pydata'

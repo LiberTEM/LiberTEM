@@ -55,6 +55,37 @@ class BaseMasksAnalysis(BaseAnalysis):
         return self.parameters.get('dtype', None)
 
 
+class SingleMaskAnalysis(BaseMasksAnalysis):
+    # FIXME remove this after UDF version is final
+    def get_results(self, job_results):
+        shape = tuple(self.dataset.shape.nav)
+        data = job_results[0].reshape(shape)
+        return self.get_generic_results(data)
+
+    def get_udf_results(self, udf_results, roi):
+        data = udf_results['intensity'].data
+        return self.get_generic_results(data[..., 0])
+
+    def get_description(self):
+        raise NotImplementedError
+
+    def get_generic_results(self, data):
+        if data.dtype.kind == 'c':
+            return SingleMaskResultSet(
+                self.get_complex_results(
+                    data,
+                    key_prefix='intensity',
+                    title='intensity',
+                    desc=self.get_description(),
+                )
+            )
+        return SingleMaskResultSet([
+            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
+                           key="intensity", title="intensity",
+                           desc=self.get_description()),
+        ])
+
+
 class MasksResultSet(AnalysisResultSet):
     """
     Running a :class:`MasksAnalysis` via :meth:`libertem.api.Context.run` on a dataset

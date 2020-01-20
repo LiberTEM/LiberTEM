@@ -378,6 +378,8 @@ class UDF(UDFBase):
     The main user-defined functions interface. You can implement your functionality
     by overriding methods on this class.
     """
+    USE_NATIVE_DTYPE = np.bool
+
     def __init__(self, **kwargs):
         """
         Create a new UDF instance. If you override `__init__`, please take care,
@@ -509,23 +511,27 @@ class UDF(UDFBase):
         '''
         Override this method to specify the preferred input dtype of the UDF.
 
-        The default is :code:`float32` since most numerical processing tasks perform
-        best with this dtype, namely dot products.
+        The default is :code:`float32` since most numerical processing tasks
+        perform best with this dtype, namely dot products.
 
         The back-end uses this preferred input dtype in combination with the
         dataset`s native dtype to determine the input dtype using
-        :meth:`numpy.result_type`. That means :code:`float` data in a dataset switches
-        the dtype to :code:`float` even if this method returns an :code:`int` dtype. :code:`int32`
-        or wider input data would switch from :code:`float32` to :code:`float64`, and
-        complex data in the dataset will switch the input dtype kind to :code:`complex`,
-        following the NumPy casting rules.
+        :meth:`numpy.result_type`. That means :code:`float` data in a dataset
+        switches the dtype to :code:`float` even if this method returns an
+        :code:`int` dtype. :code:`int32` or wider input data would switch from
+        :code:`float32` to :code:`float64`, and complex data in the dataset will
+        switch the input dtype kind to :code:`complex`, following the NumPy
+        casting rules.
 
         In case your UDF only works with specific input dtypes, it should throw
         an error or warning if incompatible dtypes are used, and/or implement a
         meaningful conversion in your UDF's :code:`process_<...>` routine.
 
         If you prefer to always use the dataset's native dtype instead of
-        floats, you can override this method to return :code:`bool`.
+        floats, you can override this method to return
+        :attr:`UDF.USE_NATIVE_DTYPE`, which is curently identical to
+        :code:`numpy.bool` and behaves as a neutral element in
+        :func:`numpy.result_type`.
 
         .. versionadded:: 0.4.0.dev0
         '''

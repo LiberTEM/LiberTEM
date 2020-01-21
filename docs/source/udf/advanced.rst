@@ -60,12 +60,12 @@ Real-world example
 
 The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses
 :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of
-a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The
-mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of
+a :class:`~libertem.udf.masks.ApplyMasksUDF` that works on log-scaled data. The
+mask stack is stored in a :class:`libertem.common.container.MaskContainer` as part of
 the task data. Note how the :code:`self.meta.slice` property of type
 :class:`~libertem.common.Slice` is used to extract the region from the mask
 stack that matches the tile using the facilities of a
-:class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log
+:class:`~libertem.common.container.MaskContainer`. After reshaping, transposing and log
 scaling the tile data into the right memory layout, the mask stack is applied to
 the data with a dot product. The result is *added* to the buffer in order to
 merge it with the results of the other tiles because addition is the correct
@@ -184,7 +184,7 @@ method and not directly by instantiating a
 :meth:`~libertem.udf.UDF.aux_data` ensures that it is set up correctly.
 
 For masks in the signal dimension that are used for dot products in combination
-with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows
+with per-tile processing, a :class:`~libertem.common.container.MaskContainer` allows
 to use more advanced slicing and transformation methods targeted at preparing
 mask stacks for optimal dot product performance.
 
@@ -200,14 +200,14 @@ pickling, network transport and unpickling.
 
 This non-trivial example from
 :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates
-a :class:`~libertem.job.masks.MaskContainer` based on the parameters in
-:code:`self.params`. This :class:`~libertem.job.masks.MaskContainer` is then
+a :class:`~libertem.common.container.MaskContainer` based on the parameters in
+:code:`self.params`. This :class:`~libertem.common.container.MaskContainer` is then
 available as :code:`self.task_data['mask_container']` within the processing
 functions.
 
 .. testsetup::
 
-    from libertem.job.masks import MaskContainer
+    from libertem.common.container import MaskContainer
     import libertem.masks as masks
 
 .. testcode::
@@ -286,7 +286,7 @@ available as :attr:`libertem.udf.UDFMeta.roi` and
 behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers
 and aux data with a custom implementation. The :ref:`mask container for tiled
 processing example<slice example>` makes use of these attributes to employ a
-:class:`libertem.job.masks.MaskContainer` instead of a :code:`shape="sig"`
+:class:`libertem..common.container.MaskContainer` instead of a :code:`shape="sig"`
 buffer in order to optimize dot product performance and support sparse masks.
 
 The slice is in the reference frame of the dataset, masked by the current ROI,

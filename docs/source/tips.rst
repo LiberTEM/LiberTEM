@@ -60,6 +60,8 @@ has to be set.
     multiprocessing.set_executable(
         os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only
 
+.. _`profiling tests`:
+
 Profiling long-running tests
 ----------------------------
 

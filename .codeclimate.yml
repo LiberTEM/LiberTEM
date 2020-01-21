@@ -6,6 +6,9 @@ checks:
   return-statements:
     config:
       threshold: 15
+  argument-count:
+    config:
+      threshold: 8
 plugins:
   tslint:
     enabled: true

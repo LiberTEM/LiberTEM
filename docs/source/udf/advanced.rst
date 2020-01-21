@@ -21,7 +21,7 @@ See :ref:`user-defined functions` for an introduction to basic topics.
 Tiled processing
 ----------------
 
-Many operations operations can be significantly optimized by working on stacks of frames.
+Many operations can be significantly optimized by working on stacks of frames.
 You can often perform `loop nest optimization <https://en.wikipedia.org/wiki/Loop_nest_optimization>`_
 to improve the `locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
 for example using `numba <https://numba.pydata.org/>`_, or using an optimized NumPy function.

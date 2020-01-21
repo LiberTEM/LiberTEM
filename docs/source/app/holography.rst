@@ -3,13 +3,18 @@
 Off-axis electron holography
 ============================
 
+LiberTEM has implementations for both :ref:`hologram simulation <holo-sim>` and 
+:ref:`hologram reconstruction <holo-reconstruct>` for off-axis electron holography.
+
 .. versionadded:: 0.3.0
+
+.. _holo-sim:
 
 Hologram simulation
 -------------------
 Holograms can be simulated using the method described by Lichte et al. :cite:`Lichte2008`
 The simulator includes simulation of holograms with Gaussian and Poisson noise, without effect of
-Fresnel fringes of biprism. The simulator requires amplitude and phase images being provided. Those can be
+Fresnel fringes of the biprism. The simulator requires amplitude and phase images being provided. Those can be
 calculated as in example below in which for amplitude a sphere is assumed, the same sphere is used
 for the mean inner potential (MIP) contribution to the phase and in addition to the quadratic long-range
 phase shift originating from the centre of the sphere:
@@ -53,14 +58,14 @@ phase shift originating from the centre of the sphere:
 
 .. image:: ./images/holography/amplitude_phase.png
 
-To generate object hologram :code:`amp` and :code:`phase` should be passed to the :code:`holo_frame`
+To generate the object hologram, :code:`amp` and :code:`phase` should be passed to the :code:`holo_frame`
 function as follows:
 
 .. testcode::
 
    holo = hologram_frame(amp, phase)
 
-To generate vacuum reference hologram use an array of ones for amplitude and zero for phase:
+To generate the vacuum reference hologram, use an array of ones for amplitude and zero for phase:
 
 .. testcode::
 
@@ -77,11 +82,13 @@ To generate vacuum reference hologram use an array of ones for amplitude and zer
 
 .. image:: ./images/holography/holograms.png
 
+.. _holo-reconstruct:
+
 Hologram reconstruction
 -----------------------
 
-LiberTEM can be used to reconstruct off-axis electron holograms using Fourier space method. The processing involves
-following steps:
+LiberTEM can be used to reconstruct off-axis electron holograms using the Fourier space method.
+The processing involves the following steps:
 
 * Fast Fourier transform
 * Filtering of the sideband in Fourier space and cropping (if applicable)
@@ -89,7 +96,8 @@ following steps:
 * Inverse Fourier transform.
 
 The reconstruction can be accessed through the :class:`~libertem.udf.holography.HoloReconstructUDF` class.
-To demonstrate reconstruction capability two datasets can be created from the holograms simulated above as follows:
+To demonstrate the reconstruction capability, two datasets can be created from the holograms
+simulated above as follows:
 
 .. testcode::
 
@@ -103,9 +111,9 @@ To demonstrate reconstruction capability two datasets can be created from the ho
                                tileshape=(1, sx, sy),
                                num_partitions=1, sig_dims=2)
 
-The reconstruction requires knowledge about position of the sideband and size of sideband filter which will be used
-in the reconstruction. The position of the sideband can be estimated from the Fourier transform of the
-vacuum reference hologram:
+The reconstruction requires knowledge about the position of the sideband and the size of the
+sideband filter which will be used in the reconstruction. The position of the sideband can be
+estimated from the Fourier transform of the vacuum reference hologram:
 
 .. testcode::
 
@@ -122,16 +130,17 @@ vacuum reference hologram:
 
 The radius of sideband filter is typically chosen as either half of the distance between the sideband and
 autocorrelation for strong phase objects or as one third of the distance for weak phase objects. Assuming
-strong phase object, one can proceed as follows:
+a strong phase object, one can proceed as follows:
 
 .. testcode::
 
    sb_size = np.hypot(sb_position[0], sb_position[1]) / 2.
 
-Since in the off-axis electron holography spatial resolution is determined by the interference fringe spacing rather
-than by the sampling of the original images, the reconstruction would typically involve changing the shape of the data.
+Since in off-axis electron holography, the spatial resolution is determined by the interference
+fringe spacing rather than by the sampling of the original images, the reconstruction would typically
+involve changing the shape of the data.
 For medium magnification holography the size of the reconstructed images can be typically set to the size
-(diameter) of the sideband filter. (For high-resolution holography reconstruction typically binning factors of
+(diameter) of the sideband filter. (For high-resolution holography reconstruction, typically binning factors of
 1-4 are used.) Therefore, the output shape can be defined as follows:
 
 .. testcode::
@@ -200,7 +209,8 @@ To unwrap phase one can do the following:
 
 In addition to the capabilities demonstrated above, the :class:`~libertem.udf.holography.HoloReconstructUDF`
 class can take smoothness of sideband (SB) filter as fraction of the SB size (:code:`sb_smoothness=0.05` is default).
-Also :code:`precision` argument can be used (:code:`precision=False`) to reduce the calculation precision
-to :code:`float32` and :code:`complex64` for the output. Note that depending of NumPy backend even with reduced
-precision FFT function used in the reconstruction may internally output results with double precision. In this case
-reducing precision will only affect the size of the output rather than the speed of processing.
+Also, the :code:`precision` argument can be used (:code:`precision=False`) to reduce the calculation precision
+to :code:`float32` and :code:`complex64` for the output. Note that depending of NumPy backend, even with reduced
+precision the FFT function used in the reconstruction may internally calculate results with double
+precision. In this case reducing precision will only affect the size of the output rather than the
+speed of processing.

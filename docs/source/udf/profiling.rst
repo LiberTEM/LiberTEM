@@ -17,19 +17,23 @@ of your code. Always measure!
 Profiling means instrumenting the execution of a program and finding out which parts
 of your code use how much of a given resource (for example, CPU time, or memory). 
 
-Prerequisite: inline executor
------------------------------
+Prerequisite: :code:`InlineJobExecutor`
+---------------------------------------
 
-By default, your UDF will be run in a multi-process or multi-threaded environment. This makes
-profiling a challenge. But as most of the time, improving the execution time of your UDF in a
-single-threaded executor also improves the respective multi-process execution time, we can run
-the UDF in a single thread to do profiling measurements.
+By default, your UDF will be run in a multi-process or multi-threaded
+environment. This makes profiling a challenge, since the usual profiling tools
+will only capture information on the main process that performs the final
+reduction and not the processes that do most of the work.
 
-LiberTEM provides what it calls :class:`~libertem.executor.inline.InlineJobExecutor`,
-which executes your UDF in a single thread, thus allowing the use of default Python profiling
-mechanisms. 
+So, in order to use the default Python profiling mechanisms, all parts of the UDF
+should be executed in the same single thread. LiberTEM provides what it calls
+:class:`~libertem.executor.inline.InlineJobExecutor` for this purpose. Improving
+the execution time in a single-threaded executor will almost always improve the
+multi-process execution time. Nevertheless, you should confirm the impact of
+changes in your production environment.
 
-To use it, pass it to the :class:`~libertem.api.Context` on construction:
+To use the :class:`~libertem.executor.inline.InlineJobExecutor`, pass it to the
+:class:`~libertem.api.Context` on construction:
 
 .. testcode::
    

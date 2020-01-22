@@ -444,6 +444,8 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
    # or directly treat as array:
    np.sum(res['buf1'])
 
+.. _`udf roi`:
+
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
 run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
 containing a bool mask, having the shape of the navigation axes of the dataset.
@@ -477,7 +479,9 @@ More about UDFs
 ---------------
 
 Now would be a good time to :ref:`read about advanced UDF functionality <advanced udf>`
-or the :ref:`general section on debugging <debugging udfs>`.
+or the :ref:`general section on debugging <debugging udfs>`. Once you have your UDF working,
+you can proceed to :ref:`UDF profiling <udf profiling>` to gain insights into the efficiency
+of your UDF.
 
 LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement general functionality,
 like standard deviation or sum of log-scaled frames. Also, LiberTEM includes
@@ -487,6 +491,7 @@ like standard deviation or sum of log-scaled frames. Also, LiberTEM includes
    :hidden:
 
    udf/advanced
+   udf/profiling
 
 .. seealso::
 

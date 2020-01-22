@@ -60,6 +60,8 @@ has to be set.
     multiprocessing.set_executable(
         os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only
 
+.. _`profiling tests`:
+
 Profiling long-running tests
 ----------------------------
 
@@ -67,7 +69,7 @@ Since our code base and test coverage is growing continuously, we should make
 sure that our test suite remains efficient to finish within reasonable time
 frames.
 
-You find the five slowest tests in the output of Tox, see :ref:`running tests`
+You can find the five slowest tests in the output of Tox, see :ref:`running tests`
 for details. If you are using :code:`pytest` directly, you can use the
 :code:`--durations` parameter:
 

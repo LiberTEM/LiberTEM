@@ -276,3 +276,14 @@ LiberTEM can work as well.
     potentially be useful.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
+
+8. Advanced: Enable user-defined functions based on WebAssembly
+    This would allow users to write user-defined functions in their favorite
+    compiled language and is a step towards using LiberTEM independent of
+    Python. See also :issue:`199`.
+
+    *Skills:* Python and compiled languages. 
+    
+    *Domain knowledge:* Experience with WebAssembly would be useful.
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)

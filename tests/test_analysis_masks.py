@@ -9,19 +9,27 @@ import libertem.api as api
 from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf.masks import ApplyMasksUDF
+from libertem.udf import UDF
 
 
 def _run_mask_test_program(lt_ctx, dataset, mask, expected, TYPE='JOB'):
+    if TYPE == 'UDF':
+        dtype = UDF.USE_NATIVE_DTYPE
+    else:
+        dtype = np.result_type(dataset.dtype, mask.dtype)
+
     analysis_default = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask]
+        dataset=dataset, factories=[lambda: mask], dtype=dtype
     )
     analysis_default.TYPE = TYPE
     analysis_sparse = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True
+        dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True,
+        dtype=dtype
     )
     analysis_sparse.TYPE = TYPE
     analysis_dense = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: to_dense(mask)], use_sparse=False
+        dataset=dataset, factories=[lambda: to_dense(mask)], use_sparse=False,
+        dtype=dtype
     )
     analysis_dense.TYPE = TYPE
     results_default = lt_ctx.run(analysis_default)

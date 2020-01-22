@@ -172,6 +172,21 @@ entire time. Please feel free to suggest your own ideas as well! Just working on
 a number of smaller features and getting a good cross-sectional experience of
 LiberTEM can work as well.
 
+0. Beginner: Implement rotation in GUI and back-end for center of mass analysis :issue:`31`
+    Currently, the implementation assumes that the detector edges are parallel
+    to the sample X and Y coordinate directions. This is mostly, but not always
+    the case. In this project you implement an additional parameter for rotation
+    both in the back-end and GUI. That includes a discussion with users of the
+    center of mask analysis on how to determine and verify this parameter and
+    what the interface should be like.
+
+    *Skills:* Communication, Python, NumPy and TypeScript programming, simple
+    web GUI development.
+    
+    *Domain knowledge:* simple linear algebra, basic optics.
+
+    *Primary contact:* Dieter (@uellue)    
+
 1. Intermediate: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
     This can give you experience with the product development, design and
     application side of software engineering, and applied data science. A major
@@ -285,5 +300,19 @@ LiberTEM can work as well.
     *Skills:* Python and compiled languages. 
     
     *Domain knowledge:* Experience with WebAssembly would be useful.
+
+    *Contact:* Dieter (@uellue), Alex (@sk1p)
+
+9. Intermediate/Advanced: Custom math kernel for bit masks 'issue'`26`
+    Currently, binary masks are first converted to floating point and then used
+    in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
+    this. This could be accelerated significantly with a Numba-based custom GEMM
+    implementation that can work on bit masks directly. Furthermore, such a
+    custom Numba-based GEMM kernel has potential other uses in LiberTEM:
+    :issue:`555`.
+
+    *Skills:* Python, Numba 
+    
+    *Domain knowledge:* Optimization, efficient matrix product implementations.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)

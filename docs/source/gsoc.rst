@@ -164,6 +164,8 @@ corresponding data to run the examples!
 Furthermore, you could help us hunt down all references to the Job API in our
 code, introduce depreciation warnings and update documentation where necessary.
 
+Other small and relatively straightforward issues include :issue:`81`
+
 Project ideas
 -------------
 
@@ -182,10 +184,23 @@ LiberTEM can work as well.
 
     *Skills:* Communication, Python, NumPy and TypeScript programming, simple
     web GUI development.
-    
+
     *Domain knowledge:* simple linear algebra, basic optics.
 
-    *Primary contact:* Dieter (@uellue)    
+    *Primary contact:* Dieter (@uellue)
+
+0. Beginner: Code snippet for analysis in GUI
+    Currently, our GUI only offers limited capabilities. Most notably, color
+    scale, scale bars and exporting results are not implemented. In this
+    project, you implement functions that generate a code snippet ready for copy
+    & paste to use an analysis with the same settings as in the GUI in a script,
+    for example a Jupyter notebook. This allows users more flexibility.
+
+    *Skills:* Python
+
+    *Domain knowledge:* Learning some LiberTEM basics
+
+    *Primary contact:* Dieter (@uellue), Alex (@sk1p)
 
 1. Intermediate: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
     This can give you experience with the product development, design and
@@ -311,8 +326,8 @@ LiberTEM can work as well.
     custom Numba-based GEMM kernel has potential other uses in LiberTEM:
     :issue:`555`.
 
-    *Skills:* Python, Numba 
-    
+    *Skills:* Python, Numba
+
     *Domain knowledge:* Optimization, efficient matrix product implementations.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)

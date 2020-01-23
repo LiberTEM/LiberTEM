@@ -69,7 +69,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
         # FIXME port this to the native layout as soon as
         # the Job interface is retired #550
         data = udf_results['intensity'].data
-        job_results = data.reshape((-1, np.prod(self.dataset.shape.nav))).T
+        job_results = data.reshape((np.prod(self.dataset.shape.nav), -1)).T
         return self.get_results(job_results)
 
     def get_results(self, job_results):

@@ -164,7 +164,7 @@ corresponding data to run the examples!
 Furthermore, you could help us hunt down all references to the Job API in our
 code, introduce depreciation warnings and update documentation where necessary.
 
-Other small and relatively straightforward issues include :issue:`81`
+Other small and relatively straightforward issues include :issue:`81,267,506`
 
 Project ideas
 -------------
@@ -174,7 +174,7 @@ entire time. Please feel free to suggest your own ideas as well! Just working on
 a number of smaller features and getting a good cross-sectional experience of
 LiberTEM can work as well.
 
-0. Beginner: Implement rotation in GUI and back-end for center of mass analysis :issue:`31`
+1. Beginner: Implement rotation in GUI and back-end for center of mass analysis :issue:`31`
     Currently, the implementation assumes that the detector edges are parallel
     to the sample X and Y coordinate directions. This is mostly, but not always
     the case. In this project you implement an additional parameter for rotation
@@ -189,12 +189,13 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue)
 
-0. Beginner: Code snippet for analysis in GUI
+2. Beginner: Code snippet for analysis in GUI
     Currently, our GUI only offers limited capabilities. Most notably, color
     scale, scale bars and exporting results are not implemented. In this
-    project, you implement functions that generate a code snippet ready for copy
-    & paste to use an analysis with the same settings as in the GUI in a script,
-    for example a Jupyter notebook. This allows users more flexibility.
+    project, you implement functions that generate a code snippet in the GUI
+    ready for copy & paste. Pasting this snippet in, for example, a Jupyter
+    notebook allows to use the analysis with the same parameters as in the GUI
+    in a scripting environment that gives users more flexibility.
 
     *Skills:* Python
 
@@ -202,7 +203,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue), Alex (@sk1p)
 
-1. Intermediate: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
+3. Intermediate: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
     This can give you experience with the product development, design and
     application side of software engineering, and applied data science. A major
     part of the work is first figuring out *what* to implement together with our
@@ -217,7 +218,35 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue)
 
-2. Beginner/Intermediate/Advanced: Compression survey.
+4. Intermediate: Allow reshaping datasets into a custom shape :issue:`441`
+    Data in files is not always stored in the native shape, or different
+    representations may be possible depending on the application. The dataset
+    implementation and GUI should allow specifying a different shape than the
+    layout in the dataset.
+
+    *Skills:* Python, NumPy and TypeScript programming.
+
+    *Domain knowledge:* None
+
+    *Primary contact:* Alex (@sk1p)
+
+
+5. Beginner/Intermediate: Set number of threads and workers dynamically for UDFs :issue:`546`
+    Your task is to implement, document and validate methods to set the thread
+    count for all relevant numerics back-ends in LiberTEM dynamically on a
+    case-by-case basis on the worker processes and main node. Furthermore, you
+    can implement an interface for UDFs to specify their preferred number of
+    threads. This can improve L3 cache efficiency for UDFs that can use a
+    multi-threaded back-end and at the same time avoids oversubscription of the
+    CPU.
+
+    *Skills:* Python programming, using Goole.
+
+    *Domain knowledge:* None
+
+    *Primary contact:* Alex (@sk1p), Dieter (@uellue)
+
+6. Beginner/Intermediate/Advanced: Compression survey :issue:`387`.
     Analyze high-throughput compression techniques, dive into lz4/zstd, blosc
     etc., compare against existing file formats.
     
@@ -238,7 +267,7 @@ LiberTEM can work as well.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-3. Intermediate: `Explore automated benchmarks in detail <https://github.com/LiberTEM/LiberTEM/issues/198>`_.
+7. Intermediate: Explore automated benchmarks in detail :issue:`198`.
     This will help us to catch performance regressions. In our experience,
     running a benchmark requires a reproducible, undisturbed environment and
     comparison to good reference data. For that reason we see it as more
@@ -252,7 +281,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Alex (@sk1p)
 
-4. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
+8. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
     Currently, the masks in the GUI are limited to a few simple shapes, while
     the back-end allows arbitrary masks. You could implement an online mask
     editor to give users more flexibility on designing masks. Part of the task
@@ -269,7 +298,7 @@ LiberTEM can work as well.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-5. Intermediate: Deploy LiberTEM with kubernetes.
+9. Intermediate: Deploy LiberTEM with kubernetes :issue:`105,484`.
     Help us set up a helm chart and documentation to deploy a LiberTEM cluster
     with kubernetes. The subject is fairly new to us and we'd appreciate your
     help, in particular if you already have experience with kubernetes.
@@ -280,54 +309,58 @@ LiberTEM can work as well.
 
     *Primary contact:* Alex (@sk1p)
 
-6. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters.
-    This feature will make it easier to implement new types of analysis in the GUI. This is a cross-section through Python and TypeScript, though we could also split off the more react-y part. Does not require NumPy knowledge, or domain knowledge. Python/TypeScript required. General WebDev experience could help.
+10. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters :issue:`316`.
+     This feature will make it easier to implement new types of analysis in the
+     GUI. This is a cross-section through Python and TypeScript, though we could
+     also split off the more react-y part. Does not require NumPy knowledge, or
+     domain knowledge. Python/TypeScript required. General WebDev experience
+     could help.
 
-    *Skills:* Systematic thinking and abstraction, Python and TypeScript programming, web development. 
+     *Skills:* Systematic thinking and abstraction, Python and TypeScript programming, web development.
+
+     *Domain knowledge:* --
+
+     *Primary contact:* Alex (@sk1p)
+
+11. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
+     Basically an efficient/zoomable/user-friendly/fully-featured replacement for
+     our visualization. Requires a cross-section of different technologies from
+     Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun
+     off into its own project if it is successful! This is a larger project that
+     can be split into smaller individual parts. If you are interested, we should
+     discuss about setting a scope that suits your interests.
+
+     *Skills:* Python and TypeScript programming, web development, asynchronous
+     and parallel programming, numerical processing, visualization.
     
-    *Domain knowledge:* --
+     *Domain knowledge:* Experience with similar projects and frameworks like for
+     example `GR <https://gr-framework.org/>`_ desirable. Knowledge of `GIS
+     <https://en.wikipedia.org/wiki/Geographic_information_system>`_ could
+     potentially be useful.
 
-    *Primary contact:* Alex (@sk1p)
+     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-7. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
-    Basically an efficient/zoomable/user-friendly/fully-featured replacement for
-    our visualization. Requires a cross-section of different technologies from
-    Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun
-    off into its own project if it is successful! This is a larger project that
-    can be split into smaller individual parts. If you are interested, we should
-    discuss about setting a scope that suits your interests.
+12. Advanced: Enable user-defined functions based on WebAssembly
+     This would allow users to write user-defined functions in their favorite
+     compiled language and is a step towards using LiberTEM independent of
+     Python. See also :issue:`199`.
 
-    *Skills:* Python and TypeScript programming, web development, asynchronous
-    and parallel programming, numerical processing, visualization. 
+     *Skills:* Python and compiled languages.
     
-    *Domain knowledge:* Experience with similar projects and frameworks like for
-    example `GR <https://gr-framework.org/>`_ desirable. Knowledge of `GIS
-    <https://en.wikipedia.org/wiki/Geographic_information_system>`_ could
-    potentially be useful.
+     *Domain knowledge:* Experience with WebAssembly would be useful.
 
-    *Contact:* Dieter (@uellue), Alex (@sk1p)
+     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-8. Advanced: Enable user-defined functions based on WebAssembly
-    This would allow users to write user-defined functions in their favorite
-    compiled language and is a step towards using LiberTEM independent of
-    Python. See also :issue:`199`.
+13. Intermediate/Advanced: Custom math kernel for bit masks 'issue'`26`
+     Currently, binary masks are first converted to floating point and then used
+     in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
+     this. This could be accelerated significantly with a Numba-based custom GEMM
+     implementation that can work on bit masks directly. Furthermore, such a
+     custom Numba-based GEMM kernel has potential other uses in LiberTEM:
+     :issue:`555`.
 
-    *Skills:* Python and compiled languages. 
-    
-    *Domain knowledge:* Experience with WebAssembly would be useful.
+     *Skills:* Python, Numba
 
-    *Contact:* Dieter (@uellue), Alex (@sk1p)
+     *Domain knowledge:* Optimization, efficient matrix product implementations.
 
-9. Intermediate/Advanced: Custom math kernel for bit masks 'issue'`26`
-    Currently, binary masks are first converted to floating point and then used
-    in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
-    this. This could be accelerated significantly with a Numba-based custom GEMM
-    implementation that can work on bit masks directly. Furthermore, such a
-    custom Numba-based GEMM kernel has potential other uses in LiberTEM:
-    :issue:`555`.
-
-    *Skills:* Python, Numba
-
-    *Domain knowledge:* Optimization, efficient matrix product implementations.
-
-    *Contact:* Dieter (@uellue), Alex (@sk1p)
+     *Contact:* Dieter (@uellue), Alex (@sk1p)

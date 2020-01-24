@@ -79,9 +79,13 @@ def test_apply_mask_on_raw_job(default_blo, lt_ctx):
     assert results[0].shape == (90 * 121,)
 
 
-def test_apply_mask_analysis(default_blo, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_blo, lt_ctx, TYPE):
     mask = np.ones((144, 144))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_blo)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (90, 121)
 
@@ -98,8 +102,12 @@ def test_pick_job(default_blo, lt_ctx):
     assert results.shape == (144, 144)
 
 
-def test_pick_analysis(default_blo, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_blo, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_blo, parameters={"x": 16, "y": 16})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (144, 144)
 

@@ -96,10 +96,14 @@ def test_apply_mask_job(default_k2is, lt_ctx):
         assert not np.isclose(px, 0)
 
 
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
 @pytest.mark.slow
-def test_apply_mask_analysis(default_k2is, lt_ctx):
+def test_apply_mask_analysis(default_k2is, lt_ctx, TYPE):
     mask = np.ones((1860, 2048))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_k2is)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (34, 35)
 
@@ -117,8 +121,12 @@ def test_pick_job(default_k2is, lt_ctx):
     assert results.shape == (1860, 2048)
 
 
-def test_pick_analysis(default_k2is, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_k2is, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_k2is, parameters={"x": 16, "y": 16})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
 

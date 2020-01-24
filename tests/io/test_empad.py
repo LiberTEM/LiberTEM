@@ -109,9 +109,13 @@ def test_apply_mask_on_empad_job(default_empad, lt_ctx):
     assert np.count_nonzero(results[0]) > 0
 
 
-def test_apply_mask_analysis(default_empad, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_empad, lt_ctx, TYPE):
     mask = np.ones((128, 128))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_empad)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (4, 4)
     assert np.count_nonzero(results[0].raw_data) > 0
@@ -124,15 +128,19 @@ def test_sum_analysis(default_empad, lt_ctx):
     assert np.count_nonzero(results[0].raw_data) > 0
 
 
-def test_pick_job(default_empad, lt_ctx):
+def test_pick_job(default_empad, lt_ctx, TYPE):
     analysis = lt_ctx.create_pick_job(dataset=default_empad, origin=(3,))
     results = lt_ctx.run(analysis)
     assert results.shape == (128, 128)
     assert np.count_nonzero(results[0]) > 0
 
 
-def test_pick_analysis(default_empad, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_empad, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_empad, parameters={"x": 2, "y": 2})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0

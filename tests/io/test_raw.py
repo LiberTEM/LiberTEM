@@ -15,10 +15,14 @@ def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
 
 
-def test_large_pick(large_raw, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_large_pick(large_raw, lt_ctx, TYPE):
     y, x = large_raw.shape.nav
     dy, dx = large_raw.shape.sig
     analysis = lt_ctx.create_pick_analysis(large_raw, y=y-1, x=x-1)
+    analysis.TYPE = TYPE
     result = lt_ctx.run(analysis)
     assert result.intensity.raw_data.shape == tuple(large_raw.shape.sig)
 
@@ -63,9 +67,13 @@ def test_apply_mask_on_raw_job(default_raw, lt_ctx):
     assert results[0].shape == (16 * 16,)
 
 
-def test_apply_mask_analysis(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_raw, lt_ctx, TYPE):
     mask = np.ones((128, 128))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_raw)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (16, 16)
 
@@ -82,8 +90,12 @@ def test_pick_job(default_raw, lt_ctx):
     assert results.shape == (128, 128)
 
 
-def test_pick_analysis(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_raw, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_raw, parameters={"x": 15, "y": 15})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0

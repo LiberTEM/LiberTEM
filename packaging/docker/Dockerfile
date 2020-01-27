@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.0.0-experimental
 FROM debian:stable-slim AS builder
 
 RUN apt-get update && apt-get install -y \

@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+"""
+Small wrapper around ghp-import, similar to travis-sphinx,
+but not specific to travis
+"""
+
+import subprocess
+
+import click
+
+
+@click.command()
+@click.option('--repo', type=str,
+              help='GitHub repository to upload to',
+              default='LiberTEM/LiberTEM',
+              show_default=True)
+@click.argument('html-dir', nargs=1, type=click.Path(exists=True, dir_okay=True, file_okay=False))
+def deploy(repo, html_dir):
+    url = 'git@github.com:%s.git' % (repo,)
+    cmd = ['ghp-import', '-p', '-f', '-n', '-m', 'Deploy docs', '-r', url, html_dir]
+    print(subprocess.check_output(cmd).decode("utf-8"))
+
+
+if __name__ == "__main__":
+    deploy(auto_envvar_prefix="LT_DOCS")

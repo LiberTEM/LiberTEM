@@ -1,8 +1,8 @@
+import asyncio
 import os
 import time
 import importlib.util
 import platform
-import asyncio
 import threading
 import pkg_resources
 from functools import partial
@@ -23,7 +23,7 @@ from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
-
+from libertem.utils.async_utils import adjust_event_loop_policy
 
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests
@@ -415,6 +415,7 @@ class ServerThread(threading.Thread):
 
     def run(self):
         try:
+            adjust_event_loop_policy()
             self.loop = loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.set_debug(True)

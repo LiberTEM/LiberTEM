@@ -31,6 +31,27 @@ STABLE_VERSION_PAT = re.compile(
 )
 
 
+def get_travis_env():
+    return {
+        'log_url': os.environ.get("TRAVIS_BUILD_WEB_URL", ""),
+        'commit': os.environ["TRAVIS_COMMIT"],
+        'branch': os.environ["TRAVIS_BRANCH"],
+        'is_pr': os.environ['TRAVIS_PULL_REQUEST'] != "false",
+    }
+
+
+def get_azure_env():
+    return {
+        'log_url': None,
+        'commit': os.environ.get('BUILD_SOURCEVERSION'),
+        'branch': os.environ.get('BUILD_SOURCEBRANCHNAME'),
+        'is_pr': os.environ.get('BUILD_REASON') == 'PullRequest',
+    }
+
+
+env = get_azure_env()
+
+
 def render_version(version_file, new_version):
     version_stm = '__version__ = "{}"\n'.format(new_version)
     with open(version_file, 'wb') as f:
@@ -252,9 +273,8 @@ def upload_to_zenodo(verbose, parent, token, sandbox_token):
 
 def get_release_msg():
     parts = []
-    travis_url = os.environ.get("TRAVIS_BUILD_WEB_URL", "")
-    if travis_url:
-        parts.append("Travis CI build log: %s" % travis_url)
+    if env['log_url']:
+        parts.append("CI build log: %s" % env['log_url'])
     return "\n\n".join(parts)
 
 
@@ -269,11 +289,9 @@ def upload_to_github(verbose, files, token, release):
     g = Github(token)
     repo = g.get_repo("LiberTEM/LiberTEM")
 
-    # FIXME: what if we are not in context of travis?
-    target = os.environ["TRAVIS_COMMIT"]
     release_data = {
         "message": msg,
-        "target_commitish": target,
+        "target_commitish": env['commit'],
     }
     if release == "dev":
         release_data.update({
@@ -445,6 +463,8 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
     if dry_run:
         print("NOTE: running in dry-run mode, specify --no-dry-run to really upload!")
 
+    print("environment: %s" % env)
+
     is_rc = current_version_tag_is_rc()
     is_release = current_version_tag_is_release()
 
@@ -476,11 +496,11 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
     github_files = get_py_release_files()
     github_files.extend(appimage_files)
 
-    branch = os.environ['TRAVIS_BRANCH']
+    branch = env['branch']
 
     is_master = branch == "master"
     is_stable_branch = STABLE_VERSION_PAT.match(branch) is not None
-    is_pull_request = os.environ['TRAVIS_PULL_REQUEST'] != "false"
+    is_pull_request = env['is_pr']
 
     if (is_master or is_stable_branch) and not is_pull_request:
         if dry_run:

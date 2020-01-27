@@ -13,4 +13,6 @@ client
 .dockerignore
 Dockerfile
 docker-compose.yml
+dask-worker-space
+__pycache__
 tmp

@@ -128,7 +128,7 @@ def test_sum_analysis(default_empad, lt_ctx):
     assert np.count_nonzero(results[0].raw_data) > 0
 
 
-def test_pick_job(default_empad, lt_ctx, TYPE):
+def test_pick_job(default_empad, lt_ctx):
     analysis = lt_ctx.create_pick_job(dataset=default_empad, origin=(3,))
     results = lt_ctx.run(analysis)
     assert results.shape == (128, 128)

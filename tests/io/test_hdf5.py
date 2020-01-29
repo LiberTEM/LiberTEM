@@ -34,6 +34,22 @@ def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1, TYPE):
     )
 
 
+def test_hdf5_3D_apply_masks(lt_ctx, hdf5_ds_3D):
+    mask = _mk_random(size=(16, 16))
+    with hdf5_ds_3D.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data.reshape((1, 17, 16, 16)))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=hdf5_ds_3D, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected
+    )
+
+
 def test_read_1(lt_ctx, hdf5):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)

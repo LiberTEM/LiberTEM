@@ -1,12 +1,6 @@
 GSoC 2020 ideas
 ===============
 
-.. note::
-    Our application for GSoC 2020 is still work in progress, but you can already
-    contact us about potential projects! Just be aware that our participation is
-    not officially confirmed, applications are not open yet and this page is
-    currently under active development.
-
 LiberTEM is participating in the `Google Summer of Code
 <https://summerofcode.withgoogle.com/>`_ as a sub-organization of the `Python
 Software Foundation <https://python-gsoc.org/>`_. As a student, you can get paid
@@ -41,12 +35,7 @@ high-resolution detectors for electron microscopy can produce. Our
 
 The project started in the beginning of 2018 and is currently attracting more
 and more users because it is orders of magnitude faster and more scalable than
-established solutions, and at the same time convenient to use. In our field,
-LiberTEM is seen as the up and coming technology to tap the full scientific
-potential of modern high-speed detectors. Such detectors can already reach a
-data rate of 8.5 GB/s and will soon produce more than 50 GB/s of raw data. The
-conventional established PC-based solutions cannot keep up with such data rates,
-and distributed systems like LiberTEM are required for progress in this field.
+established solutions.
 
 Working on LiberTEM will give you experience in developing distributed systems
 for high-performance data processing with Python. You can learn how to profile
@@ -107,10 +96,7 @@ Getting started
 ---------------
 
 If you have questions, please ask freely: Supporting users and contributors has
-a high priority for us and your questions help us improve our documentation. Our
-development is currently moving very quickly. We are planning to complete our
-documentation when a few major features have left the prototype stage. For that
-reason it is always a good idea to be in touch directly.
+a high priority for us and your questions help us improve our documentation.
 
 Installation
 ~~~~~~~~~~~~
@@ -174,7 +160,7 @@ entire time. Please feel free to suggest your own ideas as well! Just working on
 a number of smaller features and getting a good cross-sectional experience of
 LiberTEM can work as well.
 
-1. Beginner: Implement rotation in GUI and back-end for center of mass analysis :issue:`31`
+1. **Beginner**: Implement rotation in GUI and back-end for center of mass analysis :issue:`31`.
     Currently, the implementation assumes that the detector edges are parallel
     to the sample X and Y coordinate directions. This is mostly, but not always
     the case. In this project you implement an additional parameter for rotation
@@ -189,7 +175,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue)
 
-2. Beginner: Code snippet for analysis in GUI
+2. **Beginner**: Code snippet for analysis in GUI :issue:`158`.
     Currently, our GUI only offers limited capabilities. Most notably, color
     scale, scale bars and exporting results are not implemented. In this
     project, you implement functions that generate a code snippet in the GUI
@@ -203,7 +189,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue), Alex (@sk1p)
 
-3. Intermediate: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
+3. **Intermediate**: Implement an analysis workflow for `RDF mapping <https://publikationen.bibliothek.kit.edu/1000056485/5249497>`_.
     This can give you experience with the product development, design and
     application side of software engineering, and applied data science. A major
     part of the work is first figuring out *what* to implement together with our
@@ -218,7 +204,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Dieter (@uellue)
 
-4. Intermediate: Allow reshaping datasets into a custom shape :issue:`441`
+4. **Intermediate**: Allow reshaping datasets into a custom shape :issue:`441`.
     Data in files is not always stored in the native shape, or different
     representations may be possible depending on the application. The dataset
     implementation and GUI should allow specifying a different shape than the
@@ -231,7 +217,7 @@ LiberTEM can work as well.
     *Primary contact:* Alex (@sk1p)
 
 
-5. Beginner/Intermediate: Set number of threads and workers dynamically for UDFs :issue:`546`
+5. **Beginner/Intermediate**: Set number of threads and workers dynamically for UDFs :issue:`546`.
     Your task is to implement, document and validate methods to set the thread
     count for all relevant numerics back-ends in LiberTEM dynamically on a
     case-by-case basis on the worker processes and main node. Furthermore, you
@@ -246,16 +232,16 @@ LiberTEM can work as well.
 
     *Primary contact:* Alex (@sk1p), Dieter (@uellue)
 
-6. Beginner/Intermediate/Advanced: Compression survey :issue:`387`.
+6. **Beginner/Intermediate/Advanced**: Compression survey :issue:`387`.
     Analyze high-throughput compression techniques, dive into lz4/zstd, blosc
     etc., compare against existing file formats.
     
-    Beginner level: Test a number of established compression algorithms on typical
+    *Beginner level*: Test a number of established compression algorithms on typical
     data sets in terms of compression ratio, compression speed and decompression speed.
 
-    Intermediate level: Implement the compression in the LiberTEM caching layer.
+    *Intermediate level*: Implement the compression in the LiberTEM caching layer.
 
-    Advanced: Explore your own ideas regarding compression.
+    *Advanced*: Explore your own ideas regarding compression.
 
     With this project you can improve your understanding of compression
     techniques for the easier levels, and low-level optimization and programming
@@ -267,7 +253,7 @@ LiberTEM can work as well.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-7. Intermediate: Explore automated benchmarks in detail :issue:`198`.
+7. **Intermediate**: Explore automated benchmarks in detail :issue:`198`.
     This will help us to catch performance regressions. In our experience,
     running a benchmark requires a reproducible, undisturbed environment and
     comparison to good reference data. For that reason we see it as more
@@ -281,7 +267,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Alex (@sk1p)
 
-8. Intermediate: `Editor for masks <https://github.com/LiberTEM/LiberTEM/issues/47>`_.
+8. **Intermediate**: Editor for masks :issue:`47`.
     Currently, the masks in the GUI are limited to a few simple shapes, while
     the back-end allows arbitrary masks. You could implement an online mask
     editor to give users more flexibility on designing masks. Part of the task
@@ -298,7 +284,7 @@ LiberTEM can work as well.
 
     *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-9. Intermediate: Deploy LiberTEM with kubernetes :issue:`105,484`.
+9. **Intermediate**: Deploy LiberTEM with kubernetes :issue:`105,484`.
     Help us set up a helm chart and documentation to deploy a LiberTEM cluster
     with kubernetes. The subject is fairly new to us and we'd appreciate your
     help, in particular if you already have experience with kubernetes.
@@ -309,7 +295,7 @@ LiberTEM can work as well.
 
     *Primary contact:* Alex (@sk1p)
 
-10. Intermediate/Advanced: Proper schemas, validation and automatic form generation for analysis parameters :issue:`316`.
+10. **Intermediate/Advanced**: Proper schemas, validation and automatic form generation for analysis parameters :issue:`316`.
      This feature will make it easier to implement new types of analysis in the
      GUI. This is a cross-section through Python and TypeScript, though we could
      also split off the more react-y part. Does not require NumPy knowledge, or
@@ -322,7 +308,21 @@ LiberTEM can work as well.
 
      *Primary contact:* Alex (@sk1p)
 
-11. Advanced: `Live visualization of large binary data <https://github.com/LiberTEM/LiberTEM/issues/134>`_.
+11. **Intermediate/Advanced**: Custom math kernel for bit masks :issue:`26`.
+     Currently, binary masks are first converted to floating point and then used
+     in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
+     this. This could be accelerated significantly with a Numba-based custom GEMM
+     implementation that can work on bit masks directly. Furthermore, such a
+     custom Numba-based GEMM kernel has potential other uses in LiberTEM:
+     :issue:`555`.
+
+     *Skills:* Python, Numba
+
+     *Domain knowledge:* Optimization, efficient matrix product implementations.
+
+     *Contact:* Dieter (@uellue), Alex (@sk1p)
+
+12. **Advanced**: Live visualization of large binary data :issue:`134`.
      Basically an efficient/zoomable/user-friendly/fully-featured replacement for
      our visualization. Requires a cross-section of different technologies from
      Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun
@@ -340,10 +340,10 @@ LiberTEM can work as well.
 
      *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-12. Advanced: Enable user-defined functions based on WebAssembly
+13. **Advanced**: Enable user-defined functions based on WebAssembly :issue:`199`.
      This would allow users to write user-defined functions in their favorite
      compiled language and is a step towards using LiberTEM independent of
-     Python. See also :issue:`199`.
+     Python.
 
      *Skills:* Python and compiled languages.
     
@@ -351,16 +351,4 @@ LiberTEM can work as well.
 
      *Contact:* Dieter (@uellue), Alex (@sk1p)
 
-13. Intermediate/Advanced: Custom math kernel for bit masks 'issue'`26`
-     Currently, binary masks are first converted to floating point and then used
-     in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
-     this. This could be accelerated significantly with a Numba-based custom GEMM
-     implementation that can work on bit masks directly. Furthermore, such a
-     custom Numba-based GEMM kernel has potential other uses in LiberTEM:
-     :issue:`555`.
 
-     *Skills:* Python, Numba
-
-     *Domain knowledge:* Optimization, efficient matrix product implementations.
-
-     *Contact:* Dieter (@uellue), Alex (@sk1p)

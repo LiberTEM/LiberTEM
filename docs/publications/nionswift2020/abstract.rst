@@ -5,7 +5,7 @@ LiberTEM
 Migunov¹², Jan Caron¹, Rahul Chandra³, Magnus Nord⁴, Colin Ophus⁵, Simon Peter,
 Jay van Schyndel⁶, Jaeweon Shin⁷, Knut Müller-Caspary¹, Rafal Dunin-Borkowski¹
 
-**Presentation**: Dieter Weber¹
+**Presentation**: Alexander Clausen¹, Dieter Weber¹
 
 ¹Jülich Research Centre, ²RWTH Aachen University, ³Chandigarh University,
 ⁴University of Antwerp, ⁵Lawrence Livermore National Lab, ⁶Monash University
@@ -19,11 +19,11 @@ processing that go well beyond solutions based on personal computers.
 
 The LiberTEM open source platform is developed to address these challenges. It
 allows high-throughput distributed processing of large-scale binary data sets
-using a simplified MapReduce programming model. This programming model can
-generate a stream of intermediate results for interactive GUI display, allows to
-process live data streams and offline data with the same algorithms, and scales
-to very high throughput. In a benchmark we have already shown 46 GB/s on a
-microcloud cluster with eight nodes.
+using a simplified MapReduce programming model. This programming model allows to
+process live data streams and offline data with the same algorithms while
+generating a stream of intermediate results for interactive GUI display. At the
+same time, it scales to very high throughput. In a benchmark we have already
+shown 46 GB/s on a microcloud cluster with eight nodes.
 
 The current focus for application development is pixelated scanning transmission
 electron microscopy (STEM) and scanning electron beam diffraction data.

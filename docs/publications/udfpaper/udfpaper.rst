@@ -4,6 +4,8 @@ LiberTEM user-defined functions for distributed reduction operations on streamin
 Authors
 -------
 
+TODO establish full author list like in JOSS paper following authorship policy
+
 Alexander Clausen
 .................
 
@@ -66,9 +68,9 @@ integration for both offline and live data.
 Introduction and motivation
 ---------------------------
 
-The data rate of detectors for electron microscopy has grown by TODO three
+The data rate of detectors for electron microscopy has grown by three
 orders of magnitude between 2009 and 2019, while the throughput of IT components
-such as CPU, memory, mass storage and network grew by only TODO one order of
+such as CPU, memory, mass storage and network grew by roughly one order of
 magnitude, following exponential scaling laws like Moore’s law [@Weber2018].
 
 PC-based solutions that were perfectly adequate in 2009 are no longer suitable
@@ -78,15 +80,15 @@ analysis of complex multidimensional datasets [@Ophus2019].
 
 Modern detectors consist of arrays of sub-detectors, of which each has their own
 read-out electronics and connectors in order to process and transmit data in
-parallel. Live feedback from the acquisition that they are currently performing
-is a common requirement from electron microscopists since exploring a sample
-with electron microscopy is a visual and interactive process. Live data
-processing for detectors with parallel readout streams is a challenge with
-conventional software because the data stream is not available as whole frames,
-but distributed over several systems as partial frames. The data rate is so high
-that combining the streams into one single stream is not practical, and current
-distributed detectors like the Gatan K2IS camera can only dump data to storage
-for subsequent offline analysis because of these difficulties in implementation.
+parallel. Live feedback from the acquisition is a common requirement from
+electron microscopists since exploring a sample with electron microscopy is a
+visual and interactive process. Live data processing for detectors with parallel
+readout streams is a challenge with conventional software since the data
+stream is not available as whole frames, but distributed over several systems as
+partial frames. The data rate is so high that combining the streams into one
+single stream is not practical, and current distributed detectors like the Gatan
+K2IS camera can only dump data to storage for subsequent offline analysis
+because of these difficulties in implementation.
 
 For live display and human interaction, as well as many postprocessing steps,
 the data will have to be reduced. For a significant number of reduction
@@ -98,7 +100,7 @@ That means that such an algorithm can, in principle, generate a reduced live
 data stream from a distributed acquisition system that is suitable for live
 display. Other algorithms can’t easily be split, or splitting would incur
 significant performance penalties. That includes algorithms that calculate
-Fourier transforms of whole frames, because it interleaves the data of a whole
+Fourier transforms of whole frames, since it interleaves the data of a whole
 frame with itself.
 
 A practical system to process such detector therefore requires means to express
@@ -165,9 +167,8 @@ strain mapping, which is a major application in 4D STEM data analysis.
 
 TODO merge with Karina's text
 
-In a common approach for strain mapping, the approximate position of diffraction
-disks or spots is determined for an entire dataset, then their actual position
-is refined with subpixel accuracy in each frame, and finally a best fit for an
+In a common approach for strain mapping, the positions of diffraction disks or
+spots are refined with subpixel accuracy in each frame, and  a best fit for an
 affine transformation from average to actual position of the spot is determined
 that is an indication for the strain of the material.
 
@@ -180,13 +181,15 @@ rather than sharp diffraction peaks. Cross-correlation showed a favorable
 combination of quality, robustness and performance in comparison to Hough
 transforms and TODO in preliminary tests with real-world CBED patterns.
 
-The performance of cross-correlation-based refinement can be boosted by a number of optimizations:
+The performance of cross-correlation-based refinement can be boosted by a number
+of optimizations:
 
+  since the shifts are usually small.
 * Use fast correlation based on fast Fourier transforms and the correlation
   theorem TODO reference.
 * Re-use the Fourier transform of the template.
-* Limit the correlation to tight regions around the approximate peak positions in
-  signal space since strain only leads to small shifts.
+* Limit the correlation to tight regions around the peak position from an averaged frame
+  since strain only leads to small peak shifts.
 * Limit the analysis to tight regions of interest in the navigation space.
 * Use optimized FFT implementations and ensure an optimal input data layout for that implementation.
 
@@ -201,7 +204,7 @@ Since LiberTEM is based on Python, a number of Python-specific optimizations wer
 
 On the LiberTEM back-end side we handle parallelization, distribution and
 optimized input/output, which were already in place before developing the UDF
-API. Since some types of input data has to be decoded, for example the packed 12
+API TODO cite JOSS paper. Since some types of input data has to be decoded, for example the packed 12
 bit integers of the K2 IS raw format, the data should be processed in chunks
 that fit the CPU cache. A size of 1 MB has proven effective since many CPUs that
 are used in numerical processing have at least 1 MB of L3 cache per core.
@@ -281,7 +284,11 @@ implementation of the correlation engine that relies on sparse matrix products.
 merge()
 .......
 
-Overriding merge() in a UDF class allows to implement custom merge functions that merge partial result buffers into the complete result. Reductions that preserve navigation space can use the default merge() implementation, which is a simple assignment. Reductions that preserve signal space or use buffers of type "single" require a merge implementation that is appropriate for the application.
+Overriding merge() in a UDF class allows to implement custom merge functions
+that merge partial result buffers into the complete result. Reductions that
+preserve navigation space can use the default merge() implementation, which is a
+simple assignment. Reductions that preserve signal space or use buffers of type
+"single" require a merge implementation that is appropriate for the application.
 
 * Allow passing parameters for an analysis. The Blobfinder uses this to pass the list of
   expected peak positions and parameters of the template.

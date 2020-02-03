@@ -39,6 +39,8 @@ def get_correlation(sum_result, match_pattern: MatchPattern):
     '''
     Calculate the correlation between :code:`sum_result` and :code:`match_pattern`.
 
+    .. versionadded:: 0.4.0.dev0
+
     Parameters
     ----------
 

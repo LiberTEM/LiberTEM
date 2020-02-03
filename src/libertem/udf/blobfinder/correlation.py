@@ -35,6 +35,25 @@ else:
     from numba.unsafe.ndarray import to_fixed_tuple
 
 
+def get_correlation(sum_result, match_pattern: MatchPattern):
+    '''
+    Calculate the correlation between :code:`sum_result` and :code:`match_pattern`.
+
+    Parameters
+    ----------
+
+    sum_result: numpy.ndarray
+        2D result frame as correlation input
+    match_pattern : MatchPattern
+        Instance of :class:`~libertem.udf.blobfinder.MatchPattern` to correlate
+        :code:`sum_result` with
+    '''
+    spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
+    spec_sum = fft.rfft2(sum_result)
+    corrspec = spec_mask * spec_sum
+    return fft.fftshift(fft.irfft2(corrspec))
+
+
 def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
     '''
     Find peaks of the correlation between :code:`sum_result` and :code:`match_pattern`.
@@ -71,10 +90,7 @@ def get_peaks(sum_result, match_pattern: MatchPattern, num_peaks):
      [48 64]
      [64 96]]
     '''
-    spec_mask = match_pattern.get_template(sig_shape=sum_result.shape)
-    spec_sum = fft.rfft2(sum_result)
-    corrspec = spec_mask * spec_sum
-    corr = fft.fftshift(fft.irfft2(corrspec))
+    corr = get_correlation(sum_result, match_pattern)
     peaks = peak_local_max(corr, num_peaks=num_peaks)
     return peaks
 

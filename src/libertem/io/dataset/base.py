@@ -10,7 +10,11 @@ from libertem.common.buffers import bytes_aligned, zeros_aligned
 
 def _roi_to_indices(roi, start, stop):
     """
-    helper function to calculate indices from roi mask
+    Helper function to calculate indices from roi mask. Indices
+    are flattened.
+
+    Parameters
+    ----------
 
     roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
 
@@ -32,6 +36,34 @@ def _roi_to_indices(roi, start, stop):
             total += 1
             if total == frames_in_roi:
                 break
+
+
+def _roi_to_nd_indices(roi, part_slice: Slice):
+    """
+    Helper function to calculate indices from roi mask
+
+    Parameters
+    ----------
+
+    roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
+
+    part_slice
+        Slice indicating what part of the roi to operate on, for example,
+        corresponding to a partition.
+    """
+    roi_slice = roi[part_slice.get(nav_only=True)]
+    nav_dims = part_slice.shape.nav.dims
+    total = 0
+    frames_in_roi = np.count_nonzero(roi)
+    for idx, value in np.ndenumerate(roi_slice):
+        if not value:
+            continue
+        yield tuple(a + b
+                    for a, b in zip(idx, part_slice.origin[:nav_dims]))
+        # early exit: we know we don't have more frames in the roi
+        total += 1
+        if total == frames_in_roi:
+            break
 
 
 class IOCaps:
@@ -226,30 +258,33 @@ class DataSet(object):
         """
         return []
 
-    def partition_shape(self, datashape, framesize, dtype, target_size, min_num_partitions=None):
+    def partition_shape(self, dtype, target_size, min_num_partitions=None):
         """
         Calculate partition shape for the given ``target_size``
+
         Parameters
         ----------
-        datashape : (int, int, int, int)
-            size of the whole dataset
-        framesize : int
-            number of pixels per frame
         dtype : numpy.dtype or str
             data type of the dataset
+
         target_size : int
             target size in bytes - how large should each partition be?
+
         min_num_partitions : int
             minimum number of partitions desired. Defaults to the number of workers in the cluster.
+
         Returns
         -------
-        (int, int, int, int)
+        Tuple[int]
             the shape calculated from the given parameters
         """
         if min_num_partitions is None:
             min_num_partitions = self._cores
-        return get_partition_shape(datashape, framesize, dtype, target_size,
-                                   min_num_partitions)
+        return get_partition_shape(
+            dataset_shape=self.shape,
+            target_size_items=target_size // np.dtype(dtype).itemsize,
+            min_num=min_num_partitions
+        )
 
     def get_cache_key(self):
         raise NotImplementedError()

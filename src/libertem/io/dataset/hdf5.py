@@ -6,31 +6,13 @@ import h5py
 
 from libertem.common import Slice, Shape
 from libertem.web.messages import MessageConverter
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from .base import (
+    DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices
+)
 
 
 # alias for mocking:
 current_time = time.time
-
-
-def unravel_nav(slice_, containing_shape):
-    """
-    inverse of flatten_nav, currently limited to 1d -> 2d nav
-    """
-    sig_dims = slice_.shape.sig.dims
-    nav_dims = slice_.shape.dims - sig_dims
-    nav_origin = np.unravel_index(
-        slice_.origin[0],
-        tuple(containing_shape)[:-sig_dims]
-    )
-    assert nav_dims == 1, "unravel_nav only works if nav.dims is currently 1"
-    assert (len(containing_shape) - len(slice_.shape)) == 1,\
-        "currently only works for 1d -> 2d case"
-    nav_shape = (slice_.shape[0] // containing_shape[1], containing_shape[1])
-    return Slice(
-        origin=nav_origin + slice_.origin[-sig_dims:],
-        shape=Shape(nav_shape + tuple(slice_.shape.sig), sig_dims=sig_dims)
-    )
 
 
 class HDF5DatasetParams(MessageConverter):
@@ -232,15 +214,11 @@ class H5DataSet(DataSet):
 
     def get_partitions(self):
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
-        ds_slice = Slice(origin=(0, 0, 0, 0), shape=ds_shape)
-        dtype = self.dtype
+        ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
         partition_shape = self.partition_shape(
-            datashape=self.shape,
-            framesize=self.shape.sig.size,
-            dtype=dtype,
             target_size=self.target_size,
-            min_num_partitions=self.min_num_partitions,
-        )
+            dtype=self.dtype,
+        ) + tuple(self.shape.sig)
         for pslice in ds_slice.subslices(partition_shape):
             # TODO: where should the tileshape be set? let the user choose for now
             yield H5Partition(
@@ -248,6 +226,7 @@ class H5DataSet(DataSet):
                 meta=self._meta,
                 reader=self.get_reader(),
                 partition_slice=pslice.flatten_nav(self.shape),
+                slice_nd=pslice,
             )
 
     def __repr__(self):
@@ -255,9 +234,10 @@ class H5DataSet(DataSet):
 
 
 class H5Partition(Partition):
-    def __init__(self, tileshape, reader, *args, **kwargs):
+    def __init__(self, tileshape, reader, slice_nd, *args, **kwargs):
         self.tileshape = tileshape
         self.reader = reader
+        self.slice_nd = slice_nd
         super().__init__(*args, **kwargs)
 
     def _get_tiles_normal(self, tileshape, crop_to=None, dest_dtype="float32"):
@@ -266,14 +246,9 @@ class H5Partition(Partition):
                 raise DataSetException("H5DataSet only supports whole-frame crops for now")
         data = np.ndarray(tileshape, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:
-            # FIXME: we currently transform back and forth between 3D and 4D
-            # this should be possible to improve upon!
-            slice_4d = unravel_nav(self.slice, self.meta.shape)
-            subslices = list(slice_4d.subslices(shape=tileshape))
+            subslices = self.slice_nd.subslices(shape=tileshape)
             for tile_slice in subslices:
                 tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
-                assert tile_slice_flat.shape.dims == 3
-                assert tile_slice.shape.dims == 4
                 if crop_to is not None:
                     intersection = tile_slice_flat.intersection_with(crop_to)
                     if intersection.is_null():
@@ -289,22 +264,25 @@ class H5Partition(Partition):
                 yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
 
     def _get_tiles_with_roi(self, roi, dest_dtype):
-        # FIXME: this is not performance optimized, at all
-        roi = roi.reshape((-1,))
-        one_frame_shape = (1, 1) + tuple(self.meta.shape.sig)
+        roi = roi.reshape(self.meta.shape.nav)
+
+        result_shape = Shape((1,) + tuple(self.meta.shape.sig), sig_dims=self.meta.shape.sig.dims)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
         start_at_frame = self.slice.origin[0]
         frame_offset = np.count_nonzero(roi[:start_at_frame])
-        for tile in self._get_tiles_normal(one_frame_shape, crop_to=None, dest_dtype=dest_dtype):
-            if roi[tile.tile_slice.origin[0]]:
+
+        indices = _roi_to_nd_indices(roi, self.slice_nd)
+
+        with self.reader.get_h5ds() as h5ds:
+            for idx in indices:
                 tile_slice = Slice(
                     origin=(frames_read + frame_offset,) + sig_origin,
-                    shape=tile.tile_slice.shape,
+                    shape=result_shape,
                 )
                 yield DataTile(
-                    data=tile.data,
-                    tile_slice=tile_slice,
+                    data=h5ds[idx].reshape(result_shape),
+                    tile_slice=tile_slice
                 )
                 frames_read += 1
 

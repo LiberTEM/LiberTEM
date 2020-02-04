@@ -1,9 +1,10 @@
 from collections import namedtuple
 
+import numpy as np
 import pytest
 
-from libertem.io.dataset.base import FileTree, Partition3D
-from libertem.common import Shape
+from libertem.io.dataset.base import FileTree, Partition3D, _roi_to_nd_indices
+from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
@@ -90,3 +91,31 @@ def test_num_part_larger_than_num_frames():
     next(slice_iter)
     with pytest.raises(StopIteration):
         next(slice_iter)
+
+
+def test_roi_to_nd_indices():
+    roi = np.full((5, 5), False)
+    roi[1, 2] = True
+    roi[2, 1:4] = True
+    roi[3, 2] = True
+
+    part_slice = Slice(
+        origin=(2, 0, 0, 0),
+        shape=Shape((2, 5, 16, 16), sig_dims=2)
+    )
+
+    assert list(_roi_to_nd_indices(roi, part_slice)) == [
+        (2, 1), (2, 2), (2, 3),
+                (3, 2)
+    ]
+
+    part_slice = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((5, 5, 16, 16), sig_dims=2)
+    )
+
+    assert list(_roi_to_nd_indices(roi, part_slice)) == [
+                (1, 2),
+        (2, 1), (2, 2), (2, 3),
+                (3, 2)
+    ]

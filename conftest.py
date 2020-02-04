@@ -52,6 +52,21 @@ def hdf5_3D(tmpdir_factory):
         with h5py.File(filename, 'r') as f:
             yield f
 
+
+@pytest.fixture(scope='session')
+def hdf5_5D(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/hdf5-test-5D.h5'
+    try:
+        with h5py.File(filename, 'r') as f:
+            yield f
+    except OSError:
+        with h5py.File(filename, "w") as f:
+            f.create_dataset("data", data=np.ones((3, 5, 9, 16, 16)))
+        with h5py.File(filename, 'r') as f:
+            yield f
+
+
 @pytest.fixture(scope='session')
 def random_hdf5(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
@@ -105,6 +120,16 @@ def hdf5_ds_3D(hdf5_3D):
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
+
+
+@pytest.fixture
+def hdf5_ds_5D(hdf5_5D):
+    ds = H5DataSet(
+        path=hdf5_5D.filename, ds_path="data", tileshape=(1, 1, 1, 16, 16)
+    )
+    ds = ds.initialize(InlineJobExecutor())
+    return ds
+
 
 @pytest.fixture
 def ds_complex():
@@ -164,8 +189,7 @@ def raw_on_workers(dist_ctx, tmpdir_factory):
     import pickle
     dumped = cloudpickle.dumps(_make_example_raw)
 
-    hmm = pickle.loads(dumped)
-    # assert False
+    pickle.loads(dumped)
 
     print("raw_on_workers _make_example_raw: %s" %
           (dist_ctx.executor.run_each_host(_make_example_raw),))

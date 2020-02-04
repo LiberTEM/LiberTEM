@@ -376,8 +376,12 @@ class FRMS6DataSet(DataSet):
             frame_size = (frame_size[0] * bin_factor, frame_size[1])
 
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
+        preferred_dtype = np.dtype("<u2")
+        if self._enable_offset_correction:
+            preferred_dtype = np.dtype("float32")
         self._meta = DataSetMeta(
-            raw_dtype=np.dtype("u2"),
+            raw_dtype=np.dtype("<u2"),
+            dtype=preferred_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
             iocaps={"FULL_FRAMES"},
@@ -499,7 +503,7 @@ class FRMS6DataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.raw_dtype
+        return self._meta.dtype
 
     @property
     def raw_dtype(self):

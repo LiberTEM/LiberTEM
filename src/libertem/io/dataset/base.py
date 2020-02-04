@@ -291,8 +291,30 @@ class DataSet(object):
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, raw_dtype=None, metadata=None, iocaps=None):
+    def __init__(self, shape: Shape, raw_dtype=None, dtype=None,
+                 metadata=None, iocaps: IOCaps = None):
+        """
+        shape
+            "native" dataset shape, can have any dimensionality
+
+        raw_dtype : np.dtype
+            dtype used internally in the data set for reading
+
+        dtype : np.dtype
+            Best-fitting output dtype. This can be different from raw_dtype, for example
+            if there are post-processing steps done as part of reading, which need a different
+            dtype. Assumed equal to raw_dtype if not given
+
+        metadata
+            Any metadata offered by the DataSet, not specified yet
+
+        iocaps
+            I/O capabilities
+        """
         self.shape = shape
+        if dtype is None:
+            dtype = raw_dtype
+        self.dtype = np.dtype(dtype)
         self.raw_dtype = np.dtype(raw_dtype)
         self.metadata = metadata
         if iocaps is None:
@@ -323,7 +345,7 @@ class Partition(object):
 
     @property
     def dtype(self):
-        return self.meta.raw_dtype
+        return self.meta.dtype
 
     @property
     def shape(self):

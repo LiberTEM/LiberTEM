@@ -38,6 +38,9 @@ class AnalysisResult(object):
     def __repr__(self):
         return "<AnalysisResult: %s>" % self.key
 
+    def __array__(self):
+        return self.raw_data
+
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 

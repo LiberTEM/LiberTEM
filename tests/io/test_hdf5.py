@@ -7,8 +7,7 @@ import cloudpickle
 import numpy as np
 import pytest
 
-from libertem.io.dataset.hdf5 import H5DataSet, unravel_nav
-from libertem.common import Slice, Shape
+from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 
 from utils import _naive_mask_apply, _mk_random
@@ -43,6 +42,24 @@ def test_hdf5_3D_apply_masks(lt_ctx, hdf5_ds_3D):
         dataset=hdf5_ds_3D, factories=[lambda: mask]
     )
     results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected
+    )
+
+
+def test_hdf5_5D_apply_masks(lt_ctx, hdf5_ds_5D):
+    mask = _mk_random(size=(16, 16))
+    with hdf5_ds_5D.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data.reshape((1, 135, 16, 16))).reshape((3, 5, 9))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=hdf5_ds_5D, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
+
+    print(results.mask_0.raw_data.shape, expected.shape)
 
     assert np.allclose(
         results.mask_0.raw_data,
@@ -117,32 +134,6 @@ def test_cloudpickle(lt_ctx, hdf5):
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 1 * 1024
-
-
-def test_flatten_roundtrip():
-    s = Slice(
-        origin=(0, 0, 0, 0),
-        shape=Shape((2, 16, 16, 16), sig_dims=2)
-    )
-    sflat = Slice(
-        origin=(0, 0, 0),
-        shape=Shape((32, 16, 16), sig_dims=2)
-    )
-    assert s.flatten_nav((16, 16, 16, 16)) == sflat
-    assert unravel_nav(sflat, (16, 16, 16, 16)) == s
-
-
-def test_flatten_roundtrip_2():
-    s = Slice(
-        origin=(0, 0, 0, 0),
-        shape=Shape((2, 16, 32, 64), sig_dims=2)
-    )
-    sflat = Slice(
-        origin=(0, 0, 0),
-        shape=Shape((32, 32, 64), sig_dims=2)
-    )
-    assert s.flatten_nav((8, 16, 36, 64)) == sflat
-    assert unravel_nav(sflat, (8, 16, 32, 64)) == s
 
 
 def test_roi_1(hdf5, lt_ctx):

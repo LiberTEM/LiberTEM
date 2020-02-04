@@ -66,7 +66,10 @@ class StdDevUDF(UDF):
 
     >>> udf = StdDevUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
-    >>> np.array(result["var"])        # variance
+    >>> # Note: These are raw results. Use run_stddev() instead of
+    >>> # using the UDF directly to obtain
+    >>> # variance, standard deviation and mean
+    >>> np.array(result["var"])        # variance times number of frames
     array(...)
     >>> np.array(result["num_frame"])  # number of frames
     array(...)

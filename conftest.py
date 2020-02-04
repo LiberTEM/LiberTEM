@@ -40,7 +40,7 @@ def hdf5(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def hdf5_3D(tmpdir_factory):
+def hdf5_3d(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/hdf5-test-3D.h5'
     try:
@@ -54,7 +54,7 @@ def hdf5_3D(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def hdf5_5D(tmpdir_factory):
+def hdf5_5d(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/hdf5-test-5D.h5'
     try:
@@ -114,18 +114,18 @@ def hdf5_ds_2(random_hdf5):
 
 
 @pytest.fixture
-def hdf5_ds_3D(hdf5_3D):
+def hdf5_ds_3d(hdf5_3d):
     ds = H5DataSet(
-        path=hdf5_3D.filename, ds_path="data", tileshape=(1, 16, 16)
+        path=hdf5_3d.filename, ds_path="data", tileshape=(1, 16, 16)
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
 
 
 @pytest.fixture
-def hdf5_ds_5D(hdf5_5D):
+def hdf5_ds_5d(hdf5_5d):
     ds = H5DataSet(
-        path=hdf5_5D.filename, ds_path="data", tileshape=(1, 1, 1, 16, 16)
+        path=hdf5_5d.filename, ds_path="data", tileshape=(1, 1, 1, 16, 16)
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds

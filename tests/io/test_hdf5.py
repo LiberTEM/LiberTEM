@@ -29,13 +29,13 @@ def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
     )
 
 
-def test_hdf5_3D_apply_masks(lt_ctx, hdf5_ds_3D):
+def test_hdf5_3d_apply_masks(lt_ctx, hdf5_ds_3d):
     mask = _mk_random(size=(16, 16))
-    with hdf5_ds_3D.get_reader().get_h5ds() as h5ds:
+    with hdf5_ds_3d.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data.reshape((1, 17, 16, 16)))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=hdf5_ds_3D, factories=[lambda: mask]
+        dataset=hdf5_ds_3d, factories=[lambda: mask]
     )
     results = lt_ctx.run(analysis)
 
@@ -45,13 +45,13 @@ def test_hdf5_3D_apply_masks(lt_ctx, hdf5_ds_3D):
     )
 
 
-def test_hdf5_5D_apply_masks(lt_ctx, hdf5_ds_5D):
+def test_hdf5_5d_apply_masks(lt_ctx, hdf5_ds_5d):
     mask = _mk_random(size=(16, 16))
-    with hdf5_ds_5D.get_reader().get_h5ds() as h5ds:
+    with hdf5_ds_5d.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data.reshape((1, 135, 16, 16))).reshape((3, 5, 9))
     analysis = lt_ctx.create_mask_analysis(
-        dataset=hdf5_ds_5D, factories=[lambda: mask]
+        dataset=hdf5_ds_5d, factories=[lambda: mask]
     )
     results = lt_ctx.run(analysis)
 

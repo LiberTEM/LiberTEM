@@ -16,7 +16,7 @@ pytestmark = pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="need .dm4 testdata
 
 @pytest.fixture
 def default_dm(lt_ctx):
-    files = glob.glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))
+    files = list(sorted(glob.glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
     ds = lt_ctx.load("dm", files=files)
     return ds
 
@@ -36,7 +36,7 @@ def test_read_roi(default_dm, lt_ctx):
     sumres = lt_ctx.run(sumj, roi=roi)
     sha1 = hashlib.sha1()
     sha1.update(sumres.intensity.raw_data)
-    assert sha1.hexdigest() == "20a43a7ff069896fb2c46b0d7fa35f71d97d76f9"
+    assert sha1.hexdigest() == "e94ed671e20ccce33d288fbcadd0f54691a29b9c"
 
 
 def test_detect_1(lt_ctx):

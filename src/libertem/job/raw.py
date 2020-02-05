@@ -1,6 +1,7 @@
 import logging
 
-from .base import BaseJob, Task, ResultTile
+from libertem.udf.base import Task
+from .base import BaseJob, ResultTile
 from libertem.common.buffers import zeros_aligned
 
 
@@ -8,6 +9,10 @@ log = logging.getLogger(__name__)
 
 
 class PickFrameJob(BaseJob):
+    '''
+    .. deprecated:: 0.4.0.dev0
+        See :ref:`job deprecation`
+    '''
     def __init__(self, slice_, squeeze=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._slice = slice_

@@ -9,7 +9,8 @@ import scipy.sparse
 import numpy as np
 
 from libertem.io.dataset.base import DataTile, Partition
-from .base import BaseJob, Task, ResultTile
+from libertem.udf.base import Task
+from .base import BaseJob, ResultTile
 from libertem.common import Slice
 from libertem.common.buffers import zeros_aligned
 from libertem.common.container import MaskContainer
@@ -43,6 +44,9 @@ class ApplyMasksJob(BaseJob):
     Running a :class:`ApplyMaskJob` with
     :meth:`~libertem.api.Context.run` returns a :class:`numpy.ndarray`
     with shape (n_masks, prod(ds.shape.nav)).
+
+    .. deprecated:: 0.4.0.dev0
+        Use :class:`libertem.udf.masks.ApplyMasksUDF` instead. See also :ref:`job deprecation`
     """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, dtype=None, *args, **kwargs):

@@ -71,6 +71,7 @@ class PickFrameAnalysis(BaseAnalysis):
 
         return keep
 
+    # FIXME remove after Job deprecation period
     def get_job(self):
         origin = self.get_origin()
         origin = (np.ravel_multi_index(origin, self.dataset.shape.nav),)
@@ -96,6 +97,7 @@ class PickFrameAnalysis(BaseAnalysis):
         roi[self.get_origin()] = True
         return roi
 
+    # FIXME remove after Job deprecation period
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.sig)
         data = job_results.reshape(shape)

@@ -66,34 +66,25 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
 
     Parameters
     ----------
-    ctx: Context
-        Context class that contains methods for loading datasets,
-        creating jobs on them and running them
-
-    dataset: DataSet
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
-
-    num: int
+    num : int
         Number of possible peak positions to detect (better put higher value,
         the output is limited to the number of peaks the algorithm could find)
-
-    delta: float
+    delta : float
         Relative intensity difference between current frame and reference image for decision making
         for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1])
-
-    rad_in: int, optional
+    rad_in : int, optional
         Inner radius in pixels of a ring to mask region of interest of SD image to delete outliers
         for peak finding
-
-    rad_out: int, optional
+    rad_out : int, optional
         Outer radius in pixels of a ring to mask region of interest of SD image to delete outliers
         for peak finding
-
-    center: tuple, optional
+    center : tuple, optional
         (y,x) - pixels, coordinates of a ring to mask region of interest of SD image
         to delete outliers for peak finding
-
-    roi: numpy.ndarray, optional
+    roi : numpy.ndarray, optional
         boolean array which limits the elements the UDF is working on.
         Has a shape of dataset_shape.nav
 

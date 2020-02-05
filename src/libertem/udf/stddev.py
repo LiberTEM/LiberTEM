@@ -166,11 +166,9 @@ def run_stddev(ctx, dataset, roi=None):
 
     Parameters
     ----------
-    ctx
-        Context class that contains methods for loading datasets, creating jobs on them
-        and running them
+    ctx : libertem.api.Context
 
-    dataset
+    dataset : libertem.io.dataset.base.DataSet
         dataset to work on
 
     Returns
@@ -186,8 +184,8 @@ def run_stddev(ctx, dataset, roi=None):
     mean : pass_results['mean']
     number of frames : pass_results['num_frame']
     """
-    stddev_job = StdDevUDF()
-    pass_results = ctx.run_udf(dataset=dataset, udf=stddev_job, roi=roi)
+    stddev_udf = StdDevUDF()
+    pass_results = ctx.run_udf(dataset=dataset, udf=stddev_udf, roi=roi)
 
     pass_results = dict(pass_results.items())
     pass_results['var'] = pass_results['var'].data/pass_results['num_frame'].data

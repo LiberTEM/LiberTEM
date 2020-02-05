@@ -132,7 +132,10 @@ class MemoryDataSet(DataSet):
         for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self.num_partitions):
-            log.debug("creating partition", part_slice, start, stop, stackheight)
+            log.debug(
+                "creating partition slice %s start %s stop %s stackheight %s",
+                part_slice, start, stop, stackheight
+            )
             if self._crop_frames:
                 yield CropFramesMemPartition(
                     meta=self._meta,

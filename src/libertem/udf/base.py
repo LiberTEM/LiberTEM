@@ -5,7 +5,6 @@ import uuid
 import cloudpickle
 import numpy as np
 
-from libertem.job.base import Task
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 
@@ -588,6 +587,26 @@ def check_cast(fromvar, tovar):
     if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
         # FIXME exception or warning?
         raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
+
+
+class Task(object):
+    """
+    A computation on a partition. Inherit from this class and implement ``__call__``
+    for your specific computation.
+
+    .. versionchanged:: 0.4.0.dev0
+        Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
+    """
+
+    def __init__(self, partition, idx):
+        self.partition = partition
+        self.idx = idx
+
+    def get_locations(self):
+        return self.partition.get_locations()
+
+    def __call__(self):
+        raise NotImplementedError()
 
 
 class UDFTask(Task):

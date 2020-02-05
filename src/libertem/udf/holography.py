@@ -86,10 +86,10 @@ class HoloReconstructUDF(UDF):
     >>> shape = tuple(dataset.shape.sig)
     >>> sb_position = [2, 3]
     >>> sb_size = 4.4
-    >>> holo_job = HoloReconstructUDF(out_shape=shape,
+    >>> holo_udf = HoloReconstructUDF(out_shape=shape,
     ...                               sb_position=sb_position,
     ...                               sb_size=sb_size)
-    >>> wave = ctx.run_udf(dataset=dataset, udf=holo_job)['wave'].data
+    >>> wave = ctx.run_udf(dataset=dataset, udf=holo_udf)['wave'].data
     """
 
     def __init__(self,

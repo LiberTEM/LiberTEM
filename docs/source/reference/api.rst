@@ -13,6 +13,9 @@ Context
 Job API
 ~~~~~~~
 
+.. deprecated:: 0.4.0.dev0
+    See :ref:`job deprecation`
+
 .. automodule:: libertem.job.base
    :members: Job
    :special-members: __init__

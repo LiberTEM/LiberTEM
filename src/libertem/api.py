@@ -25,7 +25,7 @@ from libertem.udf.auto import AutoUDF
 class Context:
     """
     Context is the main entry point of the LiberTEM API. It contains
-    methods for loading datasets, creating jobs on them and running
+    methods for loading datasets, creating analyses on them and running
     them.
     """
 
@@ -100,6 +100,10 @@ class Context:
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
 
+        .. deprecated:: 0.4.0.dev0
+            Use :meth:`create_mask_analysis` or :class:`~libertem.udf.masks.ApplyMasksUDF`.
+            See also :ref:`job deprecation`.
+
         Parameters
         ----------
         factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
@@ -160,21 +164,26 @@ class Context:
     def create_mask_analysis(self, factories, dataset, use_sparse=None,
                              mask_count=None, mask_dtype=None, dtype=None):
         """
-        Create a mask application analysis. Each factory function should, when called,
-        return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
+        Create a mask application analysis. Each factory function should, when
+        called, return a numpy array with the same shape as frames in the
+        dataset (so dataset.shape.sig).
 
-        This is a more high-level method than `create_mask_job` and differs in the way the result
-        is returned. With `create_mask_job`, it is a single numpy array, here we split it up for
-        each mask we apply, make some default visualization available etc.
+        This is a more high-level interface than
+        :class:`~libertem.udf.masks.ApplyMasksUDF` and differs in the way the
+        result is returned. With :class:`~libertem.udf.masks.ApplyMasksUDF`, it
+        is a single numpy array, here we split it up for each mask we apply,
+        make some default visualization available etc.
 
         Parameters
         ----------
         factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
-            Function or list of functions that take no arguments and create masks. The returned
-            masks can be numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices.
-            The mask factories should not reference large objects because they can create
-            significant overheads when they are pickled and unpickled.
-            If a single function is specified, the first dimension is interpreted as the mask index.
+            Function or list of functions that take no arguments
+            and create masks. The returned masks can be numpy arrays,
+            scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
+            factories should not reference large objects because they can create
+            significant overheads when they are pickled and unpickled. If a
+            single function is specified, the first dimension is interpreted as
+            the mask index.
         dataset : libertem.io.dataset.base.DataSet
             dataset to work on
         use_sparse : bool or None
@@ -184,17 +193,19 @@ class Context:
             * True: Convert all masks to sparse matrices.
             * False: Convert all masks to dense matrices.
         mask_count : int, optional
-            Specify the number of masks if a single factory function is used so that the
-            number of masks can be determined without calling the factory function.
+            Specify the number of masks if a single factory function is
+            used so that the number of masks can be determined without calling
+            the factory function.
         mask_dtype : numpy.dtype, optional
-            Specify the dtype of the masks so that mask dtype
-            can be determined without calling the mask factory functions. This can be used to
-            override the mask dtype in the result dtype determination. As an example, setting
-            this to np.float32 means that masks of type float64 will not switch the calculation
-            and result dtype to float64 or complex128.
+            Specify the dtype of the masks so that mask dtype can be determined without
+            calling the mask factory functions. This can be used to override the
+            mask dtype in the result dtype determination. As an example, setting
+            this to np.float32 means that masks of type float64 will not switch
+            the calculation and result dtype to float64 or complex128.
         dtype : numpy.dtype, optional
-            Specify the dtype to do the calculation in. Integer dtypes are possible if
-            the numpy casting rules allow this for source and mask data.
+            Specify the dtype to do the calculation in.
+            Integer dtypes are possible if the numpy casting rules allow this
+            for source and mask data.
 
         Returns
         -------
@@ -209,11 +220,11 @@ class Context:
         >>> # large complex objects like a dataset within the
         >>> # factory function
         >>> shape = dataset.shape.sig
-        >>> job = ctx.create_mask_analysis(
+        >>> analysis = ctx.create_mask_analysis(
         ...     factories=[lambda: np.ones(shape)],
         ...     dataset=dataset
         ... )
-        >>> result = ctx.run(job)
+        >>> result = ctx.run(analysis)
         >>> result.mask_0.raw_data.shape
         (16, 16)
         """
@@ -421,6 +432,9 @@ class Context:
         It is not efficient to use this method on large parts of datasets, please consider
         implementing a UDF instead.
 
+        .. deprecated:: 0.4.0.dev0
+            See :ref:`job deprecation`.
+
         Parameters
         ----------
         dataset
@@ -512,8 +526,8 @@ class Context:
         ...     data=np.zeros([16, 16, 16, 16, 16], dtype=np.float32),
         ...     sig_dims=2
         ... )
-        >>> job = ctx.create_pick_analysis(dataset=dataset, x=9, y=8, z=7)
-        >>> result = ctx.run(job)
+        >>> analysis = ctx.create_pick_analysis(dataset=dataset, x=9, y=8, z=7)
+        >>> result = ctx.run(analysis)
         >>> assert result.intensity.raw_data.shape == tuple(dataset.shape.sig)
         """
         loc = locals()
@@ -542,6 +556,7 @@ class Context:
             of the specific AnalysisResultSet subclass or :class:`numpy.ndarray` that
             is being returned.
         """
+        # FIXME remove job support after deprecation period
         analysis = None
         if hasattr(job, "get_job") or (hasattr(job, "get_udf") and hasattr(job, "get_roi")):
             analysis = job

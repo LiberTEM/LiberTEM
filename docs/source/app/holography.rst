@@ -152,16 +152,16 @@ reference holograms:
 
 .. testcode::
 
-   # Create reconstruction job:
-   holo_job = HoloReconstructUDF(out_shape=output_shape,
+   # Create reconstruction UDF:
+   holo_udf = HoloReconstructUDF(out_shape=output_shape,
                                  sb_position=sb_position,
                                  sb_size=sb_size)
 
    # Reconstruct holograms, access data directly
    w_holo = ctx.run_udf(dataset=dataset_holo,
-                        udf=holo_job)['wave'].data
+                        udf=holo_udf)['wave'].data
    w_ref = ctx.run_udf(dataset=dataset_ref,
-                       udf=holo_job)['wave'].data
+                       udf=holo_udf)['wave'].data
 
    # Correct object wave using reference wave
    w = w_holo / w_ref

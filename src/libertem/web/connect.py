@@ -44,7 +44,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         elif connection["type"].lower() == "local":
             cluster_kwargs = {
                 "threads_per_worker": 1,
-                "local_dir": self.data.get_local_directory()
+                "local_directory": self.data.get_local_directory()
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})

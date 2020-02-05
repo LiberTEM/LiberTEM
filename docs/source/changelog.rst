@@ -1,6 +1,14 @@
 Changelog
 =========
 
+.. testsetup:: *
+
+    from libertem import api
+    from libertem.executor.inline import InlineJobExecutor
+
+    ctx = api.Context(executor=InlineJobExecutor())
+    dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
+
 .. _continuous:
 .. _`v0-4-0`:
 
@@ -11,6 +19,110 @@ Changelog
    :glob:
 
    changelog/*/*
+
+.. _`job deprecation`:
+
+Job API deprecation
+-------------------
+
+The original Job API of LiberTEM is superseded by the new :ref:`user-defined
+functions` API with release 0.4.0.dev0. See :issue:`549` for a detailed overview
+of the changes. The UDF API brings the following advantages:
+
+* Support for regions of interest (ROIs).
+* Easier to implement, extend and re-use UDFs compared to Jobs.
+* Clean separation between back-end implementation details and application-specific code.
+* Facilities to implement non-trivial operations, see :ref:`advanced udf`.
+* Performance is at least on par.
+
+For that reason, the Job API has become obsolete. The existing public
+interfaces, namely :meth:`libertem.api.Context.create_mask_job` and
+:meth:`libertem.api.Context.create_pick_job`, will be supported in LiberTEM for
+two more releases after 0.4.0, i.e. including 0.6.0. Using the Job API will
+trigger deprecation starting with this release. The new
+:class:`~libertem.udf.masks.ApplyMasksUDF` replaces
+:class:`~libertem.job.masks.ApplyMasksJob`, and :class:`~libertem.udf.raw.PickUDF`
+replaces :class:`~libertem.job.raw.PickFrameJob`.
+
+The Analysis classes that relied on the Job API as a back-end are already ported
+to the corresponding UDF back-end. The new back-end may lead to minor
+differences in behavior, such as a change of returned dtype. The legacy code for
+using a Job back-end will remain until 0.6.0 and can be activated during the
+transition period by setting :code:`analysis.TYPE = 'JOB'` before running.
+
+From ApplyMasksJob to ApplyMasksUDF
+...................................
+
+Main differences:
+
+* :class:`~libertem.udf.masks.ApplyMasksUDF` returns the result with the first
+  axes being the dataset's navigation axes. The last dimension is the mask
+  index. ApplyMasksJob used to return transposed data with flattened navigation
+  dimension.
+* Like all UDFs, running an ApplyMasksUDF returns a dictionary. The result data is
+  accessible with key :code:`'intensity'` as a
+  :class:`~libertem.common.buffers.BufferWrapper` object.
+* ROIs are supported now, like in all UDFs.
+
+.. testsetup:: jobdeprecation
+
+    import numpy as np
+    import libertem
+    import matplotlib.pyplot as plt
+
+    def all_ones():
+        return np.ones((16, 16))
+
+    def single_pixel():
+        buf = np.zeros((16, 16))
+        buf[7, 7] = 1
+        return buf
+
+Previously with ApplyMasksJob:
+
+.. testcode:: jobdeprecation
+
+    # Deprecated!
+    mask_job = ctx.create_mask_job(
+      factories=[all_ones, single_pixel],
+      dataset=dataset
+    )
+    mask_job_result = ctx.run(mask_job)
+
+    plt.imshow(mask_job_result[0].reshape(dataset.shape.nav))
+
+Now with ApplyMasksUDF:
+
+.. testcode:: jobdeprecation
+
+    mask_udf = libertem.udf.masks.ApplyMasksUDF(
+      mask_factories=[all_ones, single_pixel]
+    )
+    mask_udf_result = ctx.run_udf(dataset=dataset, udf=mask_udf)
+
+    plt.imshow(mask_udf_result['intensity'].data[..., 0])
+
+From PickFrameJob to PickUDF
+............................
+
+PickFrameJob allowed to pick arbitrary contiguous slices in both navigation and
+signal dimension. In practice, however, it was mostly used to extract single
+complete frames. PickUDF allows to pick the *complete* signal dimension from an
+arbitrary non-contiguous region of interest in navigation space by specifying a
+ROI.
+
+If necessary, more complex subsets of a dataset can be extracted by constructing
+a suitable subset of an identity matrix for the signal dimension and using it
+with ApplyMasksUDF and the appropriate ROI for the navigation dimension.
+Alternatively, it is now easily possible to implement a custom UDF for this
+purpose. Performing the complete processing through an UDF on the worker nodes
+instead of loading the data to the central node may be a viable alternative as well.
+
+PickUDF now returns data in the native :code:`dtype` of the dataset. Previously,
+PickFrameJob would convert to floats.
+
+Using :meth:`libertem.api.Context.create_pick_analysis` continues to be the
+recommended convenience function to pick single frames.
 
 .. _latest:
 .. _`v0-3-0`:

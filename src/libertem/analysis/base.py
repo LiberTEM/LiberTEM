@@ -87,11 +87,11 @@ class AnalysisResultSet(object):
     ...     result[0,0] = 1
     ...     return result
 
-    >>> job = ctx.create_mask_analysis(
+    >>> analysis = ctx.create_mask_analysis(
     ...     dataset=dataset, factories=[m0, m1]
     ... )
 
-    >>> result = ctx.run(job)
+    >>> result = ctx.run(analysis)
 
     >>> # As an object with attributes
     >>> print(result.mask_0.title)
@@ -172,6 +172,9 @@ class BaseAnalysis(Analysis):
 
     def get_results(self, job_results):
         """
+        .. deprecated:: 0.4.0.dev0
+            Use TYPE = 'UDF' and get_udf_results(). See :ref:`job deprecation`.
+
         Parameters
         ----------
         job_results : list of :class:`~numpy.ndarray`
@@ -186,10 +189,29 @@ class BaseAnalysis(Analysis):
 
     def get_job(self):
         """
+        .. deprecated:: 0.4.0.dev0
+            Use TYPE = 'UDF' and get_udf(). See :ref:`job deprecation`.
+
         Returns
         -------
         Job
             a Job instance
+        """
+        raise NotImplementedError()
+
+    def get_udf_results(self, udf_results, roi):
+        """
+        Parameters
+        ----------
+        udf_results : dics
+            raw results from the UDF
+        roi : numpy.ndarray or None
+            Boolean array of the navigation dimension
+
+        Returns
+        -------
+        list of AnalysisResult
+            one or more annotated results
         """
         raise NotImplementedError()
 

@@ -39,7 +39,7 @@ For that reason, the Job API has become obsolete. The existing public
 interfaces, namely :meth:`libertem.api.Context.create_mask_job` and
 :meth:`libertem.api.Context.create_pick_job`, will be supported in LiberTEM for
 two more releases after 0.4.0, i.e. including 0.6.0. Using the Job API will
-trigger deprecation starting with this release. The new
+trigger deprecation warnings starting with this release. The new
 :class:`~libertem.udf.masks.ApplyMasksUDF` replaces
 :class:`~libertem.job.masks.ApplyMasksJob`, and :class:`~libertem.udf.raw.PickUDF`
 replaces :class:`~libertem.job.raw.PickFrameJob`.
@@ -119,7 +119,7 @@ purpose. Performing the complete processing through an UDF on the worker nodes
 instead of loading the data to the central node may be a viable alternative as well.
 
 PickUDF now returns data in the native :code:`dtype` of the dataset. Previously,
-PickFrameJob would convert to floats.
+PickFrameJob converted to floats.
 
 Using :meth:`libertem.api.Context.create_pick_analysis` continues to be the
 recommended convenience function to pick single frames.

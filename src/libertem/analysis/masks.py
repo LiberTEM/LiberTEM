@@ -14,7 +14,7 @@ class BaseMasksAnalysis(BaseAnalysis):
     .. versionchanged:: 0.4.0.dev0
         Add support to use this Analysis with both ApplyMasksJob and ApplyMasksUDF :issue:`549`
     """
-
+    # FIXME remove job infrastructure after deprecation period
     def get_job(self):
         mask_factories = self.get_mask_factories()
         use_sparse = self.get_use_sparse()
@@ -56,7 +56,7 @@ class BaseMasksAnalysis(BaseAnalysis):
 
 
 class SingleMaskAnalysis(BaseMasksAnalysis):
-    # FIXME remove this after UDF version is final
+    # FIXME remove job aspects after deprecation period
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
         data = job_results[0].reshape(shape)
@@ -177,6 +177,7 @@ class MasksAnalysis(BaseMasksAnalysis):
             for idx in range(data.shape[-1])
         ])
 
+    # FIXME remove after job deprecation period
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav) + (-1, )
         data = job_results.T.reshape(shape)

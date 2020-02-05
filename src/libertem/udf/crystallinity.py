@@ -87,24 +87,17 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
 
     Parameters
     ----------
-    ctx: Context
-        Context class that contains methods for loading datasets,
-        creating jobs on them and running them
-
-    dataset: DataSet
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
-
-    rad_in: int
+    rad_in : int
         Inner radius in pixels of a ring mask for the integration in Fourier space
-
-    rad_out: int
+    rad_out : int
         Outer radius in pixels of a ring mask for the integration in Fourier space
-
-    real_center: Tuple[float], optional
+    real_center : Tuple[float], optional
         (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
         in real space.
-
-    real_rad: int, optional
+    real_rad : int, optional
         Radius in pixels of circle for a masking out zero-order peak in real space.
         If one of real_center or real_rad is missing: the integration will be done without
         masking zero-order peak out.

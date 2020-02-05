@@ -1,4 +1,12 @@
+import logging
+
 import numpy as np
+
+# For backwards compatibility purposes after move
+from libertem.udf.base import Task  # noqa: F401
+
+
+log = logging.getLogger(__name__)
 
 
 class Job(object):
@@ -14,6 +22,9 @@ class Job(object):
         :code:`Job` is now an abstract base job for documentation purposes
         to hide any implementation details from the user. The previous
         :code:`Job` base class is now called :class:`BaseJob`.
+
+    .. deprecated:: 0.4.0.dev0
+        See :ref:`job deprecation`
     """
     pass
 
@@ -25,9 +36,19 @@ class BaseJob(Job):
 
     .. versionadded:: 0.3.0
         Renamed :code:`Job` to :code:`BaseJob`
+
+    .. deprecated:: 0.4.0.dev0
+        See :ref:`job deprecation`
+
     """
 
     def __init__(self, dataset):
+        log.warning(
+            "The Job API is deprecated and will be removed after version 0.6.0. See "
+            "https://libertem.github.io/LiberTEM/changelog.html#job-deprecation "
+            "for details and a migration guide. "
+            "Info: Instantiating class %s", type(self)
+        )
         self.dataset = dataset
 
     def get_tasks(self):
@@ -52,23 +73,6 @@ class BaseJob(Job):
         shape = self.get_result_shape()
         dtype = self.get_result_dtype()
         return np.zeros(shape, dtype=dtype)
-
-
-class Task(object):
-    """
-    A computation on a partition. Inherit from this class and implement ``__call__``
-    for your specific computation.
-    """
-
-    def __init__(self, partition, idx):
-        self.partition = partition
-        self.idx = idx
-
-    def get_locations(self):
-        return self.partition.get_locations()
-
-    def __call__(self):
-        raise NotImplementedError()
 
 
 class ResultTile(object):

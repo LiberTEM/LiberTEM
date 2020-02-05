@@ -3,9 +3,11 @@
 Loading data
 ============
 
-To efficiently handle files larger than main memory, LiberTEM never loads the whole
-data set into memory. Calling the :meth:`~libertem.api.Context.load` function only opens the data set and gives
-back a handle; running a job with :meth:`~libertem.api.Context.run` or :meth:`~libertem.api.Context.run_udf` then streams the data from mass storage.
+To efficiently handle files larger than main memory, LiberTEM never loads the
+whole data set into memory. Calling the :meth:`~libertem.api.Context.load`
+function only opens the data set and gives back a handle; running an analysis
+with :meth:`~libertem.api.Context.run` or a UDF with
+:meth:`~libertem.api.Context.run_udf` then streams the data from mass storage.
 
 There are two main ways of opening a data set in LiberTEM: using the GUI, or
 the Python API.

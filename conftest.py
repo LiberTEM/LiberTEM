@@ -25,60 +25,46 @@ utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils)
 
 
-@pytest.fixture(scope='session')
-def hdf5(tmpdir_factory):
+def get_or_create_hdf5(tmpdir_factory, filename, *args, **kwargs):
     datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/hdf5-test.h5'
+    filename = os.path.join(datadir, filename)
     try:
         with h5py.File(filename, 'r') as f:
             yield f
     except OSError:
         with h5py.File(filename, "w") as f:
-            f.create_dataset("data", data=np.ones((5, 5, 16, 16)))
+            f.create_dataset("data", *args, **kwargs)
         with h5py.File(filename, 'r') as f:
             yield f
+
+
+@pytest.fixture(scope='session')
+def hdf5(tmpdir_factory):
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test.h5", data=np.ones((5, 5, 16, 16)))
 
 
 @pytest.fixture(scope='session')
 def hdf5_3d(tmpdir_factory):
-    datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/hdf5-test-3D.h5'
-    try:
-        with h5py.File(filename, 'r') as f:
-            yield f
-    except OSError:
-        with h5py.File(filename, "w") as f:
-            f.create_dataset("data", data=np.ones((17, 16, 16)))
-        with h5py.File(filename, 'r') as f:
-            yield f
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-3d.h5", data=np.ones((17, 16, 16)))
 
 
 @pytest.fixture(scope='session')
 def hdf5_5d(tmpdir_factory):
-    datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/hdf5-test-5D.h5'
-    try:
-        with h5py.File(filename, 'r') as f:
-            yield f
-    except OSError:
-        with h5py.File(filename, "w") as f:
-            f.create_dataset("data", data=np.ones((3, 5, 9, 16, 16)))
-        with h5py.File(filename, 'r') as f:
-            yield f
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-5d.h5",
+                                  data=np.ones((3, 5, 9, 16, 16)))
 
 
 @pytest.fixture(scope='session')
 def random_hdf5(tmpdir_factory):
-    datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/hdf5-test-random.h5'
-    try:
-        with h5py.File(filename, 'r') as f:
-            yield f
-    except OSError:
-        with h5py.File(filename, "w") as f:
-            f.create_dataset("data", data=utils._mk_random(size=(5, 5, 16, 16), dtype="float32"))
-        with h5py.File(filename, 'r') as f:
-            yield f
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-random.h5",
+                                  data=np.ones((5, 5, 16, 16)))
+
+
+@pytest.fixture(scope='session')
+def chunked_hdf5(tmpdir_factory):
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-chunked.h5",
+                                  data=np.ones((5, 5, 16, 16)),
+                                  chunks=(1, 2, 16, 16))
 
 
 @pytest.fixture(scope='session')

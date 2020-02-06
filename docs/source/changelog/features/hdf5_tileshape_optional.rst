@@ -2,4 +2,4 @@
 ===========================================================
 
  * Users should not worry about tileshape, so make the parameter
-   optional (for now kept for testing of non-standard tilings)
+   optional (for now kept for testing of non-standard tilings, :pr:`578`)

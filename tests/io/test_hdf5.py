@@ -271,3 +271,14 @@ def test_cache_key_json_serializable(hdf5, lt_ctx):
     )
     ds = ds.initialize(lt_ctx.executor)
     json.dumps(ds.get_cache_key())
+
+
+def test_auto_tileshape(chunked_hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=chunked_hdf5.filename, ds_path="data",
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    p = next(ds.get_partitions())
+    t = next(p.get_tiles(dest_dtype="float32", target_size=4*1024))
+    assert tuple(p._get_tileshape("float32", 4*1024)) == (1, 4, 16, 16)
+    assert tuple(t.tile_slice.shape) == (4, 16, 16)

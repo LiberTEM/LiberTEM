@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
+from libertem.io.utils import get_partition_shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices
@@ -103,14 +104,16 @@ class H5DataSet(DataSet):
         Minimum number of partitions, set to number of cores if not specified. Usually
         doesn't need to be specified.
     """
-    def __init__(self, path, ds_path, tileshape,
+    def __init__(self, path, ds_path, tileshape=None,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
         super().__init__()
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size
         self.sig_dims = sig_dims
-        self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
+        self.tileshape = None
+        if tileshape is not None:
+            self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None
@@ -220,7 +223,6 @@ class H5DataSet(DataSet):
             dtype=self.dtype,
         ) + tuple(self.shape.sig)
         for pslice in ds_slice.subslices(partition_shape):
-            # TODO: where should the tileshape be set? let the user choose for now
             yield H5Partition(
                 tileshape=self.tileshape,
                 meta=self._meta,
@@ -239,6 +241,17 @@ class H5Partition(Partition):
         self.reader = reader
         self.slice_nd = slice_nd
         super().__init__(*args, **kwargs)
+
+    def _get_tileshape(self, dest_dtype, target_size=None):
+        if self.tileshape is not None:
+            return self.tileshape
+        if target_size is None:
+            target_size = 1 * 1024 * 1024
+        nav_shape = get_partition_shape(
+            dataset_shape=self.slice_nd.shape,
+            target_size_items=target_size // np.dtype(dest_dtype).itemsize,
+        )
+        return nav_shape + tuple(self.slice_nd.shape.sig)
 
     def _get_tiles_normal(self, tileshape, crop_to=None, dest_dtype="float32"):
         if crop_to is not None:
@@ -287,16 +300,15 @@ class H5Partition(Partition):
                 frames_read += 1
 
     def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None):
+                  roi=None, target_size=None):
         if crop_to is not None and roi is not None:
             if crop_to.shape.nav.size != self._num_frames:
                 raise ValueError("don't use crop_to with roi")
+        tileshape = self._get_tileshape(dest_dtype, target_size)
         if full_frames:
             tileshape = (
-                tuple(self.tileshape.nav) + tuple(self.meta.shape.sig)
+                tuple(tileshape.nav) + tuple(self.meta.shape.sig)
             )
-        else:
-            tileshape = self.tileshape
         if roi is not None:
             yield from self._get_tiles_with_roi(roi, dest_dtype)
         else:

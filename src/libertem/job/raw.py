@@ -11,7 +11,9 @@ log = logging.getLogger(__name__)
 class PickFrameJob(BaseJob):
     '''
     .. deprecated:: 0.4.0.dev0
-        See :ref:`job deprecation`
+        Use :meth:`libertem.api.Context.create_pick_analysis`, :class:`libertem.udf.raw.PickUDF`,
+        :class:`libertem.udf.masks.ApplyMasksUDF`or a custom UDF (:ref:`user-defined functions`)
+        as a replacement. See also :ref:`job deprecation`.
     '''
     def __init__(self, slice_, squeeze=False, *args, **kwargs):
         super().__init__(*args, **kwargs)

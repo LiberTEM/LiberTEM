@@ -62,6 +62,22 @@ has to be set.
 
 .. _`profiling tests`:
 
+Show deprecation warnings
+-------------------------
+
+Many warning messages via the :code:`warnings` built-in module are suppressed by
+default, including in interactive shells such as IPython and Jupyter. If you'd
+like to be informed early about upcoming backwards-incompatible changes, you
+should activate deprecation warnings. This is recommended since LiberTEM is
+under active development.
+
+.. testcode::
+
+    import warnings
+
+    warnings.filterwarnings("default", category=DeprecationWarning)
+    warnings.filterwarnings("default", category=PendingDeprecationWarning)
+
 Profiling long-running tests
 ----------------------------
 

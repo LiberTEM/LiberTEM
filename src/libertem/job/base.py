@@ -1,12 +1,9 @@
-import logging
+import warnings
 
 import numpy as np
 
 # For backwards compatibility purposes after move
 from libertem.udf.base import Task  # noqa: F401
-
-
-log = logging.getLogger(__name__)
 
 
 class Job(object):
@@ -24,7 +21,7 @@ class Job(object):
         :code:`Job` base class is now called :class:`BaseJob`.
 
     .. deprecated:: 0.4.0.dev0
-        See :ref:`job deprecation`
+        Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`
     """
     pass
 
@@ -38,16 +35,17 @@ class BaseJob(Job):
         Renamed :code:`Job` to :code:`BaseJob`
 
     .. deprecated:: 0.4.0.dev0
-        See :ref:`job deprecation`
+        Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`
 
     """
 
     def __init__(self, dataset):
-        log.warning(
+        warnings.warn(
             "The Job API is deprecated and will be removed after version 0.6.0. See "
             "https://libertem.github.io/LiberTEM/changelog.html#job-deprecation "
             "for details and a migration guide. "
-            "Info: Instantiating class %s", type(self)
+            "Info: Instantiating %s" % type(self),
+            DeprecationWarning, stacklevel=2
         )
         self.dataset = dataset
 

@@ -50,17 +50,17 @@ differences in behavior, such as a change of returned dtype. The legacy code for
 using a Job back-end will remain until 0.6.0 and can be activated during the
 transition period by setting :code:`analysis.TYPE = 'JOB'` before running.
 
-From ApplyMasksJob to ApplyMasksUDF
-...................................
+From :class:`~libertem.job.masks.ApplyMasksJob` to :class:`~libertem.udf.masks.ApplyMasksUDF`
+.............................................................................................
 
 Main differences:
 
 * :class:`~libertem.udf.masks.ApplyMasksUDF` returns the result with the first
   axes being the dataset's navigation axes. The last dimension is the mask
-  index. ApplyMasksJob used to return transposed data with flattened navigation
-  dimension.
-* Like all UDFs, running an ApplyMasksUDF returns a dictionary. The result data is
-  accessible with key :code:`'intensity'` as a
+  index. :class:`~libertem.job.masks.ApplyMasksJob` used to return transposed
+  data with flattened navigation dimension.
+* Like all UDFs, running an :class:`~libertem.udf.masks.ApplyMasksUDF` returns a
+  dictionary. The result data is accessible with key :code:`'intensity'` as a
   :class:`~libertem.common.buffers.BufferWrapper` object.
 * ROIs are supported now, like in all UDFs.
 
@@ -78,7 +78,7 @@ Main differences:
         buf[7, 7] = 1
         return buf
 
-Previously with ApplyMasksJob:
+Previously with :class:`~libertem.job.masks.ApplyMasksJob`:
 
 .. testcode:: jobdeprecation
 
@@ -91,7 +91,7 @@ Previously with ApplyMasksJob:
 
     plt.imshow(mask_job_result[0].reshape(dataset.shape.nav))
 
-Now with ApplyMasksUDF:
+Now with :class:`~libertem.udf.masks.ApplyMasksUDF`:
 
 .. testcode:: jobdeprecation
 
@@ -102,24 +102,27 @@ Now with ApplyMasksUDF:
 
     plt.imshow(mask_udf_result['intensity'].data[..., 0])
 
-From PickFrameJob to PickUDF
-............................
+From :class:`~libertem.job.raw.PickFrameJob` to :class:`~libertem.udf.raw.PickUDF`
+..................................................................................
 
-PickFrameJob allowed to pick arbitrary contiguous slices in both navigation and
-signal dimension. In practice, however, it was mostly used to extract single
-complete frames. PickUDF allows to pick the *complete* signal dimension from an
-arbitrary non-contiguous region of interest in navigation space by specifying a
-ROI.
+:class:`~libertem.job.raw.PickFrameJob` allowed to pick arbitrary contiguous
+slices in both navigation and signal dimension. In practice, however, it was
+mostly used to extract single complete frames.
+:class:`~libertem.udf.raw.PickUDF` allows to pick the *complete* signal
+dimension from an arbitrary non-contiguous region of interest in navigation
+space by specifying a ROI.
 
 If necessary, more complex subsets of a dataset can be extracted by constructing
 a suitable subset of an identity matrix for the signal dimension and using it
 with ApplyMasksUDF and the appropriate ROI for the navigation dimension.
 Alternatively, it is now easily possible to implement a custom UDF for this
 purpose. Performing the complete processing through an UDF on the worker nodes
-instead of loading the data to the central node may be a viable alternative as well.
+instead of loading the data to the central node may be a viable alternative as
+well.
 
-PickUDF now returns data in the native :code:`dtype` of the dataset. Previously,
-PickFrameJob converted to floats.
+:class:`~libertem.udf.raw.PickUDF` now returns data in the native :code:`dtype`
+of the dataset. Previously, :class:`~libertem.job.raw.PickFrameJob` converted to
+floats.
 
 Using :meth:`libertem.api.Context.create_pick_analysis` continues to be the
 recommended convenience function to pick single frames.

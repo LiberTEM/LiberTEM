@@ -14,7 +14,7 @@ Job API
 ~~~~~~~
 
 .. deprecated:: 0.4.0.dev0
-    See :ref:`job deprecation`
+    Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`.
 
 .. automodule:: libertem.job.base
    :members: Job

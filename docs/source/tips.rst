@@ -60,7 +60,7 @@ has to be set.
     multiprocessing.set_executable(
         os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only
 
-.. _`profiling tests`:
+.. _`show warnings`:
 
 Show deprecation warnings
 -------------------------
@@ -77,6 +77,8 @@ under active development.
 
     warnings.filterwarnings("default", category=DeprecationWarning)
     warnings.filterwarnings("default", category=PendingDeprecationWarning)
+
+.. _`profiling tests`:
 
 Profiling long-running tests
 ----------------------------

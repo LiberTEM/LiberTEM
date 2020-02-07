@@ -1,3 +1,4 @@
+import warnings
 from typing import Union, Tuple
 
 import psutil
@@ -152,6 +153,14 @@ class Context:
         ... )
         >>> result = ctx.run(job)
         """
+        warnings.warn(
+            "The Job API is deprecated and will be removed after version 0.6.0. "
+            "Use Context.create_mask_analysis() or libertem.udf.masks.ApplyMasksUDF instead. "
+            "See "
+            "https://libertem.github.io/LiberTEM/changelog.html#job-deprecation "
+            "for details and a migration guide.",
+            FutureWarning
+        )
         return ApplyMasksJob(
             dataset=dataset,
             mask_factories=factories,
@@ -424,7 +433,7 @@ class Context:
 
         Note
         ----
-        if you just want to read single frames, it is easier to use
+        If you just want to read single frames, it is easier to use
         :meth:`create_pick_analysis`.
 
         Note
@@ -433,7 +442,10 @@ class Context:
         implementing a UDF instead.
 
         .. deprecated:: 0.4.0.dev0
-            See :ref:`job deprecation`.
+            Use :meth:`libertem.api.Context.create_pick_analysis`,
+            :class:`libertem.udf.raw.PickUDF`, :class:`libertem.udf.masks.ApplyMasksUDF` or
+            a custom UDF (:ref:`user-defined functions`) as a replacement.
+            See also :ref:`job deprecation`.
 
         Parameters
         ----------
@@ -464,6 +476,15 @@ class Context:
         >>> assert result.shape == tuple(dataset.shape.sig)
 
         """
+        warnings.warn(
+            "The Job API is deprecated and will be removed after version 0.6.0. "
+            "Use Context.create_pick_analysis, libertem.udf.raw.PickUDF, "
+            "libertem.udf.masks.ApplyMasksUDF or a custom UDF as a replacement. "
+            "See "
+            "https://libertem.github.io/LiberTEM/changelog.html#job-deprecation "
+            "for details and a migration guide.",
+            FutureWarning
+        )
         # FIXME: this method works well if we can flatten to 3D
         # need vectorized I/O for general case
         if len(origin) == dataset.shape.nav.dims:

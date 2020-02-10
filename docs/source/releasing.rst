@@ -14,7 +14,8 @@ reason we should perform some manual tests before and after a release.
 Tagging a version
 ~~~~~~~~~~~~~~~~~
 
-Install :code:`pygithub`, which is used by :code:`scripts/release`. Then call the script with
+Install dependencies from :code:`scripts/requirements.txt`,
+which are used by :code:`scripts/release`. Then call the script with
 the :code:`bump` command, with the new version as parameter:
 
 .. code-block:: shell
@@ -49,7 +50,7 @@ Before (using a release candidate package)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue
-* Copy test files of all supported types to a fresh location or purge the parameter cache
+* Make sure you have test files of all supported types available
     * Include floats, ints, big endian, little endian, complex raw data
 * Open each test file
     * Are parameters recognized correctly, as far as implemented?

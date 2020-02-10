@@ -186,11 +186,10 @@ def get_py_release_files():
 
 
 def stream_download(dest_fn, url):
-    with open(dest_fn, "wb") as f:
-        with requests.get(url, stream=True) as resp:
-            resp.raise_for_status()
-            for chunk in resp.iter_content(chunk_size=1024*1024):
-                f.write(chunk)
+    with open(dest_fn, "wb") as f, requests.get(url, stream=True) as resp:
+        resp.raise_for_status()
+        for chunk in resp.iter_content(chunk_size=1024*1024):
+            f.write(chunk)
 
 
 @contextlib.contextmanager

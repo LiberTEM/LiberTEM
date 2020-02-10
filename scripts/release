@@ -211,11 +211,11 @@ def upload_to_zenodo(verbose, parent, token, sandbox_token):
 
     out = subprocess.check_output([
         "python", join(HERE, "zenodo_upload"),
-        "--wheel=%s" % wheel,
-        "--tarball=%s" % sdist,
         "--url=%s" % url,
         "--parent=%s" % parent,
         "--mask-zenodo-exception",
+        wheel,
+        sdist,
     ])
 
     if verbose and out:

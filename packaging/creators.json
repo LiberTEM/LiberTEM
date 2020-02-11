@@ -1,12 +1,12 @@
 [
-    {            
+    {
         "displayname": "Alexander Clausen",
         "authorname": "Clausen, Alexander",
         "affiliation": "Jülich Research Centre",
         "github": "sk1p",
         "contribution": "System design, engineering, implementation, documentation, management, majority of the code",
         "orcid": "0000-0002-9555-7455"
-    }, 
+    },
     {
         "displayname": "Dieter Weber",
         "authorname": "Weber, Dieter",
@@ -32,6 +32,13 @@
         "orcid": "0000-0002-6296-4492"
     },
     {
+        "displayname": "Abijith Bahuleyan",
+        "authorname": "Bahuleyan, Abijith",
+        "affiliation": "APJ Abdul Kalam Technical University",
+        "github": "twentyse7en",
+        "contribution": "Fix issue 81"
+    },
+    {
         "displayname": "Jan Caron",
         "authorname": "Caron, Jan",
         "affiliation": "Jülich Research Centre",
@@ -45,7 +52,7 @@
         "affiliation": "Chandigarh University" ,
         "github": "irahulcse",
         "contribution": "Test and update of examples"
-    }, 
+    },
     {
         "displayname": "Magnus Nord",
         "authorname": "Nord, Magnus",

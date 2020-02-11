@@ -116,14 +116,14 @@ def main(host, port, event_registry, shared_data):
     return app
 
 
-def run(host, port, no_browser, local_directory):
+def run(host, port, browser, local_directory):
     # shared state:
     event_registry = EventRegistry()
     shared_data = SharedData()
 
     shared_data.set_local_directory(local_directory)
     main(host, port, event_registry, shared_data)
-    if not no_browser:
+    if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()
     signal.signal(signal.SIGINT, partial(sig_exit, shared_data=shared_data))

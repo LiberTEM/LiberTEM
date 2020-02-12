@@ -385,9 +385,15 @@ def main(files, parent, url, verbose, mask_zenodo_exception):
         global VERBOSE
         VERBOSE = verbose
 
-        log("Creating new version of deposition %s..." % parent)
-        r = new_version(parent_id=parent)
-        prettylog(r)
+        try:
+            log("Creating new version of deposition %s..." % parent)
+            r = new_version(parent_id=parent)
+            prettylog(r)
+        # Above will fail for very first draft
+        except ZenodoException:
+            log("Loading initial draft of deposition %s..." % parent)
+            r = get_deposition(deposition_id=parent)
+            prettylog(r)
 
         deposition_id = get_latest_draft(r)
         log("Updating draft deposition %s..." % deposition_id)

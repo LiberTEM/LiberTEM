@@ -155,6 +155,8 @@ setup(
         'cloudpickle',
         'jsonschema',
         'scikit-learn',
+        # FIXME remove in 0.7.0 after blobfinder deprecation
+        # 'libertem-blobfinder',
     ],
     extras_require={
         'torch': 'torch',

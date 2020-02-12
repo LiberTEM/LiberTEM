@@ -528,7 +528,7 @@ def do_build_appimage(ctx):
 @click.option('--tag/--no-tag', help='create a git tag after bumping (implies --commit)',
               default=False)
 @click.option('--commit/--no-commit', help='create a git commit after bumping',
-              default=False)
+              default=True)
 @click.option('--force/--no-force', help='force operation, even if it doesn\'t fit our conventions',
               default=False)
 def bump(new_version, tag, commit, force):
@@ -569,7 +569,7 @@ def bump(new_version, tag, commit, force):
         if commit:
             print("now, tag as needed and push")
         else:
-            print("now, commit the new version, tag as needed and push")
+            print("WARNING: not committed! commit the new version, tag as needed and push")
 
 
 if __name__ == "__main__":

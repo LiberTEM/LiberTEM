@@ -1,3 +1,4 @@
+# FIXME remove this in 0.7.0 after blobfinder deprecation
 import functools
 
 import numpy as np
@@ -8,6 +9,7 @@ import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
 import libertem.masks as m
 from libertem.utils.generate import cbed_frame
+from libertem.udf.masks import ApplyMasksUDF
 
 from libertem.io.dataset.memory import MemoryDataSet
 
@@ -462,16 +464,16 @@ def test_featurevector(lt_ctx):
 
     )
 
-    job = lt_ctx.create_mask_job(
-        dataset=dataset, factories=stack, mask_count=len(peaks), mask_dtype=np.float32
+    m_udf = ApplyMasksUDF(
+        mask_factories=stack, mask_count=len(peaks), mask_dtype=np.float32
     )
-    res = lt_ctx.run(job)
+    res = lt_ctx.run_udf(dataset=dataset, udf=m_udf)
 
     peak_data, _, _ = cbed_frame(*shape, zero, a, b, np.array([(0, 0)]), radius, all_equal=True)
     peak_sum = peak_data.sum()
 
-    assert np.allclose(res.sum(), data.sum())
-    assert np.allclose(res, peak_sum)
+    assert np.allclose(res['intensity'].data.sum(), data.sum())
+    assert np.allclose(res['intensity'].data, peak_sum)
 
 
 @pytest.mark.with_numba

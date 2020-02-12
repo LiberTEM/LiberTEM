@@ -25,13 +25,20 @@ log output::
 
     [2018-08-08 13:57:58,266] INFO [libertem.web.server.main:886] listening on localhost:9000
 
+It will then open your default web browser to this URL.
+
 There are a few command line options available::
 
     Usage: libertem-server [OPTIONS]
 
     Options:
       --port INTEGER  port on which the server should listen on
+      --local-directory TEXT    local directory to manage dask-worker-space files
+      --browser / --no-browser  enable/disable opening the browser
       --help          Show this message and exit.
+
+.. versionadded:: 0.4.0.dev0
+    --browser / --no-browser option is added, open browser by default. 
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
 
@@ -50,18 +57,6 @@ Or, with virtualenv:
      $ ssh -L 9000:localhost:9000 <remote-hostname> "/path/to/virtualenv/bin/libertem-server"
 
 This then makes LiberTEM that is running on `remote-hostname` available on your local host via http://localhost:9000/
-
-.. versionadded:: 0.4.0.dev0
-
-.. code-block:: shell
-
-    (libertem) $ libertem-server
-
-This will launch a new browser tab showing GUI by default.
-
-New command line option ::
-
-    --browser / --no-browser  this flag enable/disable opening the browser
 
 
 The user interface

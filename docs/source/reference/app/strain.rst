@@ -6,49 +6,13 @@ Correlation-based peak finding and strain mapping reference
 Blobfinder
 ----------
 
-This module contains classes and helper functions that allow to apply correlation and refinement on a dataset
-using the :ref:`user-defined functions` interface.
-
-Match patterns
-~~~~~~~~~~~~~~
-
-Correlation pattern classes with support for Fourier-based fast correlation.
-
-.. automodule:: libertem.udf.blobfinder.patterns
-   :members: 
-   :special-members: __init__
-
-Correlation
-~~~~~~~~~~~
-
-UDFs and utility functions to find peaks and refine their positions by using
-correlation.
-
-.. automodule:: libertem.udf.blobfinder.correlation
-   :members:
-   :show-inheritance:
-   :special-members: __init__
-
-Refinement
-~~~~~~~~~~
-
-UDFs and utility functions to refine grid parameters from peak positions.
-
-.. automodule:: libertem.udf.blobfinder.refinement
-   :members:
-   :show-inheritance:
-   :special-members: __init__
-
-Blobfinder utilities
-~~~~~~~~~~~~~~~~~~~~
-
-General utility functions for the blobfinder module.
-
-.. automodule:: libertem.udf.blobfinder.utils
-   :members:
-   :show-inheritance:
-   :special-members: __init__
-
+.. deprecated:: 0.4.0.dev0
+    Blobfinder has moved to its own package LiberTEM-blobfinder with a new
+    structure. Please see
+    https://libertem.github.io/LiberTEM-blobfinder/index.html for installation
+    instructions and documentation of the new structure. Imports from
+    :code:`libertem.udf.blobfinder` trigger a :code:`FutureWarning` starting from
+    0.4.0.dev0 and are supported until LiberTEM release 0.6.0.
 
 .. _`matching api`:
 

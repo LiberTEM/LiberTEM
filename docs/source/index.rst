@@ -25,6 +25,7 @@ Documentation
    api
    formats
    udf
+   packages
    applications
    architecture
    performance

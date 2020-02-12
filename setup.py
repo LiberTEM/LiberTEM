@@ -156,12 +156,11 @@ setup(
         'jsonschema',
         'scikit-learn',
         # FIXME remove in 0.7.0 after blobfinder deprecation
-        # 'libertem-blobfinder',
+        'libertem-blobfinder',
     ],
     extras_require={
         'torch': 'torch',
         'hdbscan': 'hdbscan',
-        'pyfftw': 'pyfftw',
     },
     package_dir={"": "src"},
     packages=[

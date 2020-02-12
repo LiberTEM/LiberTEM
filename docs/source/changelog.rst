@@ -127,16 +127,21 @@ floats.
 Using :meth:`libertem.api.Context.create_pick_analysis` continues to be the
 recommended convenience function to pick single frames.
 
-Restructuring the code base
----------------------------
+Restructuring into sub-packages
+-------------------------------
 
-We are currently restructuring LiberTEM into modules that can be installed and
+We are currently restructuring LiberTEM into packages that can be installed and
 used independently, see :issue:`261`. This will be a longer process and changes
-the import locations. The first module to be separated is the `Blobfinder
-<https://github.com/LiberTEM/LiberTEM-blobfinder>`_. For a transition period,
-importing from the previous locations is supported but will trigger a warning.
-See :ref:`show warnings` on how to activate deprecation warning messages, which
-is strongly recommended while the restructuring is ongoing.
+the import locations.
+
+* `Blobfinder <https://libertem.github.io/LiberTEM-blobfinder/>`_ is the first
+  module separated in 0.4.0.dev0.
+* See :ref:`packages` for a current overview of sub-packages.
+
+For a transition period, importing from the previous locations is supported but
+will trigger a :code:`FutureWarning`. See :ref:`show warnings` on how to
+activate deprecation warning messages, which is strongly recommended while the
+restructuring is ongoing.
 
 .. _latest:
 .. _`v0-3-0`:

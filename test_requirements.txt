@@ -3,6 +3,3 @@ pytest-cov
 pytest-asyncio
 aiohttp
 websockets
-# FIXME shim for resolving chicken-egg between libertem and libertem-blobfinder
-# during release phase. Remove after stabilization!
--i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple libertem_blobfinder

@@ -183,10 +183,6 @@ The full grid matching routines in :py:mod:`libertem.analysis.fullmatch` depend
 on `HDBSCAN <https://hdbscan.readthedocs.io/en/latest/>`_. This is an optional
 dependency because of installation issues on some platforms.
 
-The fast correlation methods in :py:mod:`libertem.udf.blobfinder` can optionally
-use `pyFFTW <https://hgomersall.github.io/pyFFTW/>`_ instead of the built-in
-Numpy FFT.
-
 Updating
 ~~~~~~~~
 

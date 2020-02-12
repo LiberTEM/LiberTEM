@@ -100,7 +100,7 @@ class FullMatcher(grm.Matcher):
         ----------
         centers : numpy.ndarray
             numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks. This would typically
-            be extracted with :meth:`~libertem.udf.blobfinder.get_peaks`
+            be extracted with :meth:`libertem_blobfinder.common.correlation.get_peaks`
         zero : numpy.ndarray
             Zero point as numpy array (y, x).
         cand : list or numpy.ndarray
@@ -112,7 +112,7 @@ class FullMatcher(grm.Matcher):
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
         peak_elevations : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
-            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.
 
         Returns
         -------

@@ -376,8 +376,8 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
 
 
 For more complete examples, you can also have a look at the functions
-implemented in the sub-modules of :code:`libertem.udf`,
-for example :code:`libertem.udf.blobfinder`.
+implemented in the sub-modules of :code:`libertem.udf` and at
+`LiberTEM-blobfinder <http://localhost:8009/index.html>`_.
 
 Passing parameters
 ~~~~~~~~~~~~~~~~~~

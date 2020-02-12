@@ -58,7 +58,7 @@ means having to load data from the slower main memory.
 Real-world example
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses
+The :class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` uses
 :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of
 a :class:`~libertem.udf.masks.ApplyMasksUDF` that works on log-scaled data. The
 mask stack is stored in a :class:`libertem.common.container.MaskContainer` as part of
@@ -75,7 +75,7 @@ be calculated.
 
 .. testsetup::
 
-    from libertem.udf.blobfinder.correlation import log_scale
+    from libertem_blobfinder.base.correlation import log_scale
 
 .. testcode::
 
@@ -104,14 +104,15 @@ performance benefits of tiled processing for a first reduction step with
 subsequent steps that require reduced data from complete frames or even a
 complete partition.
 
-Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF`
-which evaluates the correlation maps that have been generated with the dot
-product in the previous processing step and places the results in additional
-result buffers:
+Real-world example from
+:class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` which
+evaluates the correlation maps that have been generated with the dot product in
+the previous processing step and places the results in additional result
+buffers:
 
 .. testsetup::
 
-    from libertem.udf.blobfinder.correlation import evaluate_correlations
+    from libertem_blobfinder.base.correlation import evaluate_correlations
 
 .. testcode::
 
@@ -199,7 +200,7 @@ efficient than making the data available as a parameter since it avoids
 pickling, network transport and unpickling.
 
 This non-trivial example from
-:class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates
+:class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` creates
 a :class:`~libertem.common.container.MaskContainer` based on the parameters in
 :code:`self.params`. This :class:`~libertem.common.container.MaskContainer` is then
 available as :code:`self.task_data['mask_container']` within the processing
@@ -247,7 +248,8 @@ functions.
 
 .. testcleanup::
 
-    from libertem.udf.blobfinder import SparseCorrelationUDF, RadialGradient
+    from libertem_blobfinder.udf.correlation import SparseCorrelationUDF
+    from libertem_blobfinder.common.patterns import RadialGradient
 
     class TestUDF(SparseCorrelationUDF):
         pass

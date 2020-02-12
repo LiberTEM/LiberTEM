@@ -20,13 +20,21 @@ the :code:`bump` command, with the new version as parameter:
 
 .. code-block:: shell
 
-    $ ./scripts/release bump v0.3.0.rc0 --tag
+    $ ./scripts/release bump v0.3.0rc0 --tag
 
 If you are bumping to a .dev0 suffix, omit :code:`--tag` and only pass :code:`--commit`:
 
 .. code-block:: shell
 
     $ ./scripts/release bump v0.4.0.dev0 --commit
+
+.. note::
+   In normal development, the version in the master branch will be x.y.z.dev0,
+   if the next expected version is x.y.z. When starting the release process, it
+   will be bumped up to x.y.zrc0 (note: no dot before rc!) and possibly
+   additional release candidates afterwards (rc1, ..., rcN). These release candidates
+   are done mostly to assure our release scripts work as expected and for doing
+   additional QA. See below for our QA process.
 
 Before (using a release candidate package)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,3 +106,4 @@ After releasing on GitHub
 * Update documentation with new links, if necessary
     * Add zenodo badge for the new release to Changelog page
 * Send announcement message on mailing list
+* Bump version in master branch to next .dev0

@@ -10,15 +10,59 @@ Changelog
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
 
 .. _continuous:
-.. _`v0-4-0`:
+.. _`v0-5-0`:
 
-0.4.0.dev0 (continuous)
+0.5.0.dev0 (continuous)
 #######################
 
-.. toctree::
-   :glob:
+No changes yet.
 
-   changelog/*/*
+.. .. toctree::
+..    :glob:
+.. 
+..    changelog/*/*
+
+.. _latest:
+.. _`v0-4-0`:
+
+0.4.0 / 2020-02-13
+##################
+
+The main points of this release are the :ref:`job deprecation` and restructuring
+of our packaging, namely :ref:`extracting the blobfinder module <restructuring-0-4>`.
+
+New features
+------------
+
+* :code:`dtype` support for UDFs :ref:`udf dtype` (:issue:`549`, :pr:`550`)
+* Dismiss error messages via keyboard: allows pressing the escape key to close all currently open error messages (:issue:`437`)
+* ROI doesn't have any effect if in pick mode, so we hide the dropdown in that case (:issue:`511`)
+* Make tileshape parameter of HDF5 DataSet optional (:pr:`578`)
+* Open browser after starting the server. Enabled by default, can be disabled using --no-browser (:issue:`81`, :pr:`580`)
+* Implement :class:`libertem.udf.masks.ApplyMasksUDF` as a replacement of ApplyMasksJob (:issue:`549`, :pr:`550`)
+* Implement :class:`libertem.udf.raw.PickUDF` as a replacement of PickFrameJob (:issue:`549`, :pr:`550`)
+ 
+Bug fixes
+---------
+
+* Fix FRMS6 in a distributed setting. We now make sure to only do I/O in methods that are running on worker nodes (:pr:`531`).
+* Fixed loading of nD HDF5 files. Previously the HDF5 DataSet was hardcoded for
+  4D data - now, arbitraty dimensions should be supported (:issue:`574`, :pr:`567`)
+* Fix :code:`DaskJobExecutor.run_each_host`. Need to pass :code:`pure=False` to ensure multiple runs of the function (:pr:`528`).
+
+Obsolescence
+------------
+
+* Because HDFS support is right now not tested (and to my knowledge also not
+  used) and the upstream :code:`hdfs3` project is not actively maintained, remove
+  support for HDFS. :code:`ClusterDataSet` or :code:`CachedDataSet` should be used
+  instead (:issue:`38`, :pr:`534`).
+
+Misc
+----
+
+* Depend on distributed>=2.2.0 because of an API change. (:pr:`577`)
+* All analyses ported from Job to UDF back-end. The Job-related code remains for now for comparison purposes (:issue:`549`, :pr:`550`)
 
 .. _`job deprecation`:
 
@@ -127,6 +171,8 @@ floats.
 Using :meth:`libertem.api.Context.create_pick_analysis` continues to be the
 recommended convenience function to pick single frames.
 
+.. _`restructuring-0-4`:
+
 Restructuring into sub-packages
 -------------------------------
 
@@ -143,11 +189,10 @@ will trigger a :code:`FutureWarning`. See :ref:`show warnings` on how to
 activate deprecation warning messages, which is strongly recommended while the
 restructuring is ongoing.
 
-.. _latest:
 .. _`v0-3-0`:
 
-0.3.0
-#####
+0.3.0 / 2019-12-12
+##################
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3572855.svg
    :target: https://doi.org/10.5281/zenodo.3572855
@@ -209,12 +254,12 @@ Obsolescence
 Misc
 ----
 
-* Split up the bobfinder code between several files to reduce file size (:pr:`468`)
+* Split up the blobfinder code between several files to reduce file size (:pr:`468`)
 
 .. _`v0-2-2`:
 
-0.2.2
-#####
+0.2.2 / 2019-10-14
+##################
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3489385.svg
    :target: https://doi.org/10.5281/zenodo.3489385
@@ -233,8 +278,8 @@ Bug fixes
 
 .. _`v0-2-1`:
 
-0.2.1
-#####
+0.2.1 / 2019-10-07
+##################
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3474968.svg
    :target: https://doi.org/10.5281/zenodo.3474968
@@ -243,8 +288,8 @@ Point release to fix a bug in the Zenodo upload for production releases.
 
 .. _`v0-2-0`:
 
-0.2.0
-#####
+0.2.0 / 2019-10-07
+##################
 
 This release constitutes a major update after almost a year of development.
 Systematic change management starts with this release.
@@ -321,8 +366,8 @@ https://libertem.github.io/LiberTEM/formats.html
 
 .. _`v0-1-0`:
 
-0.1.0
-#####
+0.1.0 / 2018-11-06
+##################
 
 Initial release of a minimum viable product and proof of concept.
 

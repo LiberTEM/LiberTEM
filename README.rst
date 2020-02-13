@@ -17,12 +17,12 @@
 
 
 .. |codeclimate| image:: https://api.codeclimate.com/v1/badges/dee042f64380f64737e5/maintainability
-.. _codeclimate: https://codeclimate.com/github/LiberTEM/LiberTEM/maintainability
+.. _codeclimate: https://codeclimate.com/github/LiberTEM/LiberTEM
 
 LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets using a simplified `MapReduce programming model
 <https://en.wikipedia.org/wiki/MapReduce>`_. The current focus is `pixelated
-<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_
+<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors_(4D_STEM)>`_
 scanning transmission electron microscopy (`STEM
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_)
 :cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus_2019` and scanning electron beam

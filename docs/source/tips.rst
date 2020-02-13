@@ -113,7 +113,7 @@ long lead times that are hard to avoid.
 
 In order to gain more information on what slows down a particular test, you can
 install the `pytest-profiling extension
-<https://github.com/manahl/pytest-plugins/tree/master/pytest-profiling>`_ and
+<https://github.com/man-group/pytest-plugins/tree/master/pytest-profiling>`_ and
 use it to profile individual slow tests that you identified before:
 
 .. code-block:: text

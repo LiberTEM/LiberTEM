@@ -76,7 +76,7 @@ indicate that the environment is active:
 
 For more information about virtualenv, for example if you are using a shell
 without `source`, please `refer to the virtualenv documentation
-<https://virtualenv.pypa.io/en/stable/userguide/#user-guide>`_. If you are often
+<https://virtualenv.pypa.io/en/stable/user_guide.html>`_. If you are often
 working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ is recommended.
 

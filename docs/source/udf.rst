@@ -34,10 +34,10 @@ User-defined functions
    udf = YourUDF()
 
 A common case for analyzing big EM data sets is running a reduction operation
-on each individual detector frame (or other small subsets) of a data set and then
+on each individual detector frame or other small subsets of a data set and then
 combining the results of these reductions to form the complete result. This should
-cover a wide range of use cases, from simple mathematical operations (for
-example statistics) to complex image processing and analysis, like feature extraction.
+cover a wide range of use cases, from simple mathematical operations, for
+example statistics, to complex image processing and analysis, like feature extraction.
 
 The user-defined functions (UDF) interface of LiberTEM allows you to run your
 own reduction functions easily, without having to worry about parallelizing,

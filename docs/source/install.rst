@@ -4,9 +4,9 @@ Installation
 ============
 
 .. note::
-    Installation of LiberTEM is currently not working smoothly with Python 3.8
-    because of installation issues with some dependencies. Python 3.6 and Python
-    3.7 are supported.
+    LiberTEM is currently working with Python 3.6 and Python 3.7. Support for
+    Python 3.8 depends on an upcoming release of Dask.distributed. See also
+    :issue:`452`, :pr:`482`.
 
 .. note::
     Distinguish between installing a released version and installing the latest
@@ -75,7 +75,7 @@ indicate that the environment is active:
     (libertem) $ 
 
 For more information about virtualenv, for example if you are using a shell
-without `source`, please `refer to the virtualenv documentation
+without :code:`source`, please `refer to the virtualenv documentation
 <https://virtualenv.pypa.io/en/stable/user_guide.html>`_. If you are often
 working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ is recommended.
@@ -98,7 +98,7 @@ command:
     $ conda create -n libertem python=3.7
 
 To install or later run LiberTEM, activate the environment with the following
-command:
+command (see also :ref:`install on windows` if applicable):
 
 .. code-block:: shell  
 
@@ -179,6 +179,10 @@ Or from git checkout:
 Other extra packages
 ~~~~~~~~~~~~~~~~~~~~
 
+.. versionchanged:: 0.4.0
+    A number of LiberTEM applications are being spun out as sub-packages that
+    can be installed separately. See :ref:`packages` for an overview.
+
 The full grid matching routines in :py:mod:`libertem.analysis.fullmatch` depend
 on `HDBSCAN <https://hdbscan.readthedocs.io/en/latest/>`_. This is an optional
 dependency because of installation issues on some platforms.
@@ -203,6 +207,8 @@ requirements for installed third-party packages have changed, you can re-run
 After updating the installation, you can run the updated version by restarting
 the libertem-server and afterwards reloading all browser windows that are
 running the LiberTEM GUI.
+
+.. _`install on windows`:
 
 Windows
 -------

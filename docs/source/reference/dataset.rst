@@ -77,3 +77,11 @@ HDF5
 ~~~~
 
 .. autoclass:: libertem.io.dataset.hdf5.H5DataSet
+
+.. _`memory`:
+
+Memory data set
+~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.memory.MemoryDataSet
+    :special-members: __init__

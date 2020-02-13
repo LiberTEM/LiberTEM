@@ -47,9 +47,9 @@ if __name__ == '__main__':
         # to reduce transfers in the cluster.
         def mask(): return np.ones(shape=mask_shape)
 
-        job = ctx.create_mask_analysis(dataset=ds, factories=[mask])
+        analysis = ctx.create_mask_analysis(dataset=ds, factories=[mask])
 
-        result = ctx.run(job)
+        result = ctx.run(analysis)
 
         # Do something useful with the result:
         print(result)

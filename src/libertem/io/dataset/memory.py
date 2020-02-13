@@ -74,6 +74,19 @@ class MemoryFile3D(object):
 
 
 class MemoryDataSet(DataSet):
+    '''
+    This dataset is constructed from a NumPy array in memory for testing
+    purposes. It is not recommended for production use since it performs poorly with a
+    distributed executor.
+
+    Examples
+    --------
+
+    >>> from libertem.io.dataset.memory import MemoryDataSet
+    >>>
+    >>> data = np.zeros((2, 2, 128, 128))
+    >>> ds = MemoryDataSet(data=data)
+    '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
                  check_cast=True, crop_frames=False, tiledelay=None, datashape=None):
         # For HTTP API testing purposes: Allow to create empty dataset with given shape

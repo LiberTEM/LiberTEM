@@ -13,7 +13,7 @@ Context
 Job API
 ~~~~~~~
 
-.. deprecated:: 0.4.0.dev0
+.. deprecated:: 0.4.0
     Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`.
 
 .. automodule:: libertem.job.base

@@ -101,7 +101,7 @@ class Context:
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
 
-        .. deprecated:: 0.4.0.dev0
+        .. deprecated:: 0.4.0
             Use :meth:`create_mask_analysis` or :class:`~libertem.udf.masks.ApplyMasksUDF`.
             See also :ref:`job deprecation`.
 
@@ -441,7 +441,7 @@ class Context:
         It is not efficient to use this method on large parts of datasets, please consider
         implementing a UDF instead.
 
-        .. deprecated:: 0.4.0.dev0
+        .. deprecated:: 0.4.0
             Use :meth:`libertem.api.Context.create_pick_analysis`,
             :class:`libertem.udf.raw.PickUDF`, :class:`libertem.udf.masks.ApplyMasksUDF` or
             a custom UDF (:ref:`user-defined functions`) as a replacement.

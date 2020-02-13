@@ -14,7 +14,7 @@ class ApplyMasksUDF(UDF):
     '''
     Apply masks to signals/frames in the dataset.
 
-    .. versionadded:: 0.4.0.dev0
+    .. versionadded:: 0.4.0
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None):

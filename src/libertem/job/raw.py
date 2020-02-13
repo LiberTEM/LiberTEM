@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class PickFrameJob(BaseJob):
     '''
-    .. deprecated:: 0.4.0.dev0
+    .. deprecated:: 0.4.0
         Use :meth:`libertem.api.Context.create_pick_analysis`, :class:`libertem.udf.raw.PickUDF`,
         :class:`libertem.udf.masks.ApplyMasksUDF`or a custom UDF (:ref:`user-defined functions`)
         as a replacement. See also :ref:`job deprecation`.

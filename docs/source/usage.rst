@@ -37,7 +37,7 @@ There are a few command line options available::
       --browser / --no-browser  enable/disable opening the browser
       --help          Show this message and exit.
 
-.. versionadded:: 0.4.0.dev0
+.. versionadded:: 0.4.0
     --browser / --no-browser option is added, open browser by default. 
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.

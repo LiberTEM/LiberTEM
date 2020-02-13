@@ -352,7 +352,7 @@ processing routine since indicating a preferred dtype doesn't enforce it. That
 way, unsafe conversions are performed explicitly in the UDF rather than
 indirectly in the back-end.
 
-.. versionadded:: 0.4.0.dev0
+.. versionadded:: 0.4.0
 
 .. _auto UDF:
 

@@ -20,7 +20,7 @@ class Job(object):
         to hide any implementation details from the user. The previous
         :code:`Job` base class is now called :class:`BaseJob`.
 
-    .. deprecated:: 0.4.0.dev0
+    .. deprecated:: 0.4.0
         Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`
     """
     pass
@@ -34,7 +34,7 @@ class BaseJob(Job):
     .. versionadded:: 0.3.0
         Renamed :code:`Job` to :code:`BaseJob`
 
-    .. deprecated:: 0.4.0.dev0
+    .. deprecated:: 0.4.0
         Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`
 
     """

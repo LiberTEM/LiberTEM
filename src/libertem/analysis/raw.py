@@ -17,7 +17,7 @@ class PickResultSet(AnalysisResultSet):
 
     .. versionadded:: 0.3.0
 
-    .. versionchanged:: 0.4.0.dev0
+    .. versionchanged:: 0.4.0
         Picking now returns data in the native dtype of the dataset with the new UDF back-end.
 
     Attributes

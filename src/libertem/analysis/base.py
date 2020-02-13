@@ -172,7 +172,7 @@ class BaseAnalysis(Analysis):
 
     def get_results(self, job_results):
         """
-        .. deprecated:: 0.4.0.dev0
+        .. deprecated:: 0.4.0
             Use TYPE = 'UDF' and get_udf_results(). See :ref:`job deprecation`.
 
         Parameters
@@ -189,7 +189,7 @@ class BaseAnalysis(Analysis):
 
     def get_job(self):
         """
-        .. deprecated:: 0.4.0.dev0
+        .. deprecated:: 0.4.0
             Use TYPE = 'UDF' and get_udf(). See :ref:`job deprecation`.
 
         Returns

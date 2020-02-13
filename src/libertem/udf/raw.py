@@ -14,7 +14,7 @@ class PickUDF(UDF):
 
     This UDF is meant for frame picking with a very small ROI, usually a single frame.
 
-    .. versionadded:: 0.4.0.dev0
+    .. versionadded:: 0.4.0
     '''
     def get_preferred_input_dtype(self):
         ''

@@ -11,7 +11,7 @@ class BaseMasksAnalysis(BaseAnalysis):
     ``get_results``, ``get_udf_results`` and ``get_mask_factories``.
     Overwrite  ``get_use_sparse`` to return True to calculate with sparse mask matrices.
 
-    .. versionchanged:: 0.4.0.dev0
+    .. versionchanged:: 0.4.0
         Add support to use this Analysis with both ApplyMasksJob and ApplyMasksUDF :issue:`549`
     """
     # FIXME remove job infrastructure after deprecation period

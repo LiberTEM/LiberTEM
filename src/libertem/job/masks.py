@@ -45,7 +45,7 @@ class ApplyMasksJob(BaseJob):
     :meth:`~libertem.api.Context.run` returns a :class:`numpy.ndarray`
     with shape (n_masks, prod(ds.shape.nav)).
 
-    .. deprecated:: 0.4.0.dev0
+    .. deprecated:: 0.4.0
         Use :class:`libertem.udf.masks.ApplyMasksUDF` instead. See also :ref:`job deprecation`
     """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,

@@ -14,7 +14,7 @@ class UDFMeta:
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
 
-    .. versionchanged:: 0.4.0.dev0
+    .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
     """
     def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype, input_dtype):
@@ -77,7 +77,7 @@ class UDFMeta:
         This is determined from the dataset's native dtype and
         :meth:`UDF.get_preferred_input_dtype` using :meth:`numpy.result_type`
 
-        .. versionadded:: 0.4.0.dev0
+        .. versionadded:: 0.4.0
         """
         return self._input_dtype
 
@@ -532,7 +532,7 @@ class UDF(UDFBase):
         :code:`numpy.bool` and behaves as a neutral element in
         :func:`numpy.result_type`.
 
-        .. versionadded:: 0.4.0.dev0
+        .. versionadded:: 0.4.0
         '''
         return np.float32
 
@@ -594,7 +594,7 @@ class Task(object):
     A computation on a partition. Inherit from this class and implement ``__call__``
     for your specific computation.
 
-    .. versionchanged:: 0.4.0.dev0
+    .. versionchanged:: 0.4.0
         Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
     """
 

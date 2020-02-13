@@ -8,7 +8,7 @@ MaskContainer
 mask application operations, such as virtual detector, center of mass or feature
 vector calculations.
 
-.. versionchanged:: 0.4.0.dev0
+.. versionchanged:: 0.4.0
     Moved from :mod:`libertem.job.masks` to :mod:`libertem.common.container` to
     use it in UDFs and prepare deprecation of the Job interface.
 

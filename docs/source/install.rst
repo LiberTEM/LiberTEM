@@ -150,7 +150,7 @@ Or if you wish to contribute to LiberTEM, follow these steps instead :
 
 #. Click on the *fork* button:
 
-    .. image:: ../images/forking_button.png
+    ..  figure:: ./images/forking_button.png
 
 #. Copy your fork of LiberTEM from GitHub to your computer
 

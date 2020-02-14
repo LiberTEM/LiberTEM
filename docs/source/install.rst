@@ -152,11 +152,14 @@ Or if you wish to contribute to LiberTEM, follow these steps instead :
 
     ..  figure:: ./images/forking_button.png
 
-#. Copy your fork of LiberTEM from GitHub to your computer
+#. Clone your fork of LiberTEM from GitHub to your computer
 
 .. code-block:: shell
 
     $ git clone https://github.com/your-user-name/LiberTEM
+
+For more information about `forking a repository
+<https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
 
 Activate the Python environment (conda or virtualenv) and change to the newly
 created directory with the clone of the LiberTEM repository. Now you can start

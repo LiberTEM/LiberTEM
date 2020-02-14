@@ -15,18 +15,19 @@ Changelog
 0.5.0.dev0 (continuous)
 #######################
 
-No changes yet.
+.. toctree::
+   :glob:
 
-.. .. toctree::
-..    :glob:
-.. 
-..    changelog/*/*
+   changelog/*/*
 
 .. _latest:
 .. _`v0-4-0`:
 
 0.4.0 / 2020-02-13
 ##################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3666686.svg
+   :target: https://doi.org/10.5281/zenodo.3666686
 
 The main points of this release are the :ref:`job deprecation` and restructuring
 of our packaging, namely :ref:`extracting the blobfinder module <restructuring-0-4>`.

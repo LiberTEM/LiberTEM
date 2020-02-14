@@ -159,7 +159,7 @@ Or if you wish to contribute to LiberTEM, follow these steps instead :
     $ git clone https://github.com/your-user-name/LiberTEM
 
 For more information about `forking a repository
-<https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
+<https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
 
 Activate the Python environment (conda or virtualenv) and change to the newly
 created directory with the clone of the LiberTEM repository. Now you can start

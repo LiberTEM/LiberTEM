@@ -9,6 +9,7 @@ import pytest
 
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
+from libertem.udf.sumsigudf import SumSigUDF
 
 from utils import _naive_mask_apply, _mk_random
 
@@ -152,6 +153,61 @@ def test_roi_1(hdf5, lt_ctx):
     assert tiles[0].tile_slice.shape.nav.size == 1
     assert tuple(tiles[0].tile_slice.shape.sig) == (16, 16)
     assert tiles[0].tile_slice.origin == (0, 0, 0)
+
+
+def test_roi_3(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.zeros(ds.shape.flatten_nav().nav, dtype=bool)
+    roi[24] = 1
+
+    tiles = []
+    for p in ds.get_partitions():
+        for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+            print("tile:", tile)
+            tiles.append(tile)
+    assert len(tiles) == 1
+    assert tiles[0].tile_slice.shape.nav.size == 1
+    assert tuple(tiles[0].tile_slice.shape.sig) == (16, 16)
+    assert tiles[0].tile_slice.origin == (0, 0, 0)
+    assert np.allclose(tiles[0].data, hdf5['data'][4, 4])
+
+
+def test_roi_4(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.random.choice(size=ds.shape.flatten_nav().nav, a=[True, False])
+
+    sum_udf = lt_ctx.create_sum_analysis(dataset=ds)
+    sumres = lt_ctx.run(sum_udf, roi=roi)['intensity']
+
+    assert np.allclose(
+        sumres,
+        np.sum(hdf5['data'][:].reshape(25, 16, 16)[roi, ...], axis=0)
+    )
+
+
+def test_roi_5(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.random.choice(size=ds.shape.flatten_nav().nav, a=[True, False])
+
+    udf = SumSigUDF()
+    sumres = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)['intensity']
+
+    assert np.allclose(
+        sumres.raw_data,
+        np.sum(hdf5['data'][:][roi.reshape(5, 5), ...], axis=(1, 2))
+    )
 
 
 @pytest.mark.parametrize(

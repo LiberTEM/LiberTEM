@@ -277,13 +277,14 @@ class H5Partition(Partition):
                 yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
 
     def _get_tiles_with_roi(self, roi, dest_dtype):
+        flat_roi = roi.reshape((-1,))
         roi = roi.reshape(self.meta.shape.nav)
 
         result_shape = Shape((1,) + tuple(self.meta.shape.sig), sig_dims=self.meta.shape.sig.dims)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
         start_at_frame = self.slice.origin[0]
-        frame_offset = np.count_nonzero(roi[:start_at_frame])
+        frame_offset = np.count_nonzero(flat_roi[:start_at_frame])
 
         indices = _roi_to_nd_indices(roi, self.slice_nd)
 

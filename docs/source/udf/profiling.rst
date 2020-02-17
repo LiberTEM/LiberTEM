@@ -61,7 +61,7 @@ Then the easiest way to get started is to use the ipython/jupyter integration of
 `line_profiler`. Put :code:`%load_ext line_profiler` somewhere in your notebook,
 then you can use the :code:`%lprun` magic command to run your UDF while profiling:
 
-.. code-block::
+.. code-block:: text
 
    %lprun -f YourUDF.get_task_data -f YourUDF.process_frame ctx.run_udf(dataset=dataset, YourUDF())
 

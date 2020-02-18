@@ -87,11 +87,7 @@ class Context:
         See :ref:`dataset api` for format-specific documentation.
         """
         # delegate to libertem.io.dataset.load:
-        ds = self.executor.run_function(load, filetype, *args, **kwargs)
-        ds = ds.initialize(self.executor)
-        ds.set_num_cores(len(self.executor.get_available_workers()))
-        self.executor.run_function(ds.check_valid)
-        return ds
+        return load(filetype, executor=self.executor, *args, **kwargs)
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 

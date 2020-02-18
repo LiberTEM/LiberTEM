@@ -1,13 +1,7 @@
 import os
 import logging
 import asyncio
-from functools import partial
 
-import tornado.web
-import tornado.gen
-import tornado.websocket
-import tornado.ioloop
-import tornado.escape
 import psutil
 
 import libertem

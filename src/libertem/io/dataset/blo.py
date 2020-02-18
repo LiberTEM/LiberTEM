@@ -182,6 +182,10 @@ class BloDataSet(DataSet):
     def get_msg_converter(cls):
         return BLODatasetParams
 
+    @classmethod
+    def get_supported_extensions(cls):
+        return set(["blo"])
+
     @property
     def dtype(self):
         return self._meta.raw_dtype

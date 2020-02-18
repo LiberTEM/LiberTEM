@@ -516,6 +516,10 @@ class K2ISDataSet(DataSet):
         return K2ISDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["gtg", "bin"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         """
         detect if path points to a file that is part of a k2is dataset.

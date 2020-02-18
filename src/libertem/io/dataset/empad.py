@@ -166,6 +166,10 @@ class EMPADDataSet(DataSet):
         return EMPADDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["xml", "raw"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         """
         Detect parameters. If an `path` is an xml file, we try to automatically

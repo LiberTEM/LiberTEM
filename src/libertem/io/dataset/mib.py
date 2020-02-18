@@ -363,6 +363,10 @@ class MIBDataSet(DataSet):
         return MIBDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["mib", "hdr"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):

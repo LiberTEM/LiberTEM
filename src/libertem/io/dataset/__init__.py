@@ -1,3 +1,4 @@
+import typing
 import importlib
 
 from libertem.io.dataset.base import DataSetException
@@ -94,3 +95,16 @@ def detect(path, executor):
         params.update({"type": filetype})
         return params
     return {}
+
+
+def get_extensions() -> typing.Set[str]:
+    """
+    Return supported extensions as a set of strings.
+
+    Plain extensions only, no pattern!
+    """
+    types = set()
+    for filetype in filetypes.keys():
+        cls = get_dataset_cls(filetype)
+        types = types.union(set(ext.lower() for ext in cls.get_supported_extensions()))
+    return types

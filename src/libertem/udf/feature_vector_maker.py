@@ -1,10 +1,13 @@
+import warnings
+
+from skimage.feature import peak_local_max
+
 from libertem.udf import UDF
 from libertem.masks import _make_circular_mask
 from libertem.udf.stddev import run_stddev
 
-from skimage.feature import peak_local_max
 
-
+# FIXME remove this file in 0.6.0 after deprecation period
 class FeatureVecMakerUDF(UDF):
     """
     Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
@@ -13,6 +16,12 @@ class FeatureVecMakerUDF(UDF):
 
     def __init__(self, coordinates, delta, savg):
         """
+        .. deprecated:: 0.5.0.dev0
+            :code:`FeatureVecMakerUDF` is deprecated and will be removed in 0.6.0.
+            Use :class:`libertem.udf.masks.ApplyMasksUDF` with a stack of sparse one-pixel masks
+            or with a mask stack generated using
+            :meth:`libertem_blobfinder.common.patterns.feature_vector` instead.
+
         Parameters
         ----------
 
@@ -37,6 +46,13 @@ class FeatureVecMakerUDF(UDF):
         >>> np.array(result["feature_vec"]).shape
         (16, 16, 3)
         """
+        warnings.warn(
+            "FeatureVecMakerUDF is deprecated and will be removed in 0.6.0. Use "
+            "libertem.udf.masks.ApplyMasksUDF with a sparse stack of one-pixel masks "
+            "or with a mask stack generated using "
+            "libertem_blobfinder.common.patterns.feature_vector instead.",
+            DeprecationWarning
+        )
         super().__init__(coordinates=coordinates, delta=delta, savg=savg)
 
     def get_result_buffers(self):

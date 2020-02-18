@@ -10,8 +10,9 @@ import pytest
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.masks import ApplyMasksUDF
 
-from utils import _naive_mask_apply, _mk_random
+from utils import _naive_mask_apply, _mk_random, PixelsumUDF
 
 
 @pytest.mark.parametrize(
@@ -338,3 +339,10 @@ def test_auto_tileshape(chunked_hdf5, lt_ctx):
     t = next(p.get_tiles(dest_dtype="float32", target_size=4*1024))
     assert tuple(p._get_tileshape("float32", 4*1024)) == (1, 4, 16, 16)
     assert tuple(t.tile_slice.shape) == (4, 16, 16)
+
+
+def test_no_tileshape(lt_ctx, hdf5_3d):
+    ds = lt_ctx.load('HDF5', path=hdf5_3d.filename, ds_path='/data')
+
+    udf = PixelsumUDF()
+    res = lt_ctx.run_udf(udf=udf, dataset=ds)

@@ -251,7 +251,10 @@ class H5Partition(Partition):
             dataset_shape=self.slice_nd.shape,
             target_size_items=target_size // np.dtype(dest_dtype).itemsize,
         )
-        return nav_shape + tuple(self.slice_nd.shape.sig)
+        return Shape(
+            nav_shape + tuple(self.slice_nd.shape.sig),
+            sig_dims=self.slice_nd.shape.sig.dims,
+        )
 
     def _get_tiles_normal(self, tileshape, crop_to=None, dest_dtype="float32"):
         if crop_to is not None:

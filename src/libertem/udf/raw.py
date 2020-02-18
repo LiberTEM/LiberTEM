@@ -28,6 +28,8 @@ class PickUDF(UDF):
             navsize = np.count_nonzero(self.meta.roi)
         else:
             navsize = np.prod(self.meta.dataset_shape.nav)
+        if navsize == 0:
+            raise ValueError("cannot load data with all-zeros ROI")
         warn_limit = 2**28
         loaded_size = np.prod(sigshape) * navsize * np.dtype(dtype).itemsize
         if loaded_size > warn_limit:

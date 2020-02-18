@@ -161,7 +161,8 @@ Or if you wish to contribute to LiberTEM, follow these steps instead :
 For more information about `forking a repository
 <https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
 If you have limited experience using git, consider going through following
-resources :
+resources:
+
 * This `free course <https://www.udacity.com/course/version-control-with-git--ud123>`_
   covers the essentials of using Git.
 * For practicing `pull request <https://github.com/firstcontributions/first-contributions>`_

@@ -90,7 +90,7 @@ Job API deprecation
 -------------------
 
 The original Job API of LiberTEM is superseded by the new :ref:`user-defined
-functions` API with release 0.4.0.dev0. See :issue:`549` for a detailed overview
+functions` API with release 0.4.0. See :issue:`549` for a detailed overview
 of the changes. The UDF API brings the following advantages:
 
 * Support for regions of interest (ROIs).

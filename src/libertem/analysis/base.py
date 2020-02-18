@@ -20,7 +20,7 @@ class AnalysisResult:
     desc : str
         Short description in the GUI
     key : str
-        Key to identify the result in a :class:`AnalysisResultSet`
+        Key to identify the result in an :class:`AnalysisResultSet`
     """
     def __init__(self, raw_data, visualized, title, desc, key):
         self.raw_data = raw_data

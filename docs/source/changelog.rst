@@ -26,6 +26,9 @@ Changelog
 0.4.1 / 2020-02-18
 ##################
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3674003.svg
+   :target: https://doi.org/10.5281/zenodo.3674003
+
 This is a bugfix release, mainly constraining the :code:`msgpack` dependency,
 as distributed is not compatible to version 1.0 yet. It also contains
 important fixes in the HDF5 dataset.

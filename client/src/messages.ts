@@ -333,7 +333,6 @@ export interface ClustParams {
     cy: number,
     ri: number,
     ro: number,
-    delta: number,
     n_peaks: number,
     n_clust: number,
     min_dist: number,

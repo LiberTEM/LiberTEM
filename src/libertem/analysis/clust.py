@@ -2,12 +2,15 @@ from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import run_blocking
 from libertem.executor.base import JobCancelledError
-import libertem.udf.feature_vector_maker as feature
+# import libertem.udf.feature_vector_maker as feature
+from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF
 from libertem import masks
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.feature_extraction.image import grid_to_graph
 import numpy as np
+import sparse
 
 from libertem.masks import _make_circular_mask
 
@@ -25,12 +28,22 @@ class ClusterAnalysis(BaseAnalysis):
 
     def get_udf_results(self, udf_results, roi):
         n_clust = self.parameters["n_clust"]
+        y, x = tuple(self.dataset.shape.nav)
+        connectivity = grid_to_graph(
+            # Transposed!
+            n_x=y,
+            n_y=x
+        )
+        f = udf_results['intensity'].raw_data
+        feature_vector = f / np.abs(f).mean(axis=0)
+
         clustering = AgglomerativeClustering(
-            affinity='euclidean', n_clusters=n_clust, linkage='ward'
-        ).fit(udf_results['feature_vec'].raw_data)
+            affinity='euclidean', n_clusters=n_clust, linkage='ward',
+            connectivity=connectivity
+        ).fit(feature_vector)
         labels = np.array(clustering.labels_+1)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results['feature_vec'].data,
+            AnalysisResult(raw_data=udf_results['intensity'].data,
                            visualized=visualize_simple(
                                labels.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
@@ -81,10 +94,8 @@ class ClusterAnalysis(BaseAnalysis):
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]
-        delta = self.parameters["delta"]
         n_peaks = self.parameters["n_peaks"]
         min_dist = self.parameters["min_dist"]
-        savg = sd_udf_results['mean']
         sstd = sd_udf_results['std']
         sshape = sstd.shape
         if not (center is None or rad_in is None or rad_out is None):
@@ -97,8 +108,17 @@ class ClusterAnalysis(BaseAnalysis):
 
         coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
 
-        udf = feature.FeatureVecMakerUDF(
-            delta=delta, savg=savg, coordinates=coordinates
+        y = coordinates[..., 0]
+        x = coordinates[..., 1]
+        z = range(len(y))
+
+        mask = sparse.COO(
+            shape=(len(y), ) + tuple(self.dataset.shape.sig),
+            coords=(z, y, x), data=1)
+
+        udf = ApplyMasksUDF(
+            mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.uint8,
+            use_sparse=True
         )
 
         result_iter = UDFRunner(udf).run_for_dataset_async(

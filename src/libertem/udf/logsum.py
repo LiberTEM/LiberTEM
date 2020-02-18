@@ -17,6 +17,9 @@ class LogsumUDF(UDF):
     >>> np.array(result["logsum"]).shape
     (16, 16)
     """
+    def __init__(self):
+        ''
+        super().__init__()
 
     def get_result_buffers(self):
         ""

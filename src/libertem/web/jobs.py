@@ -10,10 +10,11 @@ from libertem.analysis import (
     PickFFTFrameAnalysis, SumfftAnalysis,
     RadialFourierAnalysis, ApplyFFTMask, SDAnalysis, SumSigAnalysis, ClusterAnalysis
 )
-from .base import CORSMixin, run_blocking, log_message, result_images
+from .base import CORSMixin, log_message, result_images
 from .messages import Message
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
+from libertem.utils.async_utils import run_blocking
 
 log = logging.getLogger(__name__)
 

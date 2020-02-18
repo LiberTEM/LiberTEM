@@ -12,6 +12,7 @@ import psutil
 
 import libertem
 from libertem.io.dataset.base import DataSetException
+from libertem.utils.async_utils import run_blocking
 
 log = logging.getLogger(__name__)
 
@@ -36,13 +37,6 @@ async def result_images(results, save_kwargs=None):
 
     images = await asyncio.gather(*futures)
     return images
-
-
-async def run_blocking(fn, *args, **kwargs):
-    """
-    run blocking function fn with args, kwargs in a thread and return a corresponding future
-    """
-    return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
 
 
 class CORSMixin(object):

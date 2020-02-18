@@ -3,6 +3,7 @@ import numpy as np
 
 from libertem.masks import to_dense
 from libertem.analysis.gridmatching import calc_coords
+from libertem.udf import UDF
 
 
 def _naive_mask_apply(masks, data):
@@ -57,3 +58,17 @@ def assert_msg(msg, msg_type, status='ok'):
     assert msg['status'] == status
     assert msg['messageType'] == msg_type,\
         "expected: {}, is: {}".format(msg_type, msg['messageType'])
+
+
+class PixelsumUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'pixelsum': self.buffer(
+                kind="nav", dtype="float32"
+            )
+        }
+
+    def process_frame(self, frame):
+        assert frame.shape == (16, 16)
+        assert self.results.pixelsum.shape == (1,)
+        self.results.pixelsum[:] = np.sum(frame)

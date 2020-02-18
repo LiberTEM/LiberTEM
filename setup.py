@@ -155,6 +155,7 @@ setup(
         'cloudpickle',
         'jsonschema',
         'scikit-learn',
+        'msgpack<1',  # FIXME: remove after distributed is fixed
         # FIXME remove in 0.7.0 after blobfinder deprecation
         'libertem-blobfinder',
     ],

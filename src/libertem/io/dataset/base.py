@@ -1,3 +1,4 @@
+import typing
 import itertools
 
 import jsonschema
@@ -285,6 +286,15 @@ class DataSet(object):
             target_size_items=target_size // np.dtype(dtype).itemsize,
             min_num=min_num_partitions
         )
+
+    @classmethod
+    def get_supported_extensions(cls) -> typing.Set[str]:
+        """
+        Return supported extensions as a set of strings.
+
+        Plain extensions only, no pattern!
+        """
+        return set()
 
     def get_cache_key(self):
         raise NotImplementedError()

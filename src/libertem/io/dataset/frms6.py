@@ -413,6 +413,10 @@ class FRMS6DataSet(DataSet):
         return {"path": path}
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["frms6", "hdr"])
+
+    @classmethod
     def get_msg_converter(cls):
         return FRMS6DatasetParams
 

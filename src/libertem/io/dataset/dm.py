@@ -239,6 +239,10 @@ class DMDataSet(DataSet):
         return self
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["dm3", "dm4"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         # FIXME: this doesn't really make sense for file series
         pl = path.lower()

@@ -143,6 +143,10 @@ class H5DataSet(DataSet):
         return HDF5DatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["h5", "hdf5", "hspy", "nxs"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         def _do_detect():
             with h5py.File(path, 'r'):

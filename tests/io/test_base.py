@@ -3,7 +3,10 @@ from collections import namedtuple
 import numpy as np
 import pytest
 
-from libertem.io.dataset.base import FileTree, Partition3D, _roi_to_nd_indices
+from libertem.io.dataset import get_extensions
+from libertem.io.dataset.base import (
+    FileTree, Partition3D, _roi_to_nd_indices
+)
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
 
@@ -119,3 +122,11 @@ def test_roi_to_nd_indices():
         (2, 1), (2, 2), (2, 3),
                 (3, 2)
     ]
+
+
+def test_get_extensions():
+    exts = get_extensions()
+    assert len(exts) >= 15
+    assert "mib" in exts
+    assert "gtg" in exts
+    # etc...

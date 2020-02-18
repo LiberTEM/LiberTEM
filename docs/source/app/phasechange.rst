@@ -87,21 +87,30 @@ link to a Jupyter notebook <pcmclustering.ipynb>`_.
 GUI use:
 --------
 
-To make preliminary analysis for parameters choice and a brief look at the result, you can select "Clustering" from the "Add Analysis" menu in the GUI.
+To make preliminary analysis for parameters choice and a brief look at the
+result, you can select "Clustering" from the "Add Analysis" menu in the GUI.
 
-Then you can choose the region in the navigation space in the middle to select the standard deviation (SD) calculation region (recommendation: try to select as much of the specimen you can, avoiding membrane zone).
-The frame regions wich will have higher intensity on standard deviation image will be assumed as possible positions of non-zero order diffraction peaks.
-Adjust the position of the ring and its radii in the left side to select the region for detecting peaks and click "Apply".
-Then, for each of coordinates of the peaks on SD image, the decision about the presence or absence of a peak at this position for each frame will be made.
-Next, as a result, the feature vector will be generated for each frame to further use in clustering.
+Then you can choose the region in the navigation space in the middle to select
+the standard deviation (SD) calculation region (recommendation: try to select as
+much of the specimen you can, avoiding zones without usable data, such as
+membrane or vacuum). The frame regions which will have higher intensity in the
+standard deviation image will be assumed as possible positions of non-zero order
+diffraction peaks. Adjust the position of the ring and its radii in the left
+side to select the region for detecting peaks and click "Apply". Then, for each
+of coordinates of the peaks on SD image, the decision about the presence or
+absence of a peak at this position for each frame will be made. Next, as a
+result, the feature vector will be generated for each frame to further use in
+clustering.
 
 .. figure:: ./images/phasechange/first.PNG
 
-After the first result will be shown, you can readjust the region of peak detection (in the left side), SD calculation region (in the middle) and parameters, which are hidden in the parameters section.
-For radii readjustment, you can use SD over ROI mode, to look at actual SD over ROI (for visuasization of actual SD, use the right side with "SD over ROI (rect) mode", to choose ROI for feature vector calculation and clustering, use the middle section.
+After the first result will be shown, you can readjust the region of peak
+detection (in the left side), SD calculation region (in the middle) and
+parameters, which are hidden in the parameters section. For radii readjustment,
+you can use SD over ROI mode. To see the correct ROI, use the "SD over ROI (rect) mode".
+To choose ROI for feature vector calculation and clustering, use the middle section.
 
 .. figure:: ./images/phasechange/second.PNG
-
 
 You can check the clustering result by using Pick mode.
 

@@ -483,9 +483,18 @@ or the :ref:`general section on debugging <debugging udfs>`. Once you have your 
 you can proceed to :ref:`UDF profiling <udf profiling>` to gain insights into the efficiency
 of your UDF.
 
-LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement general functionality,
-like standard deviation or sum of log-scaled frames. Also, LiberTEM includes
-:ref:`ready-to-use application-specific UDFs <applications>`.
+LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement
+general functionality:
+
+* :ref:`Sum <sum udf>`
+* :ref:`Logsum <logsum udf>`
+* :ref:`StdDev <stddev udf>`
+* :ref:`SumSig <sumsig udf>`
+* :ref:`Masks <masks udf>`
+* :ref:`Pick <pick udf>`
+
+Also, LiberTEM includes :ref:`ready-to-use application-specific UDFs
+<applications>`.
 
 .. toctree::
    :hidden:

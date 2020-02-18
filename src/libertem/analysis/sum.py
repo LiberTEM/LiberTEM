@@ -2,21 +2,11 @@ import numpy as np
 
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-from libertem.udf import UDF
 from libertem.analysis.getroi import get_roi
+from libertem.udf.sum import SumUDF
 
 
-class SumUDF(UDF):
-    def get_result_buffers(self):
-        return {
-            'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
-        }
 
-    def process_tile(self, tile):
-        self.results.intensity[:] += np.sum(tile, axis=0)
-
-    def merge(self, dest, src):
-        dest['intensity'][:] += src['intensity']
 
 
 class SumResultSet(AnalysisResultSet):

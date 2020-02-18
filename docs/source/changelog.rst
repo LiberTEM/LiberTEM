@@ -21,6 +21,22 @@ Changelog
    changelog/*/*
 
 .. _latest:
+.. _`v0-4-1`:
+
+0.4.1 / 2020-02-18
+##################
+
+This is a bugfix release, mainly constraining the :code:`msgpack` dependency,
+as distributed is not compatible to version 1.0 yet. It also contains
+important fixes in the HDF5 dataset.
+
+Bugfixes
+--------
+
+* Fix HDF5 with automatic tileshape (:pr:`608`)
+* Fix reading from HDF5 with roi beyond the first partition (:pr:`606`)
+* Add version constraint on msgpack
+
 .. _`v0-4-0`:
 
 0.4.0 / 2020-02-13

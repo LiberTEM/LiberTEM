@@ -3,7 +3,8 @@ import logging
 import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
-from .base import CORSMixin, log_message, run_blocking
+from .base import CORSMixin, log_message
+from libertem.utils.async_utils import run_blocking
 from .messages import Message
 
 log = logging.getLogger(__name__)
@@ -36,10 +37,9 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         try:
             dataset_params = converter.to_python(params)
             executor = self.data.get_executor()
-            ds = await executor.run_function(load, filetype=cls, **dataset_params)
-            ds = await run_blocking(ds.initialize, executor=executor.ensure_sync())
-            available_workers = await executor.get_available_workers()
-            ds.set_num_cores(len(available_workers))
+
+            ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
+
             await executor.run_function(ds.check_valid)
             self.data.register_dataset(
                 uuid=uuid,

@@ -1,6 +1,7 @@
 import importlib
 
 from libertem.io.dataset.base import DataSetException
+from libertem.utils.async_utils import run_blocking
 
 
 filetypes = {
@@ -17,7 +18,7 @@ filetypes = {
 }
 
 
-def load(filetype, executor, *args, **kwargs):
+def load(filetype, executor, enable_async=False, *args, **kwargs):
     """
     Low-level method to load a dataset. Usually you will want
     to use Context.load instead!
@@ -32,11 +33,23 @@ def load(filetype, executor, *args, **kwargs):
     additional parameters are passed to the concrete DataSet implementation
     """
     cls = get_dataset_cls(filetype)
-    ds = cls(*args, **kwargs)
-    ds = ds.initialize(executor)
-    ds.set_num_cores(len(executor.get_available_workers()))
-    executor.run_function(ds.check_valid)
-    return ds
+
+    async def _init_async():
+        ds = cls(*args, **kwargs)
+        ds = await run_blocking(ds.initialize, executor=executor.ensure_sync())
+        workers = await executor.get_available_workers()
+        ds.set_num_cores(len(workers))
+        await executor.run_function(ds.check_valid)
+        return ds
+
+    if enable_async:
+        return _init_async()
+    else:
+        ds = cls(*args, **kwargs)
+        ds = ds.initialize(executor)
+        ds.set_num_cores(len(executor.get_available_workers()))
+        executor.run_function(ds.check_valid)
+        return ds
 
 
 def register_dataset_cls(filetype, cls):

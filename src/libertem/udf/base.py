@@ -696,13 +696,16 @@ class UDFRunner:
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
-    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+    def _check_preconditions(self, dataset, roi):
         if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
             raise ValueError(
                 "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
                     roi.shape, dataset.shape.nav
                 )
             )
+
+    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+        self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,

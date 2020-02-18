@@ -599,7 +599,7 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset: DataSet, udf: UDF, roi=None):
+    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False):
         """
         Run `udf` on `dataset`.
 
@@ -612,7 +612,10 @@ class Context:
             UDF instance you want to run
 
         roi : numpy.ndarray
-            region of interest as bool mask over the navigation axes of the dataset
+            Region of interest as bool mask over the navigation axes of the dataset
+
+        progress : bool
+            Show progress bar
 
         Returns
         -------
@@ -623,8 +626,11 @@ class Context:
             a :class:`numpy.ndarray` in many cases because it implements
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
+
+        .. versionchanged:: 0.5.0.dev0
+            Added the progress parameter
         """
-        return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi)
+        return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi, progress=progress)
 
     def map(self, dataset, f, roi=None):
         '''

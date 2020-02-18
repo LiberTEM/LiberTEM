@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import Dict
 import uuid
 
+import tqdm
 import cloudpickle
 import numpy as np
 
@@ -691,7 +692,7 @@ class UDFRunner:
 
         return self._udf.results, partition
 
-    def run_for_dataset(self, dataset, executor, roi=None):
+    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
         if roi is not None:
             if np.product(roi.shape) != np.product(dataset.shape.nav):
                 raise ValueError(
@@ -710,20 +711,25 @@ class UDFRunner:
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
-        tasks = self._make_udf_tasks(dataset, roi)
+        tasks = list(self._make_udf_tasks(dataset, roi))
         cancel_id = str(uuid.uuid4())
 
         if self._debug:
-            tasks = list(tasks)
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
+        if progress:
+            t = tqdm.tqdm(total=len(tasks))
         for part_results, partition in executor.run_tasks(tasks, cancel_id):
+            if progress:
+                t.update(1)
             self._udf.set_views_for_partition(partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()
             )
 
+        if progress:
+            t.close()
         self._udf.clear_views()
 
         return self._udf.results.as_dict()

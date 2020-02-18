@@ -134,12 +134,14 @@ LiberTEM needs to know about the structure of your reduction. You can build this
 Declaring buffers
 ~~~~~~~~~~~~~~~~~
 
-These buffers can have a :code:`kind` declared, which corresponds to the two reduction patterns above:
-:code:`kind="sig"` for reducing over the navigation axes (and keeping the signal axes), and 
-:code:`kind="nav"` for reducing over the signal axes and keeping the navigation axes. There is a
-third, :code:`kind="single"`, which stores just a single value.
+These buffers can have a :code:`kind` declared, which corresponds to the two
+reduction patterns above: :code:`kind="sig"` for reducing over the navigation
+axes (and keeping the signal axes), and :code:`kind="nav"` for reducing over the
+signal axes and keeping the navigation axes. There is a third,
+:code:`kind="single"`, which allows to declare buffers with custom shapes that
+don't correspond directly to the data set's shape.
 
-It is also possible to append new axes to the end of the buffer using the
+It is also possible to append additional axes to the buffer's shape using the
 :code:`extra_shape` parameter.
 
 :meth:`~libertem.udf.UDF.get_result_buffers` should return a :code:`dict` which maps
@@ -223,7 +225,7 @@ Now to the actual core of the processing: implementing
 
    class ExampleUDF(UDF):
       def process_frame(self, frame):
-         pass
+         ...
 
 .. testcleanup:: processing
 

@@ -2,7 +2,6 @@ from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import run_blocking
 from libertem.executor.base import JobCancelledError
-# import libertem.udf.feature_vector_maker as feature
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF

@@ -45,7 +45,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         setMinDist(event.target.valueAsNumber);
     }
 
-    const [nPeaks, setNPeaks] = React.useState(50);
+    const [nPeaks, setNPeaks] = React.useState(500);
 
     const peakChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNPeaks(event.target.valueAsNumber);

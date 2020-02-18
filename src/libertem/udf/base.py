@@ -692,14 +692,17 @@ class UDFRunner:
 
         return self._udf.results, partition
 
+    def _debug_task_pickling(self, tasks):
+        if self._debug:
+            cloudpickle.loads(cloudpickle.dumps(tasks))
+
     def run_for_dataset(self, dataset, executor, roi=None, progress=False):
-        if roi is not None:
-            if np.product(roi.shape) != np.product(dataset.shape.nav):
-                raise ValueError(
-                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
-                        roi.shape, dataset.shape.nav
-                    )
+        if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
+            raise ValueError(
+                "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                    roi.shape, dataset.shape.nav
                 )
+            )
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
@@ -713,9 +716,7 @@ class UDFRunner:
 
         tasks = list(self._make_udf_tasks(dataset, roi))
         cancel_id = str(uuid.uuid4())
-
-        if self._debug:
-            cloudpickle.loads(cloudpickle.dumps(tasks))
+        self._debug_task_pickling(tasks)
 
         if progress:
             t = tqdm.tqdm(total=len(tasks))

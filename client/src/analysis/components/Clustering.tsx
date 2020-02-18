@@ -39,12 +39,6 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         y: cy,
     }
 
-    const [delta, setDelta] = React.useState(0.05);
-
-    const deltaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setDelta(event.target.valueAsNumber);
-    }
-
     const [minDist, setMinDist] = React.useState(1);
 
     const minDistChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +109,6 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
                 cy,
                 ri,
                 ro,
-                delta,
                 n_clust: nClust,
                 n_peaks: nPeaks,
                 min_dist: minDist
@@ -152,9 +145,6 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     </Accordion.Title>
             <Accordion.Content active={paramsVisible}>
                 <Form>
-                    <Form.Field>
-                        <label> Delta. Relative intensity difference for decision making for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1]) <input type="number" value={delta} step="0.01" min="0" max="2" onChange={deltaChange} /> </label>
-                    </Form.Field>
                     <Form.Field>
                         <label> Number of clusters  <input type="number" value={nClust} step="1" min="2" max="100" onChange={clustChange} /> </label>
                     </Form.Field>

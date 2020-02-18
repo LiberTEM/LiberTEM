@@ -6,9 +6,6 @@ from libertem.analysis.getroi import get_roi
 from libertem.udf.sum import SumUDF
 
 
-
-
-
 class SumResultSet(AnalysisResultSet):
     """
     Running a :class:`SumAnalysis` via :meth:`libertem.api.Context.run`

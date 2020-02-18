@@ -398,3 +398,13 @@ def test_dtypes(lt_ctx, preferred_dtype, data_dtype, expected_dtype):
     assert udf.meta.input_dtype == expected_dtype
     assert res['input_dtype'].data.dtype == expected_dtype
     assert res['dataset_dtype'].data.dtype == data_dtype
+
+
+def test_with_progress_bar(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    pixelsum = PixelsumUDF()
+    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, progress=True)
+    # TODO: maybe assert that some output happened on stderr?

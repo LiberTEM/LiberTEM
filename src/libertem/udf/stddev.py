@@ -53,6 +53,17 @@ def merge(p0, p1):
     return VariancePart(var=var_AB, sum_im=sum_im_AB, N=N)
 
 
+# Helper function to make sure the frame count
+# is consistent at the merge stage
+def _validate_n(num_frame):
+    if len(num_frame) == 0:
+        return 0
+    else:
+        values = tuple(num_frame.values())
+        assert np.all(np.equal(values, values[0]))
+        return values[0]
+
+
 class StdDevUDF(UDF):
     """
     Compute sum of variances and sum of pixels from the given dataset
@@ -92,12 +103,15 @@ class StdDevUDF(UDF):
                 kind='sig', dtype='float32'
             ),
             'num_frame': self.buffer(
-                kind='single', dtype='float32'
+                kind='single', dtype='object'
             ),
             'sum_frame': self.buffer(
                 kind='sig', dtype='float32'
             )
         }
+
+    def preprocess(self):
+        self.results.num_frame[:] = dict()
 
     def merge(self, dest, src):
         """
@@ -116,44 +130,57 @@ class StdDevUDF(UDF):
             Partial results that contains sum of variances, sum of frames, and the
             number of frames used over current iteration of partition
         """
+        N0 = _validate_n(dest['num_frame'][0])
+        N1 = _validate_n(src['num_frame'][0])
         p0 = VariancePart(var=dest['var'][:],
                         sum_im=dest['sum_frame'][:],
-                        N=dest['num_frame'][:])
+                        N=N0)
         p1 = VariancePart(var=src['var'][:],
                         sum_im=src['sum_frame'][:],
-                        N=src['num_frame'][:])
+                        N=N1)
         compute_merge = merge(p0, p1)
 
         dest['var'][:] = compute_merge.var
         dest['sum_frame'][:] = compute_merge.sum_im
-        dest['num_frame'][:] = compute_merge.N
+        for key in src['num_frame'][0]:
+            dest['num_frame'][0][key] = compute_merge.N
 
-    def process_frame(self, frame):
+    def process_tile(self, tile):
         """
         Given a frame, update sum of variances, sum of frames,
         and the number of total frames
 
         Parameters
         ----------
-        frame
-            single frame of the data
+        tile
+            tile of the data
         """
-        if self.results.num_frame == 0:
-            self.results.var[:] = 0
 
-        else:
-            p0 = VariancePart(
-                var=self.results.var,
-                sum_im=self.results.sum_frame,
-                N=self.results.num_frame
-            )
-            p1 = VariancePart(var=0, sum_im=frame, N=1)
-            compute_merge = merge(p0, p1)
+        key = self.meta.slice.discard_nav()
 
-            self.results.var[:] = compute_merge.var
+        if key not in self.results.num_frame[0]:
+            self.results.num_frame[0][key] = 0
 
-        self.results.sum_frame[:] += frame
-        self.results.num_frame[:] += 1
+        tile_sum = tile.sum(axis=0)
+
+        p0 = VariancePart(
+            var=self.results.var,
+            sum_im=self.results.sum_frame,
+            N=self.results.num_frame[0][key]
+        )
+        p1 = VariancePart(
+            # We doctor ddof to ensure the sum of variances is divided by one.
+            # That way we avoid multiplying by N again for this algorithm
+            var=np.var(tile, axis=0, ddof=tile.shape[0]-1),
+            sum_im=tile_sum,
+            N=tile.shape[0]
+        )
+        compute_merge = merge(p0, p1)
+
+        self.results.var[:] = compute_merge.var
+
+        self.results.sum_frame[:] = compute_merge.sum_im
+        self.results.num_frame[0][key] = compute_merge.N
 
 
 def run_stddev(ctx, dataset, roi=None):
@@ -188,10 +215,13 @@ def run_stddev(ctx, dataset, roi=None):
     pass_results = ctx.run_udf(dataset=dataset, udf=stddev_udf, roi=roi)
 
     pass_results = dict(pass_results.items())
-    pass_results['var'] = pass_results['var'].data/pass_results['num_frame'].data
+    num_frame = _validate_n(pass_results['num_frame'].data[0])
+
+    pass_results['var'] = pass_results['var'].data/num_frame
     pass_results['std'] = np.sqrt(pass_results['var'].data)
-    pass_results['mean'] = pass_results['sum_frame'].data/pass_results['num_frame'].data
-    pass_results['num_frame'] = pass_results['num_frame'].data
+
+    pass_results['mean'] = pass_results['sum_frame'].data/num_frame
+    pass_results['num_frame'] = num_frame
     pass_results['sum_frame'] = pass_results['sum_frame'].data
 
     return pass_results

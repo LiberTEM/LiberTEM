@@ -137,9 +137,11 @@ Pre-processing
 ---------------
 
 Pre-processing allows to initialize result buffers by implementing
-:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed after all
-buffers are allocated, but before the partition data is processed, with views set for
-the whole partition masked by the current ROI. This is particularly useful to set up
+:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed
+after all buffers are allocated, but before the data is processed. On the worker
+nodes it is executed with views set for the whole partition masked by the
+current ROI. On the central node it is executed with views set for the whole
+result masked by the ROI. This is particularly useful to set up
 :code:`dtype=object` buffers, for example ragged arrays.
 
 .. versionadded:: 0.3.0

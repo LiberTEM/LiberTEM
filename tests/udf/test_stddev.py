@@ -17,8 +17,10 @@ def test_stddev(lt_ctx):
         Context class for loading dataset and creating jobs on them
     """
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
-                            num_partitions=2, sig_dims=2)
+    # FIXME the tiling in signal dimension can only be tested once MemoryDataSet
+    # actually supports it
+    dataset = MemoryDataSet(data=data, tileshape=(3, 2, 16),
+                            num_partitions=8, sig_dims=2)
 
     res = run_stddev(lt_ctx, dataset)
 

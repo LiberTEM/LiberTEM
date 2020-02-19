@@ -170,6 +170,10 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
+    def set_view_for_dataset(self, dataset):
+        for k, buf in self._get_buffers():
+            self._views[k] = buf.get_view_for_dataset(dataset)
+
     def set_view_for_partition(self, partition):
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_partition(partition)
@@ -330,8 +334,12 @@ class UDFBase:
             ns.allocate_for_part(partition, roi)
 
     def allocate_for_full(self, dataset, roi):
-        for ns in [self.results]:
+        for ns in [self.params, self.results]:
             ns.allocate_for_full(dataset, roi)
+
+    def set_views_for_dataset(self, dataset):
+        for ns in [self.params]:
+            ns.set_view_for_dataset(dataset)
 
     def set_views_for_partition(self, partition):
         for ns in [self.params, self.results]:
@@ -704,7 +712,7 @@ class UDFRunner:
                 )
             )
 
-    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+    def _prepare_run_for_dataset(self, dataset, executor, roi):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
@@ -717,7 +725,15 @@ class UDFRunner:
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
+        if hasattr(self._udf, 'preprocess'):
+            self._udf.set_views_for_dataset(dataset)
+            self._udf.preprocess()
+
         tasks = list(self._make_udf_tasks(dataset, roi))
+        return tasks
+
+    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
@@ -739,26 +755,7 @@ class UDFRunner:
         return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
-        # FIXME: code duplication?
-        if roi is not None:
-            if np.product(roi.shape) != np.product(dataset.shape.nav):
-                raise ValueError(
-                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
-                        roi.shape, dataset.shape.nav
-                    )
-                )
-        meta = UDFMeta(
-            partition_shape=None,
-            dataset_shape=dataset.shape,
-            roi=roi,
-            dataset_dtype=dataset.dtype,
-            input_dtype=self._get_dtype(dataset.dtype)
-        )
-        self._udf.set_meta(meta)
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_full(dataset, roi)
-
-        tasks = self._make_udf_tasks(dataset, roi)
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
         async for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)

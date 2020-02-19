@@ -26,6 +26,13 @@ pattern is:
 So, you need to specify the data set type, the path, and dataset-specific
 arguments. These arguments are documented below.
 
+For most file types, it is possible to automatically detect the type and
+parameters, which you can trigger by using :code:`"auto"` as file type:
+
+.. code-block:: python
+
+   ctx.load("auto", path="/path/to/some/file")
+
 For the full list of supported file formats with links to their reference
 documentation, see :ref:`supported formats` below.
 

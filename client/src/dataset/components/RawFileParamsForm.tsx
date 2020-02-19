@@ -10,10 +10,8 @@ import { OpenFormProps } from "../types";
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     "type"
     | "path"
-    | "tileshape"
     | "scan_size"
     | "detector_size"> & {
-        tileshape: string,
         scan_size: string
         detector_size: string,
     };
@@ -76,7 +74,6 @@ export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
     mapPropsToValues: ({ initial }) => ({
         name: getInitial("name", "", initial),
         enable_direct: getInitial("enable_direct", false, initial),
-        tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         detector_size: getInitial("detector_size", "", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
         dtype: getInitial("dtype", "float32", initial),
@@ -88,7 +85,6 @@ export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
             name: values.name,
             dtype: values.dtype,
             enable_direct: values.enable_direct,
-            tileshape: parseNumList(values.tileshape),
             scan_size: parseNumList(values.scan_size),
             detector_size: parseNumList(values.detector_size),
         }

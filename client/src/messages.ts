@@ -97,7 +97,6 @@ export type DatasetParamsRaw = {
     detector_size: number[],
     enable_direct: boolean,
     scan_size: number[],
-    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsMIB = {

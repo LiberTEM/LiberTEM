@@ -210,7 +210,9 @@ class H5DataSet(DataSet):
                     {"name": "Shape", "value": str(shape)},
                     {"name": "Datatype", "value": str(dtype)},
                 ]}
-                for name, size, shape, dtype in sorted(datasets, key=lambda i: i[0])
+                for name, size, shape, dtype in sorted(
+                    datasets, key=lambda i: i[1], reverse=True
+                )
             ]
             return [
                 {"name": "dtype", "value": str(ds.dtype)},

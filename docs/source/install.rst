@@ -160,14 +160,14 @@ Or if you wish to contribute to LiberTEM, follow these steps instead :
 
 For more information about `forking a repository
 <https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
-If you have limited experience using git, consider going through following
-resources:
+For a beginner-friendly introduction to git and GitHub, consider going through
+the following resources:
 
 * This `free course <https://www.udacity.com/course/version-control-with-git--ud123>`_
   covers the essentials of using Git.
-* For practicing `pull request <https://github.com/firstcontributions/first-contributions>`_
-  for first time.
-* Sample `Workflow <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_
+* Practice `pull request <https://github.com/firstcontributions/first-contributions>`_
+  in a safe sandbox environment.
+* Sample `workflow <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_
   for contributing code.
 
 Activate the Python environment (conda or virtualenv) and change to the newly

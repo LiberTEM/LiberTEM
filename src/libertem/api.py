@@ -3,7 +3,7 @@ from typing import Union, Tuple
 
 import psutil
 import numpy as np
-from libertem.io.dataset import load, filetypes, detect
+from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob

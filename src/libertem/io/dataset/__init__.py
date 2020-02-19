@@ -19,6 +19,21 @@ filetypes = {
 }
 
 
+def _auto_load(path, executor):
+    if path is None:
+        raise DataSetException(
+            "please specify the `path` kwarg to allow auto detection"
+        )
+
+    params = detect(path, executor=executor)
+    filetype_detected = params.pop('type', None)
+    if filetype_detected is None:
+        raise DataSetException(
+            "could not determine DataSet type for file '%s'" % path,
+        )
+    return load(filetype_detected, executor=executor, **params)
+
+
 def load(filetype, executor, enable_async=False, *args, **kwargs):
     """
     Low-level method to load a dataset. Usually you will want
@@ -33,6 +48,9 @@ def load(filetype, executor, enable_async=False, *args, **kwargs):
 
     additional parameters are passed to the concrete DataSet implementation
     """
+    if filetype == "auto":
+        return _auto_load(kwargs.get('path'), executor)
+
     cls = get_dataset_cls(filetype)
 
     async def _init_async():

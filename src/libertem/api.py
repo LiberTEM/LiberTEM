@@ -62,10 +62,13 @@ class Context:
         you can load and process datasets that are bigger than your available RAM.
         Using fast storage (i.e. SSD) is advisable.
 
+        .. versionchanged:: 0.5.0.dev0
+            Added support for filetype="auto"
+
         Parameters
         ----------
         filetype : str
-            one of: %(types)s
+            one of: %(types)s or auto to automatically determine filetype and parameters
         args
             passed on to the DataSet implementation
         kwargs
@@ -90,37 +93,6 @@ class Context:
         return load(filetype, executor=self.executor, *args, **kwargs)
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
-
-    def dataset_info(self, path: str):
-        """
-        Try to detect the dataset at `path` and return some
-        diagnostics about it.
-
-        Note
-        ----
-        The information in the `diags` key is subject to change!
-
-        Parameters
-        ----------
-
-        path
-            Path to a file of the dataset you are interested in
-
-        Returns
-        -------
-        dict
-            Dictionary with keys `type`, `params` and `diags`.
-        """
-        params = detect(path, executor=self.executor)
-        ftype = params.pop('type', None)
-        if ftype is None:
-            return
-        ds = self.load(ftype, **params)
-        return {
-            'type': ftype,
-            'params': params,
-            'diags': ds.get_diagnostics(),
-        }
 
     def create_mask_job(self, factories, dataset, use_sparse=None,
                         mask_count=None, mask_dtype=None, dtype=None):

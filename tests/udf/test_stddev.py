@@ -1,12 +1,26 @@
 import pytest
 import numpy as np
 
-from libertem.udf.stddev import run_stddev
+from libertem.udf.stddev import run_stddev, tile_sum_var
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
 
+@pytest.mark.with_numba
+def test_tile_sum_var():
+    for i in range(100):
+        x = np.random.randint(1, 42)
+        y = np.random.randint(1, 42)
+        z = np.random.randint(1, 42)
+        data = _mk_random(size=(z, y, x), dtype="float32")
+        s, v = tile_sum_var(data)
+        assert np.allclose(s, np.sum(data, axis=0))
+        assert np.allclose(v, np.var(data, axis=0)*len(data))
+
+
+
+@pytest.mark.with_numba
 @pytest.mark.parametrize(
     "use_roi", [True, False]
 )

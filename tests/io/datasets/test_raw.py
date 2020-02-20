@@ -7,10 +7,13 @@ import numpy as np
 import pytest
 import warnings
 
+from libertem.udf.sum import SumUDF
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams
+from libertem.io.dataset.base import TilingScheme
+from libertem.common import Shape
 
 
 def test_simple_open(default_raw):
@@ -34,12 +37,23 @@ def test_check_valid(default_raw):
     default_raw.check_valid()
 
 
+@pytest.mark.with_numba
 def test_read(default_raw):
     partitions = default_raw.get_partitions()
     p = next(partitions)
     # FIXME: partition shape can vary by number of cores
     # assert tuple(p.shape) == (2, 16, 128, 128)
-    tiles = p.get_tiles()
+
+    tileshape = Shape(
+        (16,) + tuple(default_raw.shape.sig),
+        sig_dims=default_raw.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_raw.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
 
     # ~1MB
@@ -104,12 +118,17 @@ def test_pick_analysis(default_raw, lt_ctx, TYPE):
     assert np.count_nonzero(results[0].raw_data) > 0
 
 
+@pytest.mark.with_numba
 def test_roi_1(default_raw, lt_ctx):
     p = next(default_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
     tiles = []
-    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=Shape((1, 128, 128), sig_dims=2),
+        dataset_shape=default_raw.shape,
+    )
+    for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
     assert len(tiles) == 1
@@ -117,20 +136,32 @@ def test_roi_1(default_raw, lt_ctx):
     assert tuple(tiles[0].tile_slice.shape) == (1, 128, 128)
 
 
+@pytest.mark.with_numba
 def test_roi_2(default_raw, lt_ctx):
     p = next(default_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
-    stackheight = p._get_stackheight(sig_shape=p.meta.shape.sig, dest_dtype=np.dtype("float32"))
+    stackheight = 4
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=Shape((stackheight, 128, 128), sig_dims=2),
+        dataset_shape=default_raw.shape,
+    )
     roi[0:stackheight + 2] = 1
-    tiles = list(p.get_tiles(dest_dtype="float32", roi=roi))
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
+    tiles = list(tiles)
 
 
 def test_uint16_as_float32(uint16_raw, lt_ctx):
     p = next(uint16_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
-    stackheight = p._get_stackheight(sig_shape=p.meta.shape.sig, dest_dtype=np.dtype("float32"))
+
+    stackheight = 4
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=Shape((stackheight, 128, 128), sig_dims=2),
+        dataset_shape=uint16_raw.shape,
+    )
     roi[0:stackheight + 2] = 1
-    tiles = list(p.get_tiles(dest_dtype="float32", roi=roi))
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
+    tiles = list(tiles)
 
 
 def test_macrotile_normal(lt_ctx, default_raw):
@@ -159,6 +190,14 @@ def test_macrotile_roi_2(lt_ctx, default_raw):
     ps = default_raw.get_partitions()
     _ = next(ps)
     p2 = next(ps)
+
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=p2.shape,
+        dataset_shape=default_raw.shape,
+    )
+    p2._get_read_ranges(tiling_scheme, roi=None)
+    p2._get_read_ranges(tiling_scheme, roi=roi)
+
     macrotile = p2.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == (0, 128, 128)
 
@@ -237,11 +276,12 @@ def test_missing_detector_size(lt_ctx, default_raw):
             path=default_raw._path,
             scan_size=(16, 16),
             dtype="float32",
-            )
+        )
     assert e.match("missing 1 required argument: 'detector_size'")
 
 
-@pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Direct I/O only implemented on Linux')
+@pytest.mark.skipif(not sys.platform.startswith('linux'),
+                    reason='Direct I/O only implemented on Linux')
 def test_load_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",
@@ -252,9 +292,11 @@ def test_load_direct(lt_ctx, default_raw):
         enable_direct=True,
     )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
-@pytest.mark.skipif(sys.platform.startswith('linux'), reason='No direct IO only on non-Linux')
+
+@pytest.mark.skipif(sys.platform.startswith('linux'),
+                    reason='No direct IO only on non-Linux')
 def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
     with pytest.raises(Exception) as e:
         lt_ctx.load(
@@ -264,5 +306,13 @@ def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
             detector_size=(16, 16),
             dtype="float32",
             enable_direct=True,
-    )
+        )
     assert e.match("LiberTEM currently only supports Direct I/O on Linux")
+
+
+def test_big_endian(big_endian_raw, lt_ctx):
+    udf = SumUDF()
+    lt_ctx.run_udf(udf=udf, dataset=big_endian_raw)
+
+
+# TODO: test for dataset with more than 2 sig dims

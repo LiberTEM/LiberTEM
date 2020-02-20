@@ -1,97 +1,41 @@
-from collections import namedtuple
-
 import numpy as np
 import pytest
 
-from libertem.io.dataset.base import DataSetException
 from libertem.io.dataset import get_extensions
 from libertem.io.dataset.base import (
-    FileTree, Partition3D, _roi_to_nd_indices
+    Partition, _roi_to_nd_indices, DataSetException
 )
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.io.dataset.base import TilingScheme
 
 from utils import _mk_random
-
-FakeFile = namedtuple('FakeFile', ['start_idx', 'end_idx'])
-
-
-def mock_files(num):
-    return [
-        FakeFile(start_idx=x, end_idx=x + 8)
-        for x in range(0, num*8, 8)
-    ]
-
-
-def print_tree(tree, indent=0):
-    if tree is None:
-        return "-"
-    ret_us = f"([{tree.low}, {tree.high}] "
-    our_len = len(ret_us)
-    leh = print_tree(tree.left, indent + our_len)
-    r = print_tree(tree.right, indent + our_len)
-    s = " " * (indent + our_len)
-    ret = f"\n{s}{leh}\n{s}{r})"
-    return ret_us + ret
-
-
-def test_make_file_tree_1():
-    files = mock_files(1)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-    files = mock_files(2)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-    files = mock_files(3)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-    files = mock_files(4)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-    files = mock_files(5)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-
-def test_search():
-    files = mock_files(5)
-    tree = FileTree.make(files)
-    print(print_tree(tree))
-
-    for i in range(8):
-        assert tree.search_start(i)[1].start_idx == 0
-
-    for i in range(16, 24):
-        assert tree.search_start(i)[1].start_idx == 16
-
-    for i in range(24, 32):
-        assert tree.search_start(i)[1].start_idx == 24
-
-    for i in range(32, 40):
-        assert tree.search_start(i)[1].start_idx == 32
 
 
 def test_sweep_stackheight():
     data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        num_partitions=2,
+    )
     for stackheight in range(1, 256):
-        print("testing with stackheight", stackheight)
-        dataset = MemoryDataSet(
-            data=data.astype("<u2"),
-            tileshape=(stackheight, 16, 16),
-            num_partitions=2,
+        tileshape = Shape(
+            (stackheight,) + tuple(dataset.shape.sig),
+            sig_dims=dataset.shape.sig.dims
         )
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=tileshape,
+            dataset_shape=dataset.shape,
+        )
+        print("testing with stackheight", stackheight)
         for p in dataset.get_partitions():
-            for tile in p.get_tiles():
+            for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32"):
                 pass
 
 
 def test_num_part_larger_than_num_frames():
     shape = Shape((1, 1, 256, 256), sig_dims=2)
-    slice_iter = Partition3D.make_slices(shape=shape, num_partitions=2)
+    slice_iter = Partition.make_slices(shape=shape, num_partitions=2)
     next(slice_iter)
     with pytest.raises(StopIteration):
         next(slice_iter)
@@ -120,7 +64,7 @@ def test_roi_to_nd_indices():
 
     assert list(_roi_to_nd_indices(roi, part_slice)) == [
                 (1, 2),
-        (2, 1), (2, 2), (2, 3),
+        (2, 1), (2, 2), (2, 3),         # NOQA: E131
                 (3, 2)
     ]
 
@@ -137,13 +81,14 @@ def test_filetype_auto(hdf5, lt_ctx):
     ds = lt_ctx.load("auto", path=hdf5.filename)
     assert ds.ds_path == "data"
 
+
 def test_filetype_auto_fail_no_path(lt_ctx):
     with pytest.raises(DataSetException) as e:
-        ds = lt_ctx.load("auto")
+        lt_ctx.load("auto")
     assert e.match("please specify the `path` kwarg to allow auto detection")
 
 
 def test_filetype_auto_fail_file_does_not_exist(lt_ctx):
     with pytest.raises(DataSetException) as e:
-        ds = lt_ctx.load("auto", path="/does/not/exist/believe_me")
+        lt_ctx.load("auto", path="/does/not/exist/believe_me")
     assert e.match("could not determine DataSet type for file")

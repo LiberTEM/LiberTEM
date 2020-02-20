@@ -11,9 +11,11 @@ import numpy as np
 from libertem.io.dataset.base import DataTile, Partition
 from libertem.udf.base import Task
 from .base import BaseJob, ResultTile
-from libertem.common import Slice
+from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.common.container import MaskContainer
+from libertem.io.dataset.base import TilingScheme
+from libertem.utils.threading import set_num_threads
 
 
 log = logging.getLogger(__name__)
@@ -49,7 +51,7 @@ class ApplyMasksJob(BaseJob):
         Use :class:`libertem.udf.masks.ApplyMasksUDF` instead. See also :ref:`job deprecation`
     """
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
-                mask_dtype=None, dtype=None, *args, **kwargs):
+                mask_dtype=None, dtype=None, tiling_scheme=None, *args, **kwargs):
         '''
         use_sparse can be None, True, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
         '''
@@ -63,6 +65,7 @@ class ApplyMasksJob(BaseJob):
 
         self.dtype = dtype
         self.use_torch = use_torch
+        self._tiling_scheme = tiling_scheme
 
     def get_tasks(self):
         for idx, partition in enumerate(self.dataset.get_partitions()):
@@ -71,7 +74,8 @@ class ApplyMasksJob(BaseJob):
                 masks=self.masks,
                 use_torch=self.use_torch,
                 idx=idx,
-                dtype=self.get_result_dtype()
+                dtype=self.get_result_dtype(),
+                tiling_scheme=self._tiling_scheme,
             )
 
     def get_result_shape(self):
@@ -85,7 +89,7 @@ class ApplyMasksJob(BaseJob):
 
 
 class ApplyMasksTask(Task):
-    def __init__(self, masks, use_torch, dtype, *args, **kwargs):
+    def __init__(self, masks, use_torch, dtype, tiling_scheme, *args, **kwargs):
         """
         Parameters
         ----------
@@ -107,6 +111,7 @@ class ApplyMasksTask(Task):
         self.dtype = np.dtype(dtype)
         self.read_dtype = self._input_dtype(self.partition.dtype)
         self.mask_dtype = self._input_dtype(self.masks.dtype)
+        self.tiling_scheme = tiling_scheme
         if torch is None or self.dtype.kind != 'f' or self.read_dtype != self.mask_dtype:
             self.use_torch = False
 
@@ -166,32 +171,52 @@ class ApplyMasksTask(Task):
     def __call__(self):
         num_masks = len(self.masks)
         part = zeros_aligned((num_masks,) + tuple(self.partition.shape.nav), dtype=self.dtype)
-        for data_tile in self.partition.get_tiles(mmap=True, dest_dtype=self.read_dtype):
-            flat_data = data_tile.flat_data
-            masks = self.masks.get(data_tile, self.mask_dtype)
-            if isinstance(masks, sparse.SparseArray):
-                result = sparse.dot(flat_data, masks)
-            elif scipy.sparse.issparse(masks):
-                # This is scipy.sparse using the old matrix interface
-                # where "*" is the dot product
-                result = flat_data * masks
-            elif self.use_torch:
-                result = torch.mm(
-                    torch.from_numpy(flat_data),
-                    torch.from_numpy(masks),
-                ).numpy()
-            else:
-                result = flat_data.dot(masks)
-            dest_slice = data_tile.tile_slice.shift(self.partition.slice)
-            reshaped = self.reshaped_data(data=result, dest_slice=dest_slice)
-            # Ellipsis to match the "number of masks" part of the result
-            part[(...,) + dest_slice.get(nav_only=True)] += reshaped
-        return [
-            MaskResultTile(
-                data=part,
-                dest_slice=self.partition.slice.get(nav_only=True),
+
+        # FIXME: tileshape negotiation!
+        shape = self.partition.shape
+        tileshape = Shape(
+            (1,) + tuple(shape.sig),
+            sig_dims=shape.sig.dims
+        )
+        tiling_scheme = self.tiling_scheme
+        if tiling_scheme is None:
+            tiling_scheme = TilingScheme.make_for_shape(
+                tileshape=tileshape,
+                dataset_shape=shape,  # ...
             )
-        ]
+
+        tiles = self.partition.get_tiles(
+            tiling_scheme=tiling_scheme,
+            dest_dtype=self.read_dtype
+        )
+
+        with set_num_threads(1):
+            for data_tile in tiles:
+                flat_data = data_tile.flat_data
+                masks = self.masks.get(data_tile, self.mask_dtype)
+                if isinstance(masks, sparse.SparseArray):
+                    result = sparse.dot(flat_data, masks)
+                elif scipy.sparse.issparse(masks):
+                    # This is scipy.sparse using the old matrix interface
+                    # where "*" is the dot product
+                    result = flat_data * masks
+                elif self.use_torch:
+                    result = torch.mm(
+                        torch.from_numpy(flat_data),
+                        torch.from_numpy(masks),
+                    ).numpy()
+                else:
+                    result = flat_data.dot(masks)
+                dest_slice = data_tile.tile_slice.shift(self.partition.slice)
+                reshaped = self.reshaped_data(data=result, dest_slice=dest_slice)
+                # Ellipsis to match the "number of masks" part of the result
+                part[(...,) + dest_slice.get(nav_only=True)] += reshaped
+            return [
+                MaskResultTile(
+                    data=part,
+                    dest_slice=self.partition.slice.get(nav_only=True),
+                )
+            ]
 
 
 class MaskResultTile(ResultTile):

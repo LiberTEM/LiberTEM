@@ -3,19 +3,23 @@ import os
 import re
 import glob
 import math
-import mmap
+import typing
 import logging
 import itertools
-import contextlib
 
 import numpy as np
 import numba
+from numba.typed import List
 from ncempy.io import dm
 
 from libertem.common.buffers import zeros_aligned
-from libertem.common import Slice, Shape
+from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from .base import DataSet, Partition, DataTile, DataSetException, DataSetMeta
+from .base import (
+    DataSet, BasePartition, DataSetException, DataSetMeta,
+    FileSet, LocalFile, Decoder, make_get_read_ranges,
+    TilingScheme,
+)
 
 log = logging.getLogger(__name__)
 
@@ -53,15 +57,15 @@ class K2ISDatasetParams(MessageConverter):
         return data
 
 
-@numba.njit
+@numba.njit(inline='always')
 def decode_uint12_le(inp, out):
     """
-    decode bytes from bytestring ``inp`` as 12 bit into ``out``
+    Decode bytes from bytestring ``inp`` as 12 bit into ``out``
 
-    based partially on https://stackoverflow.com/a/45070947/540644
+    Based partially on https://stackoverflow.com/a/45070947/540644
     """
-    assert np.mod(len(inp), 3) == 0
-    assert len(out) >= len(inp) * 2 / 3
+    # assert np.mod(len(inp), 3) == 0
+    # assert len(out) >= len(inp) * 2 / 3
 
     for i in range(len(inp) // 3):
         fst_uint8 = np.uint16(inp[i * 3])
@@ -72,6 +76,104 @@ def decode_uint12_le(inp, out):
         b = (mid_uint8 & 0xF0) >> 4 | lst_uint8 << 4
         out[i * 2] = a
         out[i * 2 + 1] = b
+
+
+@numba.njit(inline='always')
+def decode_k2is(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    Decode a single block, from a single read range, into a tile that may
+    contain multiple blocks in the signal dimensions. This function is called
+    multiple times for a single tile, for all read ranges that are part of this
+    tile.
+    """
+    # blocks per tile (in signal dimensions)
+    blocks_per_tile = out.shape[1] // (930 * 16)
+    if blocks_per_tile == 1:
+        # shortcut: blockbuf not needed
+        return decode_uint12_le(inp=inp, out=out[idx])
+    # FIXME: get rid of this allocation, if possible at all
+    blockbuf = np.empty(BLOCK_SHAPE[0] * BLOCK_SHAPE[1], dtype=out.dtype)
+    n_blocks_y, n_blocks_x, block_y_i, block_x_i = rr[3:]
+    out_3d = out.reshape((out.shape[0], n_blocks_y * 930, n_blocks_x * 16))
+
+    tile_idx = idx // blocks_per_tile
+
+    decode_uint12_le(inp=inp, out=blockbuf)
+    out_3d[
+        tile_idx,
+        930 * block_y_i:930 * (block_y_i + 1),
+        16 * block_x_i:16 * (block_x_i + 1),
+    ] = blockbuf.reshape(BLOCK_SHAPE)
+
+
+class K2ISDecoder(Decoder):
+    def get_decode(self, native_dtype, read_dtype):
+        return decode_k2is
+
+
+@numba.njit(inline='always')
+def _k2is_read_ranges_tile_block(
+    slices_arr, fileset_arr, slice_sig_sizes, sig_origins,
+    inner_indices_start, inner_indices_stop, frame_indices, sig_size,
+    px_to_bytes, bpp, frame_header_bytes, frame_footer_bytes, file_idxs,
+    slice_offset, extra, sig_shape,
+):
+    result = List()
+
+    # positions in the signal dimensions:
+    for slice_idx in range(slices_arr.shape[0]):
+        # (offset, size) arrays defining what data to read (in pixels)
+        slice_origin = slices_arr[slice_idx][0]
+        slice_shape = slices_arr[slice_idx][1]
+
+        read_ranges = List()
+
+        n_blocks_y = slice_shape[0] // 930
+        n_blocks_x = slice_shape[1] // 16
+
+        origin_block_y = slice_origin[0] // 930
+        origin_block_x = slice_origin[1] // 16
+
+        # inner "depth" loop along the (flat) navigation axis of a tile:
+        for i, inner_frame_idx in enumerate(range(inner_indices_start, inner_indices_stop)):
+            inner_frame = frame_indices[inner_frame_idx]
+            frame_in_file_idx = inner_frame  # in k2is all files contain data from all frames
+
+            for block_y_i in range(n_blocks_y):
+                sector_index_y = origin_block_y + block_y_i
+                for block_x_i in range(n_blocks_x):
+                    block_index_x = origin_block_x + block_x_i
+                    sector_id = block_index_x // 16
+                    sector_index_x = block_index_x % 16
+                    # f = fileset_arr[sector_id]
+
+                    # "linear" block index per sector:
+                    blockidx = (15 - sector_index_x) + sector_index_y * 16
+                    offset = (
+                        frame_in_file_idx * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                        + blockidx * BLOCK_SIZE
+                    )
+                    start = offset + HEADER_SIZE
+                    stop = offset + HEADER_SIZE + DATA_SIZE
+                    read_ranges.append(
+                        (sector_id, start, stop,
+                         n_blocks_y, n_blocks_x,
+                         block_y_i, block_x_i)
+                    )
+
+        # the indices are compressed to the selected frames
+        compressed_slice = np.array([
+            [slice_offset + inner_indices_start] + [i for i in slice_origin],
+            [inner_indices_stop - inner_indices_start] + [i for i in slice_shape],
+        ])
+
+        result.append((slice_idx, compressed_slice, read_ranges))
+    return result
+
+
+k2is_get_read_ranges = make_get_read_ranges(
+    read_ranges_tile_block=_k2is_read_ranges_tile_block
+)
 
 
 def _pattern(path):
@@ -99,7 +201,7 @@ def _get_gtg_path(full_path):
         )
 
 
-class K2FileSet:
+class K2Syncer:
     def __init__(self, paths, start_offsets=None):
         self.paths = paths
         if start_offsets is None:
@@ -214,109 +316,6 @@ class Sector:
         while offset + BLOCK_SIZE < self.filesize:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
-
-    def read_full_frame(self, frame, buf, dtype="float32", crop_to=None):
-        # TODO: mmapping the whole file may confuse dask.distributed,
-        # if the file is large in compraison to RAM.
-        raw_data = mmap.mmap(
-            fileno=self.f.fileno(),
-            length=0,   # whole file
-            access=mmap.ACCESS_READ,
-        )
-        # FIXME: can we somehow get rid of this buffer?
-        block_buf = zeros_aligned(BLOCK_SHAPE, dtype=dtype).reshape((-1,))
-        for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
-            offset = (
-                self.first_block_offset
-                + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
-                + blockidx * BLOCK_SIZE
-            )
-            input_start = offset + HEADER_SIZE
-            input_end = offset + HEADER_SIZE + DATA_SIZE
-            block_x = 256 - (16 * (blockidx % 16 + 1))
-            block_y = 930 * (blockidx // 16)
-            decode_uint12_le(
-                inp=raw_data[input_start:input_end],
-                out=block_buf,
-            )
-            buf[:,
-                block_y:(block_y + BLOCK_SHAPE[0]),
-                block_x:(block_x + BLOCK_SHAPE[1])] = block_buf.reshape((1,) + BLOCK_SHAPE)
-
-    def read_stacked(self, start_at_frame, num_frames, stackheight=16,
-                     dtype="float32", crop_to=None):
-        """
-        Reads `stackheight` blocks into a single buffer.
-        The blocks are read from consecutive frames, always
-        from the same coordinates inside the sector of the frame.
-
-        yields DataTiles of the shape (stackheight, 930, 16)
-        (different tiles at the borders may be yielded if the stackheight doesn't evenly divide
-        the total number of frames to read)
-        """
-        tileshape = (
-            stackheight,
-        ) + BLOCK_SHAPE
-        raw_data = mmap.mmap(
-            fileno=self.f.fileno(),
-            length=0,   # whole file
-            access=mmap.ACCESS_READ,
-        )
-
-        tile_buf_full = zeros_aligned(tileshape, dtype=dtype)
-        assert DATA_SIZE % 3 == 0
-        log.debug("starting read_stacked with start_at_frame=%d, num_frames=%d, stackheight=%d",
-                  start_at_frame, num_frames, stackheight)
-        for outer_frame in range(start_at_frame, start_at_frame + num_frames, stackheight):
-            # log.debug("outer_frame=%d", outer_frame)
-            # end of the selected frame range, calculate rest of stack:
-            if start_at_frame + num_frames - outer_frame < stackheight:
-                end_frame = start_at_frame + num_frames
-                current_stackheight = end_frame - outer_frame
-                current_tileshape = (
-                    current_stackheight,
-                ) + BLOCK_SHAPE
-                tile_buf = zeros_aligned(current_tileshape, dtype=dtype)
-            else:
-                current_stackheight = stackheight
-                current_tileshape = tileshape
-                tile_buf = tile_buf_full
-            for blockidx in range(BLOCKS_PER_SECTOR_PER_FRAME):
-                start_x = (self.idx + 1) * 256 - (16 * (blockidx % 16 + 1))
-                start_y = 930 * (blockidx // 16)
-                tile_slice = Slice(
-                    origin=(
-                        outer_frame,
-                        start_y,
-                        start_x,
-                    ),
-                    shape=Shape(current_tileshape, sig_dims=self.sig_dims),
-                )
-                if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                offset = (
-                    self.first_block_offset
-                    + outer_frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
-                    + blockidx * BLOCK_SIZE
-                )
-                for frame in range(current_stackheight):
-                    block_offset = (
-                        offset + frame * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
-                    )
-                    input_start = block_offset + HEADER_SIZE
-                    input_end = block_offset + HEADER_SIZE + DATA_SIZE
-                    out = tile_buf[frame].reshape((-1,))
-                    decode_uint12_le(
-                        inp=raw_data[input_start:input_end],
-                        out=out,
-                    )
-                yield DataTile(
-                    data=tile_buf,
-                    tile_slice=tile_slice
-                )
-        raw_data.close()
 
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset
@@ -455,6 +454,40 @@ class DataBlock:
         )
 
 
+class K2FileSet(FileSet):
+    def get_for_range(self, start, stop):
+        """
+        K2 files have a different mapping than other file formats, so we need
+        to override this to not filter in navigation axis
+        """
+        return self
+
+    def get_read_ranges(
+        self, start_at_frame: int, stop_before_frame: int,
+        dtype, tiling_scheme: TilingScheme,
+        roi: typing.Union[np.ndarray, None] = None,
+    ):
+        fileset_arr = self.get_as_arr()
+        kwargs = dict(
+            start_at_frame=start_at_frame,
+            stop_before_frame=stop_before_frame,
+            roi=roi,
+            depth=tiling_scheme.depth,
+            slices_arr=tiling_scheme.slices_array,
+            fileset_arr=fileset_arr,
+            sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            bpp=np.dtype(dtype).itemsize,
+            frame_header_bytes=self._frame_header_bytes,
+            frame_footer_bytes=self._frame_footer_bytes,
+        )
+        return k2is_get_read_ranges(**kwargs)
+
+
+class K2ISFile(LocalFile):
+    def _mmap_to_array(self, raw_mmap, start, stop):
+        return np.frombuffer(raw_mmap, dtype=self._native_dtype)
+
+
 class K2ISDataSet(DataSet):
     """
     Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
@@ -473,17 +506,15 @@ class K2ISDataSet(DataSet):
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
         self._files = None
-        self._fileset = None
 
     def _do_initialize(self):
         self._files = self._get_files()
-        self._fileset = self._get_fileset()
+        self._get_syncer(do_sync=True)
         self._scan_size = self._get_scansize()
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
             raw_dtype=np.dtype("uint16"),
-            iocaps={"FULL_FRAMES", "SUBFRAME_TILES"},
         )
         return self
 
@@ -543,8 +574,8 @@ class K2ISDataSet(DataSet):
 
     def check_valid(self):
         try:
-            fs = self._get_fileset()
-            fs.sync()
+            syncer = self._get_syncer()
+            syncer.sync()
         except Exception as e:
             raise DataSetException("failed to load dataset: %s" % e) from e
         return True
@@ -556,11 +587,10 @@ class K2ISDataSet(DataSet):
         }
 
     def get_diagnostics(self):
-        p = next(self.get_partitions())
-        with p._sectors[0] as sector:
+        with self._get_syncer().sectors[0] as sector:
             est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
             first_block = next(sector.get_blocks())
-        fs_nosync = self._get_fileset(with_sync=False)
+        fs_nosync = self._get_syncer(do_sync=False)
         sector_nosync = fs_nosync.sectors[0]
         first_block_nosync = next(sector_nosync.get_blocks())
 
@@ -598,49 +628,52 @@ class K2ISDataSet(DataSet):
         self._start_offsets = [o + BLOCK_SIZE*self._skip_frames*32
                                for o in self._start_offsets]
 
-    def _get_fileset(self, with_sync=True):
-        if not with_sync:
-            return K2FileSet(self._files)
+    def _get_syncer(self, do_sync=True):
+        if not do_sync:
+            return K2Syncer(self._files)
         if self._start_offsets is None:
-            fs = K2FileSet(self._files)
-            fs.sync()
-            self._cache_first_block_offsets(fs)
+            sy = K2Syncer(self._files)
+            sy.sync()
+            self._cache_first_block_offsets(sy)
         else:
-            fs = K2FileSet(self._files, start_offsets=self._start_offsets)
-        return fs
+            sy = K2Syncer(self._files, start_offsets=self._start_offsets)
+        return sy
+
+    def _get_fileset(self, with_sync=True):
+        sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+        num_frames = int(np.prod(self._get_scansize()))
+        files = [
+            K2ISFile(
+                path=path,
+                start_idx=0,
+                end_idx=num_frames,
+                native_dtype=np.uint8,
+                sig_shape=sig_shape,
+                file_header=offset,
+            )
+            for path, offset in zip(self._files, self._start_offsets)
+        ]
+        return K2FileSet(files=files)
 
     def _get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
-        size = sum(sector.filesize
-                   for sector in self._fileset.sectors)
-        # let's try to aim for 512MB per partition
-        res = max(self._cores, size // (512*1024*1024))
+        # let's try to aim for 512MB (converted float data) per partition
+        partition_size_px = 512 * 1024 * 1024 // 4
+        total_size_px = np.prod(self.shape)
+        res = max(self._cores, total_size_px // partition_size_px)
         return res
 
     def get_partitions(self):
-        fs = self._fileset
-        num_frames = self.shape.nav.size
-        f_per_part = num_frames // self._get_num_partitions()
-
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
-            part_slice = Slice(
-                origin=(
-                    start, 0, 0,
-                ),
-                shape=Shape(((stop - start), SECTOR_SIZE[0], SECTOR_SIZE[1] * NUM_SECTORS),
-                            sig_dims=2)
-            )
+        fileset = self._get_fileset()
+        for part_slice, start, stop in K2ISPartition.make_slices(
+                shape=self.shape,
+                num_partitions=self._get_num_partitions()):
             yield K2ISPartition(
                 meta=self._meta,
+                fileset=fileset.get_for_range(start, stop),
                 partition_slice=part_slice,
-                sectors=fs.sectors,
                 start_frame=start,
                 num_frames=stop - start,
             )
@@ -651,98 +684,18 @@ class K2ISDataSet(DataSet):
         )
 
 
-class K2ISPartition(Partition):
-    def __init__(self, sectors, start_frame, num_frames, *args, **kwargs):
-        self._sectors = sectors
-        self._start_frame = start_frame
-        self._num_frames = num_frames
-        super().__init__(*args, **kwargs)
+class K2ISPartition(BasePartition):
+    def _get_decoder(self):
+        return K2ISDecoder()
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None, target_size=None):
-        if roi is not None:
-            # FIXME: implement roi for _read_stacked; forcing full_frames=True is suboptimal
-            # for performance reasons.
-            full_frames = True
-        if full_frames:
-            yield from self._read_full_frames(crop_to=crop_to, dest_dtype=dest_dtype, roi=roi)
-        else:
-            yield from self._read_stacked(crop_to=crop_to, dtype=dest_dtype, roi=roi)
+    def validate_tiling_scheme(self, tiling_scheme):
+        a = len(tiling_scheme.shape) == 3
+        b = tiling_scheme.shape[1] % 930 == 0
+        c = tiling_scheme.shape[2] % 16 == 0
+        if not (a and b and c):
+            raise ValueError(
+                "Invalid tiling scheme: needs to be aligned to blocksize (930, 16)"
+            )
 
-    def get_macrotile(self, mmap=False, dest_dtype="float32", roi=None):
-        '''
-        Return a single tile for the entire partition.
-
-        This is useful to support process_partiton() in UDFs and to construct dask arrays
-        from datasets.
-        '''
-        num_frames = self._num_frames
-        if roi is not None:
-            start_frame = self._start_frame
-            roi = roi.reshape((-1,))
-            num_frames = np.count_nonzero(roi[start_frame:start_frame+num_frames])
-        buf = zeros_aligned((num_frames, 1860, 2048), dtype=dest_dtype)
-        for index, t in enumerate(self._read_full_frames(dest_dtype=dest_dtype, roi=roi)):
-            buf[index] = t.data
-
-        tile_slice = Slice(
-            origin=(self._start_frame, 0, 0),
-            shape=Shape(buf.shape, sig_dims=2),
-        )
-
-        return DataTile(
-            data=buf,
-            tile_slice=tile_slice
-        )
-
-    def _read_full_frames(self, crop_to=None, dest_dtype="float32", roi=None):
-        with contextlib.ExitStack() as stack:
-            frame_buf = zeros_aligned((1, 1860, 2048), dtype=dest_dtype)
-            open_sectors = [
-                stack.enter_context(sector)
-                for sector in self._sectors
-            ]
-            frame_offset = 0
-            if roi is not None:
-                roi = roi.reshape((-1,))
-                frame_offset = np.count_nonzero(roi[:self._start_frame])
-            frames_read = 0
-            for frame in range(self._start_frame, self._start_frame + self._num_frames):
-                if roi is not None and not roi[frame]:
-                    continue
-                origin = frame
-                if roi is not None:
-                    origin = frame_offset + frames_read
-                tile_slice = Slice(
-                    origin=(origin, 0, 0),
-                    shape=Shape(frame_buf.shape, sig_dims=2),
-                )
-                if crop_to is not None:
-                    intersection = tile_slice.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                for s in open_sectors:
-                    s.read_full_frame(
-                        frame=frame,
-                        buf=frame_buf[:, :, s.idx * SECTOR_SIZE[1]:(s.idx + 1) * SECTOR_SIZE[1]]
-                    )
-                yield DataTile(
-                    data=frame_buf,
-                    tile_slice=tile_slice
-                )
-                frames_read += 1
-
-    def _read_stacked(self, crop_to=None, dtype="float32", roi=None):
-        for sector in self._sectors:
-            with sector as s:
-                yield from s.read_stacked(
-                    start_at_frame=self._start_frame,
-                    num_frames=self._num_frames,
-                    crop_to=crop_to,
-                    dtype=dtype,
-                )
-
-    def __repr__(self):
-        return "<K2ISPartition: start_frame=%d, num_frames=%d>" % (
-            self._start_frame, self._num_frames,
-        )
+    def get_base_shape(self):
+        return (1, 930, 16)

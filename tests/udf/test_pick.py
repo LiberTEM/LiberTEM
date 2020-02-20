@@ -8,9 +8,12 @@ from utils import _mk_random
 
 def test_pick(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(3, 7, 7),
+    # data = np.ones((16, 16, 16, 16), dtype="float32")
+    # data = np.arange(0, 16*16*16*16, dtype="float32").reshape((16, 16, 16, 16))
+    dataset = MemoryDataSet(data=data, tileshape=(3, 7, 16),
                             num_partitions=7, sig_dims=2)
     roi = np.random.choice([True, False], size=dataset.shape.nav)
+    roi[0] = True
 
     udf = PickUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)

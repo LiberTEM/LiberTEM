@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 import numba
 
@@ -229,7 +231,7 @@ class StdDevUDF(UDF):
 
     def get_task_data(self):
         return {
-            'num_frames': dict()
+            'num_frames': defaultdict(lambda: 0)
         }
 
     def postprocess(self):
@@ -275,11 +277,7 @@ class StdDevUDF(UDF):
             tile of the data
         """
 
-        key = self.meta.slice.discard_nav()
-
-        if key not in self.task_data.num_frames:
-            self.task_data.num_frames[key] = 0
-
+        key = tile.scheme_idx
         n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 

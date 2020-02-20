@@ -1,18 +1,25 @@
 import mmap
 import math
+from contextlib import contextmanager
+import collections
+
 import numpy as np
 
 
-def _alloc_aligned(size):
-    # round up to 4k blocks:
-    blocksize = 4096
+def _alloc_aligned(size, blocksize=4096):
+    # round up to (default 4k) blocks:
     blocks = math.ceil(size / blocksize)
 
     # flags are by default MAP_SHARED, which has to be set
     # to prevent possible corruption (see open(2)). If you
     # are adding flags here, make sure to include MAP_SHARED
     # (and check for windows compat)
-    return mmap.mmap(-1, blocksize * blocks)
+    buf = mmap.mmap(-1, blocksize * blocks)
+
+    if hasattr(buf, 'madvise'):
+        buf.madvise(mmap.MADV_WILLNEED)
+
+    return buf
 
 
 def bytes_aligned(size):
@@ -73,6 +80,43 @@ def slice_to_tuple(sl: slice):
 
 def tuple_to_slice(tup: tuple):
     return slice(tup[0], tup[1], tup[2])
+
+
+class BufferPool:
+    """
+    allocation pool for explicitly re-using (aligned) allocations
+    """
+    def __init__(self):
+        self._buffers = collections.defaultdict(lambda: [])
+
+    @contextmanager
+    def zeros(self, size, dtype):
+        if dtype == np.object or np.product(size) == 0:
+            yield np.zeros(size, dtype=dtype)
+        else:
+            with self.empty(size, dtype) as res:
+                res[:] = 0
+                yield res
+
+    @contextmanager
+    def empty(self, size, dtype):
+        size_flat = np.product(size)
+        dtype = np.dtype(dtype)
+        with self.bytes(dtype.itemsize * size_flat) as buf:
+            # self.bytes may give us more memory (for alignment reasons), so
+            # crop it off the end:
+            npbuf = np.frombuffer(buf, dtype=dtype)[:size_flat]
+            yield npbuf.reshape(size)
+
+    @contextmanager
+    def bytes(self, size):
+        buffers = self._buffers[size]
+        try:
+            buf = buffers.pop()
+        except IndexError:
+            buf = _alloc_aligned(size, blocksize=2*2**20)
+        yield buf
+        self._buffers[size].insert(0, buf)
 
 
 class BufferWrapper(object):

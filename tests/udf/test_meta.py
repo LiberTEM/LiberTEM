@@ -1,7 +1,6 @@
 import numpy as np
 
 from libertem.udf import UDF
-from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
@@ -66,7 +65,6 @@ def test_partition(lt_ctx):
     dataset = lt_ctx.load(
         "memory",
         data=data,
-        tileshape=(7, 16, 16),
         num_partitions=2,
         sig_dims=2
     )

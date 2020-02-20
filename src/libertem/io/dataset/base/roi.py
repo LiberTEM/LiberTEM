@@ -1,8 +1,10 @@
+import numba
 import numpy as np
 
 from libertem.common import Slice
 
 
+@numba.njit
 def _roi_to_indices(roi, start, stop):
     """
     Helper function to calculate indices from roi mask. Indices
@@ -18,19 +20,13 @@ def _roi_to_indices(roi, start, stop):
         can for example be the start frame index of a partition
 
     stop : int
-        stop frame index, relative to dataset start
+        stop before this frame index, relative to dataset start
         can for example be the stop frame index of a partition
     """
     roi = roi.reshape((-1,))
-    frames_in_roi = np.count_nonzero(roi)
-    total = 0
-    for flag, idx in zip(roi[start:stop], range(start, stop)):
-        if flag:
-            yield idx
-            # early exit: we know we don't have more frames in the roi
-            total += 1
-            if total == frames_in_roi:
-                break
+    part_roi = roi[start:stop]
+    indices = np.arange(start, stop)
+    return indices[part_roi]
 
 
 def _roi_to_nd_indices(roi, part_slice: Slice):

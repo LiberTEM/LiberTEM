@@ -24,8 +24,9 @@ def test_write_handle(tmpdir_factory):
     )
     tile_data = np.random.randn(3, 64, 64).astype("float32")
     tile = DataTile(
-        data=tile_data,
+        tile_data,
         tile_slice=tile_slice,
+        scheme_idx=0,
     )
 
     wh = WriteHandle(full_path, datadir, part_slice, dtype='float32')
@@ -69,8 +70,9 @@ def test_write_handle_aborted(tmpdir_factory):
     )
     tile_data = np.random.randn(3, 64, 64).astype("float32")
     tile = DataTile(
-        data=tile_data,
+        tile_data,
         tile_slice=tile_slice,
+        scheme_idx=0,
     )
 
     wh = WriteHandle(full_path, datadir, part_slice, dtype='float32')
@@ -108,8 +110,9 @@ def test_write_handle_exception(tmpdir_factory):
     )
     tile_data = np.random.randn(3, 64, 64).astype("float32")
     tile = DataTile(
-        data=tile_data,
+        tile_data,
         tile_slice=tile_slice,
+        scheme_idx=0,
     )
 
     wh = WriteHandle(full_path, datadir, part_slice, dtype='float32')

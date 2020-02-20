@@ -68,7 +68,7 @@ class Shape(object):
     @property
     def size(self):
         """
-        Nunmber of elements covered by this shape
+        Number of elements covered by this shape
 
         Examples
         --------

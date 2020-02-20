@@ -1,5 +1,6 @@
 from types import MappingProxyType
 from typing import Dict
+import logging
 import uuid
 
 import tqdm
@@ -9,6 +10,10 @@ import numpy as np
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
+from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
+
+
+log = logging.getLogger(__name__)
 
 
 class UDFMeta:
@@ -20,11 +25,14 @@ class UDFMeta:
         Added distinction of dataset_dtype and input_dtype
     """
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
-                 dataset_dtype: np.dtype, input_dtype: np.dtype):
+                 dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
+                 tiling_index: int = 0):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
         self._input_dtype = input_dtype
+        self._tiling_scheme = tiling_scheme
+        self._tiling_index = tiling_index
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -56,6 +64,13 @@ class UDFMeta:
         Shape : The original shape of the whole dataset, not influenced by the ROI
         """
         return self._dataset_shape
+
+    @property
+    def tiling_scheme(self) -> Shape:
+        """
+        TilingScheme : the tiling scheme that was negotiated
+        """
+        return self._tiling_scheme
 
     @property
     def roi(self) -> np.ndarray:
@@ -409,6 +424,10 @@ class UDF(UDFBase):
     by overriding methods on this class.
     """
     USE_NATIVE_DTYPE = np.bool
+    TILE_SIZE_BEST_FIT = object()
+    TILE_SIZE_MAX = np.float("inf")
+    TILE_DEPTH_DEFAULT = object()
+    TILE_DEPTH_MAX = np.float("inf")
 
     def __init__(self, **kwargs):
         """
@@ -586,6 +605,12 @@ class UDF(UDFBase):
         '''
         return np.float32
 
+    def get_tiling_preferences(self):
+        return {
+            "depth": UDF.TILE_DEPTH_DEFAULT,
+            "total_size": UDF.TILE_SIZE_MAX,
+        }
+
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
@@ -664,7 +689,7 @@ class Task(object):
 
 
 class UDFTask(Task):
-    def __init__(self, partition, idx, udf, roi):
+    def __init__(self, partition: Partition, idx, udf, roi):
         super().__init__(partition=partition, idx=idx)
         self._roi = roi
         self._udf = udf
@@ -681,7 +706,7 @@ class UDFRunner:
     def _get_dtype(self, dtype):
         return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
 
-    def run_for_partition(self, partition, roi):
+    def run_for_partition(self, partition: Partition, roi):
         with set_num_threads(1):
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(
@@ -690,6 +715,7 @@ class UDFRunner:
                 roi=roi,
                 dataset_dtype=partition.dtype,
                 input_dtype=dtype,
+                tiling_scheme=None,
             )
             self._udf.set_meta(meta)
             self._udf.init_result_buffers()
@@ -699,21 +725,39 @@ class UDFRunner:
                 self._udf.clear_views()
                 self._udf.preprocess()
             method = self._udf.get_method()
-            if method == 'tile':
-                tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype, mmap=True)
-            elif method == 'frame':
-                tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype, mmap=True)
-            elif method == 'partition':
-                tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype, mmap=True)]
+            neg = Negotiator()
+            tiling_scheme = neg.get_scheme(
+                udf=self._udf,
+                partition=partition,
+                read_dtype=dtype,
+                roi=roi,
+            )
+
+            # FIXME: don't fully re-create?
+            meta = UDFMeta(
+                partition_shape=partition.slice.adjust_for_roi(roi).shape,
+                dataset_shape=partition.meta.shape,
+                roi=roi,
+                dataset_dtype=partition.dtype,
+                input_dtype=dtype,
+                tiling_scheme=tiling_scheme,
+            )
+            self._udf.set_meta(meta)
+            # print("UDF TilingScheme: %r" % tiling_scheme.shape)
+
+            tiles = partition.get_tiles(
+                tiling_scheme=tiling_scheme,
+                roi=roi, dest_dtype=dtype
+            )
 
             for tile in tiles:
                 if method == 'tile':
                     self._udf.set_contiguous_views_for_tile(partition, tile)
                     self._udf.set_slice(tile.tile_slice)
-                    self._udf.process_tile(tile.data)
+                    self._udf.process_tile(tile)
                 elif method == 'frame':
                     tile_slice = tile.tile_slice
-                    for frame_idx, frame in enumerate(tile.data):
+                    for frame_idx, frame in enumerate(tile):
                         frame_slice = Slice(
                             origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
                             shape=Shape((1,) + tuple(tile_slice.shape)[1:],
@@ -725,7 +769,7 @@ class UDFRunner:
                 elif method == 'partition':
                     self._udf.set_views_for_tile(partition, tile)
                     self._udf.set_slice(partition.slice)
-                    self._udf.process_partition(tile.data)
+                    self._udf.process_partition(tile)
             self._udf.flush()
             if hasattr(self._udf, 'postprocess'):
                 self._udf.clear_views()
@@ -750,7 +794,7 @@ class UDFRunner:
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
-    def _check_preconditions(self, dataset, roi):
+    def _check_preconditions(self, dataset: DataSet, roi):
         if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
             raise ValueError(
                 "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
@@ -758,14 +802,14 @@ class UDFRunner:
                 )
             )
 
-    def _prepare_run_for_dataset(self, dataset, executor, roi):
+    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
             dataset_dtype=dataset.dtype,
-            input_dtype=self._get_dtype(dataset.dtype)
+            input_dtype=self._get_dtype(dataset.dtype),
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()
@@ -778,7 +822,7 @@ class UDFRunner:
         tasks = list(self._make_udf_tasks(dataset, roi))
         return tasks
 
-    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+    def run_for_dataset(self, dataset: DataSet, executor, roi=None, progress=False):
         tasks = self._prepare_run_for_dataset(dataset, executor, roi)
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
@@ -800,7 +844,7 @@ class UDFRunner:
 
         return self._udf.results.as_dict()
 
-    async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
+    async def run_for_dataset_async(self, dataset: DataSet, executor, cancel_id, roi=None):
         tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
@@ -816,10 +860,10 @@ class UDFRunner:
             self._udf.clear_views()
             yield self._udf.results.as_dict()
 
-    def _roi_for_partition(self, roi, partition):
+    def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
-    def _make_udf_tasks(self, dataset, roi):
+    def _make_udf_tasks(self, dataset: DataSet, roi):
         for idx, partition in enumerate(dataset.get_partitions()):
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)

@@ -15,6 +15,12 @@ def test_dask_array():
         num_partitions=2,
     )
     (da, workers) = make_dask_array(dataset)
-    assert np.allclose(da, data)
-    assert np.allclose(da.sum().compute(workers=workers), data.sum())
+    assert np.allclose(
+        da.compute(workers=workers, scheduler='single-threaded'),
+        data
+    )
+    assert np.allclose(
+        da.sum().compute(workers=workers, scheduler='single-threaded'),
+        data.sum()
+    )
     assert da.shape == data.shape

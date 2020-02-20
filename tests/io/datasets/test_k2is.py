@@ -11,8 +11,10 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
+from libertem.io.dataset.base import TilingScheme
+from libertem.common import Shape
 
-K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..',
+K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                                   'data', 'Capture52', 'Capture52_.gtg')
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
 
@@ -45,18 +47,27 @@ def test_check_valid(default_k2is):
 
 
 def test_sync(default_k2is):
-    p = next(default_k2is.get_partitions())
-    with p._sectors[0] as sector:
+    with default_k2is._get_syncer().sectors[0] as sector:
         first_block = next(sector.get_blocks())
-    assert first_block.header['frame_id'] == 60
+    assert first_block.header['frame_id'] == 59
 
 
 def test_read(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
     # NOTE: partition shape may change in the future
-    assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
-    tiles = p.get_tiles()
+    assert tuple(p.shape) == (36, 2 * 930, 8 * 256)
+
+    tileshape = Shape(
+        (16, 930, 16),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     # we get 3D tiles here, because K2IS partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
@@ -66,8 +77,18 @@ def test_read_full_frames(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
     # NOTE: partition shape may change in the future
-    assert tuple(p.shape) == (74, 2 * 930, 8 * 256)
-    tiles = p.get_tiles(full_frames=True)
+    assert tuple(p.shape) == (36, 2 * 930, 8 * 256)
+
+    tileshape = Shape(
+        (1, 1860, 2048),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (1, 1860, 2048)
     assert tuple(t.tile_slice.origin) == (0, 0, 0)
@@ -76,11 +97,40 @@ def test_read_full_frames(default_k2is):
         assert t.tile_slice.origin[0] < p.shape[0]
 
 
+def test_read_invalid_tileshape(default_k2is):
+    partitions = default_k2is.get_partitions()
+    p = next(partitions)
+
+    tileshape = Shape(
+        (1, 930, 10),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    with pytest.raises(ValueError):
+        next(p.get_tiles(tiling_scheme=tiling_scheme))
+
+
 @pytest.mark.slow
 def test_apply_mask_job(default_k2is, lt_ctx):
     mask = np.ones((1860, 2048))
 
-    job = ApplyMasksJob(dataset=default_k2is, mask_factories=[lambda: mask])
+    tileshape = Shape(
+        (16, 930, 16),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    job = ApplyMasksJob(
+        dataset=default_k2is, mask_factories=[lambda: mask],
+        tiling_scheme=tiling_scheme,
+    )
     out = job.get_result_buffer()
 
     executor = InlineJobExecutor()
@@ -136,7 +186,7 @@ def test_dataset_is_picklable(default_k2is):
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 2 * 1024
+    assert len(pickled) < 4 * 1024
 
 
 def test_partition_is_picklable(default_k2is):
@@ -144,7 +194,7 @@ def test_partition_is_picklable(default_k2is):
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
-    assert len(pickled) < 2 * 1024
+    assert len(pickled) < 4 * 1024
 
 
 def test_get_diags(default_k2is):
@@ -179,6 +229,7 @@ class PixelsumUDF(UDF):
         self.results.pixelsum[:] = np.sum(frame)
 
 
+@pytest.mark.with_numba
 def test_udf_roi(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
@@ -192,10 +243,20 @@ def test_roi(lt_ctx, default_k2is):
     roi = np.zeros(p.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
     tiles = []
-    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+
+    tileshape = Shape(
+        (16, 930, 16),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    for tile in p.get_tiles(dest_dtype="float32", roi=roi, tiling_scheme=tiling_scheme):
         print("tile:", tile)
         tiles.append(tile)
-    assert len(tiles) == 1
+    assert len(tiles) == 2*8*16
 
 
 def test_macrotile_normal(lt_ctx, default_k2is):

@@ -78,3 +78,22 @@ If the problem is only reproducible using the default executor, you will have to
 `debugging instructions of dask-distributed <https://docs.dask.org/en/latest/debugging.html>`_.
 As the API server can't use the synchronous :class:`~libertem.executor.inline.InlineJobExecutor`,
 this is also the case when debugging problems that only occur in context of the API server.
+
+Debugging failing test cases
+----------------------------
+
+When a test case fails, there are some options to find the root cause:
+
+The :code:`--pdb` command line switch of pytest can be used to automatically
+drop you into a PDB prompt in the failing test case, where you will either land
+on the failing :code:`assert` statement, or the place in the code where an
+exception was raised.
+
+This does not help if the test case only fails in CI. Here, it may be easier to
+use logging. Because we call pytest with the :code:`--log-level=DEBUG`
+parameter, the failing test case output will have a section containing the
+captured logging output.
+
+You can sprinkle the code with `log.debug(...)` calls that output the relevant
+variables. In some cases you may also leave the logging statements in the code
+even after the problem is fixed, depending on the overhead.

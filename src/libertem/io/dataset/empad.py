@@ -1,12 +1,11 @@
 import os
-import mmap
 from xml.dom import minidom
 
 import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from .base import DataSet, DataSetException, DataSetMeta, Partition3D
+from .base import DataSet, DataSetException, DataSetMeta, BasePartition
 from .raw import RawFile, RawFileSet
 
 
@@ -49,46 +48,12 @@ class EMPADDatasetParams(MessageConverter):
         return data
 
 
-class EMPADFile(RawFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._frame_size = int(np.product(EMPAD_DETECTOR_SIZE_RAW)) * int(
-            self._dtype.itemsize)
-
-    def readinto(self, start, stop, out, crop_to=None):
-        """
-        readinto copying from mmap, used for cropping off extra data
-        (mmap should be preferred for EMPAD data!)
-        """
-        arr = self.mmap()[start:stop]
-        if crop_to is not None:
-            arr = arr[(...,) + crop_to.get(sig_only=True)]
-        out[:] = arr
-
-    def open(self):
-        """
-        open file and create memory map
-        """
-        f = open(self._path, "rb")
-        self._file = f
-        raw_data = mmap.mmap(
-            fileno=f.fileno(),
-            length=self.num_frames * self._frame_size,
-            offset=self.start_idx * self.num_frames,
-            access=mmap.ACCESS_READ,
-        )
-        self._mmap = np.frombuffer(raw_data, dtype=self._dtype).reshape(
-            (self.num_frames,) + EMPAD_DETECTOR_SIZE_RAW
-        )[..., :128, :]
-
-    def close(self):
-        self._file.close()
-        self._file = None
-        self._mmap = None
-
-
 class EMPADFileSet(RawFileSet):
-    pass
+    def __init__(self, *args, **kwargs):
+        kwargs.update({
+            "frame_footer_bytes": 2*128*4,
+        })
+        super().__init__(*args, **kwargs)
 
 
 class EMPADDataSet(DataSet):
@@ -157,7 +122,6 @@ class EMPADDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
             raw_dtype=np.dtype("float32"),
-            iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         return self
 
@@ -202,17 +166,14 @@ class EMPADDataSet(DataSet):
         return self._meta.shape
 
     def _get_fileset(self):
-        frame_shape = tuple(self._meta.shape.sig)
         num_frames = self._meta.shape.flatten_nav()[0]
         return EMPADFileSet([
-            EMPADFile(
+            RawFile(
                 path=self._path_raw,
-                num_frames=num_frames,
-                frame_shape=frame_shape,
-                enable_direct=False,
-                enable_mmap=True,
-                dtype=self._meta.raw_dtype,
                 start_idx=0,
+                end_idx=num_frames,
+                sig_shape=self.shape.sig,
+                native_dtype=self._meta.raw_dtype,
             )
         ])
 
@@ -226,10 +187,9 @@ class EMPADDataSet(DataSet):
                 raise DataSetException("invalid filesize; expected %d, got %d" % (
                     expected_filesize, self._filesize
                 ))
-            # try to read from the file:
-            p = next(self.get_partitions())
-            next(p.get_tiles())
-            return True
+            fileset = self._get_fileset()
+            with fileset:
+                return True
         except (IOError, OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
@@ -248,15 +208,15 @@ class EMPADDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in Partition3D.make_slices(
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield BasePartition(
                 meta=self._meta,
                 fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
-                num_frames=int(stop - start),
+                num_frames=stop - start,
             )
 
     def __repr__(self):

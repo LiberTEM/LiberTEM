@@ -5,7 +5,7 @@ from collections import defaultdict
 import numpy as np
 
 from .base import (
-    DataSet, Partition3D, DataSetMeta, DataSetException,
+    DataSet, BasePartition, DataSetMeta, DataSetException,
     WritablePartition, WritableDataSet
 )
 from .raw import RawFile, RawFileSet
@@ -38,26 +38,17 @@ class ClusterDataSet(WritableDataSet, DataSet):
         Absolute filesystem base path, pointing to an existing directory.
         Assumes a uniform setup (same absolute path used on all nodes)
 
-    enable_direct : bool
-        Enable direct I/O for reading. This bypasses the filesystem cache and is useful for
-        systems with very fast I/O and for data sets that are much larger than the
-        main memory. Support for direct I/O writing TODO.
-
     structure : PartitionStructure
         Partitioning structure instance. Must be specified when creating a new dataset.
     """
-    def __init__(self, path, structure=None, enable_direct=False):
+    def __init__(self, path, structure=None):
         self._path = path
         self._dtype = structure.dtype
         self._structure = structure
-        self._enable_direct = enable_direct
         self._meta = DataSetMeta(
             shape=structure.shape,
             raw_dtype=np.dtype(structure.dtype),
-            iocaps={"DIRECT", "MMAP", "FULL_FRAMES"},
         )
-        if enable_direct:
-            self._meta.iocaps.remove("MMAP")
         self._executor = None
 
     def initialize(self, executor):
@@ -82,16 +73,13 @@ class ClusterDataSet(WritableDataSet, DataSet):
         return self
 
     def _get_fileset(self):
-        frame_shape = tuple(self._meta.shape.sig)
         return RawFileSet([
             RawFile(
                 path=self._get_path_for_idx(idx),
-                num_frames=end_idx - start_idx,
-                frame_shape=frame_shape,
-                enable_direct=self._enable_direct,
-                enable_mmap=not self._enable_direct,
-                dtype=self._meta.raw_dtype,
                 start_idx=start_idx,
+                end_idx=end_idx,
+                sig_shape=self.shape.sig,
+                native_dtype=self._meta.raw_dtype,
             )
             for (idx, (start_idx, end_idx)) in enumerate(self._structure.slices)
         ])
@@ -164,7 +152,6 @@ class ClusterDataSet(WritableDataSet, DataSet):
             )
             yield ClusterDSPartition(
                 path=self._get_path_for_idx(idx),
-                stackheight=None,
                 meta=self._meta,
                 fileset=fileset,
                 partition_slice=part_slice,
@@ -205,7 +192,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
         return result
 
 
-class ClusterDSPartition(WritablePartition, Partition3D):
+class ClusterDSPartition(WritablePartition, BasePartition):
     def __init__(self, path, workers, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._path = path

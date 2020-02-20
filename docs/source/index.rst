@@ -40,6 +40,7 @@ Documentation
    authorship
    citing
    acknowledgments
+   dev/how-io-works
 
 Indices and tables
 ------------------

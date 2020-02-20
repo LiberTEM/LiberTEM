@@ -8,7 +8,7 @@ import pytest
 from libertem.io.dataset.dm import DMDataSet
 
 
-DM_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'dm')
+DM_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="need .dm4 testdata")  # NOQA
@@ -53,7 +53,7 @@ def test_detect_2(lt_ctx):
     assert DMDataSet.detect_params(
         path="nofile.someext",
         executor=lt_ctx.executor,
-    )["parameters"] is False
+    ) is False
 
 
 def test_same_offset(lt_ctx):

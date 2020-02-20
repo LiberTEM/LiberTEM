@@ -39,34 +39,80 @@ def merge(N0, sum_im0, var0, N1, sum_im1, var1):
 
     shape = sum_im0.shape
 
-    sum_im0 = sum_im0.flatten()
-    sum_im1 = sum_im1.flatten()
-    var0 = var0.flatten()
-    var1 = var1.flatten()
+    sum_im0_ = sum_im0.flatten()
+    sum_im1_ = sum_im1.flatten()
+    sum_im_AB = np.zeros_like(sum_im0_)
+    var0_ = var0.flatten()
+    var1_ = var1.flatten()
+    var_AB = np.zeros_like(var0_)
+
+    le = len(sum_im0_)
+    BLOCKSIZE = 16
+    n_blocks = le // BLOCKSIZE
+
+    def _merge(sum_im0, var0, sum_im1, var1):
+        # compute mean for each partitions
+        mean_A = sum_im0 / N0
+        mean_B = sum_im1 / N1
+
+        # compute mean for joint samples
+        delta = mean_B - mean_A
+        mean = mean_A + (N1 * delta) / N
+
+        # compute sum of images for joint samples
+        sum_im_AB = sum_im0 + sum_im1
+
+        # compute sum of variances for joint samples
+        delta_P = mean_B - mean
+        var_AB = var0 + var1 + (N1 * delta * delta_P)
+        return sum_im_AB, var_AB
+
+    for block in range(n_blocks):
+        for i in range(block*BLOCKSIZE, (block+1)*BLOCKSIZE):
+            sum_im_AB[i], var_AB[i] = _merge(
+                sum_im0_[i], var0_[i], sum_im1_[i], var1_[i]
+            )
+    for i in range(n_blocks*BLOCKSIZE, le):
+        sum_im_AB[i], var_AB[i] = _merge(
+            sum_im0_[i], var0_[i], sum_im1_[i], var1_[i]
+        )
+
+    return N, sum_im_AB.reshape(shape), var_AB.reshape(shape)
 
 
-    # compute mean for each partitions
-    mean_A = sum_im0 / N0
-    mean_B = sum_im1 / N1
-
-    # compute mean for joint samples
-    delta = mean_B - mean_A
-    mean = mean_A + (N1 * delta) / N
-
-    # compute sum of images for joint samples
-    sum_im_AB = sum_im0 + sum_im1
-
-    # compute sum of variances for joint samples
-    delta_P = mean_B - mean
-    var_AB = var0 + var1 + (N1 * delta * delta_P)
-
-    return N, sum_im_AB, var_AB
-
-
+@numba.njit
 def tile_sum_var(tile):
-    s = np.sum(tile, axis=0)
-    v = np.var(tile, axis=0, ddof=tile.shape[0]-1)
-    return s, v
+    BLOCKSIZE = 16
+    shape = tile.shape[1:]
+    N = tile.shape[0]
+    # Flatten signal dimension
+    tile_ = tile.reshape((N, -1))
+    le = tile_.shape[1]
+    s = np.zeros(le, dtype=tile_.dtype)
+    v = np.zeros(le, dtype=tile_.dtype)
+
+    n_blocks = le // BLOCKSIZE
+
+    means = np.zeros(BLOCKSIZE, dtype=tile_.dtype)
+
+    for block in range(n_blocks):
+        offset = block*BLOCKSIZE
+        for j in range(N):
+            for i in range(offset, offset + BLOCKSIZE):
+                s[i] += tile_[j, i]
+        for i in range(BLOCKSIZE):
+            means[i] = s[i + offset] / N
+        for j in range(N):
+            for i in range(offset, offset + BLOCKSIZE):
+                v[i] += (tile_[j, i] - means[i - offset])**2
+    for i in range(n_blocks*BLOCKSIZE, le):
+        for j in range(N):
+            s[i] += tile_[j, i]
+        mean = s[i] / N
+        for j in range(N):
+            v[i] += (tile_[j, i] - mean)**2
+
+    return s.reshape(shape), v.reshape(shape)
 
 
 # Helper function to make sure the frame count

@@ -4,7 +4,7 @@ from libertem.utils.async_utils import run_blocking
 from libertem.executor.base import JobCancelledError
 import libertem.udf.feature_vector_maker as feature
 from libertem.udf.base import UDFRunner
-from libertem.udf.stddev import StdDevUDF
+from libertem.udf.stddev import StdDevUDF, consolidate_result
 from libertem import masks
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
@@ -68,15 +68,7 @@ class ClusterAnalysis(BaseAnalysis):
         if job_is_cancelled():
             raise JobCancelledError()
 
-        sd_udf_results['var'].data
-        sd_udf_results['num_frame'].data
-
-        sd_udf_results = dict(sd_udf_results.items())
-        sd_udf_results['var'] = sd_udf_results['var'].data/sd_udf_results['num_frame'].data
-        sd_udf_results['std'] = np.sqrt(sd_udf_results['var'].data)
-        sd_udf_results['mean'] = sd_udf_results['sum_frame'].data/sd_udf_results['num_frame'].data
-        sd_udf_results['num_frame'] = sd_udf_results['num_frame'].data
-        sd_udf_results['sum_frame'] = sd_udf_results['sum_frame'].data
+        sd_udf_results = consolidate_result(sd_udf_results)
 
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]

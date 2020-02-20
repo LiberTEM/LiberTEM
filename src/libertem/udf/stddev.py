@@ -183,6 +183,19 @@ class StdDevUDF(UDF):
         self.results.num_frame[0][key] = compute_merge.N
 
 
+def consolidate_result(udf_result):
+    udf_result = dict(udf_result.items())
+    num_frame = _validate_n(udf_result['num_frame'].data[0])
+
+    udf_result['var'] = udf_result['var'].data/num_frame
+    udf_result['std'] = np.sqrt(udf_result['var'].data)
+
+    udf_result['mean'] = udf_result['sum_frame'].data/num_frame
+    udf_result['num_frame'] = num_frame
+    udf_result['sum_frame'] = udf_result['sum_frame'].data
+    return udf_result
+
+
 def run_stddev(ctx, dataset, roi=None):
     """
     Compute sum of variances and sum of pixels from the given dataset
@@ -214,14 +227,4 @@ def run_stddev(ctx, dataset, roi=None):
     stddev_udf = StdDevUDF()
     pass_results = ctx.run_udf(dataset=dataset, udf=stddev_udf, roi=roi)
 
-    pass_results = dict(pass_results.items())
-    num_frame = _validate_n(pass_results['num_frame'].data[0])
-
-    pass_results['var'] = pass_results['var'].data/num_frame
-    pass_results['std'] = np.sqrt(pass_results['var'].data)
-
-    pass_results['mean'] = pass_results['sum_frame'].data/num_frame
-    pass_results['num_frame'] = num_frame
-    pass_results['sum_frame'] = pass_results['sum_frame'].data
-
-    return pass_results
+    return consolidate_result(pass_results)

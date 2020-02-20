@@ -38,11 +38,6 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                 <Field name="name" id="id_name" />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="id_tileshape">Tileshape:</label>
-                <ErrorMessage name="tileshape" />
-                <Field name="tileshape" id="id_tileshape" />
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="id_scan_size">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
                 <Field name="scan_size" id="id_scan_size" />

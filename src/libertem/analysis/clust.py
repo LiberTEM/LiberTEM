@@ -1,3 +1,9 @@
+from skimage.feature import peak_local_max
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.feature_extraction.image import grid_to_graph
+import numpy as np
+import sparse
+
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import run_blocking
@@ -6,14 +12,7 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF
 from libertem import masks
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.feature_extraction.image import grid_to_graph
-import numpy as np
-import sparse
-
 from libertem.masks import _make_circular_mask
-
-from skimage.feature import peak_local_max
 
 
 class ClusterAnalysis(BaseAnalysis):
@@ -113,7 +112,8 @@ class ClusterAnalysis(BaseAnalysis):
 
         mask = sparse.COO(
             shape=(len(y), ) + tuple(self.dataset.shape.sig),
-            coords=(z, y, x), data=1)
+            coords=(z, y, x), data=1
+        )
 
         udf = ApplyMasksUDF(
             mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.uint8,

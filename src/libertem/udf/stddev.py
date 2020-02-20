@@ -1,6 +1,7 @@
 import collections
 
 import numpy as np
+import numba
 
 from libertem.udf import UDF
 
@@ -8,7 +9,8 @@ from libertem.udf import UDF
 VariancePart = collections.namedtuple('VariancePart', ['var', 'sum_im', 'N'])
 
 
-def merge(p0, p1):
+@numba.njit
+def merge(N0, sum_im0, var0, N1, sum_im1, var1):
     """
     Given two sets of partitions, with sum of frames
     and sum of variances, compute joint sum of frames
@@ -16,41 +18,55 @@ def merge(p0, p1):
 
     Parameters
     ----------
-    p0
-        Contains information about the first partition, including
-        sum of variances, sum of pixels, and number of frames used
+    N0, sum_im0, var0
+        Contains information about the first partition:
+        Number of frames used, sum of pixels, sum of variances
 
-    p1
-        Contains information about the second partition, including
-        sum of variances, sum of pixels, and number of frames used
+    N1, sum_im1, var1
+        Contains information about the second partition:
+        
 
     Returns
     -------
-    VariancePart
-        colletions.namedtuple object that contains information about
-        the merged partitions, including sum of variances,
-        sum of pixels, and number of frames used
+    N, sum_im, var:
+        Number of frames used, sum of pixels, sum of variances of the merged partitions
     """
-    if p0.N == 0:
-        return p1
-    N = p0.N + p1.N
+    if N0 == 0:
+        return N1, sum_im1, var1
+    if N1 == 0:
+        return N0, sum_im0, var0
+    N = N0 + N1
+
+    shape = sum_im0.shape
+
+    sum_im0 = sum_im0.flatten()
+    sum_im1 = sum_im1.flatten()
+    var0 = var0.flatten()
+    var1 = var1.flatten()
+
 
     # compute mean for each partitions
-    mean_A = (p0.sum_im / p0.N)
-    mean_B = (p1.sum_im / p1.N)
+    mean_A = sum_im0 / N0
+    mean_B = sum_im1 / N1
 
     # compute mean for joint samples
     delta = mean_B - mean_A
-    mean = mean_A + (p1.N * delta) / (p0.N + p1.N)
+    mean = mean_A + (N1 * delta) / N
 
     # compute sum of images for joint samples
-    sum_im_AB = p0.sum_im + p1.sum_im
+    sum_im_AB = sum_im0 + sum_im1
 
     # compute sum of variances for joint samples
     delta_P = mean_B - mean
-    var_AB = p0.var + p1.var + (p1.N * delta * delta_P)
+    var_AB = var0 + var1 + (N1 * delta * delta_P)
 
-    return VariancePart(var=var_AB, sum_im=sum_im_AB, N=N)
+    return N, sum_im_AB, var_AB
+
+
+def tile_sum_var(tile):
+    s = np.sum(tile, axis=0)
+    v = np.var(tile, axis=0, ddof=tile.shape[0]-1)
+    return s, v
 
 
 # Helper function to make sure the frame count
@@ -131,19 +147,19 @@ class StdDevUDF(UDF):
             number of frames used over current iteration of partition
         """
         N0 = _validate_n(dest['num_frame'][0])
-        N1 = _validate_n(src['num_frame'][0])
-        p0 = VariancePart(var=dest['var'][:],
-                        sum_im=dest['sum_frame'][:],
-                        N=N0)
-        p1 = VariancePart(var=src['var'][:],
-                        sum_im=src['sum_frame'][:],
-                        N=N1)
-        compute_merge = merge(p0, p1)
+        sum_im0 = dest['sum_frame'][:]
+        var0 = dest['var'][:]
 
-        dest['var'][:] = compute_merge.var
-        dest['sum_frame'][:] = compute_merge.sum_im
+        N1 = _validate_n(src['num_frame'][0])
+        sum_im1 = src['sum_frame'][:]
+        var1 = src['var'][:]
+
+        N, sum_im, var = merge(N0, sum_im0, var0, N1, sum_im1, var1)
+
+        dest['var'][:] = var
+        dest['sum_frame'][:] = sum_im
         for key in src['num_frame'][0]:
-            dest['num_frame'][0][key] = compute_merge.N
+            dest['num_frame'][0][key] = N
 
     def process_tile(self, tile):
         """
@@ -161,26 +177,22 @@ class StdDevUDF(UDF):
         if key not in self.results.num_frame[0]:
             self.results.num_frame[0][key] = 0
 
-        tile_sum = tile.sum(axis=0)
+        tile_sum, tile_var = tile_sum_var(tile)
 
-        p0 = VariancePart(
-            var=self.results.var,
-            sum_im=self.results.sum_frame,
-            N=self.results.num_frame[0][key]
-        )
-        p1 = VariancePart(
-            # We doctor ddof to ensure the sum of variances is divided by one.
-            # That way we avoid multiplying by N again for this algorithm
-            var=np.var(tile, axis=0, ddof=tile.shape[0]-1),
-            sum_im=tile_sum,
-            N=tile.shape[0]
-        )
-        compute_merge = merge(p0, p1)
+        N0 = self.results.num_frame[0][key]
+        sum_im0 = self.results.sum_frame
+        var0 = self.results.var
 
-        self.results.var[:] = compute_merge.var
+        N1 = tile.shape[0]
+        sum_im1 = tile_sum
+        var1 = tile_var
 
-        self.results.sum_frame[:] = compute_merge.sum_im
-        self.results.num_frame[0][key] = compute_merge.N
+        N, sum_im, var = merge(N0, sum_im0, var0, N1, sum_im1, var1)
+
+        self.results.var[:] = var
+
+        self.results.sum_frame[:] = sum_im
+        self.results.num_frame[0][key] = N
 
 
 def consolidate_result(udf_result):

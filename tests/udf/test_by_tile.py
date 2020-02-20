@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 
 from libertem.udf import UDF
@@ -64,7 +63,7 @@ def test_mem_cropped(lt_ctx):
     """
     data = _mk_random(size=(16, 16, 24, 24), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(7, 7, 7),
-                            num_partitions=2, sig_dims=2, crop_frames=True)
+                            num_partitions=2, sig_dims=2)
 
     buf = np.zeros((256, 24, 24), dtype="float32")
     for p in dataset.get_partitions():
@@ -84,7 +83,7 @@ def test_mem_cropped(lt_ctx):
 def test_cropped(lt_ctx):
     data = _mk_random(size=(16, 16, 24, 24), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(7, 7, 7),
-                            num_partitions=2, sig_dims=2, crop_frames=True)
+                            num_partitions=2, sig_dims=2)
 
     pixelsum = PixelsumForCropped()
     res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum)
@@ -146,30 +145,3 @@ def test_roi_extra_dimension_shape(lt_ctx):
     assert np.allclose(res['test'].raw_data, (1, 2))
     assert np.allclose(res['test2'].raw_data, navcount)
     # assert np.allclose(res['test3'].raw_data, (navcount, 2*navcount))
-
-
-class FrameCounter(UDF):
-    def get_result_buffers(self):
-        return {
-            # FIXME: "by_tile_position" not implemented yet, name TBD
-            'counter': self.buffer(kind="by_tile_position", dtype="int64"),
-        }
-
-    def process_tile(self, tile):
-        self.results.counter += 1
-
-    def merge(self, dest, src):
-        dest['counter'][:] += src['counter']
-
-
-@pytest.mark.xfail
-def test_frame_counter(lt_ctx):
-    data = _mk_random(size=(16, 16, 24, 24), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(7, 7, 7),
-                            num_partitions=2, sig_dims=2, crop_frames=True)
-
-    counter = FrameCounter()
-    res = lt_ctx.run_udf(dataset=dataset, udf=counter)
-    assert 'counter' in res
-    print(data.shape, res['counter'].data.shape)
-    assert res['counter'].data == 256

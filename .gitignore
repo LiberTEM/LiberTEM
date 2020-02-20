@@ -25,3 +25,4 @@ data
 *Thumbs.db
 *.DS_Store
 *.idea
+.mypy_cache/

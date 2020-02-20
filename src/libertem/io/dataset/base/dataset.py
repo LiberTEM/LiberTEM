@@ -3,6 +3,7 @@ import typing
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
+from libertem.web.messageconverter import MessageConverter
 
 
 class DataSet(object):
@@ -79,7 +80,7 @@ class DataSet(object):
         raise NotImplementedError()
 
     @classmethod
-    def get_msg_converter(cls):
+    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
         raise NotImplementedError()
 
     @property

@@ -8,11 +8,13 @@ import pytest
 from libertem.io.dataset.mib import MIBDataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
+from libertem.udf.raw import PickUDF
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
+from libertem.io.dataset.base import TilingScheme
 
-MIB_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'default.mib')
+MIB_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdata")  # NOQA
@@ -53,8 +55,17 @@ def test_missing_frames(lt_ctx):
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
     for p in ds.get_partitions():
-        for t in p.get_tiles():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
 
@@ -68,17 +79,37 @@ def test_too_many_frames(lt_ctx):
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
     for p in ds.get_partitions():
-        for t in p.get_tiles():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
 
+@pytest.mark.with_numba
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
     p = next(partitions)
     assert len(p.shape) == 3
     assert tuple(p.shape[1:]) == (256, 256)
-    tiles = p.get_tiles()
+
+    tileshape = Shape(
+        (3,) + tuple(default_mib.shape.sig),
+        sig_dims=default_mib.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_mib.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
@@ -141,6 +172,15 @@ def test_pick_analysis(default_mib, lt_ctx, TYPE):
     assert results[0].raw_data.shape == (256, 256)
 
 
+@pytest.mark.with_numba
+def test_with_roi(default_mib, lt_ctx):
+    udf = PickUDF()
+    roi = np.zeros(default_mib.shape.nav, dtype=bool)
+    roi[0] = 1
+    res = lt_ctx.run_udf(udf=udf, dataset=default_mib, roi=roi)
+    np.array(res['intensity']).shape == (1, 256, 256)
+
+
 def test_crop_to(default_mib, lt_ctx):
     slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
     job = PickFrameJob(dataset=default_mib, slice_=slice_)
@@ -161,13 +201,6 @@ def test_read_at_boundaries(default_mib, lt_ctx):
     res = lt_ctx.run(sumjob)
 
     assert np.allclose(res[0].raw_data, res_odd[0].raw_data)
-
-
-def test_invalid_crop_full_frames_combo(default_mib, lt_ctx):
-    slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
-    p = next(default_mib.get_partitions())
-    with pytest.raises(ValueError):
-        next(p.get_tiles(crop_to=slice_, full_frames=True))
 
 
 def test_diagnostics(default_mib):

@@ -46,20 +46,21 @@ async def test_load_raw_success(default_raw, base_url, http_client):
 @pytest.mark.asyncio
 async def test_load_raw_fail(default_raw, base_url, http_client):
     await create_connection(base_url, http_client)
-    raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
     ds_url = "{}/api/datasets/{}/".format(
         base_url, uuid
     )
-    ds_data = _get_raw_params(raw_path)
-    ds_data["dataset"]["params"]["scan_size"] = [32, 32]  # too large, should cause error
+    ds_data = _get_raw_params("/does/not/exist/")
     async with http_client.put(ds_url, json=ds_data) as resp:
         assert resp.status == 200
         resp_json = await resp.json()
         assert_msg(resp_json, 'CREATE_DATASET_ERROR', status='error')
         assert resp_json['dataset'] == uuid
-        assert resp_json['msg'].startswith('invalid dataset: ')
+        assert (
+            "No such file or directory" in resp_json['msg']
+            or "The system cannot find the path specified" in resp_json['msg']
+        )
 
 
 @pytest.mark.asyncio

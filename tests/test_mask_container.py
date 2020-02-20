@@ -88,8 +88,9 @@ def test_mask_caching_2():
 
 def test_for_datatile_1(masks):
     tile = DataTile(
+        np.ones((1, 1, 1)),
         tile_slice=Slice(origin=(0, 0, 0), shape=Shape((1, 1, 1), sig_dims=2)),
-        data=np.ones((1, 1, 1))
+        scheme_idx=0,
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (1, 5)
@@ -97,8 +98,9 @@ def test_for_datatile_1(masks):
 
 def test_for_datatile_2(masks):
     tile = DataTile(
+        np.ones((2 * 2, 10, 10)),
         tile_slice=Slice(origin=(0, 0, 0), shape=Shape((2 * 2, 10, 10), sig_dims=2)),
-        data=np.ones((2 * 2, 10, 10))
+        scheme_idx=0,
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (100, 5)
@@ -106,8 +108,9 @@ def test_for_datatile_2(masks):
 
 def test_for_datatile_with_scan_origin(masks):
     tile = DataTile(
+        np.ones((2 * 2, 10, 10)),
         tile_slice=Slice(origin=(110, 0, 0), shape=Shape((2 * 2, 10, 10), sig_dims=2)),
-        data=np.ones((2 * 2, 10, 10))
+        scheme_idx=0,
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     assert slice_.shape == (100, 5)
@@ -115,8 +118,9 @@ def test_for_datatile_with_scan_origin(masks):
 
 def test_for_datatile_with_frame_origin(masks):
     tile = DataTile(
+        np.ones((2 * 2, 1, 5)),
         tile_slice=Slice(origin=(110, 10, 10), shape=Shape((2 * 2, 1, 5), sig_dims=2)),
-        data=np.ones((2 * 2, 1, 5))
+        scheme_idx=0,
     )
     slice_ = masks.get_masks_for_slice(tile.tile_slice)
     print(slice_)

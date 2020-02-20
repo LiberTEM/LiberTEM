@@ -1,57 +1,12 @@
-import numpy as np
 import jsonschema
+import numpy as np
 
 from libertem.common import Shape
 
 
-class IOCaps:
-    """
-    I/O capabilities for a dataset (may depend on dataset parameters and concrete format)
-    """
-    ALL_CAPS = {
-        "MMAP",             # .mmap is implemented on the file subclass
-        "DIRECT",           # supports direct reading
-        "FULL_FRAMES",      # can read full frames
-        "SUBFRAME_TILES",   # can read tiles that slice frames into pieces
-        "FRAME_CROPS",      # can efficiently crop on signal dimension without needing mmap
-    }
-
-    def __init__(self, caps):
-        """
-        create new capability set
-        """
-        caps = set(caps)
-        for cap in caps:
-            self._validate_cap(cap)
-        self._caps = caps
-
-    def _validate_cap(self, cap):
-        if cap not in self.ALL_CAPS:
-            raise ValueError("invalid I/O capability: %s" % cap)
-
-    def __contains__(self, cap):
-        return cap in self._caps
-
-    def __getstate__(self):
-        return {"caps": self._caps}
-
-    def __setstate__(self, state):
-        self._caps = state["caps"]
-
-    def add(self, *caps):
-        for cap in caps:
-            self._validate_cap(cap)
-        self._caps = self._caps.union(caps)
-
-    def remove(self, *caps):
-        for cap in caps:
-            self._validate_cap(cap)
-        self._caps = self._caps.difference(caps)
-
-
 class DataSetMeta(object):
     def __init__(self, shape: Shape, raw_dtype=None, dtype=None,
-                 metadata=None, iocaps: IOCaps = None):
+                 metadata=None):
         """
         shape
             "native" dataset shape, can have any dimensionality
@@ -66,9 +21,6 @@ class DataSetMeta(object):
 
         metadata
             Any metadata offered by the DataSet, not specified yet
-
-        iocaps
-            I/O capabilities
         """
         self.shape = shape
         if dtype is None:
@@ -76,9 +28,6 @@ class DataSetMeta(object):
         self.dtype = np.dtype(dtype)
         self.raw_dtype = np.dtype(raw_dtype)
         self.metadata = metadata
-        if iocaps is None:
-            iocaps = {}
-        self.iocaps = IOCaps(iocaps)
 
     def __getitem__(self, key):
         return self.metadata[key]

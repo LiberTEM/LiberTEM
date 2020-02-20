@@ -1,5 +1,38 @@
+import typing
+
+
+NodeType = typing.Union[None, 'FileTree']
+
+
 class FileTree(object):
-    def __init__(self, low, high, value, idx, left, right):
+    def __init__(self, low: int, high: int, value: typing.Any, idx: int,
+                 left: NodeType, right: NodeType):
+        """
+        Construct a FileTree node
+
+        Parameters
+        ----------
+
+        low
+            First frame contained in this file
+
+        high
+            First index of the next file
+
+        value
+            The corresponding file object
+
+        idx
+            The index of the file object in the fileset
+
+        left
+            Nodes with a lower low
+
+        right
+            Nodes with a higher low
+        """
+        if low >= high:
+            raise ValueError("low should be < high")
         self.low = low
         self.high = high
         self.value = value
@@ -39,3 +72,14 @@ class FileTree(object):
             return self.left.search_start(value)
         else:
             return self.right.search_start(value)
+
+    def __str__(self):
+        return self.to_string()
+
+    def to_string(self, depth=0):
+        padsingle = 4 * f' '
+        pad = (depth * padsingle)
+        str_left = (self.left is not None and self.left.to_string(depth + 1) or 'None')
+        str_right = (self.right is not None and self.right.to_string(depth + 1) or 'None')
+        str_self = f"(d={depth} l={self.low}, i={self.idx}, h={self.high})"
+        return f"{pad}{str_left}\n{pad}{str_self}\n{pad}{str_right}"

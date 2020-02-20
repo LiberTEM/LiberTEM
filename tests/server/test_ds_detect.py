@@ -52,4 +52,3 @@ async def test_detect_hdf5(hdf5, base_url, http_client, server_port):
             assert params['type'] == 'HDF5'
             assert params['path'] == path
             assert params['ds_path'] == "data"
-            assert "tileshape" in params

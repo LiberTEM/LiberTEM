@@ -6,6 +6,8 @@ import pytest
 import dask.distributed as dd
 
 from libertem.io.dataset.cached import CachedDataSet, LRUCacheStrategy
+from libertem.io.dataset.base import TilingScheme
+from libertem.common import Shape
 
 
 @pytest.fixture
@@ -36,27 +38,45 @@ def test_simple(default_cached_ds):
     datadir = default_cached_ds._cache_path
     default_raw = default_cached_ds._source_ds
 
+    tileshape = Shape(
+        (16,) + tuple(default_raw.shape.sig),
+        sig_dims=default_raw.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_raw.shape,
+    )
+
     print(datadir, os.listdir(datadir))
 
     print(p)
 
-    t_cache = next(p.get_tiles())
-    t_orig = next(next(default_raw.get_partitions()).get_tiles())
+    t_cache = next(p.get_tiles(tiling_scheme=tiling_scheme))
+    t_orig = next(next(default_raw.get_partitions()).get_tiles(tiling_scheme=tiling_scheme))
 
     print(t_cache)
     print(t_orig)
     assert np.allclose(t_cache.data, t_orig.data)
 
     for p in default_cached_ds.get_partitions():
-        for tile in p.get_tiles():
+        for tile in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
 
 def test_with_roi(default_cached_ds):
     roi = np.random.choice(a=[0, 1], size=tuple(default_cached_ds.shape.nav))
 
+    tileshape = Shape(
+        (16,) + tuple(default_cached_ds.shape.sig),
+        sig_dims=default_cached_ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_cached_ds.shape,
+    )
+
     for p in default_cached_ds.get_partitions():
-        for tile in p.get_tiles(roi=roi):
+        for tile in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
             pass
 
 

@@ -2,12 +2,14 @@ import os
 import logging
 import contextlib
 
+import numpy as np
 from ncempy.io.ser import fileSER
 
-from libertem.common import Shape
+from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
-    DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta,
+    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
+    _roi_to_indices, DataTile,
 )
 
 log = logging.getLogger(__name__)
@@ -34,9 +36,8 @@ class SERDatasetParams(MessageConverter):
         return data
 
 
-class SERFile(File3D):
+class SERFile:
     def __init__(self, path, num_frames, emipath=None):
-        super().__init__()
         self._path = path
         self._num_frames = num_frames
         self._emipath = emipath
@@ -57,24 +58,12 @@ class SERFile(File3D):
     def start_idx(self):
         return 0
 
-    def readinto(self, start, stop, out, crop_to=None):
-        """
-        Read [`start`, `stop`) images from this file into `out`
-        """
-        with self._get_handle() as f1:
-            num_images = f1.head['ValidNumberElements']
-            assert start < num_images
-            assert stop <= num_images
-            assert stop >= start
-            for ii in range(start, stop):
-                data0, metadata0 = f1.getDataset(ii)
-                if crop_to is not None:
-                    # TODO: maybe limit I/O to the cropped region, too?
-                    data0 = data0[crop_to.get(sig_only=True)]
-                out[ii - start, ...] = data0
+    @property
+    def end_idx(self):
+        return self.num_frames
 
 
-class SERFileSet(FileSet3D):
+class SERFileSet(FileSet):
     pass
 
 
@@ -98,16 +87,6 @@ class SERDataSet(DataSet):
         self._filesize = None
         self._num_frames = None
 
-    def _get_fileset(self):
-        assert self._num_frames is not None
-        return SERFileSet([
-            SERFile(
-                path=self._path,
-                num_frames=self._num_frames,
-                emipath=self._emipath
-            )
-        ])
-
     def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
         reader = SERFile(path=self._path, num_frames=None, emipath=self._emipath)
@@ -130,7 +109,6 @@ class SERDataSet(DataSet):
             self._meta = DataSetMeta(
                 shape=Shape(shape, sig_dims=sig_dims),
                 raw_dtype=dtype,
-                iocaps={"FULL_FRAMES"},
             )
         return self
 
@@ -184,15 +162,26 @@ class SERDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB per partition
-        res = max(self._cores, self._filesize // (512*1024*1024))
+        res = max(self._cores, self._filesize // (64*1024*1024))
         return res
+
+    def _get_fileset(self):
+        assert self._num_frames is not None
+        return SERFileSet([
+            SERFile(
+                path=self._path,
+                num_frames=self._num_frames,
+                emipath=self._emipath
+            )
+        ])
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in Partition3D.make_slices(
+        for part_slice, start, stop in SERPartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield SERPartition(
+                path=self._path,
                 meta=self._meta,
                 partition_slice=part_slice,
                 fileset=fileset,
@@ -202,3 +191,49 @@ class SERDataSet(DataSet):
 
     def __repr__(self):
         return "<SERDataSet for %s>" % (self._path,)
+
+
+class SERPartition(BasePartition):
+    def __init__(self, path, *args, **kwargs):
+        self._path = path
+        super().__init__(*args, **kwargs)
+
+    def validate_tiling_scheme(self, tiling_scheme):
+        supported = (1,) + tuple(self.shape.sig)
+        if tuple(tiling_scheme.shape) != supported:
+            raise ValueError(
+                "invalid tiling scheme: only supports %r, not %r" % (supported, tiling_scheme.shape)
+            )
+
+    def adjust_tileshape(self, tileshape):
+        # force single-frame tiles
+        return (1,) + tileshape[1:]
+
+    def get_base_shape(self):
+        return (1,) + tuple(self.shape.sig)
+
+    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+        shape = Shape((1,) + tuple(self.shape.sig), sig_dims=self.shape.sig.dims)
+
+        self.validate_tiling_scheme(tiling_scheme)
+
+        start = self._start_frame
+        stop = start + self._num_frames
+        if roi is None:
+            indices = np.arange(start, stop)
+            offset = start
+        else:
+            indices = _roi_to_indices(roi, start, stop)
+            offset = np.count_nonzero(roi.reshape((-1,))[:start])
+
+        with fileSER(self._path) as f:
+            for num, idx in enumerate(indices):
+                tile_slice = Slice(origin=(num + offset, 0, 0), shape=shape)
+                data, metadata = f.getDataset(int(idx))
+                if data.dtype != np.dtype(dest_dtype):
+                    data = data.astype(dest_dtype)
+                yield DataTile(
+                    data.reshape(shape),
+                    tile_slice=tile_slice,
+                    scheme_idx=0,
+                )

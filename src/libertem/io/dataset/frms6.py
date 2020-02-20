@@ -3,19 +3,22 @@ import os
 import re
 import csv
 import glob
+import typing
 import logging
 import warnings
 import configparser
 
+from numba.typed import List
 import scipy.io as sio
 import numpy as np
+import numba
 
-from libertem.common import Shape
-from libertem.common.buffers import zeros_aligned
+from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    File3D, FileSet3D, Partition3D
+    FileSet, BasePartition, LocalFile, Decoder,
+    TilingScheme, make_get_read_ranges,
 )
 
 log = logging.getLogger(__name__)
@@ -96,7 +99,7 @@ def _get_base_filename(_path):
     return base
 
 
-def _read_hdr(fname):
+def _read_dataset_hdr(fname):
     if not os.path.exists(fname):
         raise DataSetException(
             "Could not find .hdr file %s" % (
@@ -134,193 +137,225 @@ def _read_hdr(fname):
     return parsed
 
 
-class FRMS6File(File3D):
-    def __init__(self, path, start_idx=None, hdr_info=None):
-        self._path = path
-        self._hdr_info = hdr_info
-        self._start_idx = start_idx
-        self._header = None
-        self._size = None
-        self._preread_info()
-        super().__init__()
-
-    @property
-    def dtype(self):
-        return np.dtype("<u2")
-
-    @property
-    def header(self):
-        if self._header is not None:
-            return self._header
-        header_raw = np.fromfile(self._path, dtype=file_header_dtype, count=1)
-        header = {}
-        for field, dtype in file_header_dtype:
-            if type(dtype) != str:
-                continue
-            header[field] = header_raw[field][0]
-            # to prevent overflows in following computations:
-            if np.dtype(dtype).kind == "u":
-                header[field] = int(header[field])
-        self._header = header
-        return header
-
-    @property
-    def global_header(self):
-        return self._hdr_info
-
-    def _preread_info(self):
-        self._header = self.header
-        self._size = os.stat(self._path).st_size
-
-    def check_valid(self):
-        if not (self.header['header_size'] == 1024
-                and self.header['frame_header_size'] == 64
-                and self.header['version'] == 6):
-            return False
-        # TODO: file size sanity check?
-        return True
-
-    @property
-    def num_frames(self):
-        if self.header['num_frames'] != 0:
-            return self.header['num_frames']
-        # older FRMS6 files don't contain the number of frames in the header,
-        # so calculate from filesize:
-        header = self.header
-        w, h = header['width'], header['height']
-        bytes_per_frame = w * h * 2
-        assert self._size is not None
-        num = (self._size - 1024)
-        denum = (bytes_per_frame + 64)
-        res = num // denum
-        if num % denum != 0:
-            raise DataSetException("could not determine number of frames")
-        return res
-
-    @property
-    def start_idx(self):
-        return self._start_idx
-
-    def readinto(self, start, stop, out, crop_to=None):
-        # ignore crop_top here, as we don't support it anyways
-        # (and it would be very awkward, as the data is still folded here...)
-        slice_ = (slice(start, stop),)
-        out[:] = self.data[slice_]
-
-    def _get_mmapped_array(self):
-        raw_data = np.memmap(self._path, dtype=self.dtype, mode='r')
-        # cut off the file header:
-        header_size_px = self.header['header_size'] // self.dtype.itemsize
-        frames = raw_data[header_size_px:]
-
-        # TODO: we just throw away the frame headers here
-        # TODO: for future work, we may want to validate the stuff in there!
-        w, h = self.header['width'], self.header['height']
-        num_frames = self.num_frames
-        frames_w_headers = frames.reshape((num_frames, w * h + 32))
-        frames_wo_headers = frames_w_headers[:, 32:]
-        frames_wo_headers = frames_wo_headers.reshape((num_frames, h, w))
-        return frames_wo_headers
-
-    @property
-    def data(self):
-        return self._get_mmapped_array()
+def _read_file_header(path):
+    header_raw = np.fromfile(path, dtype=file_header_dtype, count=1)
+    header = {}
+    for field, dtype in file_header_dtype:
+        if type(dtype) != str:
+            continue
+        header[field] = header_raw[field][0]
+        # to prevent overflows in following computations:
+        if np.dtype(dtype).kind == "u":
+            header[field] = int(header[field])
+    header['filesize'] = os.stat(path).st_size
+    header['path'] = path
+    return header
 
 
-class FRMS6FileSet(FileSet3D):
-    def __init__(self, files, meta, dark_frame, gain_map):
+def _header_valid(header):
+    if not (header['header_size'] == 1024
+            and header['frame_header_size'] == 64
+            and header['version'] == 6):
+        return False
+    # TODO: file size sanity check?
+    return True
+
+
+def _num_frames(header):
+    if header['num_frames'] != 0:
+        return header['num_frames']
+    # older FRMS6 files don't contain the number of frames in the header,
+    # so calculate from filesize:
+    w, h = header['width'], header['height']
+    bytes_per_frame = w * h * 2
+    assert header['filesize'] is not None
+    num = (header['filesize'] - 1024)
+    denum = (bytes_per_frame + 64)
+    res = num // denum
+    if num % denum != 0:
+        raise DataSetException("could not determine number of frames")
+    return res
+
+
+@numba.njit(inline='always')
+def _map_y(y, xs, binning, num_rows):
+    """
+    Parameters
+    ----------
+
+    binning : int
+        Binning factor (1, 2, 4)
+
+    num_rows : int
+        Total number of rows (should be 264, if not windowing)
+    """
+    half = num_rows // 2 // binning
+    if y < half:
+        return (y, 0)
+    else:
+        return (((num_rows // binning) - y - 1), xs)
+
+
+@numba.njit(inline='always')
+def _frms6_read_ranges_tile_block(
+    slices_arr, fileset_arr, slice_sig_sizes, sig_origins,
+    inner_indices_start, inner_indices_stop, frame_indices, sig_size,
+    px_to_bytes, bpp, frame_header_bytes, frame_footer_bytes, file_idxs,
+    slice_offset, extra, sig_shape,
+):
+    """
+    Read ranges for frms6: create read ranges line-by-line
+    """
+    result = List()
+
+    # positions in the signal dimensions:
+    for slice_idx in range(slices_arr.shape[0]):
+        # (offset, size) arrays defining what data to read (in pixels)
+        slice_origin = slices_arr[slice_idx][0]
+        slice_shape = slices_arr[slice_idx][1]
+
+        read_ranges = List()
+
+        xs = slice_shape[1]
+        stride = 2 * xs
+
+        binning = extra[0]
+        num_rows = sig_shape[0]
+
+        # inner "depth" loop along the (flat) navigation axis of a tile:
+        for i, inner_frame_idx in enumerate(range(inner_indices_start, inner_indices_stop)):
+            inner_frame = frame_indices[inner_frame_idx]
+            file_idx = file_idxs[i]
+            f = fileset_arr[file_idx]
+            frame_in_file_idx = inner_frame - f[0]
+
+            # we are reading a part of a single frame, so we first need to find
+            # the offset caused by headers:
+            header_offset = frame_header_bytes * (frame_in_file_idx + 1)
+
+            # now let's figure in the current frame index:
+            # (go down into the file by full frames; `sig_size`)
+            offset = header_offset + frame_in_file_idx * (sig_size // binning) * bpp
+
+            y_start = slice_origin[0] // binning
+            y_stop = (slice_origin[0] + slice_shape[0]) // binning
+
+            for y in range(y_start, y_stop):
+                mapped_y, x_offset = _map_y(y, xs, binning, num_rows)
+                start = offset + (stride * mapped_y + x_offset) * bpp
+                read_ranges.append(
+                    (
+                        file_idx,
+                        start, start + xs * bpp
+                    )
+                )
+
+        # the indices are compressed to the selected frames
+        compressed_slice = np.array([
+            [slice_offset + inner_indices_start] + [i for i in slice_origin],
+            [inner_indices_stop - inner_indices_start] + [i for i in slice_shape],
+        ])
+
+        result.append((slice_idx, compressed_slice, read_ranges))
+    return result
+
+
+frms6_get_read_ranges = make_get_read_ranges(
+    read_ranges_tile_block=_frms6_read_ranges_tile_block
+)
+
+
+def _make_decode_frms6(binning):
+    @numba.njit(inline='always')
+    def _decode_frms6(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
         """
-        Represents all files belonging to a measurement.
-
-        Parameters
-        ----------
-        files : list of FRMS6File
-            full paths of all files, without the file containing dark frames
-        meta : DataSetMeta
-            dataset metadata
-        dark_frame : numpy.ndarray or None
-            the raw dark frame (2D, not folded)
-        gain_map : numpy.ndarray or None
-            gain map (2D, folded)
+        Row-for-row decoding of frms6 data
         """
-        self._meta = meta
-        self._dark_frame = dark_frame
+        inp_decoded = inp.reshape((-1,)).view(native_dtype)
+        out_3d = out.reshape(out.shape[0], -1, shape[-1])
+
+        num_rows_binned = ds_shape[-2] // binning
+        origin_y_binned = origin[1] // binning
+
+        # how many rows need to be *read* for this tile
+        # if we are un-binning, we need to read only
+        rows_in_tile = shape[1] // binning
+
+        # broadcast the row we read to (start, stop) rows:
+        start = (idx % rows_in_tile) * binning
+        stop = start + binning
+
+        depth = idx // rows_in_tile
+
+        # print(depth, start, stop, rows_in_tile, origin_y_binned)
+
+        if origin_y_binned + (idx % rows_in_tile) < num_rows_binned // 2:
+            out_3d[depth, start:stop, :] = inp_decoded
+        else:
+            out_3d[depth, start:stop, :] = inp_decoded[::-1]
+    return _decode_frms6
+
+
+decode_frms6_b1 = _make_decode_frms6(1)
+decode_frms6_b2 = _make_decode_frms6(2)
+decode_frms6_b4 = _make_decode_frms6(4)
+
+
+class FRMS6Decoder(Decoder):
+    def __init__(self, binning, gain_map, dark_frame):
+        self._binning = binning
         self._gain_map = gain_map
-        super().__init__(files)
+        self._dark_frame = dark_frame
 
-    def get_for_range(self, start, stop):
-        """
-        return new FileSet3D filtered for files having frames in the [start, stop) range
-        """
-        files = self._get_files_for_range(start, stop)
+    def get_decode(self, native_dtype, read_dtype):
+        return {
+            1: decode_frms6_b1,
+            2: decode_frms6_b2,
+            4: decode_frms6_b4,
+        }[self._binning]
+
+    def get_dark_frame(self):
+        return self._dark_frame
+
+    def get_gain_map(self):
+        return self._gain_map
+
+
+class FRMS6File(LocalFile):
+    pass
+
+
+class FRMS6FileSet(FileSet):
+    def __init__(self, global_header, *args, **kwargs):
+        self._global_header = global_header
+        super().__init__(*args, **kwargs)
+
+    def _clone(self, *args, **kwargs):
         return self.__class__(
-            files=files, meta=self._meta, dark_frame=self._dark_frame, gain_map=self._gain_map
+            global_header=self._global_header,
+            *args, **kwargs
         )
 
-    def read_images_multifile(self, start, stop, out, crop_to=None):
-        """
-        Read [`start`, `stop`) images from the dataset into `out`
-
-        start, stop: dataset-global indices
-
-        The frames will be pre-processed and the indices may cross file boundaries.
-
-        Pre-processing steps:
-
-        1) convert into float
-        2) offset correction (dark frame subtraction)
-        3) folding
-        4) apply gain map
-        5) un-binning
-        """
-
-        # 1) conversion to float: happens as we write to this buffer
-        raw_buffer = zeros_aligned((out.shape[0],) + tuple(self._meta['raw_frame_size']),
-                                   dtype=out.dtype)
-
-        super().read_images_multifile(
-            start=start,
-            stop=stop,
-            out=raw_buffer,
-            crop_to=crop_to
+    def get_read_ranges(
+        self, start_at_frame: int, stop_before_frame: int,
+        dtype, tiling_scheme: TilingScheme,
+        roi: typing.Union[np.ndarray, None] = None,
+    ):
+        fileset_arr = self.get_as_arr()
+        binning = self._global_header['readoutmode']['bin']
+        return frms6_get_read_ranges(
+            start_at_frame=start_at_frame,
+            stop_before_frame=stop_before_frame,
+            roi=roi,
+            depth=tiling_scheme.depth,
+            slices_arr=tiling_scheme.slices_array,
+            fileset_arr=fileset_arr,
+            sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            bpp=np.dtype(dtype).itemsize,
+            frame_header_bytes=self._frame_header_bytes,
+            frame_footer_bytes=self._frame_footer_bytes,
+            extra=(binning,),
         )
-
-        # 2) offset correction:
-        if self._dark_frame is not None:
-            raw_buffer -= self._dark_frame
-
-        # 3) folding: l(eft) p(art), r(ight) p(art)
-        # the right part is folded to below the left part
-        # (imagine the bottom-right corner as a hinge)
-        half_width = out.shape[2]
-        assert out.shape[1] % 2 == 0
-        half_height = out.shape[1] // 2
-
-        lp = raw_buffer[..., :half_width]
-        rp = raw_buffer[..., half_width:]
-        # negative strides to flip both x and y direction:
-        rp = rp[:, ::-1, ::-1]
-
-        # 4) apply gain map:
-        if self._gain_map is not None:
-            gain_half = self._gain_map.shape[0] // 2
-            gain_lp = self._gain_map[:gain_half, ...]
-            gain_rp = self._gain_map[gain_half:, ...]
-            lp *= gain_lp
-            rp *= gain_rp
-
-        # 5) un-binning:
-        bin_factor = self._files[0].global_header['readoutmode']['bin']
-        if bin_factor > 1:
-            lp = _unbin(lp, factor=bin_factor)
-            rp = _unbin(rp, factor=bin_factor)
-        out[..., :half_height, :] = lp
-        out[..., half_height:, :] = rp
-
-        # FIXME: to be implemented:
-        assert crop_to is None or tuple(crop_to.shape.sig) == tuple(out.shape[1:])
-
-        return out
 
 
 class FRMS6DataSet(DataSet):
@@ -364,8 +399,11 @@ class FRMS6DataSet(DataSet):
     def _do_initialize(self):
         self._filenames = list(sorted(glob.glob(self._pattern())))
         self._hdr_info = self._read_hdr_info()
-        first_file = next(self._get_signal_files())
-        header = first_file.header
+        self._headers = [
+            _read_file_header(path)
+            for path in self._files()
+        ]
+        header = self._headers[0]
         raw_frame_size = header['height'], header['width']
         # frms6 frames are folded in a specific way, this is the shape after unfolding:
         frame_size = 2 * header['height'], header['width'] // 2
@@ -384,19 +422,12 @@ class FRMS6DataSet(DataSet):
             dtype=preferred_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
-            iocaps={"FULL_FRAMES"},
         )
         self._dark_frame = self._get_dark_frame()
         self._gain_map = self._get_gain_map()
         self._total_filesize = sum(
             os.stat(path).st_size
             for path in self._files()
-        )
-        self._fileset = FRMS6FileSet(
-            files=list(self._get_signal_files()),
-            meta=self._meta,
-            dark_frame=self._dark_frame,
-            gain_map=self._gain_map,
         )
         return self
 
@@ -407,7 +438,7 @@ class FRMS6DataSet(DataSet):
     def detect_params(cls, path, executor):
         hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
-            executor.run_function(_read_hdr, hdr_filename)
+            executor.run_function(_read_dataset_hdr, hdr_filename)
         except Exception:
             return False
         return {
@@ -424,9 +455,20 @@ class FRMS6DataSet(DataSet):
     def get_msg_converter(cls):
         return FRMS6DatasetParams
 
+    def get_diagnostics(self):
+        global_header = self._get_hdr_info()
+        return [
+            {"name": "Offset correction available and enabled",
+             "value": str(self._get_dark_frame() is not None)},
+        ] + [
+            {"name": str(k),
+             "value": str(v)}
+            for k, v in global_header.items()
+        ]
+
     def _read_hdr_info(self):
         hdr_filename = "%s.hdr" % _get_base_filename(self._path)
-        return _read_hdr(hdr_filename)
+        return _read_dataset_hdr(hdr_filename)
 
     def _get_hdr_info(self):
         return self._hdr_info
@@ -434,21 +476,38 @@ class FRMS6DataSet(DataSet):
     def _get_dark_frame(self):
         if not self._enable_offset_correction:
             return None
-        dark_file = self._get_dark_file()
-        # FIXME: currently doing two passes here: dtype conversion and summation
-        return (
-            dark_file.data.astype("float32").sum(axis=0) / dark_file.data.shape[0]
-        )
 
-    def _get_dark_file(self):
-        """
-        the file ending with "_000.frms6" contains the dark frames,
-        which should be the first in our sorting order
-        """
-        # FIXME: dark frame acquisition may be disabled, we then need to either
-        # 1) disable offset correction
-        # 2) load the dark frames from a separate, user-given file
-        return FRMS6File(path=self._files()[0])
+        header = self._headers[0]
+        num_frames = _num_frames(header)
+
+        fs = self._get_fileset([self._headers[0]])
+
+        part_slice = Slice(
+            origin=(0, 0, 0),
+            shape=Shape((num_frames,) + tuple(self.shape.sig), sig_dims=2)
+        )
+        p = FRMS6Partition(
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=fs,
+            start_frame=0,
+            num_frames=num_frames,
+            header=self._headers[0],
+            global_header=self._get_hdr_info(),
+        )
+        tileshape = Shape(
+            (128, 8) + (self.shape[-1],),
+            sig_dims=2,
+        )
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=tileshape,
+            dataset_shape=self.shape,
+        )
+        tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype=np.float32)
+        out = np.zeros(self.shape.sig, dtype=np.float32)
+        for tile in tiles:
+            out[tile.tile_slice.get(sig_only=True)] += np.sum(tile.data, axis=0)
+        return out / num_frames
 
     def _get_gain_map(self):
         if self._gain_map_path is None:
@@ -463,19 +522,6 @@ class FRMS6DataSet(DataSet):
                 csv_gain_data = list(csv_reader)
                 csv_gain_nums = [[float(x) for x in row if x != ''] for row in csv_gain_data]
                 return np.array(csv_gain_nums).T
-
-    def _get_signal_files(self):
-        start_idx = 0
-        files = self._files()
-        if len(files) < 2:
-            raise DataSetException("did not find signal files")
-        for path in files[1:]:
-            f = FRMS6File(path=path, start_idx=start_idx, hdr_info=self._get_hdr_info())
-            start_idx += f.num_frames
-            yield f
-
-    def _get_fileset(self):
-        return self._fileset
 
     def _pattern(self):
         path, ext = os.path.splitext(self._path)
@@ -494,10 +540,11 @@ class FRMS6DataSet(DataSet):
 
     def check_valid(self):
         try:
-            for fn in self._files():
-                f = FRMS6File(fn)
-                if not f.check_valid():
-                    raise DataSetException("error while checking validity of %s" % fn)
+            for header in self._headers:
+                if not _header_valid(header):
+                    raise DataSetException(
+                        "error while checking validity of %s" % header['path']
+                    )
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)
@@ -522,21 +569,91 @@ class FRMS6DataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB (converted float data) per partition
-        partition_size = 512 * 1024 * 1024 / 4
-        partition_size /= np.dtype("u2").itemsize
-        res = max(self._cores, self._total_filesize // int(partition_size))
+        partition_size_px = 512 * 1024 * 1024 // 4
+        total_size_px = np.prod(self.shape)
+        res = max(self._cores, total_size_px // partition_size_px)
         return res
+
+    def _get_fileset(self, headers=None):
+        files = []
+        start_idx = 0
+        if headers is None:
+            headers = self._headers[1:]  # skip first file w/ dark frames...
+        header = headers[0]
+        native_dtype = np.dtype(np.uint16)
+        frame_header_size = header['frame_header_size']
+        file_header = header['header_size']
+        for header in headers:
+            path = header['path']
+            sig_shape = (header['height'], header['width'])
+            num_frames = _num_frames(header)
+            files.append(
+                FRMS6File(
+                    path=path,
+                    start_idx=start_idx,
+                    end_idx=start_idx + num_frames,
+                    native_dtype=native_dtype,
+                    sig_shape=sig_shape,
+                    file_header=file_header,
+                    frame_header=frame_header_size,
+                )
+            )
+            start_idx += num_frames
+        global_header = self._get_hdr_info()
+        return FRMS6FileSet(
+            files=files,
+            global_header=global_header,
+            frame_header_bytes=frame_header_size
+        )
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        assert fileset is not None
-        for part_slice, start, stop in Partition3D.make_slices(
+        gain_map = self._get_gain_map()
+        dark_frame = self._get_dark_frame()
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield FRMS6Partition(
                 meta=self._meta,
                 partition_slice=part_slice,
                 fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
+                header=self._headers[0],
+                global_header=self._get_hdr_info(),
+                gain_map=gain_map,
+                dark_frame=dark_frame,
             )
+
+
+class FRMS6Partition(BasePartition):
+    def __init__(self, global_header, header, gain_map=None, dark_frame=None, *args, **kwargs):
+        self._header = header
+        self._global_header = global_header
+        self._gain_map = gain_map
+        self._dark_frame = dark_frame
+        super().__init__(*args, **kwargs)
+
+    def _get_binning(self):
+        return self._global_header['readoutmode']['bin']
+
+    def _get_decoder(self):
+        return FRMS6Decoder(
+            binning=self._get_binning(),
+            gain_map=self._gain_map,
+            dark_frame=self._dark_frame,
+        )
+
+    def validate_tiling_scheme(self, tiling_scheme):
+        binning = self._get_binning()
+
+        a = len(tiling_scheme.shape) == 3
+        b = tiling_scheme.shape[1] % binning == 0
+        c = tiling_scheme.shape[2] == self.meta.shape.sig[1]
+        if not (a and b and c):
+            raise ValueError(
+                "Invalid tiling scheme: needs to be divisible by binning (%d)" % binning
+            )
+
+    def get_base_shape(self):
+        return (1, self._get_binning(), self.shape.sig[-1])

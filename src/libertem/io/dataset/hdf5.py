@@ -1,14 +1,15 @@
 import contextlib
+import warnings
 import time
 
 import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
-from libertem.io.utils import get_partition_shape
 from libertem.web.messages import MessageConverter
 from .base import (
-    DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices
+    DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
+    TilingScheme,
 )
 
 
@@ -26,20 +27,14 @@ class HDF5DatasetParams(MessageConverter):
             "type": {"const": "HDF5"},
             "path": {"type": "string"},
             "ds_path": {"type": "string"},
-            "tileshape": {
-                "type": "array",
-                "items": {"type": "number"},
-                "minItems": 4,
-                "maxItems": 4,
-            },
         },
-        "required": ["type", "path", "ds_path", "tileshape"]
+        "required": ["type", "path", "ds_path"]
     }
 
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "ds_path", "tileshape"]
+            for k in ["path", "ds_path"]
         }
         return data
 
@@ -79,7 +74,7 @@ class H5DataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("hdf5", path=path_to_hdf5, ds_path="/data", tileshape=(5, 16, 16))
+    >>> ds = ctx.load("hdf5", path=path_to_hdf5, ds_path="/data")
 
     Parameters
     ----------
@@ -88,10 +83,6 @@ class H5DataSet(DataSet):
 
     ds_path: str
         Path to the HDF5 data set inside the file
-
-    tileshape: tuple of int
-        Tuning parameter, specifying the size of the smallest data unit
-        we are reading and working on. Should match dimensionality of the data set.
 
     sig_dims: int
         Number of dimensions that should be considered part of the signal (for example
@@ -111,9 +102,8 @@ class H5DataSet(DataSet):
         self.ds_path = ds_path
         self.target_size = target_size
         self.sig_dims = sig_dims
-        self.tileshape = None
         if tileshape is not None:
-            self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
+            warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None
@@ -131,7 +121,6 @@ class H5DataSet(DataSet):
             self._meta = DataSetMeta(
                 shape=self.shape,
                 raw_dtype=self._dtype,
-                iocaps={"FULL_FRAMES"},
             )
         return self
 
@@ -179,8 +168,6 @@ class H5DataSet(DataSet):
             "parameters": {
                 "path": path,
                 "ds_path": name,
-                # FIXME: number of frames may not match L3 size
-                "tileshape": (1, 8,) + shape[2:],
             },
             "info": {
                 "dataset_paths": dataset_paths,
@@ -245,7 +232,6 @@ class H5DataSet(DataSet):
         ) + tuple(self.shape.sig)
         for pslice in ds_slice.subslices(partition_shape):
             yield H5Partition(
-                tileshape=self.tileshape,
                 meta=self._meta,
                 reader=self.get_reader(),
                 partition_slice=pslice.flatten_nav(self.shape),
@@ -257,40 +243,28 @@ class H5DataSet(DataSet):
 
 
 class H5Partition(Partition):
-    def __init__(self, tileshape, reader, slice_nd, *args, **kwargs):
-        self.tileshape = tileshape
+    def __init__(self, reader, slice_nd, *args, **kwargs):
         self.reader = reader
         self.slice_nd = slice_nd
         super().__init__(*args, **kwargs)
 
-    def _get_tileshape(self, dest_dtype, target_size=None):
-        if self.tileshape is not None:
-            return self.tileshape
-        if target_size is None:
-            target_size = 1 * 1024 * 1024
-        nav_shape = get_partition_shape(
-            dataset_shape=self.slice_nd.shape,
-            target_size_items=target_size // np.dtype(dest_dtype).itemsize,
-        )
-        return Shape(
-            nav_shape + tuple(self.slice_nd.shape.sig),
-            sig_dims=self.slice_nd.shape.sig.dims,
-        )
+    def _get_subslices(self, tiling_scheme, tileshape_nd):
+        subslices = self.slice_nd.subslices(shape=tileshape_nd)
+        scheme_len = len(tiling_scheme)
+        for idx, subslice in enumerate(subslices):
+            scheme_idx = idx % scheme_len
+            yield scheme_idx, subslice
 
-    def _get_tiles_normal(self, tileshape, crop_to=None, dest_dtype="float32"):
-        if crop_to is not None:
-            if crop_to.shape.sig != self.meta.shape.sig:
-                raise DataSetException("H5DataSet only supports whole-frame crops for now")
-        data = np.ndarray(tileshape, dtype=dest_dtype)
+    def _get_tiles_normal(self, tiling_scheme, tileshape_nd, dest_dtype="float32"):
+        data = np.ndarray(tileshape_nd, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:
-            subslices = self.slice_nd.subslices(shape=tileshape)
-            for tile_slice in subslices:
+            subslices = self._get_subslices(
+                tiling_scheme=tiling_scheme,
+                tileshape_nd=tileshape_nd,
+            )
+            for scheme_idx, tile_slice in subslices:
                 tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
-                if crop_to is not None:
-                    intersection = tile_slice_flat.intersection_with(crop_to)
-                    if intersection.is_null():
-                        continue
-                if tuple(tile_slice.shape) != tuple(tileshape):
+                if tuple(tile_slice.shape) != tuple(tileshape_nd):
                     # at the border, can't reuse buffer
                     border_data = np.ndarray(tile_slice.shape, dtype=dest_dtype)
                     buf = border_data
@@ -298,7 +272,11 @@ class H5Partition(Partition):
                     # reuse buffer
                     buf = data
                 dataset.read_direct(buf, source_sel=tile_slice.get())
-                yield DataTile(data=buf.reshape(tile_slice_flat.shape), tile_slice=tile_slice_flat)
+                yield DataTile(
+                    buf.reshape(tile_slice_flat.shape),
+                    tile_slice=tile_slice_flat,
+                    scheme_idx=scheme_idx,
+                )
 
     def _get_tiles_with_roi(self, roi, dest_dtype):
         flat_roi = roi.reshape((-1,))
@@ -319,22 +297,62 @@ class H5Partition(Partition):
                     shape=result_shape,
                 )
                 yield DataTile(
-                    data=h5ds[idx].reshape(result_shape),
-                    tile_slice=tile_slice
+                    h5ds[idx].reshape(result_shape),
+                    tile_slice=tile_slice,
+                    # there is only a single slice in the tiling scheme, so our
+                    # scheme_idx is constant 0
+                    scheme_idx=0,
                 )
                 frames_read += 1
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False, dest_dtype="float32",
-                  roi=None, target_size=None):
-        if crop_to is not None and roi is not None:
-            if crop_to.shape.nav.size != self._num_frames:
-                raise ValueError("don't use crop_to with roi")
-        tileshape = self._get_tileshape(dest_dtype, target_size)
-        if full_frames:
-            tileshape = (
-                tuple(tileshape.nav) + tuple(self.meta.shape.sig)
-            )
+    def get_base_shape(self):
+        # FIXME: use chunking?
+        return (1, 1,) + (self.shape[-1],)
+
+    def adjust_tileshape(self, tileshape):
+        return tileshape
+
+    def need_decode(self, roi, read_dtype):
+        return True
+
+    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+        extra_nav_dims = self.meta.shape.nav.dims - tiling_scheme.shape.nav.dims
+        tileshape_nd = extra_nav_dims * (1,) + tuple(tiling_scheme.shape)
+
         if roi is not None:
             yield from self._get_tiles_with_roi(roi, dest_dtype)
         else:
-            yield from self._get_tiles_normal(tileshape, crop_to, dest_dtype)
+            yield from self._get_tiles_normal(tiling_scheme, tileshape_nd, dest_dtype)
+
+    def get_locations(self):
+        return None
+
+    def get_macrotile(self, dest_dtype="float32", roi=None):
+        '''
+        Return a single tile for the entire partition.
+
+        This is useful to support process_partiton() in UDFs and to construct dask arrays
+        from datasets.
+        '''
+
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=self.shape,
+            dataset_shape=self.meta.shape,
+        )
+
+        try:
+            return next(self.get_tiles(
+                tiling_scheme=tiling_scheme,
+                dest_dtype=dest_dtype,
+                roi=roi,
+            ))
+        except StopIteration:
+            tile_slice = Slice(
+                origin=(self.slice.origin[0], 0, 0),
+                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
+            )
+            return DataTile(
+                np.zeros(tile_slice.shape, dtype=dest_dtype),
+                tile_slice=tile_slice,
+                scheme_idx=0,
+            )

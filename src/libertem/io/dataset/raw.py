@@ -191,7 +191,8 @@ class RawFileDataSet(DataSet):
             warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
 
         if crop_detector_to is not None:
-            warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
+            warnings.warn("crop_detector_to and detector_size_raw are deprecated, ",
+                          "and will be removed after version 0.6.0. ",
                           "please specify detector_size instead or use EMPAD DataSet",
                           DeprecationWarning)
             if detector_size is not None:
@@ -200,6 +201,9 @@ class RawFileDataSet(DataSet):
                 raise ValueError("RawFileDataSet can't crop detector anymore, "
                                  "please use EMPAD DataSet")
             detector_size = crop_detector_to
+
+        if detector_size is None:
+            raise ValueError("missing 1 required argument: 'detector_size'")
 
         self._path = path
         self._scan_size = tuple(scan_size)

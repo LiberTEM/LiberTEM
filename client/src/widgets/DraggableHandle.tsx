@@ -38,8 +38,8 @@ const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, focusRef, ...a
     const scaleMatrix = `matrix(${scale}, 0, 0, ${scale}, ${x - scale * x}, ${y - scale * y})`;
     const style: React.CSSProperties = { transform: scaleMatrix };
     const crossSpec = `
-        M${x - r / 2} ${y} L ${x + r / 2} ${y}
-        M${x} ${y - r / 2} L ${x} ${y + r / 2}
+        M${x - 4 - r / 2} ${y} L ${x - r / 2} ${y} M${x + r / 2} ${y} L ${x + 4 + r / 2} ${y}
+        M${x} ${y - 4 - r / 2} L ${x} ${y - r / 2} M${x} ${y + r / 2} L ${x} ${y + 4 + r / 2}
     `;
     const cross = withCross ? <Cross d={crossSpec} style={style} /> : null;
     return (

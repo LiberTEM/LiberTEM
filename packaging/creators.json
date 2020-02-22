@@ -102,5 +102,12 @@
         "affiliation": "Jülich Research Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
+    },
+    {
+        "displayname": "Anand Baburajan",
+        "authorname": "Baburajan, Anand",
+        "affiliation": "APJ Abdul Kalam Technological University",
+        "github": "anandbaburajan",
+        "contribution": "Fixed issue 267",
     }
 ]

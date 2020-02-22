@@ -134,7 +134,7 @@ drag it around with the mouse to see the frames live in the left window. The
 picked coordinates are displayed along with the virtual detector parameters
 below the frame window on the left.
 
-..  figure:: ./images/use/new_picker.png
+..  figure:: ./images/use/pick_frame.png
 
 Some analyses, such as the Center of Mass (COM) analysis, can render the result
 in different ways. You can select the channel in the "Image" drop-down menu

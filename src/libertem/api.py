@@ -18,8 +18,8 @@ from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
-from libertem.analysis.masks import MasksAnalysis, MasksResultSet
-from libertem.analysis.base import Analysis
+from libertem.analysis.masks import MasksAnalysis
+from libertem.analysis.base import Analysis, AnalysisResultSet
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
 
@@ -96,7 +96,7 @@ class Context:
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
     def create_mask_job(self, factories, dataset, use_sparse=None,
-                        mask_count=None, mask_dtype=None, dtype=None) -> np.ndarray:
+                        mask_count=None, mask_dtype=None, dtype=None) -> ApplyMasksJob:
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -429,7 +429,8 @@ class Context:
         """
         return SumAnalysis(dataset=dataset, parameters={})
 
-    def create_pick_job(self, dataset, origin: Tuple[int], shape: Tuple[int] = None) -> np.ndarray:
+    def create_pick_job(self, dataset, origin: Tuple[int],
+                        shape: Tuple[int] = None) -> PickFrameJob:
         """
         Create a job that picks raw data from `origin` with the size defined in `shape`.
 
@@ -517,7 +518,8 @@ class Context:
             squeeze=True,
         )
 
-    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None) -> PickFrameAnalysis:
+    def create_pick_analysis(self, dataset, x: int, y: int = None,
+                             z: int = None) -> PickFrameAnalysis:
         """
         Create an Analysis that picks a single frame / signal element from (z, y, x).
         The number of parameters must match number of navigation dimensions in the dataset,
@@ -557,7 +559,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, Analysis], roi=None) -> np.ndarray:
+    def run(self, job: Union[Job, Analysis], roi=None) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.
@@ -605,7 +607,7 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False) -> BufferWrapper:
+    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False) -> dict:
         """
         Run `udf` on `dataset`.
 

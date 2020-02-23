@@ -9,15 +9,16 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
 from libertem.job.base import Job
 from libertem.common import Slice, Shape
+from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
-from libertem.analysis.raw import PickFrameAnalysis
-from libertem.analysis.com import COMAnalysis
-from libertem.analysis.radialfourier import RadialFourierAnalysis
+from libertem.analysis.raw import PickFrameAnalysis, PickResultSet
+from libertem.analysis.com import COMAnalysis, COMResultSet
+from libertem.analysis.radialfourier import RadialFourierAnalysis, RadialFourierResultSet
 from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
-from libertem.analysis.sum import SumAnalysis
+from libertem.analysis.sum import SumAnalysis, SumResultSet
 from libertem.analysis.point import PointMaskAnalysis
-from libertem.analysis.masks import MasksAnalysis
+from libertem.analysis.masks import MasksAnalysis, MasksResultSet, SingleMaskResultSet
 from libertem.analysis.base import Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
@@ -95,7 +96,7 @@ class Context:
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
     def create_mask_job(self, factories, dataset, use_sparse=None,
-                        mask_count=None, mask_dtype=None, dtype=None):
+                        mask_count=None, mask_dtype=None, dtype=None) -> np.ndarray:
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -170,7 +171,7 @@ class Context:
         )
 
     def create_mask_analysis(self, factories, dataset, use_sparse=None,
-                             mask_count=None, mask_dtype=None, dtype=None):
+                             mask_count=None, mask_dtype=None, dtype=None) -> MasksResultSet:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
@@ -246,7 +247,7 @@ class Context:
                 "dtype": dtype},
         )
 
-    def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None):
+    def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None) -> COMResultSet:
         """
         Create a center-of-mass (first moment) analysis, possibly masked.
 
@@ -282,7 +283,7 @@ class Context:
 
     def create_radial_fourier_analysis(self, dataset, cx: float = None, cy: float = None,
             ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None,
-            use_sparse: bool = None):
+            use_sparse: bool = None) -> RadialFourierResultSet:
         """
         Create an Analysis that calculates the Fourier transform of rings around the center.
 
@@ -324,7 +325,7 @@ class Context:
         )
         return analysis
 
-    def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None):
+    def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None) -> SingleMaskResultSet:
         """
         Create an Analysis that integrates over a disk (i.e. filled circle).
 
@@ -354,7 +355,7 @@ class Context:
         )
 
     def create_ring_analysis(
-            self, dataset, cx: int = None, cy: int = None, ri: int = None, ro: int = None):
+            self, dataset, cx: int = None, cy: int = None, ri: int = None, ro: int = None) -> SingleMaskResultSet:
         """
         Create an Analysis that integrates over a ring.
 
@@ -385,7 +386,7 @@ class Context:
             dataset=dataset, parameters=parameters
         )
 
-    def create_point_analysis(self, dataset, x: int = None, y: int = None):
+    def create_point_analysis(self, dataset, x: int = None, y: int = None) -> SingleMaskResultSet:
         """
         Create an Analysis that selects the pixel with coords (y, x) from each frame
 
@@ -408,7 +409,7 @@ class Context:
         }
         return PointMaskAnalysis(dataset=dataset, parameters=parameters)
 
-    def create_sum_analysis(self, dataset):
+    def create_sum_analysis(self, dataset) -> SumResultSet:
         """
         Create an Analysis that sums all signal elements along the navigation
         dimension, preserving the signal dimension.
@@ -514,7 +515,7 @@ class Context:
             squeeze=True,
         )
 
-    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None):
+    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None) -> PickResultSet:
         """
         Create an Analysis that picks a single frame / signal element from (z, y, x).
         The number of parameters must match number of navigation dimensions in the dataset,
@@ -554,7 +555,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, Analysis], roi=None):
+    def run(self, job: Union[Job, Analysis], roi=None) -> np.ndarray:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.
@@ -602,7 +603,7 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False):
+    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False) -> BufferWrapper:
         """
         Run `udf` on `dataset`.
 
@@ -635,7 +636,7 @@ class Context:
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi, progress=progress)
 
-    def map(self, dataset, f, roi=None):
+    def map(self, dataset, f, roi=None) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
 

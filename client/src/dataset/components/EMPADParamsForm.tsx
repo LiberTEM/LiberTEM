@@ -17,7 +17,7 @@ type DatasetParamsEMPADForForm = Omit<DatasetParamsEMPAD,
 
 type MergedProps = FormikProps<DatasetParamsEMPADForForm> & OpenFormProps<DatasetParamsEMPAD>;
 
-const RawFileParamsForm: React.SFC<MergedProps> = ({
+const EMPADParamsForm: React.SFC<MergedProps> = ({
     values,
     touched,
     errors,
@@ -62,4 +62,4 @@ export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
         };
     },
     type: DatasetTypes.EMPAD,
-})(RawFileParamsForm);
+})(EMPADParamsForm);

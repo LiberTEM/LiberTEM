@@ -5,7 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
 import { getInitial, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-var path = require('path');
+import * as pathfind from 'path';
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
@@ -42,7 +42,7 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
+        name: getInitial("name", pathfind.basename(getInitial("path", "", initial)), initial),
     }),
     formToJson: (values, path) => {
         return {

@@ -5,7 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-var path = require('path');
+import * as pathfind from 'path';
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
@@ -68,7 +68,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
+        name: getInitial("name", pathfind.basename(getInitial("path", "", initial)), initial),
         enable_direct: getInitial("enable_direct", false, initial),
         detector_size: getInitial("detector_size", "", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),

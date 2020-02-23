@@ -171,7 +171,7 @@ class Context:
         )
 
     def create_mask_analysis(self, factories, dataset, use_sparse=None,
-                             mask_count=None, mask_dtype=None, dtype=None) -> MasksResultSet:
+                             mask_count=None, mask_dtype=None, dtype=None) -> MasksAnalysis:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
@@ -248,7 +248,7 @@ class Context:
         )
 
     def create_com_analysis(self, dataset, cx: int = None, cy: int = None,
-                            mask_radius: int = None) -> COMResultSet:
+                            mask_radius: int = None) -> COMAnalysis:
         """
         Create a center-of-mass (first moment) analysis, possibly masked.
 
@@ -284,7 +284,7 @@ class Context:
 
     def create_radial_fourier_analysis(self, dataset, cx: float = None, cy: float = None,
             ri: float = None, ro: float = None, n_bins: int = None, max_order: int = None,
-            use_sparse: bool = None) -> RadialFourierResultSet:
+            use_sparse: bool = None) -> RadialFourierAnalysis:
         """
         Create an Analysis that calculates the Fourier transform of rings around the center.
 
@@ -327,7 +327,7 @@ class Context:
         return analysis
 
     def create_disk_analysis(self, dataset, cx: int = None, cy: int = None,
-                             r: int = None) -> SingleMaskResultSet:
+                             r: int = None) -> DiskMaskAnalysis:
         """
         Create an Analysis that integrates over a disk (i.e. filled circle).
 
@@ -357,7 +357,7 @@ class Context:
         )
 
     def create_ring_analysis(self, dataset, cx: int = None, cy: int = None,
-                             ri: int = None, ro: int = None) -> SingleMaskResultSet:
+                             ri: int = None, ro: int = None) -> RingMaskAnalysis:
         """
         Create an Analysis that integrates over a ring.
 
@@ -388,7 +388,7 @@ class Context:
             dataset=dataset, parameters=parameters
         )
 
-    def create_point_analysis(self, dataset, x: int = None, y: int = None) -> SingleMaskResultSet:
+    def create_point_analysis(self, dataset, x: int = None, y: int = None) -> PointMaskAnalysis:
         """
         Create an Analysis that selects the pixel with coords (y, x) from each frame
 
@@ -411,7 +411,7 @@ class Context:
         }
         return PointMaskAnalysis(dataset=dataset, parameters=parameters)
 
-    def create_sum_analysis(self, dataset) -> SumResultSet:
+    def create_sum_analysis(self, dataset) -> SumAnalysis:
         """
         Create an Analysis that sums all signal elements along the navigation
         dimension, preserving the signal dimension.
@@ -517,7 +517,7 @@ class Context:
             squeeze=True,
         )
 
-    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None) -> PickResultSet:
+    def create_pick_analysis(self, dataset, x: int, y: int = None, z: int = None) -> PickFrameAnalysis:
         """
         Create an Analysis that picks a single frame / signal element from (z, y, x).
         The number of parameters must match number of navigation dimensions in the dataset,

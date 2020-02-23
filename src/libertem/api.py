@@ -11,14 +11,14 @@ from libertem.job.base import Job
 from libertem.common import Slice, Shape
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
-from libertem.analysis.raw import PickFrameAnalysis, PickResultSet
-from libertem.analysis.com import COMAnalysis, COMResultSet
-from libertem.analysis.radialfourier import RadialFourierAnalysis, RadialFourierResultSet
+from libertem.analysis.raw import PickFrameAnalysis
+from libertem.analysis.com import COMAnalysis
+from libertem.analysis.radialfourier import RadialFourierAnalysis
 from libertem.analysis.disk import DiskMaskAnalysis
 from libertem.analysis.ring import RingMaskAnalysis
-from libertem.analysis.sum import SumAnalysis, SumResultSet
+from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
-from libertem.analysis.masks import MasksAnalysis, MasksResultSet, SingleMaskResultSet
+from libertem.analysis.masks import MasksAnalysis, MasksResultSet
 from libertem.analysis.base import Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF

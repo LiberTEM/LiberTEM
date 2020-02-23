@@ -247,7 +247,8 @@ class Context:
                 "dtype": dtype},
         )
 
-    def create_com_analysis(self, dataset, cx: int = None, cy: int = None, mask_radius: int = None) -> COMResultSet:
+    def create_com_analysis(self, dataset, cx: int = None, cy: int = None,
+                            mask_radius: int = None) -> COMResultSet:
         """
         Create a center-of-mass (first moment) analysis, possibly masked.
 
@@ -325,7 +326,8 @@ class Context:
         )
         return analysis
 
-    def create_disk_analysis(self, dataset, cx: int = None, cy: int = None, r: int = None) -> SingleMaskResultSet:
+    def create_disk_analysis(self, dataset, cx: int = None, cy: int = None,
+                             r: int = None) -> SingleMaskResultSet:
         """
         Create an Analysis that integrates over a disk (i.e. filled circle).
 
@@ -354,8 +356,8 @@ class Context:
             dataset=dataset, parameters=parameters
         )
 
-    def create_ring_analysis(
-            self, dataset, cx: int = None, cy: int = None, ri: int = None, ro: int = None) -> SingleMaskResultSet:
+    def create_ring_analysis(self, dataset, cx: int = None, cy: int = None,
+                             ri: int = None, ro: int = None) -> SingleMaskResultSet:
         """
         Create an Analysis that integrates over a ring.
 

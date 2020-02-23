@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsEMPAD, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+var path = require('path');
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsEMPADForForm = Omit<DatasetParamsEMPAD,
@@ -50,7 +51,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     formToJson: (values, path) => {
@@ -63,4 +64,3 @@ export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
     },
     type: DatasetTypes.EMPAD,
 })(RawFileParamsForm);
-

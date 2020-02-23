@@ -5,7 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsSER, DatasetTypes } from "../../messages";
 import { getInitial, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-
+var path = require('path');
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsSERForForm = Omit<DatasetParamsSER,
@@ -41,7 +41,7 @@ const SERParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsSER, DatasetParamsSERForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
     }),
     formToJson: (values, path) => {
         return {

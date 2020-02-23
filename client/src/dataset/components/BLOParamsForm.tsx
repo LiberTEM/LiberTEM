@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsBLO, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+var path = require('path');
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsBLOForForm = Omit<DatasetParamsBLO,
@@ -51,7 +52,7 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsBLO, DatasetParamsBLOForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
     formToJson: (values, path) => {

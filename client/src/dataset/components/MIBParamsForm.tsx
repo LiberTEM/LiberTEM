@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsMIB, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+var path = require('path');
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
@@ -69,7 +70,7 @@ export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
         }
     },
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),

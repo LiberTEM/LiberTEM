@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+var path = require('path');
 
 type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string, };
 
@@ -48,7 +49,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+        name: getInitial("name", path.basename(getInitial("path", "", initial)), initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         ds_path: getInitial("ds_path", "", initial),
     }),

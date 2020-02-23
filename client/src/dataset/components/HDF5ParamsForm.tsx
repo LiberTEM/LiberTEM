@@ -1,11 +1,12 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
+import * as pathfind from 'path';
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
 import { getInitial, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-import * as pathfind from 'path';
+
 type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string, };
 
 type MergedProps = FormikProps<DatasetParamsHDF5ForForm> & OpenFormProps<DatasetParamsHDF5>;

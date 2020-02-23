@@ -1,11 +1,11 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
+import * as pathfind from 'path';
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
 import { getInitial, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-import * as pathfind from 'path';
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,

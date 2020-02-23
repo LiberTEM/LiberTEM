@@ -1,5 +1,5 @@
 import warnings
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 
 import psutil
 import numpy as np
@@ -607,7 +607,8 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset: DataSet, udf: UDF, roi=None, progress=False) -> dict:
+    def run_udf(self, dataset: DataSet, udf: UDF, roi=None,
+                progress=False) -> Dict[str, BufferWrapper]:
         """
         Run `udf` on `dataset`.
 

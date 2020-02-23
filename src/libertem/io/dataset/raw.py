@@ -203,7 +203,7 @@ class RawFileDataSet(DataSet):
             detector_size = crop_detector_to
 
         if detector_size is None:
-            raise ValueError("missing 1 required argument: 'detector_size'")
+            raise TypeError("missing 1 required argument: 'detector_size'")
 
         self._path = path
         self._scan_size = tuple(scan_size)

@@ -1,10 +1,9 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
-import * as pathfind from 'path';
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsFRMS6, DatasetTypes } from "../../messages";
-import { getInitial, withValidation } from "../helpers";
+import { getInitialName, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -41,7 +40,7 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsFRMS6, DatasetParamsFRMS6ForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", pathfind.basename(getInitial("path", "", initial)), initial),
+        name: getInitialName(initial),
     }),
     formToJson: (values, path) => {
         return {

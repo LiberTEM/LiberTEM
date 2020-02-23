@@ -1,10 +1,9 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
-import * as pathfind from 'path';
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -68,7 +67,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", pathfind.basename(getInitial("path", "", initial)), initial),
+        name: getInitialName(initial),
         enable_direct: getInitial("enable_direct", false, initial),
         detector_size: getInitial("detector_size", "", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),

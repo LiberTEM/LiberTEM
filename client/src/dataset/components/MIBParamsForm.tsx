@@ -1,10 +1,9 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
-import * as pathfind from 'path';
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsMIB, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -70,7 +69,7 @@ export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
         }
     },
     mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", pathfind.basename(getInitial("path", "", initial)), initial),
+        name: getInitialName(initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),

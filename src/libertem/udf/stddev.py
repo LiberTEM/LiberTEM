@@ -32,7 +32,7 @@ def merge(dest_N, dest_sum, dest_varsum, src_N, src_sum, src_varsum):
     Given two sets of partitions, with sum of frames
     and sum of variances, aggregate joint sum of frames
     and sum of variances in destination partition using one pass
-    algorithm :cite:`Schubert2018`
+    algorithm. :cite:`Schubert2018`
 
     Parameters
     ----------

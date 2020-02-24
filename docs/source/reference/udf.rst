@@ -62,6 +62,8 @@ Some generally useful UDFs are included with LiberTEM:
 
 .. _`stddev udf`:
 
+Single-pass standard deviation based on :cite:`Schubert2018`.
+
 .. autoclass:: libertem.udf.stddev.StdDevUDF
     :members:
     :special-members: __init__

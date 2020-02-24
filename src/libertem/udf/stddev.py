@@ -7,7 +7,7 @@ from libertem.udf import UDF
 @numba.njit(fastmath=True)
 def _merge(N, N0, sum_im0, var0, N1, sum_im1, var1):
     '''
-    Basic function to perform numerically stable merge :cite:`Schubert2018`
+    Basic function to perform numerically stable merge Schubert2018
     '''
     # compute mean for each partitions
     mean_A = sum_im0 / N0
@@ -32,7 +32,7 @@ def merge(dest_N, dest_sum, dest_varsum, src_N, src_sum, src_varsum):
     Given two sets of partitions, with sum of frames
     and sum of variances, aggregate joint sum of frames
     and sum of variances in destination partition using one pass
-    algorithm. :cite:`Schubert2018`
+    algorithm. Schubert2018
 
     Parameters
     ----------
@@ -128,7 +128,7 @@ class StdDevUDF(UDF):
     Compute sum of variances and sum of pixels from the given dataset
 
     The one-pass algorithm used in this code is taken from the following paper:
-    :cite:`Schubert2018`
+    Schubert2018
 
     Examples
     --------

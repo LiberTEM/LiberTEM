@@ -6,8 +6,17 @@ from libertem.udf import UDF
 
 @numba.njit(fastmath=True)
 def _merge(N, N0, sum_im0, var0, N1, sum_im1, var1):
+    # FIXME manual citation due to issues in CI.
+    # Check if :cite:`Schubert2018` works in a future release
     '''
-    Basic function to perform numerically stable merge Schubert2018
+    Basic function to perform numerically stable merge
+
+    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
+    (co-)variance. In `Proceedings of the 30th International Conference on
+    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
+    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
+
+    cite:Schubert2018
     '''
     # compute mean for each partitions
     mean_A = sum_im0 / N0
@@ -28,11 +37,20 @@ def _merge(N, N0, sum_im0, var0, N1, sum_im1, var1):
 
 @numba.njit(fastmath=True)
 def merge(dest_N, dest_sum, dest_varsum, src_N, src_sum, src_varsum):
+    # FIXME manual citation due to issues in CI.
+    # Check if :cite:`Schubert2018` works in a future release
     """
     Given two sets of partitions, with sum of frames
     and sum of variances, aggregate joint sum of frames
     and sum of variances in destination partition using one pass
-    algorithm. Schubert2018
+    algorithm.
+
+    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
+    (co-)variance. In `Proceedings of the 30th International Conference on
+    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
+    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
+
+    cite:Schubert2018
 
     Parameters
     ----------
@@ -124,11 +142,19 @@ def _validate_n(num_frame):
 
 
 class StdDevUDF(UDF):
+    # FIXME manual citation due to issues in CI.
+    # Check if :cite:`Schubert2018` works in a future release
     """
     Compute sum of variances and sum of pixels from the given dataset
 
     The one-pass algorithm used in this code is taken from the following paper:
-    Schubert2018
+
+    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
+    (co-)variance. In `Proceedings of the 30th International Conference on
+    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
+    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
+
+    cite:Schubert2018
 
     Examples
     --------

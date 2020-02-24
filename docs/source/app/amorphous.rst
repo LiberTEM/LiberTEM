@@ -21,7 +21,7 @@ volume of beam and sample will lead to increased "speckle", i.e. intensity
 fluctuations within this ring, since regions with local ordering will diffract
 the beam to preferred directions similar to a crystal. For Fluctuation EM
 :cite:`Gibson1997`, the standard deviation within this ring is calculated to
-obtain a measure of this local ordering.
+obtain a measure of this local ordering. :cite:`Schubert2018`
 
 GUI use
 -------

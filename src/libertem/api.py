@@ -3,6 +3,7 @@ from typing import Union, Tuple, Dict, Iterable, Callable
 
 import psutil
 import numpy as np
+import scipy.sparse as sp
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
@@ -95,8 +96,10 @@ class Context:
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
+    MaskArrayType = Union[np.ndarray, sp.coo.coo_matrix, sp.dok.dok_matrix]
+    
     def create_mask_job(self,
-            factories: Union[Callable[[], np.ndarray], Iterable[Callable[[], np.ndarray]]],
+            factories: Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]],
             dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
             mask_dtype: np.ndarray = None, dtype: np.ndarray = None) -> ApplyMasksJob:
         """
@@ -173,7 +176,7 @@ class Context:
         )
 
     def create_mask_analysis(self,
-            factories: Union[Callable[[], np.ndarray], Iterable[Callable[[], np.ndarray]]],
+            factories: Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]],
             dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
             mask_dtype: np.dtype = None, dtype: np.dtype = None) -> MasksAnalysis:
         """

@@ -7,7 +7,6 @@ from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
-from libertem.job.base import Job
 from libertem.common import Slice, Shape
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
@@ -20,7 +19,7 @@ from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
-from libertem.analysis.base import Analysis, AnalysisResultSet
+from libertem.analysis.base import AnalysisResultSet, BaseAnalysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
 
@@ -32,7 +31,7 @@ class Context:
     them.
     """
 
-    def __init__(self, executor: JobExecutor=None):
+    def __init__(self, executor: JobExecutor = None):
         """
         Create a new context. In the background, this creates a suitable
         executor and spins up a local Dask cluster.
@@ -96,8 +95,10 @@ class Context:
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
-    def create_mask_job(self, factories, dataset, use_sparse=None,
-                        mask_count=None, mask_dtype=None,dtype=None) -> ApplyMasksJob:
+    def create_mask_job(self,
+            factories: Union[Callable[[], np.ndarray], Iterable[Callable[[], np.ndarray]]],
+            dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
+            mask_dtype: np.ndarray = None, dtype: np.ndarray = None) -> ApplyMasksJob:
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -171,9 +172,10 @@ class Context:
             dtype=dtype,
         )
 
-    def create_mask_analysis(self, factories, dataset: DataSet, use_sparse: bool = None,
-            mask_count: int = None, mask_dtype: np.dtype = None,
-            dtype: np.dtype = None) -> MasksAnalysis:
+    def create_mask_analysis(self,
+            factories: Union[Callable[[], np.ndarray], Iterable[Callable[[], np.ndarray]]],
+            dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
+            mask_dtype: np.dtype = None, dtype: np.dtype = None) -> MasksAnalysis:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
@@ -562,7 +564,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, Analysis],
+    def run(self, job: BaseAnalysis,
             roi: np.ndarray = None, progress: bool = False) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`

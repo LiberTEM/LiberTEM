@@ -1,9 +1,8 @@
 import warnings
-from typing import Union, Tuple, Dict, Iterable, Callable
+from typing import Union, Tuple, Dict
 
 import psutil
 import numpy as np
-import scipy.sparse as sp
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
@@ -12,6 +11,7 @@ from libertem.common import Slice, Shape
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.base import JobExecutor
+from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
 from libertem.analysis.radialfourier import RadialFourierAnalysis
@@ -96,12 +96,9 @@ class Context:
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
-    MaskArrayType = Union[np.ndarray, sp.coo.coo_matrix, sp.dok.dok_matrix]
-    
-    def create_mask_job(self,
-            factories: Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]],
-            dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
-            mask_dtype: np.ndarray = None, dtype: np.ndarray = None) -> ApplyMasksJob:
+    def create_mask_job(self, factories: MaskFactoriesType, dataset: DataSet,
+            use_sparse: bool = None, mask_count: int = None, mask_dtype: np.ndarray = None,
+            dtype: np.ndarray = None) -> ApplyMasksJob:
         """
         Create a low-level mask application job. Each factory function should, when called,
         return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
@@ -175,10 +172,9 @@ class Context:
             dtype=dtype,
         )
 
-    def create_mask_analysis(self,
-            factories: Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]],
-            dataset: DataSet, use_sparse: bool = None, mask_count: int = None,
-            mask_dtype: np.dtype = None, dtype: np.dtype = None) -> MasksAnalysis:
+    def create_mask_analysis(self, factories: MaskFactoriesType, dataset: DataSet,
+            use_sparse: bool = None, mask_count: int = None, mask_dtype: np.dtype = None,
+            dtype: np.dtype = None) -> MasksAnalysis:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the

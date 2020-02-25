@@ -39,8 +39,8 @@ const SERParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsSER, DatasetParamsSERForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitialName(initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName(initial,path),
     }),
     formToJson: (values, path) => {
         return {

@@ -50,8 +50,8 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsBLO, DatasetParamsBLOForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitialName(initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName(initial,path),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
     formToJson: (values, path) => {

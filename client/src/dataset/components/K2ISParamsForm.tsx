@@ -40,8 +40,8 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitialName(initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName(initial,path),
     }),
     formToJson: (values, path) => {
         return {

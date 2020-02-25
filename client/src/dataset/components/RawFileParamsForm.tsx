@@ -31,6 +31,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     onCancel,
 }) => {
     return (
+
         <Form onSubmit={handleSubmit}>
             <Form.Field>
                 <label htmlFor="id_name">Name:</label>
@@ -66,8 +67,8 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitialName(initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName(initial,path),
         enable_direct: getInitial("enable_direct", false, initial),
         detector_size: getInitial("detector_size", "", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),

@@ -39,8 +39,8 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsFRMS6, DatasetParamsFRMS6ForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitialName(initial),
+    mapPropsToValues: ({ path, initial }) => ({
+        name: getInitialName(initial,path),
     }),
     formToJson: (values, path) => {
         return {

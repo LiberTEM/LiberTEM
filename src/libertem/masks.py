@@ -1,8 +1,13 @@
+from typing import Union, Callable, Iterable
+
 import numpy as np
 import scipy.sparse as sp
 import sparse
 
 from libertem.utils import make_polar
+
+MaskArrayType = Union[np.ndarray, sp.coo.coo_matrix, sp.dok.dok_matrix]
+MaskFactoriesType = Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]]
 
 
 def _make_circular_mask(centerX, centerY, imageSizeX, imageSizeY, radius, antialiased=False):

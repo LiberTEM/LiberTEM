@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
-from libertem.common.buffers import bytes_aligned, zeros_aligned
+from libertem.common.buffers import bytes_aligned
 
 
 def _roi_to_indices(roi, start, stop):
@@ -764,7 +764,7 @@ class Partition3D(Partition):
             sig_shape = self.meta.shape.sig
         stackheight = self._get_stackheight(
             sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
-        tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+        tile_buf_full = self.zeros((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         tileshape = (
             stackheight,
@@ -778,7 +778,7 @@ class Partition3D(Partition):
                     current_tileshape = (
                         current_stackheight,
                     ) + tuple(sig_shape)
-                    tile_buf = zeros_aligned(current_tileshape, dtype=dest_dtype)
+                    tile_buf = self.zeros(current_tileshape, dtype=dest_dtype)
                 else:
                     current_stackheight = stackheight
                     current_tileshape = tileshape
@@ -819,7 +819,15 @@ class Partition3D(Partition):
             sig_shape = self.meta.shape.sig
         stackheight = self._get_stackheight(
             sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
-        tile_buf = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+
+        frames_in_roi = np.count_nonzero(roi.reshape(-1,)[
+            start_at_frame:start_at_frame + self._num_frames
+        ])
+
+        if frames_in_roi == 0:
+            return
+
+        tile_buf = self.zeros((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         frames_read = 0
         tile_idx = 0
@@ -905,6 +913,9 @@ class Partition3D(Partition):
                     data=arr,
                     tile_slice=tile_slice
                 )
+
+    def zeros(self, *args, **kwargs):
+        return np.zeros(*args, **kwargs)
 
 
 class PartitionStructure:

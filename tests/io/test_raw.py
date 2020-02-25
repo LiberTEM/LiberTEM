@@ -239,6 +239,7 @@ def test_missing_detector_size(lt_ctx, default_raw):
     assert e.match("missing 1 required argument: 'detector_size'")
 
 
+@pytest.mark.skipif(os.name == 'nt')
 def test_load_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",

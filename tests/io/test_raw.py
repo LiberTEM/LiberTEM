@@ -237,3 +237,16 @@ def test_missing_detector_size(lt_ctx, default_raw):
             dtype="float32",
             )
     assert e.match("missing 1 required argument: 'detector_size'")
+
+
+def test_load_direct(lt_ctx, default_raw):
+    ds_direct = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        scan_size=(16, 16),
+        detector_size=(16, 16),
+        dtype="float32",
+        enable_direct=True,
+    )
+    analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
+    results = lt_ctx.run(analysis)

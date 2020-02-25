@@ -109,5 +109,12 @@
         "affiliation": "APJ Abdul Kalam Technological University",
         "github": "anandbaburajan",
         "contribution": "Various GUI fixes"
+    },
+    {
+        "displayname": "Shankhadeep Dey",
+        "authorname": "Dey, Shankhadeep",
+        "affiliation": "Siliguri Institute of Technology",
+        "github": "iamshankhadeep",
+        "contribution": "Added types to libertem.api.Context #643"
     }
 ]

@@ -154,6 +154,13 @@ below the right window.
 
 ..  figure:: ./images/use/image.png
 
+Citation
+~~~~~~~~
+
+Ophus, Colin, & Savitzky, Benjamin. (2019). Simulated calibration dataset for
+4D scanning transmission electron microscopy [Data set].
+Zenodo. http://doi.org/10.5281/zenodo.3592520
+
 Application-specific documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

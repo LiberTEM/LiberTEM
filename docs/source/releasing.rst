@@ -10,10 +10,10 @@ Release checklist
 
 * Not all aspects of LiberTEM are covered with automated unit tests. For that
   reason we should perform some manual tests before and after a release.
-* Handling deprecation, search the code base for :code:`DeprecationWarning`s
+* Handling deprecation, search the code base for :code:`DeprecationWarning`
   that are supposed to be removed in that release.
 * Add the current LiberTEM version to
-  `CVL<https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
+  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
 
 Tagging a version
 ~~~~~~~~~~~~~~~~~

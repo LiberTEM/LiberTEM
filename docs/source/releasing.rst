@@ -8,8 +8,12 @@ contributions.
 Release checklist
 -----------------
 
-Not all aspects of LiberTEM are covered with automated unit tests. For that
-reason we should perform some manual tests before and after a release.
+* Not all aspects of LiberTEM are covered with automated unit tests. For that
+  reason we should perform some manual tests before and after a release.
+* Handling deprecation, search the code base for :code:`DeprecationWarning`s
+  that are supposed to be removed in that release.
+* Add the current LiberTEM version to
+  `CVL<https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
 
 Tagging a version
 ~~~~~~~~~~~~~~~~~
@@ -53,7 +57,7 @@ Before (using a release candidate package)
 * Confirm that a new version with the most recent release candidate is created in the
   `Zenodo.org sandbox <https://sandbox.zenodo.org/record/367108>`_ that is ready for submission.
 * Install release candidate packages in a clean environment
-  (for example: 
+  (for example:
   :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
@@ -77,7 +81,7 @@ Before (using a release candidate package)
     * Proper understandable error messages?
 * Pick one file and confirm keyboard and mouse interaction for all analyses
     * Correct bounds check for keyboard and mouse?
-* Check what happens when trying to open non-existent files or directories in the GUI. 
+* Check what happens when trying to open non-existent files or directories in the GUI.
     * Proper understandable error message?
     * Possible to continue working?
 * Shut down libertem-server while analysis is running

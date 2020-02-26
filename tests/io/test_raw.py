@@ -4,6 +4,7 @@ import pickle
 
 import numpy as np
 import pytest
+import warnings
 
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
@@ -211,3 +212,42 @@ def test_sum_on_dist(raw_on_workers, dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=raw_on_workers)
     results = dist_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
+
+
+def test_ctx_load_old(lt_ctx, default_raw):
+    with warnings.catch_warnings(record=True) as w:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            dtype="float32",
+            detector_size_raw=(128, 128),
+            crop_detector_to=(128, 128)
+        )
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+
+
+def test_missing_detector_size(lt_ctx, default_raw):
+    with pytest.raises(TypeError) as e:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            dtype="float32",
+            )
+    assert e.match("missing 1 required argument: 'detector_size'")
+
+
+@pytest.mark.skipif(os.name == 'nt', reason='No direct IO on windows')
+def test_load_direct(lt_ctx, default_raw):
+    ds_direct = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        scan_size=(16, 16),
+        detector_size=(16, 16),
+        dtype="float32",
+        enable_direct=True,
+    )
+    analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
+    results = lt_ctx.run(analysis)

@@ -6,6 +6,7 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
+from libertem.common.buffers import zeros_aligned
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D,
@@ -192,6 +193,7 @@ class RawFileDataSet(DataSet):
 
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
+                          "and will be removed after version 0.6.0. "
                           "please specify detector_size instead or use EMPAD DataSet",
                           DeprecationWarning)
             if detector_size is not None:
@@ -200,6 +202,9 @@ class RawFileDataSet(DataSet):
                 raise ValueError("RawFileDataSet can't crop detector anymore, "
                                  "please use EMPAD DataSet")
             detector_size = crop_detector_to
+
+        if detector_size is None:
+            raise TypeError("missing 1 required argument: 'detector_size'")
 
         self._path = path
         self._scan_size = tuple(scan_size)
@@ -282,7 +287,8 @@ class RawFileDataSet(DataSet):
         for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield RawPartition(
+                enable_direct=self._enable_direct,
                 stackheight=self._stackheight,
                 meta=self._meta,
                 fileset=fileset,
@@ -293,3 +299,14 @@ class RawFileDataSet(DataSet):
 
     def __repr__(self):
         return "<RawFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
+
+
+class RawPartition(Partition3D):
+    def __init__(self, enable_direct, *args, **kwargs):
+        self._enable_direct = enable_direct
+        super().__init__(*args, **kwargs)
+
+    def zeros(self, *args, **kwargs):
+        if self._enable_direct:
+            return zeros_aligned(*args, **kwargs)
+        return super().zeros(*args, **kwargs)

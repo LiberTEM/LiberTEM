@@ -8,12 +8,8 @@ contributions.
 Release checklist
 -----------------
 
-* Not all aspects of LiberTEM are covered with automated unit tests. For that
-  reason we should perform some manual tests before and after a release.
-* Handling deprecation, search the code base for :code:`DeprecationWarning`
-  that are supposed to be removed in that release.
-* Add the current LiberTEM version to
-  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
+Not all aspects of LiberTEM are covered with automated unit tests. For that
+reason we should perform some manual tests before and after a release.
 
 Tagging a version
 ~~~~~~~~~~~~~~~~~
@@ -44,6 +40,8 @@ Before (using a release candidate package)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Review open issues and pull requests
+* Handle deprecation, search the code base for :code:`DeprecationWarning`
+  that are supposed to be removed in that release.
 * Full documentation review and update, including link check using
   ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
 * Update the expected version in notes on changes, i.e. from :code:`0.3.0.dev0`
@@ -98,6 +96,8 @@ Before (using a release candidate package)
     * Still usable, decent response times?
 * Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
   in appropriate branch.
+* Add the current LiberTEM version to
+  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
 
 After releasing on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~

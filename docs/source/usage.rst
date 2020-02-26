@@ -82,7 +82,8 @@ below it lists all files and subdirectories in that directory. You select an
 entry by clicking once on it. You can move up one directory with the ".." entry
 on top of the list. The file browser is still very basic. Possible improvements
 are discussed in `Issue #83 <https://github.com/LiberTEM/LiberTEM/issues/83>`_.
-Contributions are highly appreciated!
+Contributions are highly appreciated! This example opens an HDF5 file.
+:cite:`ophus_colin_2019_3592520`
 
 ..  figure:: ./images/use/open.png
 
@@ -153,13 +154,6 @@ in different ways. You can select the channel in the "Image" drop-down menu
 below the right window.
 
 ..  figure:: ./images/use/image.png
-
-Citation
-~~~~~~~~
-
-Ophus, Colin, & Savitzky, Benjamin. (2019). Simulated calibration dataset for
-4D scanning transmission electron microscopy [Data set].
-Zenodo. http://doi.org/10.5281/zenodo.3592520
 
 Application-specific documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

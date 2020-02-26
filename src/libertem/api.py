@@ -7,6 +7,7 @@ from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
+from libertem.job.base import Job
 from libertem.common import Slice, Shape
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
@@ -563,8 +564,8 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: BaseAnalysis,
-            roi: np.ndarray = None, progress: bool = False) -> Union[np.ndarray, AnalysisResultSet]:
+    def run(self, job: Union[Job, BaseAnalysis],
+            roi: np.ndarray = None) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.

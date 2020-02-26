@@ -48,7 +48,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
     mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName(initial,path),
+        name: getInitialName("name",path,initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         ds_path: getInitial("ds_path", "", initial),
     }),

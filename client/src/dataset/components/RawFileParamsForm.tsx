@@ -68,7 +68,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
     mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName(initial,path),
+        name: getInitialName("name",path,initial),
         enable_direct: getInitial("enable_direct", false, initial),
         detector_size: getInitial("detector_size", "", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),

@@ -69,7 +69,7 @@ export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
         }
     },
     mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName(initial,path),
+        name: getInitialName("name",path,initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),

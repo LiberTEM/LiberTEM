@@ -16,8 +16,12 @@ export function getInitial<T extends object, K extends keyof T, V>(key: K, other
     return res;
 }
 
-export function getInitialName(initial: any, path: string){
-    return getInitial("name", pathfind.basename(path), initial);
+export function getInitialName<T extends object, K extends keyof T>(key: K, otherwise: string, values?: T): string | T[K] {
+    if (!values) {
+        return pathfind.basename(otherwise);
+    }
+    const res = values[key] !== undefined ? values[key] : pathfind.basename(otherwise);
+    return res;
 }
 
 type FormToJsonFn<SubmitParams, FormParams> = (inParams: FormParams, path: string) => SubmitParams;

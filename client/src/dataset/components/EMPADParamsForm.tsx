@@ -50,7 +50,7 @@ const EMPADParamsForm: React.SFC<MergedProps> = ({
 
 export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
     mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName(initial,path),
+        name: getInitialName("name",path,initial),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     formToJson: (values, path) => {

@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsMIB, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -68,8 +68,8 @@ export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
             scan_size: parseNumList(values.scan_size),
         }
     },
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName("name",path,initial),
         tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),

@@ -3,9 +3,8 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsFRMS6, DatasetTypes } from "../../messages";
-import { getInitial, withValidation } from "../helpers";
+import { getInitialName, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsFRMS6ForForm = Omit<DatasetParamsFRMS6,
@@ -40,8 +39,8 @@ const FRMS6ParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsFRMS6, DatasetParamsFRMS6ForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+    mapPropsToValues: ({ path, initial }) => ({
+        name: getInitialName("name",path,initial),
     }),
     formToJson: (values, path) => {
         return {

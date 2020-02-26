@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsEMPAD, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -17,7 +17,7 @@ type DatasetParamsEMPADForForm = Omit<DatasetParamsEMPAD,
 
 type MergedProps = FormikProps<DatasetParamsEMPADForForm> & OpenFormProps<DatasetParamsEMPAD>;
 
-const RawFileParamsForm: React.SFC<MergedProps> = ({
+const EMPADParamsForm: React.SFC<MergedProps> = ({
     values,
     touched,
     errors,
@@ -49,8 +49,8 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName("name",path,initial),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     formToJson: (values, path) => {
@@ -62,5 +62,4 @@ export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
         };
     },
     type: DatasetTypes.EMPAD,
-})(RawFileParamsForm);
-
+})(EMPADParamsForm);

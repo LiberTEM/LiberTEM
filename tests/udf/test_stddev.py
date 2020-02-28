@@ -34,19 +34,19 @@ def test_stddev(lt_ctx, use_roi):
         roi = np.ones(dataset.shape.nav, dtype=bool)
         res = run_stddev(lt_ctx, dataset)
 
-    assert 'sum_frame' in res
-    assert 'num_frame' in res
+    assert 'sum' in res
+    assert 'num_frames' in res
     assert 'var' in res
     assert 'mean' in res
     assert 'std' in res
 
     N = np.count_nonzero(roi)
-    assert res['num_frame'] == N  # check the total number of frames
+    assert res['num_frames'] == N  # check the total number of frames
 
-    print(res['sum_frame'])
+    print(res['sum'])
     print(np.sum(data[roi], axis=0))
-    print(res['sum_frame'] - np.sum(data[roi], axis=0))
-    assert np.allclose(res['sum_frame'], np.sum(data[roi], axis=0))  # check sum of frames
+    print(res['sum'] - np.sum(data[roi], axis=0))
+    assert np.allclose(res['sum'], np.sum(data[roi], axis=0))  # check sum of frames
 
     assert np.allclose(res['mean'], np.mean(data[roi], axis=0))  # check mean
 
@@ -59,6 +59,13 @@ def test_stddev(lt_ctx, use_roi):
 
 @numba.njit
 def _stability_workhorse(data):
+    # This function imitates the calculation flow of a single pixel for a very big dataset.
+    # The partition and tile structure is given by the shape of data
+    # data.shape[0]: partitions
+    # data.shape[1]: tiles per partition
+    # data.shape[2]: frames per tile
+    # The test uses numba since this allows efficient calculations for small units
+    # of data. Running it with JIT disabled is very, very slow!
     s = np.zeros(1, dtype=np.float32)
     varsum = np.zeros(1, dtype=np.float32)
     N = 0
@@ -77,15 +84,15 @@ def _stability_workhorse(data):
             else:
                 partition_N = process_tile(
                     tile=data[partition, tile],
-                    N0=partition_N,
+                    n_0=partition_N,
                     sum_inout=partition_sum,
-                    var_inout=partition_varsum
+                    varsum_inout=partition_varsum
                 )
         N = merge(
-            dest_N=N,
+            dest_n=N,
             dest_sum=s,
             dest_varsum=varsum,
-            src_N=partition_N,
+            src_n=partition_N,
             src_sum=partition_sum,
             src_varsum=partition_varsum
         )
@@ -96,15 +103,6 @@ def _stability_workhorse(data):
 # since the calculation will take forever
 # with JIT disabled
 def test_stability(lt_ctx):
-    """
-    Test variance, standard deviation, sum of frames, and mean computation
-    implemented in udf/stddev.py
-
-    Parameters
-    ----------
-    lt_ctx
-        Context class for loading dataset and creating jobs on them
-    """
     data = _mk_random(size=(1024, 1024, 8, 1), dtype="float32")
 
     N, s, varsum = _stability_workhorse(data)

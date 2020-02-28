@@ -50,11 +50,17 @@ Some generally useful UDFs are included with LiberTEM:
 
 .. _`sum udf`:
 
+Sum of frames
+#############
+
 .. autoclass:: libertem.udf.sum.SumUDF
     :members:
     :special-members: __init__
 
 .. _`logsum udf`:
+
+Sum of log-scaled frames
+########################
 
 .. autoclass:: libertem.udf.logsum.LogsumUDF
     :members:
@@ -62,11 +68,21 @@ Some generally useful UDFs are included with LiberTEM:
 
 .. _`stddev udf`:
 
+Standard deviation
+##################
+
 .. autoclass:: libertem.udf.stddev.StdDevUDF
     :members:
     :special-members: __init__
 
+.. autofunction:: libertem.udf.stddev.run_stddev
+
+.. autofunction:: libertem.udf.stddev.consolidate_result
+
 .. _`sumsig udf`:
+
+Sum per frame
+#############
 
 .. autoclass:: libertem.udf.sumsigudf.SumSigUDF
     :members:
@@ -74,11 +90,17 @@ Some generally useful UDFs are included with LiberTEM:
 
 .. _`masks udf`:
 
+Apply masks
+###########
+
 .. autoclass:: libertem.udf.masks.ApplyMasksUDF
     :members:
     :special-members: __init__
 
 .. _`pick udf`:
+
+Load data
+#########
 
 .. autoclass:: libertem.udf.raw.PickUDF
     :members:

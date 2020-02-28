@@ -446,6 +446,9 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
 
 .. _`udf roi`:
 
+Regions of interest
+-------------------
+
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
 run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
 containing a bool mask, having the shape of the navigation axes of the dataset.

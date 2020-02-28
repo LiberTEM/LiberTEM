@@ -1,4 +1,4 @@
 [Feature] :code:`StdDevUDF` speed-up
 ====================================
 
-* More than 2x speed-up of standard deviation calculation with tiled processing (:pr:`625`)
+* About 10x speed-up of standard deviation calculation for large frames (:pr:`625,640`)

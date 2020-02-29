@@ -591,7 +591,8 @@ class Context:
                 if roi is None:
                     roi = analysis.get_roi()
                 udf_results = self.run_udf(
-                    dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi
+                    dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
+                    progress=True
                 )
                 return analysis.get_udf_results(udf_results, roi)
         else:
@@ -665,7 +666,7 @@ class Context:
             Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        results = self.run_udf(dataset=dataset, udf=udf, roi=roi)
+        results = self.run_udf(dataset=dataset, udf=udf, roi=roi, progress=True)
         return results['result']
 
     def _create_local_executor(self):

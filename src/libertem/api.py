@@ -559,7 +559,8 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, Analysis], roi=None) -> Union[np.ndarray, AnalysisResultSet]:
+    def run(self, job: Union[Job, Analysis], roi=None,
+            progress=False) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.
@@ -571,6 +572,8 @@ class Context:
         roi : numpy.ndarray, optional
             Boolean mask of the navigation dimension. This is curently not supported for all
             Analysis types and may raise a :class:`TypeError` in that case.
+        progress : bool
+            Show progress bar
 
         Returns
         -------
@@ -592,7 +595,7 @@ class Context:
                     roi = analysis.get_roi()
                 udf_results = self.run_udf(
                     dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
-                    progress=True
+                    progress=progress
                 )
                 return analysis.get_udf_results(udf_results, roi)
         else:
@@ -642,7 +645,7 @@ class Context:
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi, progress=progress)
 
-    def map(self, dataset, f, roi=None) -> BufferWrapper:
+    def map(self, dataset, f, roi=None, progress=False) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
 
@@ -656,6 +659,8 @@ class Context:
             reduced output compared to the size of a frame.
         roi : numpy.ndarray
             region of interest as bool mask over the navigation axes of the dataset
+        progress : bool
+            Show progress bar
 
         Returns
         -------
@@ -666,7 +671,7 @@ class Context:
             Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        results = self.run_udf(dataset=dataset, udf=udf, roi=roi, progress=True)
+        results = self.run_udf(dataset=dataset, udf=udf, roi=roi, progress=progress)
         return results['result']
 
     def _create_local_executor(self):

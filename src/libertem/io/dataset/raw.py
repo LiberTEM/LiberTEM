@@ -101,8 +101,11 @@ class RawFile(File3D):
 
     def open(self):
         if self._enable_direct:
-            fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
-            f = open(fh, "rb", buffering=0)
+            try:
+                fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
+                f = open(fh, "rb", buffering=0)
+            except AttributeError:
+                raise DataSetException("LiberTEM currently does not support Direct I/O on Windows")
         else:
             f = open(self._path, "rb")
         self._file = f

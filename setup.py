@@ -144,9 +144,8 @@ setup(
         "pillow",
         "h5py",
         "psutil",
-        # Pinned due to https://github.com/pydata/sparse/issues/257
-        # Ensure compatibility with numpy 1.17
-        "numba>=0.46",
+        # Bounds checking in Numba
+        "numba>=0.47",
         "ncempy>=1.4",
         'pywin32!=226;platform_system=="Windows"',
         # FIXME pull request #259

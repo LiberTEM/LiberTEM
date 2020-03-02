@@ -26,7 +26,7 @@ def test_stddev(lt_ctx, use_roi):
     # FIXME the tiling in signal dimension can only be tested once MemoryDataSet
     # actually supports it
     dataset = MemoryDataSet(data=data, tileshape=(3, 1, 1025),
-                            num_partitions=8, sig_dims=2)
+                            num_partitions=2, sig_dims=2)
     if use_roi:
         roi = np.random.choice([True, False], size=dataset.shape.nav)
         res = run_stddev(lt_ctx, dataset, roi=roi)
@@ -57,13 +57,14 @@ def test_stddev(lt_ctx, use_roi):
     assert np.allclose(std, res['std'])  # check standard deviation
 
 
-@numba.njit
+@numba.njit(boundscheck=True)
 def _stability_workhorse(data):
     # This function imitates the calculation flow of a single pixel for a very big dataset.
     # The partition and tile structure is given by the shape of data
     # data.shape[0]: partitions
     # data.shape[1]: tiles per partition
     # data.shape[2]: frames per tile
+    # data.shape[3]: mock signal shape, can be 1
     # The test uses numba since this allows efficient calculations for small units
     # of data. Running it with JIT disabled is very, very slow!
     s = np.zeros(1, dtype=np.float32)

@@ -141,7 +141,7 @@ def process_tile(tile, n_0, sum_inout, varsum_inout):
     n_pixels = tile.shape[1]
     n = n_0 + n_frames
 
-    BLOCKSIZE = 1024
+    BLOCKSIZE = 256
     n_blocks = n_pixels // BLOCKSIZE
 
     sumsum = np.zeros(BLOCKSIZE, dtype=sum_inout.dtype)
@@ -165,17 +165,17 @@ def process_tile(tile, n_0, sum_inout, varsum_inout):
                 n_frames, sumsum[i], varsum[i], mean[i]
             )
     for pixel in range(n_blocks*BLOCKSIZE, n_pixels):
-        sumsum2 = 0.
+        sumsum_rest = 0.
         for frame in range(n_frames):
-            sumsum2 += tile[frame, pixel]
-        mean2 = sumsum2 / n_frames
-        varsum2 = 0.
+            sumsum_rest += tile[frame, pixel]
+        mean_rest = sumsum_rest / n_frames
+        varsum_rest = 0.
         for frame in range(n_frames):
-            varsum2 += (tile[frame, pixel] - mean2)**2
+            varsum_rest += (tile[frame, pixel] - mean_rest)**2
         sum_inout[pixel], varsum_inout[pixel] = merge_single(
             n,
             n_0, sum_inout[pixel], varsum_inout[pixel],
-            n_frames, sumsum2, varsum2, mean2
+            n_frames, sumsum_rest, varsum_rest, mean_rest
         )
     return n
 
@@ -224,7 +224,6 @@ class StdDevUDF(UDF):
     >>> np.array(result["sum"])  # sum of all frames
     array(...)
     """
-
     def get_result_buffers(self):
         """
         Initializes BufferWrapper objects for sum of variances,
@@ -236,15 +235,16 @@ class StdDevUDF(UDF):
             A dictionary that maps 'varsum',  'num_frames', 'sum' to
             the corresponding BufferWrapper objects
         """
+        dtype = np.result_type(self.meta.input_dtype, np.float32)
         return {
             'varsum': self.buffer(
-                kind='sig', dtype='float32'
+                kind='sig', dtype=dtype
             ),
             'num_frames': self.buffer(
                 kind='single', dtype='object'
             ),
             'sum': self.buffer(
-                kind='sig', dtype='float32'
+                kind='sig', dtype=dtype
             )
         }
 

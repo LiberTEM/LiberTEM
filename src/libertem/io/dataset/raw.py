@@ -101,11 +101,8 @@ class RawFile(File3D):
 
     def open(self):
         if self._enable_direct:
-            try:
-                fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
-                f = open(fh, "rb", buffering=0)
-            except AttributeError:
-                raise DataSetException("LiberTEM currently does not support Direct I/O on Windows")
+            fh = os.open(self._path, os.O_RDONLY | os.O_DIRECT)
+            f = open(fh, "rb", buffering=0)
         else:
             f = open(self._path, "rb")
         self._file = f
@@ -261,6 +258,8 @@ class RawFileDataSet(DataSet):
         ])
 
     def check_valid(self):
+        if self._enable_direct and not hasattr(os, 'O_DIRECT'):
+            raise DataSetException("LiberTEM currently does not support Direct I/O on Windows")
         try:
             fileset = self._get_fileset()
             with fileset:

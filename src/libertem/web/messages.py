@@ -1,13 +1,15 @@
 import jsonschema
 
+from .state import SharedState
+
 
 class Message(object):
     """
     possible messages - the translation of our python datatypes to json types
     """
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, state: SharedState):
+        self.state = state
 
     def initial_state(self, jobs, datasets):
         return {
@@ -68,7 +70,7 @@ class Message(object):
             "status": "ok",
             "messageType": "JOB_STARTED",
             "job": job_id,
-            "details": self.data.serialize_job(job_id),
+            "details": self.state.job_state.serialize(job_id),
         }
 
     def job_error(self, job_id, msg):
@@ -84,7 +86,7 @@ class Message(object):
             "status": "ok",
             "messageType": "FINISH_JOB",
             "job": job_id,
-            "details": self.data.serialize_job(job_id),
+            "details": self.state.job_state.serialize(job_id),
             "followup": {
                 "numMessages": num_images,
                 "descriptions": image_descriptions,
@@ -173,6 +175,18 @@ class Message(object):
             "messageType": "DATASET_SCHEMA_FAILED",
             "msg": "failed to get schema for type %s: %s" % (ds_type, msg),
             "ds_type": ds_type,
+        }
+
+    def create_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_CREATED",
+            "analysis": uuid,
+            "details": {
+                "dataset": dataset_uuid,
+                "id": uuid,
+                "parameters": parameters,
+            }
         }
 
 

@@ -1,31 +1,31 @@
 import json
-import asyncio
 
 import pytest
 import websockets
 
 from utils import assert_msg
 
-
 pytestmark = [pytest.mark.functional]
 
 
-def _get_ds_params():
+def _get_raw_params(path):
     return {
         "dataset": {
             "params": {
-                "type": "memory",
-                "tileshape": [7, 32, 32],
-                "datashape": [256, 32, 32],
-                "tiledelay": 0.1,
-                "num_partitions": 16,
+                "type": "raw",
+                "path": path,
+                "dtype": "float32",
+                "detector_size": [128, 128],
+                "enable_direct": False,
+                "tileshape": [1, 1, 128, 128],
+                "scan_size": [16, 16]
             }
         }
     }
 
 
 @pytest.mark.asyncio
-async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
+async def test_run_analysis_1_sum(default_raw, base_url, http_client, server_port):
     conn_url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {
@@ -51,7 +51,7 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         ds_url = "{}/api/datasets/{}/".format(
             base_url, ds_uuid
         )
-        ds_data = _get_ds_params()
+        ds_data = _get_raw_params(default_raw._path)
         async with http_client.put(ds_url, json=ds_data) as resp:
             assert resp.status == 200
             resp_json = await resp.json()
@@ -61,15 +61,34 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'CREATE_DATASET')
 
-        job_uuid = "229faa20-d146-46c1-af8c-32e303531322"
-        job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
-        job_data = {
-            "job": {
+        analysis_uuid = "229faa20-d146-46c1-af8c-32e303531322"
+        analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
+        analysis_data = {
+            "analysis": {
                 "dataset": ds_uuid,
                 "analysis": {
                     "type": "SUM_FRAMES",
                     "parameters": {}
                 }
+            }
+        }
+        async with http_client.put(analysis_url, json=analysis_data) as resp:
+            print(await resp.text())
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert resp_json['status'] == "ok"
+
+        msg = json.loads(await ws.recv())
+        assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['analysis'] == analysis_uuid
+        assert msg['details']['dataset'] == ds_uuid
+        assert msg['details']['id'] == analysis_uuid
+
+        job_uuid = "28132c24-573a-4cda-8a78-6e39cac08ad5"
+        job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
+        job_data = {
+            "job": {
+                "analysis": analysis_uuid,
             }
         }
         async with http_client.put(job_url, json=job_data) as resp:
@@ -81,70 +100,37 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
+        assert msg['details']['analysis'] == analysis_uuid
         assert msg['details']['id'] == job_uuid
 
-        await asyncio.sleep(0)  # for debugging, set to >0
-
-        async with http_client.delete(job_url) as resp:
-            assert resp.status == 200
-            assert_msg(await resp.json(), 'CANCEL_JOB')
-
-        # wait for CANCEL_JOB message:
+        num_followup = 0
         done = False
-        num_seen = 0
         while not done:
             msg = json.loads(await ws.recv())
-            num_seen += 1
             if msg['messageType'] == 'TASK_RESULT':
                 assert_msg(msg, 'TASK_RESULT')
                 assert msg['job'] == job_uuid
-            elif msg['messageType'] == 'CANCEL_JOB':
-                # this is the confirmation sent from the DELETE method handler:
-                assert_msg(msg, 'CANCEL_JOB')
-                assert msg['job'] == job_uuid
-                done = True
-            else:
-                raise Exception("invalid message type: {}".format(msg['messageType']))
-            if 'followup' in msg:
-                for i in range(msg['followup']['numMessages']):
-                    # drain binary messages:
-                    msg = await ws.recv()
-
-        assert num_seen < 4
-        assert job_uuid not in shared_state.jobs
-
-        # now we drain messages from websocket and look for CANCEL_JOB_DONE msg:
-        done = False
-        num_seen = 0
-        types_seen = []
-        msgs = []
-        while not done:
-            msg = json.loads(await ws.recv())
-            print(msg)
-            num_seen += 1
-            types_seen.append(msg['messageType'])
-            msgs.append(msg)
-            if msg['messageType'] == 'TASK_RESULT':
-                assert_msg(msg, 'TASK_RESULT')
-                assert msg['job'] == job_uuid
-            elif msg['messageType'] == 'CANCEL_JOB_DONE':
-                assert msg['job'] == job_uuid
-                done = True
             elif msg['messageType'] == 'FINISH_JOB':
-                done = True  # we should not get this one...
+                done = True  # but we still need to check followup messages below
             elif msg['messageType'] == 'JOB_ERROR':
                 raise Exception('JOB_ERROR: {}'.format(msg['msg']))
             else:
                 raise Exception("invalid message type: {}".format(msg['messageType']))
+
             if 'followup' in msg:
                 for i in range(msg['followup']['numMessages']):
-                    # drain binary messages:
                     msg = await ws.recv()
-        assert set(types_seen) == {"CANCEL_JOB_DONE"}
-        assert num_seen < 4
+                    # followups should be PNG encoded:
+                    assert msg[:8] == b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A'
+                    num_followup += 1
+        assert num_followup > 0
 
-        # get rid of the dataset:
+        # we are done with this job, clean up:
+        async with http_client.delete(job_url) as resp:
+            assert resp.status == 200
+            assert_msg(await resp.json(), 'CANCEL_JOB')
+
+        # also get rid of the dataset:
         async with http_client.delete(ds_url) as resp:
             assert resp.status == 200
             resp_json = await resp.json()

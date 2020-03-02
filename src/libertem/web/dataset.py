@@ -6,23 +6,25 @@ from libertem.io.dataset import load, detect, get_dataset_cls
 from .base import CORSMixin, log_message
 from libertem.utils.async_utils import run_blocking
 from .messages import Message
+from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
 class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
+        self.dataset_state = state.dataset_state
         self.event_registry = event_registry
 
     async def delete(self, uuid):
         try:
-            self.data.get_dataset(uuid)
+            self.dataset_state.get_dataset(uuid)
         except KeyError:
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return
-        await self.data.remove_dataset(uuid)
-        msg = Message(self.data).delete_dataset(uuid)
+        await self.dataset_state.remove(uuid)
+        msg = Message(self.state).delete_dataset(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -36,33 +38,33 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         converter = ConverterCls()
         try:
             dataset_params = converter.to_python(params)
-            executor = self.data.get_executor()
+            executor = self.state.executor_state.get_executor()
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
 
             await executor.run_function(ds.check_valid)
-            self.data.register_dataset(
+            self.dataset_state.register(
                 uuid=uuid,
                 dataset=ds,
                 params=request_data['dataset'],
             )
-            details = await self.data.serialize_dataset(dataset_id=uuid)
-            msg = Message(self.data).create_dataset(dataset=uuid, details=details)
+            details = await self.dataset_state.serialize(dataset_id=uuid)
+            msg = Message(self.state).create_dataset(dataset=uuid, details=details)
             log_message(msg)
             self.write(msg)
             self.event_registry.broadcast_event(msg)
         except Exception as e:
-            if self.data.has_dataset(uuid):
-                await self.data.remove_dataset(uuid)
-            msg = Message(self.data).create_dataset_error(uuid, str(e))
+            if uuid in self.dataset_state:
+                await self.dataset_state.remove(uuid)
+            msg = Message(self.state).create_dataset_error(uuid, str(e))
             log_message(msg, exception=True)
             self.write(msg)
             return
 
 
 class DataSetOpenSchema(tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     def get(self):
@@ -72,33 +74,33 @@ class DataSetOpenSchema(tornado.web.RequestHandler):
             ConverterCls = cls.get_msg_converter()
             converter = ConverterCls()
             schema = converter.SCHEMA
-            msg = Message(self.data).dataset_schema(ds_type, schema)
+            msg = Message(self.state).dataset_schema(ds_type, schema)
             log_message(msg)
             self.write(msg)
         except Exception as e:
-            msg = Message(self.data).dataset_schema_failed(ds_type, str(e))
+            msg = Message(self.state).dataset_schema_failed(ds_type, str(e))
             log_message(msg, exception=True)
             self.write(msg)
             return
 
 
 class DataSetDetectHandler(tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     async def get(self):
         path = self.request.arguments['path'][0].decode("utf8")
-        executor = self.data.get_executor()
+        executor = self.state.executor_state.get_executor()
 
         params = await run_blocking(detect, path=path, executor=executor.ensure_sync())
 
         if not params:
-            msg = Message(self.data).dataset_detect_failed(path=path)
+            msg = Message(self.state).dataset_detect_failed(path=path)
             log_message(msg)
             self.write(msg)
             return
         params['type'] = params['type'].upper()
-        msg = Message(self.data).dataset_detect(params=params)
+        msg = Message(self.state).dataset_detect(params=params)
         log_message(msg)
         self.write(msg)

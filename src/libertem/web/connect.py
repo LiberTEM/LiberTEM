@@ -7,20 +7,21 @@ from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.executor.dask import DaskJobExecutor
 from .messages import Message
 from .base import log_message
+from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
 class ConnectHandler(tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     async def get(self):
         log.info("ConnectHandler.get")
         try:
-            self.data.get_executor()
-            params = self.data.get_cluster_params()
+            self.state.executor_state.get_executor()
+            params = self.state.get_cluster_params()
             # TODO: extract into Message class
             self.write({
                 "status": "ok",
@@ -44,7 +45,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         elif connection["type"].lower() == "local":
             cluster_kwargs = {
                 "threads_per_worker": 1,
-                "local_directory": self.data.get_local_directory()
+                "local_directory": self.state.get_local_directory()
             }
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
@@ -54,11 +55,12 @@ class ConnectHandler(tornado.web.RequestHandler):
         else:
             raise ValueError("unknown connection type")
         executor = AsyncAdapter(wrapped=sync_executor)
-        await self.data.set_executor(executor, request_data)
-        await self.data.verify_datasets()
-        datasets = await self.data.serialize_datasets()
-        msg = Message(self.data).initial_state(
-            jobs=self.data.serialize_jobs(),
+        await self.state.executor_state.set_executor(executor, request_data)
+        await self.state.dataset_state.verify()
+        datasets = await self.state.dataset_state.serialize_all()
+        # FIXME: send over analyses, too!
+        msg = Message(self.state).initial_state(
+            jobs=self.state.job_state.serialize_all(),
             datasets=datasets,
         )
         log_message(msg)

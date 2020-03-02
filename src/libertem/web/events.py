@@ -4,12 +4,13 @@ import tornado.websocket
 
 from .base import log_message
 from .messages import Message
+from .state import SharedState
 
 
 class ResultEventHandler(tornado.websocket.WebSocketHandler):
-    def initialize(self, data, event_registry):
+    def initialize(self, state: SharedState, event_registry):
         self.registry = event_registry
-        self.data = data
+        self.state = state
 
     def check_origin(self, origin):
         # FIXME: implement this when we want to support CORS later
@@ -17,11 +18,12 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
 
     async def open(self):
         self.registry.add_handler(self)
-        if self.data.have_executor():
-            await self.data.verify_datasets()
-            datasets = await self.data.serialize_datasets()
-            msg = Message(self.data).initial_state(
-                jobs=self.data.serialize_jobs(),
+        if self.state.executor_state.have_executor():
+            await self.state.dataset_state.verify()
+            datasets = await self.state.dataset_state.serialize_all()
+            # FIXME: send over analyses, too!
+            msg = Message(self.state).initial_state(
+                jobs=self.state.job_state.serialize_all(),
                 datasets=datasets,
             )
             log_message(msg)

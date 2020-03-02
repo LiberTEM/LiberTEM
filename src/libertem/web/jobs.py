@@ -11,6 +11,7 @@ from libertem.analysis import (
     RadialFourierAnalysis, ApplyFFTMask, SDAnalysis, SumSigAnalysis, ClusterAnalysis
 )
 from .base import CORSMixin, log_message, result_images
+from .state import SharedState
 from .messages import Message
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
@@ -20,8 +21,8 @@ log = logging.getLogger(__name__)
 
 
 class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     def get_analysis_by_type(self, type_):
@@ -45,39 +46,42 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
-        params = request_data['job']
-        ds = self.data.get_dataset(params['dataset'])
-        analysis = self.get_analysis_by_type(params['analysis']['type'])(
+        analysis_id = request_data['job']['analysis']
+        analysis_details = self.state.get_analysis(analysis_id)
+
+        analysis_type = analysis_details["type"]
+        params = analysis_details["params"]
+        ds = self.state.get_dataset(analysis_details['dataset'])
+
+        analysis = self.get_analysis_by_type(analysis_type)(
             dataset=ds,
-            parameters=params['analysis']['parameters']
+            parameters=params,
         )
 
         try:
-            if analysis.TYPE == 'UDF':
-                return await self.run_udf(uuid, ds, analysis)
-            else:
-                return await self.run_job(uuid, ds, analysis)
+            assert analysis.TYPE == 'UDF'
+            return await self.run_udf(uuid, ds, analysis)
         except JobCancelledError:
-            msg = Message(self.data).cancel_done(uuid)
+            msg = Message(self.state).cancel_done(uuid)
             log_message(msg)
             await self.event_registry.broadcast_event(msg)
             return
         except Exception as e:
             log.exception("error running job, params=%r", params)
-            msg = Message(self.data).job_error(uuid, "error running job: %s" % str(e))
+            msg = Message(self.state).job_error(uuid, "error running job: %s" % str(e))
             self.event_registry.broadcast_event(msg)
-            await self.data.remove_job(uuid)
+            await self.state.remove_job(uuid)
 
     async def delete(self, uuid):
-        result = await self.data.remove_job(uuid)
+        result = await self.state.remove_job(uuid)
         if result:
-            msg = Message(self.data).cancel_job(uuid)
+            msg = Message(self.state).cancel_job(uuid)
             log_message(msg)
             self.event_registry.broadcast_event(msg)
             self.write(msg)
         else:
             log.warning("tried to remove unknown job %s", uuid)
-            msg = Message(self.data).cancel_failed(uuid)
+            msg = Message(self.state).cancel_failed(uuid)
             log_message(msg)
             self.event_registry.broadcast_event(msg)
             self.write(msg)
@@ -87,11 +91,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         roi = analysis.get_roi()
 
         # FIXME: register_job for UDFs?
-        self.data.register_job(uuid=uuid, job=udf, dataset=ds)
+        self.state.register_job(
+            uuid=uuid, job=udf, dataset=ds,
+        )
 
         # FIXME: code duplication
-        executor = self.data.get_executor()
-        msg = Message(self.data).start_job(
+        executor = self.state.get_executor()
+        msg = Message(self.state).start_job(
             job_id=uuid,
         )
         log_message(msg)
@@ -102,7 +108,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         if hasattr(analysis, 'controller'):
             return await analysis.controller(
                 cancel_id=uuid, executor=executor,
-                job_is_cancelled=lambda: self.data.job_is_cancelled(uuid),
+                job_is_cancelled=lambda: self.state.job_is_cancelled(uuid),
                 send_results=lambda results, finished: self.send_results(results, uuid,
                 finished=finished)
             )
@@ -128,7 +134,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             # backpressure from the network
             t = time.time()
 
-        if self.data.job_is_cancelled(uuid):
+        if self.state.job_is_cancelled(uuid):
             raise JobCancelledError()
         results = await run_blocking(
             analysis.get_udf_results,
@@ -137,57 +143,14 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
         )
         await self.send_results(results, uuid, finished=True)
 
-    async def run_job(self, uuid, ds, analysis):
-        job = analysis.get_job()
-        full_result = job.get_result_buffer()
-
-        self.data.register_job(uuid=uuid, job=job, dataset=job.dataset)
-        executor = self.data.get_executor()
-        msg = Message(self.data).start_job(
-            job_id=uuid,
-        )
-        log_message(msg)
-        self.write(msg)
-        self.finish()
-        self.event_registry.broadcast_event(msg)
-
-        t = time.time()
-        post_t = time.time()
-        window = 0.3
-        async for result in executor.run_job(job, cancel_id=uuid):
-            for tile in result:
-                tile.reduce_into_result(full_result)
-            window = min(max(window, 2*(t - post_t)), 5)
-            if time.time() - t < window:
-                continue
-            post_t = time.time()
-
-            results = await run_blocking(
-                analysis.get_results,
-                job_results=full_result,
-            )
-
-            await self.send_results(results, uuid)
-            # The broadcast might have taken quite some time due to
-            # backpressure from the network
-            t = time.time()
-
-        if self.data.job_is_cancelled(uuid):
-            raise JobCancelledError()
-        results = await run_blocking(
-            analysis.get_results,
-            job_results=full_result,
-        )
-        await self.send_results(results, uuid, finished=True)
-
     async def send_results(self, results, uuid, finished=False):
-        if self.data.job_is_cancelled(uuid):
+        if self.state.job_is_cancelled(uuid):
             raise JobCancelledError()
         images = await result_images(results)
-        if self.data.job_is_cancelled(uuid):
+        if self.state.job_is_cancelled(uuid):
             raise JobCancelledError()
         if finished:
-            msg = Message(self.data).finish_job(
+            msg = Message(self.state).finish_job(
                 job_id=uuid,
                 num_images=len(results),
                 image_descriptions=[
@@ -196,7 +159,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 ],
             )
         else:
-            msg = Message(self.data).task_result(
+            msg = Message(self.state).task_result(
                 job_id=uuid,
                 num_images=len(results),
                 image_descriptions=[

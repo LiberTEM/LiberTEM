@@ -251,3 +251,16 @@ def test_load_direct(lt_ctx, default_raw):
     )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     results = lt_ctx.run(analysis)
+
+@pytest.mark.skipif(os.name != 'nt', reason='No direct IO only on windows')
+def test_direct_io_enabled_windows(lt_ctx, default_raw):
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            detector_size=(16, 16),
+            dtype="float32",
+            enable_direct=True,
+    )
+    assert e.match("LiberTEM currently does not support Direct I/O on Windows")

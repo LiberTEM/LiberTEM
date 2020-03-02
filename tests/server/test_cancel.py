@@ -61,15 +61,32 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'CREATE_DATASET')
 
+        analysis_uuid = "229faa20-d146-46c1-af8c-32e303531322"
+        analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
+        analysis_data = {
+            "dataset": ds_uuid,
+            "analysis": {
+                "type": "SUM_FRAMES",
+                "parameters": {}
+            }
+        }
+        async with http_client.put(analysis_url, json=analysis_data) as resp:
+            print(await resp.text())
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert resp_json['status'] == "ok"
+
+        msg = json.loads(await ws.recv())
+        assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['analysis'] == analysis_uuid
+        assert msg['dataset'] == ds_uuid
+        assert msg['details']['parameters'] == {}
+
         job_uuid = "229faa20-d146-46c1-af8c-32e303531322"
         job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
         job_data = {
             "job": {
-                "dataset": ds_uuid,
-                "analysis": {
-                    "type": "SUM_FRAMES",
-                    "parameters": {}
-                }
+                "analysis": analysis_uuid,
             }
         }
         async with http_client.put(job_url, json=job_data) as resp:
@@ -81,8 +98,8 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
         assert msg['details']['id'] == job_uuid
+        assert msg['details']['analysis'] == analysis_uuid
 
         await asyncio.sleep(0)  # for debugging, set to >0
 
@@ -112,7 +129,7 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
                     msg = await ws.recv()
 
         assert num_seen < 4
-        assert job_uuid not in shared_state.jobs
+        assert job_uuid not in shared_state.job_state.jobs
 
         # now we drain messages from websocket and look for CANCEL_JOB_DONE msg:
         done = False

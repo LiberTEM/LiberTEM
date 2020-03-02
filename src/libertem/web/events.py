@@ -21,10 +21,9 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         if self.state.executor_state.have_executor():
             await self.state.dataset_state.verify()
             datasets = await self.state.dataset_state.serialize_all()
-            # FIXME: send over analyses, too!
             msg = Message(self.state).initial_state(
                 jobs=self.state.job_state.serialize_all(),
-                datasets=datasets,
+                datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
             )
             log_message(msg)
             self.registry.broadcast_event(msg)

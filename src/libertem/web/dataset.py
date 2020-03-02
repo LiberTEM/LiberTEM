@@ -19,7 +19,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def delete(self, uuid):
         try:
-            self.dataset_state.get_dataset(uuid)
+            self.dataset_state[uuid]
         except KeyError:
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return

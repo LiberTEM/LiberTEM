@@ -21,7 +21,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         log.info("ConnectHandler.get")
         try:
             self.state.executor_state.get_executor()
-            params = self.state.get_cluster_params()
+            params = self.state.executor_state.get_cluster_params()
             # TODO: extract into Message class
             self.write({
                 "status": "ok",
@@ -58,10 +58,9 @@ class ConnectHandler(tornado.web.RequestHandler):
         await self.state.executor_state.set_executor(executor, request_data)
         await self.state.dataset_state.verify()
         datasets = await self.state.dataset_state.serialize_all()
-        # FIXME: send over analyses, too!
         msg = Message(self.state).initial_state(
             jobs=self.state.job_state.serialize_all(),
-            datasets=datasets,
+            datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
         )
         log_message(msg)
         self.event_registry.broadcast_event(msg)

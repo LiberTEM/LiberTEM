@@ -11,12 +11,13 @@ class Message(object):
     def __init__(self, state: SharedState):
         self.state = state
 
-    def initial_state(self, jobs, datasets):
+    def initial_state(self, jobs, datasets, analyses):
         return {
             "status": "ok",
             "messageType": "INITIAL_STATE",
             "datasets": datasets,
             "jobs": jobs,
+            "analyses": analyses,
         }
 
     def config(self, config):
@@ -65,11 +66,12 @@ class Message(object):
             "msg": reason,
         }
 
-    def start_job(self, job_id):
+    def start_job(self, job_id, analysis_id):
         return {
             "status": "ok",
             "messageType": "JOB_STARTED",
             "job": job_id,
+            "analysis": analysis_id,
             "details": self.state.job_state.serialize(job_id),
         }
 
@@ -182,9 +184,21 @@ class Message(object):
             "status": "ok",
             "messageType": "ANALYSIS_CREATED",
             "analysis": uuid,
+            "dataset": dataset_uuid,
             "details": {
-                "dataset": dataset_uuid,
-                "id": uuid,
+                "analysisType": analysis_type,
+                "parameters": parameters,
+            }
+        }
+
+    def update_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_UPDATED",
+            "analysis": uuid,
+            "dataset": dataset_uuid,
+            "details": {
+                "analysisType": analysis_type,
                 "parameters": parameters,
             }
         }

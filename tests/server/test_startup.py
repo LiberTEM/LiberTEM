@@ -3,7 +3,24 @@ import json
 import pytest
 import websockets
 
+from utils import assert_msg
+
 pytestmark = [pytest.mark.functional]
+
+
+def _get_raw_params(path):
+    return {
+        "dataset": {
+            "params": {
+                "type": "RAW",
+                "path": path,
+                "dtype": "float32",
+                "detector_size": [128, 128],
+                "enable_direct": False,
+                "scan_size": [16, 16]
+            }
+        }
+    }
 
 
 @pytest.mark.asyncio
@@ -93,3 +110,143 @@ async def test_initial_state_empty(default_raw, base_url, http_client, server_po
         assert initial_msg['status'] == "ok"
         assert initial_msg['datasets'] == []
         assert initial_msg['jobs'] == []
+        assert initial_msg['analyses'] == []
+
+
+@pytest.mark.asyncio
+async def test_initial_state_w_existing_ds(default_raw, base_url, http_client, server_port):
+    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 2,
+        }
+    }
+    async with http_client.put(conn_url, json=conn_details) as response:
+        assert response.status == 200
+
+    # first connect has empty list of datasets:
+    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert initial_msg['messageType'] == "INITIAL_STATE"
+        assert initial_msg['status'] == "ok"
+        assert initial_msg['datasets'] == []
+
+    raw_path = default_raw._path
+
+    ds_uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
+    ds_url = "{}/api/datasets/{}/".format(
+        base_url, ds_uuid
+    )
+    ds_params = _get_raw_params(raw_path)
+    async with http_client.put(ds_url, json=ds_params) as resp:
+        assert resp.status == 200
+        resp_json = await resp.json()
+        assert_msg(resp_json, 'CREATE_DATASET')
+        for k in ds_params['dataset']['params']:
+            assert ds_params['dataset']['params'][k] == resp_json['details']['params'][k]
+
+    # second connect has one dataset:
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert initial_msg['messageType'] == "INITIAL_STATE"
+        assert initial_msg['status'] == "ok"
+        assert len(initial_msg['datasets']) == 1
+        assert initial_msg['datasets'][0]["id"] == ds_uuid
+        assert initial_msg['datasets'][0]["params"] == {
+            "type": "RAW",
+            "path": raw_path,
+            "dtype": "float32",
+            "detector_size": [128, 128],
+            "enable_direct": False,
+            "scan_size": [16, 16],
+            "shape": [16, 16, 128, 128],
+        }
+
+
+@pytest.mark.asyncio
+async def test_initial_state_analyses(default_raw, base_url, http_client, server_port):
+    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 2,
+        }
+    }
+    async with http_client.put(conn_url, json=conn_details) as response:
+        assert response.status == 200
+
+    # first connect has empty list of datasets:
+    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert initial_msg['messageType'] == "INITIAL_STATE"
+        assert initial_msg['status'] == "ok"
+        assert initial_msg['datasets'] == []
+
+    raw_path = default_raw._path
+
+    ds_uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
+    ds_url = "{}/api/datasets/{}/".format(
+        base_url, ds_uuid
+    )
+    ds_params = _get_raw_params(raw_path)
+    async with http_client.put(ds_url, json=ds_params) as resp:
+        assert resp.status == 200
+        resp_json = await resp.json()
+        assert_msg(resp_json, 'CREATE_DATASET')
+        for k in ds_params['dataset']['params']:
+            assert ds_params['dataset']['params'][k] == resp_json['details']['params'][k]
+
+        analysis_uuid = "229faa20-d146-46c1-af8c-32e303531322"
+        analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
+
+        analysis_data = {
+            "analysis": {
+                "dataset": ds_uuid,
+                "analysis": {
+                    "type": "SUM_FRAMES",
+                    "parameters": {
+                        "roi": {
+                            "shape": "disk",
+                            "r": 1,
+                            "cx": 1,
+                            "cy": 1,
+                        }
+                    }
+                }
+            }
+        }
+
+        async with http_client.put(analysis_url, json=analysis_data) as resp:
+            print(await resp.text())
+            assert resp.status == 200
+            msg = await resp.json()
+            assert msg['status'] == "ok"
+            assert_msg(msg, 'ANALYSIS_CREATED')
+            assert msg['analysis'] == analysis_uuid
+            assert msg['details']['parameters'] == {
+                "roi": {
+                    "shape": "disk",
+                    "r": 1,
+                    "cx": 1,
+                    "cy": 1,
+                },
+            }
+
+    # second connect has one dataset and one analysis:
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert initial_msg['messageType'] == "INITIAL_STATE"
+        assert initial_msg['status'] == "ok"
+        assert len(initial_msg['datasets']) == 1
+        assert len(initial_msg['analyses']) == 1
+        assert initial_msg["analyses"][0]["parameters"] == {
+            "roi": {
+                "shape": "disk",
+                "r": 1,
+                "cx": 1,
+                "cy": 1,
+            },
+        }

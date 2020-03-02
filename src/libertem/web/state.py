@@ -1,5 +1,7 @@
 import os
+import copy
 import typing
+from collections import defaultdict
 
 import psutil
 
@@ -11,6 +13,7 @@ from libertem.io.dataset.base import DataSetException
 class ExecutorState:
     def __init__(self):
         self.executor = None
+        self.cluster_params = {}
 
     def get_executor(self):
         if self.executor is None:
@@ -27,6 +30,9 @@ class ExecutorState:
         self.executor = executor
         self.cluster_params = params
 
+    def get_cluster_params(self):
+        return self.cluster_params
+
 
 AnalysisParameters = typing.Dict
 
@@ -36,22 +42,42 @@ class AnalysisState:
         self.analyses: typing.Dict[str, AnalysisParameters] = {}
         self.results: typing.Dict[str, typing.Tuple[AnalysisResultSet, AnalysisParameters]] = {}
 
-    def create_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
+    def create(self, uuid, dataset_uuid, analysis_type, parameters):
         assert uuid not in self.analyses
         self.analyses[uuid] = {
-            "type": analysis_type,
-            "dataset": dataset_uuid,
-            "params": parameters,
+            "analysis": uuid,
+            "details": {
+                "analysisType": analysis_type,
+                "dataset": dataset_uuid,
+                "parameters": parameters,
+            },
         }
 
-    def get_analysis(self, uuid):
-        return self.analyses.get(uuid)
+    def update(self, uuid, parameters):
+        self.analyses[uuid]["details"]["parameters"] = parameters
+
+    def get(self, uuid, default=None):
+        return self.analyses.get(uuid, default)
+
+    def __getitem__(self, uuid):
+        return self.analyses[uuid]
+
+    def serialize(self, uuid):
+        return self[uuid]
+
+    def serialize_all(self):
+        return [
+            self.serialize(uuid)
+            for uuid in self.analyses
+        ]
 
 
 class DatasetState:
-    def __init__(self, executor_state: ExecutorState):
+    def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
         self.datasets = {}
+        self.dataset_to_id = {}
         self.executor_state = executor_state
+        self.job_state = job_state
 
     def register(self, uuid, dataset, params):
         assert uuid not in self.datasets
@@ -76,11 +102,13 @@ class DatasetState:
         }
 
     async def serialize_all(self):
-        executor = self.executor_state.get_executor()
         return [
-            await self.serialize_dataset(executor, dataset_id)
+            await self.serialize(dataset_id)
             for dataset_id in self.datasets.keys()
         ]
+
+    def id_for_dataset(self, dataset):
+        return self.dataset_to_id[dataset]
 
     def __getitem__(self, uuid):
         return self.datasets[uuid]["dataset"]
@@ -98,44 +126,47 @@ class DatasetState:
                 await self.remove_dataset(uuid)
 
     async def remove(self, uuid):
+        """
+        Stop all jobs and remove dataset state for the dataset identified by `uuid`
+        """
         ds = self.datasets[uuid]["dataset"]
-        jobs_to_remove = [
-            job
-            for job in self.jobs.values()
-            if self.dataset_to_id[self.dataset_for_job[job]] == uuid
-        ]
-        job_ids = {self.job_to_id[job]
-                   for job in jobs_to_remove}
+        job_ids = copy.copy(self.job_state.get_for_dataset_id(uuid))
         del self.datasets[uuid]
         del self.dataset_to_id[ds]
         for job_id in job_ids:
-            await self.remove_job(job_id)
+            await self.job_state.remove(job_id)
 
 
 class JobState:
-    def __init__(self, executor_state: ExecutorState, dataset_state: DatasetState):
+    def __init__(self, executor_state: ExecutorState):
         self.jobs = {}
-        self.job_to_id = {}
         self.executor_state = executor_state
-        self.dataset_state = dataset_state
+        self.jobs_for_dataset = defaultdict(lambda: set())
 
-    def register(self, uuid, job, analysis_id, dataset):
-        assert uuid not in self.jobs
-        self.jobs[uuid] = job
-        self.job_to_id[job] = uuid
-        self.dataset_for_job[job] = dataset
+    def register(self, job_id, analysis_id, dataset_id):
+        assert job_id not in self.jobs
+        self.jobs[job_id] = {
+            "id": job_id,
+            "analysis": analysis_id,
+            "dataset": dataset_id,
+        }
+        self.jobs_for_dataset[dataset_id].add(job_id)
         return self
 
     async def remove(self, uuid):
         try:
-            job = self.jobs[uuid]
             executor = self.executor_state.get_executor()
             await executor.cancel(uuid)
             del self.jobs[uuid]
-            del self.job_to_id[job]
+            for ds, jobs in self.jobs_for_dataset.items():
+                if uuid in jobs:
+                    jobs.remove(uuid)
             return True
         except KeyError:
             return False
+
+    def get_for_dataset_id(self, dataset_id):
+        return self.jobs_for_dataset[dataset_id]
 
     def __getitem__(self, uuid):
         return self.jobs[uuid]
@@ -144,16 +175,15 @@ class JobState:
         return uuid not in self.jobs
 
     def serialize(self, job_id):
-        job = self.jobs[job_id]
-        dataset = self.dataset_to_id[self.dataset_for_job[job]]
+        job = self[job_id]
         return {
-            "id": job_id,
-            "dataset": dataset,
+            "id": job["id"],
+            "analysis": job["analysis"],
         }
 
     def serialize_all(self):
         return [
-            self.serialize_job(job_id)
+            self.serialize(job_id)
             for job_id in self.jobs.keys()
         ]
 
@@ -162,12 +192,10 @@ class SharedState:
     def __init__(self):
         self.executor_state = ExecutorState()
         self.analysis_state = AnalysisState(self.executor_state)
-        self.dataset_state = DatasetState(self.executor_state)
-        self.job_state = JobState(self.executor_state, self.dataset_state)
+        self.job_state = JobState(self.executor_state)
+        self.dataset_state = DatasetState(self.executor_state, job_state=self.job_state)
 
-        self.dataset_to_id = {}
         self.dataset_for_job = {}
-        self.cluster_params = {}
         self.local_directory = "dask-worker-space"
 
     def get_local_cores(self, default=2):
@@ -192,6 +220,3 @@ class SharedState:
             # '/' works on Windows, too.
             "separator": '/'
         }
-
-    def get_cluster_params(self):
-        return self.cluster_params

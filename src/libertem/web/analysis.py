@@ -2,6 +2,7 @@ import tornado.web
 
 from .base import CORSMixin, log_message
 from .messages import Message
+from .state import SharedState
 
 
 class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -12,8 +13,8 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
     zero or one Job.
 
     """
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     async def put(self, uuid):
@@ -27,26 +28,28 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         jobs are handled separately by the JobDetailHandler
         """
         request_data = tornado.escape.json_decode(self.request.body)
+        dataset_id = request_data["dataset"]
         details = request_data['analysis']
-        params = details['analysis']['parameters']
-        analysis_type = details['analysis']['type']
-        dataset_id = details["dataset"]
-        existing_analysis = self.data.get_analysis(uuid)
+        params = details['parameters']
+        analysis_type = details['type']
+        existing_analysis = self.state.analysis_state.get(uuid)
         if existing_analysis is None:
             return await self._create_analysis(uuid, dataset_id, analysis_type, params)
         else:
-            return await self._update_analysis(uuid, existing_analysis, params)
+            return await self._update_analysis(
+                uuid, dataset_id, analysis_type, existing_analysis, params
+            )
 
     async def _create_analysis(self, uuid, dataset_id, analysis_type, params):
-        self.data.create_analysis(uuid, dataset_id, analysis_type, params)
-        msg = Message(self.data).create_analysis(uuid, dataset_id, analysis_type, params)
+        self.state.analysis_state.create(uuid, dataset_id, analysis_type, params)
+        msg = Message(self.state).create_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
 
-    async def _update_analysis(self, uuid, existing_analysis, params):
-        self.data.update_analysis(uuid, params)
-        msg = Message(self.data).update_analysis(uuid, params)
+    async def _update_analysis(self, uuid, dataset_id, analysis_type, existing_analysis, params):
+        self.state.analysis_state.update(uuid, params)
+        msg = Message(self.state).update_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -56,9 +59,9 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         Remove an analysis, stop all related jobs and remove
         analysis results.
         """
-        result = await self.data.remove_analysis(uuid)
+        result = await self.state.analysis_state.remove(uuid)
         if result:
-            msg = Message(self.data).analysis_removed(uuid)
+            msg = Message(self.state).analysis_removed(uuid)
         else:
-            msg = Message(self.data).analysis_removal_failed(uuid)
+            msg = Message(self.state).analysis_removal_failed(uuid)
         log_message(msg)

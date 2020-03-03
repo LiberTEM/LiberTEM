@@ -565,7 +565,7 @@ class Context:
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
     def run(self, job: Union[Job, Analysis],
-            roi: np.ndarray = None) -> Union[np.ndarray, AnalysisResultSet]:
+            roi: np.ndarray = None, progress: bool = False) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.

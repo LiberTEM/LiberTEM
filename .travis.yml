@@ -29,6 +29,11 @@ jobs:
       dist: xenial
       sudo: true
     - stage: test
+      env: TOXENV=mypy
+      python: 3.7
+      dist: xenial
+      sudo: true
+    - stage: test
       env: TOXENV=flake8
       python: 3.7
       dist: xenial

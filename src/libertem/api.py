@@ -21,7 +21,7 @@ from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
-from libertem.analysis.base import AnalysisResultSet, BaseAnalysis
+from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
 
@@ -564,7 +564,7 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, BaseAnalysis],
+    def run(self, job: Union[Job, Analysis],
             roi: np.ndarray = None) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`

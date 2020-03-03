@@ -18,7 +18,8 @@ class UDFMeta:
     .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
     """
-    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype, input_dtype):
+    def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
+                 dataset_dtype: np.dtype, input_dtype: np.dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
@@ -29,7 +30,7 @@ class UDFMeta:
         self._slice = None
 
     @property
-    def slice(self):
+    def slice(self) -> Slice:
         """
         Slice : A :class:`~libertem.common.slice.Slice` instance that describes the location
                 within the dataset with navigation dimension flattened and reduced to the ROI.
@@ -37,7 +38,7 @@ class UDFMeta:
         return self._slice
 
     @slice.setter
-    def slice(self, new_slice):
+    def slice(self, new_slice: Slice):
         self._slice = new_slice
 
     @property
@@ -87,16 +88,16 @@ class UDFData:
     '''
     Container for result buffers, return value from running UDFs
     '''
-    def __init__(self, data):
+    def __init__(self, data: Dict):
         self._data = data
         self._views = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<UDFData: %r>" % (
             self._data
         )
 
-    def __getattr__(self, k):
+    def __getattr__(self, k: str):
         if k.startswith("_"):
             raise AttributeError("no such attribute: %s" % k)
         try:
@@ -139,7 +140,7 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
-    def as_dict(self):
+    def as_dict(self) -> Dict:
         return dict(self.items())
 
     def get_proxy(self):
@@ -148,13 +149,13 @@ class UDFData:
             for k, v in self._data.items()
         })
 
-    def _get_buffers(self, filter_allocated=False):
+    def _get_buffers(self, filter_allocated: bool = False):
         for k, buf in self._data.items():
             if not hasattr(buf, 'has_data') or (buf.has_data() and filter_allocated):
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition, roi):
+    def allocate_for_part(self, partition: Shape, roi: np.ndarray):
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
@@ -164,7 +165,7 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
-    def allocate_for_full(self, dataset, roi):
+    def allocate_for_full(self, dataset, roi: np.ndarray):
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
@@ -174,7 +175,7 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_dataset(dataset)
 
-    def set_view_for_partition(self, partition):
+    def set_view_for_partition(self, partition: Shape):
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_partition(partition)
 
@@ -189,7 +190,7 @@ class UDFData:
             else:
                 self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
-    def new_for_partition(self, partition, roi):
+    def new_for_partition(self, partition, roi: np.ndarray):
         for k, buf in self._get_buffers():
             self._data[k] = buf.new_for_partition(partition, roi)
 
@@ -201,7 +202,7 @@ class UDFFrameMixin:
     '''
     Implement :code:`process_frame` for per-frame processing.
     '''
-    def process_frame(self, frame):
+    def process_frame(self, frame: np.ndarray):
         """
         Implement this method to process the data on a frame-by-frame manner.
 
@@ -226,7 +227,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
-    def process_tile(self, tile):
+    def process_tile(self, tile: np.ndarray):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -251,7 +252,7 @@ class UDFPartitionMixin:
     '''
     Implement :code:`process_partition` for per-partition processing.
     '''
-    def process_partition(self, partition):
+    def process_partition(self, partition: np.ndarray):
         """
         Implement this method to process the data partitioned into large
         (100s of MiB) partitions.
@@ -426,7 +427,7 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def copy_for_partition(self, partition, roi):
+    def copy_for_partition(self, partition: np.ndarray, roi: np.ndarray):
         """
         create a copy of the UDF, specifically slicing aux data to the
         specified pratition and roi

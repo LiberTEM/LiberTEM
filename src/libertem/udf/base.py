@@ -88,7 +88,7 @@ class UDFData:
     '''
     Container for result buffers, return value from running UDFs
     '''
-    def __init__(self, data: Dict):
+    def __init__(self, data: Dict[str, BufferWrapper]):
         self._data = data
         self._views = {}
 
@@ -140,7 +140,7 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> Dict[str, BufferWrapper]:
         return dict(self.items())
 
     def get_proxy(self):

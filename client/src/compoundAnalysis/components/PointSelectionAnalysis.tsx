@@ -8,13 +8,13 @@ import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import { CompoundAnalysisProps } from "../types";
 import useDefaultFrameView from "./DefaultFrameView";
+import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
 
-const PointSelectionAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset, }) => {
+const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset, }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
@@ -61,7 +61,7 @@ const PointSelectionAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset, }
         }));
     };
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -69,14 +69,14 @@ const PointSelectionAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset, }
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    jobIndex={1} analysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

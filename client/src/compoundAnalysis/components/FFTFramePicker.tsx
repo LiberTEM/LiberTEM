@@ -24,7 +24,6 @@ const useFFTFramePicker = ({
                 type: AnalysisTypes.PICK_FFT_FRAME,
                 parameters: { x: cx, y: cy, real_rad, real_centerx, real_centery },
             }))
-
         }
     }, [analysisId, cx, cy, enabled, jobIndex, real_rad, real_centerx, real_centery, dispatch]);
 

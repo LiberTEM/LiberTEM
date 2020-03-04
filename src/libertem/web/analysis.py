@@ -63,5 +63,18 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         if result:
             msg = Message(self.state).analysis_removed(uuid)
         else:
-            msg = Message(self.state).analysis_removal_failed(uuid)
+            # FIXME: concrete error message?
+            msg = Message(self.state).analysis_removal_failed(uuid, "analysis could not be removed")
         log_message(msg)
+
+
+class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
+        self.event_registry = event_registry
+
+    async def get(self, uuid):
+        fmt = self.request.arguments['fmt']
+        assert len(fmt) == 1
+        fmt = fmt[0].decode("utf8")
+        raise NotImplementedError()

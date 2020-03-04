@@ -9,20 +9,22 @@ import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import { CompoundAnalysisProps } from "../types";
 import useDefaultFrameView from "./DefaultFrameView";
+import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
+const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
-    const minLength = Math.min(imageWidth, imageHeight);
 
+    const minLength = Math.min(imageWidth, imageHeight);
     const [cx, setCx] = useState(imageWidth / 2);
     const [cy, setCy] = useState(imageHeight / 2);
     const [ri, setRi] = useState(minLength / 4);
     const [ro, setRo] = useState(minLength / 2);
+    const [nBins] = useState(1);
+    const [maxOrder] = useState(8);
 
     const riHandle = {
         x: cx - ri,
@@ -66,18 +68,6 @@ const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             imageWidth={imageWidth} />
     )
 
-    const dispatch = useDispatch();
-
-    const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.FEM,
-            parameters: {
-                shape: "ring",
-                cx, cy, ri, ro,
-            }
-        }));
-    };
-
     const {
         frameViewTitle, frameModeSelector,
         handles: resultHandles,
@@ -92,22 +82,36 @@ const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const dispatch = useDispatch();
+
+    const runAnalysis = () => {
+        dispatch(analysisActions.Actions.run(analysis.id, 1, {
+            type: AnalysisTypes.RADIAL_FOURIER,
+            parameters: {
+                shape: "radial_fourier",
+                cx, cy, ri, ro,
+                n_bins: nBins,
+                max_order: maxOrder,
+            }
+        }));
+    };
+
+    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
-            title="Fluctuation EM (SD over Ring analysis)" subtitle={subtitle}
+            title="Radial Fourier analysis" subtitle={subtitle}
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    jobIndex={1} analysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}
@@ -118,4 +122,4 @@ const FEMAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     );
 }
 
-export default FEMAnalysis;
+export default RadialFourierAnalysis;

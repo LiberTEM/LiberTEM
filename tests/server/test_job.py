@@ -77,9 +77,8 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
 
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['dataset'] == ds_uuid
         assert msg['analysis'] == analysis_uuid
-        assert msg['details']['dataset'] == ds_uuid
-        assert msg['details']['id'] == analysis_uuid
         assert msg['details']['parameters'] == {}
 
         job_uuid = "229faa20-d146-46c1-af8c-32e303531322"
@@ -98,7 +97,7 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
+        assert msg['analysis'] == analysis_uuid
         assert msg['details']['id'] == job_uuid
 
         num_followup = 0
@@ -193,9 +192,8 @@ async def test_run_job_delete_ds(default_raw, base_url, http_client, server_port
 
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['dataset'] == ds_uuid
         assert msg['analysis'] == analysis_uuid
-        assert msg['details']['dataset'] == ds_uuid
-        assert msg['details']['id'] == analysis_uuid
         assert msg['details']['parameters'] == {}
 
         job_uuid = "229faa20-d146-46c1-af8c-32e303531322"
@@ -214,7 +212,7 @@ async def test_run_job_delete_ds(default_raw, base_url, http_client, server_port
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
+        assert msg['analysis'] == analysis_uuid
         assert msg['details']['id'] == job_uuid
 
         num_followup = 0
@@ -337,9 +335,8 @@ async def test_run_with_all_zeros_roi(default_raw, base_url, http_client, server
 
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['dataset'] == ds_uuid
         assert msg['analysis'] == analysis_uuid
-        assert msg['details']['dataset'] == ds_uuid
-        assert msg['details']['id'] == analysis_uuid
         assert msg['details']['parameters'] == {
             "roi": {
                 "shape": "disk",
@@ -369,7 +366,7 @@ async def test_run_with_all_zeros_roi(default_raw, base_url, http_client, server
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
+        assert msg['analysis'] == analysis_uuid
         assert msg['details']['id'] == job_uuid
 
         num_followup = 0
@@ -460,10 +457,9 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
 
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'ANALYSIS_CREATED')
+        assert msg['dataset'] == ds_uuid
         assert msg['analysis'] == analysis_uuid
         assert msg['details']['analysisType'] == "SUM_FRAMES"
-        assert msg['details']['dataset'] == ds_uuid
-        assert msg['details']['id'] == analysis_uuid
         assert msg['details']['parameters'] == {}
 
         analysis_data_updated = {
@@ -490,7 +486,6 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'ANALYSIS_UPDATED')
         assert msg['analysis'] == analysis_uuid
-        assert msg['details']['id'] == analysis_uuid
         assert msg['details']['parameters'] == {
             "roi": {
                 "shape": "disk",
@@ -516,7 +511,7 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'JOB_STARTED')
         assert msg['job'] == job_uuid
-        assert msg['details']['dataset'] == ds_uuid
+        assert msg['analysis'] == analysis_uuid
         assert msg['details']['id'] == job_uuid
 
         num_followup = 0
@@ -551,3 +546,7 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
             assert resp.status == 200
             resp_json = await resp.json()
             assert_msg(resp_json, 'DELETE_DATASET')
+
+
+def test_analysis_removal():
+    assert False

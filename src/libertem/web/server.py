@@ -18,7 +18,7 @@ from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
-from .analysis import AnalysisDetailHandler
+from .analysis import AnalysisDetailHandler, DownloadDetailHandler
 
 
 log = logging.getLogger(__name__)
@@ -60,6 +60,10 @@ def make_app(event_registry, shared_state):
             "event_registry": event_registry
         }),
         (r"/api/analyses/([^/]+)/", AnalysisDetailHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/analyses/([^/]+)/download/", DownloadDetailHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

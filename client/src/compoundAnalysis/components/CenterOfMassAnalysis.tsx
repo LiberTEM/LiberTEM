@@ -8,13 +8,13 @@ import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraint
 import Disk from "../../widgets/Disk";
 import { DraggableHandle } from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import * as compoundAnalysisActions from "../actions";
+import { CompoundAnalysisProps } from "../types";
 import useDefaultFrameView from "./DefaultFrameView";
+import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const CenterOfMassAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
+const CenterOfMassAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -61,13 +61,13 @@ const CenterOfMassAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) =
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.id,
+        analysisId: compoundAnalysis.id,
     })
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 1, {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.id, 1, {
             type: AnalysisTypes.CENTER_OF_MASS,
             parameters: {
                 shape: "com",
@@ -78,7 +78,7 @@ const CenterOfMassAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) =
         }));
     };
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -86,14 +86,14 @@ const CenterOfMassAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) =
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    jobIndex={1} analysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

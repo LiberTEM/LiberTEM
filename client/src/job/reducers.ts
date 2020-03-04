@@ -19,7 +19,7 @@ export function jobReducer(state = initialJobState, action: AllActions): JobRedu
                 action.payload.id,
                 {
                     id: action.payload.id,
-                    dataset: action.payload.dataset,
+                    analysis: action.payload.analysis,
                     running: JobRunning.CREATING,
                     status: JobStatus.CREATING,
                     results: [],

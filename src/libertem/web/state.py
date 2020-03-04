@@ -45,10 +45,10 @@ class AnalysisState:
     def create(self, uuid, dataset_uuid, analysis_type, parameters):
         assert uuid not in self.analyses
         self.analyses[uuid] = {
+            "dataset": dataset_uuid,
             "analysis": uuid,
             "details": {
                 "analysisType": analysis_type,
-                "dataset": dataset_uuid,
                 "parameters": parameters,
             },
         }
@@ -58,6 +58,19 @@ class AnalysisState:
 
     def get(self, uuid, default=None):
         return self.analyses.get(uuid, default)
+
+    def remove(self, uuid):
+        self.remove_results(uuid)
+        del self.analyses[uuid]
+
+    def set_results(self, uuid, parameters, results):
+        """
+        set results: create or update
+        """
+        self.results[uuid] = (parameters, results)
+
+    def remove_results(self, uuid):
+        del self.results[uuid]
 
     def __getitem__(self, uuid):
         return self.analyses[uuid]

@@ -1,8 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Header, Icon, Message, Modal, Popup, Segment } from 'semantic-ui-react';
-import AnalysisList from "../../analysis/components/AnalysisList";
-import { AnalysisState } from "../../analysis/types";
+import AnalysisList from "../../compoundAnalysis/components/AnalysisList";
+import { CompoundAnalysisState } from "../../compoundAnalysis/types";
 import { filterWithPred } from "../../helpers/reducerHelpers";
 import { DatasetState, DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
@@ -15,9 +15,9 @@ interface DatasetProps {
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
-    const p = (analysis: AnalysisState) => analysis.dataset === ownProps.dataset.id;
+    const p = (analysis: CompoundAnalysisState) => analysis.dataset === ownProps.dataset.id;
     return {
-        analyses: filterWithPred(state.analyses, p),
+        analyses: filterWithPred(state.compoundAnalyses, p),
     }
 }
 

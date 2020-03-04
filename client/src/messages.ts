@@ -167,6 +167,7 @@ export type DatasetDeleting = DatasetCommon & {
 export type DatasetOpen = DatasetCommon & {
     status: DatasetStatus.OPEN,
     params: {
+        shape: number[],
     }
     diagnostics: DiagElemMsg[],
 }
@@ -433,8 +434,8 @@ export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams 
 export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | SumSigDetails | ClustDetails;
 
 export interface CreateOrUpdateAnalysisRequest {
-    analysis: AnalysisDetails,
     dataset: string,
+    analysis: AnalysisDetails,
 }
 
 export interface CreateAnalysisResponse {
@@ -453,10 +454,20 @@ export interface UpdateAnalysisResponse {
     details: AnalysisDetails,
 }
 
+export type RemoveAnalysisResponse = {
+    status: "ok"
+    messageType: "ANALYSIS_REMOVED",
+    analysis: string,
+} | {
+    status: "error",
+    messageType: "ANALYSIS_REMOVAL_FAILED",
+    msg: string,
+    analysis: string,
+}
+
 export interface StartJobRequest {
     job: {
-        dataset: string,
-        analysis: AnalysisDetails,
+        analysis: string,
     }
 }
 

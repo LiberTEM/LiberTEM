@@ -1,8 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import * as analysisActions from "../../analysis/actions";
-import AnalysisSelect from "../../analysis/components/AnalysisSelect";
+import * as analysisActions from "../../compoundAnalysis/actions";
+import AnalysisSelect from "../../compoundAnalysis/components/AnalysisSelect";
 import { AnalysisTypes, DatasetState } from "../../messages";
 
 interface DatasetProps {

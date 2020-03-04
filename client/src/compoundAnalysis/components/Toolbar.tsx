@@ -5,18 +5,28 @@ import { Button, Icon, IconProps, Segment } from "semantic-ui-react";
 import { RootReducer } from "../../store";
 import * as analysisActions from "../actions";
 import { getAnalysisStatus } from "../helpers";
-import { AnalysisState } from "../types";
+import { CompoundAnalysisState } from "../types";
 
 interface ToolbarProps {
-    analysis: AnalysisState,
+    compoundAnalysis: CompoundAnalysisState,
     busyIdxs: number[],
     onApply: () => void,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: ToolbarProps) => {
     return {
-        handleRemove: () => dispatch(analysisActions.Actions.remove(ownProps.analysis.id)),
+        handleRemove: () => dispatch(analysisActions.Actions.remove(ownProps.compoundAnalysis.id)),
     }
+}
+
+const mapStateToProps = (state: RootReducer, ownProps: ToolbarProps) => {
+    const status = getAnalysisStatus(
+        ownProps.compoundAnalysis, state.analyses, state.jobs,
+        ownProps.busyIdxs
+    );
+    return {
+        status,
+    };
 }
 
 type MergedProps = ToolbarProps & ReturnType<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
@@ -38,13 +48,6 @@ const Toolbar: React.SFC<MergedProps> = ({ status, onApply, handleRemove }) => {
             </Button.Group>
         </Segment>
     );
-}
-
-const mapStateToProps = (state: RootReducer, ownProps: ToolbarProps) => {
-    const status = getAnalysisStatus(ownProps.analysis, state.jobs, ownProps.busyIdxs);
-    return {
-        status,
-    };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Toolbar);

@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useState } from "react";
 
-import { FrameParams } from "../../messages";
-import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
-import Disk from "../../widgets/Disk";
-import DraggableHandle from "../../widgets/DraggableHandle";
-import { HandleRenderFunction } from "../../widgets/types";
+import { FrameParams } from "../../../messages";
+import { cbToRadius, inRectConstraint, keepOnCY } from "../../../widgets/constraints";
+import Disk from "../../../widgets/Disk";
+import DraggableHandle from "../../../widgets/DraggableHandle";
+import { HandleRenderFunction } from "../../../widgets/types";
 
-const useDiskROI = ({ scanWidth, scanHeight}: {
+const useDiskROI = ({ scanWidth, scanHeight }: {
     scanWidth: number;
     scanHeight: number;
 }) => {

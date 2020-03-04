@@ -9,18 +9,15 @@ import { cbToRadius, inRectConstraint, riConstraint, roConstraints } from "../..
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutTwoRes from "./AnalysisLayoutTwoRes";
+import * as compoundAnalysisActions from "../actions";
+import { CompoundAnalysisProps } from "../types";
 import useDefaultFrameView from "./DefaultFrameView";
-import { useRectROI } from "./RectROI";
+import AnalysisLayoutTwoRes from "./layouts/AnalysisLayoutTwoRes";
+import { useRectROI } from "./roi/RectROI";
 import Toolbar from "./Toolbar";
 
 
-
-
-const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
-
+const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -94,14 +91,14 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const { rectRoiParameters, rectRoiHandles, rectRoiWidgets } = useRectROI({ scanWidth, scanHeight });
 
     React.useEffect(() => {
-        dispatch(analysisActions.Actions.run(analysis.id, 1, {
+        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 1, {
             type: AnalysisTypes.SUM_SIG,
             parameters: {},
         }))
     }, [analysis.id, dispatch]);
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 2, {
+        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.CLUST,
             parameters: {
                 roi: rectRoiParameters.roi,
@@ -129,7 +126,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const subtitle = (
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
 
     const [paramsVisible, setParamsVisible] = React.useState(false);
 
@@ -142,7 +139,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             <Accordion.Title active={paramsVisible} index={0} onClick={handleClick}>
                 <Icon name='dropdown' />
                 Parameters
-    </Accordion.Title>
+            </Accordion.Title>
             <Accordion.Content active={paramsVisible}>
                 <Form>
                     <Form.Field>
@@ -164,14 +161,14 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             mid={<>
                 <ResultList
-                    jobIndex={1} analysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={rectRoiHandles}
                     extraWidgets={rectRoiWidgets}
@@ -180,7 +177,7 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
             right={<>
                 <ResultList
-                    jobIndex={2} analysis={analysis.id}
+                    analysisIndex={2} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}
@@ -195,8 +192,6 @@ const ClustAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
         />
     );
-
 }
-
 
 export default ClustAnalysis;

@@ -1,7 +1,7 @@
 import { AllActions } from "../actions";
-import * as analysisActions from '../analysis/actions';
 import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
+import * as analysisActions from '../compoundAnalysis/actions';
 import * as datasetActions from '../dataset/actions';
 import { ById, filterWithPred, insertById } from "../helpers/reducerHelpers";
 import * as errorActions from './actions';

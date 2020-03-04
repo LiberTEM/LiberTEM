@@ -1,8 +1,10 @@
 import { AllActions } from "../actions";
-import * as datasetActions from "../dataset/actions";
+import * as channelActions from '../channel/actions';
 import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
+import * as jobActions from '../job/actions';
 import * as analysisActions from "./actions";
-import { AnalysisState, JobList } from "./types";
+import { AnalysisState } from "./types";
+
 
 export type AnalysisReducerState = ById<AnalysisState>;
 
@@ -16,25 +18,28 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.CREATED: {
             return insertById(state, action.payload.analysis.id, action.payload.analysis);
         }
-        case analysisActions.ActionTypes.PREPARE_RUN: {
-            const { jobIndex, id } = action.payload;
-            const analysis = state.byId[id];
-            const oldJob = analysis.jobs[jobIndex];
-            const jobHistory = [...analysis.jobHistory];
-            if (oldJob !== undefined) {
-                // TODO: length restriction?
-                const hist = jobHistory[jobIndex] ? jobHistory[jobIndex] : [];
-                jobHistory[jobIndex] = [oldJob, ...hist];
-            }
-            const newJobs: JobList = [...analysis.jobs];
-            newJobs[jobIndex] = action.payload.job;
-            return updateById(state, action.payload.id, { jobs: newJobs, jobHistory })
-        }
         case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
-        case datasetActions.ActionTypes.DELETE: {
-            return filterWithPred(state, (r: AnalysisState) => r.dataset !== action.payload.dataset);
+        case analysisActions.ActionTypes.UPDATE: {
+            return updateById(state, action.payload.id, {
+                details: action.payload.parameters,
+            });
+        }
+        case jobActions.ActionTypes.CREATE: {
+            return state; // FIXME: add job to appropriate analysis?
+        }
+        case channelActions.ActionTypes.TASK_RESULT: {
+            const analysisIdForJob = state.ids.find(id => {
+                const analysis = state.byId[id];
+                return analysis.jobs.some(job => job === action.payload.job)
+            });
+            if (!analysisIdForJob) {
+                return state;
+            }
+            return updateById(state, analysisIdForJob, {
+                displayedJob: action.payload.job,
+            });
         }
     }
     return state;

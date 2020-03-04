@@ -9,12 +9,12 @@ import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
 import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutTwoCol from "./AnalysisLayoutTwoCol";
+import { CompoundAnalysisProps } from "../types";
 import useDefaultFrameView from "./DefaultFrameView";
+import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const RingMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
+const RingMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -92,7 +92,7 @@ const RingMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -100,14 +100,14 @@ const RingMaskAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    jobIndex={1} analysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

@@ -20,6 +20,7 @@ export enum MessageTypes {
     CLOSE = "CLOSE",
     ERROR = "ERROR",
     DELETE_DATASET = "DELETE_DATASET",
+    CREATE_DATASET = "CREATE_DATASET",
     CANCEL_JOB_DONE = "CANCEL_JOB_DONE",
 }
 

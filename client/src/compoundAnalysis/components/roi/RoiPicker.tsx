@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useDispatch } from "react-redux";
-import { AnalysisTypes, FrameParams } from "../../messages";
-import * as analysisActions from "../actions";
+import { AnalysisTypes, FrameParams } from "../../../messages";
+import * as analysisActions from "../../actions";
 
 
 const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis }: {

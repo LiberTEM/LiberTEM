@@ -115,6 +115,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield call(handleTaskResult, msg, socketChannel, timestamp);
                     break;
                 }
+                case channelMessages.MessageTypes.CREATE_DATASET: {
+                    yield put(datasetActions.Actions.created(msg.details));
+                    break;
+                }
                 case channelMessages.MessageTypes.DELETE_DATASET: {
                     yield put(datasetActions.Actions.deleted(msg.dataset));
                     break;

@@ -203,6 +203,21 @@ class Message(object):
             }
         }
 
+    def analysis_removed(self, uuid):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_REMOVED",
+            "analysis": uuid,
+        }
+
+    def analysis_removal_failed(self, uuid, msg):
+        return {
+            "status": "error",
+            "messageType": "ANALYSIS_REMOVAL_FAILED",
+            "analysis": uuid,
+            "msg": msg,
+        }
+
 
 class MessageConverter:
     SCHEMA = None

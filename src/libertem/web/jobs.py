@@ -47,11 +47,12 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def put(self, job_id):
         request_data = tornado.escape.json_decode(self.request.body)
         analysis_id = request_data['job']['analysis']
-        analysis_details = self.state.analysis_state[analysis_id]
+        analysis_state = self.state.analysis_state[analysis_id]
+        ds = self.state.dataset_state[analysis_state['dataset']]
 
-        analysis_type = analysis_details["type"]
-        params = analysis_details["params"]
-        ds = self.state.dataset_state[analysis_details['dataset']]
+        analysis_details = analysis_state["details"]
+        analysis_type = analysis_details["analysisType"]
+        params = analysis_details["parameters"]
 
         analysis = self.get_analysis_by_type(analysis_type)(
             dataset=ds,
@@ -66,7 +67,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             return await self.run_udf(
                 job_id=job_id,
                 dataset=ds,
-                dataset_id=analysis_details['dataset'],
+                dataset_id=analysis_state['dataset'],
                 analysis=analysis,
                 analysis_id=analysis_id,
             )

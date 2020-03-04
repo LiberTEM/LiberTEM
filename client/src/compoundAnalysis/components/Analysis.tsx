@@ -2,10 +2,10 @@ import * as React from "react";
 import { useSelector } from "react-redux";
 import { DatasetStatus } from "../../messages";
 import { RootReducer } from "../../store";
-import { AnalysisMetadata, AnalysisState } from "../types";
+import { CompoundAnalysisMetadata, CompoundAnalysisState } from "../types";
 
 interface AnalysisDispatcherProps {
-    analysis: AnalysisState,
+    analysis: CompoundAnalysisState,
 }
 
 const AnalysisDispatcherComponent: React.SFC<AnalysisDispatcherProps> = ({ analysis }) => {
@@ -15,12 +15,12 @@ const AnalysisDispatcherComponent: React.SFC<AnalysisDispatcherProps> = ({ analy
         return null;
     }
 
-    const AnalysisComponent = AnalysisMetadata[analysis.mainAnalysisType].component;
+    const AnalysisComponent = CompoundAnalysisMetadata[analysis.mainAnalysisType].component;
     if (!AnalysisComponent) {
         throw new Error("unknown analysis type");
     }
 
-    return <AnalysisComponent dataset={dataset} analysis={analysis} />;
+    return <AnalysisComponent dataset={dataset} compoundAnalysis={analysis} />;
 }
 
 export default AnalysisDispatcherComponent;

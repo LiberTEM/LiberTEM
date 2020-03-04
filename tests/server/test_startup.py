@@ -203,17 +203,15 @@ async def test_initial_state_analyses(default_raw, base_url, http_client, server
         analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
 
         analysis_data = {
+            "dataset": ds_uuid,
             "analysis": {
-                "dataset": ds_uuid,
-                "analysis": {
-                    "type": "SUM_FRAMES",
-                    "parameters": {
-                        "roi": {
-                            "shape": "disk",
-                            "r": 1,
-                            "cx": 1,
-                            "cy": 1,
-                        }
+                "type": "SUM_FRAMES",
+                "parameters": {
+                    "roi": {
+                        "shape": "disk",
+                        "r": 1,
+                        "cx": 1,
+                        "cy": 1,
                     }
                 }
             }
@@ -223,7 +221,6 @@ async def test_initial_state_analyses(default_raw, base_url, http_client, server
             print(await resp.text())
             assert resp.status == 200
             msg = await resp.json()
-            assert msg['status'] == "ok"
             assert_msg(msg, 'ANALYSIS_CREATED')
             assert msg['analysis'] == analysis_uuid
             assert msg['details']['parameters'] == {
@@ -242,7 +239,7 @@ async def test_initial_state_analyses(default_raw, base_url, http_client, server
         assert initial_msg['status'] == "ok"
         assert len(initial_msg['datasets']) == 1
         assert len(initial_msg['analyses']) == 1
-        assert initial_msg["analyses"][0]["parameters"] == {
+        assert initial_msg["analyses"][0]["details"]["parameters"] == {
             "roi": {
                 "shape": "disk",
                 "r": 1,

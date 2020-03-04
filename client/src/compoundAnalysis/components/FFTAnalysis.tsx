@@ -9,16 +9,16 @@ import Disk from "../../widgets/Disk";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import Ring from "../../widgets/Ring";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
-import { AnalysisProps } from "../types";
-import AnalysisLayoutThreeCol from "./AnalysisLayoutThreeCol";
+import * as compoundAnalysisActions from "../actions";
+import { CompoundAnalysisProps } from "../types";
 import useFFTFrameView from "./FFTFrameView";
+import AnalysisLayoutThreeCol from "./layouts/AnalysisLayoutThreeCol";
 import Toolbar from "./Toolbar";
 
 
 
 
-const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
+const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -108,7 +108,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     );
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 2, {
+        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.APPLY_FFT_MASK,
             parameters: {
                 rad_in: radIn,
@@ -132,7 +132,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
 
 
-    const toolbar = <Toolbar analysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
 
 
     let subtitle;
@@ -141,7 +141,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         mid = (<>
             <ResultList
                 extraHandles={frameViewHandlesreal} extraWidgets={frameViewWidgetsreal}
-                jobIndex={1} analysis={analysis.id}
+                analysisIndex={1} compoundAnalysis={analysis.id}
                 width={imageWidth} height={imageHeight}
                 selectors={frameModeSelector}
             />
@@ -154,7 +154,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     else {
         mid = (<>
             <ResultList
-                jobIndex={1} analysis={analysis.id}
+                analysisIndex={1} compoundAnalysis={analysis.id}
                 width={imageWidth} height={imageHeight}
                 selectors={frameModeSelector}
             />
@@ -171,7 +171,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             left={<>
                 <ResultList
                     extraHandles={frameViewHandlesfft} extraWidgets={frameViewWidgetsfft}
-                    jobIndex={0} analysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.id}
                     width={imageWidth} height={imageHeight}
                 />
             </>}
@@ -179,7 +179,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
             right={<>
                 <ResultList
-                    jobIndex={2} analysis={analysis.id}
+                    analysisIndex={2} compoundAnalysis={analysis.id}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                 />

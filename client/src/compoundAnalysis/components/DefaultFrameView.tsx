@@ -2,11 +2,11 @@ import * as React from "react";
 import { useState } from "react";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
-import { useDiskROI } from "./DiskROI";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
-import { useRectROI } from "./RectROI";
-import { useRoiPicker } from "./RoiPicker";
+import { useDiskROI } from "./roi/DiskROI";
+import { useRectROI } from "./roi/RectROI";
+import { useRoiPicker } from "./roi/RoiPicker";
 
 
 export enum DefaultModes {

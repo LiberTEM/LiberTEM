@@ -1,9 +1,9 @@
 import * as React from "react";
-import { AnalysisReducerState } from "../reducers";
+import { CompoundAnalysisReducerState } from "../reducers";
 import Analysis from "./Analysis";
 
 interface AnalysisProps {
-    analyses: AnalysisReducerState,
+    analyses: CompoundAnalysisReducerState,
 }
 
 const AnalysisList: React.SFC<AnalysisProps> = ({ analyses }) => {

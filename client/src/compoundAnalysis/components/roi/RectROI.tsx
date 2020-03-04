@@ -1,15 +1,15 @@
 import * as React from "react";
 import { useState } from "react";
 
-import { FrameParams } from "../../messages";
-import DraggableHandle from "../../widgets/DraggableHandle";
-import Rect from "../../widgets/Rect";
-import { HandleRenderFunction } from "../../widgets/types";
+import { FrameParams } from "../../../messages";
+import DraggableHandle from "../../../widgets/DraggableHandle";
+import Rect from "../../../widgets/Rect";
+import { HandleRenderFunction } from "../../../widgets/types";
 
 
-const useRectROI = ({ scanWidth, scanHeight}: {
+const useRectROI = ({ scanWidth, scanHeight }: {
     scanWidth: number;
-    scanHeight: number; 
+    scanHeight: number;
 }) => {
     const minLength = Math.min(scanWidth, scanHeight);
     const [x, setx] = useState(scanWidth / 2);
@@ -35,12 +35,12 @@ const useRectROI = ({ scanWidth, scanHeight}: {
     };
 
     const handleShapeChange = (newx: number, newy: number) => {
-        setwidth(newx-x);
-        setheight(newy-y);
+        setwidth(newx - x);
+        setheight(newy - y);
     };
 
     const smthHandle = {
-        x: x + width ,
+        x: x + width,
         y: y + height,
     }
 
@@ -49,12 +49,12 @@ const useRectROI = ({ scanWidth, scanHeight}: {
             imageWidth={scanWidth}
             onDragMove={handleCornerChange}
             parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}/>
+            parentOnDrop={handleDrop} />
         <DraggableHandle x={smthHandle.x} y={smthHandle.y}
             imageWidth={scanWidth}
             onDragMove={handleShapeChange}
             parentOnDragStart={handleDragStart}
-            parentOnDrop={handleDrop}/>
+            parentOnDrop={handleDrop} />
     </>);
 
     const rectRoiWidgets = (

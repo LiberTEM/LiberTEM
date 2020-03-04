@@ -97,7 +97,7 @@ Before (using a release candidate package)
 * Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
   in appropriate branch.
 * Add the current LiberTEM version to
-  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_
+  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_ (add both the singularity and the .desktop file!)
 
 After releasing on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~

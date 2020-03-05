@@ -58,11 +58,10 @@ To create a new virtualenv for LiberTEM, you can use the following command:
 
 .. code-block:: shell
 
-    $ virtualenv -p python3.x ~/libertem-venv/
+    $ virtualenv -p python3 ~/libertem-venv/
 
-Replace :code:`x` with current Python version installed. To find out which
-version of Python is installed on your system run the :code:`python --version`
-or :code:`python -V` command.
+If multiple python versions are installed, replace :code:`python3` with 
+:code:`python3.6` or above version.
 
 Replace :code:`~/libertem-venv/` with any path where you would like to create
 the venv. You can then activate the virtualenv with
@@ -197,13 +196,6 @@ PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
 
 You can let pip install PyTorch automatically by using the torch variant, for
 example from PyPi:
-
-.. code-block:: shell
-
-    (libertem) $ pip install libertem[torch]
-
-Some shell interprets above code differently and might cause an error, in this
-scenario quoting the package name argument might help.
 
 .. code-block:: shell
 

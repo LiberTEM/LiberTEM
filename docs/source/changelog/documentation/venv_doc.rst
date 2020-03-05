@@ -3,4 +3,5 @@
 
  * Instruction generalised for different python
    version.
- * optional pytorch installation
+ * Added quotes for package name argument for
+   installing pytorch.

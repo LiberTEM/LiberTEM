@@ -1,3 +1,5 @@
+import io
+
 import tornado.web
 
 from .base import CORSMixin, log_message
@@ -75,8 +77,23 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.state = state
         self.event_registry = event_registry
 
-    async def get(self, uuid):
+    def _get_format(self):
+        # FIXME: unused for now
         fmt = self.request.arguments['fmt']
         assert len(fmt) == 1
-        fmt = fmt[0].decode("utf8")
-        raise NotImplementedError()
+        return fmt[0].decode("utf8")
+
+    async def get(self, uuid):
+        details, results = self.state.analysis_state.get_results(uuid)
+        import h5py
+
+        bio = io.BytesIO()
+        with h5py.File(bio) as f:
+            for k in results.keys():
+                f[k] = results[k]
+
+        # FIXME: stream file (maybe temporary file w/ sendfile?), correct content-type
+        # FIXME: add parameters to h5 file
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename="results.h5"')
+        self.write(bio.getvalue())

@@ -64,14 +64,17 @@ class AnalysisState:
         self.remove_results(uuid)
         del self.analyses[uuid]
 
-    def set_results(self, uuid, parameters, results):
+    def set_results(self, uuid, details, results):
         """
         set results: create or update
         """
-        self.results[uuid] = (parameters, results)
+        self.results[uuid] = (details, results)
 
     def remove_results(self, uuid):
         del self.results[uuid]
+
+    def get_results(self, uuid):
+        return self.results[uuid]
 
     def __getitem__(self, uuid):
         return self.analyses[uuid]

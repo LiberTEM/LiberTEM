@@ -70,6 +70,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 dataset_id=analysis_state['dataset'],
                 analysis=analysis,
                 analysis_id=analysis_id,
+                details=analysis_details,
             )
         except JobCancelledError:
             msg = Message(self.state).cancel_done(job_id)
@@ -96,7 +97,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.event_registry.broadcast_event(msg)
             self.write(msg)
 
-    async def run_udf(self, job_id, dataset, dataset_id, analysis, analysis_id):
+    async def run_udf(self, job_id, dataset, dataset_id, analysis, analysis_id, details):
         udf = analysis.get_udf()
         roi = analysis.get_roi()
 
@@ -119,7 +120,8 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 cancel_id=job_id, executor=executor,
                 job_is_cancelled=lambda: self.state.job_state.is_cancelled(job_id),
                 send_results=lambda results, finished: self.send_results(
-                    results, job_id, finished=finished
+                    results, job_id, finished=finished,
+                    details=details, analysis_id=analysis_id,
                 )
             )
 
@@ -139,7 +141,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 roi=roi,
             )
             post_t = time.time()
-            await self.send_results(results, job_id)
+            await self.send_results(results, job_id, analysis_id, details)
             # The broadcast might have taken quite some time due to
             # backpressure from the network
             t = time.time()
@@ -151,9 +153,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             udf_results=udf_results,
             roi=roi,
         )
-        await self.send_results(results, job_id, finished=True)
+        await self.send_results(results, job_id, analysis_id, details, finished=True)
 
-    async def send_results(self, results, job_id, finished=False):
+    async def send_results(self, results, job_id, analysis_id, details, finished=False):
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         images = await result_images(results)
@@ -168,6 +170,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                     for result in results
                 ],
             )
+            self.state.analysis_state.set_results(analysis_id, details, results)
         else:
             msg = Message(self.state).task_result(
                 job_id=job_id,

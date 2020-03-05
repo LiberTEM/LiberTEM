@@ -138,6 +138,9 @@ class AnalysisResultSet(object):
     def __len__(self):
         return len(self.results)
 
+    def keys(self):
+        return [r.key for r in self.results]
+
     @property
     def results(self):
         if callable(self._results):

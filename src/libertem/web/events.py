@@ -26,6 +26,7 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
                 datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
             )
             log_message(msg)
+            # FIXME: don't broadcast, only send to the new connection
             self.registry.broadcast_event(msg)
 
     def on_close(self):
@@ -45,9 +46,12 @@ class EventRegistry(object):
     def broadcast_event(self, message, *args, **kwargs):
         futures = []
         for handler in self.handlers:
-            futures.append(
-                handler.write_message(message, *args, **kwargs)
-            )
+            try:
+                future = handler.write_message(message, *args, **kwargs)
+            except tornado.websocket.WebSocketClosedError:
+                self.remove_handler(handler)
+                continue
+            futures.append(future)
         return asyncio.gather(*futures)
 
     def broadcast_together(self, messages, *args, **kwargs):

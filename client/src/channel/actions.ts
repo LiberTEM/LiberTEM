@@ -1,6 +1,6 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
 import { JobResultType } from '../job/types';
-import { MsgPartInitialDataset, MsgPartJob } from '../messages';
+import { AnalysisDetails, MsgPartInitialDataset, MsgPartJob } from '../messages';
 
 
 export type PartialResultType = JobResultType;
@@ -15,6 +15,9 @@ export enum ActionTypes {
     CLOSE = "CHANNEL_CLOSE",
     ERROR = "CHANNEL_ERROR",
     CANCELLED = "CANCELLED",
+    ANALYSIS_CREATED = 'ANALYSIS_CREATED',
+    ANALYSIS_UPDATED = 'ANALYSIS_UPDATED',
+    ANALYSIS_REMOVED = 'ANALYSIS_REMOVED',
 }
 
 export const Actions = {
@@ -27,6 +30,9 @@ export const Actions = {
     close: (timestamp: number) => createAction(ActionTypes.CLOSE, { timestamp }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
     cancelled: (job: string) => createAction(ActionTypes.CANCELLED, { job }),
+    analysisCreated: (analysis: string, dataset: string, details: AnalysisDetails) => createAction(ActionTypes.ANALYSIS_CREATED, { dataset, analysis, details }),
+    analysisUpdated: (analysis: string, dataset: string, details: AnalysisDetails) => createAction(ActionTypes.ANALYSIS_UPDATED, { dataset, analysis, details }),
+    analysisRemoved: (analysis: string) => createAction(ActionTypes.ANALYSIS_REMOVED, { analysis }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

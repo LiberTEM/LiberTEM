@@ -132,6 +132,31 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.cancelled(msg.job));
                     break;
                 }
+                /*
+                // FIXME: server needs to know about compount analyses
+                case channelMessages.MessageTypes.ANALYSIS_CREATED: {
+                    yield put(channelActions.Actions.analysisCreated(
+                        msg.analysis,
+                        msg.dataset,
+                        msg.details,
+                    ));
+                    break;
+                }
+                case channelMessages.MessageTypes.ANALYSIS_UPDATED: {
+                    yield put(channelActions.Actions.analysisUpdated(
+                        msg.analysis,
+                        msg.dataset,
+                        msg.details,
+                    ));
+                    break;
+                }
+                case channelMessages.MessageTypes.ANALYSIS_REMOVED: {
+                    yield put(channelActions.Actions.analysisRemoved(
+                        msg.analysis,
+                    ));
+                    break;
+                }
+                */
             }
         }
     } finally {

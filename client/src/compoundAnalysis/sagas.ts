@@ -1,6 +1,7 @@
 import { buffers } from 'redux-saga';
 import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
+import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
 import * as jobActions from '../job/actions';
 import { cancelJob, createOrUpdateAnalysis, startJob } from '../job/api';
@@ -86,26 +87,39 @@ export function* analysisSidecar(compoundAnalysisId: string) {
 
             // get the current state incl. configuration
             const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
-            const { analysisIndex, parameters } = action.payload;
+            const { analysisIndex, details } = action.payload;
 
-            // create or update the analysis on the server:
-            yield call(createOrUpdateAnalysis, compoundAnalysisId, compoundAnalysis.dataset, parameters);
+            let analysisId = compoundAnalysis.analyses[analysisIndex];
+
+            if (analysisId) {
+                // update the analysis on the server:
+                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield put(analysisActions.Actions.updated(analysisId, details));
+
+                const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+
+                for (const oldJobId of analysis.jobs) {
+                    const job: JobState = yield select(selectJob, oldJobId);
+                    if (job && job.running !== "DONE") {
+                        // wait until the job is cancelled:
+                        yield call(cancelJob, oldJobId);
+                    }
+                }
+            } else {
+                // create the analysis on the server:
+                analysisId = uuid();
+                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield put(analysisActions.Actions.created({
+                    id: analysisId,
+                    dataset: compoundAnalysis.dataset,
+                    details,
+                    jobs: [],
+                }, compoundAnalysis.id, analysisIndex));
+            }
 
             // prepare running the job:
             const jobId = uuid();
-            yield put(jobActions.Actions.create(jobId, compoundAnalysis.id, Date.now()));
-            yield put(compoundAnalysisActions.Actions.prepareRun(compoundAnalysis.id, analysisIndex, jobId));
-
-            const analysisId = compoundAnalysis.analyses[analysisIndex];
-            const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
-
-            for (const oldJobId of analysis.jobs) {
-                const job: JobState = yield select(selectJob, oldJobId);
-                if (job && job.running !== "DONE") {
-                    // wait until the job is cancelled:
-                    yield call(cancelJob, oldJobId);
-                }
-            }
+            yield put(jobActions.Actions.create(jobId, analysisId, Date.now()));
 
             // FIXME: we have a race here, as the websocket msg FINISH_JOB may
             // arrive before call(startJob, ...) returns. this causes the apply button
@@ -113,7 +127,7 @@ export function* analysisSidecar(compoundAnalysisId: string) {
             // best reproduced in "Slow 3G" network simulation mode in devtools
 
             // wait until the job is started
-            yield call(startJob, jobId, compoundAnalysisId);
+            yield call(startJob, jobId, analysisId);
             yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.id, jobId, analysisIndex));
         } catch (e) {
             const timestamp = Date.now();

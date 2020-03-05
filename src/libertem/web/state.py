@@ -53,8 +53,9 @@ class AnalysisState:
             },
         }
 
-    def update(self, uuid, parameters):
+    def update(self, uuid, analysis_type, parameters):
         self.analyses[uuid]["details"]["parameters"] = parameters
+        self.analyses[uuid]["details"]["analysisType"] = analysis_type
 
     def get(self, uuid, default=None):
         return self.analyses.get(uuid, default)

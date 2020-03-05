@@ -25,7 +25,9 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         request body contains the analysis type and parameters
 
         On update, we let the currently running jobs continue running,
-        jobs are handled separately by the JobDetailHandler
+        jobs are handled separately by the JobDetailHandler.
+
+        Update can change both parameters and analysis type.
         """
         request_data = tornado.escape.json_decode(self.request.body)
         dataset_id = request_data["dataset"]
@@ -48,7 +50,7 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(msg)
 
     async def _update_analysis(self, uuid, dataset_id, analysis_type, existing_analysis, params):
-        self.state.analysis_state.update(uuid, params)
+        self.state.analysis_state.update(uuid, analysis_type, params)
         msg = Message(self.state).update_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)

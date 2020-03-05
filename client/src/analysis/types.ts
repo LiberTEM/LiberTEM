@@ -5,7 +5,7 @@ export type JobList = string[];
 export interface Analysis {
     id: string,
     dataset: string,
-    displayedJob: string,
+    displayedJob?: string,
     details: AnalysisDetails,
     jobs: JobList,
 }

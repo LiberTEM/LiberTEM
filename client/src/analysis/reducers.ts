@@ -21,18 +21,25 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
-        case analysisActions.ActionTypes.UPDATE: {
+        case analysisActions.ActionTypes.UPDATED: {
             return updateById(state, action.payload.id, {
-                details: action.payload.parameters,
+                details: action.payload.details,
             });
         }
         case jobActions.ActionTypes.CREATE: {
-            return state; // FIXME: add job to appropriate analysis?
+            const analysis = state.byId[action.payload.analysis];
+            // FIXME: remove old jobs
+            const oldJobs = analysis.jobs ? analysis.jobs : [];
+            return updateById(state, action.payload.analysis, {
+                jobs: [action.payload.id, ...oldJobs],
+            })
         }
+        case channelActions.ActionTypes.FINISH_JOB:
         case channelActions.ActionTypes.TASK_RESULT: {
             const analysisIdForJob = state.ids.find(id => {
                 const analysis = state.byId[id];
-                return analysis.jobs.some(job => job === action.payload.job)
+                const jobs = analysis.jobs ? analysis.jobs : [];
+                return jobs.some(job => job === action.payload.job)
             });
             if (!analysisIdForJob) {
                 return state;

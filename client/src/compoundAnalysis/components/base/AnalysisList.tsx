@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CompoundAnalysisReducerState } from "../reducers";
+import { CompoundAnalysisReducerState } from "../../reducers";
 import Analysis from "./Analysis";
 
 interface AnalysisProps {

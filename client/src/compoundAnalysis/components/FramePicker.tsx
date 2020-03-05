@@ -4,7 +4,7 @@ import { AnalysisParameters, AnalysisTypes } from "../../messages";
 import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
+import * as compoundAnalysisActions from "../actions";
 
 const useFramePicker = ({
     enabled, scanWidth, scanHeight, jobIndex, analysisId, cx, cy, setCx, setCy
@@ -23,7 +23,7 @@ const useFramePicker = ({
                 y: cy,
             };
 
-            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+            dispatch(compoundAnalysisActions.Actions.run(analysisId, jobIndex, {
                 type: AnalysisTypes.PICK_FRAME,
                 parameters: params,
             }))

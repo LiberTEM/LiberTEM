@@ -1,5 +1,5 @@
 import { ActionCreatorsMapObject } from "redux";
-import { FollowupPart, MsgPartInitialDataset, MsgPartJob } from "../messages";
+import { AnalysisDetails, FollowupPart, MsgPartInitialDataset, MsgPartJob } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T
@@ -22,6 +22,9 @@ export enum MessageTypes {
     DELETE_DATASET = "DELETE_DATASET",
     CREATE_DATASET = "CREATE_DATASET",
     CANCEL_JOB_DONE = "CANCEL_JOB_DONE",
+    ANALYSIS_CREATED = "ANALYSIS_CREATED",
+    ANALYSIS_UPDATED = "ANALYSIS_UPDATED",
+    ANALYSIS_REMOVED = "ANALYSIS_REMOVED",
 }
 
 export const Messages = {
@@ -36,6 +39,9 @@ export const Messages = {
     error: (msg: string) => createMessage(MessageTypes.ERROR, { msg }),
     deleteDataset: (dataset: string) => createMessage(MessageTypes.DELETE_DATASET, { dataset }),
     cancelled: (job: string) => createMessage(MessageTypes.CANCEL_JOB_DONE, { job }),
+    analysisCreated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_CREATED, { dataset, analysis, details }),
+    analysisUpdated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_UPDATED, { dataset, analysis, details }),
+    analysisRemoved: (analysis: string) => createMessage(MessageTypes.ANALYSIS_REMOVED, { analysis }),
 }
 
 export type MessagesUnion<A extends ActionCreatorsMapObject> = ReturnType<A[keyof A]>

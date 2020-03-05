@@ -47,13 +47,13 @@ The short version:
 
 .. code-block:: shell
 
-    $ virtualenv -p python3.6 ~/libertem-venv/
+    $ virtualenv -p python3 ~/libertem-venv/
     $ source ~/libertem-venv/bin/activate
-    (libertem) $ pip install libertem[torch]
+    (libertem) $ pip install "libertem[torch]"
 
 Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!
 
-Deployment as a single-node system for a local user is thoroughly tested and can be considered stable. Deployment on a cluster is 
+Deployment as a single-node system for a local user is thoroughly tested and can be considered stable. Deployment on a cluster is
 experimental and still requires some additional work, see `Issue #105 <https://github.com/LiberTEM/LiberTEM/issues/105>`_.
 
 Applications
@@ -72,13 +72,13 @@ The Python API and user-defined functions (UDFs) can be used for more complex op
 If you are having trouble running the examples, please let us know, either by filing an issue
 or by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 
-LiberTEM is suitable as a high-performance processing backend for other applications, including live data streams. `Contact us <https://gitter.im/LiberTEM/Lobby>`_ if you are interested! 
+LiberTEM is suitable as a high-performance processing backend for other applications, including live data streams. `Contact us <https://gitter.im/LiberTEM/Lobby>`_ if you are interested!
 
 
 LiberTEM is evolving rapidly and prioritizes features following user demand and contributions. In the future we'd like to implement live acquisition, and more analysis methods for all applications of pixelated STEM and other large-scale detector data.
 If you like to influence the direction this
 project is taking, or if you'd like to `contribute <https://libertem.github.io/LiberTEM/contributing.html>`_, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_
-and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_. 
+and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_.
 
 File formats
 ------------

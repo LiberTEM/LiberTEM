@@ -4,7 +4,7 @@ import uuid from 'uuid/v4';
 import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
 import * as jobActions from '../job/actions';
-import { cancelJob, createOrUpdateAnalysis, startJob } from '../job/api';
+import { cancelJob, createOrUpdateAnalysis, removeAnalysis, startJob } from '../job/api';
 import { JobState } from '../job/types';
 import { DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
@@ -138,11 +138,21 @@ export function* analysisSidecar(compoundAnalysisId: string) {
 }
 
 export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysisActions.Actions.remove>) {
-    // const analysis: AnalysisState = yield select(selectAnalysis, action.payload.id)
+    const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, action.payload.id);
     try {
-        // TODO: cancel all jobs! loop over all of them...
-        // yield call(cancelOldJob, analysis, "RESULT");
-        // yield call(cancelOldJob, analysis, "FRAME");
+        for (const analysisId of compoundAnalysis.analyses) {
+            const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+
+            for (const oldJobId of analysis.jobs) {
+                const job: JobState = yield select(selectJob, oldJobId);
+                if (job && job.running !== "DONE") {
+                    // wait until the job is cancelled:
+                    yield call(cancelJob, oldJobId);
+                }
+            }
+
+            yield call(removeAnalysis, analysisId);
+        }
     } finally {
         yield put(compoundAnalysisActions.Actions.removed(action.payload.id));
     }

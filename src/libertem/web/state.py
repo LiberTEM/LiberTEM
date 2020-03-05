@@ -61,8 +61,10 @@ class AnalysisState:
         return self.analyses.get(uuid, default)
 
     def remove(self, uuid):
-        self.remove_results(uuid)
+        if uuid in self.results:
+            self.remove_results(uuid)
         del self.analyses[uuid]
+        return True
 
     def set_results(self, uuid, details, results):
         """

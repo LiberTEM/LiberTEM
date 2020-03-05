@@ -63,13 +63,15 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         Remove an analysis, stop all related jobs and remove
         analysis results.
         """
-        result = await self.state.analysis_state.remove(uuid)
+        result = self.state.analysis_state.remove(uuid)
         if result:
             msg = Message(self.state).analysis_removed(uuid)
         else:
             # FIXME: concrete error message?
             msg = Message(self.state).analysis_removal_failed(uuid, "analysis could not be removed")
         log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        self.write(msg)
 
 
 class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):

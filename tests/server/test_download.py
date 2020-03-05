@@ -1,7 +1,10 @@
+import io
 import json
 
+import h5py
 import pytest
 import websockets
+import numpy as np
 
 from utils import assert_msg
 
@@ -122,7 +125,26 @@ async def test_download_1(default_raw, base_url, http_client, server_port):
 
         download_url = "{}/api/analyses/{}/download/?format=h5".format(base_url, analysis_uuid)
         async with http_client.get(download_url) as resp:
-            assert False, "TODO: load hdf5 result and check contents"
+            raw_data = await resp.read()
+            bio = io.BytesIO(raw_data)
+            with h5py.File(bio, "r") as f:
+                assert 'intensity' in f.keys()
+                data = np.array(f['intensity'])
+                default_raw_data = np.memmap(
+                    filename=default_raw._path,
+                    dtype=default_raw.dtype,
+                    mode='r',
+                    shape=tuple(default_raw.shape),
+                )
+                assert np.allclose(
+                    default_raw_data.sum(axis=(0, 1)),
+                    data
+                )
+
+        # we are done with this analysis, clean up:
+        async with http_client.delete(analysis_url) as resp:
+            assert resp.status == 200
+            assert_msg(await resp.json(), 'ANALYSIS_REMOVED')
 
         # we are done with this job, clean up:
         async with http_client.delete(job_url) as resp:

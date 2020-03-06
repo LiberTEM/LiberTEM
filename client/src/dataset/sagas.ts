@@ -44,8 +44,16 @@ export function* doOpenDataset(fullPath: string) {
         yield put(datasetActions.Actions.detect(fullPath));
         const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
         if (detectResult.status === "ok") {
-            detectedParams = detectResult.datasetParams;
-            yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            if(fullPath.includes(".dm") || fullPath.includes(".DM")) {
+              const timestamp = Date.now();
+              const id = uuid();
+              yield put(datasetActions.Actions.detectFailed(fullPath));
+              yield put(datasetActions.Actions.error(`DM`, `DM dataset is currently not supported in the GUI`, timestamp, id));
+            }
+            else {
+              detectedParams = detectResult.datasetParams;
+              yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            }
         } else {
             yield put(datasetActions.Actions.detectFailed(fullPath));
         }

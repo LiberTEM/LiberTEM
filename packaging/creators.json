@@ -32,6 +32,13 @@
         "orcid": "0000-0002-6296-4492"
     },
     {
+        "displayname": "Anand Baburajan",
+        "authorname": "Baburajan, Anand",
+        "affiliation": "APJ Abdul Kalam Technological University",
+        "github": "anandbaburajan",
+        "contribution": "Various GUI fixes"
+    },
+    {
         "displayname": "Abijith Bahuleyan",
         "authorname": "Bahuleyan, Abijith",
         "affiliation": "APJ Abdul Kalam Technical University",
@@ -52,6 +59,13 @@
         "affiliation": "Chandigarh University" ,
         "github": "irahulcse",
         "contribution": "Test and update of examples"
+    },
+    {
+        "displayname": "Shankhadeep Dey",
+        "authorname": "Dey, Shankhadeep",
+        "affiliation": "Siliguri Institute of Technology",
+        "github": "iamshankhadeep",
+        "contribution": "Added types to libertem.api.Context #643"
     },
     {
         "displayname": "Magnus Nord",
@@ -102,19 +116,5 @@
         "affiliation": "Jülich Research Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-    {
-        "displayname": "Anand Baburajan",
-        "authorname": "Baburajan, Anand",
-        "affiliation": "APJ Abdul Kalam Technological University",
-        "github": "anandbaburajan",
-        "contribution": "Various GUI fixes"
-    },
-    {
-        "displayname": "Shankhadeep Dey",
-        "authorname": "Dey, Shankhadeep",
-        "affiliation": "Siliguri Institute of Technology",
-        "github": "iamshankhadeep",
-        "contribution": "Added types to libertem.api.Context #643"
     }
 ]

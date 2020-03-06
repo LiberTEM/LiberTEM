@@ -2,7 +2,6 @@ import * as React from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { DropdownProps, Header, Segment } from "semantic-ui-react";
 import uuid from "uuid/v4";
-import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
@@ -22,7 +21,7 @@ import SERParamsForm from "./SERParamsForm";
  * Get the initial selection for the dataset type dropdown. If we have a previous
  * user selection, we use it, but only if the reset button was not pressed. If it was,
  * we use the detected dataset type, falling back to RAW.
- * 
+ *
  * @param didReset flag: was the reset button pressed?
  * @param openState complete OpenDatasetState instance
  */
@@ -45,7 +44,7 @@ const getDefaultDSType = (didReset: boolean, openState: OpenDatasetState) => {
  * Get the initial form field values. If we have previously entered values, we
  * use these, otherwise we use the detected parameters. If the reset button was
  * clicked, we use the detected params, but keep the original name field,
- * 
+ *
  * @param didReset flag: was the reset button pressed?
  * @param openState complete OpenDatasetState instance
  */
@@ -156,7 +155,7 @@ const DatasetOpen = () => {
             return renderForm(<EMPADParamsForm {...commonParams} initial={initial} />)
         }
     }
-    return assertNotReached("unknown dataset type");
+    return (null);
 }
 
 export default DatasetOpen;

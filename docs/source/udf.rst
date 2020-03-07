@@ -362,7 +362,9 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          - You cannot rely on any particular order of frames this function
            is called in.
          - Your function should be pure, that is, it should not have side
-           effects and should only depend on it's input parameters.
+           effects beyond modifying the content of result buffers or task data,
+           and should only depend on it's input parameters, including
+           the UDF object :code:`self`.
          """
          self.results.maxbuf[:] = np.maximum(frame, self.results.maxbuf)
 

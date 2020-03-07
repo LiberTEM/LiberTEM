@@ -15,13 +15,23 @@ class SumUDF(UDF):
     (16, 16)
     """
     def __init__(self, dtype='float32'):
-        ''
+        '''
+        Parameters
+        ----------
+        dtype : numpy.dtype, optional
+            Preferred dtype for computation, default 'float32'. The actual dtype will be determined
+            from this value and the dataset's dtype using :meth:`numpy.result_type`.
+            See also :ref:`udf dtype`.
+        '''
         super().__init__(dtype=dtype)
+
+    def get_preferred_input_dtype(self):
+        return self.params.dtype
 
     def get_result_buffers(self):
         ''
         return {
-            'intensity': self.buffer(kind='sig', dtype=self.params.dtype)
+            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
         }
 
     def process_tile(self, tile):

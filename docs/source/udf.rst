@@ -335,9 +335,15 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          """
          return {
             'maxbuf': self.buffer(
-               kind="sig", dtype=self.meta.dataset_dtype
+               kind="sig", dtype=self.meta.input_dtype
             )
          }
+
+      def preprocess(self):
+         """
+         Initialize buffer with neutral element for maximum.
+         """
+         self.results.maxbuf[:] = np.float('-inf')
 
       def process_frame(self, frame):
          """

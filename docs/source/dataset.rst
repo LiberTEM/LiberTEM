@@ -29,5 +29,22 @@ Download
 Creating your own dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+You can generate your own dataset in the following way
+
+.. testcode::
+   import numpy as np
+   real_data = np.random.randn(16, 16, 16, 16).astype("float32")
+   real_data.tofile("/tmp/real_raw_file.raw")
 
 
+Now you can load the data through the :ref:`Python API <api>` in the following way
+
+.. testcode::
+    from libertem.api import Context
+    ctx = Context()
+    ds = ctx.load("raw", path="/tmp/something.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
+    
+
+
+
+Alternatively, you can enter the parameters (scan_size, dtype, detector_size) directly into the load dialog of the GUI. 

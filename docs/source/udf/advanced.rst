@@ -339,7 +339,7 @@ dimension as it appears in processing:
 
     assert np.allclose(res['pixelsum_nav_raw'].data, dataset.data[roi].sum(axis=(1, 2)))
 
-.. _udf dtype:
+.. _`udf dtype`:
 
 dtype support
 -------------

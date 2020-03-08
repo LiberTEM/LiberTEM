@@ -24,3 +24,5 @@ so it should be no problem to load and process for example time series.
 
 If you want to process data with, for example, 1D or 3D samples, you can write
 :ref:`UDFs <user-defined functions>`. Note that in that case, a "frame" is no longer 2D!
+
+`Fast normalized correlation paper <http://scribblethink.org/Work/nvisionInterface/nip.pdf>`_ (which is an extended version of this paper: J. P. Lewis, “FastTemplateMatching” , Vision Interface, p. 120-123, 1995)

@@ -124,7 +124,7 @@ in scan coordinates on the right.
 ..  figure:: ./images/use/apply.png
 
 Instead of average, you can select "Standard Deviation". This calculates
-standard deviation of all detector frame.
+standard deviation of all detector frames.
 
 .. figure:: ./images/use/std_dev.png
 
@@ -141,10 +141,10 @@ below the frame window on the left.
 
 ..  figure:: ./images/use/pick_frame.png
 
-If you are interested in limited region, ROI provide option to select rectangle,
-disk. For example if you select "Rect", the average/standard deviation is calculated
-over all images that lie inside selected rectangle. You can adjust the disk/rectangle
-by dragging the handles in the GUI.
+If you are interested in a limited region, the ROI dropdown provides the option
+to select a rectangular region. For example if you select "Rect", the
+average/standard deviation is calculated over all images that lie inside selected
+rectangle. You can adjust the rectangle by dragging the handles in the GUI.
 
 .. figure:: ./images/use/rect.png
 

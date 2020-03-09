@@ -1,13 +1,13 @@
 import { call, put, select, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
-import { isKnownDatasetType } from './helpers';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
 import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, detectDataset, openDataset } from './api';
+import { isKnownDatasetType } from './helpers';
 
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {

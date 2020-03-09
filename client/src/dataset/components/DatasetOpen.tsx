@@ -2,6 +2,7 @@ import * as React from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { DropdownProps, Header, Segment } from "semantic-ui-react";
 import uuid from "uuid/v4";
+import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
@@ -155,7 +156,7 @@ const DatasetOpen = () => {
             return renderForm(<EMPADParamsForm {...commonParams} initial={initial} />)
         }
     }
-    return (null);
+    return assertNotReached("unknown dataset type");
 }
 
 export default DatasetOpen;

@@ -1,9 +1,10 @@
 import { call, put, select, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
+import { isKnownDatasetType } from './helpers';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
-import { DatasetTypes, DetectDatasetResponse, OpenDatasetResponse } from '../messages';
+import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, detectDataset, openDataset } from './api';
@@ -36,26 +37,33 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     }
 }
 
+export function* doDetectDataset(fullPath: string) {
+    yield put(datasetActions.Actions.detect(fullPath));
+    const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
+    let detectedParams;
+    if (detectResult.status === "ok") {
+        if (isKnownDatasetType(detectResult.datasetParams.type)) {
+          detectedParams = detectResult.datasetParams;
+          yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+        }
+        else {
+          const timestamp = Date.now();
+          const id = uuid();
+          yield put(datasetActions.Actions.detectFailed(fullPath));
+          yield put(datasetActions.Actions.error(id, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
+        }
+    } else {
+        yield put(datasetActions.Actions.detectFailed(fullPath));
+    }
+    return detectedParams;
+}
+
 export function* doOpenDataset(fullPath: string) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const cachedParams = config.lastOpened[fullPath];
     let detectedParams;
     try {
-        yield put(datasetActions.Actions.detect(fullPath));
-        const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
-        if (detectResult.status === "ok" && Object.keys(DatasetTypes).some((v) => v === detectResult.datasetParams.type)) {
-            detectedParams = detectResult.datasetParams;
-            yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
-            }
-        else if (detectResult.status === "ok" && Object.keys(DatasetTypes).some((v) => v !== detectResult.datasetParams.type)) {
-            const timestamp = Date.now();
-            const id = uuid();
-            yield put(datasetActions.Actions.detectFailed(fullPath));
-            yield put(datasetActions.Actions.error(detectResult.datasetParams.type, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
-            }
-        else {
-            yield put(datasetActions.Actions.detectFailed(fullPath));
-        }
+      detectedParams = yield call(doDetectDataset, fullPath);
     } catch (e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }

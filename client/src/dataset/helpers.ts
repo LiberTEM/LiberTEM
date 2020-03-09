@@ -24,6 +24,10 @@ export function getInitialName<T extends object, K extends keyof T>(key: K, othe
     return res;
 }
 
+export function isKnownDatasetType(detectedType: string) {
+  return (Object.keys(DatasetTypes).some((v) => v === detectedType) ? true : false);
+}
+
 type FormToJsonFn<SubmitParams, FormParams> = (inParams: FormParams, path: string) => SubmitParams;
 type PropsToValuesFn<SubmitParams, FormParams> = (props: OpenFormProps<SubmitParams>) => FormParams;
 

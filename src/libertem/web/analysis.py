@@ -96,6 +96,6 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         # FIXME: stream file (maybe temporary file w/ sendfile?), correct content-type
         # FIXME: add parameters to h5 file
-        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Type', 'application/x-hdf5')
         self.set_header('Content-Disposition', 'attachment; filename="results.h5"')
         self.write(bio.getvalue())

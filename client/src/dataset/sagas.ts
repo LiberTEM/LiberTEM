@@ -3,7 +3,7 @@ import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
-import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
+import { DatasetTypes, DetectDatasetResponse, OpenDatasetResponse } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, detectDataset, openDataset } from './api';
@@ -44,8 +44,16 @@ export function* doOpenDataset(fullPath: string) {
         yield put(datasetActions.Actions.detect(fullPath));
         const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
         if (detectResult.status === "ok") {
-            detectedParams = detectResult.datasetParams;
-            yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            if(Object.keys(DatasetTypes).some((v) => v === detectResult.datasetParams.type)) {
+              detectedParams = detectResult.datasetParams;
+              yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+            }
+            else {
+              const timestamp = Date.now();
+              const id = uuid();
+              yield put(datasetActions.Actions.detectFailed(fullPath));
+              yield put(datasetActions.Actions.error(detectResult.datasetParams.type, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
+            }
         } else {
             yield put(datasetActions.Actions.detectFailed(fullPath));
         }
@@ -63,14 +71,7 @@ export function* openDatasetSagaFullPath(action: ReturnType<typeof browserAction
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
-    if(fullPath.includes(".dm") || fullPath.includes(".DM")) {
-      const timestamp = Date.now();
-      const id = uuid();
-      yield put(datasetActions.Actions.detectFailed(fullPath));
-      yield put(datasetActions.Actions.error(`DM`, `DM dataset is currently not supported in the GUI`, timestamp, id));
-    } else {
-      yield call(doOpenDataset, fullPath);
-    }
+    yield call(doOpenDataset, fullPath);
 }
 
 export function* datasetRootSaga() {

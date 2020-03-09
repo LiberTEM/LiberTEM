@@ -235,7 +235,7 @@ class StdDevUDF(UDF):
             A dictionary that maps 'varsum',  'num_frames', 'sum' to
             the corresponding BufferWrapper objects
         """
-        dtype = np.result_type(self.meta.input_dtype, np.float32)
+        dtype = np.result_type(self.meta.input_dtype, np.float64)
         return {
             'varsum': self.buffer(
                 kind='sig', dtype=dtype

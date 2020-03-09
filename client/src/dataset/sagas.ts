@@ -43,18 +43,17 @@ export function* doOpenDataset(fullPath: string) {
     try {
         yield put(datasetActions.Actions.detect(fullPath));
         const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
-        if (detectResult.status === "ok") {
-            if(Object.keys(DatasetTypes).some((v) => v === detectResult.datasetParams.type)) {
-              detectedParams = detectResult.datasetParams;
-              yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+        if (detectResult.status === "ok" && Object.keys(DatasetTypes).some((v) => v === detectResult.datasetParams.type)) {
+            detectedParams = detectResult.datasetParams;
+            yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
             }
-            else {
-              const timestamp = Date.now();
-              const id = uuid();
-              yield put(datasetActions.Actions.detectFailed(fullPath));
-              yield put(datasetActions.Actions.error(detectResult.datasetParams.type, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
+        else if (detectResult.status === "ok" && Object.keys(DatasetTypes).some((v) => v !== detectResult.datasetParams.type)) {
+            const timestamp = Date.now();
+            const id = uuid();
+            yield put(datasetActions.Actions.detectFailed(fullPath));
+            yield put(datasetActions.Actions.error(detectResult.datasetParams.type, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
             }
-        } else {
+        else {
             yield put(datasetActions.Actions.detectFailed(fullPath));
         }
     } catch (e) {

@@ -4,7 +4,7 @@ import uuid from 'uuid/v4';
 import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
 import * as jobActions from '../job/actions';
-import { cancelJob, createOrUpdateAnalysis, removeAnalysis, startJob } from '../job/api';
+import { cancelJob, createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, startJob, removeCompoundAnalysis } from '../job/api';
 import { JobState } from '../job/types';
 import { DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
@@ -35,19 +35,28 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
             throw new Error("invalid dataset status");
         }
         const compoundAnalysis: CompoundAnalysisState = {
-            id: uuid(),
+            compoundAnalysis: uuid(),
             dataset: action.payload.dataset,
-            mainAnalysisType: action.payload.analysisType,
-            analyses: [],
+            details: {
+                mainType: action.payload.analysisType,
+                analyses: [],
+            }
         }
 
-        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.id);
+        yield call(
+            createOrUpdateCompoundAnalysis,
+            compoundAnalysis.compoundAnalysis,
+            compoundAnalysis.dataset,
+            compoundAnalysis.details,
+        );
+
+        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis);
 
         yield put(compoundAnalysisActions.Actions.created(compoundAnalysis));
 
         while (true) {
             const removeAction: ReturnType<typeof compoundAnalysisActions.Actions.remove> = yield take(compoundAnalysisActions.ActionTypes.REMOVE);
-            if (removeAction.payload.id === compoundAnalysis.id) {
+            if (removeAction.payload.id === compoundAnalysis.compoundAnalysis) {
                 yield cancel(sidecarTask);
             }
         }
@@ -89,7 +98,7 @@ export function* analysisSidecar(compoundAnalysisId: string) {
             const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
             const { analysisIndex, details } = action.payload;
 
-            let analysisId = compoundAnalysis.analyses[analysisIndex];
+            let analysisId = compoundAnalysis.details.analyses[analysisIndex];
 
             if (analysisId) {
                 // update the analysis on the server:
@@ -114,7 +123,14 @@ export function* analysisSidecar(compoundAnalysisId: string) {
                     dataset: compoundAnalysis.dataset,
                     details,
                     jobs: [],
-                }, compoundAnalysis.id, analysisIndex));
+                }, compoundAnalysis.compoundAnalysis, analysisIndex));
+
+                yield call(
+                    createOrUpdateCompoundAnalysis,
+                    compoundAnalysis.compoundAnalysis,
+                    compoundAnalysis.dataset,
+                    compoundAnalysis.details,
+                );
             }
 
             // prepare running the job:
@@ -128,7 +144,7 @@ export function* analysisSidecar(compoundAnalysisId: string) {
 
             // wait until the job is started
             yield call(startJob, jobId, analysisId);
-            yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.id, jobId, analysisIndex));
+            yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.compoundAnalysis, jobId, analysisIndex));
         } catch (e) {
             const timestamp = Date.now();
             const id = uuid();
@@ -140,7 +156,7 @@ export function* analysisSidecar(compoundAnalysisId: string) {
 export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysisActions.Actions.remove>) {
     const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, action.payload.id);
     try {
-        for (const analysisId of compoundAnalysis.analyses) {
+        for (const analysisId of compoundAnalysis.details.analyses) {
             const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
 
             for (const oldJobId of analysis.jobs) {
@@ -153,6 +169,7 @@ export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysis
 
             yield call(removeAnalysis, analysisId);
         }
+        yield call(removeCompoundAnalysis, action.payload.id);
     } finally {
         yield put(compoundAnalysisActions.Actions.removed(action.payload.id));
     }

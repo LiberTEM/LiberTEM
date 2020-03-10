@@ -33,25 +33,25 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         """
         request_data = tornado.escape.json_decode(self.request.body)
         dataset_id = request_data["dataset"]
-        details = request_data['analysis']
+        details = request_data['details']
         params = details['parameters']
-        analysis_type = details['type']
+        analysis_type = details['analysisType']
         existing_analysis = self.state.analysis_state.get(uuid)
         if existing_analysis is None:
-            return await self._create_analysis(uuid, dataset_id, analysis_type, params)
+            return await self._create(uuid, dataset_id, analysis_type, params)
         else:
-            return await self._update_analysis(
+            return await self._update(
                 uuid, dataset_id, analysis_type, existing_analysis, params
             )
 
-    async def _create_analysis(self, uuid, dataset_id, analysis_type, params):
+    async def _create(self, uuid, dataset_id, analysis_type, params):
         self.state.analysis_state.create(uuid, dataset_id, analysis_type, params)
         msg = Message(self.state).create_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
 
-    async def _update_analysis(self, uuid, dataset_id, analysis_type, existing_analysis, params):
+    async def _update(self, uuid, dataset_id, analysis_type, existing_analysis, params):
         self.state.analysis_state.update(uuid, analysis_type, params)
         msg = Message(self.state).update_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
@@ -99,3 +99,30 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.set_header('Content-Type', 'application/x-hdf5')
         self.set_header('Content-Disposition', 'attachment; filename="results.h5"')
         self.write(bio.getvalue())
+
+
+class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
+        self.event_registry = event_registry
+
+    async def put(self, uuid):
+        request_data = tornado.escape.json_decode(self.request.body)
+        dataset_id = request_data['dataset']
+        details = request_data['details']
+        main_type = details['mainType']
+        analyses = details['analyses']
+        created = self.state.compound_analysis_state.create_or_update(
+            uuid, main_type, dataset_id, analyses
+        )
+        serialized = self.state.compound_analysis_state.serialize(uuid)
+        if created:
+            msg = Message(self.state).compound_analysis_created(serialized)
+        else:
+            msg = Message(self.state).compound_analysis_updated(serialized)
+        log_message(msg)
+        self.event_registry.broadcast_event(msg)
+        self.write(msg)
+
+    async def delete(self, uuid):
+        raise NotImplementedError()

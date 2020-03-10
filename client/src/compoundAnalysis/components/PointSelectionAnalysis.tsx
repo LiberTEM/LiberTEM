@@ -41,7 +41,7 @@ const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnal
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.id,
+        analysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (
@@ -51,8 +51,8 @@ const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnal
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.APPLY_POINT_SELECTOR,
+        dispatch(analysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+            analysisType: AnalysisTypes.APPLY_POINT_SELECTOR,
             parameters: {
                 shape: "point",
                 cx,
@@ -69,14 +69,14 @@ const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnal
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles}
-                    analysisIndex={0} compoundAnalysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

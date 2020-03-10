@@ -75,7 +75,7 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.id,
+        analysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (
@@ -85,8 +85,8 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.RADIAL_FOURIER,
+        dispatch(analysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+            analysisType: AnalysisTypes.RADIAL_FOURIER,
             parameters: {
                 shape: "radial_fourier",
                 cx, cy, ri, ro,
@@ -104,14 +104,14 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

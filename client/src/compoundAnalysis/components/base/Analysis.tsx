@@ -15,7 +15,7 @@ const AnalysisDispatcherComponent: React.SFC<AnalysisDispatcherProps> = ({ analy
         return null;
     }
 
-    const AnalysisComponent = CompoundAnalysisMetadata[analysis.mainAnalysisType].component;
+    const AnalysisComponent = CompoundAnalysisMetadata[analysis.details.mainType].component;
     if (!AnalysisComponent) {
         throw new Error("unknown analysis type");
     }

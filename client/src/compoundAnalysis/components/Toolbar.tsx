@@ -15,7 +15,7 @@ interface ToolbarProps {
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: ToolbarProps) => {
     return {
-        handleRemove: () => dispatch(analysisActions.Actions.remove(ownProps.compoundAnalysis.id)),
+        handleRemove: () => dispatch(analysisActions.Actions.remove(ownProps.compoundAnalysis.compoundAnalysis)),
     }
 }
 

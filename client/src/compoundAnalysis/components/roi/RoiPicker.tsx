@@ -19,7 +19,7 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis }
         const handle = setTimeout(() => {
             if (enabled) {
                 const analysisDetails = {
-                    type: analysis,
+                    analysisType: analysis,
                     parameters: roiParameters,
                 };
                 dispatch(analysisActions.Actions.run(analysisId, jobIndex, analysisDetails))

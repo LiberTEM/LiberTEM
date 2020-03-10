@@ -65,8 +65,8 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
         analysis_data = {
             "dataset": ds_uuid,
-            "analysis": {
-                "type": "SUM_FRAMES",
+            "details": {
+                "analysisType": "SUM_FRAMES",
                 "parameters": {}
             }
         }

@@ -11,13 +11,14 @@ class Message(object):
     def __init__(self, state: SharedState):
         self.state = state
 
-    def initial_state(self, jobs, datasets, analyses):
+    def initial_state(self, jobs, datasets, analyses, compound_analyses):
         return {
             "status": "ok",
             "messageType": "INITIAL_STATE",
             "datasets": datasets,
             "jobs": jobs,
             "analyses": analyses,
+            "compountAnalyses": compound_analyses,
         }
 
     def config(self, config):
@@ -217,6 +218,30 @@ class Message(object):
             "analysis": uuid,
             "msg": msg,
         }
+
+    def compound_analysis_created(self, serialized):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_CREATED",
+        }
+        msg.update(serialized)
+        return msg
+
+    def compound_analysis_updated(self, serialized):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_UPDATED",
+        }
+        msg.update(serialized)
+        return msg
+
+    def compound_analysis_removed(self, uuid):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_REMOVED",
+            "compoundAnalysis": uuid,
+        }
+        return msg
 
 
 class MessageConverter:

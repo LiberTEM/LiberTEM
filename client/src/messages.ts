@@ -355,104 +355,95 @@ export enum AnalysisTypes {
 }
 
 export interface RingMaskDetails {
-    type: AnalysisTypes.APPLY_RING_MASK,
+    analysisType: AnalysisTypes.APPLY_RING_MASK,
     parameters: MaskDefRing,
-
 }
 
 export interface FFTDetails {
-    type: AnalysisTypes.APPLY_FFT_MASK,
+    analysisType: AnalysisTypes.APPLY_FFT_MASK,
     parameters: FFTParams,
 }
 
 export interface FEMDetails {
-    type: AnalysisTypes.FEM,
+    analysisType: AnalysisTypes.FEM,
     parameters: MaskDefRing,
 }
 
 export interface DiskMaskDetails {
-    type: AnalysisTypes.APPLY_DISK_MASK,
+    analysisType: AnalysisTypes.APPLY_DISK_MASK,
     parameters: MaskDefDisk,
 }
 
 export interface PointDefDetails {
-    type: AnalysisTypes.APPLY_POINT_SELECTOR,
+    analysisType: AnalysisTypes.APPLY_POINT_SELECTOR,
     parameters: PointDef,
 }
 
 export interface CenterOfMassDetails {
-    type: AnalysisTypes.CENTER_OF_MASS,
+    analysisType: AnalysisTypes.CENTER_OF_MASS,
     parameters: CenterOfMassParams,
 }
 
 export interface SumFramesDetails {
-    type: AnalysisTypes.SUM_FRAMES,
+    analysisType: AnalysisTypes.SUM_FRAMES,
     parameters: FrameParams
 }
 
 export interface SDFramesDetails {
-    type: AnalysisTypes.SD_FRAMES,
+    analysisType: AnalysisTypes.SD_FRAMES,
     parameters: FrameParams
 }
 
 export interface SumSigDetails {
-    type: AnalysisTypes.SUM_SIG,
+    analysisType: AnalysisTypes.SUM_SIG,
     parameters: {}
 }
 
 export interface FFTSumFramesDetails {
-    type: AnalysisTypes.FFTSUM_FRAMES,
+    analysisType: AnalysisTypes.FFTSUM_FRAMES,
     parameters: FFTSumFramesParams,
 }
 
 export interface PickFrameDetails {
-    type: AnalysisTypes.PICK_FRAME,
+    analysisType: AnalysisTypes.PICK_FRAME,
     parameters: PickFrameParams,
 }
 
 export interface PickFFTFrameDetails {
-    type: AnalysisTypes.PICK_FFT_FRAME,
+    analysisType: AnalysisTypes.PICK_FFT_FRAME,
     parameters: PickFFTFrameParams,
 }
 
 export interface RadialFourierDetails {
-    type: AnalysisTypes.RADIAL_FOURIER,
-    parameters: RadialFourierParams,
-}
-
-export interface RadialFourierDetails {
-    type: AnalysisTypes.RADIAL_FOURIER,
+    analysisType: AnalysisTypes.RADIAL_FOURIER,
     parameters: RadialFourierParams,
 }
 
 export interface ClustDetails {
-    type: AnalysisTypes.CLUST,
+    analysisType: AnalysisTypes.CLUST,
     parameters: ClustParams,
 }
 
 export type AnalysisParameters = MaskDefRing | MaskDefDisk | CenterOfMassParams | PointDef | PickFrameParams | RadialFourierParams | FFTParams | PickFFTFrameParams | FFTSumFramesParams | ClustParams;
 export type AnalysisDetails = RingMaskDetails | DiskMaskDetails | CenterOfMassDetails | PointDefDetails | SumFramesDetails | SDFramesDetails | PickFrameDetails | RadialFourierDetails | FEMDetails | FFTDetails | FFTSumFramesDetails | PickFFTFrameDetails | SumSigDetails | ClustDetails;
 
-export interface CreateOrUpdateAnalysisRequest {
+export interface MsgPartAnalysis {
+    analysis: string,
     dataset: string,
-    analysis: AnalysisDetails,
+    details: AnalysisDetails,
 }
 
-export interface CreateAnalysisResponse {
+export type CreateOrUpdateAnalysisRequest = Omit<MsgPartAnalysis, "analysis">;
+
+export type CreateAnalysisResponse = {
     status: "ok",
     messageType: "ANALYSIS_CREATED",
-    analysis: string,
-    dataset: string,
-    details: AnalysisDetails,
-}
+} & MsgPartAnalysis
 
-export interface UpdateAnalysisResponse {
+export type UpdateAnalysisResponse = {
     status: "ok",
     messageType: "ANALYSIS_UPDATED",
-    analysis: string,
-    dataset: string,
-    details: AnalysisDetails,
-}
+} & MsgPartAnalysis
 
 export type RemoveAnalysisResponse = {
     status: "ok"
@@ -461,6 +452,38 @@ export type RemoveAnalysisResponse = {
 } | {
     status: "error",
     messageType: "ANALYSIS_REMOVAL_FAILED",
+    msg: string,
+    analysis: string,
+}
+
+export interface CompoundAnalysisDetails {
+    mainType: AnalysisTypes,
+    analyses: string[],
+}
+
+export interface MsgPartCompoundAnalysis {
+    compoundAnalysis: string,
+    dataset: string,
+    details: CompoundAnalysisDetails,
+}
+
+export interface CreateOrUpdateCompoundAnalysisRequest {
+    dataset: string,
+    details: CompoundAnalysisDetails,
+}
+
+export type CreateCompoundAnalysisResponse = {
+    status: "ok",
+    messageType: "COMPOUND_ANALYSIS_CREATED",
+} & MsgPartCompoundAnalysis;
+
+export type RemoveCompoundAnalysisResponse = {
+    status: "ok"
+    messageType: "COMPOUND_ANALYSIS_REMOVED",
+    analysis: string,
+} | {
+    status: "error",
+    messageType: "COMPOUND_ANALYSIS_REMOVAL_FAILED",
     msg: string,
     analysis: string,
 }

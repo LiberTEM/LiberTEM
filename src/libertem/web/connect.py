@@ -61,6 +61,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         msg = Message(self.state).initial_state(
             jobs=self.state.job_state.serialize_all(),
             datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
+            compound_analyses=self.state.compound_analysis_state.serialize_all(),
         )
         log_message(msg)
         # FIXME: don't broadcast, only send to the websocket that matches this HTTP connection

@@ -13,7 +13,7 @@ const useFFTSumFrames = ({
     React.useEffect(() => {
         if (enabled) {
             dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.FFTSUM_FRAMES,
+                analysisType: AnalysisTypes.FFTSUM_FRAMES,
                 parameters: { real_rad, real_centerx, real_centery },
             }));
         }

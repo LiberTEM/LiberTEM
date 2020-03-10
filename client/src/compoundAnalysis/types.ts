@@ -16,10 +16,12 @@ export type JobHistory = string[][];
 export type FrameAnalysisDetails = PickFrameDetails | SumFramesDetails;
 
 export interface CompoundAnalysis {
-    id: string,
+    compoundAnalysis: string,
     dataset: string,
-    mainAnalysisType: AnalysisTypes,
-    analyses: string[],
+    details: {
+        mainType: AnalysisTypes,
+        analyses: string[],
+    }
 }
 
 

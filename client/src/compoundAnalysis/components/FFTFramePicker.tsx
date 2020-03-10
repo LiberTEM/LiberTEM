@@ -21,7 +21,7 @@ const useFFTFramePicker = ({
     React.useEffect(() => {
         if (enabled) {
             dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.PICK_FFT_FRAME,
+                analysisType: AnalysisTypes.PICK_FFT_FRAME,
                 parameters: { x: cx, y: cy, real_rad, real_centerx, real_centery },
             }))
         }

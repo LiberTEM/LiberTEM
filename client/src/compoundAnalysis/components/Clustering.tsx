@@ -91,15 +91,15 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
     const { rectRoiParameters, rectRoiHandles, rectRoiWidgets } = useRectROI({ scanWidth, scanHeight });
 
     React.useEffect(() => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.SUM_SIG,
+        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+            analysisType: AnalysisTypes.SUM_SIG,
             parameters: {},
         }))
-    }, [analysis.id, dispatch]);
+    }, [analysis.compoundAnalysis, dispatch]);
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 2, {
-            type: AnalysisTypes.CLUST,
+        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 2, {
+            analysisType: AnalysisTypes.CLUST,
             parameters: {
                 roi: rectRoiParameters.roi,
                 cx,
@@ -120,7 +120,7 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.id,
+        analysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (
@@ -161,14 +161,14 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             mid={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={rectRoiHandles}
                     extraWidgets={rectRoiWidgets}
@@ -177,7 +177,7 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
 
             right={<>
                 <ResultList
-                    analysisIndex={2} compoundAnalysis={analysis.id}
+                    analysisIndex={2} compoundAnalysis={analysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

@@ -4,7 +4,7 @@ import { JobRunning } from "../job/types";
 import { CompoundAnalysisState } from "./types";
 
 export const getAnalysisStatus = (compoundAnalysis: CompoundAnalysisState, analyses: AnalysisReducerState, jobs: JobReducerState, analysisIdxsToInclude: number[] = []): "idle" | "busy" => {
-    let filteredAnalyses = compoundAnalysis.analyses;
+    let filteredAnalyses = compoundAnalysis.details.analyses;
 
     if (analysisIdxsToInclude.length > 0) {
         filteredAnalyses = filteredAnalyses.filter((analysisId: string, idx: number) => {

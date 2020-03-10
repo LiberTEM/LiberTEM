@@ -23,7 +23,7 @@ interface ExternalResultListProps {
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
     const compoundAnalysis = state.compoundAnalyses.byId[ownProps.compoundAnalysis];
-    const analysis = state.analyses.byId[compoundAnalysis.analyses[ownProps.analysisIndex]];
+    const analysis = state.analyses.byId[compoundAnalysis.details.analyses[ownProps.analysisIndex]];
     const downloadURL = analysis ? `/api/analyses/${analysis.id}/download/` : undefined;
 
     return {

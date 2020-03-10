@@ -1,6 +1,6 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
 import { JobResultType } from '../job/types';
-import { AnalysisDetails, MsgPartInitialDataset, MsgPartJob } from '../messages';
+import { AnalysisDetails, MsgPartCompoundAnalysis, MsgPartInitialDataset, MsgPartJob } from '../messages';
 
 
 export type PartialResultType = JobResultType;
@@ -21,7 +21,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    initialState: (jobs: MsgPartJob[], datasets: MsgPartInitialDataset[], timestamp: number) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets, timestamp }),
+    initialState: (jobs: MsgPartJob[], datasets: MsgPartInitialDataset[], compoundAnalyses: MsgPartCompoundAnalysis[], timestamp: number) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets, timestamp, compoundAnalyses }),
     jobStarted: (job: string, dataset: string, timestamp: number) => createAction(ActionTypes.JOB_STARTED, { job, timestamp, dataset }),
     finishJob: (job: string, results: JobResultType[], timestamp: number) => createAction(ActionTypes.FINISH_JOB, { job, results, timestamp }),
     taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),

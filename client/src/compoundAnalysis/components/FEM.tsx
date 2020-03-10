@@ -69,8 +69,8 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.id, 1, {
-            type: AnalysisTypes.FEM,
+        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+            analysisType: AnalysisTypes.FEM,
             parameters: {
                 shape: "ring",
                 cx, cy, ri, ro,
@@ -85,7 +85,7 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.id,
+        analysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (
@@ -100,14 +100,14 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.id}
+                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.id}
+                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

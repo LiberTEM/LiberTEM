@@ -61,14 +61,14 @@ const CenterOfMassAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalys
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: compoundAnalysis.id,
+        analysisId: compoundAnalysis.compoundAnalysis,
     })
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.id, 1, {
-            type: AnalysisTypes.CENTER_OF_MASS,
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
+            analysisType: AnalysisTypes.CENTER_OF_MASS,
             parameters: {
                 shape: "com",
                 cx,
@@ -86,14 +86,14 @@ const CenterOfMassAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalys
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={compoundAnalysis.id}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={compoundAnalysis.id}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

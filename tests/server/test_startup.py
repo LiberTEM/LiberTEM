@@ -204,8 +204,8 @@ async def test_initial_state_analyses(default_raw, base_url, http_client, server
 
         analysis_data = {
             "dataset": ds_uuid,
-            "analysis": {
-                "type": "SUM_FRAMES",
+            "details": {
+                "analysisType": "SUM_FRAMES",
                 "parameters": {
                     "roi": {
                         "shape": "disk",

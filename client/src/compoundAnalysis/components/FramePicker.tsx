@@ -24,7 +24,7 @@ const useFramePicker = ({
             };
 
             dispatch(compoundAnalysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.PICK_FRAME,
+                analysisType: AnalysisTypes.PICK_FRAME,
                 parameters: params,
             }))
         }

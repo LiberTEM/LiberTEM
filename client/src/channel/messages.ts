@@ -1,5 +1,5 @@
 import { ActionCreatorsMapObject } from "redux";
-import { AnalysisDetails, FollowupPart, MsgPartInitialDataset, MsgPartJob } from "../messages";
+import { AnalysisDetails, CompoundAnalysisDetails, FollowupPart, MsgPartInitialDataset, MsgPartJob, MsgPartCompoundAnalysis, MsgPartAnalysis } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T
@@ -25,10 +25,21 @@ export enum MessageTypes {
     ANALYSIS_CREATED = "ANALYSIS_CREATED",
     ANALYSIS_UPDATED = "ANALYSIS_UPDATED",
     ANALYSIS_REMOVED = "ANALYSIS_REMOVED",
+    COMPOUND_ANALYSIS_CREATED = "COMPOUND_ANALYSIS_CREATED",
+    COMPOUND_ANALYSIS_UPDATED = "COMPOUND_ANALYSIS_UPDATED",
+    COMPOUND_ANALYSIS_REMOVED = "COMPOUND_ANALYSIS_REMOVED",
 }
 
 export const Messages = {
-    initialState: (jobs: MsgPartJob[], datasets: MsgPartInitialDataset[]) => createMessage(MessageTypes.INITIAL_STATE, { jobs, datasets }),
+    initialState: (
+        jobs: MsgPartJob[],
+        datasets: MsgPartInitialDataset[],
+        analyses: MsgPartAnalysis[],
+        compoundAnalyses: MsgPartCompoundAnalysis[]
+    ) => createMessage(MessageTypes.INITIAL_STATE, {
+        jobs, datasets, compoundAnalyses, analyses,
+    }),
+
     startJob: (job: string, dataset: string) => createMessage(MessageTypes.JOB_STARTED, { job, dataset }),
     finishJob: (job: string, followup: FollowupPart) => createMessage(MessageTypes.FINISH_JOB, { job, followup }),
     taskResult: (job: string, followup: FollowupPart) => createMessage(MessageTypes.TASK_RESULT, { job, followup }),
@@ -42,6 +53,10 @@ export const Messages = {
     analysisCreated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_CREATED, { dataset, analysis, details }),
     analysisUpdated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_UPDATED, { dataset, analysis, details }),
     analysisRemoved: (analysis: string) => createMessage(MessageTypes.ANALYSIS_REMOVED, { analysis }),
+
+    compoundAnalysisCreated: (compoundAnalysis: string, dataset: string, details: CompoundAnalysisDetails) => createMessage(MessageTypes.COMPOUND_ANALYSIS_CREATED, { dataset, compoundAnalysis, details }),
+    compoundAnalysisUpdated: (compoundAnalysis: string, dataset: string, details: CompoundAnalysisDetails) => createMessage(MessageTypes.COMPOUND_ANALYSIS_UPDATED, { dataset, compoundAnalysis, details }),
+    compoundAnalysisRemoved: (compoundAnalysis: string) => createMessage(MessageTypes.ANALYSIS_REMOVED, { compoundAnalysis }),
 }
 
 export type MessagesUnion<A extends ActionCreatorsMapObject> = ReturnType<A[keyof A]>

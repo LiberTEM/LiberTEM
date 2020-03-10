@@ -91,6 +91,36 @@ class AnalysisState:
         ]
 
 
+class CompoundAnalysisState:
+    def __init__(self, analysis_state: AnalysisState):
+        self.analysis_state = analysis_state
+        self.analyses = {}
+
+    def create_or_update(self, uuid, main_type, dataset_id, analyses):
+        created = uuid not in self.analyses
+        self.analyses[uuid] = {
+            "dataset": dataset_id,
+            "compoundAnalysis": uuid,
+            "details": {
+                "mainType": main_type,
+                "analyses": analyses,
+            }
+        }
+        return created
+
+    def __getitem__(self, uuid):
+        return self.analyses[uuid]
+
+    def serialize(self, uuid):
+        return self[uuid]
+
+    def serialize_all(self):
+        return [
+            self.serialize(uuid)
+            for uuid in self.analyses
+        ]
+
+
 class DatasetState:
     def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
         self.datasets = {}
@@ -213,6 +243,7 @@ class SharedState:
         self.analysis_state = AnalysisState(self.executor_state)
         self.job_state = JobState(self.executor_state)
         self.dataset_state = DatasetState(self.executor_state, job_state=self.job_state)
+        self.compound_analysis_state = CompoundAnalysisState(self.analysis_state)
 
         self.dataset_for_job = {}
         self.local_directory = "dask-worker-space"

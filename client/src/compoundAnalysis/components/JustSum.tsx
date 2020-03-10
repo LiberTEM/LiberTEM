@@ -4,16 +4,16 @@ import { AnalysisTypes } from "../../messages";
 import * as analysisActions from "../actions";
 
 const useSumSig = ({
-    enabled, jobIndex, analysisId, 
+    enabled, jobIndex, analysisId,
 }: {
-    enabled: boolean, jobIndex: number, analysisId: string, 
+    enabled: boolean, jobIndex: number, analysisId: string,
 }) => {
     const dispatch = useDispatch();
 
     React.useEffect(() => {
         if (enabled) {
             dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
-                type: AnalysisTypes.SUM_SIG,
+                analysisType: AnalysisTypes.SUM_SIG,
                 parameters: {},
             }));
         }

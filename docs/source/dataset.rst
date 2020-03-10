@@ -1,50 +1,43 @@
-Dataset
-========
+===============
+Sample Dataset
+===============
+Public datasets
+~~~~~~~~~~~~~~~~
+Some data to work with have been obtained from _`Zenodo <https://zenodo.org>`. 
 
-
-Here, we have two simulated 4D-STEM datasets containing diffraction shifting, elliptical distortion, and an r-space/k-space rotational offset.  Two HDF5 files each include the simulated data for two different electron probes: a standard probe, using a circular probe-forming aperture, and a 'bullseye' probe, using a patterned aperture.  Each HDF5 file contains the following data objects:
-
-(a) the 'experimental' 4D-STEM scan of a strained single-crystal gold nanoparticle 
-
-(b) a 4D-STEM scan of a calibration sample of polycrystalline gold 
-
-(c) a stack of diffraction images of the electron probe over vacuum 
-
-(d) a single image of the electron probe over the sample and far from focus, such that the CBED forms a shadow image 
-
-Download
-~~~~~~~~~
-
-
-1.  `bullseye probe <https://zenodo.org/record/3592520/files/calibrationData_bullseyeProbe.h5?download=1>`_
-2.  `standard probe <https://zenodo.org/record/3592520/files/calibrationData_circularProbe.h5?download=1>`_
-
-
-
-
-
-
-
-
++-------------------------------------------------+----------+---------+----------+----------+
+|   Title                                         |Download  |  Format | Dimension| Size     |
++=================================================+==========+=========+==========+==========+
+| `Bullseye probe`_                               |`link1`_  | HDF5    | 4D       | 2.1 GB   |             
++-------------------------------------------------+----------+---------+----------+----------+
+| `Circular probe`_                               |`link2`_  |  HDF5   |  4D      | 2.1 GB   |
++-------------------------------------------------+----------+---------+----------+----------+
+| `Electron Bessel beam diffraction pattern`_     |`link3`_  | DM3     | 3D       | 2.6 GB   |
++-------------------------------------------------+----------+---------+----------+----------+
 Creating your own dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can generate your own dataset in the following way
 
-.. testcode::
-   import numpy as np
-   real_data = np.random.randn(16, 16, 16, 16).astype("float32")
-   real_data.tofile("/tmp/real_raw_file.raw")
-
+.. code-block:: python
+      
+      import numpy as np
+      real_data = np.random.randn(16, 16, 16, 16).astype("float32")
+      real_data.tofile("/tmp/real_raw_file.raw")
 
 Now you can load the data through the :ref:`Python API <api>` in the following way
 
-.. testcode::
+.. code-block:: python
+    
     from libertem.api import Context
     ctx = Context()
     ds = ctx.load("raw", path="/tmp/something.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
     
-
-
-
 Alternatively, you can enter the parameters (scan_size, dtype, detector_size) directly into the load dialog of the GUI. 
+
+.. _link1: https://zenodo.org/record/3592520/files/calibrationData_bullseyeProbe.h5?download=1
+.. _link2: https://zenodo.org/record/3592520/files/calibrationData_circularProbe.h5?download=1
+.. _link3: https://zenodo.org/record/2566137/files/experimental_data.7z?download=1
+.. _Bullseye probe: https://zenodo.org/record/3592520#.XmdNN3DhXIU
+.. _Circular probe: https://zenodo.org/record/3592520#.XmdNN3DhXIU  
+.. _Electron Bessel beam diffraction pattern: https://zenodo.org/record/2566137#.XmdNQnDhXIU

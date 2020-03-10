@@ -66,14 +66,15 @@ export function* doOpenDataset(fullPath: string) {
     let detectedParams;
     let shouldOpen = true;
     try {
-      let doDetectDatasetRes = yield call(doDetectDataset, fullPath);
+      const doDetectDatasetRes = yield call(doDetectDataset, fullPath);
       detectedParams = doDetectDatasetRes[0];
       shouldOpen = doDetectDatasetRes[1];
     } catch (e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
-    if(shouldOpen)
+    if(shouldOpen) {
       yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams));
+    }
 }
 
 export function* openDatasetSagaFullPath(action: ReturnType<typeof browserActions.Actions.selectFullPath>) {

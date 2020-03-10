@@ -41,6 +41,7 @@ export function* doDetectDataset(fullPath: string) {
     yield put(datasetActions.Actions.detect(fullPath));
     const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
     let detectedParams;
+    let shouldOpen = true;
     if (detectResult.status === "ok") {
         if (isKnownDatasetType(detectResult.datasetParams.type)) {
           detectedParams = detectResult.datasetParams;
@@ -50,24 +51,29 @@ export function* doDetectDataset(fullPath: string) {
           const timestamp = Date.now();
           const id = uuid();
           yield put(datasetActions.Actions.detectFailed(fullPath));
+          shouldOpen = false;
           yield put(datasetActions.Actions.error(id, detectResult.datasetParams.type + ` dataset type is currently not supported in the GUI`, timestamp, id));
         }
     } else {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
-    return detectedParams;
+    return [detectedParams, shouldOpen];
 }
 
 export function* doOpenDataset(fullPath: string) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const cachedParams = config.lastOpened[fullPath];
     let detectedParams;
+    let shouldOpen = true;
     try {
-      detectedParams = yield call(doDetectDataset, fullPath);
+      let doDetectDatasetRes = yield call(doDetectDataset, fullPath);
+      detectedParams = doDetectDatasetRes[0];
+      shouldOpen = doDetectDatasetRes[1];
     } catch (e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
-    yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams));
+    if(shouldOpen)
+      yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams));
 }
 
 export function* openDatasetSagaFullPath(action: ReturnType<typeof browserActions.Actions.selectFullPath>) {

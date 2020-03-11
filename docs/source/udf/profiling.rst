@@ -42,6 +42,16 @@ To use the :class:`~libertem.executor.inline.InlineJobExecutor`, pass it to the
 
 Then, you can continue as usual, loading data, executing your UDF, etc.
 
+Using progress bar
+---------------------
+
+A progress bar is a graphical tool that shows a far a process has progressed.  It can be used to assess the partitioning of data, since the progress is indicated on a per partition basis in the following way:
+
+.. code-block:: python
+     
+    res = ctx.run_udf(udf=fit_udf, dataset=ds, roi=roi, progress=True)
+    > 100%|██████████| 18/18 [01:17<00:00,  4.29s/it]
+    
 Line profiling using `line_profiler`
 ------------------------------------------
 

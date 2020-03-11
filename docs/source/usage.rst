@@ -83,7 +83,6 @@ entry by clicking once on it. You can move up one directory with the ".." entry
 on top of the list. The file browser is still very basic. Possible improvements
 are discussed in `Issue #83 <https://github.com/LiberTEM/LiberTEM/issues/83>`_.
 Contributions are highly appreciated! This example opens an HDF5 file.
-:cite:`ophus_colin_2019_3592520`
 
 ..  figure:: ./images/use/open.png
 

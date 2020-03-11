@@ -3,7 +3,7 @@ Sample Dataset
 ===============
 Public datasets
 ~~~~~~~~~~~~~~~~
-Some data to work with have been obtained from _`Zenodo <https://zenodo.org>`. 
+Some data to work with have been obtained from `Zenodo <https://zenodo.org>`_. 
 
 +-------------------------------------------------+----------+---------+----------+----------+
 |   Title                                         |Download  |  Format | Dimension| Size     |

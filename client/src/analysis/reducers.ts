@@ -1,6 +1,6 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as jobActions from '../job/actions';
 import * as analysisActions from "./actions";
 import { AnalysisState } from "./types";
@@ -33,6 +33,21 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
             return updateById(state, action.payload.analysis, {
                 jobs: [action.payload.id, ...oldJobs],
             })
+        }
+        case channelActions.ActionTypes.INITIAL_STATE: {
+            const analysisState: AnalysisState[] = action.payload.analyses.map(item => {
+                return {
+                    id: item.analysis,
+                    dataset: item.dataset,
+                    details: item.details,
+                    // FIXME: add jobs!
+                    jobs: [],
+                };
+            });
+            return {
+                byId: constructById(analysisState, analysis => analysis.id),
+                ids: action.payload.analyses.map(analysis => analysis.analysis),
+            }
         }
         case channelActions.ActionTypes.FINISH_JOB:
         case channelActions.ActionTypes.TASK_RESULT: {

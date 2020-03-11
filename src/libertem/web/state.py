@@ -38,9 +38,10 @@ AnalysisParameters = typing.Dict
 
 
 class AnalysisState:
-    def __init__(self, executor_state: ExecutorState):
+    def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
         self.analyses: typing.Dict[str, AnalysisParameters] = {}
         self.results: typing.Dict[str, typing.Tuple[AnalysisResultSet, AnalysisParameters]] = {}
+        self.job_state = job_state
 
     def create(self, uuid, dataset_uuid, analysis_type, parameters):
         assert uuid not in self.analyses
@@ -60,20 +61,33 @@ class AnalysisState:
     def get(self, uuid, default=None):
         return self.analyses.get(uuid, default)
 
-    def remove(self, uuid):
+    def filter(self, predicate):
+        return [
+            analysis
+            for analysis in self.analyses.values()
+            if predicate(analysis)
+        ]
+
+    async def remove(self, uuid):
         if uuid in self.results:
             self.remove_results(uuid)
+        await self.remove_jobs(uuid)
         del self.analyses[uuid]
         return True
+
+    async def remove_jobs(self, uuid):
+        jobs = copy.copy(self.job_state.get_for_analysis_id(uuid))
+        for job_id in jobs:
+            await self.job_state.remove(job_id)
+
+    def remove_results(self, uuid):
+        del self.results[uuid]
 
     def set_results(self, uuid, details, results):
         """
         set results: create or update
         """
         self.results[uuid] = (details, results)
-
-    def remove_results(self, uuid):
-        del self.results[uuid]
 
     def get_results(self, uuid):
         return self.results[uuid]
@@ -108,8 +122,18 @@ class CompoundAnalysisState:
         }
         return created
 
+    def remove(self, uuid):
+        del self.analyses[uuid]
+
     def __getitem__(self, uuid):
         return self.analyses[uuid]
+
+    def filter(self, predicate):
+        return [
+            ca
+            for ca in self.analyses.values()
+            if predicate(ca)
+        ]
 
     def serialize(self, uuid):
         return self[uuid]
@@ -122,11 +146,13 @@ class CompoundAnalysisState:
 
 
 class DatasetState:
-    def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
+    def __init__(self, executor_state: ExecutorState, analysis_state: AnalysisState,
+                 compound_analysis_state: CompoundAnalysisState):
         self.datasets = {}
         self.dataset_to_id = {}
         self.executor_state = executor_state
-        self.job_state = job_state
+        self.analysis_state = analysis_state
+        self.compound_analysis_state = compound_analysis_state
 
     def register(self, uuid, dataset, params):
         assert uuid not in self.datasets
@@ -179,11 +205,14 @@ class DatasetState:
         Stop all jobs and remove dataset state for the dataset identified by `uuid`
         """
         ds = self.datasets[uuid]["dataset"]
-        job_ids = copy.copy(self.job_state.get_for_dataset_id(uuid))
+        analyses = self.analysis_state.filter(lambda a: a["dataset"] == uuid)
+        compound_analyses = self.compound_analysis_state.filter(lambda ca: ca["dataset"] == uuid)
         del self.datasets[uuid]
         del self.dataset_to_id[ds]
-        for job_id in job_ids:
-            await self.job_state.remove(job_id)
+        for analysis in analyses:
+            await self.analysis_state.remove(analysis["analysis"])
+        for ca in compound_analyses:
+            await self.compound_analysis_state.remove(ca["compoundAnalysis"])
 
 
 class JobState:
@@ -191,6 +220,7 @@ class JobState:
         self.jobs = {}
         self.executor_state = executor_state
         self.jobs_for_dataset = defaultdict(lambda: set())
+        self.jobs_for_analyses = defaultdict(lambda: set())
 
     def register(self, job_id, analysis_id, dataset_id):
         assert job_id not in self.jobs
@@ -200,6 +230,7 @@ class JobState:
             "dataset": dataset_id,
         }
         self.jobs_for_dataset[dataset_id].add(job_id)
+        self.jobs_for_analyses[analysis_id].add(job_id)
         return self
 
     async def remove(self, uuid):
@@ -210,12 +241,18 @@ class JobState:
             for ds, jobs in self.jobs_for_dataset.items():
                 if uuid in jobs:
                     jobs.remove(uuid)
+            for ds, jobs in self.jobs_for_analyses.items():
+                if uuid in jobs:
+                    jobs.remove(uuid)
             return True
         except KeyError:
             return False
 
     def get_for_dataset_id(self, dataset_id):
         return self.jobs_for_dataset[dataset_id]
+
+    def get_for_analysis_id(self, analysis_id):
+        return self.jobs_for_analyses[analysis_id]
 
     def __getitem__(self, uuid):
         return self.jobs[uuid]
@@ -240,10 +277,14 @@ class JobState:
 class SharedState:
     def __init__(self):
         self.executor_state = ExecutorState()
-        self.analysis_state = AnalysisState(self.executor_state)
         self.job_state = JobState(self.executor_state)
-        self.dataset_state = DatasetState(self.executor_state, job_state=self.job_state)
+        self.analysis_state = AnalysisState(self.executor_state, job_state=self.job_state)
         self.compound_analysis_state = CompoundAnalysisState(self.analysis_state)
+        self.dataset_state = DatasetState(
+            self.executor_state,
+            analysis_state=self.analysis_state,
+            compound_analysis_state=self.compound_analysis_state,
+        )
 
         self.dataset_for_job = {}
         self.local_directory = "dask-worker-space"

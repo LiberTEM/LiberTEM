@@ -18,7 +18,7 @@ class Message(object):
             "datasets": datasets,
             "jobs": jobs,
             "analyses": analyses,
-            "compountAnalyses": compound_analyses,
+            "compoundAnalyses": compound_analyses,
         }
 
     def config(self, config):

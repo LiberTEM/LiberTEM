@@ -100,7 +100,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     break;
                 }
                 case channelMessages.MessageTypes.INITIAL_STATE: {
-                    yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, msg.compountAnalyses, timestamp));
+                    yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, msg.compoundAnalyses, msg.analyses, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.JOB_STARTED: {

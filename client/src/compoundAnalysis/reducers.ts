@@ -1,8 +1,8 @@
 import { AllActions } from "../actions";
 import * as analysisActions from "../analysis/actions";
-import * as datasetActions from "../dataset/actions";
 import * as channelActions from '../channel/actions';
-import { ById, filterWithPred, insertById, updateById, constructById } from "../helpers/reducerHelpers";
+import * as datasetActions from "../dataset/actions";
+import { ById, constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
 import * as compoundAnalysisActions from "./actions";
 import { CompoundAnalysisState } from "./types";
 

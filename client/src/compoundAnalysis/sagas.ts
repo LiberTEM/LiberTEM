@@ -1,10 +1,11 @@
-import { buffers } from 'redux-saga';
+import { buffers, Task } from 'redux-saga';
 import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
+import * as channelActions from '../channel/actions';
 import * as jobActions from '../job/actions';
-import { cancelJob, createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, startJob, removeCompoundAnalysis } from '../job/api';
+import { cancelJob, createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, removeCompoundAnalysis, startJob } from '../job/api';
 import { JobState } from '../job/types';
 import { DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
@@ -27,6 +28,14 @@ function selectJob(state: RootReducer, id: string) {
     return state.jobs.byId[id];
 }
 
+export function* cleanupOnRemove(compoundAnalysis: CompoundAnalysisState, sidecarTask: Task) {
+    while (true) {
+        const removeAction: ReturnType<typeof compoundAnalysisActions.Actions.remove> = yield take(compoundAnalysisActions.ActionTypes.REMOVE);
+        if (removeAction.payload.id === compoundAnalysis.compoundAnalysis) {
+            yield cancel(sidecarTask);
+        }
+    }
+}
 
 export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAnalysisActions.Actions.create>) {
     try {
@@ -53,17 +62,21 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
         const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis);
 
         yield put(compoundAnalysisActions.Actions.created(compoundAnalysis));
-
-        while (true) {
-            const removeAction: ReturnType<typeof compoundAnalysisActions.Actions.remove> = yield take(compoundAnalysisActions.ActionTypes.REMOVE);
-            if (removeAction.payload.id === compoundAnalysis.compoundAnalysis) {
-                yield cancel(sidecarTask);
-            }
-        }
+        yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
     } catch (e) {
         const timestamp = Date.now();
         const id = uuid();
         yield put(compoundAnalysisActions.Actions.error(`Error creating analysis: ${e.toString()}`, timestamp, id));
+    }
+}
+
+export function* createFromServerState(action: ReturnType<typeof channelActions.Actions.initialState>) {
+    for (const msgPart of action.payload.compoundAnalyses) {
+        const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, msgPart.compoundAnalysis);
+        // tslint:disable-next-line:no-console
+        console.log("meh:", compoundAnalysis)
+        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis);
+        yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
     }
 }
 
@@ -86,70 +99,74 @@ export function* analysisSidecar(compoundAnalysisId: string) {
     const runOrParamsChannel = yield actionChannel(compoundAnalysisActions.ActionTypes.RUN, buffers.sliding(2));
 
     while (true) {
-        try {
-            const action: compoundAnalysisActions.ActionParts["run"] = yield take(runOrParamsChannel);
+        /*try { */
+        const action: compoundAnalysisActions.ActionParts["run"] = yield take(runOrParamsChannel);
 
-            // ignore actions meant for other analyses
-            if (action.payload.id !== compoundAnalysisId) {
-                continue;
-            }
+        // ignore actions meant for other analyses
+        if (action.payload.id !== compoundAnalysisId) {
+            continue;
+        }
 
-            // get the current state incl. configuration
-            const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
-            const { analysisIndex, details } = action.payload;
+        // get the current state incl. configuration
+        const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
+        const { analysisIndex, details } = action.payload;
 
-            let analysisId = compoundAnalysis.details.analyses[analysisIndex];
+        let analysisId = compoundAnalysis.details.analyses[analysisIndex];
 
-            if (analysisId) {
-                // update the analysis on the server:
-                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
-                yield put(analysisActions.Actions.updated(analysisId, details));
+        if (analysisId) {
+            // update the analysis on the server:
+            yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+            yield put(analysisActions.Actions.updated(analysisId, details));
 
-                const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+            const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+            const jobs = analysis.jobs ? analysis.jobs : [];
 
-                for (const oldJobId of analysis.jobs) {
-                    const job: JobState = yield select(selectJob, oldJobId);
-                    if (job && job.running !== "DONE") {
-                        // wait until the job is cancelled:
-                        yield call(cancelJob, oldJobId);
-                    }
+            for (const oldJobId of jobs) {
+                const job: JobState = yield select(selectJob, oldJobId);
+                if (job && job.running !== "DONE") {
+                    // wait until the job is cancelled:
+                    yield call(cancelJob, oldJobId);
                 }
-            } else {
-                // create the analysis on the server:
-                analysisId = uuid();
-                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
-                yield put(analysisActions.Actions.created({
-                    id: analysisId,
-                    dataset: compoundAnalysis.dataset,
-                    details,
-                    jobs: [],
-                }, compoundAnalysis.compoundAnalysis, analysisIndex));
-
-                yield call(
-                    createOrUpdateCompoundAnalysis,
-                    compoundAnalysis.compoundAnalysis,
-                    compoundAnalysis.dataset,
-                    compoundAnalysis.details,
-                );
             }
+        } else {
+            // create the analysis on the server:
+            analysisId = uuid();
+            yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+            yield put(analysisActions.Actions.created({
+                id: analysisId,
+                dataset: compoundAnalysis.dataset,
+                details,
+                jobs: [],
+            }, compoundAnalysis.compoundAnalysis, analysisIndex));
 
-            // prepare running the job:
-            const jobId = uuid();
-            yield put(jobActions.Actions.create(jobId, analysisId, Date.now()));
+            yield call(
+                createOrUpdateCompoundAnalysis,
+                compoundAnalysis.compoundAnalysis,
+                compoundAnalysis.dataset,
+                compoundAnalysis.details,
+            );
+        }
 
-            // FIXME: we have a race here, as the websocket msg FINISH_JOB may
-            // arrive before call(startJob, ...) returns. this causes the apply button
-            // to feel unresponsive (the action gets done, but only after we finish here...)
-            // best reproduced in "Slow 3G" network simulation mode in devtools
+        // prepare running the job:
+        const jobId = uuid();
+        yield put(jobActions.Actions.create(jobId, analysisId, Date.now()));
 
-            // wait until the job is started
-            yield call(startJob, jobId, analysisId);
-            yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.compoundAnalysis, jobId, analysisIndex));
-        } catch (e) {
+        // FIXME: we have a race here, as the websocket msg FINISH_JOB may
+        // arrive before call(startJob, ...) returns. this causes the apply button
+        // to feel unresponsive (the action gets done, but only after we finish here...)
+        // best reproduced in "Slow 3G" network simulation mode in devtools
+
+        // wait until the job is started
+        yield call(startJob, jobId, analysisId);
+        yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.compoundAnalysis, jobId, analysisIndex));
+        // tslint:disable-next-line:no-empty
+        /* catch (e) {
             const timestamp = Date.now();
             const id = uuid();
+            // tslint:disable-next-line:no-console
+            console.log(e.stack)
             yield put(compoundAnalysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
-        }
+        } */
     }
 }
 
@@ -178,4 +195,5 @@ export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysis
 export function* analysisRootSaga() {
     yield takeEvery(compoundAnalysisActions.ActionTypes.CREATE, createCompoundAnalysisSaga);
     yield takeEvery(compoundAnalysisActions.ActionTypes.REMOVE, doRemoveAnalysisSaga);
+    yield takeEvery(channelActions.ActionTypes.INITIAL_STATE, createFromServerState);
 }

@@ -1,5 +1,5 @@
 import { ActionCreatorsMapObject } from "redux";
-import { AnalysisDetails, CompoundAnalysisDetails, FollowupPart, MsgPartInitialDataset, MsgPartJob, MsgPartCompoundAnalysis, MsgPartAnalysis } from "../messages";
+import { AnalysisDetails, CompoundAnalysisDetails, FollowupPart, MsgPartAnalysis, MsgPartCompoundAnalysis, MsgPartInitialDataset, MsgPartJob } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T

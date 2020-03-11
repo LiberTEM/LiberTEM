@@ -212,7 +212,7 @@ class DatasetState:
         for analysis in analyses:
             await self.analysis_state.remove(analysis["analysis"])
         for ca in compound_analyses:
-            await self.compound_analysis_state.remove(ca["compoundAnalysis"])
+            self.compound_analysis_state.remove(ca["compoundAnalysis"])
 
 
 class JobState:

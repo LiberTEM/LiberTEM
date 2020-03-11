@@ -99,74 +99,74 @@ export function* analysisSidecar(compoundAnalysisId: string) {
     const runOrParamsChannel = yield actionChannel(compoundAnalysisActions.ActionTypes.RUN, buffers.sliding(2));
 
     while (true) {
-        /*try { */
-        const action: compoundAnalysisActions.ActionParts["run"] = yield take(runOrParamsChannel);
+        try {
+            const action: compoundAnalysisActions.ActionParts["run"] = yield take(runOrParamsChannel);
 
-        // ignore actions meant for other analyses
-        if (action.payload.id !== compoundAnalysisId) {
-            continue;
-        }
-
-        // get the current state incl. configuration
-        const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
-        const { analysisIndex, details } = action.payload;
-
-        let analysisId = compoundAnalysis.details.analyses[analysisIndex];
-
-        if (analysisId) {
-            // update the analysis on the server:
-            yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
-            yield put(analysisActions.Actions.updated(analysisId, details));
-
-            const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
-            const jobs = analysis.jobs ? analysis.jobs : [];
-
-            for (const oldJobId of jobs) {
-                const job: JobState = yield select(selectJob, oldJobId);
-                if (job && job.running !== "DONE") {
-                    // wait until the job is cancelled:
-                    yield call(cancelJob, oldJobId);
-                }
+            // ignore actions meant for other analyses
+            if (action.payload.id !== compoundAnalysisId) {
+                continue;
             }
-        } else {
-            // create the analysis on the server:
-            analysisId = uuid();
-            yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
-            yield put(analysisActions.Actions.created({
-                id: analysisId,
-                dataset: compoundAnalysis.dataset,
-                details,
-                jobs: [],
-            }, compoundAnalysis.compoundAnalysis, analysisIndex));
 
-            yield call(
-                createOrUpdateCompoundAnalysis,
-                compoundAnalysis.compoundAnalysis,
-                compoundAnalysis.dataset,
-                compoundAnalysis.details,
-            );
-        }
+            // get the current state incl. configuration
+            const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
+            const { analysisIndex, details } = action.payload;
 
-        // prepare running the job:
-        const jobId = uuid();
-        yield put(jobActions.Actions.create(jobId, analysisId, Date.now()));
+            let analysisId = compoundAnalysis.details.analyses[analysisIndex];
 
-        // FIXME: we have a race here, as the websocket msg FINISH_JOB may
-        // arrive before call(startJob, ...) returns. this causes the apply button
-        // to feel unresponsive (the action gets done, but only after we finish here...)
-        // best reproduced in "Slow 3G" network simulation mode in devtools
+            if (analysisId) {
+                // update the analysis on the server:
+                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield put(analysisActions.Actions.updated(analysisId, details));
 
-        // wait until the job is started
-        yield call(startJob, jobId, analysisId);
-        yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.compoundAnalysis, jobId, analysisIndex));
-        // tslint:disable-next-line:no-empty
-        /* catch (e) {
+                const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+                const jobs = analysis.jobs ? analysis.jobs : [];
+
+                for (const oldJobId of jobs) {
+                    const job: JobState = yield select(selectJob, oldJobId);
+                    if (job && job.running !== "DONE") {
+                        // wait until the job is cancelled:
+                        yield call(cancelJob, oldJobId);
+                    }
+                }
+            } else {
+                // create the analysis on the server:
+                analysisId = uuid();
+                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield put(analysisActions.Actions.created({
+                    id: analysisId,
+                    dataset: compoundAnalysis.dataset,
+                    details,
+                    jobs: [],
+                }, compoundAnalysis.compoundAnalysis, analysisIndex));
+
+                yield call(
+                    createOrUpdateCompoundAnalysis,
+                    compoundAnalysis.compoundAnalysis,
+                    compoundAnalysis.dataset,
+                    compoundAnalysis.details,
+                );
+            }
+
+            // prepare running the job:
+            const jobId = uuid();
+            yield put(jobActions.Actions.create(jobId, analysisId, Date.now()));
+
+            // FIXME: we have a race here, as the websocket msg FINISH_JOB may
+            // arrive before call(startJob, ...) returns. this causes the apply button
+            // to feel unresponsive (the action gets done, but only after we finish here...)
+            // best reproduced in "Slow 3G" network simulation mode in devtools
+
+            // wait until the job is started
+            yield call(startJob, jobId, analysisId);
+            yield put(compoundAnalysisActions.Actions.running(compoundAnalysis.compoundAnalysis, jobId, analysisIndex));
+            // tslint:disable-next-line:no-empty
+        } catch (e) {
             const timestamp = Date.now();
             const id = uuid();
             // tslint:disable-next-line:no-console
             console.log(e.stack)
             yield put(compoundAnalysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
-        } */
+        }
     }
 }
 

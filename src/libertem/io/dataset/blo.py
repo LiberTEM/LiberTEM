@@ -160,7 +160,7 @@ class BloDataSet(DataSet):
             raw_dtype=np.dtype("u1"),
             iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
-        self._filesize = os.stat(self._path).st_size
+        self._filesize = executor.run_function(lambda: os.stat(self._path).st_size)
         return self
 
     @classmethod
@@ -168,7 +168,7 @@ class BloDataSet(DataSet):
         try:
             ds = cls(path, endianess='<')
             ds = ds.initialize(executor)
-            if not ds.check_valid():
+            if not executor.run_function(ds.check_valid):
                 return False
             return {
                 "path": path,
@@ -181,6 +181,10 @@ class BloDataSet(DataSet):
     @classmethod
     def get_msg_converter(cls):
         return BLODatasetParams
+
+    @classmethod
+    def get_supported_extensions(cls):
+        return set(["blo"])
 
     @property
     def dtype(self):

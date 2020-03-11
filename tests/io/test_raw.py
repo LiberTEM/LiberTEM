@@ -1,15 +1,31 @@
-import pickle
+import os
 import json
+import pickle
 
 import numpy as np
+import pytest
+import warnings
 
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
+from libertem.io.dataset.raw import RAWDatasetParams
 
 
 def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_large_pick(large_raw, lt_ctx, TYPE):
+    y, x = large_raw.shape.nav
+    dy, dx = large_raw.shape.sig
+    analysis = lt_ctx.create_pick_analysis(large_raw, y=y-1, x=x-1)
+    analysis.TYPE = TYPE
+    result = lt_ctx.run(analysis)
+    assert result.intensity.raw_data.shape == tuple(large_raw.shape.sig)
 
 
 def test_check_valid(default_raw):
@@ -52,9 +68,13 @@ def test_apply_mask_on_raw_job(default_raw, lt_ctx):
     assert results[0].shape == (16 * 16,)
 
 
-def test_apply_mask_analysis(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_raw, lt_ctx, TYPE):
     mask = np.ones((128, 128))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_raw)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (16, 16)
 
@@ -71,8 +91,12 @@ def test_pick_job(default_raw, lt_ctx):
     assert results.shape == (128, 128)
 
 
-def test_pick_analysis(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_raw, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_raw, parameters={"x": 15, "y": 15})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0
@@ -148,3 +172,95 @@ def test_macrotile_roi_3(lt_ctx, default_raw):
 
 def test_cache_key_json_serializable(default_raw):
     json.dumps(default_raw.get_cache_key())
+
+
+def test_message_converter_direct():
+    src = {
+        "type": "RAW",
+        "path": "p",
+        "dtype": "d",
+        "scan_size": [16, 16],
+        "detector_size": [8, 8],
+        "enable_direct": True,
+    }
+    converted = RAWDatasetParams().convert_to_python(src)
+    assert converted == {
+        "path": "p",
+        "dtype": "d",
+        "scan_size": [16, 16],
+        "detector_size": [8, 8],
+        "enable_direct": True,
+    }
+
+
+@pytest.mark.dist
+def test_raw_on_workers(raw_on_workers, dist_ctx):
+    # should not exist on the client node:
+    assert not os.path.exists(raw_on_workers._path)
+    res = dist_ctx.executor.run_each_host(os.path.exists, raw_on_workers._path)
+    assert len(res) == 2
+    assert all(res)
+
+
+@pytest.mark.dist
+def test_sum_on_dist(raw_on_workers, dist_ctx):
+    print(dist_ctx.executor.run_each_host(lambda: os.system("hostname")))
+    print(dist_ctx.executor.get_available_workers().group_by_host())
+    print(dist_ctx.executor.get_available_workers())
+    print(dist_ctx.executor.run_each_host(
+        lambda: os.listdir(os.path.dirname(raw_on_workers._path))))
+    analysis = dist_ctx.create_sum_analysis(dataset=raw_on_workers)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (128, 128)
+
+
+def test_ctx_load_old(lt_ctx, default_raw):
+    with warnings.catch_warnings(record=True) as w:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            dtype="float32",
+            detector_size_raw=(128, 128),
+            crop_detector_to=(128, 128)
+        )
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+
+
+def test_missing_detector_size(lt_ctx, default_raw):
+    with pytest.raises(TypeError) as e:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            dtype="float32",
+            )
+    assert e.match("missing 1 required argument: 'detector_size'")
+
+
+@pytest.mark.skipif(os.name == 'nt', reason='No direct IO on windows')
+def test_load_direct(lt_ctx, default_raw):
+    ds_direct = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        scan_size=(16, 16),
+        detector_size=(16, 16),
+        dtype="float32",
+        enable_direct=True,
+    )
+    analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
+    results = lt_ctx.run(analysis)
+
+@pytest.mark.skipif(os.name != 'nt', reason='No direct IO only on windows')
+def test_direct_io_enabled_windows(lt_ctx, default_raw):
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            scan_size=(16, 16),
+            detector_size=(16, 16),
+            dtype="float32",
+            enable_direct=True,
+    )
+    assert e.match("LiberTEM currently does not support Direct I/O on Windows")

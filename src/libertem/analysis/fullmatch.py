@@ -21,7 +21,7 @@ class FullMatcher(grm.Matcher):
     Include the ability to guess grid parameters from a point cloud. This is separated
     from the other code since it currently only works with :class:`~hdbscan.HDBSCAN`,
     which can be problematic
-    to install on some platforms. FOr that reason it is an optional dependency.
+    to install on some platforms. For that reason it is an optional dependency.
     '''
     def __init__(
             self, tolerance=3, min_weight=0.1, min_match=3, min_angle=np.pi/10,
@@ -62,7 +62,7 @@ class FullMatcher(grm.Matcher):
             matched.
             Set this to :code:`None` to disable dynamic adjustment of :code:`min_cluster_size`.
             If you like to set :code:`min_cluster_size` to a constant value, you can
-            set this to :code:`None`and additionally set the :code:`clusterer` parameter with
+            set this to :code:`None` and additionally set the :code:`clusterer` parameter with
             your own clusterer object to have direct control over all parameters.
         min_samples_fraction : float
             Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
@@ -91,7 +91,6 @@ class FullMatcher(grm.Matcher):
     def full_match(
             self, centers, zero=None, cand=None,
             refineds=None, peak_values=None, peak_elevations=None):
-        # FIXME check formatting when included in documentation
         '''
         This function extracts a list of Match objects as well two PointSelection objects
         for unmatched and weak points from correlation_result and zero point.
@@ -99,10 +98,9 @@ class FullMatcher(grm.Matcher):
 
         Parameters
         ----------
-
         centers : numpy.ndarray
             numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks. This would typically
-            be extracted with :meth:`~libertem.udf.blobfinder.get_peaks`
+            be extracted with :meth:`libertem_blobfinder.common.correlation.get_peaks`
         zero : numpy.ndarray
             Zero point as numpy array (y, x).
         cand : list or numpy.ndarray
@@ -114,11 +112,10 @@ class FullMatcher(grm.Matcher):
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
         peak_elevations : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
-            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.
 
         Returns
         -------
-
         Tuple[List[libertem.analysis.gridmatching.Match, ...],\
         libertem.analysis.gridmatching.PointSelection,\
         libertem.analysis.gridmatching.PointSelection]

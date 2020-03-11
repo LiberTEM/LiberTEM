@@ -61,13 +61,16 @@ const useDefaultFrameView = ({
     const [frameMode, setMode] = useState(DefaultModes.SUM);
     const [roi, setRoi] = useState(DefaultRois.ALL)
 
-    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode"/>
+    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode" />
 
-    const roiSelector = <ModeSelector modes={availableRois} currentMode={roi} onModeChange={setRoi} label="ROI"/>
+    let roiSelector = <ModeSelector modes={availableRois} currentMode={roi} onModeChange={setRoi} label="ROI" />
+
+    if (frameMode === DefaultModes.PICK) {
+        roiSelector = <></>;
+    }
 
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
-
 
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === DefaultModes.PICK,
@@ -77,17 +80,14 @@ const useDefaultFrameView = ({
         cx, cy, setCx, setCy
     });
 
-
-    const { rectRoiHandles, rectRoiWidgets, rectRoiParameters }  = useRectROI({ scanHeight, scanWidth })
-    const { diskRoiHandles, diskRoiWidgets, diskRoiParameters}  = useDiskROI({ scanHeight, scanWidth })
+    const { rectRoiHandles, rectRoiWidgets, rectRoiParameters } = useRectROI({ scanHeight, scanWidth })
+    const { diskRoiHandles, diskRoiWidgets, diskRoiParameters } = useDiskROI({ scanHeight, scanWidth })
 
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
     let handles = nullHandles;
 
-
-
     let widgets;
-    let params = {roi:{}};
+    let params = { roi: {} };
     switch (roi) {
         case DefaultRois.DISK:
             handles = diskRoiHandles;
@@ -106,7 +106,7 @@ const useDefaultFrameView = ({
             handles = pickHandles;
             widgets = undefined;
             break;
-    }   
+    }
 
     useRoiPicker({
         enabled: frameMode === DefaultModes.SD,
@@ -117,8 +117,6 @@ const useDefaultFrameView = ({
         analysis: AnalysisTypes.SD_FRAMES
     })
 
-    
-
     useRoiPicker({
         enabled: frameMode === DefaultModes.SUM,
         scanWidth, scanHeight,
@@ -127,7 +125,6 @@ const useDefaultFrameView = ({
         roiParameters: params,
         analysis: AnalysisTypes.SUM_FRAMES,
     })
-
 
     const frameViewTitle = (
         frameMode !== DefaultModes.PICK ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>

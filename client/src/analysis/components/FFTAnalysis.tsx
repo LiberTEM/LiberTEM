@@ -25,16 +25,16 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
     const cx = imageWidth / 2;
     const cy = imageHeight / 2;
-    const [rad_in, setRi] = useState(minLength / 4);
-    const [rad_out, setRo] = useState(minLength / 2);
+    const [radIn, setRi] = useState(minLength / 4);
+    const [radOut, setRo] = useState(minLength / 2);
 
     const dispatch = useDispatch();
     const riHandle = {
-        x: cx - rad_in,
+        x: cx - radIn,
         y: cy,
     }
     const roHandle = {
-        x: cx - rad_out,
+        x: cx - radOut,
         y: cy,
     }
 
@@ -59,7 +59,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     </>);
 
     const frameViewWidgetsfft = (
-        <Ring cx={cx} cy={cy} ri={rad_in} ro={rad_out}
+        <Ring cx={cx} cy={cy} ri={radIn} ro={radOut}
             imageWidth={imageWidth} />
     )
 
@@ -71,9 +71,9 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
 
 
 
-    const [real_centerx, setCx] = useState(imageWidth / 2);
-    const [real_centery, setCy] = useState(imageHeight / 2);
-    const [real_rad, setR] = useState(minLength / 4);
+    const [realCenterX, setCx] = useState(imageWidth / 2);
+    const [realCenterY, setCy] = useState(imageHeight / 2);
+    const [realRad, setR] = useState(minLength / 4);
 
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
         setCx(newCx);
@@ -82,12 +82,12 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
     const handleRChange = defaultDebounce(setR);
 
     const rHandle = {
-        x: real_centerx - real_rad,
-        y: real_centery,
+        x: realCenterX - realRad,
+        y: realCenterY,
     }
 
     const frameViewHandlesreal: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
-        <DraggableHandle x={real_centerx} y={real_centery}
+        <DraggableHandle x={realCenterX} y={realCenterY}
             imageWidth={imageWidth}
             onDragMove={handleCenterChange}
             parentOnDragStart={handleDragStart}
@@ -95,14 +95,14 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             constraint={inRectConstraint(imageWidth, imageHeight)} />
         <DraggableHandle x={rHandle.x} y={rHandle.y}
             imageWidth={imageWidth}
-            onDragMove={cbToRadius(real_centerx, real_centery, handleRChange)}
+            onDragMove={cbToRadius(realCenterX, realCenterY, handleRChange)}
             parentOnDragStart={handleDragStart}
             parentOnDrop={handleDrop}
-            constraint={keepOnCY(real_centery)} />
+            constraint={keepOnCY(realCenterY)} />
     </>);
 
     const frameViewWidgetsreal = (
-        <Disk cx={real_centerx} cy={real_centery} r={real_rad}
+        <Disk cx={realCenterX} cy={realCenterY} r={realRad}
             imageWidth={imageWidth} imageHeight={imageHeight}
         />
     );
@@ -111,11 +111,11 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         dispatch(analysisActions.Actions.run(analysis.id, 2, {
             type: AnalysisTypes.APPLY_FFT_MASK,
             parameters: {
-                rad_in,
-                rad_out,
-                real_rad: check ? real_rad : null,
-                real_centerx: check ? real_centerx : null,
-                real_centery: check ? real_centery : null
+                rad_in: radIn,
+                rad_out: radOut,
+                real_rad: check ? realRad : null,
+                real_centerx: check ? realCenterX : null,
+                real_centery: check ? realCenterY : null
 
             }
         }));
@@ -125,9 +125,9 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
         scanWidth,
         scanHeight,
         analysisId: analysis.id,
-        real_rad: check ? real_rad : null,
-        real_centerx: check ? real_centerx : null,
-        real_centery: check ? real_centery : null
+        real_rad: check ? realRad : null,
+        real_centerx: check ? realCenterX : null,
+        real_centery: check ? realCenterY : null
     })
 
 
@@ -147,7 +147,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             />
         </>)
         subtitle = (
-            <>{frameViewTitle} real_rad={rad_in.toFixed(2)}, real_center=(x={real_centerx.toFixed(2)}, y={real_centery.toFixed(2)}), fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
+            <>{frameViewTitle} real_rad={radIn.toFixed(2)}, real_center=(x={realCenterX.toFixed(2)}, y={realCenterY.toFixed(2)}), fourier_rad_in={radIn.toFixed(2)}, fourier_rad_out={radOut.toFixed(2)}</>
         )
     }
 
@@ -160,7 +160,7 @@ const FFTAnalysis: React.SFC<AnalysisProps> = ({ analysis, dataset }) => {
             />
         </>)
         subtitle = (
-            <>{frameViewTitle} fourier_rad_in={rad_in.toFixed(2)}, fourier_rad_out={rad_out.toFixed(2)}</>
+            <>{frameViewTitle} fourier_rad_in={radIn.toFixed(2)}, fourier_rad_out={radOut.toFixed(2)}</>
         )
     }
 

@@ -6,13 +6,16 @@ import sys
 import json
 import glob
 import shutil
+import tempfile
 import subprocess
+import contextlib
 from os.path import join
 
 from github import Github, UnknownObjectException
 from pkg_resources import parse_version
 from pkg_resources.extern.packaging.version import LegacyVersion
 import click
+import requests
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.normpath(join(HERE, '..'))
@@ -143,15 +146,6 @@ def tag_matches(tags):
             if m is not None]
 
 
-def get_version_tag():
-    """
-    get the current version tag as match dict
-    """
-    version_tags = tag_matches(get_current_tags())
-    if len(version_tags) == 1:
-        return version_tags[0]
-
-
 def current_version_tag_is_rc():
     return get_release_kind() == "rc"
 
@@ -191,7 +185,37 @@ def get_py_release_files():
     return glob.glob("%s/dist/*" % BASE_DIR)
 
 
+def stream_download(dest_fn, url):
+    with open(dest_fn, "wb") as f, requests.get(url, stream=True) as resp:
+        resp.raise_for_status()
+        for chunk in resp.iter_content(chunk_size=1024*1024):
+            f.write(chunk)
+
+
+@contextlib.contextmanager
+def get_archive(tag):
+    """
+    Download repository archive from github releases page.
+
+    Parameters
+    ----------
+    tag : re.Match
+        Release tag to download the archive for, as
+        matched by VERSION_PAT
+    """
+    filename = "libertem-repo-archive-%s.tar.gz" % tag['full']
+    with tempfile.TemporaryDirectory() as tempdir:
+        full_fn = os.path.join(tempdir, filename)
+        url = "https://github.com/LiberTEM/LiberTEM/archive/%s.tar.gz" % tag['full']
+        stream_download(dest_fn=full_fn, url=url)
+        yield full_fn
+
+
 def upload_to_zenodo(verbose, parent, token, sandbox_token):
+    """
+    Upload wheel, sdist and repo archive to zenodo. Only works if
+    there is a matching GitHub release already created.
+    """
     if verbose:
         print("uploading to zenodo")
 
@@ -209,14 +233,18 @@ def upload_to_zenodo(verbose, parent, token, sandbox_token):
         url = "https://zenodo.org/api/"
         os.environ['ZENODO_OAUTH_TOKEN'] = token
 
-    out = subprocess.check_output([
-        "python", join(HERE, "zenodo_upload"),
-        "--wheel=%s" % wheel,
-        "--tarball=%s" % sdist,
-        "--url=%s" % url,
-        "--parent=%s" % parent,
-        "--mask-zenodo-exception",
-    ])
+    tag = get_release_tag()
+
+    with get_archive(tag) as repo_archive:
+        out = subprocess.check_output([
+            "python", join(HERE, "zenodo_upload"),
+            "--url=%s" % url,
+            "--parent=%s" % parent,
+            "--mask-zenodo-exception",
+            wheel,
+            sdist,
+            repo_archive,
+        ])
 
     if verbose and out:
         print(out.decode("utf-8"))
@@ -437,10 +465,6 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
         json.load(f)
 
     if not dry_run:
-        if is_release or is_rc:
-            upload_to_zenodo(verbose=ctx.obj['verbose'],
-                             parent=zenodo_sandbox_parent if is_rc else zenodo_parent,
-                             token=zenodo_token, sandbox_token=zenodo_sandbox_token)
         if is_release:
             upload_to_pypi(ctx.obj['verbose'], user=pypi_user, password=pypi_password)
         elif is_rc:
@@ -471,6 +495,11 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
             ", not uploading to github (files=%s)" % github_files
         )
 
+    if not dry_run and (is_release or is_rc):
+        upload_to_zenodo(verbose=ctx.obj['verbose'],
+                         parent=zenodo_sandbox_parent if is_rc else zenodo_parent,
+                         token=zenodo_token, sandbox_token=zenodo_sandbox_token)
+
 
 @cli.command()
 @click.pass_context
@@ -499,7 +528,7 @@ def do_build_appimage(ctx):
 @click.option('--tag/--no-tag', help='create a git tag after bumping (implies --commit)',
               default=False)
 @click.option('--commit/--no-commit', help='create a git commit after bumping',
-              default=False)
+              default=True)
 @click.option('--force/--no-force', help='force operation, even if it doesn\'t fit our conventions',
               default=False)
 def bump(new_version, tag, commit, force):
@@ -540,7 +569,7 @@ def bump(new_version, tag, commit, force):
         if commit:
             print("now, tag as needed and push")
         else:
-            print("now, commit the new version, tag as needed and push")
+            print("WARNING: not committed! commit the new version, tag as needed and push")
 
 
 if __name__ == "__main__":

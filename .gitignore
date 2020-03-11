@@ -1,5 +1,7 @@
 *.swp
 *.pyc
+*.bib.bak
+*.bib.sav
 __pycache__
 .tox
 docs/build/
@@ -20,3 +22,6 @@ MANIFEST
 .vscode
 pip-wheel-metadata
 data
+*Thumbs.db
+*.DS_Store
+*.idea

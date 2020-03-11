@@ -34,10 +34,10 @@ User-defined functions
    udf = YourUDF()
 
 A common case for analyzing big EM data sets is running a reduction operation
-on each individual detector frame (or other small subsets) of a data set and then
+on each individual detector frame or other small subsets of a data set and then
 combining the results of these reductions to form the complete result. This should
-cover a wide range of use cases, from simple mathematical operations (for
-example statistics) to complex image processing and analysis, like feature extraction.
+cover a wide range of use cases, from simple mathematical operations, for
+example statistics, to complex image processing and analysis, like feature extraction.
 
 The user-defined functions (UDF) interface of LiberTEM allows you to run your
 own reduction functions easily, without having to worry about parallelizing,
@@ -335,9 +335,15 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          """
          return {
             'maxbuf': self.buffer(
-               kind="sig", dtype=self.meta.dataset_dtype
+               kind="sig", dtype=self.meta.input_dtype
             )
          }
+
+      def preprocess(self):
+         """
+         Initialize buffer with neutral element for maximum.
+         """
+         self.results.maxbuf[:] = np.float('-inf')
 
       def process_frame(self, frame):
          """
@@ -356,7 +362,9 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          - You cannot rely on any particular order of frames this function
            is called in.
          - Your function should be pure, that is, it should not have side
-           effects and should only depend on it's input parameters.
+           effects beyond modifying the content of result buffers or task data,
+           and should only depend on it's input parameters, including
+           the UDF object :code:`self`.
          """
          self.results.maxbuf[:] = np.maximum(frame, self.results.maxbuf)
 
@@ -376,8 +384,8 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
 
 
 For more complete examples, you can also have a look at the functions
-implemented in the sub-modules of :code:`libertem.udf`,
-for example :code:`libertem.udf.blobfinder`.
+implemented in the sub-modules of :code:`libertem.udf` and at
+`LiberTEM-blobfinder <http://localhost:8009/index.html>`_.
 
 Passing parameters
 ~~~~~~~~~~~~~~~~~~
@@ -444,6 +452,11 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
    # or directly treat as array:
    np.sum(res['buf1'])
 
+.. _`udf roi`:
+
+Regions of interest
+-------------------
+
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
 run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
 containing a bool mask, having the shape of the navigation axes of the dataset.
@@ -477,12 +490,28 @@ More about UDFs
 ---------------
 
 Now would be a good time to :ref:`read about advanced UDF functionality <advanced udf>`
-or the :ref:`general section on debugging <debugging udfs>`.
+or the :ref:`general section on debugging <debugging udfs>`. Once you have your UDF working,
+you can proceed to :ref:`UDF profiling <udf profiling>` to gain insights into the efficiency
+of your UDF.
+
+LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement
+general functionality:
+
+* :ref:`Sum <sum udf>`
+* :ref:`Logsum <logsum udf>`
+* :ref:`StdDev <stddev udf>`
+* :ref:`SumSig <sumsig udf>`
+* :ref:`Masks <masks udf>`
+* :ref:`Pick <pick udf>`
+
+Also, LiberTEM includes :ref:`ready-to-use application-specific UDFs
+<applications>`.
 
 .. toctree::
    :hidden:
 
    udf/advanced
+   udf/profiling
 
 .. seealso::
 

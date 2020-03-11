@@ -177,6 +177,9 @@ class BufferWrapper(object):
         """
         return partition.slice.adjust_for_roi(self._roi)
 
+    def get_view_for_dataset(self, dataset):
+        return self._data
+
     def get_view_for_partition(self, partition):
         """
         get a view for a single partition in a whole-result-sized buffer
@@ -278,6 +281,9 @@ class AuxBufferWrapper(BufferWrapper):
         assert np.product(new_data.shape) > 0
         assert not buf._data_coords_global
         return buf
+
+    def get_view_for_dataset(self, dataset):
+        return self._data[self._roi]
 
     def set_buffer(self, buf, is_global=True):
         """

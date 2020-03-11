@@ -1,13 +1,20 @@
 import logging
 
-from .base import Job, Task, ResultTile
+from libertem.udf.base import Task
+from .base import BaseJob, ResultTile
 from libertem.common.buffers import zeros_aligned
 
 
 log = logging.getLogger(__name__)
 
 
-class PickFrameJob(Job):
+class PickFrameJob(BaseJob):
+    '''
+    .. deprecated:: 0.4.0
+        Use :meth:`libertem.api.Context.create_pick_analysis`, :class:`libertem.udf.raw.PickUDF`,
+        :class:`libertem.udf.masks.ApplyMasksUDF`or a custom UDF (:ref:`user-defined functions`)
+        as a replacement. See also :ref:`job deprecation`.
+    '''
     def __init__(self, slice_, squeeze=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._slice = slice_

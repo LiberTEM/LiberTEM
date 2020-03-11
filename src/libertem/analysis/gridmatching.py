@@ -3,6 +3,10 @@ from libertem.utils import calc_coords, within_frame
 
 
 class CorrelationResult:
+    """
+    Container class for the result of correlation-based refinement of peak
+    positions within a frame.
+    """
     def __init__(self, centers, refineds=None, peak_values=None, peak_elevations=None):
         if refineds is None:
             refineds = centers
@@ -26,7 +30,6 @@ class PointSelection:
 
     Attributes
     ----------
-
     selector : numpy.ndarray
         Boolean mask for all points in the correlation result, :code:`True` indicating
         selected points.
@@ -83,11 +86,12 @@ class PointSelection:
 
 
 class Matcher:
+    '''
+    The main job of the Matcher object is managing the matching parameters
+    and making them available for the various matching routines.
+    '''
     def __init__(self, tolerance=3, min_weight=0.1, min_match=3):
         '''
-        The main job of the Matcher object is managing the matching parameters
-        and making them available for the various matching routines.
-
         Parameters
         ----------
 
@@ -124,7 +128,7 @@ class Matcher:
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
         peak_elevations : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
-            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.
         zero : numpy.ndarray
             The near approximate zero point as numpy array (y, x).
         a,b : numpy.ndarray
@@ -182,7 +186,7 @@ class Matcher:
             numpy.ndarray of shape (n,) with float maxima of correlation map of peaks
         peak_values : numpy.ndarray
             numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
-            See :meth:`~libertem.udf.blobfinder.peak_elevation` for details.
+            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.
         indices : numpy.ndarray
             The indices assigned to each point of the CorrelationResult.
 

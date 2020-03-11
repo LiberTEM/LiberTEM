@@ -166,6 +166,10 @@ class EMPADDataSet(DataSet):
         return EMPADDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["xml", "raw"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         """
         Detect parameters. If an `path` is an xml file, we try to automatically
@@ -175,7 +179,7 @@ class EMPADDataSet(DataSet):
         try:
             ds = cls(path)
             ds = ds.initialize(executor)
-            if not ds.check_valid():
+            if not executor.run_function(ds.check_valid):
                 return False
             return {
                 "path": path,

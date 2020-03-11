@@ -10,19 +10,30 @@ class FEMUDF(UDF):
 
     This UDF calculates the standard deviation within a ring around the zero order diffraction peak.
     '''
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, center, rad_in, rad_out):
         '''
-        center: tuple
-            (x,y) - coordinates of a center of a ring for a masking region of interest to
+        Examples
+        --------
+        >>> fem_udf = FEMUDF(center=(8, 8), rad_in=4, rad_out=6)
+        >>> result = ctx.run_udf(dataset=dataset, udf=fem_udf)
+        >>> np.array(result["intensity"]).shape
+        (16, 16)
+
+        Parameters
+        ----------
+
+        center: Tuple[float]
+            (x, y) - coordinates of a center of a ring for a masking region of interest to
             calculate SD
 
-        rad_in: int
+        rad_in: float
             Inner radius of a ring mask
 
-        rad_out: int
+        rad_out: float
             Outer radius of a ring mask
         '''
-        super().__init__(*args, **kwargs)
+        super().__init__(center=center, rad_in=rad_in, rad_out=rad_out)
 
     def get_result_buffers(self):
         return {
@@ -63,26 +74,20 @@ def run_fem(ctx, dataset, center, rad_in, rad_out, roi=None):
     Parameters
     ----------
 
-    ctx: Context
-        Context class that contains methods for loading datasets,
-        creating jobs on them and running them
-
-    dataset: DataSet
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.base.DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
-
-    center: tuple
+    center : tuple
         (x,y) - coordinates of a center of a ring for a masking region of interest to calculate SD
-
-    rad_in: int
+    rad_in : int
         Inner radius of a ring mask
-
-    rad_out: int
+    rad_out : int
         Outer radius of a ring mask
 
     Returns
     -------
 
-    pass_results: dict
+    pass_results : dict
         Returns a standard deviation(SD) value for each frame of pixels which belong to ring mask.
         To return 2-D array use pass_results['intensity'].data
 

@@ -10,10 +10,13 @@ from within a Python application or script.
 Basic example
 -------------
 
-This is a basic example to load the API, create a local cluster, load a file and run a job. For a complete example on how to use the Python API, please see the
-Jupyter notebooks in `the example directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
+This is a basic example to load the API, create a local cluster, load a file and
+run an analysis. For a complete example on how to use the Python API, please see the
+Jupyter notebooks in `the example directory
+<https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
-For more details, please see :ref:`loading data`, :ref:`dataset api` and  :ref:`format-specific reference<formats>`.
+For more details, please see :ref:`loading data`, :ref:`dataset api` and
+:ref:`format-specific reference<formats>`.
 
 .. include:: /../../examples/basic.py
     :code:

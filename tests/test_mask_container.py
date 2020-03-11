@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import sparse
 import pytest
 
-from libertem.job.masks import MaskContainer
+from libertem.common.container import MaskContainer
 from libertem.io.dataset.base import DataTile
 from libertem.common import Slice, Shape
 from libertem.masks import gradient_x

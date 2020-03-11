@@ -1,0 +1,43 @@
+version: "2"
+checks:
+  file-lines:
+    config:
+      threshold: 400
+  return-statements:
+    config:
+      threshold: 15
+  argument-count:
+    config:
+      threshold: 8
+plugins:
+  tslint:
+    enabled: true
+    config: client/tslint.json
+  sonar-python:
+    enabled: true
+    config:
+      tests_patterns:
+        - tests/**
+      minimum_severity: major
+  radon:
+    enabled: true
+    config:
+      threshold: "B"
+  bandit:
+    enabled: true
+exclude_patterns:
+- "config/"
+- "db/"
+- "dist/"
+- "features/"
+- "**/node_modules/"
+- "script/"
+- "**/spec/"
+- "**/test/"
+- "**/tests/"
+- "Tests/"
+- "**/vendor/"
+- "**/*_test.go"
+- "**/*.d.ts"
+- "benchmarks/"
+- "prototypes/"

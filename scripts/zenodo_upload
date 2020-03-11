@@ -371,13 +371,12 @@ def make_data():
 
 
 @click.command()
-@click.option('--wheel', required=True, type=click.File())
-@click.option('--tarball', required=True, type=click.File())
 @click.option('--parent', default="264899")
 @click.option('--url', default='https://sandbox.zenodo.org/api/')
 @click.option('--verbose', '-v', is_flag=True)
 @click.option('--mask-zenodo-exception', is_flag=True)
-def main(wheel, tarball, parent, url, verbose, mask_zenodo_exception):
+@click.argument('files', nargs=-1, required=True, type=click.File())
+def main(files, parent, url, verbose, mask_zenodo_exception):
     try:
         # raise ZenodoException("Test")
         global BASE_URL
@@ -386,9 +385,15 @@ def main(wheel, tarball, parent, url, verbose, mask_zenodo_exception):
         global VERBOSE
         VERBOSE = verbose
 
-        log("Creating new version of deposition %s..." % parent)
-        r = new_version(parent_id=parent)
-        prettylog(r)
+        try:
+            log("Creating new version of deposition %s..." % parent)
+            r = new_version(parent_id=parent)
+            prettylog(r)
+        # Above will fail for very first draft
+        except ZenodoException:
+            log("Loading initial draft of deposition %s..." % parent)
+            r = get_deposition(deposition_id=parent)
+            prettylog(r)
 
         deposition_id = get_latest_draft(r)
         log("Updating draft deposition %s..." % deposition_id)
@@ -400,13 +405,10 @@ def main(wheel, tarball, parent, url, verbose, mask_zenodo_exception):
             r = delete_file(deposition_id, file_id)
             prettylog(r)
 
-        log("Uploading wheel as new file...")
-        wheel_upload = upload_file(deposition_id=deposition_id, filename=wheel.name)
-        prettylog(wheel_upload)
-
-        log("Uploading tarball as new file...")
-        tar_upload = upload_file(deposition_id=deposition_id, filename=tarball.name)
-        prettylog(tar_upload)
+        for fh in files:
+            log("Uploading file %s..." % fh.name)
+            upload_result = upload_file(deposition_id=deposition_id, filename=fh.name)
+            prettylog(upload_result)
 
         log("Finished!")
     except ZenodoException as e:

@@ -97,6 +97,13 @@ def _get_base_filename(_path):
 
 
 def _read_hdr(fname):
+    if not os.path.exists(fname):
+        raise DataSetException(
+            "Could not find .hdr file %s" % (
+                fname,
+            )
+        )
+
     config = configparser.ConfigParser()
     config.read(fname)
     parsed = {}
@@ -130,9 +137,11 @@ def _read_hdr(fname):
 class FRMS6File(File3D):
     def __init__(self, path, start_idx=None, hdr_info=None):
         self._path = path
-        self._header = None
         self._hdr_info = hdr_info
         self._start_idx = start_idx
+        self._header = None
+        self._size = None
+        self._preread_info()
         super().__init__()
 
     @property
@@ -159,6 +168,10 @@ class FRMS6File(File3D):
     def global_header(self):
         return self._hdr_info
 
+    def _preread_info(self):
+        self._header = self.header
+        self._size = os.stat(self._path).st_size
+
     def check_valid(self):
         if not (self.header['header_size'] == 1024
                 and self.header['frame_header_size'] == 64
@@ -173,11 +186,11 @@ class FRMS6File(File3D):
             return self.header['num_frames']
         # older FRMS6 files don't contain the number of frames in the header,
         # so calculate from filesize:
-        size = os.stat(self._path).st_size
         header = self.header
         w, h = header['width'], header['height']
         bytes_per_frame = w * h * 2
-        num = (size - 1024)
+        assert self._size is not None
+        num = (self._size - 1024)
         denum = (bytes_per_frame + 64)
         res = num // denum
         if num % denum != 0:
@@ -195,7 +208,7 @@ class FRMS6File(File3D):
         out[:] = self.data[slice_]
 
     def _get_mmapped_array(self):
-        raw_data = np.memmap(self._path, dtype=self.dtype)
+        raw_data = np.memmap(self._path, dtype=self.dtype, mode='r')
         # cut off the file header:
         header_size_px = self.header['header_size'] // self.dtype.itemsize
         frames = raw_data[header_size_px:]
@@ -335,6 +348,9 @@ class FRMS6DataSet(DataSet):
         self._dark_frame = None
         self._enable_offset_correction = enable_offset_correction
         self._meta = None
+        self._filenames = None
+        self._hdr_info = None
+        self._fileset = None
         if dest_dtype is not None:
             warnings.warn(
                 "dest_dtype is now handled per `get_tiles` call, and ignored here",
@@ -346,6 +362,8 @@ class FRMS6DataSet(DataSet):
         return self._meta.shape
 
     def _do_initialize(self):
+        self._filenames = list(sorted(glob.glob(self._pattern())))
+        self._hdr_info = self._read_hdr_info()
         first_file = next(self._get_signal_files())
         header = first_file.header
         raw_frame_size = header['height'], header['width']
@@ -358,8 +376,12 @@ class FRMS6DataSet(DataSet):
             frame_size = (frame_size[0] * bin_factor, frame_size[1])
 
         sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
+        preferred_dtype = np.dtype("<u2")
+        if self._enable_offset_correction:
+            preferred_dtype = np.dtype("float32")
         self._meta = DataSetMeta(
-            raw_dtype=np.dtype("u2"),
+            raw_dtype=np.dtype("<u2"),
+            dtype=preferred_dtype,
             metadata={'raw_frame_size': raw_frame_size},
             shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
             iocaps={"FULL_FRAMES"},
@@ -370,6 +392,12 @@ class FRMS6DataSet(DataSet):
             os.stat(path).st_size
             for path in self._files()
         )
+        self._fileset = FRMS6FileSet(
+            files=list(self._get_signal_files()),
+            meta=self._meta,
+            dark_frame=self._dark_frame,
+            gain_map=self._gain_map,
+        )
         return self
 
     def initialize(self, executor):
@@ -377,7 +405,7 @@ class FRMS6DataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        hdr_filename = "%s.hdr" % _get_base_filename(path)
+        hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
             executor.run_function(_read_hdr, hdr_filename)
         except Exception:
@@ -385,12 +413,19 @@ class FRMS6DataSet(DataSet):
         return {"path": path}
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["frms6", "hdr"])
+
+    @classmethod
     def get_msg_converter(cls):
         return FRMS6DatasetParams
 
-    def _get_hdr_info(self):
+    def _read_hdr_info(self):
         hdr_filename = "%s.hdr" % _get_base_filename(self._path)
         return _read_hdr(hdr_filename)
+
+    def _get_hdr_info(self):
+        return self._hdr_info
 
     def _get_dark_frame(self):
         if not self._enable_offset_correction:
@@ -436,12 +471,7 @@ class FRMS6DataSet(DataSet):
             yield f
 
     def _get_fileset(self):
-        return FRMS6FileSet(
-            files=list(self._get_signal_files()),
-            meta=self._meta,
-            dark_frame=self._dark_frame,
-            gain_map=self._gain_map,
-        )
+        return self._fileset
 
     def _pattern(self):
         path, ext = os.path.splitext(self._path)
@@ -456,9 +486,7 @@ class FRMS6DataSet(DataSet):
         return pattern
 
     def _files(self):
-        pattern = self._pattern()
-        files = glob.glob(pattern)
-        return list(sorted(files))
+        return self._filenames
 
     def check_valid(self):
         try:
@@ -479,7 +507,7 @@ class FRMS6DataSet(DataSet):
 
     @property
     def dtype(self):
-        return self._meta.raw_dtype
+        return self._meta.dtype
 
     @property
     def raw_dtype(self):
@@ -496,13 +524,15 @@ class FRMS6DataSet(DataSet):
         return res
 
     def get_partitions(self):
+        fileset = self._get_fileset()
+        assert fileset is not None
         for part_slice, start, stop in Partition3D.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
             yield Partition3D(
                 meta=self._meta,
                 partition_slice=part_slice,
-                fileset=self._get_fileset(),
+                fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
             )

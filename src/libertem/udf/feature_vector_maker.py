@@ -1,11 +1,60 @@
+import warnings
+
+from skimage.feature import peak_local_max
+
 from libertem.udf import UDF
 from libertem.masks import _make_circular_mask
 from libertem.udf.stddev import run_stddev
 
-from skimage.feature import peak_local_max
 
-
+# FIXME remove this file in 0.6.0 after deprecation period
 class FeatureVecMakerUDF(UDF):
+    """
+    Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
+    positions
+    """
+
+    def __init__(self, coordinates, delta, savg):
+        """
+        .. deprecated:: 0.5.0.dev0
+            :code:`FeatureVecMakerUDF` is deprecated and will be removed in 0.6.0.
+            Use :class:`libertem.udf.masks.ApplyMasksUDF` with a stack of sparse one-pixel masks
+            or with a mask stack generated using
+            :meth:`libertem_blobfinder.common.patterns.feature_vector` instead.
+
+        Parameters
+        ----------
+
+        coordinates: np.array
+            Array of frame coordinates (i.e. shape (N, 2) for N coords) which should be
+            checked for peak intensity
+
+        savg: np.array
+            Reference image, usually the mean of all frames (or mean of all frames in a ROI)
+
+        delta: float
+            Relative intensity difference between current frame and reference
+            image for decision making for feature vector value
+            (delta = (x-ref) / ref, so, normally, value should be in range [0,1])
+
+        Examples
+        --------
+        >>> coords = np.array([[1, 2], [3, 4], [5, 6]])
+        >>> savg = np.random.randn(16, 16)  # in real usage should be mean of all frames
+        >>> udf = FeatureVecMakerUDF(delta=0.5, coordinates=coords, savg=savg)
+        >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+        >>> np.array(result["feature_vec"]).shape
+        (16, 16, 3)
+        """
+        warnings.warn(
+            "FeatureVecMakerUDF is deprecated and will be removed in 0.6.0. Use "
+            "libertem.udf.masks.ApplyMasksUDF with a sparse stack of one-pixel masks "
+            "or with a mask stack generated using "
+            "libertem_blobfinder.common.patterns.feature_vector instead.",
+            DeprecationWarning
+        )
+        super().__init__(coordinates=coordinates, delta=delta, savg=savg)
+
     def get_result_buffers(self):
         coordinates = self.params.coordinates
         return {
@@ -30,36 +79,28 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
     """
     Creates a feature vector for each frame in ROI based on non-zero order diffraction peaks
     positions
+
     Parameters
     ----------
-    ctx: Context
-        Context class that contains methods for loading datasets,
-        creating jobs on them and running them
-
-    dataset: DataSet
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
-
-    num: int
+    num : int
         Number of possible peak positions to detect (better put higher value,
         the output is limited to the number of peaks the algorithm could find)
-
-    delta: float
+    delta : float
         Relative intensity difference between current frame and reference image for decision making
         for feature vector value (delta = (x-ref)/ref, so, normally, value should be in range [0,1])
-
-    rad_in: int, optional
+    rad_in : int, optional
         Inner radius in pixels of a ring to mask region of interest of SD image to delete outliers
         for peak finding
-
-    rad_out: int, optional
+    rad_out : int, optional
         Outer radius in pixels of a ring to mask region of interest of SD image to delete outliers
         for peak finding
-
-    center: tuple, optional
+    center : tuple, optional
         (y,x) - pixels, coordinates of a ring to mask region of interest of SD image
         to delete outliers for peak finding
-
-    roi: numpy.ndarray, optional
+    roi : numpy.ndarray, optional
         boolean array which limits the elements the UDF is working on.
         Has a shape of dataset_shape.nav
 
@@ -90,9 +131,8 @@ def make_feature_vec(ctx, dataset, delta, n_peaks, min_dist=None,
         min_dist = 1
     coordinates = peak_local_max(masked_sstd, num_peaks=n_peaks, min_distance=min_dist)
     udf = FeatureVecMakerUDF(
-        delta=delta, n_peaks=n_peaks, center=center, rad_in=rad_in, rad_out=rad_out,
-        min_dist=min_dist, savg=savg, coordinates=coordinates
-        )
+        delta=delta, savg=savg, coordinates=coordinates
+    )
     pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     return (pass_results, coordinates)

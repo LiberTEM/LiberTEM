@@ -1,9 +1,14 @@
 from collections import namedtuple
 
+import numpy as np
 import pytest
 
-from libertem.io.dataset.base import FileTree, Partition3D
-from libertem.common import Shape
+from libertem.io.dataset.base import DataSetException
+from libertem.io.dataset import get_extensions
+from libertem.io.dataset.base import (
+    FileTree, Partition3D, _roi_to_nd_indices
+)
+from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
@@ -90,3 +95,55 @@ def test_num_part_larger_than_num_frames():
     next(slice_iter)
     with pytest.raises(StopIteration):
         next(slice_iter)
+
+
+def test_roi_to_nd_indices():
+    roi = np.full((5, 5), False)
+    roi[1, 2] = True
+    roi[2, 1:4] = True
+    roi[3, 2] = True
+
+    part_slice = Slice(
+        origin=(2, 0, 0, 0),
+        shape=Shape((2, 5, 16, 16), sig_dims=2)
+    )
+
+    assert list(_roi_to_nd_indices(roi, part_slice)) == [
+        (2, 1), (2, 2), (2, 3),
+                (3, 2)
+    ]
+
+    part_slice = Slice(
+        origin=(0, 0, 0, 0),
+        shape=Shape((5, 5, 16, 16), sig_dims=2)
+    )
+
+    assert list(_roi_to_nd_indices(roi, part_slice)) == [
+                (1, 2),
+        (2, 1), (2, 2), (2, 3),
+                (3, 2)
+    ]
+
+
+def test_get_extensions():
+    exts = get_extensions()
+    assert len(exts) >= 15
+    assert "mib" in exts
+    assert "gtg" in exts
+    # etc...
+
+
+def test_filetype_auto(hdf5, lt_ctx):
+    ds = lt_ctx.load("auto", path=hdf5.filename)
+    assert ds.ds_path == "data"
+
+def test_filetype_auto_fail_no_path(lt_ctx):
+    with pytest.raises(DataSetException) as e:
+        ds = lt_ctx.load("auto")
+    assert e.match("please specify the `path` kwarg to allow auto detection")
+
+
+def test_filetype_auto_fail_file_does_not_exist(lt_ctx):
+    with pytest.raises(DataSetException) as e:
+        ds = lt_ctx.load("auto", path="/does/not/exist/believe_me")
+    assert e.match("could not determine DataSet type for file")

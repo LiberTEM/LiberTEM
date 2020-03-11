@@ -109,3 +109,9 @@ def test_run_each_partition_2(dask_executor):
     for result in dask_executor.run_each_partition(partitions, lambda p: False, all_nodes=True):
         i += 1
     assert i == 0  # memory dataset doesn't have a defined location, so fn is never run
+
+
+def test_map_1(dask_executor):
+    iterable = [1, 2, 3]
+    res = dask_executor.map(lambda x: x**2, iterable)
+    assert res == [1, 4, 9]

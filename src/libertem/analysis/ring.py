@@ -1,32 +1,14 @@
 import numpy as np
 
 from libertem import masks
-from libertem.viz import visualize_simple
-from .base import AnalysisResult, AnalysisResultSet
-from .masks import BaseMasksAnalysis
+from .masks import SingleMaskAnalysis
 
 
-class RingMaskAnalysis(BaseMasksAnalysis):
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav)
-        data = job_results[0].reshape(shape)
-        if data.dtype.kind == 'c':
-            return AnalysisResultSet(
-                self.get_complex_results(
-                    data.reshape(shape),
-                    key_prefix='intensity',
-                    title='intensity',
-                    desc="intensity of the integration over the selected ring",
-                )
-            )
-        return AnalysisResultSet([
-            AnalysisResult(
-                raw_data=data.reshape(shape),
-                visualized=visualize_simple(data),
-                key="intensity",
-                title="intensity",
-                desc="intensity of the integration over the selected ring"),
-        ])
+class RingMaskAnalysis(SingleMaskAnalysis):
+    TYPE = 'UDF'
+
+    def get_description(self):
+        return "intensity of the integration over the selected ring"
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

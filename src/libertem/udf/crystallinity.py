@@ -5,6 +5,40 @@ from libertem.udf import UDF
 
 
 class CrystallinityUDF(UDF):
+    """
+    Determine crystallinity by integration over a ring in the fourier spectrum of each frame.
+    """
+
+    def __init__(self, rad_in, rad_out, real_center, real_rad):
+        """
+        Examples
+        --------
+        >>> cryst_udf = CrystallinityUDF(rad_in=4, rad_out=6, real_center=(8, 8), real_rad=3)
+        >>> result = ctx.run_udf(dataset=dataset, udf=cryst_udf)
+        >>> np.array(result["intensity"]).shape
+        (16, 16)
+
+        Parameters
+        ----------
+
+        rad_in: float
+            Inner radius in pixels of a ring mask for the integration in Fourier space
+
+        rad_out: float
+            Outer radius in pixels of a ring mask for the integration in Fourier space
+
+        real_center: Tuple[float], optional
+            (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
+            in real space.
+
+        real_rad: float, optional
+            Radius in pixels of circle for a masking out zero-order peak in real space.
+            If one of real_center or real_rad is missing: the integration will be done without
+            masking zero-order peak out.
+        """
+        super().__init__(rad_in=rad_in, rad_out=rad_out,
+                         real_center=real_center, real_rad=real_rad)
+
     def get_result_buffers(self):
         return {
             'intensity': self.buffer(
@@ -50,27 +84,22 @@ class CrystallinityUDF(UDF):
 def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None, roi=None):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.
+
     Parameters
     ----------
-    ctx: Context
-        Context class that contains methods for loading datasets,
-        creating jobs on them and running them
-
-    dataset: DataSet
+    ctx : libertem.api.Context
+    dataset : libertem.io.dataset.DataSet
         A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions
-    rad_in: int
+    rad_in : int
         Inner radius in pixels of a ring mask for the integration in Fourier space
-
-    rad_out: int
+    rad_out : int
         Outer radius in pixels of a ring mask for the integration in Fourier space
-
-    real_center: tuple, optional
+    real_center : Tuple[float], optional
         (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
         in real space.
-
-    real_rad: int, optional
+    real_rad : int, optional
         Radius in pixels of circle for a masking out zero-order peak in real space.
-        If one from real_center or real_rad is missing: the integration will be done without
+        If one of real_center or real_rad is missing: the integration will be done without
         masking zero-order peak out.
 
     Returns

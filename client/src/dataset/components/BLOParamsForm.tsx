@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsBLO, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
@@ -50,8 +50,8 @@ const BLOFileParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsBLO, DatasetParamsBLOForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName("name",path,initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
     }),
     formToJson: (values, path) => {

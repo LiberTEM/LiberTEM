@@ -135,6 +135,10 @@ class SERDataSet(DataSet):
         return SERDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["ser"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         if path.lower().endswith(".ser"):
             return {"path": path}

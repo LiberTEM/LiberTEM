@@ -1,4 +1,5 @@
 import { withFormik } from "formik";
+import * as pathfind from 'path';
 import { DatasetTypes } from "../messages";
 import { OpenFormProps } from "./types";
 import { validateOpen } from "./validate";
@@ -13,6 +14,18 @@ export function getInitial<T extends object, K extends keyof T, V>(key: K, other
     }
     const res = values[key] !== undefined ? values[key] : otherwise;
     return res;
+}
+
+export function getInitialName<T extends object, K extends keyof T>(key: K, otherwise: string, values?: T): string | T[K] {
+    if (!values) {
+        return pathfind.basename(otherwise);
+    }
+    const res = values[key] !== undefined ? values[key] : pathfind.basename(otherwise);
+    return res;
+}
+
+export function isKnownDatasetType(detectedType: string) {
+  return (Object.keys(DatasetTypes).some((v) => v === detectedType) ? true : false);
 }
 
 type FormToJsonFn<SubmitParams, FormParams> = (inParams: FormParams, path: string) => SubmitParams;

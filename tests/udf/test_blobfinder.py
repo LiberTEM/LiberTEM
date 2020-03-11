@@ -1,3 +1,4 @@
+# FIXME remove this in 0.7.0 after blobfinder deprecation
 import functools
 
 import numpy as np
@@ -8,12 +9,14 @@ import libertem.udf.blobfinder as blobfinder
 import libertem.analysis.gridmatching as grm
 import libertem.masks as m
 from libertem.utils.generate import cbed_frame
+from libertem.udf.masks import ApplyMasksUDF
 
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
 
+@pytest.mark.with_numba
 def test_refinement():
     data = np.array([
         (0, 0, 0, 0, 0, 1),
@@ -39,6 +42,7 @@ def test_refinement():
     assert (rx < x) and (rx > (x - 1))
 
 
+@pytest.mark.with_numba
 def test_smoke(lt_ctx):
     """
     just check if the analysis runs without throwing exceptions:
@@ -52,6 +56,7 @@ def test_smoke(lt_ctx):
     )
 
 
+@pytest.mark.with_numba
 def test_crop_disks_from_frame():
     match_pattern = blobfinder.RadialGradient(radius=2, search=2)
     crop_size = match_pattern.get_crop_size()
@@ -104,6 +109,7 @@ def test_crop_disks_from_frame():
     ])
 
 
+@pytest.mark.with_numba
 def test_com():
     data = np.random.random((7, 9))
     ref = scipy.ndimage.measurements.center_of_mass(data)
@@ -119,6 +125,9 @@ def test_run_refine_fastmatch(lt_ctx):
     b = np.array([0., 29.19]) + np.random.uniform(-1, 1, size=2)
     indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
+
+    drop = np.random.choice([True, False], size=len(indices), p=[0.9, 0.1])
+    indices = indices[drop]
 
     radius = 10
 
@@ -317,6 +326,58 @@ def test_run_refine_fullframe(lt_ctx):
     assert np.allclose(res['b'].data[0], b, atol=0.2)
 
 
+@pytest.mark.with_numba
+@pytest.mark.parametrize(
+    "cls",
+    [
+        blobfinder.FastCorrelationUDF,
+        blobfinder.FullFrameCorrelationUDF,
+    ]
+)
+def test_run_refine_blocktests(lt_ctx, cls):
+    shape = np.array([128, 128])
+    zero = shape / 2
+    a = np.array([27.17, 0.])
+    b = np.array([0., 29.19])
+    indices = np.mgrid[-2:3, -2:3]
+    indices = np.concatenate(indices.T)
+
+    radius = 7
+    match_pattern = blobfinder.RadialGradient(radius=radius)
+    crop_size = match_pattern.get_crop_size()
+
+    data, indices, peaks = cbed_frame(
+        *shape, zero=zero, a=a, b=b, indices=indices, radius=radius, margin=crop_size
+    )
+
+    dataset = MemoryDataSet(data=data, tileshape=(1, *shape),
+                            num_partitions=1, sig_dims=2)
+
+    # The crop buffer is float32
+    # FIXME adapt as soon as UDFs have dtype support
+    nbytes = (2*crop_size)**2 * np.dtype(np.float32).itemsize
+
+    for limit in (
+            1,
+            nbytes - 1,
+            nbytes,
+            nbytes + 1,
+            (len(peaks) - 1)*nbytes - 1,
+            (len(peaks) - 1)*nbytes,
+            (len(peaks) - 1)*nbytes + 1,
+            len(peaks)*nbytes - 1,
+            len(peaks)*nbytes,
+            len(peaks)*nbytes + 1,
+            *np.random.randint(low=1, high=len(peaks)*nbytes + 3, size=5)):
+        udf = cls(peaks=peaks, match_pattern=match_pattern, __limit=limit)
+        res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+        print(limit)
+        print(res['refineds'].data[0])
+        print(peaks)
+        print(peaks - res['refineds'].data[0])
+        assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
+
+
 def test_custom_template():
     template = m.radial_gradient(centerX=10, centerY=10, imageSizeX=21, imageSizeY=23, radius=7)
     custom = blobfinder.UserTemplate(template=template, search=18)
@@ -403,18 +464,19 @@ def test_featurevector(lt_ctx):
 
     )
 
-    job = lt_ctx.create_mask_job(
-        dataset=dataset, factories=stack, mask_count=len(peaks), mask_dtype=np.float32
+    m_udf = ApplyMasksUDF(
+        mask_factories=stack, mask_count=len(peaks), mask_dtype=np.float32
     )
-    res = lt_ctx.run(job)
+    res = lt_ctx.run_udf(dataset=dataset, udf=m_udf)
 
     peak_data, _, _ = cbed_frame(*shape, zero, a, b, np.array([(0, 0)]), radius, all_equal=True)
     peak_sum = peak_data.sum()
 
-    assert np.allclose(res.sum(), data.sum())
-    assert np.allclose(res, peak_sum)
+    assert np.allclose(res['intensity'].data.sum(), data.sum())
+    assert np.allclose(res['intensity'].data, peak_sum)
 
 
+@pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [
@@ -432,7 +494,7 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
     indices = np.mgrid[-2:3, -2:3]
     indices = np.concatenate(indices.T)
 
-    radius = 10
+    radius = 8
 
     data, indices, peaks = cbed_frame(*shape, zero, a, b, indices, radius)
 
@@ -479,6 +541,7 @@ def test_correlation_methods(lt_ctx, cls, dtype, kwargs):
         assert np.allclose(res['refineds'].data[0], peaks, atol=0.5)
 
 
+@pytest.mark.with_numba
 @pytest.mark.parametrize(
     "cls,dtype,kwargs",
     [

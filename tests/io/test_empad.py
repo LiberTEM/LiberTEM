@@ -109,9 +109,13 @@ def test_apply_mask_on_empad_job(default_empad, lt_ctx):
     assert np.count_nonzero(results[0]) > 0
 
 
-def test_apply_mask_analysis(default_empad, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_empad, lt_ctx, TYPE):
     mask = np.ones((128, 128))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_empad)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (4, 4)
     assert np.count_nonzero(results[0].raw_data) > 0
@@ -131,8 +135,12 @@ def test_pick_job(default_empad, lt_ctx):
     assert np.count_nonzero(results[0]) > 0
 
 
-def test_pick_analysis(default_empad, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_empad, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_empad, parameters={"x": 2, "y": 2})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0
@@ -178,3 +186,12 @@ def test_crop_to(default_empad, lt_ctx):
 
 def test_cache_key_json_serializable(default_empad):
     json.dumps(default_empad.get_cache_key())
+
+
+@pytest.mark.dist
+def test_empad_dist(dist_ctx):
+    ds = EMPADDataSet(path="/data/EMPAD/acquisition_12_pretty.xml")
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (128, 128)

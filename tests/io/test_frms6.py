@@ -22,6 +22,15 @@ def default_frms6(lt_ctx):
     return ds
 
 
+@pytest.fixture
+def dist_frms6(dist_ctx):
+    path = "/data/frms6/C16_15_24_151203_019.hdr"
+    ds = FRMS6DataSet(path=path)
+    ds = ds.initialize(dist_ctx.executor)
+    assert ds._fileset is not None
+    return ds
+
+
 def test_simple_open(default_frms6):
     assert tuple(default_frms6.shape) == (256, 256, 264, 264)
 
@@ -54,8 +63,12 @@ def test_pick_job(default_frms6, lt_ctx):
     assert results.shape == (264, 264)
 
 
-def test_pick_analysis(default_frms6, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_frms6, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_frms6, parameters={"x": 16, "y": 16})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (264, 264)
 
@@ -70,6 +83,18 @@ def test_pickle_is_small(default_frms6):
 
 def test_cache_key_json_serializable(default_frms6):
     json.dumps(default_frms6.get_cache_key())
+
+
+@pytest.mark.dist
+def test_dist_process(dist_frms6, dist_ctx):
+    roi = {
+        "shape": "disk",
+        "cx": 5,
+        "cy": 6,
+        "r": 7,
+    }
+    analysis = SumAnalysis(dataset=dist_frms6, parameters={"roi": roi})
+    dist_ctx.run(analysis)
 
 
 # TODO: gain map tests

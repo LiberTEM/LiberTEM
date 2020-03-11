@@ -73,7 +73,11 @@ class ClusterDataSet(WritableDataSet, DataSet):
         if not all(s == given_structure for s in sidecars.values()):
             print(sidecars.values())
             print(given_structure)
-            raise DataSetException("inconsistent sidecars, what now?")
+            raise DataSetException(
+                "inconsistent sidecars, please inspect %s on each node" % (
+                    self._sidecar_path(),
+                )
+            )
         self._executor = executor
         return self
 
@@ -134,9 +138,8 @@ class ClusterDataSet(WritableDataSet, DataSet):
             json.dump(self._structure.serialize(), fh)
 
     def check_valid(self):
-        # FIXME: assert -> DataSetException
-        assert os.path.exists(self._path)
-        assert os.path.isdir(self._path)
+        if not os.path.exists(self._path) or not os.path.isdir(self._path):
+            raise DataSetException("path %s does not exist or is not a directory" % self._path)
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -174,7 +177,10 @@ class ClusterDataSet(WritableDataSet, DataSet):
         """
         returns a mapping idx -> workers
         """
-        assert self._executor is not None
+        if self._executor is None:
+            raise RuntimeError(
+                "invalid state: _get_all_workers needs access to the executor"
+            )
 
         paths = [
             (idx, self._get_path_for_idx(idx))

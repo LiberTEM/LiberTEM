@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
-import { getInitial, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type" | "tileshape"> & { tileshape: string, };
@@ -47,8 +47,8 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 }
 
 export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
-    mapPropsToValues: ({ initial }) => ({
-        name: getInitial("name", "", initial),
+    mapPropsToValues: ({path, initial }) => ({
+        name: getInitialName("name",path,initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         ds_path: getInitial("ds_path", "", initial),
     }),

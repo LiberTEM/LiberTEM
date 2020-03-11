@@ -1,12 +1,18 @@
+import pytest
 import numpy as np
+import numba
 
-from libertem.udf.stddev import run_stddev
+from libertem.udf.stddev import run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
 
-def test_stddev(lt_ctx):
+@pytest.mark.with_numba
+@pytest.mark.parametrize(
+    "use_roi", [True, False]
+)
+def test_stddev(lt_ctx, use_roi):
     """
     Test variance, standard deviation, sum of frames, and mean computation
     implemented in udf/stddev.py
@@ -16,27 +22,92 @@ def test_stddev(lt_ctx):
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+    data = _mk_random(size=(30, 2, 1025), dtype="float32")
+    # FIXME the tiling in signal dimension can only be tested once MemoryDataSet
+    # actually supports it
+    dataset = MemoryDataSet(data=data, tileshape=(3, 1, 1025),
                             num_partitions=2, sig_dims=2)
+    if use_roi:
+        roi = np.random.choice([True, False], size=dataset.shape.nav)
+        res = run_stddev(lt_ctx, dataset, roi=roi)
+    else:
+        roi = np.ones(dataset.shape.nav, dtype=bool)
+        res = run_stddev(lt_ctx, dataset)
 
-    res = run_stddev(lt_ctx, dataset)
-
-    assert 'sum_frame' in res
-    assert 'num_frame' in res
+    assert 'sum' in res
+    assert 'num_frames' in res
     assert 'var' in res
     assert 'mean' in res
     assert 'std' in res
 
-    N = data.shape[2] * data.shape[3]
-    assert res['num_frame'] == N  # check the total number of frames
+    N = np.count_nonzero(roi)
+    assert res['num_frames'] == N  # check the total number of frames
 
-    assert np.allclose(res['sum_frame'], np.sum(data, axis=(0, 1)))  # check sum of frames
+    print(res['sum'])
+    print(np.sum(data[roi], axis=0))
+    print(res['sum'] - np.sum(data[roi], axis=0))
+    assert np.allclose(res['sum'], np.sum(data[roi], axis=0))  # check sum of frames
 
-    assert np.allclose(res['mean'], np.mean(data, axis=(0, 1)))  # check mean
+    assert np.allclose(res['mean'], np.mean(data[roi], axis=0))  # check mean
 
-    var = np.var(data, axis=(0, 1))
+    var = np.var(data[roi], axis=0)
     assert np.allclose(var, res['var'])  # check variance
 
-    std = np.std(data, axis=(0, 1))
+    std = np.std(data[roi], axis=0)
     assert np.allclose(std, res['std'])  # check standard deviation
+
+
+@numba.njit(boundscheck=True)
+def _stability_workhorse(data):
+    # This function imitates the calculation flow of a single pixel for a very big dataset.
+    # The partition and tile structure is given by the shape of data
+    # data.shape[0]: partitions
+    # data.shape[1]: tiles per partition
+    # data.shape[2]: frames per tile
+    # data.shape[3]: mock signal shape, can be 1
+    # The test uses numba since this allows efficient calculations for small units
+    # of data. Running it with JIT disabled is very, very slow!
+    s = np.zeros(1, dtype=np.float32)
+    varsum = np.zeros(1, dtype=np.float32)
+    N = 0
+    partitions = data.shape[0]
+    tiles = data.shape[1]
+    frames = data.shape[2]
+    for partition in range(partitions):
+        partition_sum = np.zeros(1, dtype=np.float32)
+        partition_varsum = np.zeros(1, dtype=np.float32)
+        partition_N = 0
+        for tile in range(tiles):
+            if partition_N == 0:
+                partition_sum[:] = np.sum(data[partition, tile])
+                partition_varsum[:] = np.var(data[partition, tile]) * frames
+                partition_N = frames
+            else:
+                partition_N = process_tile(
+                    tile=data[partition, tile],
+                    n_0=partition_N,
+                    sum_inout=partition_sum,
+                    varsum_inout=partition_varsum
+                )
+        N = merge(
+            dest_n=N,
+            dest_sum=s,
+            dest_varsum=varsum,
+            src_n=partition_N,
+            src_sum=partition_sum,
+            src_varsum=partition_varsum
+        )
+    return N, s, varsum
+
+
+# This shouldn't be @pytest.mark.numba
+# since the calculation will take forever
+# with JIT disabled
+def test_stability(lt_ctx):
+    data = _mk_random(size=(1024, 1024, 8, 1), dtype="float32")
+
+    N, s, varsum = _stability_workhorse(data)
+
+    assert N == np.prod(data.shape)
+    assert np.allclose(data.sum(), s)
+    assert np.allclose(data.var(ddof=N-1), varsum)

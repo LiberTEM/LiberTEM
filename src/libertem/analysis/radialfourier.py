@@ -14,18 +14,64 @@ from .masks import BaseMasksAnalysis
 log = logging.getLogger(__name__)
 
 
+class RadialFourierResultSet(AnalysisResultSet):
+    """
+    Result set of a :class:`RadialFourierAnalysis`
+
+    Running a :class:`RadialFourierAnalysis` via :meth:`libertem.api.Context.run` on a dataset
+    returns an instance of this class. It contains the Fourier coefficients
+    for each bin. See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
+    available parameters and :ref:`radialfourier app` for a description of the application!
+
+    .. versionadded:: 0.3.0
+
+    Attributes
+    ----------
+    dominant_0, absolute_0_0, absolute_0_1, ..., absolute_0_<max_order>,\
+    phase_0_0, ..., phase_0_<max_order>,\
+    complex_0_0, ..., complex_0_<max_order>;\
+    dominant_1, absolute_1_0, ..., complex_1_<max_order>;\
+    dominant_<nbins-1>, ..., complex_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+        Results for each bin: dominant Fourier coefficient (indicates symmetry),
+        absolute values of each Fourier coefficient,
+        phase values of each Fourier coefficient, complex values of each Fourier coefficient.
+        The results have the shape of the navigation dimension.
+    raw_results : numpy.ndarray
+        Complex numbers, shape (<n_bins>, <max_order + 1>, \\*(<ds.shape.nav>))
+    """
+    pass
+
+
 class RadialFourierAnalysis(BaseMasksAnalysis):
     '''
-    Analysis to calculate Fourier transforms of rings around the center.
+    The Radial Fourier Analysis can be used to characterize
+    atomic ordering in materials, in particular for low intensities where
+    Fluctualtion EM :cite:`Gibson1997` has a hard time to distinguish speckle
+    from shot noise. Reference :cite:`6980942` describes a previous application
+    of this method to characterize features in images.
 
-    This can be used to characterize atomic ordering in materials, in particular for
-    low intensities where Fluctualtion EM :cite:`Gibson1997` has a hard time to
-    distinguish speckle from shot noise.
+    This analysis doesn't use fast Fourier transforms, but calculates the
+    Fourier coefficients using sparse matrices in a dot product following the
+    `definition of Fourier series
+    <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>`_.
 
-    This analysis doesn't use fast Fourier transforms, but calculates the Fourier coefficients
-    using sparse matrices in a dot product following the `definition of Fourier series
-    <https://en.wikipedia.org/wiki/Fourier_series#Complex-valued_functions>_`.
+    See :meth:`libertem.api.Context.create_radial_fourier_analysis` for
+    available parameters and :ref:`radialfourier app` for a description of the
+    application!
     '''
+
+    TYPE = 'UDF'
+
+    def get_udf_results(self, udf_results, roi):
+        # Here, we reconstruct the shape of the Job result
+        # so that we don't have to change the involved
+        # data processing in get_results
+        # FIXME port this to the native layout as soon as
+        # the Job interface is retired #550
+        data = udf_results['intensity'].data
+        job_results = data.reshape((np.prod(self.dataset.shape.nav), -1)).T
+        return self.get_results(job_results)
+
     def get_results(self, job_results):
         '''
         The AnalysisResults are calculated lazily in this function to reduce
@@ -43,10 +89,12 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             angle = np.angle(job_results)
-            below_threshold = absolute[:, 1:20, ...] < \
-                absolute[:, 2:7:2, ...].max(axis=(1, 2, 3)) * 0.5
-            below_threshold = np.all(below_threshold, axis=1)
-            dominant = np.argmax(absolute[:, 1:20], axis=1) + 1
+            threshold_map = absolute[:, 1:, ...].reshape((n_bins, -1)).max(axis=1) * 0.2
+            below_threshold = np.all(
+                absolute[:, 1:, ...] < threshold_map[:, np.newaxis, np.newaxis, np.newaxis],
+                axis=1
+            )
+            dominant = np.argmax(absolute[:, 1:], axis=1) + 1
             dominant[below_threshold] = 0
             for b in range(n_bins):
                 sets.append(
@@ -121,7 +169,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
                         )
                     )
             return sets
-        return AnalysisResultSet(resultlist, raw_results=job_results)
+        return RadialFourierResultSet(resultlist, raw_results=job_results)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

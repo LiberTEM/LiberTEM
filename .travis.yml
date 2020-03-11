@@ -38,6 +38,16 @@ jobs:
       before_install:
         - sudo apt-get -y install libhdf5-dev
     - stage: test
+      env: TOXENV=numba_coverage
+      python: 3.7
+      dist: xenial
+      sudo: true
+    - stage: test
+      env: TOXENV=mypy
+      python: 3.7
+      dist: xenial
+      sudo: true
+    - stage: test
       env: TOXENV=flake8
       python: 3.7
       dist: xenial
@@ -52,6 +62,18 @@ jobs:
       install:
         - pip install tox
         - sudo apt-get install -y pandoc
+    - stage: test
+      env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
+      python: 3.7
+      dist: xenial
+      services:
+        - docker
+      install:
+        - pip install tox pip-tools
+        - (cd packaging/docker/ && ./update_reqs.sh)
+      script:
+        - (cd packaging/docker/ && docker-compose up --build -d)
+        - tox -e py37 -- tests/ -m dist
     - stage: test
       language: node_js
       node_js: 8
@@ -73,10 +95,12 @@ jobs:
       python: 3.7
       dist: xenial
       install:
-        - pip install click pygithub requests twine html5lib docutils bibtexparser
+        - pip install -r scripts/requirements.txt
       script:
         - python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
-
+  
+  allow_failures:
+    - env: TOXENV=mypy    
 branches:
   except:
     - # Do not build tags that we create when we upload to GitHub Releases

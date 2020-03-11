@@ -1,6 +1,21 @@
 Internal API
 ------------
 
+MaskContainer
+~~~~~~~~~~~~~
+
+:class:`libertem.common.container.MaskContainer` helps to implement highly efficient
+mask application operations, such as virtual detector, center of mass or feature
+vector calculations.
+
+.. versionchanged:: 0.4.0
+    Moved from :mod:`libertem.job.masks` to :mod:`libertem.common.container` to
+    use it in UDFs and prepare deprecation of the Job interface.
+
+.. automodule:: libertem.common.container
+   :members: MaskContainer
+   :special-members: __init__
+
 Shapes and slices
 ~~~~~~~~~~~~~~~~~
 
@@ -15,17 +30,5 @@ a high-level introduction.
 
 .. automodule:: libertem.common.slice
    :members:
-   :undoc-members:
-   :special-members: __init__
-
-MaskContainer and ApplyMaskjob
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-:class:`libertem.job.masks.MaskContainer` and :class:`libertem.job.masks.ApplyMaskJob` allow to implement
-highly efficient mask application operations, such as virtual detector, center of mass or
-feature vector calculations. In the future, they might be migrated to the :ref:`user-defined functions` API.
-
-.. automodule:: libertem.job.masks
-   :members: MaskContainer,ApplyMasksJob
    :undoc-members:
    :special-members: __init__

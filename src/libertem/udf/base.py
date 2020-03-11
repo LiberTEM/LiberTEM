@@ -2,10 +2,10 @@ from types import MappingProxyType
 from typing import Dict
 import uuid
 
+import tqdm
 import cloudpickle
 import numpy as np
 
-from libertem.job.base import Task
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 
@@ -14,18 +14,23 @@ class UDFMeta:
     """
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
     for each task/partition.
+
+    .. versionchanged:: 0.4.0
+        Added distinction of dataset_dtype and input_dtype
     """
-    def __init__(self, partition_shape, dataset_shape, roi, dataset_dtype):
+    def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
+                 dataset_dtype: np.dtype, input_dtype: np.dtype):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
+        self._input_dtype = input_dtype
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
         self._slice = None
 
     @property
-    def slice(self):
+    def slice(self) -> Slice:
         """
         Slice : A :class:`~libertem.common.slice.Slice` instance that describes the location
                 within the dataset with navigation dimension flattened and reduced to the ROI.
@@ -33,7 +38,7 @@ class UDFMeta:
         return self._slice
 
     @slice.setter
-    def slice(self, new_slice):
+    def slice(self, new_slice: Slice):
         self._slice = new_slice
 
     @property
@@ -66,21 +71,33 @@ class UDFMeta:
         """
         return self._dataset_dtype
 
+    @property
+    def input_dtype(self) -> np.dtype:
+        """
+        numpy.dtype : dtype of the data that will be passed to the UDF
+
+        This is determined from the dataset's native dtype and
+        :meth:`UDF.get_preferred_input_dtype` using :meth:`numpy.result_type`
+
+        .. versionadded:: 0.4.0
+        """
+        return self._input_dtype
+
 
 class UDFData:
     '''
     Container for result buffers, return value from running UDFs
     '''
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, BufferWrapper]):
         self._data = data
         self._views = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<UDFData: %r>" % (
             self._data
         )
 
-    def __getattr__(self, k):
+    def __getattr__(self, k: str):
         if k.startswith("_"):
             raise AttributeError("no such attribute: %s" % k)
         try:
@@ -123,7 +140,7 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, BufferWrapper]:
         return dict(self.items())
 
     def get_proxy(self):
@@ -132,13 +149,13 @@ class UDFData:
             for k, v in self._data.items()
         })
 
-    def _get_buffers(self, filter_allocated=False):
+    def _get_buffers(self, filter_allocated: bool = False):
         for k, buf in self._data.items():
             if not hasattr(buf, 'has_data') or (buf.has_data() and filter_allocated):
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition, roi):
+    def allocate_for_part(self, partition: Shape, roi: np.ndarray):
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
@@ -148,13 +165,17 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
-    def allocate_for_full(self, dataset, roi):
+    def allocate_for_full(self, dataset, roi: np.ndarray):
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
-    def set_view_for_partition(self, partition):
+    def set_view_for_dataset(self, dataset):
+        for k, buf in self._get_buffers():
+            self._views[k] = buf.get_view_for_dataset(dataset)
+
+    def set_view_for_partition(self, partition: Shape):
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_partition(partition)
 
@@ -169,7 +190,7 @@ class UDFData:
             else:
                 self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
-    def new_for_partition(self, partition, roi):
+    def new_for_partition(self, partition, roi: np.ndarray):
         for k, buf in self._get_buffers():
             self._data[k] = buf.new_for_partition(partition, roi)
 
@@ -181,7 +202,7 @@ class UDFFrameMixin:
     '''
     Implement :code:`process_frame` for per-frame processing.
     '''
-    def process_frame(self, frame):
+    def process_frame(self, frame: np.ndarray):
         """
         Implement this method to process the data on a frame-by-frame manner.
 
@@ -206,7 +227,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
-    def process_tile(self, tile):
+    def process_tile(self, tile: np.ndarray):
         """
         Implement this method to process the data in a tiled manner.
 
@@ -231,7 +252,7 @@ class UDFPartitionMixin:
     '''
     Implement :code:`process_partition` for per-partition processing.
     '''
-    def process_partition(self, partition):
+    def process_partition(self, partition: np.ndarray):
         """
         Implement this method to process the data partitioned into large
         (100s of MiB) partitions.
@@ -265,7 +286,7 @@ class UDFPreprocessMixin:
     Implement :code:`preprocess` to initialize the result buffers of a partition on the worker
     before the partition data is processed.
 
-    .. versionadded:: 0.3.0.dev0
+    .. versionadded:: 0.3.0
     '''
     def preprocess(self):
         """
@@ -314,8 +335,12 @@ class UDFBase:
             ns.allocate_for_part(partition, roi)
 
     def allocate_for_full(self, dataset, roi):
-        for ns in [self.results]:
+        for ns in [self.params, self.results]:
             ns.allocate_for_full(dataset, roi)
+
+    def set_views_for_dataset(self, dataset):
+        for ns in [self.params]:
+            ns.set_view_for_dataset(dataset)
 
     def set_views_for_partition(self, partition):
         for ns in [self.params, self.results]:
@@ -362,6 +387,8 @@ class UDF(UDFBase):
     The main user-defined functions interface. You can implement your functionality
     by overriding methods on this class.
     """
+    USE_NATIVE_DTYPE = np.bool
+
     def __init__(self, **kwargs):
         """
         Create a new UDF instance. If you override `__init__`, please take care,
@@ -400,7 +427,7 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def copy_for_partition(self, partition, roi):
+    def copy_for_partition(self, partition: np.ndarray, roi: np.ndarray):
         """
         create a copy of the UDF, specifically slicing aux data to the
         specified pratition and roi
@@ -489,6 +516,36 @@ class UDF(UDFBase):
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]
 
+    def get_preferred_input_dtype(self):
+        '''
+        Override this method to specify the preferred input dtype of the UDF.
+
+        The default is :code:`float32` since most numerical processing tasks
+        perform best with this dtype, namely dot products.
+
+        The back-end uses this preferred input dtype in combination with the
+        dataset`s native dtype to determine the input dtype using
+        :meth:`numpy.result_type`. That means :code:`float` data in a dataset
+        switches the dtype to :code:`float` even if this method returns an
+        :code:`int` dtype. :code:`int32` or wider input data would switch from
+        :code:`float32` to :code:`float64`, and complex data in the dataset will
+        switch the input dtype kind to :code:`complex`, following the NumPy
+        casting rules.
+
+        In case your UDF only works with specific input dtypes, it should throw
+        an error or warning if incompatible dtypes are used, and/or implement a
+        meaningful conversion in your UDF's :code:`process_<...>` routine.
+
+        If you prefer to always use the dataset's native dtype instead of
+        floats, you can override this method to return
+        :attr:`UDF.USE_NATIVE_DTYPE`, which is curently identical to
+        :code:`numpy.bool` and behaves as a neutral element in
+        :func:`numpy.result_type`.
+
+        .. versionadded:: 0.4.0
+        '''
+        return np.float32
+
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
@@ -542,6 +599,26 @@ def check_cast(fromvar, tovar):
         raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
 
 
+class Task(object):
+    """
+    A computation on a partition. Inherit from this class and implement ``__call__``
+    for your specific computation.
+
+    .. versionchanged:: 0.4.0
+        Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
+    """
+
+    def __init__(self, partition, idx):
+        self.partition = partition
+        self.idx = idx
+
+    def get_locations(self):
+        return self.partition.get_locations()
+
+    def __call__(self):
+        raise NotImplementedError()
+
+
 class UDFTask(Task):
     def __init__(self, partition, idx, udf, roi):
         super().__init__(partition=partition, idx=idx)
@@ -558,15 +635,7 @@ class UDFRunner:
         self._debug = debug
 
     def _get_dtype(self, dtype):
-        '''
-        FIXME replace with dtype switching logic and user control similar to MaskJob
-        '''
-        dtype = np.dtype(dtype)
-        # simple dtype logic for now: if data is complex or float, keep data dtype,
-        # otherwise convert to float32
-        if dtype.kind not in ('c', 'f'):
-            dtype = np.dtype("float32")
-        return dtype
+        return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
 
     def run_for_partition(self, partition, roi):
         dtype = self._get_dtype(partition.dtype)
@@ -574,7 +643,8 @@ class UDFRunner:
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
             roi=roi,
-            dataset_dtype=dtype
+            dataset_dtype=partition.dtype,
+            input_dtype=dtype,
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()
@@ -585,11 +655,11 @@ class UDFRunner:
             self._udf.preprocess()
         method = self._udf.get_method()
         if method == 'tile':
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype)
+            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype, mmap=True)
         elif method == 'frame':
-            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype)
+            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype, mmap=True)
         elif method == 'partition':
-            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype)]
+            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype, mmap=True)]
 
         for tile in tiles:
             if method == 'tile':
@@ -631,62 +701,62 @@ class UDFRunner:
 
         return self._udf.results, partition
 
-    def run_for_dataset(self, dataset, executor, roi=None):
-        if roi is not None:
-            if np.product(roi.shape) != np.product(dataset.shape.nav):
-                raise ValueError(
-                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
-                        roi.shape, dataset.shape.nav
-                    )
+    def _debug_task_pickling(self, tasks):
+        if self._debug:
+            cloudpickle.loads(cloudpickle.dumps(tasks))
+
+    def _check_preconditions(self, dataset, roi):
+        if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
+            raise ValueError(
+                "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                    roi.shape, dataset.shape.nav
                 )
+            )
+
+    def _prepare_run_for_dataset(self, dataset, executor, roi):
+        self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
             dataset_shape=dataset.shape,
             roi=roi,
-            dataset_dtype=self._get_dtype(dataset.dtype)
+            dataset_dtype=dataset.dtype,
+            input_dtype=self._get_dtype(dataset.dtype)
         )
         self._udf.set_meta(meta)
         self._udf.init_result_buffers()
         self._udf.allocate_for_full(dataset, roi)
 
-        tasks = self._make_udf_tasks(dataset, roi)
+        if hasattr(self._udf, 'preprocess'):
+            self._udf.set_views_for_dataset(dataset)
+            self._udf.preprocess()
+
+        tasks = list(self._make_udf_tasks(dataset, roi))
+        return tasks
+
+    def run_for_dataset(self, dataset, executor, roi=None, progress=False):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
         cancel_id = str(uuid.uuid4())
+        self._debug_task_pickling(tasks)
 
-        if self._debug:
-            tasks = list(tasks)
-            cloudpickle.loads(cloudpickle.dumps(tasks))
-
+        if progress:
+            t = tqdm.tqdm(total=len(tasks))
         for part_results, partition in executor.run_tasks(tasks, cancel_id):
+            if progress:
+                t.update(1)
             self._udf.set_views_for_partition(partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()
             )
 
+        if progress:
+            t.close()
         self._udf.clear_views()
 
         return self._udf.results.as_dict()
 
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
-        # FIXME: code duplication?
-        if roi is not None:
-            if np.product(roi.shape) != np.product(dataset.shape.nav):
-                raise ValueError(
-                    "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
-                        roi.shape, dataset.shape.nav
-                    )
-                )
-        meta = UDFMeta(
-            partition_shape=None,
-            dataset_shape=dataset.shape,
-            roi=roi,
-            dataset_dtype=dataset.dtype
-        )
-        self._udf.set_meta(meta)
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_full(dataset, roi)
-
-        tasks = self._make_udf_tasks(dataset, roi)
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
         async for part_results, partition in executor.run_tasks(tasks, cancel_id):
             self._udf.set_views_for_partition(partition)

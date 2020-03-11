@@ -37,11 +37,11 @@ Code contributions
 ------------------
 
 We are using `pull requests
-<https://help.github.com/en/articles/about-pull-requests>`_ to accept
-contributions. Each pull request should focus on a single issue, to keep the
-number of changes small and reviewable. To keep your changes organized and to
-prevent unrelated changes from disturbing your pull request, create a new branch
-for each pull request.
+<https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests>`_
+to accept contributions. Each pull request should focus on a single issue, to
+keep the number of changes small and reviewable. To keep your changes organized
+and to prevent unrelated changes from disturbing your pull request, create a new
+branch for each pull request.
 
 Before creating a pull request, please make sure all tests still pass. See
 `Running the Tests`_ for more information. You should also update the test suite
@@ -53,7 +53,8 @@ To make sure our code base stays readable, we follow a `Code Style`_.
 Please update ``packaging/creators.json`` with your author information when you
 contribute to LiberTEM for the first time. This helps us to keep track of all
 contributors and give credit where credit is due! Please let us know if you
-wouldn't like to be credited.
+wouldn't like to be credited. Our :ref:`authorship` describes in more detail how
+we manage authorship of LiberTEM and related material.
 
 If you are changing parts of LiberTEM that are currently not covered by tests,
 please consider writing new tests! When changing example code, which is not run
@@ -330,3 +331,4 @@ See more:
    :maxdepth: 2
 
    releasing
+   dist_tests

@@ -56,7 +56,7 @@ const About: React.SFC<MergedProps> = ({ version, revision }) => {
                 <List.Item>
                     <List.Icon name="linkify" />
                     <List.Content>
-                    <a href="https://doi.org/10.5281/zenodo.1478763"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1478763.svg" alt="DOI"/></a>
+                    <a href="https://doi.org/10.5281/zenodo.1477847"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg" alt="doi.org/10.5281/zenodo.1477847"/></a>
                     </List.Content>
                 </List.Item>
             </List>

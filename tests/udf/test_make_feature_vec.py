@@ -19,16 +19,19 @@ def test_simple_example(lt_ctx):
     data[3:6, 2, 4] = 1
     dataset = MemoryDataSet(data=data, tileshape=(1, 5, 5),
                             num_partitions=3, sig_dims=2)
-    result, coordinates = feature.make_feature_vec(ctx=lt_ctx, dataset=dataset,
-    delta=0, n_peaks=5, min_dist=0)
+    result, coordinates = feature.make_feature_vec(
+        ctx=lt_ctx, dataset=dataset, delta=0, n_peaks=4, min_dist=0
+    )
+    print(result['feature_vec'].data)
+    print(coordinates)
     # check if values of feature vectors are zeros for amorphous frames
-    assert np.allclose(result['feature_vec'].data[6:9], np.zeros([3, 4]))
+    assert np.allclose(result['feature_vec'].data[6:9], 0)
     # check if all values of feature vectors are NOT zeros for strong crystalline frames
-    # (at least one peak is recognized)
-    assert (result['feature_vec'].data[0:3] > np.zeros([3, 4])).any()
+    # The strong peaks are listed first
+    assert np.all(result['feature_vec'].data[0:3, 0:2])
     # check if all values of feature vector are NOT zeros for weak crystalline frames
     # (at least one peak is recognized)
-    assert (result['feature_vec'].data[3:6] > np.zeros([3, 4])).any()
+    assert np.all(result['feature_vec'].data[3:6, 2:4])
     # check of feature vectors are NOT equal for strong crystalline frames
     #  than for weak crystalline frames
     # (because of non-zero order diffraction peaks are in different positions)

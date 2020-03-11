@@ -1,19 +1,24 @@
 import pickle
 import json
 from unittest import mock
+import threading
 
 import cloudpickle
 import numpy as np
 import pytest
 
-from libertem.io.dataset.hdf5 import H5DataSet, unravel_nav
-from libertem.common import Slice, Shape
+from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
+from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.masks import ApplyMasksUDF
 
-from utils import _naive_mask_apply, _mk_random
+from utils import _naive_mask_apply, _mk_random, PixelsumUDF
 
 
-def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1, TYPE):
     mask = _mk_random(size=(16, 16))
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
@@ -21,7 +26,42 @@ def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
     analysis = lt_ctx.create_mask_analysis(
         dataset=hdf5_ds_1, factories=[lambda: mask]
     )
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected
+    )
+
+
+def test_hdf5_3d_apply_masks(lt_ctx, hdf5_ds_3d):
+    mask = _mk_random(size=(16, 16))
+    with hdf5_ds_3d.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data.reshape((1, 17, 16, 16)))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=hdf5_ds_3d, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected
+    )
+
+
+def test_hdf5_5d_apply_masks(lt_ctx, hdf5_ds_5d):
+    mask = _mk_random(size=(16, 16))
+    with hdf5_ds_5d.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data.reshape((1, 135, 16, 16))).reshape((3, 5, 9))
+    analysis = lt_ctx.create_mask_analysis(
+        dataset=hdf5_ds_5d, factories=[lambda: mask]
+    )
+    results = lt_ctx.run(analysis)
+
+    print(results.mask_0.raw_data.shape, expected.shape)
 
     assert np.allclose(
         results.mask_0.raw_data,
@@ -98,32 +138,6 @@ def test_cloudpickle(lt_ctx, hdf5):
     assert len(pickled) < 1 * 1024
 
 
-def test_flatten_roundtrip():
-    s = Slice(
-        origin=(0, 0, 0, 0),
-        shape=Shape((2, 16, 16, 16), sig_dims=2)
-    )
-    sflat = Slice(
-        origin=(0, 0, 0),
-        shape=Shape((32, 16, 16), sig_dims=2)
-    )
-    assert s.flatten_nav((16, 16, 16, 16)) == sflat
-    assert unravel_nav(sflat, (16, 16, 16, 16)) == s
-
-
-def test_flatten_roundtrip_2():
-    s = Slice(
-        origin=(0, 0, 0, 0),
-        shape=Shape((2, 16, 32, 64), sig_dims=2)
-    )
-    sflat = Slice(
-        origin=(0, 0, 0),
-        shape=Shape((32, 32, 64), sig_dims=2)
-    )
-    assert s.flatten_nav((8, 16, 36, 64)) == sflat
-    assert unravel_nav(sflat, (8, 16, 32, 64)) == s
-
-
 def test_roi_1(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
@@ -142,7 +156,65 @@ def test_roi_1(hdf5, lt_ctx):
     assert tiles[0].tile_slice.origin == (0, 0, 0)
 
 
-def test_pick(hdf5, lt_ctx):
+def test_roi_3(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.zeros(ds.shape.flatten_nav().nav, dtype=bool)
+    roi[24] = 1
+
+    tiles = []
+    for p in ds.get_partitions():
+        for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+            print("tile:", tile)
+            tiles.append(tile)
+    assert len(tiles) == 1
+    assert tiles[0].tile_slice.shape.nav.size == 1
+    assert tuple(tiles[0].tile_slice.shape.sig) == (16, 16)
+    assert tiles[0].tile_slice.origin == (0, 0, 0)
+    assert np.allclose(tiles[0].data, hdf5['data'][4, 4])
+
+
+def test_roi_4(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.random.choice(size=ds.shape.flatten_nav().nav, a=[True, False])
+
+    sum_udf = lt_ctx.create_sum_analysis(dataset=ds)
+    sumres = lt_ctx.run(sum_udf, roi=roi)['intensity']
+
+    assert np.allclose(
+        sumres,
+        np.sum(hdf5['data'][:].reshape(25, 16, 16)[roi, ...], axis=0)
+    )
+
+
+def test_roi_5(hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        target_size=12800*2,
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    roi = np.random.choice(size=ds.shape.flatten_nav().nav, a=[True, False])
+
+    udf = SumSigUDF()
+    sumres = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)['intensity']
+
+    assert np.allclose(
+        sumres.raw_data,
+        np.sum(hdf5['data'][:][roi.reshape(5, 5), ...], axis=(1, 2))
+    )
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick(hdf5, lt_ctx, TYPE):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
     )
@@ -150,6 +222,7 @@ def test_pick(hdf5, lt_ctx):
     assert len(ds.shape) == 4
     print(ds.shape)
     pick = lt_ctx.create_pick_analysis(dataset=ds, x=2, y=3)
+    pick.TYPE = TYPE
     lt_ctx.run(pick)
 
 
@@ -183,14 +256,18 @@ def test_timeout_1(hdf5, lt_ctx):
 
 
 def test_timeout_2(hdf5, lt_ctx):
-    with mock.patch('time.time', side_effect=[1, 30, 30, 60]):
+    print(threading.enumerate())
+    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[1, 30]):
         params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)
         assert list(params.keys()) == ["path"]
 
-        ds = H5DataSet(
-            path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
-        )
-        ds = ds.initialize(lt_ctx.executor)
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+    )
+    ds = ds.initialize(lt_ctx.executor)
+
+    print(threading.enumerate())
+    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[30, 60]):
         diags = ds.diagnostics
         print(diags)
 
@@ -251,3 +328,21 @@ def test_cache_key_json_serializable(hdf5, lt_ctx):
     )
     ds = ds.initialize(lt_ctx.executor)
     json.dumps(ds.get_cache_key())
+
+
+def test_auto_tileshape(chunked_hdf5, lt_ctx):
+    ds = H5DataSet(
+        path=chunked_hdf5.filename, ds_path="data",
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    p = next(ds.get_partitions())
+    t = next(p.get_tiles(dest_dtype="float32", target_size=4*1024))
+    assert tuple(p._get_tileshape("float32", 4*1024)) == (1, 4, 16, 16)
+    assert tuple(t.tile_slice.shape) == (4, 16, 16)
+
+
+def test_no_tileshape(lt_ctx, hdf5_3d):
+    ds = lt_ctx.load('HDF5', path=hdf5_3d.filename, ds_path='/data')
+
+    udf = PixelsumUDF()
+    res = lt_ctx.run_udf(udf=udf, dataset=ds)

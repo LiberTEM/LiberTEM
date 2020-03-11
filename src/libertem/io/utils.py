@@ -1,4 +1,5 @@
 import numpy as np
+from libertem.common import Shape
 
 try:
     import pwd
@@ -11,36 +12,40 @@ except ModuleNotFoundError:
     from libertem.win_tweaks import get_owner_name  # noqa: F401
 
 
-def get_partition_shape(datashape, framesize, dtype, target_size, min_num_partitions=None):
+def get_partition_shape(dataset_shape: Shape, target_size_items: int, min_num: int = None):
     """
-    Calculate partition shape for the given ``target_size``
+    Calculate partition shape for the given ``target_size_items``
+
     Parameters
     ----------
-    datashape : (int, int, int, int)
-        size of the whole dataset
-    framesize : int
-        number of pixels per frame
-    dtype : numpy.dtype or str
-        data type of the dataset
-    target_size : int
-        target size in bytes - how large should each partition be?
-    min_num_partitions : int
-        minimum number of partitions desired.
-    Returns
-    -------
-    (int, int, int, int)
-        the shape calculated from the given parameters
+
+    dataset_shape
+        "native" dataset shape
+
+    target_size_items
+        target partition size in number of items/pixels
+
+    min_num
+        minimum number of partitions
     """
-    # FIXME: allow for partitions smaller than one scan row
-    # FIXME: allow specifying the "aspect ratio" for a partition?
-    num_frames = datashape[0] * datashape[1]
-    bytes_per_frame = framesize * np.dtype(str(dtype)).itemsize
-    frames_per_partition = target_size // bytes_per_frame
-    num_partitions = num_frames // frames_per_partition
-    num_partitions = max(min_num_partitions, num_partitions)
+    sig_size = dataset_shape.sig.size
+    current_p_shape = ()
 
-    # number of partitions should evenly divide number of scan rows:
-    # assert datashape[1] % num_partitions == 0,\
-    #     "%d %% %d != 0 (datashape=%r)" % (datashape[1], num_partitions, datashape)
+    if min_num is None:
+        min_num = 1
 
-    return (max(1, datashape[0] // num_partitions), datashape[1], datashape[2], datashape[3])
+    target_size_items = min(target_size_items, int(dataset_shape.size // min_num))
+
+    for dim in reversed(dataset_shape.nav):
+        proposed_shape = (dim,) + current_p_shape
+        proposed_size = np.product(proposed_shape) * sig_size
+        if proposed_size <= target_size_items:
+            current_p_shape = proposed_shape
+        else:
+            overshoot = proposed_size / target_size_items
+            last_size = max(1, int(dim // overshoot))
+            current_p_shape = (last_size,) + current_p_shape
+            break
+
+    res = tuple([1] * (len(dataset_shape.nav) - len(current_p_shape))) + current_p_shape
+    return res

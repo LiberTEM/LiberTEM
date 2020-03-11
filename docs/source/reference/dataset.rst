@@ -3,7 +3,9 @@
 Data Set API
 ------------
 
-This API allows to load and handle data on a distributed system efficiently.
+This API allows to load and handle data on a distributed system efficiently. Note that you should
+not directly use most dataset methods, but rather use the more high-level tools available, for
+example user-defined functions.
 
 See :ref:`our documentation on loading data <loading data>` for a high-level introduction.
 
@@ -26,6 +28,13 @@ Raw binary files
 ~~~~~~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.raw.RawFileDataSet
+
+.. _`dm format`:
+
+Digital Micrograph (DM3, DM4) files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.dm.DMDataSet
 
 .. _`empad`:
 
@@ -68,3 +77,11 @@ HDF5
 ~~~~
 
 .. autoclass:: libertem.io.dataset.hdf5.H5DataSet
+
+.. _`memory`:
+
+Memory data set
+~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.memory.MemoryDataSet
+    :special-members: __init__

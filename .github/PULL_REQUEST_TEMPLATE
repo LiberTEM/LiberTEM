@@ -7,6 +7,14 @@
 
 ## Please remove this section
 
-Before submitting your PR, please have a look at [our contributing docs](https://libertem.github.io/LiberTEM/contributing.html).
+Starting by submitting an incomplete pull request (PR) or draft PR is OK. You
+can work on the checklist step by step by pushing additional commits into the
+PR. Please indicate if you think some items may not be applicable.
+
+You can have a look at [our contributing
+docs](https://libertem.github.io/LiberTEM/contributing.html) for more
+information on contributing to LiberTEM. Please feel free to ask for
+clarification and help, for example in your PR description, with comments or in
+our [Gitter channel](https://gitter.im/LiberTEM/Lobby).
 
 Thank you for your contribution!

@@ -1,0 +1,4 @@
+# Inject release candidates for LiberTEM sub-packages during release and testing process
+# keep next line commented if the file is empty otherwise - breaks tox env creation in some cases!
+# --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple
+# libertem-blobfinder

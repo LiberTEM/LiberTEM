@@ -4,18 +4,23 @@ Installation
 ============
 
 .. note::
+    LiberTEM is currently working with Python 3.6 and Python 3.7. Support for
+    Python 3.8 depends on an upcoming release of Dask.distributed. See also
+    :issue:`452`, :pr:`482`.
+
+.. note::
     Distinguish between installing a released version and installing the latest
     development version. Both `installing from PyPi`_ and `installing from a git
     clone`_ use pip, but they do fundamentally different things. :code:`pip
     install libertem` downloads the latest release from PyPi, which can be
     somewhat older.
-    
+
     Changing directory to a git clone and running :code:`pip install -e .`
     installs from the local directory in editable mode. "Editable mode" means
     that the source directory is linked into the current Python environment
     rather than copied. That means changes in the source directory are
     immediately active in the Python environment.
-    
+
     Installing from a git clone in editable mode is the correct setup for
     development work and using :ref:`the latest features in the development
     branch <continuous>`. Installing from PyPI is easier and preferred for new
@@ -53,13 +58,16 @@ To create a new virtualenv for LiberTEM, you can use the following command:
 
 .. code-block:: shell
 
-    $ virtualenv -p python3.7 ~/libertem-venv/
+    $ virtualenv -p python3 ~/libertem-venv/
+
+If multiple python versions are installed, replace :code:`python3` with 
+:code:`python3.6` or above version.
 
 Replace :code:`~/libertem-venv/` with any path where you would like to create
 the venv. You can then activate the virtualenv with
 
 .. code-block:: shell
-    
+
     $ source ~/libertem-venv/bin/activate
 
 Afterwards, your shell prompt should be prefixed with :code:`(libertem)` to
@@ -67,11 +75,11 @@ indicate that the environment is active:
 
 .. code-block:: shell
 
-    (libertem) $ 
+    (libertem) $
 
 For more information about virtualenv, for example if you are using a shell
-without `source`, please `refer to the virtualenv documentation
-<https://virtualenv.pypa.io/en/stable/userguide/#user-guide>`_. If you are often
+without :code:`source`, please `refer to the virtualenv documentation
+<https://virtualenv.pypa.io/en/stable/user_guide.html>`_. If you are often
 working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ is recommended.
 
@@ -93,9 +101,9 @@ command:
     $ conda create -n libertem python=3.7
 
 To install or later run LiberTEM, activate the environment with the following
-command:
+command (see also :ref:`install on windows` if applicable):
 
-.. code-block:: shell  
+.. code-block:: shell
 
     $ source activate libertem
 
@@ -104,10 +112,10 @@ indicate that the environment is active:
 
 .. code-block:: shell
 
-    (libertem) $ 
+    (libertem) $
 
 Now the environment is ready to install LiberTEM.
-    
+
 For more information about conda, see their `documentation about creating and
 managing environments
 <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
@@ -130,12 +138,40 @@ continue by reading the :ref:`usage documentation`.
 Installing from a git clone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to follow the latest development or contribute to LiberTEM, you
-should install LiberTEM from a git clone:
+If you want to follow the latest development, you should install LiberTEM from
+a git clone:
 
 .. code-block:: shell
 
     $ git clone https://github.com/LiberTEM/LiberTEM
+
+Or if you wish to contribute to LiberTEM, follow these steps instead :
+
+#. Log into your `GitHub <https://github.com/>`_ account.
+
+#. Go to the `LiberTEM GitHub <https://github.com/liberteM/LiberTEM/>`_ home page.
+
+#. Click on the *fork* button:
+
+    ..  figure:: ./images/forking_button.png
+
+#. Clone your fork of LiberTEM from GitHub to your computer
+
+.. code-block:: shell
+
+    $ git clone https://github.com/your-user-name/LiberTEM
+
+For more information about `forking a repository
+<https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
+For a beginner-friendly introduction to git and GitHub, consider going through
+the following resources:
+
+* This `free course <https://www.udacity.com/course/version-control-with-git--ud123>`_
+  covers the essentials of using Git.
+* Practice `pull request <https://github.com/firstcontributions/first-contributions>`_
+  in a safe sandbox environment.
+* Sample `workflow <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_
+  for contributing code.
 
 Activate the Python environment (conda or virtualenv) and change to the newly
 created directory with the clone of the LiberTEM repository. Now you can start
@@ -143,7 +179,7 @@ the LiberTEM installation. Please note the dot at the end, which indicates the
 current directory!
 
 .. code-block:: shell
-    
+
     (libertem) $ pip install -e .
 
 This should download the dependencies and install LiberTEM in the environment.
@@ -163,7 +199,7 @@ example from PyPi:
 
 .. code-block:: shell
 
-    (libertem) $ pip install libertem[torch]
+    (libertem) $ pip install "libertem[torch]"
 
 Or from git checkout:
 
@@ -174,13 +210,13 @@ Or from git checkout:
 Other extra packages
 ~~~~~~~~~~~~~~~~~~~~
 
+.. versionchanged:: 0.4.0
+    A number of LiberTEM applications are being spun out as sub-packages that
+    can be installed separately. See :ref:`packages` for an overview.
+
 The full grid matching routines in :py:mod:`libertem.analysis.fullmatch` depend
 on `HDBSCAN <https://hdbscan.readthedocs.io/en/latest/>`_. This is an optional
 dependency because of installation issues on some platforms.
-
-The fast correlation methods in :py:mod:`libertem.udf.blobfinder` can optionally
-use `pyFFTW <https://hgomersall.github.io/pyFFTW/>`_ instead of the built-in
-Numpy FFT.
 
 Updating
 ~~~~~~~~
@@ -192,7 +228,7 @@ update the source code with this command:
 .. code-block:: shell
 
     $ git pull
-    
+
 The installation with ``pip install -e`` has installed LiberTEM in `"editable"
 mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
 That means the changes pulled from git are active immediately. Only if the
@@ -202,6 +238,8 @@ requirements for installed third-party packages have changed, you can re-run
 After updating the installation, you can run the updated version by restarting
 the libertem-server and afterwards reloading all browser windows that are
 running the LiberTEM GUI.
+
+.. _`install on windows`:
 
 Windows
 -------
@@ -226,7 +264,7 @@ Differences:
 .. code-block:: shell
 
     > conda activate libertem
-    
+
 * You might have to install pip into your local LiberTEM conda environment to
   make sure that ``pip install`` installs packages into your local environment and
   not into the global Anaconda base environment. This helps to avoid permission

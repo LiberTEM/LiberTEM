@@ -363,6 +363,10 @@ class MIBDataSet(DataSet):
         return MIBDatasetParams
 
     @classmethod
+    def get_supported_extensions(cls):
+        return set(["mib", "hdr"])
+
+    @classmethod
     def detect_params(cls, path, executor):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
@@ -370,7 +374,7 @@ class MIBDataSet(DataSet):
                 "path": path,
                 "tileshape": (1, 3, 256, 256),
             }
-        elif pathlow.endswith(".hdr") and is_valid_hdr(path):
+        elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
             hdr = executor.run_function(read_hdr_file, path)
             scan_size = scan_size_from_hdr(hdr)
             return {

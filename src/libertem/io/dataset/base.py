@@ -1,3 +1,4 @@
+import typing
 import itertools
 
 import jsonschema
@@ -5,12 +6,16 @@ import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.common import Slice, Shape
-from libertem.common.buffers import bytes_aligned, zeros_aligned
+from libertem.common.buffers import bytes_aligned
 
 
 def _roi_to_indices(roi, start, stop):
     """
-    helper function to calculate indices from roi mask
+    Helper function to calculate indices from roi mask. Indices
+    are flattened.
+
+    Parameters
+    ----------
 
     roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
 
@@ -32,6 +37,34 @@ def _roi_to_indices(roi, start, stop):
             total += 1
             if total == frames_in_roi:
                 break
+
+
+def _roi_to_nd_indices(roi, part_slice: Slice):
+    """
+    Helper function to calculate indices from roi mask
+
+    Parameters
+    ----------
+
+    roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
+
+    part_slice
+        Slice indicating what part of the roi to operate on, for example,
+        corresponding to a partition.
+    """
+    roi_slice = roi[part_slice.get(nav_only=True)]
+    nav_dims = part_slice.shape.nav.dims
+    total = 0
+    frames_in_roi = np.count_nonzero(roi)
+    for idx, value in np.ndenumerate(roi_slice):
+        if not value:
+            continue
+        yield tuple(a + b
+                    for a, b in zip(idx, part_slice.origin[:nav_dims]))
+        # early exit: we know we don't have more frames in the roi
+        total += 1
+        if total == frames_in_roi:
+            break
 
 
 class IOCaps:
@@ -226,38 +259,72 @@ class DataSet(object):
         """
         return []
 
-    def partition_shape(self, datashape, framesize, dtype, target_size, min_num_partitions=None):
+    def partition_shape(self, dtype, target_size, min_num_partitions=None):
         """
         Calculate partition shape for the given ``target_size``
+
         Parameters
         ----------
-        datashape : (int, int, int, int)
-            size of the whole dataset
-        framesize : int
-            number of pixels per frame
         dtype : numpy.dtype or str
             data type of the dataset
+
         target_size : int
             target size in bytes - how large should each partition be?
+
         min_num_partitions : int
             minimum number of partitions desired. Defaults to the number of workers in the cluster.
+
         Returns
         -------
-        (int, int, int, int)
+        Tuple[int]
             the shape calculated from the given parameters
         """
         if min_num_partitions is None:
             min_num_partitions = self._cores
-        return get_partition_shape(datashape, framesize, dtype, target_size,
-                                   min_num_partitions)
+        return get_partition_shape(
+            dataset_shape=self.shape,
+            target_size_items=target_size // np.dtype(dtype).itemsize,
+            min_num=min_num_partitions
+        )
+
+    @classmethod
+    def get_supported_extensions(cls) -> typing.Set[str]:
+        """
+        Return supported extensions as a set of strings.
+
+        Plain extensions only, no pattern!
+        """
+        return set()
 
     def get_cache_key(self):
         raise NotImplementedError()
 
 
 class DataSetMeta(object):
-    def __init__(self, shape, raw_dtype=None, metadata=None, iocaps=None):
+    def __init__(self, shape: Shape, raw_dtype=None, dtype=None,
+                 metadata=None, iocaps: IOCaps = None):
+        """
+        shape
+            "native" dataset shape, can have any dimensionality
+
+        raw_dtype : np.dtype
+            dtype used internally in the data set for reading
+
+        dtype : np.dtype
+            Best-fitting output dtype. This can be different from raw_dtype, for example
+            if there are post-processing steps done as part of reading, which need a different
+            dtype. Assumed equal to raw_dtype if not given
+
+        metadata
+            Any metadata offered by the DataSet, not specified yet
+
+        iocaps
+            I/O capabilities
+        """
         self.shape = shape
+        if dtype is None:
+            dtype = raw_dtype
+        self.dtype = np.dtype(dtype)
         self.raw_dtype = np.dtype(raw_dtype)
         self.metadata = metadata
         if iocaps is None:
@@ -288,7 +355,7 @@ class Partition(object):
 
     @property
     def dtype(self):
-        return self.meta.raw_dtype
+        return self.meta.dtype
 
     @property
     def shape(self):
@@ -596,6 +663,7 @@ class Partition3D(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._stackheight = stackheight
+        assert num_frames > 0, "invalid number of frames: %d" % num_frames
         super().__init__(*args, **kwargs)
 
     def _get_stackheight(self, sig_shape, dest_dtype, target_size=None):
@@ -696,7 +764,7 @@ class Partition3D(Partition):
             sig_shape = self.meta.shape.sig
         stackheight = self._get_stackheight(
             sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
-        tile_buf_full = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+        tile_buf_full = self.zeros((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         tileshape = (
             stackheight,
@@ -710,7 +778,7 @@ class Partition3D(Partition):
                     current_tileshape = (
                         current_stackheight,
                     ) + tuple(sig_shape)
-                    tile_buf = zeros_aligned(current_tileshape, dtype=dest_dtype)
+                    tile_buf = self.zeros(current_tileshape, dtype=dest_dtype)
                 else:
                     current_stackheight = stackheight
                     current_tileshape = tileshape
@@ -751,7 +819,15 @@ class Partition3D(Partition):
             sig_shape = self.meta.shape.sig
         stackheight = self._get_stackheight(
             sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
-        tile_buf = zeros_aligned((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+
+        frames_in_roi = np.count_nonzero(roi.reshape(-1,)[
+            start_at_frame:start_at_frame + self._num_frames
+        ])
+
+        if frames_in_roi == 0:
+            return
+
+        tile_buf = self.zeros((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         frames_read = 0
         tile_idx = 0
@@ -837,6 +913,9 @@ class Partition3D(Partition):
                     data=arr,
                     tile_slice=tile_slice
                 )
+
+    def zeros(self, *args, **kwargs):
+        return np.zeros(*args, **kwargs)
 
 
 class PartitionStructure:

@@ -31,10 +31,14 @@ def ds_random():
     return dataset
 
 
-def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx, TYPE):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_w_zero_frame, cx=0, cy=0, mask_radius=0
     )
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     # no inf/nan in center_x and center_y
@@ -50,10 +54,14 @@ def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx):
     assert not np.any(np.isnan(results[2].raw_data))
 
 
-def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx, TYPE):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_random, cx=0, cy=0, mask_radius=None
     )
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
@@ -65,10 +73,14 @@ def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
         assert np.allclose(scy, field_y[idx])
 
 
-def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_comparison_scipy_2_masked(ds_random, lt_ctx, TYPE):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_random, cx=0, cy=0, mask_radius=8
     )
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
@@ -114,7 +126,10 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         )
 
 
-def test_com_complex_numbers(lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_complex_numbers(lt_ctx, TYPE):
     data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
     ds_complex = MemoryDataSet(
         data=data,
@@ -122,6 +137,7 @@ def test_com_complex_numbers(lt_ctx):
         num_partitions=2,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     reshaped_data = ds_complex.data.reshape((16 * 16, 16, 16))
@@ -144,7 +160,10 @@ def test_com_complex_numbers(lt_ctx):
             assert np.allclose(scy, field_y[idx])
 
 
-def test_com_complex_numbers_handcrafted_1(lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_complex_numbers_handcrafted_1(lt_ctx, TYPE):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         [0,    0,    0, 0],
@@ -158,6 +177,7 @@ def test_com_complex_numbers_handcrafted_1(lt_ctx):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     field_x = results.x_real.raw_data + 1j * results.x_imag.raw_data
@@ -167,7 +187,10 @@ def test_com_complex_numbers_handcrafted_1(lt_ctx):
     assert field_y[0, 0] == 1.5
 
 
-def test_com_complex_numbers_handcrafted_2(lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_complex_numbers_handcrafted_2(lt_ctx, TYPE):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         [0,    0,    0, 0],
@@ -181,6 +204,7 @@ def test_com_complex_numbers_handcrafted_2(lt_ctx):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     field_x = results.x_real.raw_data + 1j * results.x_imag.raw_data
@@ -190,7 +214,10 @@ def test_com_complex_numbers_handcrafted_2(lt_ctx):
     assert field_y[0, 0] == 1.5
 
 
-def test_com_complex_numbers_handcrafted_3(lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_complex_numbers_handcrafted_3(lt_ctx, TYPE):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         0,    0,    0, 0,
@@ -204,6 +231,7 @@ def test_com_complex_numbers_handcrafted_3(lt_ctx):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     print(data[0, 0])
@@ -215,7 +243,10 @@ def test_com_complex_numbers_handcrafted_3(lt_ctx):
     assert field_y[0, 0] == 1
 
 
-def test_com_default_params(lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_default_params(lt_ctx, TYPE):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
@@ -226,4 +257,5 @@ def test_com_default_params(lt_ctx):
     analysis = lt_ctx.create_com_analysis(
         dataset=dataset,
     )
+    analysis.TYPE = TYPE
     lt_ctx.run(analysis)

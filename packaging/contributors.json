@@ -51,7 +51,7 @@
         "displayname": "Peter Ercius",
         "authorname": "Ercius, Peter",
         "affiliation": "Berkeley Lab",
-        "contribution": "Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file and SER support."
+        "contribution": "Re-licensing `ncempy <https://github.com/ercius/openNCEM/>`_ under MIT license to allow using it in the IO part of LiberTEM, enabling full K2IS raw file, DM3/DM4, and SER support."
     },
     {
         "displayname": "Caroline Fuery",
@@ -76,6 +76,13 @@
         "authorname": "Guzzinati, Giulio ",
         "affiliation": "U Antwerp",
         "contribution": "Discussions and publication https://arxiv.org/abs/1902.06979 leading to the affine transformation strain map"
+    },
+    {
+        "displayname": "Benedikt Haas",
+        "authorname": "Haas, Benedikt",
+        "github": "unsimulatable",
+        "affiliation": "HU Berlin",
+        "contribution": "Discussions, bug reports"
     },
     {
         "displayname": "Chris Hines",
@@ -126,6 +133,12 @@
         "contribution": "Discussions, Python support in GMS"
     },
     {
+        "displayname": "Anastasiia Lesnichaia",
+        "authorname": "Lesnichaia, Anastasiia",
+        "affiliation": "FZ J\u00fclich",
+        "contribution": "Prototyping for scalable implementation of Single Side Band ptychography, WIP"
+    },
+    {
         "displayname": "Penghan Lu",
         "authorname": "Lu, Penghan",
         "affiliation": "FZ J\u00fclich",
@@ -153,7 +166,7 @@
         "displayname": "Heide Meissner",
         "authorname": "Meissner, Heide",
         "affiliation": "HZDR",
-        "contribution": "Discussions, funding applications "
+        "contribution": "Discussions, funding applications"
     },
     {
         "displayname": "Grigore Moldovan",
@@ -162,10 +175,10 @@
         "contribution": "Discussions"
     },
     {
-        "displayname": "Knut M\u00fcller-Caspary",
-        "authorname": "M\u00fcller-Caspary, Knut",
-        "affiliation": "FZ J\u00fclich",
-        "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader"
+        "displayname": "Johannes Müller",
+        "authorname": "Müller, Johannes",
+        "affiliation": "HU Berlin",
+        "contribution": "Discussions"
     },
     {
         "displayname": "Eduardo Nebot",
@@ -174,22 +187,10 @@
         "contribution": "Support, discussions, sample files, funding applications"
     },
     {
-        "displayname": "Magnus Nord",
-        "authorname": "Nord, Magnus",
-        "affiliation": "U Antwerp",
-        "contribution": "Discussions, tests, code in related projects"
-    },
-    {
         "displayname": "Liam O'Ryan",
         "authorname": "O'Ryan, Liam",
         "affiliation": "Quantum Detectors",
         "contribution": "Support, discussions, sample files, funding applications"
-    },
-    {
-        "displayname": "Colin Ophus",
-        "authorname": "Ophus, Colin",
-        "affiliation": "Lawrence Berkeley National Lab",
-        "contribution": "Discussions, sample code for K2 reader, overview of related projects"
     },
     {
         "displayname": "Ana Pakzad",

@@ -21,7 +21,7 @@ See :ref:`user-defined functions` for an introduction to basic topics.
 Tiled processing
 ----------------
 
-Many operations operations can be significantly optimized by working on stacks of frames.
+Many operations can be significantly optimized by working on stacks of frames.
 You can often perform `loop nest optimization <https://en.wikipedia.org/wiki/Loop_nest_optimization>`_
 to improve the `locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
 for example using `numba <https://numba.pydata.org/>`_, or using an optimized NumPy function.
@@ -58,14 +58,14 @@ means having to load data from the slower main memory.
 Real-world example
 ~~~~~~~~~~~~~~~~~~
 
-The :class:`~libertem.udf.blobfinder.SparseCorrelationUDF` uses
+The :class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` uses
 :meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of
-a :class:`~libertem.job.masks.ApplyMasksJob` that works on log-scaled data. The
-mask stack is stored in a :class:`libertem.job.mask.MaskContainer` as part of
+a :class:`~libertem.udf.masks.ApplyMasksUDF` that works on log-scaled data. The
+mask stack is stored in a :class:`libertem.common.container.MaskContainer` as part of
 the task data. Note how the :code:`self.meta.slice` property of type
 :class:`~libertem.common.Slice` is used to extract the region from the mask
 stack that matches the tile using the facilities of a
-:class:`~libertem.job.masks.MaskContainer`. After reshaping, transposing and log
+:class:`~libertem.common.container.MaskContainer`. After reshaping, transposing and log
 scaling the tile data into the right memory layout, the mask stack is applied to
 the data with a dot product. The result is *added* to the buffer in order to
 merge it with the results of the other tiles because addition is the correct
@@ -75,7 +75,7 @@ be calculated.
 
 .. testsetup::
 
-    from libertem.udf.blobfinder.correlation import log_scale
+    from libertem_blobfinder.base.correlation import log_scale
 
 .. testcode::
 
@@ -104,14 +104,15 @@ performance benefits of tiled processing for a first reduction step with
 subsequent steps that require reduced data from complete frames or even a
 complete partition.
 
-Real-world example from :class:`~libertem.udf.blobfinder.SparseCorrelationUDF`
-which evaluates the correlation maps that have been generated with the dot
-product in the previous processing step and places the results in additional
-result buffers:
+Real-world example from
+:class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` which
+evaluates the correlation maps that have been generated with the dot product in
+the previous processing step and places the results in additional result
+buffers:
 
 .. testsetup::
 
-    from libertem.udf.blobfinder.correlation import evaluate_correlations
+    from libertem_blobfinder.base.correlation import evaluate_correlations
 
 .. testcode::
 
@@ -135,13 +136,21 @@ result buffers:
 Pre-processing
 ---------------
 
-Pre-processing allows to initialize result buffers by implementing
-:meth:`libertem.udf.UDFPreprocessMixin.preprocess`. This method is executed after all
-buffers are allocated, but before the partition data is processed, with views set for
-the whole partition masked by the current ROI. This is particularly useful to set up
-:code:`dtype=object` buffers, for example ragged arrays.
+Pre-processing allows to initialize result buffers before processing or merging.
+This is particularly useful to set up :code:`dtype=object` buffers, for example
+ragged arrays, or to initialize buffers for operations where the neutral element
+is not 0. :meth:`libertem.udf.UDFPreprocessMixin.preprocess` is executed after
+all buffers are allocated, but before the data is processed. On the worker nodes
+it is executed with views set for the whole partition masked by the current ROI.
+On the central node it is executed with views set for the whole dataset masked
+by the ROI. 
 
-.. versionadded:: 0.3.0.dev0
+.. versionadded:: 0.3.0
+
+.. versionchanged:: 0.5.0.dev0
+    :meth:`libertem.udf.UDFPreprocessMixin.preprocess` is executed on the master
+    node, too. Views for aux data are set correctly on the master node. Previously,
+    it was only executed on the worker nodes.
 
 Partition processing
 --------------------
@@ -184,7 +193,7 @@ method and not directly by instantiating a
 :meth:`~libertem.udf.UDF.aux_data` ensures that it is set up correctly.
 
 For masks in the signal dimension that are used for dot products in combination
-with per-tile processing, a :class:`~libertem.job.masks.MaskContainer` allows
+with per-tile processing, a :class:`~libertem.common.container.MaskContainer` allows
 to use more advanced slicing and transformation methods targeted at preparing
 mask stacks for optimal dot product performance.
 
@@ -199,15 +208,15 @@ efficient than making the data available as a parameter since it avoids
 pickling, network transport and unpickling.
 
 This non-trivial example from
-:class:`~libertem.udf.blobfinder.SparseCorrelationUDF` creates
-a :class:`~libertem.job.masks.MaskContainer` based on the parameters in
-:code:`self.params`. This :class:`~libertem.job.masks.MaskContainer` is then
+:class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` creates
+a :class:`~libertem.common.container.MaskContainer` based on the parameters in
+:code:`self.params`. This :class:`~libertem.common.container.MaskContainer` is then
 available as :code:`self.task_data['mask_container']` within the processing
 functions.
 
 .. testsetup::
 
-    from libertem.job.masks import MaskContainer
+    from libertem.common.container import MaskContainer
     import libertem.masks as masks
 
 .. testcode::
@@ -247,7 +256,8 @@ functions.
 
 .. testcleanup::
 
-    from libertem.udf.blobfinder import SparseCorrelationUDF, RadialGradient
+    from libertem_blobfinder.udf.correlation import SparseCorrelationUDF
+    from libertem_blobfinder.common.patterns import RadialGradient
 
     class TestUDF(SparseCorrelationUDF):
         pass
@@ -276,6 +286,7 @@ available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type
 Common applications include allocating buffers with a :code:`dtype` or shape
 that matches the dataset or partition via
 :attr:`libertem.udf.UDFMeta.dataset_dtype`,
+:attr:`libertem.udf.UDFMeta.input_dtype`,
 :attr:`libertem.udf.UDFMeta.dataset_shape` and
 :attr:`libertem.udf.UDFMeta.partition_shape`.
 
@@ -285,7 +296,7 @@ available as :attr:`libertem.udf.UDFMeta.roi` and
 behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers
 and aux data with a custom implementation. The :ref:`mask container for tiled
 processing example<slice example>` makes use of these attributes to employ a
-:class:`libertem.job.masks.MaskContainer` instead of a :code:`shape="sig"`
+:class:`libertem..common.container.MaskContainer` instead of a :code:`shape="sig"`
 buffer in order to optimize dot product performance and support sparse masks.
 
 The slice is in the reference frame of the dataset, masked by the current ROI,
@@ -327,6 +338,29 @@ dimension as it appears in processing:
     res = ctx.run_udf(dataset=dataset, udf=pixelsum, roi=roi)
 
     assert np.allclose(res['pixelsum_nav_raw'].data, dataset.data[roi].sum(axis=(1, 2)))
+
+.. _`udf dtype`:
+
+dtype support
+-------------
+
+UDFs can override :meth:`~libertem.udf.UDF.get_preferred_input_dtype` to
+indicate a "lowest common denominator" compatible dtype. The actual input dtype
+is determined by combining the indicated preferred dtype with the input
+dataset's native dtype using :func:`numpy.result_type`. The default preferred
+dtype is :attr:`numpy.float32`. Returning :attr:`UDF.USE_NATIVE_DTYPE`, which is
+currently identical to :code:`numpy.bool`, will switch to the dataset's native
+dtype since :code:`numpy.bool` behaves as a neutral element in
+:func:`numpy.result_type`.
+
+If an UDF requires a specific dtype rather than only preferring it, it should
+override this method and additionally check the actual input type, throw an
+error when used incorrectly and/or implement a meaningful conversion in its
+processing routine since indicating a preferred dtype doesn't enforce it. That
+way, unsafe conversions are performed explicitly in the UDF rather than
+indirectly in the back-end.
+
+.. versionadded:: 0.4.0
 
 .. _auto UDF:
 

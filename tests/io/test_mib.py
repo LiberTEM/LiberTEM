@@ -108,9 +108,13 @@ def test_apply_mask_on_mib_job(default_mib, lt_ctx):
     assert results[0].shape == (1024,)
 
 
-def test_apply_mask_analysis(default_mib, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_apply_mask_analysis(default_mib, lt_ctx, TYPE):
     mask = np.ones((256, 256))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_mib)
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (32, 32)
 
@@ -127,8 +131,12 @@ def test_pick_job(default_mib, lt_ctx):
     assert results.shape == (256, 256)
 
 
-def test_pick_analysis(default_mib, lt_ctx):
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_pick_analysis(default_mib, lt_ctx, TYPE):
     analysis = PickFrameAnalysis(dataset=default_mib, parameters={"x": 16, "y": 16})
+    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
 
@@ -168,3 +176,13 @@ def test_diagnostics(default_mib):
 
 def test_cache_key_json_serializable(default_mib):
     json.dumps(default_mib.get_cache_key())
+
+
+@pytest.mark.dist
+def test_mib_dist(dist_ctx):
+    scan_size = (32, 32)
+    ds = MIBDataSet(path="/data/default.mib", tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = ds.initialize(dist_ctx.executor)
+    analysis = dist_ctx.create_sum_analysis(dataset=ds)
+    results = dist_ctx.run(analysis)
+    assert results[0].raw_data.shape == (256, 256)

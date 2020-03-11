@@ -60,6 +60,26 @@ has to be set.
     multiprocessing.set_executable(
         os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only
 
+.. _`show warnings`:
+
+Show deprecation warnings
+-------------------------
+
+Many warning messages via the :code:`warnings` built-in module are suppressed by
+default, including in interactive shells such as IPython and Jupyter. If you'd
+like to be informed early about upcoming backwards-incompatible changes, you
+should activate deprecation warnings. This is recommended since LiberTEM is
+under active development.
+
+.. testcode::
+
+    import warnings
+
+    warnings.filterwarnings("default", category=DeprecationWarning)
+    warnings.filterwarnings("default", category=PendingDeprecationWarning)
+
+.. _`profiling tests`:
+
 Profiling long-running tests
 ----------------------------
 
@@ -67,11 +87,11 @@ Since our code base and test coverage is growing continuously, we should make
 sure that our test suite remains efficient to finish within reasonable time
 frames.
 
-You find the five slowest tests in the output of Tox, see :ref:`running tests`
+You can find the five slowest tests in the output of Tox, see :ref:`running tests`
 for details. If you are using :code:`pytest` directly, you can use the
 :code:`--durations` parameter:
 
-.. code-block::
+.. code-block:: text
 
     (libertem) $ pytest --durations=10 tests/
     (...)
@@ -93,10 +113,10 @@ long lead times that are hard to avoid.
 
 In order to gain more information on what slows down a particular test, you can
 install the `pytest-profiling extension
-<https://github.com/manahl/pytest-plugins/tree/master/pytest-profiling>`_ and
+<https://github.com/man-group/pytest-plugins/tree/master/pytest-profiling>`_ and
 use it to profile individual slow tests that you identified before:
 
-.. code-block::
+.. code-block:: text
 
     (libertem) $ pytest --profile tests/udf/test_blobfinder.py::test_run_refine_affinematch
     (...)

@@ -1,9 +1,10 @@
 import os
+import json
 
 import pytest
 import numpy as np
 
-from libertem.io.dataset.base import PartitionStructure
+from libertem.io.dataset.base import PartitionStructure, DataSetException
 from libertem.io.dataset.cluster import ClusterDataSet
 
 
@@ -37,20 +38,101 @@ def test_initialization(draw_directory, lt_ctx):
         "dtype": "float32",
     }
     structure = PartitionStructure.from_json(data)
-    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ClusterDataSet(path=str(draw_directory), enable_direct=False, structure=structure)
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
     assert set(os.listdir(draw_directory)) == {"parts", "structure.json"}
 
 
-def test_inconsistent_sidecars_raise_error():
-    # TODO: need multiple "hosts" for this to work
-    # maybe create a simple InlineExecutor-derived executor for this?
-    # TODO: need path-per-host for this; maybe `path` can be a dict? or make a second arg paths...
-    pass
+@pytest.mark.dist
+def test_inconsistent_sidecars_raise_error(dist_ctx, draw_directory):
+    # tmpdir_factory doesn't output plain strings,
+    # and thus draw_directory was some pytest object. we don't have
+    # pytest installed on the worker containers, so it failed spectacularly:
+    draw_directory = str(draw_directory)
+    # first, create consistent ClusterDataSet:
+    data = {
+        "version": 1,
+        "slices": [[0, 4], [5, 16]],
+        "shape": [4, 4, 128, 128],
+        "sig_dims": 2,
+        "dtype": "float32",
+    }
+    structure = PartitionStructure.from_json(data)
+    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ds.initialize(dist_ctx.executor)
+    ds.check_valid()
+
+    # then, scramble the sidecars, creating an inconsistent state:
+    data = {
+        "worker-1": {
+            "version": 1,
+            "slices": [[0, 8], [9, 16]],
+            "shape": [4, 4, 128, 128],
+            "sig_dims": 2,
+            "dtype": "int32",
+        },
+        "worker-2": {
+            "version": 1,
+            "slices": [[0, 4], [5, 16]],
+            "shape": [4, 4, 128, 128],
+            "sig_dims": 2,
+            "dtype": "float32",
+        },
+    }
+
+    sidecar_path = os.path.join(draw_directory, 'structure.json')
+
+    def _scramble_sidecars():
+        import socket
+        sidecar_data = data[socket.gethostname()]
+        print(sidecar_path, os.listdir(os.path.dirname(sidecar_path)))
+        with open(sidecar_path, "w") as fh:
+            json.dump(sidecar_data, fh)
+        print(sidecar_path, os.listdir(os.path.dirname(sidecar_path)))
+
+    print(
+        list(dist_ctx.executor.run_each_host(_scramble_sidecars))
+    )
+
+    print(draw_directory)
+
+    dirlists = dist_ctx.executor.run_each_host(lambda: os.listdir(draw_directory))
+    for v in dirlists.values():
+        print(set(v))
+
+    sidecars = dist_ctx.executor.run_each_host(lambda: open(sidecar_path).read())
+    print(sidecars)
+
+    # try to re-open the dataset, should fail:
+    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+
+    with pytest.raises(DataSetException) as e:
+        ds = ds.initialize(dist_ctx.executor)
+
+    assert e.match('inconsistent sidecars, please inspect')
 
 
-def test_missing_sidecar_are_created():
-    # TODO: see above; also need multiple hosts
-    pass
+@pytest.mark.dist
+def test_missing_sidecars_are_created(draw_directory, dist_ctx):
+    # tmpdir_factory doesn't output plain strings,
+    # and thus draw_directory was some pytest object. we don't have
+    # pytest installed on the worker containers, so it failed spectacularly:
+    draw_directory = str(draw_directory)
+    data = {
+        "version": 1,
+        "slices": [[0, 8], [16, 256]],
+        "shape": [4, 4, 128, 128],
+        "sig_dims": 2,
+        "dtype": "float32",
+    }
+    structure = PartitionStructure.from_json(data)
+    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ds.initialize(dist_ctx.executor)
+    ds.check_valid()
+
+    dirlists = dist_ctx.executor.run_each_host(lambda: os.listdir(draw_directory))
+
+    for v in dirlists.values():
+        assert set(v) == {"parts", "structure.json"}

@@ -16,8 +16,7 @@ Some data to work with have been obtained from _`Zenodo <https://zenodo.org>`.
 +-------------------------------------------------+----------+---------+----------+----------+
 Creating your own dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can generate your own dataset in the following way
+Random data can be generated in the following way. It should be kept in mind that the data generated in this way can only be used for simple testing as it has no physical significance.
 
 .. code-block:: python
       

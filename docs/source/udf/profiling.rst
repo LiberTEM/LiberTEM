@@ -51,7 +51,10 @@ A progress bar is a graphical tool that shows a far a process has progressed.  I
      
     res = ctx.run_udf(udf=fit_udf, dataset=ds, roi=roi, progress=True)
     > 100%|██████████| 18/18 [01:17<00:00,  4.29s/it]
-    
+
+This run is using 18 partitions, and took 4.29s/it per partition. 
+Flamescope and Perf can be used for low-level profiling.
+
 Line profiling using `line_profiler`
 ------------------------------------------
 

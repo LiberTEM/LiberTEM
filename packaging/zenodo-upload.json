@@ -3,6 +3,7 @@
         "metadata": {
             "title": "LiberTEM/LiberTEM: ",
             "upload_type": "software",
+            "communities": [{"identifier": "ecfunded"}, {"identifier": "tem"}],
             "grants": [
                 {"id": "10.13039/501100000780::780487"},
                 {"id": "10.13039/501100000780::686053"},

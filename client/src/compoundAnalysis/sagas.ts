@@ -10,7 +10,7 @@ import { JobState } from '../job/types';
 import { DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
 import * as compoundAnalysisActions from './actions';
-import { CompoundAnalysisState } from './types';
+import { CompoundAnalysis, CompoundAnalysisState } from './types';
 
 function selectDataset(state: RootReducer, dataset: string) {
     return state.datasets.byId[dataset];
@@ -28,7 +28,7 @@ function selectJob(state: RootReducer, id: string) {
     return state.jobs.byId[id];
 }
 
-export function* cleanupOnRemove(compoundAnalysis: CompoundAnalysisState, sidecarTask: Task) {
+export function* cleanupOnRemove(compoundAnalysis: CompoundAnalysis, sidecarTask: Task) {
     while (true) {
         const removeAction: ReturnType<typeof compoundAnalysisActions.Actions.remove> = yield take(compoundAnalysisActions.ActionTypes.REMOVE);
         if (removeAction.payload.id === compoundAnalysis.compoundAnalysis) {
@@ -43,7 +43,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
         if (datasetState.status !== DatasetStatus.OPEN) {
             throw new Error("invalid dataset status");
         }
-        const compoundAnalysis: CompoundAnalysisState = {
+        const compoundAnalysis: CompoundAnalysis = {
             compoundAnalysis: uuid(),
             dataset: action.payload.dataset,
             details: {
@@ -59,7 +59,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
             compoundAnalysis.details,
         );
 
-        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis);
+        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis, { doAutoStart: true });
 
         yield put(compoundAnalysisActions.Actions.created(compoundAnalysis));
         yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
@@ -73,9 +73,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
 export function* createFromServerState(action: ReturnType<typeof channelActions.Actions.initialState>) {
     for (const msgPart of action.payload.compoundAnalyses) {
         const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, msgPart.compoundAnalysis);
-        // tslint:disable-next-line:no-console
-        console.log("meh:", compoundAnalysis)
-        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis);
+        const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis, { doAutoStart: false });
         yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
     }
 }
@@ -92,7 +90,7 @@ export function* cancelOldJob(analysis: AnalysisState, jobIndex: number) {
     }
 }
 
-export function* analysisSidecar(compoundAnalysisId: string) {
+export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoStart: boolean }) {
     // channel for incoming actions:
     // all actions that arrive while we block in `call` will be buffered here.
     // because the buffer is sliding of size 1, we only keep the latest action!

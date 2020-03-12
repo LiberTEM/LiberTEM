@@ -9,10 +9,10 @@ import ModeSelector from "./ModeSelector";
 import { useRoiPicker } from "./roi/RoiPicker";
 
 const useFFTFrameView = ({
-    scanWidth, scanHeight, analysisId, real_rad, real_centerx, real_centery
+    scanWidth, scanHeight, doAutoStart, compoundAnalysisId, real_rad, real_centerx, real_centery
 }: {
-    scanWidth: number, scanHeight: number,
-    analysisId: string, real_rad: number | null, real_centerx: number | null, real_centery: number | null
+    scanWidth: number, scanHeight: number, doAutoStart: boolean,
+    compoundAnalysisId: string, real_rad: number | null, real_centerx: number | null, real_centery: number | null
 }) => {
     const availableModes = [
 
@@ -38,23 +38,22 @@ const useFFTFrameView = ({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
         jobIndex: 1,
-        analysisId,
+        analysisId: compoundAnalysisId,
         cx, cy, setCx, setCy
     });
 
     useFFTFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
-        jobIndex: 0,
-        analysisId,
+        analysisIndex: 0,
+        compoundAnalysisId,
         cx, cy, setCx, setCy, real_rad, real_centerx, real_centery
     });
-
 
     useRoiPicker({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 1,
-        analysisId,
+        analysisId: compoundAnalysisId,
         scanWidth, scanHeight,
         roiParameters: { roi: {} },
         analysis: AnalysisTypes.SUM_FRAMES,
@@ -62,7 +61,7 @@ const useFFTFrameView = ({
     useFFTSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
         jobIndex: 0,
-        analysisId,
+        analysisId: compoundAnalysisId,
         real_rad,
         real_centerx,
         real_centery
@@ -71,8 +70,6 @@ const useFFTFrameView = ({
     const frameViewTitle = (
         frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
-
-
 
     const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
 

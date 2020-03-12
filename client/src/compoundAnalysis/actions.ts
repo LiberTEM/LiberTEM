@@ -1,6 +1,6 @@
 import { ActionsUnion, createAction } from "../helpers/actionHelpers";
 import { AnalysisDetails, AnalysisTypes, CompoundAnalysisDetails } from "../messages";
-import { CompoundAnalysisState } from "./types";
+import { CompoundAnalysis } from "./types";
 
 
 export enum ActionTypes {
@@ -16,7 +16,7 @@ export enum ActionTypes {
 
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
-    created: (compoundAnalysis: CompoundAnalysisState) => createAction(ActionTypes.CREATED, { compoundAnalysis }),
+    created: (compoundAnalysis: CompoundAnalysis) => createAction(ActionTypes.CREATED, { compoundAnalysis }),
     updated: (id: string, details: CompoundAnalysisDetails) => createAction(ActionTypes.UPDATED, { id, details }),
     run: (id: string, analysisIndex: number, details: AnalysisDetails) => createAction(ActionTypes.RUN, { id, analysisIndex, details }),
     running: (id: string, job: string, analysisIndex: number) => createAction(ActionTypes.RUNNING, { id, job, jobIndex: analysisIndex }),

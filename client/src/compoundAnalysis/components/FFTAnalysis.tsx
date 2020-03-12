@@ -18,7 +18,7 @@ import Toolbar from "./Toolbar";
 
 
 
-const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
+const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -108,7 +108,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     );
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 2, {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 2, {
             analysisType: AnalysisTypes.APPLY_FFT_MASK,
             parameters: {
                 rad_in: radIn,
@@ -124,16 +124,13 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     const { frameViewTitle, frameModeSelector, handles: resultHandles } = useFFTFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
         real_rad: check ? realRad : null,
         real_centerx: check ? realCenterX : null,
         real_centery: check ? realCenterY : null
-    })
+    });
 
-
-
-    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
-
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[2]} />
 
     let subtitle;
     let mid: React.ReactNode;
@@ -141,7 +138,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
         mid = (<>
             <ResultList
                 extraHandles={frameViewHandlesreal} extraWidgets={frameViewWidgetsreal}
-                analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                 width={imageWidth} height={imageHeight}
                 selectors={frameModeSelector}
             />
@@ -154,7 +151,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     else {
         mid = (<>
             <ResultList
-                analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                 width={imageWidth} height={imageHeight}
                 selectors={frameModeSelector}
             />
@@ -171,7 +168,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
             left={<>
                 <ResultList
                     extraHandles={frameViewHandlesfft} extraWidgets={frameViewWidgetsfft}
-                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                 />
             </>}
@@ -179,7 +176,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
 
             right={<>
                 <ResultList
-                    analysisIndex={2} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={2} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                 />

@@ -4,13 +4,14 @@ import { AnalysisTypes } from "../../messages";
 import { inRectConstraint } from "../../widgets/constraints";
 import DraggableHandle from "../../widgets/DraggableHandle";
 import { HandleRenderFunction } from "../../widgets/types";
-import * as analysisActions from "../actions";
+import * as compoundAnalysisActions from "../actions";
 
 const useFFTFramePicker = ({
-    enabled, scanWidth, scanHeight, jobIndex, analysisId, cx, cy, real_rad, real_centerx, real_centery, setCx, setCy
+    enabled, scanWidth, scanHeight, analysisIndex, compoundAnalysisId,
+    cx, cy, real_rad, real_centerx, real_centery, setCx, setCy
 }: {
     enabled: boolean, scanWidth: number, scanHeight: number,
-    jobIndex: number, analysisId: string,
+    analysisIndex: number, compoundAnalysisId: string,
     cx: number, cy: number, setCx: (newCx: number) => void, setCy: (newCy: number) => void,
     real_rad: number | null, real_centerx: number | null, real_centery: number | null
 
@@ -20,12 +21,12 @@ const useFFTFramePicker = ({
 
     React.useEffect(() => {
         if (enabled) {
-            dispatch(analysisActions.Actions.run(analysisId, jobIndex, {
+            dispatch(compoundAnalysisActions.Actions.run(compoundAnalysisId, analysisIndex, {
                 analysisType: AnalysisTypes.PICK_FFT_FRAME,
                 parameters: { x: cx, y: cy, real_rad, real_centerx, real_centery },
-            }))
+            }));
         }
-    }, [analysisId, cx, cy, enabled, jobIndex, real_rad, real_centerx, real_centery, dispatch]);
+    }, [compoundAnalysisId, cx, cy, enabled, analysisIndex, real_rad, real_centerx, real_centery, dispatch]);
 
     const onPickChange = (pickX: number, pickY: number) => {
         const newX = Math.round(pickX);

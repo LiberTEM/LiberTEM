@@ -120,7 +120,7 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (

@@ -4,9 +4,9 @@ import { AnalysisTypes } from "../../messages";
 import * as analysisActions from "../actions";
 
 const useFFTSumFrames = ({
-    enabled, jobIndex, analysisId, real_rad, real_centerx, real_centery
+    enabled, analysisIndex: jobIndex, compoundAnalysisId: analysisId, real_rad, real_centerx, real_centery
 }: {
-    enabled: boolean, jobIndex: number, analysisId: string, real_rad: number | null, real_centerx: number | null, real_centery: number | null
+    enabled: boolean, analysisIndex: number, compoundAnalysisId: string, real_rad: number | null, real_centerx: number | null, real_centery: number | null
 }) => {
     const dispatch = useDispatch();
 

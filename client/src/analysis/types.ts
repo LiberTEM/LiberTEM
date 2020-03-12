@@ -11,4 +11,5 @@ export interface Analysis {
 }
 
 export type AnalysisState = Analysis & {
+    doAutoStart: boolean,
 };

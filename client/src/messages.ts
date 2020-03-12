@@ -1,3 +1,4 @@
+import { JobList } from "./analysis/types"
 
 /* 
  * Common
@@ -431,9 +432,10 @@ export interface MsgPartAnalysis {
     analysis: string,
     dataset: string,
     details: AnalysisDetails,
+    jobs: JobList,
 }
 
-export type CreateOrUpdateAnalysisRequest = Omit<MsgPartAnalysis, "analysis">;
+export type CreateOrUpdateAnalysisRequest = Omit<MsgPartAnalysis, "analysis" | "jobs">;
 
 export type CreateAnalysisResponse = {
     status: "ok",

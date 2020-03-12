@@ -4,14 +4,14 @@ import { AnalysisTypes, FrameParams } from "../../../messages";
 import * as analysisActions from "../../actions";
 
 
-const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis }: {
+const useRoiPicker = ({ compoundAnalysisId, enabled, analysisIndex, roiParameters, analysisType }: {
     scanWidth: number;
     scanHeight: number;
     enabled: boolean;
-    jobIndex: number,
-    analysisId: string;
+    analysisIndex: number,
+    compoundAnalysisId: string;
     roiParameters: FrameParams;
-    analysis: AnalysisTypes.SD_FRAMES | AnalysisTypes.SUM_FRAMES
+    analysisType: AnalysisTypes.SD_FRAMES | AnalysisTypes.SUM_FRAMES
 }) => {
     const dispatch = useDispatch();
 
@@ -19,17 +19,17 @@ const useRoiPicker = ({ analysisId, enabled, jobIndex, roiParameters, analysis }
         const handle = setTimeout(() => {
             if (enabled) {
                 const analysisDetails = {
-                    analysisType: analysis,
+                    analysisType,
                     parameters: roiParameters,
                 };
-                dispatch(analysisActions.Actions.run(analysisId, jobIndex, analysisDetails))
+                dispatch(analysisActions.Actions.run(compoundAnalysisId, analysisIndex, analysisDetails))
             }
         }, 100);
 
         return () => clearTimeout(handle);
         // rules-of-hooks can't be statically validated here
         // eslint-disable-next-line
-    }, [analysis, analysisId, enabled, jobIndex, JSON.stringify(roiParameters), dispatch]);
+    }, [analysisType, compoundAnalysisId, enabled, analysisIndex, JSON.stringify(roiParameters), dispatch]);
 
     return {
     };

@@ -85,7 +85,7 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (

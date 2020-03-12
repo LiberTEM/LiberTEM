@@ -16,7 +16,7 @@ const initialCompoundAnalysisState: CompoundAnalysisReducerState = {
 export function compoundAnalysisReducer(state = initialCompoundAnalysisState, action: AllActions): CompoundAnalysisReducerState {
     switch (action.type) {
         case compoundAnalysisActions.ActionTypes.CREATED: {
-            return insertById(state, action.payload.compoundAnalysis.compoundAnalysis, { ...action.payload.compoundAnalysis, doAutoStart: true });
+            return insertById(state, action.payload.compoundAnalysis.compoundAnalysis, action.payload.compoundAnalysis);
         }
         case compoundAnalysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: CompoundAnalysisState) => r.compoundAnalysis !== action.payload.id);
@@ -36,12 +36,7 @@ export function compoundAnalysisReducer(state = initialCompoundAnalysisState, ac
             });
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
-            const compoundAnalyses = action.payload.compoundAnalyses.map(ca => {
-                return {
-                    ...ca,
-                    doAutoStart: false,
-                }
-            });
+            const compoundAnalyses = action.payload.compoundAnalyses;
             return {
                 byId: constructById(compoundAnalyses, ca => ca.compoundAnalysis),
                 ids: compoundAnalyses.map(ca => ca.compoundAnalysis),

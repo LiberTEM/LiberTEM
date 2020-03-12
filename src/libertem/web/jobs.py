@@ -64,6 +64,10 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 raise TypeError(
                     'Only Analysis classes with TYPE="UDF" are supported'
                 )
+            # FIXME: naming? job_state for UDFs?
+            self.state.job_state.register(
+                job_id=job_id, analysis_id=analysis_id, dataset_id=analysis_state['dataset'],
+            )
             return await self.run_udf(
                 job_id=job_id,
                 dataset=ds,
@@ -100,11 +104,6 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def run_udf(self, job_id, dataset, dataset_id, analysis, analysis_id, details):
         udf = analysis.get_udf()
         roi = analysis.get_roi()
-
-        # FIXME: naming? job_state for UDFs?
-        self.state.job_state.register(
-            job_id=job_id, analysis_id=analysis_id, dataset_id=dataset_id,
-        )
 
         executor = self.state.executor_state.get_executor()
         msg = Message(self.state).start_job(

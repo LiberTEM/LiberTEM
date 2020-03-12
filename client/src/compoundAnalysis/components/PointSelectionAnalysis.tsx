@@ -41,7 +41,7 @@ const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnal
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (

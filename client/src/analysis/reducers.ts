@@ -24,6 +24,7 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.UPDATED: {
             return updateById(state, action.payload.id, {
                 details: action.payload.details,
+                doAutoStart: true,
             });
         }
         case jobActions.ActionTypes.CREATE: {
@@ -37,11 +38,12 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case channelActions.ActionTypes.INITIAL_STATE: {
             const analysisState: AnalysisState[] = action.payload.analyses.map(item => {
                 return {
+                    doAutoStart: false,
                     id: item.analysis,
                     dataset: item.dataset,
                     details: item.details,
                     // FIXME: add jobs!
-                    jobs: [],
+                    jobs: item.jobs,
                 };
             });
             return {

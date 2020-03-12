@@ -16,8 +16,6 @@ import AnalysisLayoutThreeCol from "./layouts/AnalysisLayoutThreeCol";
 import Toolbar from "./Toolbar";
 
 
-
-
 const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
@@ -69,8 +67,6 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
         setCheck(event.target.checked);
     }
 
-
-
     const [realCenterX, setCx] = useState(imageWidth / 2);
     const [realCenterY, setCy] = useState(imageHeight / 2);
     const [realRad, setR] = useState(minLength / 4);
@@ -116,7 +112,6 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
                 real_rad: check ? realRad : null,
                 real_centerx: check ? realCenterX : null,
                 real_centery: check ? realCenterY : null
-
             }
         }));
     };
@@ -127,7 +122,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
         compoundAnalysisId: compoundAnalysis.compoundAnalysis,
         real_rad: check ? realRad : null,
         real_centerx: check ? realCenterX : null,
-        real_centery: check ? realCenterY : null
+        real_centery: check ? realCenterY : null,
     });
 
     const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[2]} />

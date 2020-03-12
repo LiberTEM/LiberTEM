@@ -9,18 +9,16 @@ import ModeSelector from "./ModeSelector";
 import { useRoiPicker } from "./roi/RoiPicker";
 
 const useFFTFrameView = ({
-    scanWidth, scanHeight, doAutoStart, compoundAnalysisId, real_rad, real_centerx, real_centery
+    scanWidth, scanHeight, compoundAnalysisId, real_rad, real_centerx, real_centery
 }: {
-    scanWidth: number, scanHeight: number, doAutoStart: boolean,
-    compoundAnalysisId: string, real_rad: number | null, real_centerx: number | null, real_centery: number | null
+    scanWidth: number, scanHeight: number, compoundAnalysisId: string,
+    real_rad: number | null, real_centerx: number | null, real_centery: number | null
 }) => {
     const availableModes = [
-
         {
             text: "Pick",
             value: AnalysisTypes.PICK_FRAME,
         },
-
         {
             text: "Average",
             value: AnalysisTypes.SUM_FRAMES,
@@ -37,8 +35,8 @@ const useFFTFrameView = ({
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === AnalysisTypes.PICK_FRAME,
         scanWidth, scanHeight,
-        jobIndex: 1,
-        analysisId: compoundAnalysisId,
+        analysisIndex: 1,
+        compoundAnalysisId,
         cx, cy, setCx, setCy
     });
 
@@ -52,16 +50,16 @@ const useFFTFrameView = ({
 
     useRoiPicker({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
-        jobIndex: 1,
-        analysisId: compoundAnalysisId,
+        analysisIndex: 1,
+        compoundAnalysisId,
         scanWidth, scanHeight,
         roiParameters: { roi: {} },
-        analysis: AnalysisTypes.SUM_FRAMES,
+        analysisType: AnalysisTypes.SUM_FRAMES,
     })
     useFFTSumFrames({
         enabled: frameMode === AnalysisTypes.SUM_FRAMES,
-        jobIndex: 0,
-        analysisId: compoundAnalysisId,
+        analysisIndex: 0,
+        compoundAnalysisId,
         real_rad,
         real_centerx,
         real_centery

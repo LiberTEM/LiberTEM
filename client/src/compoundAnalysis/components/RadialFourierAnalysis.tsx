@@ -75,7 +75,7 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (

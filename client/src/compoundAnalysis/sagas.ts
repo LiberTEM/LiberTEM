@@ -132,6 +132,7 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
                 yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
                 yield put(analysisActions.Actions.created({
                     id: analysisId,
+                    doAutoStart: true,
                     dataset: compoundAnalysis.dataset,
                     details,
                     jobs: [],

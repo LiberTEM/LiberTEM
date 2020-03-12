@@ -61,7 +61,7 @@ const CenterOfMassAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalys
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: compoundAnalysis.compoundAnalysis,
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
     })
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;

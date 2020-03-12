@@ -48,11 +48,16 @@ class AnalysisState:
         self.analyses[uuid] = {
             "dataset": dataset_uuid,
             "analysis": uuid,
+            "jobs": [],
             "details": {
                 "analysisType": analysis_type,
                 "parameters": parameters,
             },
         }
+
+    def add_job(self, analysis_id, job_id):
+        jobs = self.analyses[analysis_id]["jobs"]
+        jobs.append(job_id)
 
     def update(self, uuid, analysis_type, parameters):
         self.analyses[uuid]["details"]["parameters"] = parameters

@@ -7,10 +7,10 @@ import { HandleRenderFunction } from "../../widgets/types";
 import * as compoundAnalysisActions from "../actions";
 
 const useFramePicker = ({
-    enabled, scanWidth, scanHeight, jobIndex, analysisId, cx, cy, setCx, setCy
+    enabled, scanWidth, scanHeight, analysisIndex, compoundAnalysisId, cx, cy, setCx, setCy
 }: {
     enabled: boolean, scanWidth: number, scanHeight: number,
-    jobIndex: number, analysisId: string,
+    analysisIndex: number, compoundAnalysisId: string,
     cx: number, cy: number, setCx: (newCx: number) => void, setCy: (newCy: number) => void,
 }) => {
 
@@ -23,12 +23,12 @@ const useFramePicker = ({
                 y: cy,
             };
 
-            dispatch(compoundAnalysisActions.Actions.run(analysisId, jobIndex, {
+            dispatch(compoundAnalysisActions.Actions.run(compoundAnalysisId, analysisIndex, {
                 analysisType: AnalysisTypes.PICK_FRAME,
                 parameters: params,
             }))
         }
-    }, [analysisId, cx, cy, enabled, jobIndex, dispatch]);
+    }, [compoundAnalysisId, cx, cy, enabled, analysisIndex, dispatch]);
 
     const onPickChange = (pickX: number, pickY: number) => {
         const newX = Math.round(pickX);

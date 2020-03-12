@@ -85,7 +85,7 @@ const RingMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: 
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: analysis.compoundAnalysis,
     })
 
     const subtitle = (

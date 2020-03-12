@@ -16,17 +16,16 @@ export enum DefaultModes {
 }
 
 export enum DefaultRois {
-
     ALL = "ALL",
     DISK = "DISK",
     RECT = "RECT",
-
 }
 
 const useDefaultFrameView = ({
-    scanWidth, scanHeight, analysisId,
+    scanWidth, scanHeight, compoundAnalysisId: analysisId, doAutoStart = true,
 }: {
-    scanWidth: number, scanHeight: number, analysisId: string,
+    scanWidth: number, scanHeight: number, compoundAnalysisId: string,
+    doAutoStart?: boolean,
 }) => {
     const availableModes = [
         {
@@ -75,8 +74,8 @@ const useDefaultFrameView = ({
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === DefaultModes.PICK,
         scanWidth, scanHeight,
-        jobIndex: 0,
-        analysisId,
+        analysisIndex: 0,
+        compoundAnalysisId: analysisId,
         cx, cy, setCx, setCy
     });
 
@@ -109,21 +108,21 @@ const useDefaultFrameView = ({
     }
 
     useRoiPicker({
-        enabled: frameMode === DefaultModes.SD,
+        enabled: frameMode === DefaultModes.SD && doAutoStart,
         scanWidth, scanHeight,
-        jobIndex: 0,
-        analysisId,
+        analysisIndex: 0,
+        compoundAnalysisId: analysisId,
         roiParameters: params,
-        analysis: AnalysisTypes.SD_FRAMES
+        analysisType: AnalysisTypes.SD_FRAMES
     })
 
     useRoiPicker({
-        enabled: frameMode === DefaultModes.SUM,
+        enabled: frameMode === DefaultModes.SUM && doAutoStart,
         scanWidth, scanHeight,
-        jobIndex: 0,
-        analysisId,
+        analysisIndex: 0,
+        compoundAnalysisId: analysisId,
         roiParameters: params,
-        analysis: AnalysisTypes.SUM_FRAMES,
+        analysisType: AnalysisTypes.SUM_FRAMES,
     })
 
     const frameViewTitle = (

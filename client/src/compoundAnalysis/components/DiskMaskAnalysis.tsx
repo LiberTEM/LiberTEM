@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useAutoStart } from "../../analysis/helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
@@ -13,8 +14,7 @@ import useDefaultFrameView from "./DefaultFrameView";
 import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-
-const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
+const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
@@ -58,7 +58,7 @@ const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: 
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
             analysisType: AnalysisTypes.APPLY_DISK_MASK,
             parameters: {
                 shape: "disk",
@@ -67,18 +67,21 @@ const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: 
         }));
     };
 
+    const doAutoStart = useAutoStart(compoundAnalysis, 0);
+
     const {
         frameViewTitle, frameModeSelector,
-        handles: resultHandles, widgets: resultWidgets
+        handles: resultHandles, widgets: resultWidgets,
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        analysisId: analysis.compoundAnalysis,
-    })
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
+        doAutoStart,
+    });
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;
 
-    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -86,14 +89,14 @@ const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: 
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

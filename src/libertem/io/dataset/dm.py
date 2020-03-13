@@ -31,16 +31,20 @@ class DMDatasetParams(MessageConverter):
       "title": "DMDatasetParams",
       "type": "object",
       "properties": {
-        "type": {"const": "EMPAD"},
-        "path": {"type": "string"},
+        "type": {"const": "DM"},
+        "files": {
+          "type": "array",
+          "items": {"type":"string"},
+          "minItems": 1,
+        },
         "scan_size": {
             "type": "array",
-            "items": {"type": "number", "minimum": 1},
-            "minItems": 2,
-            "maxItems": 2
+            "items": {"type": "number"},
+            "minItems": 3,
+            "maxItems": 4,
         },
       },
-      "required": ["type", "path"]
+      "required": ["type", "files"]
     }
 
     def convert_to_python(self, raw_data):

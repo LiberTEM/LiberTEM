@@ -5,6 +5,7 @@ from ncempy.io.dm import fileDM
 import numpy as np
 
 from libertem.common import Shape
+from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
     LocalFile,
@@ -22,6 +23,31 @@ def _get_offset(path):
     offset = fh.dataOffset[idx]
     return offset
 
+class DMDatasetParams(MessageConverter):
+    SCHEMA = {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://libertem.org/DMDatasetParams.schema.json",
+      "title": "DMDatasetParams",
+      "type": "object",
+      "properties": {
+        "type": {"const": "EMPAD"},
+        "path": {"type": "string"},
+        "scan_size": {
+            "type": "array",
+            "items": {"type": "number", "minimum": 1},
+            "minItems": 2,
+            "maxItems": 2
+        },
+      },
+      "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path", "scan_size"]
+        }
+        return data
 
 class StackedDMFile(LocalFile):
     def _mmap_to_array(self, raw_mmap, start, stop):
@@ -196,6 +222,10 @@ class DMDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
+    
+    @classmethod
+    def get_msg_converter(cls):
+        return DMDatasetParams
 
     def check_valid(self):
         first_fn = self._get_files()[0]

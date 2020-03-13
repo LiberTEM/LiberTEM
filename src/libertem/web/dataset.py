@@ -34,6 +34,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         params = request_data['dataset']['params']
         params["type"] = ds_type = params["type"].upper()
         cls = get_dataset_cls(ds_type)
+        
         ConverterCls = cls.get_msg_converter()
         converter = ConverterCls()
         try:

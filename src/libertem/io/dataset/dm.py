@@ -23,6 +23,7 @@ def _get_offset(path):
     offset = fh.dataOffset[idx]
     return offset
 
+
 class DMDatasetParams(MessageConverter):
     SCHEMA = {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -222,7 +223,7 @@ class DMDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
-    
+
     @classmethod
     def get_msg_converter(cls):
         return DMDatasetParams

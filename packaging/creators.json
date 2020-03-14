@@ -2,7 +2,7 @@
     {
         "displayname": "Alexander Clausen",
         "authorname": "Clausen, Alexander",
-        "affiliation": "Jülich Research Centre",
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "github": "sk1p",
         "contribution": "System design, engineering, implementation, documentation, management, majority of the code",
         "orcid": "0000-0002-9555-7455"
@@ -10,7 +10,7 @@
     {
         "displayname": "Dieter Weber",
         "authorname": "Weber, Dieter",
-        "affiliation": "Jülich Research Centre",
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "github": "uellue",
         "contribution": "Management, requirements analysis, system design, testing, documentation, communication",
         "orcid": "0000-0001-6635-9567"
@@ -18,7 +18,7 @@
     {
         "displayname": "Karina Ruzaeva",
         "authorname": "Ruzaeva, Karina",
-        "affiliation": "Jülich Research Centre" ,
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre" ,
         "github": "kruzaeva",
         "contribution": "Fast diffraction analysis",
         "orcid": "0000-0003-3610-0989"
@@ -26,10 +26,17 @@
     {
         "displayname": "Vadim Migunov",
         "authorname": "Migunov, Vadim",
-        "affiliation": "RWTH Aachen University, Jülich Research Centre, Ernst Ruska-Centre",
+        "affiliation": "RWTH Aachen University, Jülich Research Centre, Ernst Ruska Centre",
         "github": "woozey",
         "contribution": "Scientific advisory, discussion, sample data, binning prototype, holography features",
         "orcid": "0000-0002-6296-4492"
+    },
+    {
+        "displayname": "Anand Baburajan",
+        "authorname": "Baburajan, Anand",
+        "affiliation": "APJ Abdul Kalam Technological University",
+        "github": "anandbaburajan",
+        "contribution": "Various GUI fixes"
     },
     {
         "displayname": "Abijith Bahuleyan",
@@ -41,7 +48,7 @@
     {
         "displayname": "Jan Caron",
         "authorname": "Caron, Jan",
-        "affiliation": "Jülich Research Centre",
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "github": "jan-car",
         "contribution": "Discussions, advanced color wheel for vector field visualization",
         "orcid": "0000-0002-0873-889X"
@@ -54,6 +61,13 @@
         "contribution": "Test and update of examples"
     },
     {
+        "displayname": "Shankhadeep Dey",
+        "authorname": "Dey, Shankhadeep",
+        "affiliation": "Siliguri Institute of Technology",
+        "github": "iamshankhadeep",
+        "contribution": "Added types to libertem.api.Context #643"
+    },
+    {
         "displayname": "Magnus Nord",
         "authorname": "Nord, Magnus",
         "affiliation": "University of Antwerp",
@@ -64,7 +78,7 @@
     {
         "displayname": "Colin Ophus",
         "authorname": "Ophus, Colin",
-        "affiliation": "Lawrence Livermore National Lab",
+        "affiliation": "Lawrence Berkeley National Laboratory",
         "github": "cophus",
         "contribution": "Discussions, sample code for K2 reader, overview of related projects, reference files",
         "orcid": "0000-0003-2348-8558"
@@ -92,29 +106,15 @@
     {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
-        "affiliation": "Jülich Research Centre",
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, discussion, sample data regarding strain mapping, sample code for MIB reader",
         "orcid": "0000-0002-2588-7993"
     },
     {
         "displayname": "Rafal E. Dunin-Borkowski",
         "authorname": "Dunin-Borkowski, Rafal E.",
-        "affiliation": "Jülich Research Centre",
+        "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-    {
-        "displayname": "Anand Baburajan",
-        "authorname": "Baburajan, Anand",
-        "affiliation": "APJ Abdul Kalam Technological University",
-        "github": "anandbaburajan",
-        "contribution": "Various GUI fixes"
-    },
-    {
-        "displayname": "Shankhadeep Dey",
-        "authorname": "Dey, Shankhadeep",
-        "affiliation": "Siliguri Institute of Technology",
-        "github": "iamshankhadeep",
-        "contribution": "Added types to libertem.api.Context #643"
     }
 ]

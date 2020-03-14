@@ -38,7 +38,7 @@ There are a few command line options available::
       --help          Show this message and exit.
 
 .. versionadded:: 0.4.0
-    :code:`--browser` / :code:`--no-browser` option is added, open browser by default. 
+    :code:`--browser` / :code:`--no-browser` option is added, open browser by default.
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
 
@@ -82,7 +82,7 @@ below it lists all files and subdirectories in that directory. You select an
 entry by clicking once on it. You can move up one directory with the ".." entry
 on top of the list. The file browser is still very basic. Possible improvements
 are discussed in `Issue #83 <https://github.com/LiberTEM/LiberTEM/issues/83>`_.
-Contributions are highly appreciated!
+Contributions are highly appreciated! This example opens an HDF5 file.
 
 ..  figure:: ./images/use/open.png
 
@@ -123,6 +123,11 @@ in scan coordinates on the right.
 
 ..  figure:: ./images/use/apply.png
 
+Instead of average, you can select "Standard Deviation". This calculates
+standard deviation of all detector frames.
+
+.. figure:: ./images/use/std_dev.png
+
 If you are interested in individual frames rather than the average, you can
 switch to "Pick" mode in the "Mode" drop-down menu directly below the detector
 window.
@@ -135,6 +140,13 @@ picked coordinates are displayed along with the virtual detector parameters
 below the frame window on the left.
 
 ..  figure:: ./images/use/pick_frame.png
+
+If you are interested in a limited region, the ROI dropdown provides the option
+to select a rectangular region. For example if you select "Rect", the
+average/standard deviation is calculated over all images that lie inside selected
+rectangle. You can adjust the rectangle by dragging the handles in the GUI.
+
+.. figure:: ./images/use/rect.png
 
 Some analyses, such as the Center of Mass (COM) analysis, can render the result
 in different ways. You can select the channel in the "Image" drop-down menu

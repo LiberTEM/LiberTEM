@@ -26,6 +26,7 @@ Documentation
    formats
    udf
    packages
+   dataset
    applications
    architecture
    performance

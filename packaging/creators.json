@@ -116,5 +116,12 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    }
+    },
+	{
+	    "displayname": "Sayandip Halder",
+		"authorname": "Halder, Sayandip",
+		"affiliation": "Jadavpur University",
+		"github": "sayandip18",
+		"contribution": "Modifying the documentation to make it more user-friendly"
+	}
 ]

@@ -17,6 +17,17 @@ The "detector" axes are also called "signal axes", and a single 2D image is also
 We generally follow the numpy convention for axis order, so for a 4D data set,
 you could have a :code:`(ny, nx, sy, sx)` tuple describing the shape.
 
+MATLAB users should keep one thing in mind. The navigation axes in Python is the transpose of that of MATLAB. 
+In Python, the indices increase linearly with the row. A 3x3 Python matrix is represented in the following way:
+ 
+.. code-block: python
+
+    [[0,1,2],
+	 [3,4,5],
+	 [6,7,8]]
+	
+`This`_ might be helpful for MATLAB users.
+
 While our GUI is currently limited to 4D data sets, the Python API does not
 have that limitation. You can load data of arbitraty dimensionality, provided our I/O
 routines support the format. Most of our methods are currently built for 2D image data,
@@ -25,4 +36,4 @@ so it should be no problem to load and process for example time series.
 If you want to process data with, for example, 1D or 3D samples, you can write
 :ref:`UDFs <user-defined functions>`. Note that in that case, a "frame" is no longer 2D!
 
-MATLAB users should keep one thing in mind. The navigation axes in Python is the transpose of that of MATLAB. In Python, the indices increase linearly with the row. ``[[1,2,3],[4,5,6],[7,8,9]]`` is how a 3x3 matrix is represented. 
+.. _This: https://numpy.org/doc/1.18/user/numpy-for-matlab-users.html#numpy-for-matlab-users

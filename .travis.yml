@@ -31,6 +31,7 @@ jobs:
       env: TOXENV=py36
       before_install:
         - pyenv versions
+        - pyenv install 3.6
         - pyenv global 3.6
       language: shell
     - stage: test
@@ -38,6 +39,7 @@ jobs:
       env: TOXENV=py37
       before_install:
         - pyenv versions
+        - pyenv install 3.7
         - pyenv global 3.7
       language: shell
 

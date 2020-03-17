@@ -56,7 +56,7 @@ async def test_run_job(async_executor):
 
 
 @pytest.mark.skipif(os.name == 'nt',
-                    reason="doesnt run on windows")
+                    reason="Doesn't run on windows")
 @pytest.mark.asyncio
 async def test_fd_limit(async_executor):
     import resource

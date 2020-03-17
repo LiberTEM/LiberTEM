@@ -64,6 +64,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
     const [check, setCheck] = React.useState(true);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysis.compoundAnalysis));
         setCheck(event.target.checked);
     }
 
@@ -72,6 +73,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
     const [realRad, setR] = useState(minLength / 4);
 
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
+        dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysis.compoundAnalysis));
         setCx(newCx);
         setCy(newCy);
     });
@@ -143,7 +145,6 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
             <>{frameViewTitle} real_rad={radIn.toFixed(2)}, real_center=(x={realCenterX.toFixed(2)}, y={realCenterY.toFixed(2)}), fourier_rad_in={radIn.toFixed(2)}, fourier_rad_out={radOut.toFixed(2)}</>
         )
     }
-
     else {
         mid = (<>
             <ResultList

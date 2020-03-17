@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import * as compoundAnalysisActions from "../actions";
 import useFFTFramePicker from "./FFTFramePicker";
 import useFFTSumFrames from "./FFTSumFrames";
 import useFramePicker from "./FramePicker";
@@ -29,7 +31,14 @@ const useFFTFrameView = ({
 
     const [frameMode, setMode] = useState(AnalysisTypes.SUM_FRAMES);
 
-    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode" />
+    const dispatch = useDispatch();
+
+    const updateMode = (newMode: AnalysisTypes) => {
+        dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
+        setMode(newMode);
+    }
+
+    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={updateMode} label="Mode" />
 
     const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));

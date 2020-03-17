@@ -17,6 +17,7 @@ def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
 
 
+@pytest.mark.skipif(sys.platform.startswith("darwin"), reason="No general sparse support on OS X")
 @pytest.mark.parametrize(
     'TYPE', ['JOB', 'UDF']
 )

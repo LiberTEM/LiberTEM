@@ -30,12 +30,14 @@ jobs:
       os: osx
       env: TOXENV=py36
       before_install:
+        - pyenv versions
         - pyenv global 3.6
       language: shell
     - stage: test
       os: osx
       env: TOXENV=py37
       before_install:
+        - pyenv versions
         - pyenv global 3.7
       language: shell
 

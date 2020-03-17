@@ -1,4 +1,6 @@
 language: python
+os: linux
+dist: xenial
 cache:
   - pip
   - directories:
@@ -15,46 +17,45 @@ after_success:
 
 jobs:
   include:
+    # Linux tests:
     - stage: test
       env: TOXENV=py36
       python: 3.6
     - stage: test
       env: TOXENV=py37
       python: 3.7
-      dist: xenial
-      sudo: true
+
+    # OSX tests:
+    - stage: test
+      env: TOXENV=py36
+      python: 3.6
+      os: osx
+    - stage: test
+      env: TOXENV=py37
+      python: 3.7
+      os: osx
+
     - stage: test
       env: TOXENV=numba_coverage
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=mypy
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=flake8
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=qa
-      dist: xenial
       python: 3.7
-      sudo: true
     - stage: test
       env: TOXENV=docs-check
       python: 3.7
-      dist: xenial
-      sudo: true
       install:
         - pip install tox
         - sudo apt-get install -y pandoc
     - stage: test
       env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
       python: 3.7
-      dist: xenial
       services:
         - docker
       install:
@@ -77,7 +78,6 @@ jobs:
     - stage: packaging
       env: TOXENV=docs-deploy
       python: 3.7
-      dist: xenial
       sudo: true
       install:
         - pip install tox
@@ -86,7 +86,6 @@ jobs:
     - stage: packaging
       sudo: require
       python: 3.7
-      dist: xenial
       install:
         - pip install -r scripts/requirements.txt
       script:

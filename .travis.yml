@@ -5,7 +5,6 @@ cache:
   - pip
   - directories:
     - client/node_modules/
-    - $HOME/.cache/pyenv
 
 install:
   - pip install tox
@@ -31,21 +30,29 @@ jobs:
       os: osx
       env: TOXENV=py36
       before_install:
+        - eval "$(pyenv init -)"
         - pyenv install -l
         - pyenv install --skip-existing 3.6.9
         - pyenv global 3.6.9
         - pyenv rehash
         - python --version
+        - python3 --version
+        - pip3 --version
+        - pip --version
       language: shell
     - stage: test
       os: osx
       env: TOXENV=py37
       before_install:
+        - eval "$(pyenv init -)"
         - pyenv install -l
         - pyenv install --skip-existing 3.7.5
         - pyenv global 3.7.5
         - pyenv rehash
         - python --version
+        - python3 --version
+        - pip3 --version
+        - pip --version
       language: shell
 
     - stage: test

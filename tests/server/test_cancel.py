@@ -5,6 +5,10 @@ import pytest
 import websockets
 
 from utils import assert_msg
+from aio_utils import (
+    create_connection, create_analysis,
+    create_update_compound_analysis, create_job_for_analysis,
+)
 
 
 pytestmark = [pytest.mark.functional]
@@ -25,18 +29,8 @@ def _get_ds_params():
 
 
 @pytest.mark.asyncio
-async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    print("checkpoint 0")
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
-        assert (await response.json())['status'] == 'ok'
+async def test_cancel_udf_job(base_url, default_raw, http_client, server_port, shared_state):
+    await create_connection(base_url, http_client)
 
     print("checkpoint 1")
 
@@ -51,6 +45,7 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         ds_url = "{}/api/datasets/{}/".format(
             base_url, ds_uuid
         )
+
         ds_data = _get_ds_params()
         async with http_client.put(ds_url, json=ds_data) as resp:
             assert resp.status == 200
@@ -61,45 +56,17 @@ async def test_cancel_udf_job(base_url, http_client, server_port, shared_state):
         msg = json.loads(await ws.recv())
         assert_msg(msg, 'CREATE_DATASET')
 
-        analysis_uuid = "229faa20-d146-46c1-af8c-32e303531322"
-        analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
-        analysis_data = {
-            "dataset": ds_uuid,
-            "details": {
-                "analysisType": "SUM_FRAMES",
-                "parameters": {}
-            }
-        }
-        async with http_client.put(analysis_url, json=analysis_data) as resp:
-            print(await resp.text())
-            assert resp.status == 200
-            resp_json = await resp.json()
-            assert resp_json['status'] == "ok"
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
 
-        msg = json.loads(await ws.recv())
-        assert_msg(msg, 'ANALYSIS_CREATED')
-        assert msg['analysis'] == analysis_uuid
-        assert msg['dataset'] == ds_uuid
-        assert msg['details']['parameters'] == {}
+        analysis_uuid, analysis_url = await create_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid,
+        )
 
-        job_uuid = "229faa20-d146-46c1-af8c-32e303531322"
-        job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
-        job_data = {
-            "job": {
-                "analysis": analysis_uuid,
-            }
-        }
-        async with http_client.put(job_url, json=job_data) as resp:
-            print(await resp.text())
-            assert resp.status == 200
-            resp_json = await resp.json()
-            assert resp_json['status'] == "ok"
-
-        msg = json.loads(await ws.recv())
-        assert_msg(msg, 'JOB_STARTED')
-        assert msg['job'] == job_uuid
-        assert msg['details']['id'] == job_uuid
-        assert msg['details']['analysis'] == analysis_uuid
+        job_uuid, job_url = await create_job_for_analysis(
+            ws, http_client, base_url, analysis_uuid
+        )
 
         await asyncio.sleep(0)  # for debugging, set to >0
 

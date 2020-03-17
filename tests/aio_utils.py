@@ -79,9 +79,11 @@ async def create_default_dataset(default_raw, ws, http_client, base_url):
     return ds_uuid, ds_url
 
 
-async def create_analysis(ws, http_client, base_url, ds_uuid, details=None):
+async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=None):
     analysis_uuid = _get_uuid_str()
-    analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
+    analysis_url = "{}/api/compoundAnalyses/{}/analyses/{}/".format(
+        base_url, ca_uuid, analysis_uuid
+    )
     if details is None:
         details = {
             "analysisType": "SUM_FRAMES",
@@ -110,7 +112,7 @@ async def create_analysis(ws, http_client, base_url, ds_uuid, details=None):
 
 
 async def create_update_compound_analysis(
-    ws, http_client, base_url, ds_uuid, analyses, details=None, ca_uuid=None,
+    ws, http_client, base_url, ds_uuid, details=None, ca_uuid=None,
 ):
     if ca_uuid is None:
         ca_uuid = _get_uuid_str()

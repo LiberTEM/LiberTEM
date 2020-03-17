@@ -86,11 +86,11 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         return fmt[0].decode("utf8")
 
     async def get(self, compoundUuid, uuid):
-        details, results = self.state.analysis_state.get_results(uuid)
+        details, results, job_id = self.state.analysis_state.get_results(uuid)
         import h5py
 
         bio = io.BytesIO()
-        with h5py.File(bio) as f:
+        with h5py.File(bio, 'w') as f:
             for k in results.keys():
                 f[k] = results[k]
 

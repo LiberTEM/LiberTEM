@@ -10,7 +10,7 @@ from utils import assert_msg
 
 from aio_utils import (
     create_connection, consume_task_results, create_default_dataset, create_analysis,
-    create_job_for_analysis,
+    create_job_for_analysis, create_update_compound_analysis,
 )
 
 
@@ -31,8 +31,12 @@ async def test_download_1(default_raw, base_url, http_client, server_port):
             default_raw, ws, http_client, base_url
         )
 
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
+
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid
         )
 
         job_uuid, job_url = await create_job_for_analysis(
@@ -41,8 +45,11 @@ async def test_download_1(default_raw, base_url, http_client, server_port):
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/analyses/{}/download/?format=h5".format(base_url, analysis_uuid)
+        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/?format=h5".format(
+            base_url, ca_uuid, analysis_uuid,
+        )
         async with http_client.get(download_url) as resp:
+            assert resp.status == 200
             raw_data = await resp.read()
             bio = io.BytesIO(raw_data)
             with h5py.File(bio, "r") as f:

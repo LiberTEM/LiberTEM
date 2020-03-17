@@ -4,6 +4,9 @@ import pytest
 import websockets
 
 from utils import assert_msg
+from aio_utils import (
+    create_connection, create_analysis, create_update_compound_analysis,
+)
 
 pytestmark = [pytest.mark.functional]
 
@@ -167,15 +170,7 @@ async def test_initial_state_w_existing_ds(default_raw, base_url, http_client, s
 
 @pytest.mark.asyncio
 async def test_initial_state_analyses(default_raw, base_url, http_client, server_port):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
+    await create_connection(base_url, http_client)
 
     # first connect has empty list of datasets:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
@@ -199,38 +194,27 @@ async def test_initial_state_analyses(default_raw, base_url, http_client, server
         for k in ds_params['dataset']['params']:
             assert ds_params['dataset']['params'][k] == resp_json['details']['params'][k]
 
-        analysis_uuid = "229faa20-d146-46c1-af8c-32e303531322"
-        analysis_url = "{}/api/analyses/{}/".format(base_url, analysis_uuid)
+        async with websockets.connect(ws_url) as ws:
+            initial_msg = json.loads(await ws.recv())
+            assert initial_msg['messageType'] == "INITIAL_STATE"
 
-        analysis_data = {
-            "dataset": ds_uuid,
-            "details": {
-                "analysisType": "SUM_FRAMES",
-                "parameters": {
-                    "roi": {
-                        "shape": "disk",
-                        "r": 1,
-                        "cx": 1,
-                        "cy": 1,
-                    }
+            ca_uuid, ca_url = await create_update_compound_analysis(
+                ws, http_client, base_url, ds_uuid,
+            )
+
+            analysis_uuid, analysis_url = await create_analysis(
+                ws, http_client, base_url, ds_uuid, ca_uuid, details={
+                    "analysisType": "SUM_FRAMES",
+                    "parameters": {
+                        "roi": {
+                            "shape": "disk",
+                            "r": 1,
+                            "cx": 1,
+                            "cy": 1,
+                            }
+                        }
                 }
-            }
-        }
-
-        async with http_client.put(analysis_url, json=analysis_data) as resp:
-            print(await resp.text())
-            assert resp.status == 200
-            msg = await resp.json()
-            assert_msg(msg, 'ANALYSIS_CREATED')
-            assert msg['analysis'] == analysis_uuid
-            assert msg['details']['parameters'] == {
-                "roi": {
-                    "shape": "disk",
-                    "r": 1,
-                    "cx": 1,
-                    "cy": 1,
-                },
-            }
+            )
 
     # second connect has one dataset and one analysis:
     async with websockets.connect(ws_url) as ws:

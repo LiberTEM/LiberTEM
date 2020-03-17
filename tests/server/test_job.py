@@ -30,8 +30,12 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
             default_raw, ws, http_client, base_url
         )
 
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
+
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
@@ -72,8 +76,12 @@ async def test_run_job_delete_ds(default_raw, base_url, http_client, server_port
             default_raw, ws, http_client, base_url
         )
 
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
+
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
@@ -123,8 +131,12 @@ async def test_run_with_all_zeros_roi(default_raw, base_url, http_client, server
             default_raw, ws, http_client, base_url
         )
 
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
+
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, details={
+            ws, http_client, base_url, ds_uuid, ca_uuid, details={
                 "analysisType": "SUM_FRAMES",
                 "parameters": {
                     "roi": {
@@ -173,8 +185,12 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
             default_raw, ws, http_client, base_url
         )
 
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid,
+        )
+
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
@@ -251,16 +267,16 @@ async def test_analysis_removal(default_raw, base_url, http_client, server_port,
 
         # compound analysis is first created without any analyses:
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, analyses=[], details=None,
+            ws, http_client, base_url, ds_uuid, details=None,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid,
         )
 
         # compound analysis is updated with the newly created analysis:
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, analyses=[], details={
+            ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid]
             }, ca_uuid=ca_uuid
@@ -317,16 +333,16 @@ async def test_create_compound_analysis(default_raw, base_url, http_client, serv
 
         # compound analysis is first created without any analyses:
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, analyses=[], details=None,
+            ws, http_client, base_url, ds_uuid, details=None,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid
         )
 
         # compound analysis is updated with the newly created analysis:
         _, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, analyses=[], details={
+            ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid]
             }, ca_uuid=ca_uuid

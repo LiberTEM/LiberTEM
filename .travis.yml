@@ -5,6 +5,7 @@ cache:
   - pip
   - directories:
     - client/node_modules/
+    - $HOME/.pyenv/versions/
 
 install:
   - pip install tox

@@ -31,6 +31,8 @@ jobs:
       os: osx
       env: TOXENV=py36
       before_install:
+        - ulimit -n
+        - ulimit -n 4096
         - eval "$(pyenv init -)"
         - pyenv install -l
         - pyenv install --skip-existing 3.6.9
@@ -45,6 +47,8 @@ jobs:
       os: osx
       env: TOXENV=py37
       before_install:
+        - ulimit -n
+        - ulimit -n 4096
         - eval "$(pyenv init -)"
         - pyenv install -l
         - pyenv install --skip-existing 3.7.5

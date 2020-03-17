@@ -6,13 +6,13 @@ import tornado.web
 from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.executor.dask import DaskJobExecutor
 from .messages import Message
-from .base import log_message
+from .base import log_message, ResultHandlerMixin
 from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
-class ConnectHandler(tornado.web.RequestHandler):
+class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
     def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
@@ -67,6 +67,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         # FIXME: don't broadcast, only send to the websocket that matches this HTTP connection
         # (is this even possible?)
         self.event_registry.broadcast_event(msg)
+        await self.send_existing_job_results()
         self.write({
             "status": "ok",
             "connection": connection,

@@ -1,6 +1,5 @@
 import time
 import logging
-import asyncio
 
 import tornado.web
 
@@ -10,7 +9,7 @@ from libertem.analysis import (
     PickFFTFrameAnalysis, SumfftAnalysis,
     RadialFourierAnalysis, ApplyFFTMask, SDAnalysis, SumSigAnalysis, ClusterAnalysis
 )
-from .base import CORSMixin, log_message, result_images
+from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
 from libertem.executor.base import JobCancelledError
@@ -20,7 +19,7 @@ from libertem.utils.async_utils import run_blocking
 log = logging.getLogger(__name__)
 
 
-class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
+class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler):
     def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
@@ -68,6 +67,7 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.state.job_state.register(
                 job_id=job_id, analysis_id=analysis_id, dataset_id=analysis_state['dataset'],
             )
+            self.state.analysis_state.add_job(analysis_id, job_id)
             return await self.run_udf(
                 job_id=job_id,
                 dataset=ds,
@@ -153,43 +153,3 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             roi=roi,
         )
         await self.send_results(results, job_id, analysis_id, details, finished=True)
-
-    async def send_results(self, results, job_id, analysis_id, details, finished=False):
-        if self.state.job_state.is_cancelled(job_id):
-            raise JobCancelledError()
-        images = await result_images(results)
-        if self.state.job_state.is_cancelled(job_id):
-            raise JobCancelledError()
-        if finished:
-            msg = Message(self.state).finish_job(
-                job_id=job_id,
-                num_images=len(results),
-                image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
-                    for result in results
-                ],
-            )
-            self.state.analysis_state.set_results(analysis_id, details, results)
-        else:
-            msg = Message(self.state).task_result(
-                job_id=job_id,
-                num_images=len(results),
-                image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
-                    for result in results
-                ],
-            )
-        log_message(msg)
-        # NOTE: make sure the following broadcast_event messages are sent atomically!
-        # (that is: keep the code below synchronous, and only send the messages
-        # once the images have finished encoding, and then send all at once)
-        futures = []
-        futures.append(
-            self.event_registry.broadcast_event(msg)
-        )
-        for image in images:
-            raw_bytes = image.read()
-            futures.append(
-                self.event_registry.broadcast_event(raw_bytes, binary=True)
-            )
-        await asyncio.gather(*futures)

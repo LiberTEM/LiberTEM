@@ -19,7 +19,7 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.state = state
         self.event_registry = event_registry
 
-    async def put(self, uuid):
+    async def put(self, compoundUuid, uuid):
         """
         Register or update an analysis, which is then later associated
         to their results.
@@ -58,7 +58,7 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
         self.write(msg)
 
-    async def delete(self, uuid):
+    async def delete(self, compoundUuid, uuid):
         """
         Remove an analysis, stop all related jobs and remove
         analysis results.
@@ -85,7 +85,7 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         assert len(fmt) == 1
         return fmt[0].decode("utf8")
 
-    async def get(self, uuid):
+    async def get(self, compoundUuid, uuid):
         details, results = self.state.analysis_state.get_results(uuid)
         import h5py
 

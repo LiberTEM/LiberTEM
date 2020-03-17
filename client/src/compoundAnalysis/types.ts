@@ -34,6 +34,7 @@ export interface CompoundAnalysis {
  */
 
 export type CompoundAnalysisState = CompoundAnalysis & {
+    doAutoStart: boolean,
 };
 
 export interface CompoundAnalysisProps {

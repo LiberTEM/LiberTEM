@@ -9,10 +9,12 @@ import ModeSelector from "./ModeSelector";
 import { useRoiPicker } from "./roi/RoiPicker";
 
 const useFFTFrameView = ({
-    scanWidth, scanHeight, compoundAnalysisId, real_rad, real_centerx, real_centery
+    scanWidth, scanHeight, compoundAnalysisId, real_rad, real_centerx,
+    real_centery, doAutoStart,
 }: {
     scanWidth: number, scanHeight: number, compoundAnalysisId: string,
-    real_rad: number | null, real_centerx: number | null, real_centery: number | null
+    real_rad: number | null, real_centerx: number | null, real_centery: number | null,
+    doAutoStart: boolean,
 }) => {
     const availableModes = [
         {
@@ -33,7 +35,7 @@ const useFFTFrameView = ({
     const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
 
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
-        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        enabled: frameMode === AnalysisTypes.PICK_FRAME && doAutoStart,
         scanWidth, scanHeight,
         analysisIndex: 1,
         compoundAnalysisId,
@@ -41,7 +43,7 @@ const useFFTFrameView = ({
     });
 
     useFFTFramePicker({
-        enabled: frameMode === AnalysisTypes.PICK_FRAME,
+        enabled: frameMode === AnalysisTypes.PICK_FRAME && doAutoStart,
         scanWidth, scanHeight,
         analysisIndex: 0,
         compoundAnalysisId,
@@ -49,7 +51,7 @@ const useFFTFrameView = ({
     });
 
     useRoiPicker({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+        enabled: frameMode === AnalysisTypes.SUM_FRAMES && doAutoStart,
         analysisIndex: 1,
         compoundAnalysisId,
         scanWidth, scanHeight,
@@ -57,7 +59,7 @@ const useFFTFrameView = ({
         analysisType: AnalysisTypes.SUM_FRAMES,
     })
     useFFTSumFrames({
-        enabled: frameMode === AnalysisTypes.SUM_FRAMES,
+        enabled: frameMode === AnalysisTypes.SUM_FRAMES && doAutoStart,
         analysisIndex: 0,
         compoundAnalysisId,
         real_rad,

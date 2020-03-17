@@ -24,7 +24,6 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.UPDATED: {
             return updateById(state, action.payload.id, {
                 details: action.payload.details,
-                doAutoStart: true,
             });
         }
         case jobActions.ActionTypes.CREATE: {

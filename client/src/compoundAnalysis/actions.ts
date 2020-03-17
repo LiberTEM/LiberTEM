@@ -12,11 +12,17 @@ export enum ActionTypes {
     REMOVE = 'COMPOUND_ANALYSIS_REMOVE',
     REMOVED = 'COMPOUND_ANALYSIS_REMOVED',
     ERROR = 'COMPOUND_ANALYSIS_ERROR',
+    ENABLE_AUTOSTART = 'COMPOUND_ANALYSIS_ENABLE_AUTOSTART',
 }
 
 export const Actions = {
     create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
-    created: (compoundAnalysis: CompoundAnalysis) => createAction(ActionTypes.CREATED, { compoundAnalysis }),
+    created: (
+        compoundAnalysis: CompoundAnalysis, autoStart: boolean
+    ) => createAction(ActionTypes.CREATED, { compoundAnalysis, autoStart }),
+    enableAutoStart: (
+        compoundAnalysisId: string
+    ) => createAction(ActionTypes.ENABLE_AUTOSTART, { compoundAnalysisId }),
     updated: (id: string, details: CompoundAnalysisDetails) => createAction(ActionTypes.UPDATED, { id, details }),
     run: (id: string, analysisIndex: number, details: AnalysisDetails) => createAction(ActionTypes.RUN, { id, analysisIndex, details }),
     running: (id: string, job: string, analysisIndex: number) => createAction(ActionTypes.RUNNING, { id, job, jobIndex: analysisIndex }),

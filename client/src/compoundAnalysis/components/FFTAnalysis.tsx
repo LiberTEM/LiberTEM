@@ -123,6 +123,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
         real_rad: check ? realRad : null,
         real_centerx: check ? realCenterX : null,
         real_centery: check ? realCenterY : null,
+        doAutoStart: compoundAnalysis.doAutoStart,
     });
 
     const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[2]} />

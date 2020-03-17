@@ -14,7 +14,6 @@ const useFFTFramePicker = ({
     analysisIndex: number, compoundAnalysisId: string,
     cx: number, cy: number, setCx: (newCx: number) => void, setCy: (newCy: number) => void,
     real_rad: number | null, real_centerx: number | null, real_centery: number | null
-
 }) => {
 
     const dispatch = useDispatch();

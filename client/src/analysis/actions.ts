@@ -13,12 +13,25 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    create: (dataset: string, analysisType: AnalysisTypes) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
-    created: (analysis: AnalysisState, compoundAnalysis: string, analysisIndex: number) => createAction(ActionTypes.CREATED, { analysis, compoundAnalysis, analysisIndex }),
-    updated: (id: string, details: AnalysisDetails) => createAction(ActionTypes.UPDATED, { id, details }),
+    create: (
+        dataset: string, analysisType: AnalysisTypes
+    ) => createAction(ActionTypes.CREATE, { dataset, analysisType }),
+
+    created: (
+        analysis: AnalysisState, compoundAnalysis: string, analysisIndex: number
+    ) => createAction(ActionTypes.CREATED, {
+        analysis, compoundAnalysis, analysisIndex
+    }),
+
+    updated: (
+        id: string, details: AnalysisDetails
+    ) => createAction(ActionTypes.UPDATED, { id, details }),
+
     remove: (id: string) => createAction(ActionTypes.REMOVE, { id }),
     removed: (id: string) => createAction(ActionTypes.REMOVED, { id }),
-    error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
+    error: (
+        msg: string, timestamp: number, id: string
+    ) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

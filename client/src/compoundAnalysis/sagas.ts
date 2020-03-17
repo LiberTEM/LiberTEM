@@ -5,11 +5,12 @@ import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
 import * as channelActions from '../channel/actions';
 import * as jobActions from '../job/actions';
-import { cancelJob, createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, removeCompoundAnalysis, startJob } from '../job/api';
+import { cancelJob, startJob } from '../job/api';
 import { JobState } from '../job/types';
 import { DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
 import * as compoundAnalysisActions from './actions';
+import { createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, removeCompoundAnalysis } from "./api";
 import { CompoundAnalysis, CompoundAnalysisState } from './types';
 
 function selectDataset(state: RootReducer, dataset: string) {
@@ -61,7 +62,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
 
         const sidecarTask = yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis, { doAutoStart: true });
 
-        yield put(compoundAnalysisActions.Actions.created(compoundAnalysis));
+        yield put(compoundAnalysisActions.Actions.created(compoundAnalysis, true));
         yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
     } catch (e) {
         const timestamp = Date.now();
@@ -113,7 +114,10 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
 
             if (analysisId) {
                 // update the analysis on the server:
-                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield call(createOrUpdateAnalysis,
+                    compoundAnalysis.compoundAnalysis, analysisId,
+                    compoundAnalysis.dataset, details
+                );
                 yield put(analysisActions.Actions.updated(analysisId, details));
 
                 const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
@@ -129,20 +133,24 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
             } else {
                 // create the analysis on the server:
                 analysisId = uuid();
-                yield call(createOrUpdateAnalysis, analysisId, compoundAnalysis.dataset, details);
+                yield call(createOrUpdateAnalysis,
+                    compoundAnalysis.compoundAnalysis, analysisId,
+                    compoundAnalysis.dataset, details
+                );
                 yield put(analysisActions.Actions.created({
                     id: analysisId,
-                    doAutoStart: true,
                     dataset: compoundAnalysis.dataset,
                     details,
                     jobs: [],
                 }, compoundAnalysis.compoundAnalysis, analysisIndex));
 
+                const updatedCompoundAnalysis = yield select(selectCompoundAnalysis, compoundAnalysisId);
+
                 yield call(
                     createOrUpdateCompoundAnalysis,
-                    compoundAnalysis.compoundAnalysis,
-                    compoundAnalysis.dataset,
-                    compoundAnalysis.details,
+                    updatedCompoundAnalysis.compoundAnalysis,
+                    updatedCompoundAnalysis.dataset,
+                    updatedCompoundAnalysis.details,
                 );
             }
 
@@ -162,8 +170,6 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
         } catch (e) {
             const timestamp = Date.now();
             const id = uuid();
-            // tslint:disable-next-line:no-console
-            console.log(e.stack)
             yield put(compoundAnalysisActions.Actions.error(`Error running analysis: ${e.toString()}`, timestamp, id));
         }
     }
@@ -183,7 +189,8 @@ export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysis
                 }
             }
 
-            yield call(removeAnalysis, analysisId);
+            yield call(removeAnalysis, compoundAnalysis.compoundAnalysis, analysisId);
+            yield put(analysisActions.Actions.removed(analysisId));
         }
         yield call(removeCompoundAnalysis, action.payload.id);
     } finally {

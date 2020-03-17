@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { AnalysisTypes } from "../../messages";
 import { HandleRenderFunction } from "../../widgets/types";
+import * as compoundAnalysisActions from "../actions";
 import useFramePicker from "./FramePicker";
 import ModeSelector from "./ModeSelector";
 import { useDiskROI } from "./roi/DiskROI";
@@ -22,10 +24,10 @@ export enum DefaultRois {
 }
 
 const useDefaultFrameView = ({
-    scanWidth, scanHeight, compoundAnalysisId: analysisId, doAutoStart = true,
+    scanWidth, scanHeight, compoundAnalysisId, doAutoStart,
 }: {
     scanWidth: number, scanHeight: number, compoundAnalysisId: string,
-    doAutoStart?: boolean,
+    doAutoStart: boolean,
 }) => {
     const availableModes = [
         {
@@ -58,11 +60,23 @@ const useDefaultFrameView = ({
     ]
 
     const [frameMode, setMode] = useState(DefaultModes.SUM);
-    const [roi, setRoi] = useState(DefaultRois.ALL)
+    const [roi, setRoi] = useState(DefaultRois.ALL);
 
-    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={setMode} label="Mode" />
+    const dispatch = useDispatch();
 
-    let roiSelector = <ModeSelector modes={availableRois} currentMode={roi} onModeChange={setRoi} label="ROI" />
+    const updateFrameMode = (newMode: DefaultModes) => {
+        dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
+        setMode(newMode);
+    }
+
+    const updateRoi = (newRoi: DefaultRois) => {
+        dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
+        setRoi(newRoi);
+    }
+
+    const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={updateFrameMode} label="Mode" />
+
+    let roiSelector = <ModeSelector modes={availableRois} currentMode={roi} onModeChange={updateRoi} label="ROI" />
 
     if (frameMode === DefaultModes.PICK) {
         roiSelector = <></>;
@@ -75,7 +89,7 @@ const useDefaultFrameView = ({
         enabled: frameMode === DefaultModes.PICK,
         scanWidth, scanHeight,
         analysisIndex: 0,
-        compoundAnalysisId: analysisId,
+        compoundAnalysisId,
         cx, cy, setCx, setCy
     });
 
@@ -111,7 +125,7 @@ const useDefaultFrameView = ({
         enabled: frameMode === DefaultModes.SD && doAutoStart,
         scanWidth, scanHeight,
         analysisIndex: 0,
-        compoundAnalysisId: analysisId,
+        compoundAnalysisId,
         roiParameters: params,
         analysisType: AnalysisTypes.SD_FRAMES
     })
@@ -120,7 +134,7 @@ const useDefaultFrameView = ({
         enabled: frameMode === DefaultModes.SUM && doAutoStart,
         scanWidth, scanHeight,
         analysisIndex: 0,
-        compoundAnalysisId: analysisId,
+        compoundAnalysisId,
         roiParameters: params,
         analysisType: AnalysisTypes.SUM_FRAMES,
     })

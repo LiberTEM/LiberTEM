@@ -74,6 +74,8 @@ class AnalysisState:
         ]
 
     async def remove(self, uuid):
+        if uuid not in self.analyses:
+            return False
         if uuid in self.results:
             self.remove_results(uuid)
         await self.remove_jobs(uuid)
@@ -88,14 +90,17 @@ class AnalysisState:
     def remove_results(self, uuid):
         del self.results[uuid]
 
-    def set_results(self, uuid, details, results):
+    def set_results(self, uuid, details, results, job_id):
         """
         set results: create or update
         """
-        self.results[uuid] = (details, results)
+        self.results[uuid] = (details, results, job_id)
 
     def get_results(self, uuid):
         return self.results[uuid]
+
+    def get_all_results(self):
+        return self.results.items()
 
     def __getitem__(self, uuid):
         return self.analyses[uuid]

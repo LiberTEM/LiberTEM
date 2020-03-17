@@ -14,7 +14,7 @@ import useDefaultFrameView from "./DefaultFrameView";
 import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
+const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
@@ -75,7 +75,8 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        compoundAnalysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
+        doAutoStart: compoundAnalysis.doAutoStart,
     })
 
     const subtitle = (
@@ -85,7 +86,7 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(analysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+        dispatch(analysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
             analysisType: AnalysisTypes.RADIAL_FOURIER,
             parameters: {
                 shape: "radial_fourier",
@@ -96,7 +97,7 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
         }));
     };
 
-    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -104,14 +105,14 @@ const RadialFourierAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnaly
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

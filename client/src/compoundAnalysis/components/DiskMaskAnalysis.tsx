@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useAutoStart } from "../../analysis/helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
 import { cbToRadius, inRectConstraint, keepOnCY } from "../../widgets/constraints";
@@ -67,8 +66,6 @@ const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, 
         }));
     };
 
-    const doAutoStart = useAutoStart(compoundAnalysis, 0);
-
     const {
         frameViewTitle, frameModeSelector,
         handles: resultHandles, widgets: resultWidgets,
@@ -76,7 +73,7 @@ const DiskMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, 
         scanWidth,
         scanHeight,
         compoundAnalysisId: compoundAnalysis.compoundAnalysis,
-        doAutoStart,
+        doAutoStart: compoundAnalysis.doAutoStart,
     });
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;

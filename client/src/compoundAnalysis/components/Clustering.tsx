@@ -17,7 +17,7 @@ import { useRectROI } from "./roi/RectROI";
 import Toolbar from "./Toolbar";
 
 
-const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
+const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -91,14 +91,16 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
     const { rectRoiParameters, rectRoiHandles, rectRoiWidgets } = useRectROI({ scanWidth, scanHeight });
 
     React.useEffect(() => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 1, {
-            analysisType: AnalysisTypes.SUM_SIG,
-            parameters: {},
-        }))
-    }, [analysis.compoundAnalysis, dispatch]);
+        if (compoundAnalysis.doAutoStart) {
+            dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
+                analysisType: AnalysisTypes.SUM_SIG,
+                parameters: {},
+            }))
+        }
+    }, [compoundAnalysis.compoundAnalysis, dispatch, compoundAnalysis.doAutoStart]);
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 2, {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 2, {
             analysisType: AnalysisTypes.CLUST,
             parameters: {
                 roi: rectRoiParameters.roi,
@@ -120,13 +122,14 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        compoundAnalysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
+        doAutoStart: compoundAnalysis.doAutoStart,
     })
 
     const subtitle = (
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
-    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[2]} />
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[2]} />
 
     const [paramsVisible, setParamsVisible] = React.useState(false);
 
@@ -161,14 +164,14 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             mid={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={rectRoiHandles}
                     extraWidgets={rectRoiWidgets}
@@ -177,7 +180,7 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: ana
 
             right={<>
                 <ResultList
-                    analysisIndex={2} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={2} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

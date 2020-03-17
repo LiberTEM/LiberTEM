@@ -14,7 +14,7 @@ import useDefaultFrameView from "./DefaultFrameView";
 import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analysis, dataset }) => {
+const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -69,7 +69,7 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     const dispatch = useDispatch();
 
     const runAnalysis = () => {
-        dispatch(compoundAnalysisActions.Actions.run(analysis.compoundAnalysis, 1, {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
             analysisType: AnalysisTypes.FEM,
             parameters: {
                 shape: "ring",
@@ -85,14 +85,15 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
     } = useDefaultFrameView({
         scanWidth,
         scanHeight,
-        compoundAnalysisId: analysis.compoundAnalysis,
+        compoundAnalysisId: compoundAnalysis.compoundAnalysis,
+        doAutoStart: compoundAnalysis.doAutoStart,
     })
 
     const subtitle = (
         <>{frameViewTitle} Ring: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), ri={ri.toFixed(2)}, ro={ro.toFixed(2)}</>
     )
 
-    const toolbar = <Toolbar compoundAnalysis={analysis} onApply={runAnalysis} busyIdxs={[1]} />
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
 
     return (
         <AnalysisLayoutTwoCol
@@ -100,14 +101,14 @@ const FEMAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis: analy
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}
-                    analysisIndex={0} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={0} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={imageWidth} height={imageHeight}
                     selectors={frameModeSelector}
                 />
             </>}
             right={<>
                 <ResultList
-                    analysisIndex={1} compoundAnalysis={analysis.compoundAnalysis}
+                    analysisIndex={1} compoundAnalysis={compoundAnalysis.compoundAnalysis}
                     width={scanWidth} height={scanHeight}
                     extraHandles={resultHandles}
                     extraWidgets={resultWidgets}

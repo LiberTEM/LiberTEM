@@ -59,11 +59,11 @@ def make_app(event_registry, shared_state):
             "state": shared_state,
             "event_registry": event_registry
         }),
-        (r"/api/analyses/([^/]+)/", AnalysisDetailHandler, {
+        (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/", AnalysisDetailHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),
-        (r"/api/analyses/([^/]+)/download/", DownloadDetailHandler, {
+        (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/download/", DownloadDetailHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

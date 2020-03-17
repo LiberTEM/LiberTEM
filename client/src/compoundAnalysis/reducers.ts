@@ -16,10 +16,19 @@ const initialCompoundAnalysisState: CompoundAnalysisReducerState = {
 export function compoundAnalysisReducer(state = initialCompoundAnalysisState, action: AllActions): CompoundAnalysisReducerState {
     switch (action.type) {
         case compoundAnalysisActions.ActionTypes.CREATED: {
-            return insertById(state, action.payload.compoundAnalysis.compoundAnalysis, action.payload.compoundAnalysis);
+            const newCompoundAnalysis = {
+                doAutoStart: action.payload.autoStart,
+                ...action.payload.compoundAnalysis,
+            }
+            return insertById(state, action.payload.compoundAnalysis.compoundAnalysis, newCompoundAnalysis);
         }
         case compoundAnalysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: CompoundAnalysisState) => r.compoundAnalysis !== action.payload.id);
+        }
+        case compoundAnalysisActions.ActionTypes.ENABLE_AUTOSTART: {
+            return updateById(state, action.payload.compoundAnalysisId, {
+                doAutoStart: true,
+            })
         }
         case datasetActions.ActionTypes.DELETE: {
             return filterWithPred(state, (r: CompoundAnalysisState) => r.dataset !== action.payload.dataset);
@@ -36,7 +45,7 @@ export function compoundAnalysisReducer(state = initialCompoundAnalysisState, ac
             });
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
-            const compoundAnalyses = action.payload.compoundAnalyses;
+            const compoundAnalyses = action.payload.compoundAnalyses.map(ca => ({ doAutoStart: false, ...ca }));
             return {
                 byId: constructById(compoundAnalyses, ca => ca.compoundAnalysis),
                 ids: compoundAnalyses.map(ca => ca.compoundAnalysis),

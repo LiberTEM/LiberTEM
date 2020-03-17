@@ -26,6 +26,7 @@ Documentation
    formats
    udf
    packages
+   sample_datasets
    applications
    architecture
    performance

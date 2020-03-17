@@ -1,5 +1,6 @@
 pytest>=5,<6
 pytest-cov
 pytest-asyncio
+pytest-xdist
 aiohttp
 websockets

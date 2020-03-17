@@ -20,11 +20,11 @@ you could have a :code:`(ny, nx, sy, sx)` tuple describing the shape.
 MATLAB users should keep one thing in mind. The navigation axes in Python is the transpose of that of MATLAB. 
 In Python, the indices increase linearly with the row. A 3x3 Python matrix is represented in the following way:
  
-.. code-block: python
+.. code-block:: python
 
     [[0,1,2],
-	 [3,4,5],
-	 [6,7,8]]
+	[3,4,5],
+	[6,7,8]]
 	
 `This`_ might be helpful for MATLAB users.
 

@@ -8,6 +8,7 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
+from libertem.utils.threading import set_num_threads
 
 
 class UDFMeta:
@@ -638,6 +639,7 @@ class UDFRunner:
         return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
 
     def run_for_partition(self, partition, roi):
+        set_num_threads(1)
         dtype = self._get_dtype(partition.dtype)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,

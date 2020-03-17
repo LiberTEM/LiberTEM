@@ -77,13 +77,11 @@ jobs:
     - stage: packaging
       env: TOXENV=docs-deploy
       python: 3.7
-      sudo: true
       install:
         - pip install tox
         - sudo apt-get install -y pandoc
 
     - stage: packaging
-      sudo: require
       python: 3.7
       install:
         - pip install -r scripts/requirements.txt

@@ -1,6 +1,6 @@
-===============
-Sample Dataset
-===============
+================
+Sample Datasets
+================
 Public datasets
 ~~~~~~~~~~~~~~~~
 Some data to work with have been obtained from `Zenodo <https://zenodo.org>`_. 
@@ -21,9 +21,9 @@ Random data can be generated in the following way. It should be kept in mind tha
 
 .. code-block:: python
       
-      import numpy as np
-      real_data = np.random.randn(16, 16, 16, 16).astype("float32")
-      real_data.tofile("/tmp/real_raw_file.raw")
+    import numpy as np
+    real_data = np.random.randn(16, 16, 16, 16).astype("float32")
+    real_data.tofile("/tmp/real_raw_file.raw")
 
 Now you can load the data through the `Python API`_ in the following way
 

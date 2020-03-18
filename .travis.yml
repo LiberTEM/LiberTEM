@@ -72,6 +72,7 @@ jobs:
       script:
         - (cd client && npm run build)
         - (cd client && npm test -- --coverage)
+        - (cd client && npm run lint)
 
     - stage: packaging
       env: TOXENV=docs-deploy

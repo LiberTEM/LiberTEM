@@ -764,7 +764,7 @@ class Partition3D(Partition):
             sig_shape = self.meta.shape.sig
         stackheight = self._get_stackheight(
             sig_shape=sig_shape, dest_dtype=dest_dtype, target_size=target_size)
-        tile_buf_full = self.zeros((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
+        tile_buf_full = self.empty((stackheight,) + tuple(sig_shape), dtype=dest_dtype)
 
         tileshape = (
             stackheight,
@@ -778,7 +778,7 @@ class Partition3D(Partition):
                     current_tileshape = (
                         current_stackheight,
                     ) + tuple(sig_shape)
-                    tile_buf = self.zeros(current_tileshape, dtype=dest_dtype)
+                    tile_buf = self.empty(current_tileshape, dtype=dest_dtype)
                 else:
                     current_stackheight = stackheight
                     current_tileshape = tileshape
@@ -916,6 +916,9 @@ class Partition3D(Partition):
 
     def zeros(self, *args, **kwargs):
         return np.zeros(*args, **kwargs)
+
+    def empty(self, *args, **kwargs):
+        return np.empty(*args, **kwargs)
 
 
 class PartitionStructure:

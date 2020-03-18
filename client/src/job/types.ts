@@ -20,7 +20,7 @@ export enum JobStatus {
 
 export interface JobStateCommon {
     id: string,
-    dataset: string,
+    analysis: string,
     status: JobStatus,
     startTimestamp: number,
     results: JobResultType[],

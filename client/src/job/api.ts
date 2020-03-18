@@ -1,9 +1,8 @@
-import { AnalysisDetails, CancelJobResponse, StartJobRequest, StartJobResponse } from "../messages";
+import { CancelJobResponse, StartJobRequest, StartJobResponse } from "../messages";
 
-export function startJob(jobId: string, datasetId: string, analysis: AnalysisDetails): Promise<StartJobResponse> {
+export function startJob(jobId: string, analysis: string): Promise<StartJobResponse> {
     const payload: StartJobRequest = {
         job: {
-            dataset: datasetId,
             analysis,
         }
     }
@@ -20,3 +19,5 @@ export function cancelJob(jobId: string): Promise<CancelJobResponse> {
         credentials: "same-origin",
     }).then(r => r.json());
 }
+
+

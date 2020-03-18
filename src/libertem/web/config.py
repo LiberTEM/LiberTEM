@@ -8,17 +8,18 @@ import tornado.escape
 
 from .base import log_message
 from .messages import Message
+from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
 class ConfigHandler(tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     async def get(self):
         log.info("ConfigHandler.get")
-        msg = Message(self.data).config(config=self.data.get_config())
+        msg = Message(self.state).config(config=self.state.get_config())
         log_message(msg)
         self.write(msg)

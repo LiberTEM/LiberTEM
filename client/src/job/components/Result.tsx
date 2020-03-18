@@ -1,8 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import styled from 'styled-components';
-import { AnalysisState } from "../../analysis/types";
-import { DatasetState } from "../../messages";
 import BusyWrapper from "../../widgets/BusyWrapper";
 import HandleParent from "../../widgets/HandleParent";
 import { HandleRenderFunction } from "../../widgets/types";
@@ -13,12 +11,9 @@ interface ResultProps {
     width: number,
     height: number,
     job: JobState,
-    dataset: DatasetState,
-    analysis: AnalysisState,
     extraHandles?: HandleRenderFunction,
     extraWidgets?: React.ReactElement<SVGElement>,
-    idx: number,
-    jobIndex: number,
+    channel: number,
 }
 
 const ResultWrapper = styled.svg`
@@ -44,13 +39,13 @@ class Result extends React.Component<MergedProps> {
     }
 
     public render() {
-        const { job, idx, width, height, extraWidgets } = this.props;
+        const { job, channel, width, height, extraWidgets } = this.props;
         const busy = job.running !== JobRunning.DONE;
 
         return (
             <BusyWrapper busy={busy}>
                 <ResultWrapper width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-                    <ResultImage job={job} idx={idx} width={width} height={height} />
+                    <ResultImage job={job} channel={channel} width={width} height={height} />
                     {extraWidgets}
                     {this.renderHandles()}
                 </ResultWrapper>

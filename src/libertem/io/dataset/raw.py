@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from libertem.common.buffers import zeros_aligned
+from libertem.common.buffers import zeros_aligned, empty_aligned
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     Partition3D, File3D, FileSet3D,
@@ -312,3 +312,8 @@ class RawPartition(Partition3D):
         if self._enable_direct:
             return zeros_aligned(*args, **kwargs)
         return super().zeros(*args, **kwargs)
+
+    def empty(self, *args, **kwargs):
+        if self._enable_direct:
+            return empty_aligned(*args, **kwargs)
+        return super().empty(*args, **kwargs)

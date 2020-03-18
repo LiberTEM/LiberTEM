@@ -4,13 +4,13 @@ import styles from "./ResultImage.module.css";
 
 interface ResultImageProps {
     job: JobState,
-    idx: number,
+    channel: number,
     width: number,
     height: number,
 }
 
-const ResultImage: React.SFC<ResultImageProps> = ({ job, idx, width, height }) => {
-    const result = job.results[idx];
+const ResultImage: React.SFC<ResultImageProps> = ({ job, channel, width, height }) => {
+    const result = job.results[channel];
     if (result === undefined) {
         return (
             <svg className={styles.fallback} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />

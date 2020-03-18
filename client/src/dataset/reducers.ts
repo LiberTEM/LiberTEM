@@ -28,7 +28,11 @@ export function datasetReducer(state = initialDatasetState, action: AllActions):
         }
         case datasetActions.ActionTypes.CREATED: {
             const ds = Object.assign({}, action.payload.dataset, { status: DatasetStatus.OPEN });
-            return updateById(state, action.payload.dataset.id, ds);
+            if (state.byId[action.payload.dataset.id]) {
+                return updateById(state, action.payload.dataset.id, ds);
+            } else {
+                return insertById(state, action.payload.dataset.id, ds);
+            }
         }
         case datasetActions.ActionTypes.ERROR: {
             return filterWithPred(state, (r: DatasetState) => r.id !== action.payload.dataset);

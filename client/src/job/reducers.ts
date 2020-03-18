@@ -1,6 +1,6 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { ById, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, constructById, insertById, updateById } from "../helpers/reducerHelpers";
 import * as jobActions from './actions';
 import { JobRunning, JobState, JobStatus } from "./types";
 
@@ -19,7 +19,7 @@ export function jobReducer(state = initialJobState, action: AllActions): JobRedu
                 action.payload.id,
                 {
                     id: action.payload.id,
-                    dataset: action.payload.dataset,
+                    analysis: action.payload.analysis,
                     running: JobRunning.CREATING,
                     status: JobStatus.CREATING,
                     results: [],
@@ -72,6 +72,28 @@ export function jobReducer(state = initialJobState, action: AllActions): JobRedu
                     endTimestamp: timestamp,
                 }
             )
+        }
+        case channelActions.ActionTypes.INITIAL_STATE: {
+            const jobs = action.payload.jobs;
+            const jobState: JobState[] = jobs.map(job => {
+                return {
+                    id: job.id,
+                    analysis: job.analysis,
+                    // FIXME: right job status!
+                    status: JobStatus.SUCCESS,
+                    startTimestamp: 0,
+                    // FIXME: result blobs?
+                    results: [],
+                    // FIXME: right job running status!
+                    running: JobRunning.DONE,
+                    endTimestamp: 0,
+                };
+            })
+
+            return {
+                byId: constructById(jobState, job => job.id),
+                ids: jobState.map(job => job.id),
+            };
         }
     }
     return state;

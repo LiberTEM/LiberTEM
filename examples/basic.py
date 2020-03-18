@@ -1,13 +1,7 @@
-import os
 import sys
 import logging
-# Disable threading, we already use multiprocessing
-# to saturate the CPUs
-# The variables have to be set before any numerics
-# libraries are loaded.
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
+# Changed in 0.5.0.dev0: The thread count ist set dynamically
+# on the workers. No need for setting environment variables anymore.
 
 import numpy as np
 import matplotlib.pyplot as plt

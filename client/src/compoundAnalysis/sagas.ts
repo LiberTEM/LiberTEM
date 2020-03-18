@@ -7,7 +7,7 @@ import * as channelActions from '../channel/actions';
 import * as jobActions from '../job/actions';
 import { cancelJob, startJob } from '../job/api';
 import { JobState } from '../job/types';
-import { DatasetState, DatasetStatus, AnalysisDetails } from '../messages';
+import { AnalysisDetails, DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
 import * as compoundAnalysisActions from './actions';
 import { createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, removeCompoundAnalysis } from "./api";

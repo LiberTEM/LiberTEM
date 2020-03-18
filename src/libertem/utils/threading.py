@@ -1,38 +1,48 @@
-import os
 import logging
-from pathlib import Path
-from ctypes.util import find_library
-import ctypes
+from contextlib import contextmanager
+
+import threadpoolctl
+try:
+    import pyfftw
+except ImportError:
+    pyfftw = None
+# import numba  FIXME use as soon as 0.49 is released
+# See also setup.py to set version limit for numba
+
 
 log = logging.getLogger(__name__)
 
 
+if pyfftw:
+    @contextmanager
+    def set_fftw_threads(n):
+        pyfftw_threads = pyfftw.config.NUM_THREADS
+        try:
+            pyfftw.config.NUM_THREADS = n
+            yield
+        finally:
+            pyfftw.config.NUM_THREADS = pyfftw_threads
+else:
+    @contextmanager
+    def set_fftw_threads(n):
+        yield
+
+
+# FIXME as soon as numba 0.49 is released
+# @contextmanager
+# def set_numba_threads(n):
+#     numba_threads = numba.get_num_threads(n)
+#     try:
+#         numba.set_num_threads(n)
+#         yield
+#     finally:
+#         numba.set_num_threads(numba_threads)
+@contextmanager
+def set_numba_threads(n):
+    yield
+
+
+@contextmanager
 def set_num_threads(n):
-    # The library has to be loaded for each call
-    # through ctypes
-    # and not once during import of this module
-    # for this to work with dask.distributed workers
-
-    def get_numpy_openblas_dll_path():
-        import numpy
-        numpy_dir = os.path.dirname(numpy.__file__)
-        dll_dir = os.path.join(numpy_dir, '.libs')
-        files = Path(dll_dir).rglob('libopenblas*.dll')
-        return str(next(files))
-
-    try:
-        if os.name == 'nt':
-            lib_str = get_numpy_openblas_dll_path()
-        else:
-            lib_str = find_library('openblas')
-        openblas = ctypes.cdll.LoadLibrary(lib_str)
-
-        openblas_set_num_threads = openblas.openblas_set_num_threads
-        log.debug("Found OpenBLAS library")
-    except Exception as e:
-        log.warning("Didn't find OpenBLAS library", exc_info=e)
-
-        def openblas_set_num_threads(n):
-            pass
-
-    openblas_set_num_threads(n)
+    with threadpoolctl.threadpool_limits(n), set_fftw_threads(n), set_numba_threads(n):
+        yield

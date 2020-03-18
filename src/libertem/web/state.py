@@ -1,6 +1,7 @@
 import os
 import copy
 import typing
+import itertools
 from collections import defaultdict
 
 import psutil
@@ -250,10 +251,8 @@ class JobState:
             executor = self.executor_state.get_executor()
             await executor.cancel(uuid)
             del self.jobs[uuid]
-            for ds, jobs in self.jobs_for_dataset.items():
-                if uuid in jobs:
-                    jobs.remove(uuid)
-            for ds, jobs in self.jobs_for_analyses.items():
+            for ds, jobs in itertools.chain(self.jobs_for_dataset.items(),
+                                            self.jobs_for_analyses.items()):
                 if uuid in jobs:
                     jobs.remove(uuid)
             return True

@@ -7,7 +7,7 @@ import * as channelActions from '../channel/actions';
 import * as jobActions from '../job/actions';
 import { cancelJob, startJob } from '../job/api';
 import { JobState } from '../job/types';
-import { DatasetState, DatasetStatus } from '../messages';
+import { DatasetState, DatasetStatus, AnalysisDetails } from '../messages';
 import { RootReducer } from '../store';
 import * as compoundAnalysisActions from './actions';
 import { createOrUpdateAnalysis, createOrUpdateCompoundAnalysis, removeAnalysis, removeCompoundAnalysis } from "./api";
@@ -91,6 +91,55 @@ export function* cancelOldJob(analysis: AnalysisState, jobIndex: number) {
     }
 }
 
+export function* createOrUpdate(
+    compoundAnalysis: CompoundAnalysisState, analysisId: string | undefined,
+    analysisIndex: number, details: AnalysisDetails
+) {
+    if (analysisId) {
+        // update the analysis on the server:
+        yield call(createOrUpdateAnalysis,
+            compoundAnalysis.compoundAnalysis, analysisId,
+            compoundAnalysis.dataset, details
+        );
+        yield put(analysisActions.Actions.updated(analysisId, details));
+
+        const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
+        const jobs = analysis.jobs ? analysis.jobs : [];
+
+        for (const oldJobId of jobs) {
+            const job: JobState = yield select(selectJob, oldJobId);
+            if (job && job.running !== "DONE") {
+                // wait until the job is cancelled:
+                yield call(cancelJob, oldJobId);
+            }
+        }
+        return analysisId;
+    } else {
+        // create the analysis on the server:
+        const newAnalysisId = uuid();
+        yield call(createOrUpdateAnalysis,
+            compoundAnalysis.compoundAnalysis, newAnalysisId,
+            compoundAnalysis.dataset, details
+        );
+        yield put(analysisActions.Actions.created({
+            id: newAnalysisId,
+            dataset: compoundAnalysis.dataset,
+            details,
+            jobs: [],
+        }, compoundAnalysis.compoundAnalysis, analysisIndex));
+
+        const updatedCompoundAnalysis = yield select(selectCompoundAnalysis, compoundAnalysis.compoundAnalysis);
+
+        yield call(
+            createOrUpdateCompoundAnalysis,
+            updatedCompoundAnalysis.compoundAnalysis,
+            updatedCompoundAnalysis.dataset,
+            updatedCompoundAnalysis.details,
+        );
+        return newAnalysisId;
+    }
+}
+
 export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoStart: boolean }) {
     // channel for incoming actions:
     // all actions that arrive while we block in `call` will be buffered here.
@@ -110,49 +159,8 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
             const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, compoundAnalysisId);
             const { analysisIndex, details } = action.payload;
 
-            let analysisId = compoundAnalysis.details.analyses[analysisIndex];
-
-            if (analysisId) {
-                // update the analysis on the server:
-                yield call(createOrUpdateAnalysis,
-                    compoundAnalysis.compoundAnalysis, analysisId,
-                    compoundAnalysis.dataset, details
-                );
-                yield put(analysisActions.Actions.updated(analysisId, details));
-
-                const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
-                const jobs = analysis.jobs ? analysis.jobs : [];
-
-                for (const oldJobId of jobs) {
-                    const job: JobState = yield select(selectJob, oldJobId);
-                    if (job && job.running !== "DONE") {
-                        // wait until the job is cancelled:
-                        yield call(cancelJob, oldJobId);
-                    }
-                }
-            } else {
-                // create the analysis on the server:
-                analysisId = uuid();
-                yield call(createOrUpdateAnalysis,
-                    compoundAnalysis.compoundAnalysis, analysisId,
-                    compoundAnalysis.dataset, details
-                );
-                yield put(analysisActions.Actions.created({
-                    id: analysisId,
-                    dataset: compoundAnalysis.dataset,
-                    details,
-                    jobs: [],
-                }, compoundAnalysis.compoundAnalysis, analysisIndex));
-
-                const updatedCompoundAnalysis = yield select(selectCompoundAnalysis, compoundAnalysisId);
-
-                yield call(
-                    createOrUpdateCompoundAnalysis,
-                    updatedCompoundAnalysis.compoundAnalysis,
-                    updatedCompoundAnalysis.dataset,
-                    updatedCompoundAnalysis.details,
-                );
-            }
+            const existingAnalysisId = compoundAnalysis.details.analyses[analysisIndex];
+            const analysisId = yield call(createOrUpdate, compoundAnalysis, existingAnalysisId, analysisIndex, details);
 
             // prepare running the job:
             const jobId = uuid();
@@ -175,20 +183,22 @@ export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoSt
     }
 }
 
+function* removeJobsForAnalysis(analysis: AnalysisState) {
+    for (const oldJobId of analysis.jobs) {
+        const job: JobState = yield select(selectJob, oldJobId);
+        if (job && job.running !== "DONE") {
+            // wait until the job is cancelled:
+            yield call(cancelJob, oldJobId);
+        }
+    }
+}
+
 export function* doRemoveAnalysisSaga(action: ReturnType<typeof compoundAnalysisActions.Actions.remove>) {
     const compoundAnalysis: CompoundAnalysisState = yield select(selectCompoundAnalysis, action.payload.id);
     try {
         for (const analysisId of compoundAnalysis.details.analyses) {
             const analysis: AnalysisState = yield select(selectAnalysis, analysisId);
-
-            for (const oldJobId of analysis.jobs) {
-                const job: JobState = yield select(selectJob, oldJobId);
-                if (job && job.running !== "DONE") {
-                    // wait until the job is cancelled:
-                    yield call(cancelJob, oldJobId);
-                }
-            }
-
+            yield call(removeJobsForAnalysis, analysis);
             yield call(removeAnalysis, compoundAnalysis.compoundAnalysis, analysisId);
             yield put(analysisActions.Actions.removed(analysisId));
         }

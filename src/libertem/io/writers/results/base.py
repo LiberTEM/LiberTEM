@@ -22,12 +22,13 @@ class ResultFormatRegistry(type):
 
     @classmethod
     def get_available_formats(cls):
-        return [
-            {
-                identifier: fmt['info']['description']
+        return {
+            identifier: {
+                "identifier": identifier,
+                "description": fmt['info']['description'],
             }
             for identifier, fmt in cls.registry.items()
-        ]
+        }
 
     @classmethod
     def get_format_by_id(cls, identifier) -> 'ResultFormat':

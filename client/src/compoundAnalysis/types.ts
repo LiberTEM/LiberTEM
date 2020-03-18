@@ -56,48 +56,48 @@ export interface CompoundAnalysisMetadataItem {
  */
 export const CompoundAnalysisMetadata: { [s: string]: CompoundAnalysisMetadataItem } = {
     [AnalysisTypes.APPLY_RING_MASK]: {
-        desc: "Apply a ring mask with center cx, cy; inner radius ri, outer radius ro",
+        desc: "Application of a ring mask",
         title: "Ring",
         component: RingMaskAnalysis,
     },
     [AnalysisTypes.APPLY_DISK_MASK]: {
-        desc: "Apply a disk mask with center cx, cy; radius r",
+        desc: "Application of a disk mask",
         title: "Disk",
         component: DiskMaskAnalysis,
     },
     [AnalysisTypes.FEM]: {
-        desc: "Apply a ring mask with center cx, cy; radius r",
+        desc: "Application of a ring mask",
         title: "FEM (SD over Ring)",
         component: FEM,
     },
     [AnalysisTypes.CENTER_OF_MASS]: {
-        desc: "Compute the center of mass of all diffraction images",
+        desc: "The center of mass of all diffraction images",
         title: "Center of mass",
         component: CenterOfMassAnalysis,
     },
     [AnalysisTypes.APPLY_POINT_SELECTOR]: {
-        desc: "Create an image from a single pixel selected in the detector",
+        desc: "Image from a single pixel selected in the detector",
         title: "Point selection",
         component: PointSelectionAnalysis,
     },
     [AnalysisTypes.SUM_FRAMES]: {
-        desc: "Create a sum of all detector frames",
+        desc: "A sum of all (or selected) detector frames",
         title: "Sum all frames",
     },
     [AnalysisTypes.SD_FRAMES]: {
-        desc: "Create a SD of all detector frames",
+        desc: "A SD of all (or selected) detector frames",
         title: "SD all frames",
     },
     [AnalysisTypes.PICK_FRAME]: {
-        desc: "Pick a single frame",
+        desc: "A single picked frame",
         title: "Pick frame",
     },
     [AnalysisTypes.PICK_FFT_FRAME]: {
-        desc: "Pick a single frame",
+        desc: "Fourier transform of a picked frame",
         title: "Pick frame",
     },
     [AnalysisTypes.APPLY_FFT_MASK]: {
-        desc: "Apply a ring mask with inner radius fourier_rad_in and outer radius fourier_rad_out in Fourier space",
+        desc: "Application of a ring mask in Fourier space",
         title: "FFT analysis",
         component: FFTAnalysis
     },
@@ -106,7 +106,7 @@ export const CompoundAnalysisMetadata: { [s: string]: CompoundAnalysisMetadataIt
         title: "FFT of Sum all frames",
     },
     [AnalysisTypes.RADIAL_FOURIER]: {
-        desc: "Compute a radial Fourier analysis",
+        desc: "Radial Fourier analysis over the selected ring",
         title: "Radial Fourier",
         component: RadialFourierAnalysis,
     },

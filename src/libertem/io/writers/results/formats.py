@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+from PIL import Image
 
 from .base import ResultFormat
 
@@ -31,32 +32,82 @@ class NPZResultFormat(ResultFormat):
     def format_info(cls):
         return {
             "id": "NPZ",
-            "description": "Numpy format (.npz)",
+            "description": "numpy format (.npz)",
         }
 
     def _get_result_dict(self):
         return {
-            k: self._result_set[k]
+            k: np.array(self._result_set[k])
             for k in self._result_set.keys()
         }
 
     def serialize_to_buffer(self, buf):
-        np.savez(buf, self._get_result_dict())
+        np.savez(buf, **self._get_result_dict())
 
     def get_content_type(self):
         return "application/octet-stream"
 
     def get_filename(self):
-        return "results.npy"  # FIXME: naming
+        return "results.npz"  # FIXME: naming
 
 
-class NPZCompressedResultFormat(ResultFormat):
+class NPZCompressedResultFormat(NPZResultFormat):
     @classmethod
     def format_info(cls):
         return {
             "id": "NPZ_COMPRESSED",
-            "description": "Numpy format, compressed (.npz)",
+            "description": "numpy format, compressed (.npz)",
         }
 
     def serialize_to_buffer(self, buf):
-        np.savez_compressed(buf, self._get_result_dict())
+        np.savez_compressed(buf, **self._get_result_dict())
+
+
+class TiffResultFormat(ResultFormat):
+    @classmethod
+    def format_info(cls):
+        return {
+            "id": "TIFF",
+            "description": "Multi-page 32bit float TIFF (.tif)",
+        }
+
+    def get_channel_images(self):
+        for k in self._result_set.keys():
+            result = np.array(self._result_set[k]).astype(np.float32)
+            yield Image.fromarray(result)
+
+    def serialize_to_buffer(self, buf):
+        images = self.get_channel_images()
+        first_image = next(images)
+        first_image.save(buf, format="TIFF", save_all=True, append_images=images)
+
+    def get_content_type(self):
+        return "image/tiff"
+
+    def get_filename(self):
+        return "results.tif"  # FIXME: naming
+
+
+class RawResultFormat(ResultFormat):
+    @classmethod
+    def format_info(cls):
+        return {
+            "id": "RAW",
+            "description": "Raw binary, as-is (.bin)",
+        }
+
+    def _get_result_arr(self):
+        return np.stack([
+            np.array(self._result_set[k])
+            for k in self._result_set.keys()
+        ])
+
+    def serialize_to_buffer(self, buf):
+        buf.write(self._get_result_arr().tobytes())
+
+    def get_content_type(self):
+        return "application/octet-stream"
+
+    def get_filename(self):
+        arr = self._get_result_arr()
+        return "results_%s_%s.bin" % (arr.dtype, "-".join(str(i) for i in arr.shape))

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { connect, useDispatch } from "react-redux";
 import { Modal } from "semantic-ui-react";
+import { useDismissEscape } from "../../helpers/hooks";
 import { RootReducer } from "../../store";
 import { Actions } from "../actions";
 import Error from "./Error";
@@ -23,18 +24,11 @@ const ErrorList: React.SFC<MergedProps> = ({ errors, clusterConnected, channelCo
 
     const dispatch = useDispatch();
 
-    React.useEffect(() => {
-        const handleEsc = (ev: KeyboardEvent) => {
-            if(ev.code === "Escape" || ev.keyCode === 27) {
-                dispatch(Actions.dismissAll());
-            }
-        }
-        document.addEventListener("keyup", handleEsc);
+    const doDismiss = () => {
+        dispatch(Actions.dismissAll());
+    }
 
-        return () => {
-            document.removeEventListener("keyup", handleEsc);
-        };
-    });
+    useDismissEscape(doDismiss);
 
     return (
         <Modal open={showModal}>

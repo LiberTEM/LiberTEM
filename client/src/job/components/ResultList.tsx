@@ -24,12 +24,10 @@ interface ExternalResultListProps {
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
     const compoundAnalysis = state.compoundAnalyses.byId[ownProps.compoundAnalysis];
     const analysis = state.analyses.byId[compoundAnalysis.details.analyses[ownProps.analysisIndex]];
-    const downloadURL = analysis ? `/api/analyses/${analysis.id}/download/` : undefined;
 
     return {
         jobsById: state.jobs.byId,
         analysis,
-        downloadURL,
         compoundAnalysis,
         analysisIndex: ownProps.analysisIndex,
     };
@@ -87,7 +85,7 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
     }
 
     public genericRender(currentResult: React.ReactElement, job?: JobState) {
-        const { subtitle, children, selectors, downloadURL } = this.props;
+        const { subtitle, children, selectors } = this.props;
         const msg = this.getMsg(job);
         return (
             <div>
@@ -98,7 +96,6 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
                     {selectors}
                 </Selectors>
                 <p>{subtitle} {msg}</p>
-                {downloadURL ? <p><a href={downloadURL}>Download</a></p> : null}
             </div>
         );
     }

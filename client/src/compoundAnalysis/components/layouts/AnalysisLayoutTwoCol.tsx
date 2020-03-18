@@ -16,7 +16,6 @@ const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
     left, right,
     toolbar,
 }) => {
-
     return (
         <>
             <Header as='h3' attached="top">

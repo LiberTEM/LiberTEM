@@ -14,6 +14,9 @@ export const getAnalysisStatus = (compoundAnalysis: CompoundAnalysisState, analy
 
     return filteredAnalyses.reduce((prevValue: "idle" | "busy", analysisId: string) => {
         const analysis = analyses.byId[analysisId];
+        if(!analysis) {
+            return prevValue; // no analysis, so "all jobs" are done
+        }
         const allDone = analysis.jobs.every(
             jobId => jobs.byId[jobId].running === JobRunning.DONE
         );

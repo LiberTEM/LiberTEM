@@ -13,12 +13,10 @@ export interface LocalConfig {
     }
 }
 
-export interface ConfigMeta {
-    haveConfig: boolean,
-}
-
 export type ConfigParams = MsgPartConfig & LocalConfig;
-export type ConfigState = ConfigParams & ConfigMeta;
+export type ConfigState = ConfigParams & {
+    haveConfig: boolean,
+};
 
 const initialConfigState: ConfigState = {
     version: "",
@@ -27,6 +25,7 @@ const initialConfigState: ConfigState = {
     cwd: "/",
     separator: "/",
     lastOpened: {},
+    resultFileFormats: {},
     fileHistory: [],
     haveConfig: false,
 }

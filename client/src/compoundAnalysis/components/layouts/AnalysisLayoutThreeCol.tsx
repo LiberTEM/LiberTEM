@@ -11,7 +11,6 @@ interface AnalysisLayoutThreeColProps {
     title1: string,
     title2: React.ReactNode,
     title3: string,
-
 }
 
 type MergedProps = AnalysisLayoutThreeColProps;
@@ -36,7 +35,6 @@ const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
 
                         <Grid.Column width={5}>
                             <p>{title2}</p>
-
                         </Grid.Column>
 
                         <Grid.Column width={6}>
@@ -61,7 +59,6 @@ const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
 
                     <Grid.Row>
                         <Grid.Column width={10}>
-
                             <p>{subtitle}</p>
                         </Grid.Column>
 

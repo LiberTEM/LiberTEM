@@ -5,6 +5,7 @@ const config: ConfigState = {
     separator: '/', version: '', revision: '', cwd: '/',
     lastOpened: {},
     fileHistory: [],
+    resultFileFormats: {},
     localCores: 0,
     haveConfig: true,
 };

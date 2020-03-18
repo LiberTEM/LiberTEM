@@ -15,6 +15,12 @@ export interface MsgPartConfig {
     localCores: number,
     cwd: string,
     separator: string,
+    resultFileFormats: {
+        [id: string]: {
+            identifier: string,
+            description: string,
+        }
+    },
 }
 
 export interface GetConfigResponse {

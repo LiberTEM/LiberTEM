@@ -45,7 +45,7 @@ async def test_download_1(default_raw, base_url, http_client, server_port):
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/?format=h5".format(
+        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/HDF5/".format(
             base_url, ca_uuid, analysis_uuid,
         )
         async with http_client.get(download_url) as resp:

@@ -5,6 +5,7 @@ import tornado.web
 from .base import CORSMixin, log_message
 from .messages import Message
 from .state import SharedState
+from libertem.io.writers.results.base import ResultFormatRegistry
 
 
 class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
@@ -85,20 +86,20 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         assert len(fmt) == 1
         return fmt[0].decode("utf8")
 
-    async def get(self, compoundUuid, uuid):
-        details, results, job_id = self.state.analysis_state.get_results(uuid)
-        import h5py
+    async def get(self, compoundUuid: str, uuid: str, file_format_id: str):
+        details, result_set, job_id = self.state.analysis_state.get_results(uuid)
+        format_cls = ResultFormatRegistry.get_format_by_id(file_format_id)
+        result_formatter = format_cls(result_set)
+        buf = io.BytesIO()
+        result_formatter.serialize_to_buffer(buf)
 
-        bio = io.BytesIO()
-        with h5py.File(bio, 'w') as f:
-            for k in results.keys():
-                f[k] = results[k]
-
-        # FIXME: stream file (maybe temporary file w/ sendfile?), correct content-type
-        # FIXME: add parameters to h5 file
-        self.set_header('Content-Type', 'application/x-hdf5')
-        self.set_header('Content-Disposition', 'attachment; filename="results.h5"')
-        self.write(bio.getvalue())
+        self.set_header('Content-Type', result_formatter.get_content_type())
+        self.set_header(
+            'Content-Disposition',
+            'attachment; filename="%s"' % result_formatter.get_filename(),
+        )
+        # FIXME: stream file (maybe temporary file w/ sendfile?)
+        self.write(buf.getvalue())
 
 
 class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):

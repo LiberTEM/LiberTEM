@@ -8,6 +8,8 @@ import psutil
 import libertem
 from libertem.analysis.base import AnalysisResultSet
 from libertem.io.dataset.base import DataSetException
+from libertem.io.writers.results.base import ResultFormatRegistry
+from libertem.io.writers.results import formats  # NOQA
 
 
 class ExecutorState:
@@ -315,6 +317,7 @@ class SharedState:
     def get_config(self):
         return {
             "version": libertem.__version__,
+            "resultFileFormats": ResultFormatRegistry.get_available_formats(),
             "revision": libertem.revision,
             "localCores": self.get_local_cores(),
             "cwd": os.getcwd(),

@@ -148,9 +148,10 @@ def test_symmetries(lt_ctx, TYPE):
     assert np.all(np.abs(c_1_2[0, 0]) > 0)
     assert np.all(np.abs(c_1_2[0, 1]) > 0)
     assert np.all(np.abs(c_1_2[1, 0]) > 0)
-    assert np.allclose(np.angle(c_1_2[0, 0]), np.pi)
-    assert np.allclose(np.angle(c_1_2[0, 1]), -np.pi)
-    assert np.allclose(np.angle(c_1_2[1, 0]), np.pi)
+    # Discontinuity at this point, can be pi or -pi
+    assert np.allclose(np.abs(np.angle(c_1_2[0, 0])), np.pi)
+    assert np.allclose(np.abs(np.angle(c_1_2[0, 1])), np.pi)
+    assert np.allclose(np.abs(np.angle(c_1_2[1, 0])), np.pi)
 
     c_0_3 = results.complex_0_3.raw_data
     c_1_3 = results.complex_1_3.raw_data

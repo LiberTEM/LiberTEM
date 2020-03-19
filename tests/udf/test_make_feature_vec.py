@@ -12,10 +12,10 @@ def test_simple_example(lt_ctx):
     # adding high intensity zero order peak for all frames
     data[:, 2, 2] = 7
     # adding strong non-zero order diffraction peaks for 0:3 frames
-    data[0:3, 0, 0] = 2
+    data[0:3, 0, 0] = 2.5
     data[0:3, 4, 4] = 2
     # adding weak non-zero order diffraction peaks for 0:3 frames
-    data[3:6, 2, 0] = 1
+    data[3:6, 2, 0] = 1.5
     data[3:6, 2, 4] = 1
     dataset = MemoryDataSet(data=data, tileshape=(1, 5, 5),
                             num_partitions=3, sig_dims=2)

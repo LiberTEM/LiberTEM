@@ -685,7 +685,8 @@ class Context:
         if cores is None:
             cores = 2
         return DaskJobExecutor.make_local(
-            cluster_kwargs={"threads_per_worker": 1, "n_workers": cores}
+            cluster_kwargs={"threads_per_worker": 1, "n_workers": cores},
+            client_kwargs={'set_as_default': False}
         )
 
     def close(self):

@@ -47,10 +47,15 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 "threads_per_worker": 1,
                 "local_directory": self.state.get_local_directory()
             }
+            client_kwargs = {'set_as_default': False}
             if "numWorkers" in connection:
                 cluster_kwargs.update({"n_workers": connection["numWorkers"]})
             sync_executor = await sync_to_async(
-                partial(DaskJobExecutor.make_local, cluster_kwargs=cluster_kwargs)
+                partial(
+                    DaskJobExecutor.make_local,
+                    cluster_kwargs=cluster_kwargs,
+                    client_kwargs=client_kwargs
+                )
             )
         else:
             raise ValueError("unknown connection type")

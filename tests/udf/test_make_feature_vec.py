@@ -10,7 +10,11 @@ def test_simple_example(lt_ctx):
     #  6:9 frames are amourphous
     data = np.zeros([3*3, 7, 7]).astype(np.float32)
     # adding high intensity zero order peak for all frames
-    data[:, 3, 3] = 7
+    # The first one different to make sure it shows up weakly in the standard deviation map
+    # This makes sure that we have more peaks than n_peaks, but this one
+    # is intentionally the weakest
+    data[0, 3, 3] = 7.1
+    data[1:, 3, 3] = 7
     # adding strong non-zero order diffraction peaks for 0:3 frames
     data[0:3, 1, 1] = 2.5
     data[0:3, 5, 5] = 2

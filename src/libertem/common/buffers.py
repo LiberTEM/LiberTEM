@@ -2,6 +2,7 @@ import mmap
 import math
 import numpy as np
 
+
 def _alloc_aligned(size):
     # round up to 4k blocks:
     blocksize = 4096
@@ -71,7 +72,7 @@ class BufferWrapper(object):
         """
 
         if np.product(tuple(extra_shape)) == 0:
-            raise ValueError("invalid extra_shape %r: cannot contain zeros" %(tuple(extra_shape),) )
+            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (tuple(extra_shape),))
 
         self._extra_shape = tuple(extra_shape)
         self._kind = kind

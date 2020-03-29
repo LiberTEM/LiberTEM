@@ -1,8 +1,6 @@
 import mmap
 import math
 import numpy as np
-from libertem.common import Shape
-
 
 def _alloc_aligned(size):
     # round up to 4k blocks:
@@ -72,14 +70,10 @@ class BufferWrapper(object):
             The dtype of this buffer
         """
 
-        if isinstance(extra_shape, Shape):
-            self._extra_shape = extra_shape._nav_shape + extra_shape._sig_shape
-        else:
-            self._extra_shape = extra_shape
+        if np.product(tuple(extra_shape)) == 0:
+            raise ValueError("invalid extra_shape %r: cannot contain zeros" %(tuple(extra_shape),) )
 
-        if np.product(self._extra_shape) == 0:
-            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (self._extra_shape,))
-
+        self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
         self._data = None

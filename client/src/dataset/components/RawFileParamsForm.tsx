@@ -57,7 +57,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
                 <ErrorMessage name="enable_direct" />
-                <Field type="checkbox" name="enable_direct" id="id_enable_direct" />
+                <Field type="checkbox" name="enable_direct" checked={values.enable_direct} id="id_enable_direct" />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>

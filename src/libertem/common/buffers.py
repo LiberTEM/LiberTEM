@@ -62,17 +62,20 @@ class BufferWrapper(object):
             The abstract shape of the buffer, corresponding either to the navigation
             or the signal dimensions of the dataset, or a single value.
 
-        extra_shape : optional, tuple of int
+        extra_shape : optional, tuple of int or a Shape object
             You can specify additional dimensions for your data. For example, if
             you want to store 2D coords, you would specify (2,) here.
+            For a Shape object, sig_dims is discarded and the entire shape is used.
 
         dtype : string or numpy dtype
             The dtype of this buffer
         """
+
+        if np.product(tuple(extra_shape)) == 0:
+            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (tuple(extra_shape),))
+
+        self._extra_shape = tuple(extra_shape)
         self._kind = kind
-        if np.product(extra_shape) == 0:
-            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (extra_shape,))
-        self._extra_shape = extra_shape
         self._dtype = np.dtype(dtype)
         self._data = None
         # set to True if the data coords are global ds coords

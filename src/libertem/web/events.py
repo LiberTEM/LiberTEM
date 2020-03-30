@@ -2,33 +2,9 @@ import asyncio
 
 import tornado.websocket
 
-from .base import log_message
+from .base import log_message, ResultHandlerMixin
 from .messages import Message
-
-
-class ResultEventHandler(tornado.websocket.WebSocketHandler):
-    def initialize(self, data, event_registry):
-        self.registry = event_registry
-        self.data = data
-
-    def check_origin(self, origin):
-        # FIXME: implement this when we want to support CORS later
-        return super().check_origin(origin)
-
-    async def open(self):
-        self.registry.add_handler(self)
-        if self.data.have_executor():
-            await self.data.verify_datasets()
-            datasets = await self.data.serialize_datasets()
-            msg = Message(self.data).initial_state(
-                jobs=self.data.serialize_jobs(),
-                datasets=datasets,
-            )
-            log_message(msg)
-            self.registry.broadcast_event(msg)
-
-    def on_close(self):
-        self.registry.remove_handler(self)
+from .state import SharedState
 
 
 class EventRegistry(object):
@@ -44,9 +20,12 @@ class EventRegistry(object):
     def broadcast_event(self, message, *args, **kwargs):
         futures = []
         for handler in self.handlers:
-            futures.append(
-                handler.write_message(message, *args, **kwargs)
-            )
+            try:
+                future = handler.write_message(message, *args, **kwargs)
+            except tornado.websocket.WebSocketClosedError:
+                self.remove_handler(handler)
+                continue
+            futures.append(future)
         return asyncio.gather(*futures)
 
     def broadcast_together(self, messages, *args, **kwargs):
@@ -57,3 +36,31 @@ class EventRegistry(object):
                     handler.write_message(message, *args, **kwargs)
                 )
         return asyncio.gather(*futures)
+
+
+class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler):
+    def initialize(self, state: SharedState, event_registry: EventRegistry):
+        self.event_registry = event_registry
+        self.state = state
+
+    def check_origin(self, origin):
+        # FIXME: implement this when we want to support CORS later
+        return super().check_origin(origin)
+
+    async def open(self):
+        self.event_registry.add_handler(self)
+        if self.state.executor_state.have_executor():
+            await self.state.dataset_state.verify()
+            datasets = await self.state.dataset_state.serialize_all()
+            msg = Message(self.state).initial_state(
+                jobs=self.state.job_state.serialize_all(),
+                datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
+                compound_analyses=self.state.compound_analysis_state.serialize_all(),
+            )
+            log_message(msg)
+            # FIXME: don't broadcast, only send to the new connection
+            self.event_registry.broadcast_event(msg)
+            await self.send_existing_job_results()
+
+    def on_close(self):
+        self.event_registry.remove_handler(self)

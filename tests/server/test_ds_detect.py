@@ -4,22 +4,14 @@ import pytest
 import websockets
 
 from utils import assert_msg
+from aio_utils import create_connection
 
 pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
 async def test_detect_failed(default_raw, base_url, http_client, server_port):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
-
+    await create_connection(base_url, http_client)
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:
@@ -39,16 +31,7 @@ async def test_detect_failed(default_raw, base_url, http_client, server_port):
 
 @pytest.mark.asyncio
 async def test_detect_hdf5(hdf5, base_url, http_client, server_port):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
-
+    await create_connection(base_url, http_client)
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:

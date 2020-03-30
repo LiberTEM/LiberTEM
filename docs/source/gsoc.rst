@@ -217,20 +217,7 @@ LiberTEM can work as well.
     *Primary contact:* Alex (@sk1p)
 
 
-5. **Beginner/Intermediate**: Set number of threads and workers dynamically for UDFs :issue:`546`.
-    Your task is to implement, document and validate methods to set the thread
-    count for all relevant numerics back-ends in LiberTEM dynamically on a
-    case-by-case basis on the worker processes and main node. Furthermore, you
-    can implement an interface for UDFs to specify their preferred number of
-    threads. This can improve L3 cache efficiency for UDFs that can use a
-    multi-threaded back-end and at the same time avoids oversubscription of the
-    CPU.
-
-    *Skills:* Python programming, using Goole.
-
-    *Domain knowledge:* None
-
-    *Primary contact:* Alex (@sk1p), Dieter (@uellue)
+5. (*Removed since being implemented*: Set number of threads and workers dynamically for UDFs :issue:`546`.)
 
 6. **Beginner/Intermediate/Advanced**: Compression survey :issue:`387`.
     Analyze high-throughput compression techniques, dive into lz4/zstd, blosc

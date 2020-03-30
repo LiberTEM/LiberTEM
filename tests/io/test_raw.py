@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pickle
 
@@ -16,6 +17,7 @@ def test_simple_open(default_raw):
     assert tuple(default_raw.shape) == (16, 16, 128, 128)
 
 
+@pytest.mark.skipif(sys.platform.startswith("darwin"), reason="No general sparse support on OS X")
 @pytest.mark.parametrize(
     'TYPE', ['JOB', 'UDF']
 )
@@ -239,7 +241,7 @@ def test_missing_detector_size(lt_ctx, default_raw):
     assert e.match("missing 1 required argument: 'detector_size'")
 
 
-@pytest.mark.skipif(os.name == 'nt', reason='No direct IO on windows')
+@pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Direct I/O only implemented on Linux')
 def test_load_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",
@@ -252,8 +254,8 @@ def test_load_direct(lt_ctx, default_raw):
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     results = lt_ctx.run(analysis)
 
-@pytest.mark.skipif(os.name != 'nt', reason='No direct IO only on windows')
-def test_direct_io_enabled_windows(lt_ctx, default_raw):
+@pytest.mark.skipif(sys.platform.startswith('linux'), reason='No direct IO only on non-Linux')
+def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
     with pytest.raises(Exception) as e:
         lt_ctx.load(
             "raw",
@@ -263,4 +265,4 @@ def test_direct_io_enabled_windows(lt_ctx, default_raw):
             dtype="float32",
             enable_direct=True,
     )
-    assert e.match("LiberTEM currently does not support Direct I/O on Windows")
+    assert e.match("LiberTEM currently only supports Direct I/O on Linux")

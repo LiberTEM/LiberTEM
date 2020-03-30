@@ -8,7 +8,8 @@ import aiohttp
 
 from libertem.executor.inline import InlineJobExecutor
 
-from libertem.web.server import make_app, EventRegistry, SharedData
+from libertem.web.server import make_app, EventRegistry
+from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.executor.dask import DaskJobExecutor
 from libertem import api as lt
@@ -57,12 +58,12 @@ async def http_client():
 
 
 @pytest.fixture
-def shared_data():
-    return SharedData()
+def shared_state():
+    return SharedState()
 
 
 @pytest.fixture(scope="function")
-async def server_port(unused_tcp_port_factory, shared_data):
+async def server_port(unused_tcp_port_factory, shared_state):
     """
     start a LiberTEM API server on a unused port
     """
@@ -70,15 +71,15 @@ async def server_port(unused_tcp_port_factory, shared_data):
     loop.set_debug(True)
     port = unused_tcp_port_factory()
     event_registry = EventRegistry()
-    app = make_app(event_registry, shared_data)
+    app = make_app(event_registry, shared_state)
     print("starting server at port {}".format(port))
     server = app.listen(address="127.0.0.1", port=port)
     yield port
     print("stopping server at port {}".format(port))
     server.stop()
     await server.close_all_connections()
-    if shared_data.have_executor():
-        await shared_data.get_executor().close()
+    if shared_state.executor_state.have_executor():
+        await shared_state.executor_state.get_executor().close()
 
 
 @pytest.fixture(scope="function")

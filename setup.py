@@ -137,13 +137,15 @@ setup(
         "numpy",
         "scipy",
         "sparse",
-        "distributed>=2.2.0",
+        "distributed>=2.2.0,<2.9",
         "click",
         "tornado>=5",
         "matplotlib",
         "pillow",
         "h5py",
         "psutil",
+        # FIXME numba>=0.49 as soon as released for thread count control #685, #546
+        # See also src/libertem/utils/threading.py
         # Bounds checking in Numba
         "numba>=0.47",
         "ncempy>=1.4",
@@ -158,6 +160,7 @@ setup(
         'tqdm',
         # FIXME remove in 0.7.0 after blobfinder deprecation
         'libertem-blobfinder',
+        'threadpoolctl'
     ],
     extras_require={
         'torch': 'torch',

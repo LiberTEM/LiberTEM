@@ -8,6 +8,7 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
+from libertem.utils.threading import set_num_threads
 
 
 class UDFMeta:
@@ -638,68 +639,69 @@ class UDFRunner:
         return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
 
     def run_for_partition(self, partition, roi):
-        dtype = self._get_dtype(partition.dtype)
-        meta = UDFMeta(
-            partition_shape=partition.slice.adjust_for_roi(roi).shape,
-            dataset_shape=partition.meta.shape,
-            roi=roi,
-            dataset_dtype=partition.dtype,
-            input_dtype=dtype,
-        )
-        self._udf.set_meta(meta)
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_part(partition, roi)
-        self._udf.init_task_data()
-        if hasattr(self._udf, 'preprocess'):
-            self._udf.clear_views()
-            self._udf.preprocess()
-        method = self._udf.get_method()
-        if method == 'tile':
-            tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype, mmap=True)
-        elif method == 'frame':
-            tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype, mmap=True)
-        elif method == 'partition':
-            tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype, mmap=True)]
-
-        for tile in tiles:
+        with set_num_threads(1):
+            dtype = self._get_dtype(partition.dtype)
+            meta = UDFMeta(
+                partition_shape=partition.slice.adjust_for_roi(roi).shape,
+                dataset_shape=partition.meta.shape,
+                roi=roi,
+                dataset_dtype=partition.dtype,
+                input_dtype=dtype,
+            )
+            self._udf.set_meta(meta)
+            self._udf.init_result_buffers()
+            self._udf.allocate_for_part(partition, roi)
+            self._udf.init_task_data()
+            if hasattr(self._udf, 'preprocess'):
+                self._udf.clear_views()
+                self._udf.preprocess()
+            method = self._udf.get_method()
             if method == 'tile':
-                self._udf.set_views_for_tile(partition, tile)
-                self._udf.set_slice(tile.tile_slice)
-                self._udf.process_tile(tile.data)
+                tiles = partition.get_tiles(full_frames=False, roi=roi, dest_dtype=dtype, mmap=True)
             elif method == 'frame':
-                tile_slice = tile.tile_slice
-                for frame_idx, frame in enumerate(tile.data):
-                    frame_slice = Slice(
-                        origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
-                        shape=Shape((1,) + tuple(tile_slice.shape)[1:],
-                                    sig_dims=tile_slice.shape.sig.dims),
-                    )
-                    self._udf.set_slice(frame_slice)
-                    self._udf.set_views_for_frame(partition, tile, frame_idx)
-                    self._udf.process_frame(frame)
+                tiles = partition.get_tiles(full_frames=True, roi=roi, dest_dtype=dtype, mmap=True)
             elif method == 'partition':
-                self._udf.set_views_for_tile(partition, tile)
-                self._udf.set_slice(partition.slice)
-                self._udf.process_partition(tile.data)
+                tiles = [partition.get_macrotile(roi=roi, dest_dtype=dtype, mmap=True)]
 
-        if hasattr(self._udf, 'postprocess'):
+            for tile in tiles:
+                if method == 'tile':
+                    self._udf.set_views_for_tile(partition, tile)
+                    self._udf.set_slice(tile.tile_slice)
+                    self._udf.process_tile(tile.data)
+                elif method == 'frame':
+                    tile_slice = tile.tile_slice
+                    for frame_idx, frame in enumerate(tile.data):
+                        frame_slice = Slice(
+                            origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
+                            shape=Shape((1,) + tuple(tile_slice.shape)[1:],
+                                        sig_dims=tile_slice.shape.sig.dims),
+                        )
+                        self._udf.set_slice(frame_slice)
+                        self._udf.set_views_for_frame(partition, tile, frame_idx)
+                        self._udf.process_frame(frame)
+                elif method == 'partition':
+                    self._udf.set_views_for_tile(partition, tile)
+                    self._udf.set_slice(partition.slice)
+                    self._udf.process_partition(tile.data)
+
+            if hasattr(self._udf, 'postprocess'):
+                self._udf.clear_views()
+                self._udf.postprocess()
+
+            self._udf.cleanup()
             self._udf.clear_views()
-            self._udf.postprocess()
 
-        self._udf.cleanup()
-        self._udf.clear_views()
+            if self._debug:
+                try:
+                    cloudpickle.loads(cloudpickle.dumps(partition))
+                except TypeError:
+                    raise TypeError("could not pickle partition")
+                try:
+                    cloudpickle.loads(cloudpickle.dumps(self._udf.results))
+                except TypeError:
+                    raise TypeError("could not pickle results")
 
-        if self._debug:
-            try:
-                cloudpickle.loads(cloudpickle.dumps(partition))
-            except TypeError:
-                raise TypeError("could not pickle partition")
-            try:
-                cloudpickle.loads(cloudpickle.dumps(self._udf.results))
-            except TypeError:
-                raise TypeError("could not pickle results")
-
-        return self._udf.results, partition
+            return self._udf.results, partition
 
     def _debug_task_pickling(self, tasks):
         if self._debug:

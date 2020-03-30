@@ -1,8 +1,10 @@
 import { AllActions } from "../actions";
-import * as datasetActions from "../dataset/actions";
-import { ById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
+import * as channelActions from '../channel/actions';
+import { ById, constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
+import * as jobActions from '../job/actions';
 import * as analysisActions from "./actions";
-import { AnalysisState, JobList } from "./types";
+import { AnalysisState } from "./types";
+
 
 export type AnalysisReducerState = ById<AnalysisState>;
 
@@ -16,25 +18,51 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case analysisActions.ActionTypes.CREATED: {
             return insertById(state, action.payload.analysis.id, action.payload.analysis);
         }
-        case analysisActions.ActionTypes.PREPARE_RUN: {
-            const { jobIndex, id } = action.payload;
-            const analysis = state.byId[id];
-            const oldJob = analysis.jobs[jobIndex];
-            const jobHistory = [...analysis.jobHistory];
-            if (oldJob !== undefined) {
-                // TODO: length restriction?
-                const hist = jobHistory[jobIndex] ? jobHistory[jobIndex] : [];
-                jobHistory[jobIndex] = [oldJob, ...hist];
-            }
-            const newJobs: JobList = [...analysis.jobs];
-            newJobs[jobIndex] = action.payload.job;
-            return updateById(state, action.payload.id, { jobs: newJobs, jobHistory })
-        }
         case analysisActions.ActionTypes.REMOVED: {
             return filterWithPred(state, (r: AnalysisState) => r.id !== action.payload.id);
         }
-        case datasetActions.ActionTypes.DELETE: {
-            return filterWithPred(state, (r: AnalysisState) => r.dataset !== action.payload.dataset);
+        case analysisActions.ActionTypes.UPDATED: {
+            return updateById(state, action.payload.id, {
+                details: action.payload.details,
+            });
+        }
+        case jobActions.ActionTypes.CREATE: {
+            const analysis = state.byId[action.payload.analysis];
+            // FIXME: remove old jobs
+            const oldJobs = analysis.jobs ? analysis.jobs : [];
+            return updateById(state, action.payload.analysis, {
+                jobs: [action.payload.id, ...oldJobs],
+            })
+        }
+        case channelActions.ActionTypes.INITIAL_STATE: {
+            const analysisState: AnalysisState[] = action.payload.analyses.map(item => {
+                return {
+                    doAutoStart: false,
+                    id: item.analysis,
+                    dataset: item.dataset,
+                    details: item.details,
+                    // FIXME: add jobs!
+                    jobs: item.jobs,
+                };
+            });
+            return {
+                byId: constructById(analysisState, analysis => analysis.id),
+                ids: action.payload.analyses.map(analysis => analysis.analysis),
+            }
+        }
+        case channelActions.ActionTypes.FINISH_JOB:
+        case channelActions.ActionTypes.TASK_RESULT: {
+            const analysisIdForJob = state.ids.find(id => {
+                const analysis = state.byId[id];
+                const jobs = analysis.jobs ? analysis.jobs : [];
+                return jobs.some(job => job === action.payload.job)
+            });
+            if (!analysisIdForJob) {
+                return state;
+            }
+            return updateById(state, analysisIdForJob, {
+                displayedJob: action.payload.job,
+            });
         }
     }
     return state;

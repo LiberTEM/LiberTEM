@@ -1,3 +1,4 @@
+import { getApiBasePath } from "../helpers/apiHelpers";
 import { CancelJobResponse, StartJobRequest, StartJobResponse } from "../messages";
 
 export function startJob(jobId: string, analysis: string): Promise<StartJobResponse> {
@@ -6,7 +7,8 @@ export function startJob(jobId: string, analysis: string): Promise<StartJobRespo
             analysis,
         }
     }
-    return fetch(`/api/jobs/${jobId}/`, {
+    const basePath = getApiBasePath();
+    return fetch(`${basePath}jobs/${jobId}/`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",
@@ -14,7 +16,8 @@ export function startJob(jobId: string, analysis: string): Promise<StartJobRespo
 }
 
 export function cancelJob(jobId: string): Promise<CancelJobResponse> {
-    return fetch(`/api/jobs/${jobId}/`, {
+    const basePath = getApiBasePath();
+    return fetch(`${basePath}jobs/${jobId}/`, {
         method: "DELETE",
         credentials: "same-origin",
     }).then(r => r.json());

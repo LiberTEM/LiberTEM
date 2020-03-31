@@ -1,30 +1,22 @@
-import { getApiBasePath } from "../helpers/apiHelpers";
+import { genericDelete, genericPut, getApiBasePath } from "../helpers/apiHelpers";
 import { DataSetOpenSchemaResponse, DeleteDatasetResponse, DetectDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
-export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
-    const basePath = getApiBasePath();
-    return fetch(`${basePath}datasets/${id}/`, {
-        body: JSON.stringify(dataset),
-        credentials: "same-origin",
-        method: "PUT",
-    }).then(r => r.json());
+export async function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
+    return await genericPut(`datasets/${id}/`, dataset);
 }
 
-export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
-    const basePath = getApiBasePath();
-    return fetch(`${basePath}datasets/${id}/`, {
-        credentials: "same-origin",
-        method: "DELETE",
-    }).then(r => r.json());
+export async function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
+    return await genericDelete(`datasets/${id}/`);
 }
 
 
-export function detectDataset(path: string): Promise<DetectDatasetResponse> {
+export async function detectDataset(path: string): Promise<DetectDatasetResponse> {
     const basePath = getApiBasePath();
-    return fetch(`${basePath}datasets/detect/?path=${encodeURIComponent(path)}`, {
+    const r = await fetch(`${basePath}datasets/detect/?path=${encodeURIComponent(path)}`, {
         credentials: "same-origin",
         method: "GET",
-    }).then(r => r.json());
+    });
+    return await r.json();
 }
 
 interface SchemaCache {

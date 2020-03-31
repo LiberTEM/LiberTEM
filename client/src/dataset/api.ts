@@ -1,7 +1,9 @@
+import { getApiBasePath } from "../helpers/apiHelpers";
 import { DataSetOpenSchemaResponse, DeleteDatasetResponse, DetectDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
 export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
-    return fetch(`/api/datasets/${id}/`, {
+    const basePath = getApiBasePath();
+    return fetch(`${basePath}datasets/${id}/`, {
         body: JSON.stringify(dataset),
         credentials: "same-origin",
         method: "PUT",
@@ -9,7 +11,8 @@ export function openDataset(id: string, dataset: OpenDatasetRequest): Promise<Op
 }
 
 export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
-    return fetch(`/api/datasets/${id}/`, {
+    const basePath = getApiBasePath();
+    return fetch(`${basePath}datasets/${id}/`, {
         credentials: "same-origin",
         method: "DELETE",
     }).then(r => r.json());
@@ -17,7 +20,8 @@ export function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
 
 
 export function detectDataset(path: string): Promise<DetectDatasetResponse> {
-    return fetch(`/api/datasets/detect/?path=${encodeURIComponent(path)}`, {
+    const basePath = getApiBasePath();
+    return fetch(`${basePath}datasets/detect/?path=${encodeURIComponent(path)}`, {
         credentials: "same-origin",
         method: "GET",
     }).then(r => r.json());
@@ -30,11 +34,12 @@ interface SchemaCache {
 const schemaCache: SchemaCache = {};
 
 export async function getSchema(type: string): Promise<DataSetOpenSchemaResponse> {
+    const basePath = getApiBasePath();
     const cached = schemaCache[type];
     if (cached) {
         return new Promise((resolve) => resolve(cached));
     } else {
-        const r = await fetch(`/api/datasets/schema/?type=${encodeURIComponent(type)}`, {
+        const r = await fetch(`${basePath}datasets/schema/?type=${encodeURIComponent(type)}`, {
             credentials: "same-origin",
             method: "GET",
         });

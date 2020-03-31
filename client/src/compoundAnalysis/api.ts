@@ -1,3 +1,4 @@
+import { getApiBasePath } from "../helpers/apiHelpers";
 import {
     AnalysisDetails, CompoundAnalysisDetails, CreateAnalysisResponse,
     CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest,
@@ -13,7 +14,8 @@ export async function createOrUpdateAnalysis(
         dataset,
         details,
     };
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
+    const basePath = getApiBasePath();
+    const r = await fetch(`${basePath}compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",
@@ -22,7 +24,8 @@ export async function createOrUpdateAnalysis(
 }
 
 export async function removeAnalysis(compoundAnalysisId: string, analysisId: string): Promise<RemoveAnalysisResponse> {
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
+    const basePath = getApiBasePath();
+    const r = await fetch(`${basePath}compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
         credentials: "same-origin",
         method: "DELETE",
     });
@@ -30,11 +33,12 @@ export async function removeAnalysis(compoundAnalysisId: string, analysisId: str
 }
 
 export async function createOrUpdateCompoundAnalysis(compoundAnalysisId: string, dataset: string, details: CompoundAnalysisDetails): Promise<CreateCompoundAnalysisResponse> {
+    const basePath = getApiBasePath();
     const payload: CreateOrUpdateCompoundAnalysisRequest = {
         dataset,
         details,
     };
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/`, {
+    const r = await fetch(`${basePath}compoundAnalyses/${compoundAnalysisId}/`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",
@@ -43,7 +47,8 @@ export async function createOrUpdateCompoundAnalysis(compoundAnalysisId: string,
 }
 
 export async function removeCompoundAnalysis(compoundAnalysisId: string): Promise<RemoveCompoundAnalysisResponse> {
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/`, {
+    const basePath = getApiBasePath();
+    const r = await fetch(`${basePath}compoundAnalyses/${compoundAnalysisId}/`, {
         credentials: "same-origin",
         method: "DELETE",
     });

@@ -160,14 +160,19 @@ class H5DataSet(DataSet):
         # try to guess the hdf5 dataset path:
         try:
             datasets = executor.run_function(_get_datasets, path)
-            largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
-            name, size, shape, dtype = largest_ds
+            datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
+            ds_paths = [ds_path[0] for ds_path in datasets_list]
+            # options for the semantic-ui dropdown
+            dataset_paths = [{"key": option, "text": option, "value": option} for option in ds_paths]
+            name, size, shape, dtype = datasets_list[0]
+            print(name)
         except (IndexError, TimeoutError):
             return {"path": path}
 
         return {
             "path": path,
-            "ds_path": name,
+            "ds_path": "",
+            "dataset_paths": dataset_paths,
             # FIXME: number of frames may not match L3 size
             "tileshape": (1, 8,) + shape[2:],
         }

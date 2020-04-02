@@ -1,6 +1,6 @@
 import { JobList } from "./analysis/types"
 
-/* 
+/*
  * Common
  */
 
@@ -98,6 +98,7 @@ export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
     ds_path: string,
+    dataset_paths: [],
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -518,7 +519,7 @@ export interface CancelJobResponse {
 }
 
 /*
- * fs browser 
+ * fs browser
  */
 
 // some named place, i.e. "Documents", "Home", ...

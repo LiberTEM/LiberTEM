@@ -24,6 +24,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     setFieldValue,
 }) => {
 
+    const isTimeOut = (values.dataset_paths === "" ) ? true : false;
     const dsPathOptions = values.dataset_paths.split(", ").map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
 
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
@@ -33,7 +34,6 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
       }
     };
 
-    const isTimeOut = (dsPathOptions.length === 0 ) ? true : false;
     let dsPathInput;
     let dsPathDropdown;
 

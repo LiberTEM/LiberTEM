@@ -39,9 +39,15 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         if connection["type"].lower() == "tcp":
-            sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
-                scheduler_uri=connection['address'],
-            ))
+            try:
+                sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
+                    scheduler_uri=connection['address'],
+                ))
+            except OSError as e:
+                msg = Message(self.state).cluster_conn_error(msg=str(e))
+                log_message(msg)
+                self.write(msg)
+                return None
         elif connection["type"].lower() == "local":
             cluster_kwargs = {
                 "threads_per_worker": 1,

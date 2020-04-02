@@ -21,6 +21,13 @@ class Message(object):
             "compoundAnalyses": compound_analyses,
         }
 
+    def cluster_conn_error(self, msg):
+        return {
+            "status": "error",
+            "messageType": "CLUSTER_CONN_ERROR",
+            "msg": msg,
+        }
+
     def config(self, config):
         return {
             "status": "ok",

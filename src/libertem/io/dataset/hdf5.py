@@ -163,15 +163,14 @@ class H5DataSet(DataSet):
             datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
             ds_paths = [ds_path[0] for ds_path in datasets_list]
             # options for the semantic-ui dropdown
-            dataset_paths = [{"key": option, "text": option, "value": option} for option in ds_paths]
+            dataset_paths = [{"key": dpath, "text": dpath, "value": dpath} for dpath in ds_paths]
             name, size, shape, dtype = datasets_list[0]
-            print(name)
         except (IndexError, TimeoutError):
             return {"path": path}
 
         return {
             "path": path,
-            "ds_path": "",
+            "ds_path": name,
             "dataset_paths": dataset_paths,
             # FIXME: number of frames may not match L3 size
             "tileshape": (1, 8,) + shape[2:],

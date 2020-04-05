@@ -99,7 +99,7 @@ async def test_cluster_connect_error(base_url, http_client):
     conn_details = {
         'connection': {
             'type': 'TCP',
-            'address': 'tcp://unknown:8786',
+            'address': 'tcp://invalid',
         }
     }
     async with http_client.put(url, json=conn_details) as response:

@@ -43,7 +43,7 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
                     scheduler_uri=connection['address'],
                 ))
-            except OSError as e:
+            except Exception as e:
                 msg = Message(self.state).cluster_conn_error(msg=str(e))
                 log_message(msg)
                 self.write(msg)

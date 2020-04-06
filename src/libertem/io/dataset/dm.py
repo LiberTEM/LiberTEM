@@ -34,7 +34,7 @@ class DMDatasetParams(MessageConverter):
         "type": {"const": "DM"},
         "files": {
           "type": "array",
-          "items": {"type":"string"},
+          "items": {"type": "string"},
           "minItems": 1,
         },
         "scan_size": {

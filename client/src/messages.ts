@@ -152,7 +152,7 @@ export type DatasetParamsEMPAD = {
 
 export type DatasetParamsDM = {
   type: DatasetTypes.DM,
-  files: string[],
+  path: string,
   scan_size: number[],
 } & DatasetParamsCommon
 

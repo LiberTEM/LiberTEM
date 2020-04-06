@@ -8,7 +8,7 @@ import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsDMForForm = Omit<DatasetParamsDM,
-  "files"
+  "path"
   | "type"
   | "scan_size"
 > & {
@@ -54,10 +54,8 @@ export default withValidation<DatasetParamsDM, DatasetParamsDMForForm>({
     scan_size: getInitial("scan_size", "", initial).toString(),
   }),
   formToJson: (values, path) => {
-    const files: string[] = [];
-    files.push(path);
     return {
-      files,
+      path,
       type: DatasetTypes.DM,
       name: values.name,
       scan_size: parseNumList(values.scan_size),

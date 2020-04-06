@@ -205,6 +205,11 @@ class DMDataSet(DataSet):
         return self
 
     @classmethod
+    def get_msg_converter(cls):
+        print(DMDatasetParams)
+        return DMDatasetParams
+
+    @classmethod
     def get_supported_extensions(cls):
         return set(["dm3", "dm4"])
 
@@ -227,10 +232,6 @@ class DMDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
-
-    @classmethod
-    def get_msg_converter(cls):
-        return DMDatasetParams
 
     def check_valid(self):
         first_fn = self._get_files()[0]

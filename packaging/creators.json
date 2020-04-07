@@ -123,5 +123,13 @@
 		"affiliation": "Jadavpur University",
 		"github": "sayandip18",
 		"contribution": "Modifying the documentation to make it more user-friendly"
+	},
+	{
+	    "displayname": "Barnaby D.A. Levin",
+		"authorname": "Levin, Barnaby D.A.",
+		"affiliation": "Direct Electron",
+		"github": "bdalevin",
+		"contribution": "Discussions, ensuring compatibility with data from Direct Electron cameras",
+		"orcid": "0000-0003-1010-0366"
 	}
 ]

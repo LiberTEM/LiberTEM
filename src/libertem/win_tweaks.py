@@ -1,11 +1,19 @@
 import sys
 import msvcrt
 import ctypes
+import logging
 from ctypes import windll, wintypes, byref
 
 import win32security
 import pywintypes
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+formatter = logging.Formatter('%(levelname)s : %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
 
 def get_owner_name(full_path, stat):
     try:

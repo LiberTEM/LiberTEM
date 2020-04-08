@@ -5,7 +5,7 @@ Sample Datasets
 Public datasets
 ~~~~~~~~~~~~~~~~
 
-Some data to work with have been obtained from Zenodo.
+Some data to work with can be downloaded from Zenodo.
 
 +-----------------------------------------------------+-------------------------------------------------------------------+-----------------+---------------------+--------+
 | Link                                                | Description                                                       | Format          | Dimension           | Size   |

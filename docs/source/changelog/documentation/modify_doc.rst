@@ -2,4 +2,4 @@
 =====================================================================
 
  * Making changes to the documentation as per the HackMD notebook to make it more user-friendly
- * Adding new sample datasets
+ * Add information for downloading and generating sample datasets :ref:`sample data`

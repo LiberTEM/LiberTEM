@@ -492,6 +492,12 @@ class UDF(UDFBase):
 
     @property
     def requires_custom_merge(self):
+        """
+        Determine if buffers with :code:`kind != 'nav'` are present where
+        the default merge doesn't work
+
+        .. versionadded:: 0.5.0
+        """
         if self._requires_custom_merge is None:
             buffers = self.get_result_buffers()
             self._requires_custom_merge = any(buffer.kind != 'nav' for buffer in buffers.values())

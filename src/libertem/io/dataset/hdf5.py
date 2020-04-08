@@ -147,7 +147,7 @@ class H5DataSet(DataSet):
         return set(["h5", "hdf5", "hspy", "nxs"])
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         def _do_detect():
             with h5py.File(path, 'r'):
                 pass
@@ -167,14 +167,19 @@ class H5DataSet(DataSet):
             name, size, shape, dtype = datasets_list[0]
         except (IndexError, TimeoutError):
             return {"path": path}
-
-        return {
+        parameters = {
             "path": path,
             "ds_path": name,
-            "dataset_paths": dataset_paths,
             # FIXME: number of frames may not match L3 size
-            "tileshape": (1, 8,) + shape[2:],
+            "tileshape": (1, 8,) + shape[2:]
         }
+        additional_info = {
+            "dataset_paths": dataset_paths
+        }
+        # If additional info is required. Example: ds_paths for dropdown
+        if info:
+            parameters.update(additional_info)
+        return parameters
 
     @property
     def dtype(self):

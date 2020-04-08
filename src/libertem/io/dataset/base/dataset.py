@@ -66,7 +66,7 @@ class DataSet(object):
         raise NotImplementedError()
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         """
         Guess if path can be opened using this DataSet implementation and
         detect parameters.

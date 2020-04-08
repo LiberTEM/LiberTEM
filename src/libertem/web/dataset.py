@@ -93,7 +93,7 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = self.state.executor_state.get_executor()
 
-        params = await run_blocking(detect, path=path, executor=executor.ensure_sync())
+        params = await run_blocking(detect, path=path, executor=executor.ensure_sync(), info=True)
 
         if not params:
             msg = Message(self.state).dataset_detect_failed(path=path)

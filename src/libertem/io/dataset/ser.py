@@ -139,9 +139,16 @@ class SERDataSet(DataSet):
         return set(["ser"])
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         if path.lower().endswith(".ser"):
-            return {"path": path}
+            parameters = {
+                "path": path
+            }
+            additional_info = {}
+            # If additional info is required
+            if info:
+                parameters.update(additional_info)
+            return parameters
         return False
 
     @property

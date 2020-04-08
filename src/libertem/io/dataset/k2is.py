@@ -520,7 +520,7 @@ class K2ISDataSet(DataSet):
         return set(["gtg", "bin"])
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         """
         detect if path points to a file that is part of a k2is dataset.
         extension needs to be bin or gtg, and number of files of the dataset needs to match
@@ -535,10 +535,14 @@ class K2ISDataSet(DataSet):
                 return False
         except DataSetException:
             return False
-        params = {
-            "path": path,
+        parameters = {
+            "path": path
         }
-        return params
+        additional_info = {}
+        # If additional info is required
+        if info:
+            parameters.update(additional_info)
+        return parameters
 
     def check_valid(self):
         try:

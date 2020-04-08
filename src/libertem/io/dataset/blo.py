@@ -164,17 +164,22 @@ class BloDataSet(DataSet):
         return self
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         try:
             ds = cls(path, endianess='<')
             ds = ds.initialize(executor)
             if not executor.run_function(ds.check_valid):
                 return False
-            return {
+            parameters = {
                 "path": path,
                 "tileshape": (1, 8) + tuple(ds.shape.sig),
                 "endianess": "<",
             }
+            additional_info = {}
+            # If additional info is required
+            if info:
+                parameters.update(additional_info)
+            return parameters
         except Exception:
             return False
 

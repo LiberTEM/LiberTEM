@@ -558,7 +558,7 @@ class UDF(UDFBase):
 
         If you prefer to always use the dataset's native dtype instead of
         floats, you can override this method to return
-        :attr:`UDF.USE_NATIVE_DTYPE`, which is curently identical to
+        :attr:`UDF.USE_NATIVE_DTYPE`, which is currently identical to
         :code:`numpy.bool` and behaves as a neutral element in
         :func:`numpy.result_type`.
 

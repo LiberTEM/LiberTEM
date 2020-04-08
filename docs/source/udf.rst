@@ -195,7 +195,8 @@ Examples of buffer declarations:
 .. testcleanup:: getresultbuffers
 
    class TestUDF(UDF):
-      pass
+      def merge(self, dest, src):
+         pass
 
    TestUDF.get_result_buffers = get_result_buffers
 

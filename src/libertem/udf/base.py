@@ -494,8 +494,9 @@ class UDF(UDFBase):
     def requires_custom_merge(self):
         if self._requires_custom_merge is None:
             self._requires_custom_merge = False
-            for name, content in self.get_result_buffers().items():
-                if content.kind != 'nav':
+            buffers = self.get_result_buffers()
+            for buffer in buffers.values():
+                if buffer.kind != 'nav':
                     self._requires_custom_merge = True
                     break
         return self._requires_custom_merge

@@ -424,6 +424,7 @@ class UDF(UDFBase):
         self.params = UDFData(kwargs)
         self.task_data = None
         self.results = None
+        self._requires_custom_merge = None
 
     def copy(self):
         return self.__class__(**self._kwargs)
@@ -489,6 +490,16 @@ class UDF(UDFBase):
         """
         raise NotImplementedError()
 
+    @property
+    def requires_custom_merge(self):
+        if self._requires_custom_merge is None:
+            self._requires_custom_merge = False
+            for name, content in self.get_result_buffers().items():
+                if content.kind != 'nav':
+                    self._requires_custom_merge = True
+                    break
+        return self._requires_custom_merge
+
     def merge(self, dest: Dict[str, np.array], src: Dict[str, np.array]):
         """
         Merge a partial result `src` into the current global result `dest`.
@@ -513,6 +524,11 @@ class UDF(UDFBase):
         This function is running on the leader node, which means `self.results`
         and `self.task_data` are not available.
         """
+        if self.requires_custom_merge:
+            raise NotImplementedError(
+                "Default merging only works for kind='nav' buffers. "
+                "Please implement a suitable custom merge function."
+            )
         for k in dest:
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]

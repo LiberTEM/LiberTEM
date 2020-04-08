@@ -135,6 +135,33 @@ def test_bad_merge(lt_ctx):
         lt_ctx.run_udf(dataset=dataset, udf=bm)
 
 
+def test_no_default_merge(lt_ctx):
+    """
+    Test forgotten merge function if not :code:`kind='nav'`.
+    """
+    data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    class NodefaultUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'pixelsum_nav': self.buffer(
+                    kind="nav", dtype="float32"
+                ),
+                'pixelsum': self.buffer(
+                    kind="sig", dtype="float32"
+                )
+            }
+
+        def process_frame(self, frame):
+            self.results.pixelsum[:] += frame
+
+    with pytest.raises(NotImplementedError):
+        nd = NodefaultUDF()
+        lt_ctx.run_udf(dataset=dataset, udf=nd)
+
+
 def test_extra_dimension_shape(lt_ctx):
     """
     Test sum over the pixels for 2-dimensional dataset
@@ -182,6 +209,7 @@ def test_extra_dimension_shape(lt_ctx):
     assert res['test'].data.shape == tuple(dataset.shape.nav) + (2,)
     assert res['test2'].data.shape == tuple(dataset.shape.sig) + (2,)
     assert res['test3'].data.shape == (2,)
+    assert res['test'].extra_shape == (2,)
     assert np.allclose(res['test'].data, (1, 2))
     assert np.allclose(res['test2'].data, navcount)
     assert np.allclose(res['test3'].data, (navcount, 2*navcount))
@@ -382,6 +410,9 @@ def test_dtypes(lt_ctx, preferred_dtype, data_dtype, expected_dtype):
             assert frame.dtype == self.meta.input_dtype
             assert self.results.input_dtype.dtype == self.meta.input_dtype
             assert self.results.dataset_dtype.dtype == self.meta.dataset_dtype
+
+        def merge(self, dest, src):
+            dest['dtype'][:] = src['dtype'][:]
 
     if expected_dtype is None:
         expected_dtype = np.result_type(preferred_dtype, data_dtype)

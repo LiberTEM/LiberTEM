@@ -493,12 +493,8 @@ class UDF(UDFBase):
     @property
     def requires_custom_merge(self):
         if self._requires_custom_merge is None:
-            self._requires_custom_merge = False
             buffers = self.get_result_buffers()
-            for buffer in buffers.values():
-                if buffer.kind != 'nav':
-                    self._requires_custom_merge = True
-                    break
+            self._requires_custom_merge = any(buffer.kind != 'nav' for buffer in buffers.values())
         return self._requires_custom_merge
 
     def merge(self, dest: Dict[str, np.array], src: Dict[str, np.array]):

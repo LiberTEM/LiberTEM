@@ -32,7 +32,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
-        print(params)
         params["type"] = ds_type = params["type"].upper()
         cls = get_dataset_cls(ds_type)
         ConverterCls = cls.get_msg_converter()

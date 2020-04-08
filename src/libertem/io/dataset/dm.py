@@ -32,10 +32,8 @@ class DMDatasetParams(MessageConverter):
       "type": "object",
       "properties": {
         "type": {"const": "DM"},
-        "files": {
-          "type": "array",
-          "items": {"type": "string"},
-          "minItems": 1,
+        "path": {
+          "type": "string",
         },
         "scan_size": {
             "type": "array",
@@ -44,14 +42,15 @@ class DMDatasetParams(MessageConverter):
             "maxItems": 4,
         },
       },
-      "required": ["type", "files"]
+      "required": ["type", "path"]
     }
 
     def convert_to_python(self, raw_data):
         data = {
-            k: raw_data[k]
-            for k in ["path", "scan_size"]
+            "files": [raw_data["path"]],
+            "scan_size": raw_data["scan_size"]
         }
+        print(data)
         return data
 
 class StackedDMFile(LocalFile):
@@ -206,7 +205,6 @@ class DMDataSet(DataSet):
 
     @classmethod
     def get_msg_converter(cls):
-        print(DMDatasetParams)
         return DMDatasetParams
 
     @classmethod

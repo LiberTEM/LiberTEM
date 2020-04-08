@@ -146,6 +146,24 @@ class BufferWrapper(object):
         """
         return self._data
 
+    @property
+    def kind(self):
+        """
+        Get the kind of this buffer.
+
+        .. versionadded:: 0.5.0
+        """
+        return self._kind
+
+    @property
+    def extra_shape(self):
+        """
+        Get the :code:`extra_shape` of this buffer.
+
+        .. versionadded:: 0.5.0
+        """
+        return self._extra_shape
+
     def __array__(self):
         """
         returns the "wrapped"/reshaped array, see above

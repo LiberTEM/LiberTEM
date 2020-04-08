@@ -367,21 +367,31 @@ class MIBDataSet(DataSet):
         return set(["mib", "hdr"])
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path, executor, info=False):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
-            return {
+            parameters = {
                 "path": path,
-                "tileshape": (1, 3, 256, 256),
+                "tileshape": (1, 3, 256, 256)
             }
+            additional_info = {}
+            # If additional info is required
+            if info:
+                parameters.update(additional_info)
+            return parameters
         elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
             hdr = executor.run_function(read_hdr_file, path)
             scan_size = scan_size_from_hdr(hdr)
-            return {
+            parameters = {
                 "path": path,
                 "tileshape": (1, 3, 256, 256),
                 "scan_size": scan_size,
             }
+            additional_info = {}
+            # If additional info is required
+            if info:
+                parameters.update(additional_info)
+            return parameters
         return False
 
     def _preread_headers(self):

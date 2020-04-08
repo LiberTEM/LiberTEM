@@ -31,7 +31,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
       }
     };
 
-    const isTimeOut = (values.dataset_paths === [] ) ? true : false;
+    const isTimeOut = (values.dataset_paths.length === 0 ) ? true : false;
     let dsPathInput;
     let dsPathOptions;
 

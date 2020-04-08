@@ -99,11 +99,11 @@ def get_dataset_cls(filetype):
     return cls
 
 
-def detect(path, executor):
+def detect(path, executor, info=False):
     for filetype in filetypes.keys():
         try:
             cls = get_dataset_cls(filetype)
-            maybe_params = cls.detect_params(path, executor)
+            maybe_params = cls.detect_params(path, executor, info)
         except (NotImplementedError, DataSetException):
             continue
         if not maybe_params:

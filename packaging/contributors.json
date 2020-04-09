@@ -305,5 +305,12 @@
         "github": "theassassin",
         "authorname": "@theassassin",
         "contribution": "Help with setting up AppImage building and Continuous Integration"
-    }
+    },
+    {
+        "displayname": "SahanWickramage",
+        "authorname": "Sahan, Wickramage",
+        "affiliation": "University of Moratuwa" ,
+        "github": "SahanWickramage",
+        "contribution": "Added better empty state"
+    },  
 ]

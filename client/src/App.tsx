@@ -1,13 +1,13 @@
-import * as React from 'react';
 import 'semantic-ui-css/semantic.min.css';
+import * as React from 'react';
 import { Container, Icon, Modal, Popup } from 'semantic-ui-react';
 import About from './About';
 import ChannelStatus from './channel/components/ChannelStatus';
+import { connect } from "react-redux";
 import DatasetList from './dataset/components/DatasetList';
 import ErrorList from './errors/components/ErrorList';
 import logo from './images/LiberTEM logo-medium.png';
 import { RootReducer } from "./store";
-import { connect } from "react-redux";
 
 const mapStateToProps = (state: RootReducer) => {
     return {
@@ -47,5 +47,4 @@ class App extends React.Component<MergedProps> {
 
 }
 
-//export default App;
 export default connect(mapStateToProps)(App);

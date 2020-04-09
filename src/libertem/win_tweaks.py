@@ -15,6 +15,7 @@ formatter = logging.Formatter('%(levelname)s : %(message)s')
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 
+
 def get_owner_name(full_path, stat):
     try:
         s = win32security.GetFileSecurity(full_path, win32security.OWNER_SECURITY_INFORMATION)
@@ -35,7 +36,7 @@ def get_console_mode(stream=sys.stdin):
     getConsoleMode.argtypes, getConsoleMode.restype = ([wintypes.HANDLE, wintypes.LPDWORD],
                                                        wintypes.BOOL)
     mode = wintypes.DWORD(0)
-    try: 
+    try:
         if getConsoleMode(file_handle, byref(mode)):
             return mode.value
     except ctypes.WinError(ctypes.get_last_error()):

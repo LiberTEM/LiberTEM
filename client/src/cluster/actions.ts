@@ -5,12 +5,16 @@ export enum ActionTypes {
     NOT_CONNECTED = 'CLUSTER_NOT_CONNECTED',
     CONNECT = 'CLUSTER_CONNECT',
     CONNECTED = 'CLUSTER_CONNECTED',
+    ERROR = 'CLUSTER_ERROR'
+    
 }
 
 export const Actions = {
     notConnected: () => createAction(ActionTypes.NOT_CONNECTED),
     connect: (params: ConnectRequestParams) => createAction(ActionTypes.CONNECT, { params }),
     connected: (params: ConnectRequestParams) => createAction(ActionTypes.CONNECTED, { params }),
+    error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
+
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

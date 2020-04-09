@@ -69,6 +69,10 @@ export type ConnectResponse = {
 } | {
     status: "disconnected",
     connection: {},
+} | {
+    status: "error",
+    messageType: string,
+    msg: string,
 }
 
 /*

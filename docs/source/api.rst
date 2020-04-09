@@ -16,7 +16,7 @@ Jupyter notebooks in `the example directory
 <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
 For more details, please see :ref:`loading data`, :ref:`dataset api` and
-:ref:`format-specific reference<formats>`.
+:ref:`format-specific reference<formats>`. See :ref:`sample data` for publicly available datasets.
 
 .. include:: /../../examples/basic.py
     :code:

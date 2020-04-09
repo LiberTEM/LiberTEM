@@ -35,11 +35,11 @@ def get_console_mode(stream=sys.stdin):
     getConsoleMode.argtypes, getConsoleMode.restype = ([wintypes.HANDLE, wintypes.LPDWORD],
                                                        wintypes.BOOL)
     mode = wintypes.DWORD(0)
-    if getConsoleMode(file_handle, byref(mode)):
-        return mode.value
-    else:
-        err = ctypes.get_last_error()
-        raise ctypes.WinError(err)
+    try: 
+        if getConsoleMode(file_handle, byref(mode)):
+            return mode.value
+    except ctypes.WinError(ctypes.get_last_error()):
+        logger.error("Failed to connect")
 
 
 def set_console_mode(mode, stream=sys.stdin):

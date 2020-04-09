@@ -1,6 +1,6 @@
 ## Contributor Checklist:
 
-* [ ] I have added myself to [the creators.json file](https://github.com/LiberTEM/LiberTEM/blob/master/packaging/creators.json)
+* [ ] I have added or updated my entry in [the creators.json file](https://github.com/LiberTEM/LiberTEM/blob/master/packaging/creators.json)
 * [ ] I have added [a changelog entry](https://github.com/LiberTEM/LiberTEM/tree/master/docs/source/changelog) for my contribution
 * [ ] I have added/updated documentation for all user-facing changes
 * [ ] I have added/updated test cases

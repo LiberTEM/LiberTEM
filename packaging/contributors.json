@@ -51,12 +51,14 @@
         "displayname": "Simeon Ehrig",
         "authorname": "Ehrig, Simeon",
         "affiliation": "HZDR",
+        "github": "SimeonEhrig",
         "contribution": "Discussions, ptychography integration concepts, GPU integration concepts"
     },
     {
         "displayname": "Alberto Eljarrat Ascunce",
         "authorname": "Eljarrat Ascunce, Alberto",
         "affiliation": "HU Berlin",
+        "github": "AEljarrat",
         "contribution": "Nion Swift hackathon, feedback and discussions"
     },
     {
@@ -184,6 +186,7 @@
         "displayname": "Andreas Mittelberger",
         "authorname": "Mittelberger, Andreas",
         "affiliation": "Nion",
+        "github": "Brow71189",
         "contribution": "Nion Swift integration; feedback and discussions"
     },
     {
@@ -220,6 +223,7 @@
         "displayname": "Thomas C. Pekin",
         "authorname": "Pekin, Thomas C.",
         "affiliation": "HU Berlin",
+        "github": "tcpekin",
         "contribution": "Nion Swift hackathon, feedback and discussions"
     },
     {
@@ -262,6 +266,7 @@
         "displayname": "Sherjeel Shabih",
         "authorname": "Shabih, Sherjeel",
         "affiliation": "HU Berlin",
+        "github": "shabihsherjeel",
         "contribution": "Nion Swift hackathon, feedback and discussions"
     },
     {

@@ -35,7 +35,7 @@ def get_console_mode(stream=sys.stdin):
     getConsoleMode.argtypes, getConsoleMode.restype = ([wintypes.HANDLE, wintypes.LPDWORD],
                                                        wintypes.BOOL)
     mode = wintypes.DWORD(0)
-    try: 
+    try:
         if getConsoleMode(file_handle, byref(mode)):
             return mode.value
     except ctypes.WinError(ctypes.get_last_error()):

@@ -6,12 +6,25 @@ import ChannelStatus from './channel/components/ChannelStatus';
 import DatasetList from './dataset/components/DatasetList';
 import ErrorList from './errors/components/ErrorList';
 import logo from './images/LiberTEM logo-medium.png';
+import { RootReducer } from "./store";
+import { connect } from "react-redux";
 
-class App extends React.Component {
+const mapStateToProps = (state: RootReducer) => {
+    return {
+        noOfDatasets: state.datasets.ids.length,
+        isVisible: state.openDataset.formVisible,
+    };
+}
+
+type MergedProps = ReturnType<typeof mapStateToProps>;
+
+class App extends React.Component<MergedProps> {
     public render() {
+        const { noOfDatasets, isVisible } = this.props;
         return (
             <Container style={{ margin: "5em 1em 5em 1em" }}>
-                <div style={{ display: "flex" }}>
+                {(noOfDatasets || isVisible) ? 
+                    <div style={{ display: "flex" }}>
                     <img src={logo} width="200" height="46" alt="LiberTEM" style={{ marginBottom: "20px" }} />
                     {' '}
                     <Modal trigger={
@@ -23,6 +36,7 @@ class App extends React.Component {
                         </Popup.Content>
                     </Modal>
                 </div>
+                : ''}
                 <ErrorList />
                 <ChannelStatus>
                     <DatasetList />
@@ -30,6 +44,8 @@ class App extends React.Component {
             </Container>
         );
     }
+
 }
 
-export default App;
+//export default App;
+export default connect(mapStateToProps)(App);

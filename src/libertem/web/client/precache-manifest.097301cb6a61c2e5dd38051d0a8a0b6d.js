@@ -1,27 +1,27 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "bc52b9943cd58b4b6e2b7373299c0aa0",
+    "revision": "a0d4c2fdc65c61e2a49b26e81c3067bb",
     "url": "/static/index.html"
   },
   {
-    "revision": "99456b282b92823e7fb4",
-    "url": "/static/static/css/2.c0d44fd6.chunk.css"
+    "revision": "873d996980015abd2e84",
+    "url": "/static/static/css/2.b6060847.chunk.css"
   },
   {
-    "revision": "94a327db960643532e5e",
+    "revision": "a50292337b2ac770a771",
     "url": "/static/static/css/main.fbce021b.chunk.css"
   },
   {
-    "revision": "99456b282b92823e7fb4",
-    "url": "/static/static/js/2.6fb1f5ce.chunk.js"
+    "revision": "873d996980015abd2e84",
+    "url": "/static/static/js/2.9e4a5923.chunk.js"
   },
   {
     "revision": "d8f4d5e8e8b95ff4e7ad88cdeacdedce",
-    "url": "/static/static/js/2.6fb1f5ce.chunk.js.LICENSE.txt"
+    "url": "/static/static/js/2.9e4a5923.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "94a327db960643532e5e",
-    "url": "/static/static/js/main.98b910a5.chunk.js"
+    "revision": "a50292337b2ac770a771",
+    "url": "/static/static/js/main.85ee706e.chunk.js"
   },
   {
     "revision": "2c4bb1ca699109454fe7",
@@ -74,6 +74,10 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "faff92145777a3cbaf8e7367b4807987",
     "url": "/static/static/media/icons.faff9214.woff"
+  },
+  {
+    "revision": "bbb560f43518066d71ad3454a3acdabf",
+    "url": "/static/static/media/libertem_logo.bbb560f4.svg"
   },
   {
     "revision": "701ae6abd4719e9c2ada3535a497b341",

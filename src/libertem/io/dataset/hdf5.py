@@ -147,7 +147,7 @@ class H5DataSet(DataSet):
         return set(["h5", "hdf5", "hspy", "nxs"])
 
     @classmethod
-    def detect_params(cls, path, executor, info=False):
+    def detect_params(cls, path, executor):
         def _do_detect():
             with h5py.File(path, 'r'):
                 pass
@@ -161,25 +161,26 @@ class H5DataSet(DataSet):
         try:
             datasets = executor.run_function(_get_datasets, path)
             datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
-            ds_paths = [ds_path[0] for ds_path in datasets_list]
-            # options for the semantic-ui dropdown
-            dataset_paths = [{"key": dpath, "text": dpath, "value": dpath} for dpath in ds_paths]
+            dataset_paths = ", ".join([ds_path[0] for ds_path in datasets_list])
             name, size, shape, dtype = datasets_list[0]
         except (IndexError, TimeoutError):
-            return {"path": path}
-        parameters = {
-            "path": path,
-            "ds_path": name,
-            # FIXME: number of frames may not match L3 size
-            "tileshape": (1, 8,) + shape[2:]
+            return {
+                "parameters": {
+                    "path": path
+                }
+            }
+
+        return {
+            "parameters": {
+                "path": path,
+                "ds_path": name,
+                # FIXME: number of frames may not match L3 size
+                "tileshape": (1, 8,) + shape[2:],
+            },
+            "info": {
+                "dataset_paths": dataset_paths,
+            }
         }
-        additional_info = {
-            "dataset_paths": dataset_paths
-        }
-        # If additional info is required. Example: ds_paths for dropdown
-        if info:
-            parameters.update(additional_info)
-        return parameters
 
     @property
     def dtype(self):

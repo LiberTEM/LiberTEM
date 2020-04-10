@@ -170,7 +170,7 @@ class EMPADDataSet(DataSet):
         return set(["xml", "raw"])
 
     @classmethod
-    def detect_params(cls, path, executor, info=False):
+    def detect_params(cls, path, executor):
         """
         Detect parameters. If an `path` is an xml file, we try to automatically
         set the scan_size, otherwise we can't really detect if this is a EMPAD
@@ -181,15 +181,12 @@ class EMPADDataSet(DataSet):
             ds = ds.initialize(executor)
             if not executor.run_function(ds.check_valid):
                 return False
-            parameters = {
-                "path": path,
-                "scan_size": ds._scan_size,
+            return {
+                "parameters": {
+                    "path": path,
+                    "scan_size": ds._scan_size,
+                },
             }
-            additional_info = {}
-            # If additional info is required
-            if info:
-                parameters.update(additional_info)
-            return parameters
         except Exception:
             return False
 

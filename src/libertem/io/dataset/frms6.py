@@ -404,20 +404,17 @@ class FRMS6DataSet(DataSet):
         return executor.run_function(self._do_initialize)
 
     @classmethod
-    def detect_params(cls, path, executor, info=False):
+    def detect_params(cls, path, executor):
         hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
             executor.run_function(_read_hdr, hdr_filename)
         except Exception:
             return False
-        parameters = {
-            "path": path
+        return {
+            "parameters": {
+                "path": path
+            },
         }
-        additional_info = {}
-        # If additional info is required
-        if info:
-            parameters.update(additional_info)
-        return parameters
 
     @classmethod
     def get_supported_extensions(cls):

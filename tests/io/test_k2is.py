@@ -27,7 +27,7 @@ def default_k2is():
 
 
 def test_detect():
-    params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH, InlineJobExecutor())
+    params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH, InlineJobExecutor())["parameters"]
     assert params == {
         "path": K2IS_TESTDATA_PATH,
     }

@@ -36,7 +36,7 @@ def test_simple_open(default_frms6):
 
 
 def test_detetct(lt_ctx):
-    assert FRMS6DataSet.detect_params(FRMS6_TESTDATA_PATH, lt_ctx.executor) is not False
+    assert FRMS6DataSet.detect_params(FRMS6_TESTDATA_PATH, lt_ctx.executor)["parameters"] is not False
 
 
 def test_check_valid(default_frms6):

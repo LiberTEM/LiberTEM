@@ -33,7 +33,7 @@ class DMDatasetParams(MessageConverter):
       "properties": {
         "type": {"const": "DM"},
         "path": {
-          "type": "string", 
+          "type": "string",
         },
         "scan_size": {
             "type": "array",

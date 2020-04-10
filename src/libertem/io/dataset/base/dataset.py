@@ -85,7 +85,7 @@ class DataSet(object):
     @property
     def diagnostics(self):
         """
-        Diagnistics common for all DataSet implementations
+        Diagnostics common for all DataSet implementations
         """
         p = next(self.get_partitions())
 

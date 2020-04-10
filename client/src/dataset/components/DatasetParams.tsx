@@ -16,15 +16,12 @@ const renderParamValue = (value: any) => {
 
 const renderParams = (params: any) => {
     return Object.keys(params).map((key: string, idx: number) => {
-        if(key !== "dataset_paths") {
-          return (
-              <Table.Row key={idx}>
-                  <Table.Cell>{key}</Table.Cell>
-                  <Table.Cell>{renderParamValue(params[key])}</Table.Cell>
-              </Table.Row>
-          );
-      }
-      return null;
+        return (
+            <Table.Row key={idx}>
+                <Table.Cell>{key}</Table.Cell>
+                <Table.Cell>{renderParamValue(params[key])}</Table.Cell>
+            </Table.Row>
+        );
     })
 }
 

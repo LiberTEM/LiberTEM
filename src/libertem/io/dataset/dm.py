@@ -33,12 +33,11 @@ class DMDatasetParams(MessageConverter):
       "properties": {
         "type": {"const": "DM"},
         "path": {
-          "type": "string",
+          "type": "string", 
         },
         "scan_size": {
             "type": "array",
             "items": {"type": "number"},
-            "minItems": 3,
             "maxItems": 4,
         },
       },
@@ -48,9 +47,7 @@ class DMDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             "files": [raw_data["path"]],
-            "scan_size": raw_data["scan_size"]
         }
-        print(data)
         return data
 
 class StackedDMFile(LocalFile):
@@ -236,6 +233,9 @@ class DMDataSet(DataSet):
         try:
             with fileDM(first_fn, on_memory=True):
                 pass
+            print("============")
+            print(np.product(self._scan_size), len(self._get_files()))
+            print("===================")
             if (self._scan_size is not None
                     and np.product(self._scan_size) != len(self._get_files())):
                 raise DataSetException("incompatible scan_size")

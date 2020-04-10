@@ -153,7 +153,7 @@ export type DatasetParamsEMPAD = {
 export type DatasetParamsDM = {
   type: DatasetTypes.DM,
   path: string,
-  scan_size: number[],
+  scan_size?: number[],
 } & DatasetParamsCommon
 
 export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsDM

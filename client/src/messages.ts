@@ -98,7 +98,7 @@ export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
     ds_path: string,
-    dataset_paths: [],
+    dataset_paths: string,
     tileshape: number[],
 } & DatasetParamsCommon
 

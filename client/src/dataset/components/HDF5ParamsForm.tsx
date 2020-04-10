@@ -24,6 +24,8 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     setFieldValue,
 }) => {
 
+    const dsPathOptions = values.dataset_paths.split(", ").map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
+
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
       const { value } = result;
       if (value) {
@@ -31,16 +33,16 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
       }
     };
 
-    const isTimeOut = (values.dataset_paths.length === 0 ) ? true : false;
+    const isTimeOut = (dsPathOptions.length === 0 ) ? true : false;
     let dsPathInput;
-    let dsPathOptions;
+    let dsPathDropdown;
 
     if (isTimeOut) {
       dsPathInput = <Field name="ds_path" id="id_ds_path" />;
-      dsPathOptions = null;
+      dsPathDropdown = null;
     } else {
       dsPathInput = <Field name="ds_path" id="id_ds_path" hidden={true} />;
-      dsPathOptions = <Dropdown name="options" id="id_options" placeholder="Select dataset" fluid={true} search={true} selection={true} defaultValue={values.ds_path} onChange={onDSPathChange} options={values.dataset_paths} />;
+      dsPathDropdown = <Dropdown name="options" id="id_options" placeholder="Select dataset" fluid={true} search={true} selection={true} defaultValue={values.ds_path} onChange={onDSPathChange} options={dsPathOptions} />;
     }
 
     return (
@@ -54,7 +56,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
                 <label htmlFor="id_ds_path">HDF5 Dataset Path:</label>
                 <ErrorMessage name="ds_path" />
                 {dsPathInput}
-                {dsPathOptions}
+                {dsPathDropdown}
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_tileshape">Tileshape:</label>
@@ -71,7 +73,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
     mapPropsToValues: ({path, initial }) => ({
         name: getInitialName("name",path,initial),
-        dataset_paths: getInitial("dataset_paths", [], initial),
+        dataset_paths: getInitial("dataset_paths", "", initial),
         tileshape: getInitial("tileshape", "1, 8, 128, 128", initial).toString(),
         ds_path: getInitial("ds_path", "", initial),
     }),

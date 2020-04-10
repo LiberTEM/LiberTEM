@@ -27,7 +27,7 @@ def default_mib(lt_ctx):
 
 
 def test_detect(lt_ctx):
-    params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)
+    params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)["parameters"]
     assert params == {
         "path": MIB_TESTDATA_PATH,
         "tileshape": (1, 3, 256, 256)

@@ -38,7 +38,7 @@ def test_detect():
     assert BloDataSet.detect_params(
         path=str(BLO_TESTDATA_PATH),
         executor=InlineJobExecutor()
-    )
+    )["parameters"]
 
 
 def test_read(default_blo):

@@ -6,6 +6,7 @@ import * as clusterActions from './actions';
 import { checkClusterConnection, connectToCluster } from "./api";
 
 function* connectSaga(action: ReturnType<typeof clusterActions.Actions.connect>) {
+    yield put(clusterActions.Actions.connecting())
     const conn: ConnectResponse = yield call(connectToCluster, action.payload.params);
     yield call(putClusterStatus, conn);
 }

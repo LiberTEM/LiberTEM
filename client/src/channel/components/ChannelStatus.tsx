@@ -13,6 +13,7 @@ const messages = {
 const clusterMessages = {
     connected: "Connected, waiting for initial state...",
     unknown: "Connected, fetching cluster status...",
+    connecting : "Connecting to cluster"
 }
 
 const ConnectedNotReady: React.SFC = () => {
@@ -28,6 +29,8 @@ const ConnectedNotReady: React.SFC = () => {
         return <ChannelConnecting msg={clusterMessages.connected} />;
     } else if (clusterConnection.status === "unknown") {
         return <ChannelConnecting msg={clusterMessages.unknown} />;
+    } else if (clusterConnection.status === "connecting") {
+        return <ChannelConnecting msg={clusterMessages.connecting} />
     }
     assertNotReached("should not happen");
 }

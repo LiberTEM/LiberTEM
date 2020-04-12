@@ -93,7 +93,9 @@ organization will review your pull request, and may add comments or ask
 questions. If everything is good to go, your changes will be merged and you can
 delete the branch you created for the pull request.
 
-See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
+.. seealso:: `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_
+
+.. seealso:: `How to make a simple GitHub PR (video) <https://www.youtube.com/watch?v=cysuuUtbC6E>`_
 
 .. _`running tests`:
 

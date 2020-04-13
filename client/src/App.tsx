@@ -1,9 +1,9 @@
-import 'semantic-ui-css/semantic.min.css';
 import * as React from 'react';
+import { connect } from "react-redux";
+import 'semantic-ui-css/semantic.min.css';
 import { Container, Icon, Modal, Popup } from 'semantic-ui-react';
 import About from './About';
 import ChannelStatus from './channel/components/ChannelStatus';
-import { connect } from "react-redux";
 import DatasetList from './dataset/components/DatasetList';
 import ErrorList from './errors/components/ErrorList';
 import logo from './images/LiberTEM logo-medium.png';

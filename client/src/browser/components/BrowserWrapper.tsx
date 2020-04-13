@@ -1,16 +1,18 @@
 import * as React from "react";
-import * as browserActions from '../actions';
+import { connect } from "react-redux";
 import { Button, Icon } from "semantic-ui-react";
-import { connect, useSelector } from "react-redux";
-import FileBrowser from "./FileBrowser";
-import github from '../../images/github_logo.png'
-import libertem from '../../images/libertem_logo.svg'
+import github from '../../images/github_logo.png';
+import libertem from '../../images/libertem_logo.svg';
 import { RootReducer } from "../../store";
+import * as browserActions from '../actions';
+import FileBrowser from "./FileBrowser";
 
 
 export const mapStateToProps = (state: RootReducer) => {
     return {
         isOpen: state.browser.isOpen,
+        noOfDatasets: state.datasets.ids.length,
+        isVisible: state.openDataset.formVisible,
     }
 }
 
@@ -20,9 +22,7 @@ export const mapDispatchToProps = {
 
 type MergedProps = ReturnType<typeof mapStateToProps> & DispatchProps<typeof mapDispatchToProps>;
 
-const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open}) => {
-    const noOfDatasets = useSelector((state: RootReducer) => state.datasets.ids).length;
-    const isVisible = useSelector((state: RootReducer) => state.openDataset.formVisible);
+const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open, noOfDatasets, isVisible}) => {
     if (!isOpen) {
         return ( 
             <div>

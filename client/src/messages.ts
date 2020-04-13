@@ -24,8 +24,8 @@ export interface MsgPartConfig {
 }
 
 export interface GetConfigResponse {
-  status: "ok",
-  config: MsgPartConfig,
+    status: "ok",
+    config: MsgPartConfig,
 }
 
 /*
@@ -33,39 +33,39 @@ export interface GetConfigResponse {
  */
 
 export enum ClusterTypes {
-  LOCAL = "LOCAL",
-  TCP = "TCP",
+    LOCAL = "LOCAL",
+    TCP = "TCP",
 }
 
 export const ClusterTypeMetadata: { [s: string]: { [s: string]: string } } = {
-  [ClusterTypes.LOCAL]: {
-    label: "Create local cluster",
-  },
-  [ClusterTypes.TCP]: {
-    label: "Connect to cluster",
-    helpText: "can be either local or remote, connection via TCP",
-  }
+    [ClusterTypes.LOCAL]: {
+        label: "Create local cluster",
+    },
+    [ClusterTypes.TCP]: {
+        label: "Connect to cluster",
+        helpText: "can be either local or remote, connection via TCP",
+    }
 }
 
 export interface ConnectRequestLocalCluster {
-  type: ClusterTypes.LOCAL,
-  numWorkers?: number,
+    type: ClusterTypes.LOCAL,
+    numWorkers?: number,
 }
 
 export interface ConnectRequestTCP {
-  type: ClusterTypes.TCP,
-  address: string,
+    type: ClusterTypes.TCP,
+    address: string,
 }
 
 export type ConnectRequestParams = ConnectRequestLocalCluster | ConnectRequestTCP
 
 export interface ConnectRequest {
-  connection: ConnectRequestParams
+    connection: ConnectRequestParams
 }
 
 export type ConnectResponse = {
-  status: "ok",
-  connection: ConnectRequest,
+    status: "ok",
+    connection: ConnectRequest,
 } | {
     status: "disconnected",
     connection: {},
@@ -80,19 +80,19 @@ export type ConnectResponse = {
  */
 
 export enum DatasetTypes {
-  HDF5 = "HDF5",
-  RAW = "RAW",
-  MIB = "MIB",
-  BLO = "BLO",
-  K2IS = "K2IS",
-  SER = "SER",
-  FRMS6 = "FRMS6",
-  EMPAD = "EMPAD",
-  DM = "DM",
+    HDF5 = "HDF5",
+    RAW = "RAW",
+    MIB = "MIB",
+    BLO = "BLO",
+    K2IS = "K2IS",
+    SER = "SER",
+    FRMS6 = "FRMS6",
+    EMPAD = "EMPAD",
+    DM = "DM",
 }
 
 export interface DatasetParamsCommon {
-  name: string,
+    name: string,
 }
 
 export enum AdditionalInfo {
@@ -108,141 +108,141 @@ export type DatasetParamsHDF5 = {
 } & DatasetParamsCommon
 
 export type DatasetParamsRaw = {
-  type: DatasetTypes.RAW,
-  path: string,
-  dtype: string,
-  detector_size: number[],
-  enable_direct: boolean,
-  scan_size: number[],
+    type: DatasetTypes.RAW,
+    path: string,
+    dtype: string,
+    detector_size: number[],
+    enable_direct: boolean,
+    scan_size: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsMIB = {
-  type: DatasetTypes.MIB,
-  path: string,
-  scan_size: number[],
-  tileshape: number[],
+    type: DatasetTypes.MIB,
+    path: string,
+    scan_size: number[],
+    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsBLO = {
-  type: DatasetTypes.BLO,
-  path: string,
-  tileshape: number[],
+    type: DatasetTypes.BLO,
+    path: string,
+    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsK2IS = {
-  type: DatasetTypes.K2IS,
-  path: string,
+    type: DatasetTypes.K2IS,
+    path: string,
 } & DatasetParamsCommon
 
 export type DatasetParamsSER = {
-  type: DatasetTypes.SER,
-  path: string,
+    type: DatasetTypes.SER,
+    path: string,
 } & DatasetParamsCommon
 
 export type DatasetParamsFRMS6 = {
-  type: DatasetTypes.FRMS6,
-  path: string,
+    type: DatasetTypes.FRMS6,
+    path: string,
 } & DatasetParamsCommon
 
 export type DatasetParamsEMPAD = {
-  type: DatasetTypes.EMPAD,
-  path: string,
-  scan_size: number[],
+    type: DatasetTypes.EMPAD,
+    path: string,
+    scan_size: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsDM = {
-  type: DatasetTypes.DM,
-  path: string,
-  scan_size: number[],
+    type: DatasetTypes.DM,
+    path: string,
+    scan_size: number[],
 } & DatasetParamsCommon
 
 export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsDM
 
 export interface DatasetCreateParams {
-  id: string,
-  params: DatasetFormParams,
+    id: string,
+    params: DatasetFormParams,
 }
 
 export enum DatasetStatus {
-  OPEN = "OPEN",
-  OPENING = "OPENING",
-  DELETING = "DELETING",
+    OPEN = "OPEN",
+    OPENING = "OPENING",
+    DELETING = "DELETING",
 }
 
 export interface DiagElemMsg {
-  name: string,
-  value: string | DiagElemMsg[],
+    name: string,
+    value: string | DiagElemMsg[],
 }
 
 interface DatasetCommon {
-  id: string,
-  params: DatasetFormParams,
+    id: string,
+    params: DatasetFormParams,
 }
 
 export type DatasetOpening = DatasetCommon & {
-  status: DatasetStatus.OPENING,
+    status: DatasetStatus.OPENING,
 }
 
 export type DatasetDeleting = DatasetCommon & {
-  status: DatasetStatus.DELETING,
+    status: DatasetStatus.DELETING,
 }
 
 export type DatasetOpen = DatasetCommon & {
-  status: DatasetStatus.OPEN,
-  params: {
-    shape: number[],
-  }
-  diagnostics: DiagElemMsg[],
+    status: DatasetStatus.OPEN,
+    params: {
+        shape: number[],
+    }
+    diagnostics: DiagElemMsg[],
 }
 
 export type Dataset = DatasetOpening | DatasetOpen | DatasetDeleting;
 
 export interface OpenDatasetRequest {
-  dataset: DatasetCreateParams
+    dataset: DatasetCreateParams
 }
 
 export interface OpenDatasetResponseOk {
-  status: "ok",
-  dataset: string,  // TODO: uuid type?
-  details: Dataset,
+    status: "ok",
+    dataset: string,  // TODO: uuid type?
+    details: Dataset,
 }
 
 export interface OpenDatasetResponseError {
-  status: "error",
-  dataset: string,
-  msg: string,
+    status: "error",
+    dataset: string,
+    msg: string,
 }
 
 export type OpenDatasetResponse = OpenDatasetResponseOk | OpenDatasetResponseError
 
 export interface DeleteDatasetResponse {
-  status: "ok",
-  dataset: string,
+    status: "ok",
+    dataset: string,
 }
 
 export interface DetectDatasetSuccessResponse {
-  status: "ok",
-  datasetParams: DatasetFormParams,
+    status: "ok",
+    datasetParams: DatasetFormParams,
 }
 
 export interface DetectDatasetErrorResponse {
-  status: "error",
-  path: string,
-  msg: string,
+    status: "error",
+    path: string,
+    msg: string,
 }
 
 export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
 
 export interface DataSetOpenSchemaSuccessResponse {
-  status: "ok",
-  ds_type: string,
-  schema: object,
+    status: "ok",
+    ds_type: string,
+    schema: object,
 }
 
 export interface DataSetOpenSchemaErrorResponse {
-  status: "error",
-  ds_type: string,
-  msg: string,
+    status: "error",
+    ds_type: string,
+    msg: string,
 }
 
 export type DataSetOpenSchemaResponse = DataSetOpenSchemaSuccessResponse | DataSetOpenSchemaErrorResponse;
@@ -261,120 +261,120 @@ export interface MsgPartJob {
 }
 
 export interface MaskDefRing {
-  shape: "ring",
-  cx: number,
-  cy: number,
-  ri: number,
-  ro: number
+    shape: "ring",
+    cx: number,
+    cy: number,
+    ri: number,
+    ro: number
 }
 
 
 export interface MaskDefDisk {
-  shape: "disk",
-  cx: number,
-  cy: number,
-  r: number,
-}
-
-export interface PointDef {
-  shape: "point",
-  cx: number,
-  cy: number,
-}
-
-// TODO: shape doesn't really make sense here, needs to be restructured
-export interface CenterOfMassParams {
-  shape: "com",
-  cx: number,
-  cy: number,
-  r: number,
-}
-
-export interface PickFrameParams {
-  x: number,
-  y: number,
-}
-
-export interface FFTSumFramesParams {
-  real_rad: number | null,
-  real_centerx: number | null,
-  real_centery: number | null,
-}
-
-export interface PickFFTFrameParams {
-  x: number,
-  y: number,
-  real_rad: number | null,
-  real_centerx: number | null,
-  real_centery: number | null,
-}
-export interface RadialFourierParams {
-  shape: "radial_fourier",
-  cx: number,
-  cy: number,
-  ri: number,
-  ro: number,
-  n_bins: number,
-  max_order: number
-}
-
-export interface FFTParams {
-  rad_in: number,
-  rad_out: number,
-  real_rad: number | null,
-  real_centerx: number | null,
-  real_centery: number | null,
-}
-
-
-export interface FrameParams {
-  roi: {
-    shape: "rect",
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  } | {
     shape: "disk",
     cx: number,
     cy: number,
     r: number,
-  } |
-  {}
+}
+
+export interface PointDef {
+    shape: "point",
+    cx: number,
+    cy: number,
+}
+
+// TODO: shape doesn't really make sense here, needs to be restructured
+export interface CenterOfMassParams {
+    shape: "com",
+    cx: number,
+    cy: number,
+    r: number,
+}
+
+export interface PickFrameParams {
+    x: number,
+    y: number,
+}
+
+export interface FFTSumFramesParams {
+    real_rad: number | null,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
+
+export interface PickFFTFrameParams {
+    x: number,
+    y: number,
+    real_rad: number | null,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
+export interface RadialFourierParams {
+    shape: "radial_fourier",
+    cx: number,
+    cy: number,
+    ri: number,
+    ro: number,
+    n_bins: number,
+    max_order: number
+}
+
+export interface FFTParams {
+    rad_in: number,
+    rad_out: number,
+    real_rad: number | null,
+    real_centerx: number | null,
+    real_centery: number | null,
+}
+
+
+export interface FrameParams {
+    roi: {
+        shape: "rect",
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+    } | {
+        shape: "disk",
+        cx: number,
+        cy: number,
+        r: number,
+    } |
+    {}
 }
 
 export interface ClustParams {
-  roi: {
-    shape: "rect",
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  } | {}
-  cx: number,
-  cy: number,
-  ri: number,
-  ro: number,
-  n_peaks: number,
-  n_clust: number,
-  min_dist: number,
+    roi: {
+        shape: "rect",
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+    } | {}
+    cx: number,
+    cy: number,
+    ri: number,
+    ro: number,
+    n_peaks: number,
+    n_clust: number,
+    min_dist: number,
 }
 
 export enum AnalysisTypes {
-  APPLY_RING_MASK = "APPLY_RING_MASK",
-  APPLY_DISK_MASK = "APPLY_DISK_MASK",
-  APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
-  CENTER_OF_MASS = "CENTER_OF_MASS",
-  SUM_FRAMES = "SUM_FRAMES",
-  SD_FRAMES = "SD_FRAMES",
-  PICK_FRAME = "PICK_FRAME",
-  PICK_FFT_FRAME = "PICK_FFT_FRAME",
-  APPLY_FFT_MASK = "APPLY_FFT_MASK",
-  FFTSUM_FRAMES = "FFTSUM_FRAMES",
-  RADIAL_FOURIER = "RADIAL_FOURIER",
-  FEM = "FEM",
-  CLUST = "CLUST",
-  SUM_SIG = "SUM_SIG",
+    APPLY_RING_MASK = "APPLY_RING_MASK",
+    APPLY_DISK_MASK = "APPLY_DISK_MASK",
+    APPLY_POINT_SELECTOR = "APPLY_POINT_SELECTOR",
+    CENTER_OF_MASS = "CENTER_OF_MASS",
+    SUM_FRAMES = "SUM_FRAMES",
+    SD_FRAMES = "SD_FRAMES",
+    PICK_FRAME = "PICK_FRAME",
+    PICK_FFT_FRAME = "PICK_FFT_FRAME",
+    APPLY_FFT_MASK = "APPLY_FFT_MASK",
+    FFTSUM_FRAMES = "FFTSUM_FRAMES",
+    RADIAL_FOURIER = "RADIAL_FOURIER",
+    FEM = "FEM",
+    CLUST = "CLUST",
+    SUM_SIG = "SUM_SIG",
 }
 
 export interface RingMaskDetails {
@@ -519,14 +519,14 @@ export interface StartJobRequest {
 }
 
 export interface StartJobResponse {
-  status: "ok",
-  job: string,
-  details: MsgPartJob,
+    status: "ok",
+    job: string,
+    details: MsgPartJob,
 }
 
 export interface CancelJobResponse {
-  status: "ok",
-  job: string,
+    status: "ok",
+    job: string,
 }
 
 /*
@@ -535,34 +535,34 @@ export interface CancelJobResponse {
 
 // some named place, i.e. "Documents", "Home", ...
 export interface FSPlace {
-  title: string,
-  path: string,
-  key: string,
+    title: string,
+    path: string,
+    key: string,
 }
 
 export interface DirectoryListingDetails {
-  name: string,
-  size: number,
-  ctime: number,
-  mtime: number,
-  owner: string,
+    name: string,
+    size: number,
+    ctime: number,
+    mtime: number,
+    owner: string,
 }
 
 export interface DirectoryListingResponseOK {
-  status: "ok",
-  path: string,
-  files: DirectoryListingDetails[],
-  dirs: DirectoryListingDetails[],
-  drives: string[],
-  places: FSPlace[],
+    status: "ok",
+    path: string,
+    files: DirectoryListingDetails[],
+    dirs: DirectoryListingDetails[],
+    drives: string[],
+    places: FSPlace[],
 }
 
 export interface DirectoryListingResponseError {
-  status: "error",
-  path: string,
-  code: string,
-  msg: string,
-  alternative?: string,
+    status: "error",
+    path: string,
+    code: string,
+    msg: string,
+    alternative?: string,
 }
 
 export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;

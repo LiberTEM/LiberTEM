@@ -210,20 +210,20 @@ On Windows with Anaconda, you have to create named aliases for the Python interp
     REM @echo off is vital so that the file doesn't clutter the output
     REM execute python.exe with the same command line
     @python.exe %*
-    
+
 To execute tests with Python 3.7, you create a new environment with Python 3.7:
 
 .. code-block:: shell
 
     > conda create -n libertem-3.7 python=3.7
-    
+
 Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment alongside :literal:`python3.6.bat` and make it execute the Python interpreter of your new libertem-3.7 environment:
 
 .. code-block:: bat
 
     @echo off
     REM @echo off is vital so that the file doesn't clutter the output
-    REM execute python.exe in a different environment 
+    REM execute python.exe in a different environment
     REM with the same command line
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
@@ -240,7 +240,7 @@ as the surrounding code.
 You can check the code style by running:
 
 .. code-block:: bat
-   
+
    $ tox -e flake8
 
 We recommend using an editor that can check code style on the fly, such as `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
@@ -276,7 +276,7 @@ Building the client
 The LiberTEM client is written in TypeScript, using a combination of React/Redux/Redux-Saga. The
 client communicates with the Python API server using both HTTP and websockets. Because browsers
 can't directly execute TypeScript, there is a build step involved, which translates the TypeScript
-code into JavaScript that is then understood by the browser. 
+code into JavaScript that is then understood by the browser.
 This build step is needed both for development and then again for building the production version.
 
 If you would like to contribute to the client, you first need to set up the development environment.
@@ -292,7 +292,7 @@ the needed build tools and dependencies by changing to the client directory and 
    $ npm install
 
 .. note::
-   
+
    It is always a good idea to start development with installing the current dependencies with the
    above command. Having old versions of dependencies installed may cause the build to fail or
    cause unpredictable failures.
@@ -314,8 +314,9 @@ You can then use any editor you like to change the client source files, in the c
 We recommend `Visual Studio Code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
 
 To simplify development and installing from a git checkout, we currently always ship a production build
-of the client in the git repository. When you are creating a pull request for the client, please always
-include a current production build. You can create it using a tox shortcut:
+of the client in the git repository. Please always open your pull request for the client as WIP and
+include a rebuilt production build after the PR is approved and ready to merge.
+You can create it using a tox shortcut:
 
 .. code-block:: shell
 

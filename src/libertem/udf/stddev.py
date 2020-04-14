@@ -241,15 +241,20 @@ class StdDevUDF(UDF):
                 kind='sig', dtype=dtype
             ),
             'num_frames': self.buffer(
-                kind='single', dtype='object'
+                kind='single', dtype='int'
             ),
             'sum': self.buffer(
                 kind='sig', dtype=dtype
             )
         }
 
-    def preprocess(self):
-        self.results.num_frames[:] = dict()
+    def get_task_data(self):
+        return {
+            'num_frames': dict()
+        }
+
+    def postprocess(self):
+        self.results.num_frames[:] = _validate_n(self.task_data.num_frames)
 
     def merge(self, dest, src):
         """
@@ -267,8 +272,8 @@ class StdDevUDF(UDF):
             Partial results that contains sum of variances, sum of frames, and the
             number of frames of a partition to be merged into the aggregation buffers
         """
-        dest_n = _validate_n(dest['num_frames'][0])
-        src_n = _validate_n(src['num_frames'][0])
+        dest_n = dest['num_frames'][0]
+        src_n = src['num_frames'][0]
 
         n = merge(
             dest_n=dest_n,
@@ -278,8 +283,7 @@ class StdDevUDF(UDF):
             src_sum=src['sum'].reshape((-1,)),
             src_varsum=src['varsum'].reshape((-1,)),
         )
-        for key in src['num_frames'][0]:
-            dest['num_frames'][0][key] = n
+        dest['num_frames'][:] = n
 
     def process_tile(self, tile):
         """
@@ -294,10 +298,10 @@ class StdDevUDF(UDF):
 
         key = self.meta.slice.discard_nav()
 
-        if key not in self.results.num_frames[0]:
-            self.results.num_frames[0][key] = 0
+        if key not in self.task_data.num_frames:
+            self.task_data.num_frames[key] = 0
 
-        n_0 = self.results.num_frames[0][key]
+        n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 
         if n_0 == 0:
@@ -307,9 +311,9 @@ class StdDevUDF(UDF):
             # of variances
             # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html
             self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1)
-            self.results.num_frames[0][key] = n_1
+            self.task_data.num_frames[key] = n_1
         else:
-            self.results.num_frames[0][key] = process_tile(
+            self.task_data.num_frames[key] = process_tile(
                 tile=tile.reshape((n_1, -1)),
                 n_0=n_0,
                 sum_inout=self.results.sum.reshape((-1, )),
@@ -335,7 +339,7 @@ def consolidate_result(udf_result):
         :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
     '''
     udf_result = dict(udf_result.items())
-    num_frames = _validate_n(udf_result['num_frames'].data[0])
+    num_frames = udf_result['num_frames'].data[0]
 
     udf_result['num_frames'] = num_frames
     udf_result['varsum'] = udf_result['varsum'].data

@@ -107,7 +107,8 @@ class COMAnalysis(BaseMasksAnalysis):
 
             return COMResultSet([
                 AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
-                       key="field", title="field", desc="cubehelix colorwheel visualization"),
+                       key="field", title="field", desc="cubehelix colorwheel visualization",
+                       include_in_download=False),
                 AnalysisResult(raw_data=m, visualized=visualize_simple(m),
                        key="magnitude", title="magnitude", desc="magnitude of the vector field"),
                 AnalysisResult(raw_data=d, visualized=visualize_simple(d),

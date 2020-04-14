@@ -22,7 +22,8 @@ class AnalysisResult:
     key : str
         Key to identify the result in an :class:`AnalysisResultSet`
     """
-    def __init__(self, raw_data, visualized, title, desc, key):
+    def __init__(self, raw_data, visualized, title, desc, key, include_in_download=True):
+        self.include_in_download = include_in_download
         self.raw_data = raw_data
         self._visualized = visualized
         self.title = title
@@ -39,7 +40,7 @@ class AnalysisResult:
         return "<AnalysisResult: %s>" % self.key
 
     def __array__(self):
-        return self.raw_data
+        return np.array(self.raw_data)
 
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)

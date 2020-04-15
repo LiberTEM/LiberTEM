@@ -94,8 +94,8 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         executor = self.state.executor_state.get_executor()
 
         detected_params = await run_blocking(
-            detect, path=path, executor=executor.ensure_sync(), getInfo=True
-            )
+            detect, path=path, executor=executor.ensure_sync()
+        )
 
         if not detected_params:
             msg = Message(self.state).dataset_detect_failed(path=path)

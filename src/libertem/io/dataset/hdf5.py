@@ -161,7 +161,7 @@ class H5DataSet(DataSet):
         try:
             datasets = executor.run_function(_get_datasets, path)
             datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
-            dataset_paths = ", ".join([ds_path[0] for ds_path in datasets_list])
+            dataset_paths = [ds_path[0] for ds_path in datasets_list]
             name, size, shape, dtype = datasets_list[0]
         except (IndexError, TimeoutError):
             return {

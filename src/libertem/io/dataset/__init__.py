@@ -26,7 +26,7 @@ def _auto_load(path, executor):
         )
 
     detected_params = detect(path, executor=executor)
-    filetype_detected = detected_params.pop('type', None)
+    filetype_detected = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
@@ -100,7 +100,19 @@ def get_dataset_cls(filetype):
     return cls
 
 
-def detect(path, executor, getParams=True, getInfo=False):
+def detect(path, executor):
+    """
+    Returns dataset's detected type, parameters and
+    additional info.
+
+    Examples
+    --------
+
+    >>> detected_params = detect(path, executor=executor)
+    >>> type = detected_params.get('type', None)
+    >>> params = detected_params["parameters"]
+    >>> info = detected_params["info"]
+    """
     for filetype in filetypes.keys():
         try:
             cls = get_dataset_cls(filetype)
@@ -110,10 +122,6 @@ def detect(path, executor, getParams=True, getInfo=False):
         if not params:
             continue
         params.update({"type": filetype})
-        if not getParams:
-            del params["parameters"]
-        if not getInfo and "info" in params:
-            del params["info"]
         return params
     return {}
 

@@ -94,11 +94,15 @@ export interface DatasetParamsCommon {
     name: string,
 }
 
+export enum AdditionalInfo {
+    dataset_paths = "dataset_paths",
+}
+
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
     ds_path: string,
-    dataset_paths: string,
+    dataset_paths: string[],
     tileshape: number[],
 } & DatasetParamsCommon
 

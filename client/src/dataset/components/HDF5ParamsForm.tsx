@@ -26,7 +26,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 
     const dsPathOptions = values.dataset_paths.map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
 
-    //semantic-ui requires value to be set manually on option selection
+    // semantic-ui requires value to be set manually on option selection
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
       const { value } = result;
       if (value) {

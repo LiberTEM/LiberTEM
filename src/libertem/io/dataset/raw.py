@@ -190,7 +190,7 @@ class RawFileDataSet(DataSet):
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
-
+        # FIXME execute deprecation after 0.6.0
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
                           "and will be removed after version 0.6.0. "

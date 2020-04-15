@@ -104,14 +104,6 @@ def detect(path, executor):
     """
     Returns dataset's detected type, parameters and
     additional info.
-
-    Examples
-    --------
-
-    >>> detected_params = detect(path, executor=executor)
-    >>> type = detected_params.get('type', None)
-    >>> params = detected_params["parameters"]
-    >>> info = detected_params["info"]
     """
     for filetype in filetypes.keys():
         try:

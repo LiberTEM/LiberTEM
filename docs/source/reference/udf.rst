@@ -10,7 +10,7 @@ Defining UDFs
 
 See :ref:`user-defined functions` for an introduction and in-depth explanation.
 
-.. automodule:: libertem.udf
+.. automodule:: libertem.udf.base
    :members:
    :special-members: __init__
    :exclude-members: UDFTask,UDFRunner

@@ -570,6 +570,10 @@ class UDF(UDFBase):
         pass
 
     def buffer(self, kind, extra_shape=(), dtype="float32"):
+        '''
+        Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
+        in :meth:`get_result_buffers`.
+        '''
         return BufferWrapper(kind, extra_shape, dtype)
 
     @classmethod

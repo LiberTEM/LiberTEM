@@ -6,20 +6,13 @@ from libertem.udf import UDF
 
 @numba.njit(fastmath=True)
 def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     '''
     Basic function to perform numerically stable merge.
 
     This function is designed to be inlined in a loop over all pixels in a frame
     to merge an individual pixel, with some parts pre-calculated.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
+    Based on :cite:`Schubert2018`.
 
     Parameters
     ----------
@@ -61,8 +54,6 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
 
 @numba.njit
 def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     """
     Given two sets of buffers, with sum of frames
     and sum of variances, aggregate joint sum of frames
@@ -71,12 +62,7 @@ def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
 
     This is ther numerical workhorse for :meth:`StdDevUDF.merge`.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
+    Based on :cite:`Schubert2018`.
 
     Parameters
     ----------
@@ -192,21 +178,13 @@ def _validate_n(num_frame):
 
 
 class StdDevUDF(UDF):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     """
     Compute sum of variances and sum of pixels from the given dataset
 
-    The one-pass algorithm used in this code is taken from the following paper:
+    The one-pass algorithm used in this code is taken from the following
+    paper: :cite:`Schubert2018`.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
-
-    ..versionchanged:: 0.5.0.dev0
+    ..versionchanged:: 0.5.0
         Result buffers have been renamed
 
     Examples
@@ -352,16 +330,18 @@ def consolidate_result(udf_result):
     return udf_result
 
 
-def run_stddev(ctx, dataset, roi=None):
+def run_stddev(ctx, dataset, roi=None, progress=False):
     """
     Compute sum of variances and sum of pixels from the given dataset
 
     One-pass algorithm used in this code is taken from the following paper:
-    "Numerically Stable Parallel Computation of (Co-) Variance"
-    DOI : https://doi.org/10.1145/3221269.3223036
+    :cite:`Schubert2018`.
 
-    ..versionchanged:: 0.5.0.dev0
+    ..versionchanged:: 0.5.0
         Result buffers have been renamed
+
+    ..versionchanged:: 0.5.0
+        Added :code:`progress` parameter for progress bar
 
     Parameters
     ----------
@@ -370,6 +350,8 @@ def run_stddev(ctx, dataset, roi=None):
         dataset to work on
     roi : numpy.ndarray
         Region of interest, see :ref:`udf roi` for more information.
+    progress : bool, optional
+        Show progress bar. Default is :code:`False`.
 
 
     Returns
@@ -386,6 +368,8 @@ def run_stddev(ctx, dataset, roi=None):
     number of frames : pass_results['num_frames']
     """
     stddev_udf = StdDevUDF()
-    pass_results = ctx.run_udf(dataset=dataset, udf=stddev_udf, roi=roi)
+    pass_results = ctx.run_udf(
+        dataset=dataset, udf=stddev_udf, roi=roi, progress=progress
+    )
 
     return consolidate_result(pass_results)

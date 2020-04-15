@@ -1,6 +1,6 @@
 import sys
 import logging
-# Changed in 0.5.0.dev0: The thread count ist set dynamically
+# Changed in 0.5.0: The thread count ist set dynamically
 # on the workers. No need for setting environment variables anymore.
 
 import numpy as np

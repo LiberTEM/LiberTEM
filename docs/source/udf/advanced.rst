@@ -147,7 +147,7 @@ by the ROI.
 
 .. versionadded:: 0.3.0
 
-.. versionchanged:: 0.5.0.dev0
+.. versionchanged:: 0.5.0
     :meth:`libertem.udf.UDFPreprocessMixin.preprocess` is executed on the master
     node, too. Views for aux data are set correctly on the master node. Previously,
     it was only executed on the worker nodes.

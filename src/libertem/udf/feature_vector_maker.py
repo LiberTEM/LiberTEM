@@ -16,7 +16,7 @@ class FeatureVecMakerUDF(UDF):
 
     def __init__(self, coordinates, delta, savg):
         """
-        .. deprecated:: 0.5.0.dev0
+        .. deprecated:: 0.5.0
             :code:`FeatureVecMakerUDF` is deprecated and will be removed in 0.6.0.
             Use :class:`libertem.udf.masks.ApplyMasksUDF` with a stack of sparse one-pixel masks
             or with a mask stack generated using

@@ -172,6 +172,17 @@ download the available results.
 
 ..  figure:: ./images/use/download-modal.png
 
+Possible error
+~~~~~~~~~~~~~~~~
+
+You may get the following error if you try to run libertem-server for a second time
+
+.. code-block:: shell
+
+    OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+
+In such a case you need to forcefully stop the process.
+
 Keyboard controls
 ~~~~~~~~~~~~~~~~~
 

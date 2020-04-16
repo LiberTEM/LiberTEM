@@ -192,8 +192,9 @@ class DMDataSet(DataSet):
         self._fileset = executor.run_function(self._get_fileset)
         first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
-        shape = nav_dims + tuple(first_file.sig_shape)
-        sig_dims = len(first_file.sig_shape)
+        shape = nav_dims + tuple(first_file.shape)
+        shape = tuple([int(x) for x in shape])
+        sig_dims = len(first_file.shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),
             raw_dtype=first_file.native_dtype,

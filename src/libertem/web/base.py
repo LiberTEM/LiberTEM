@@ -50,7 +50,8 @@ class CORSMixin:
 
 
 class ResultHandlerMixin:
-    async def send_results(self, results: AnalysisResultSet, job_id, analysis_id, details, finished=False):
+    async def send_results(self, results: AnalysisResultSet, job_id, analysis_id,
+                           details, finished=False):
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         images = await result_images(results)

@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "9a9b3b53dfa08f3280966d32a3bddd85",
+    "revision": "7b1020538307cb78755b07954db6580d",
     "url": "/static/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/static/static/css/2.b6060847.chunk.css"
   },
   {
-    "revision": "5f78fbff5c95544e6b72",
+    "revision": "bfdc60c13b08a9ce1f50",
     "url": "/static/static/css/main.fbce021b.chunk.css"
   },
   {
@@ -20,8 +20,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/static/static/js/2.3253473e.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "5f78fbff5c95544e6b72",
-    "url": "/static/static/js/main.fc659961.chunk.js"
+    "revision": "bfdc60c13b08a9ce1f50",
+    "url": "/static/static/js/main.57fac2c0.chunk.js"
   },
   {
     "revision": "2c4bb1ca699109454fe7",
@@ -76,8 +76,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/static/static/media/icons.faff9214.woff"
   },
   {
-    "revision": "bbb560f43518066d71ad3454a3acdabf",
-    "url": "/static/static/media/libertem_logo.bbb560f4.svg"
+    "revision": "4ecbfe5de4949809c198fa35744f5f34",
+    "url": "/static/static/media/libertem_logo.4ecbfe5d.png"
   },
   {
     "revision": "701ae6abd4719e9c2ada3535a497b341",

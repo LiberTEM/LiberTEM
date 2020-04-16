@@ -13,6 +13,7 @@ const mapStateToProps = (state: RootReducer) => {
     return {
         noOfDatasets: state.datasets.ids.length,
         isVisible: state.openDataset.formVisible,
+        isbusy: state.openDataset.busy,
     };
 }
 
@@ -20,10 +21,10 @@ type MergedProps = ReturnType<typeof mapStateToProps>;
 
 class App extends React.Component<MergedProps> {
     public render() {
-        const { noOfDatasets, isVisible } = this.props;
+        const { noOfDatasets, isVisible, isbusy } = this.props;
         return (
             <Container style={{ margin: "5em 1em 5em 1em" }}>
-                {(noOfDatasets || isVisible) ? 
+                {(noOfDatasets || isVisible || isbusy) ? 
                     <div style={{ display: "flex" }}>
                     <img src={logo} width="200" height="46" alt="LiberTEM" style={{ marginBottom: "20px" }} />
                     {' '}

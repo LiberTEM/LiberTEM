@@ -6,7 +6,7 @@ import { JobList } from "./analysis/types"
 
 export interface FollowupPart {
     numMessages: number,
-    descriptions: Array<{ title: string, desc: string }>,
+    descriptions: Array<{ title: string, desc: string, includeInDownload: boolean }>,
 }
 
 export interface MsgPartConfig {

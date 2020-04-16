@@ -41,13 +41,24 @@ const DownloadItems: React.SFC<DownloadItemsProps> = ({
         return getMetadata(analysis.details.analysisType).desc;
     }
 
+    const getDownloadChannels = (analysis: AnalysisState) => {
+        if(!analysis.displayedJob) {
+            return [];
+        }
+        return jobsById[analysis.displayedJob].results.filter(
+            result => result.description.includeInDownload
+        ).map(
+            result => result.description.title
+        )
+    }
+
     return (
         <ul>
             {analyses.map((analysis) => {
                 return (
                     <li key={analysis.id}>
                         <a href={downloadUrl(analysis.id)}>
-                            {getAnalysisDescription(analysis)}
+                            {getAnalysisDescription(analysis)} (channels: {getDownloadChannels(analysis).join(", ")})
                         </a>
                     </li>
                 );

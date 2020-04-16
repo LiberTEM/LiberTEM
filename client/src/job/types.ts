@@ -1,7 +1,7 @@
 
 export interface JobResultType {
     imageURL: string,
-    description: { title: string, desc: string },
+    description: { title: string, desc: string, includeInDownload: boolean },
 }
 
 export enum JobRunning {

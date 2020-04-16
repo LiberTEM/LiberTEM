@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
@@ -116,7 +118,7 @@ class AnalysisResultSet:
     >>> print(result['mask_1'].title)
     mask 1
     """
-    def __init__(self, results, raw_results=None):
+    def __init__(self, results: typing.List[AnalysisResult], raw_results=None):
         self._results = results
         self.raw_results = raw_results
 

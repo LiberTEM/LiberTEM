@@ -11,6 +11,23 @@ from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
 
 
+class TaskProxy:
+    def __init__(self, task, task_id):
+        self.task = task
+        self.task_id = task_id
+
+    def __getattribute__(self, k):
+        if k in ["task", "task_id"]:
+            return super().__getattribute__(k)
+        return getattr(self.task, k)
+
+    def __call__(self, *args, **kwargs):
+        return {
+            "task_result": self.task(),
+            "task_id": self.task_id,
+        }
+
+
 class UDFMeta:
     """
     UDF metadata. Makes all relevant metadata accessible to the UDF. Can be different
@@ -779,8 +796,8 @@ class UDFRunner:
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
-        async for part_results, partition in executor.run_tasks(tasks, cancel_id):
-            self._udf.set_views_for_partition(partition)
+        async for part_results, task in executor.run_tasks(tasks, cancel_id):
+            self._udf.set_views_for_partition(task.partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()

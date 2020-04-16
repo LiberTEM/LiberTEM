@@ -21,6 +21,8 @@ class CommonDaskMixin(object):
 
     def _futures_for_locations(self, fns_and_locations):
         """
+        Submit tasks and return the resulting futures
+
         Parameters
         ----------
 
@@ -28,7 +30,7 @@ class CommonDaskMixin(object):
             callables zipped with potential locations
         """
         futures = []
-        for fn, locations in fns_and_locations:
+        for task, locations in fns_and_locations:
             submit_kwargs = {}
             if locations is not None:
                 if len(locations) == 0:
@@ -36,7 +38,7 @@ class CommonDaskMixin(object):
                 locations = locations.names()
             submit_kwargs['workers'] = locations
             futures.append(
-                self.client.submit(fn, **submit_kwargs)
+                self.client.submit(task, **submit_kwargs)
             )
         return futures
 
@@ -73,13 +75,14 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     def run_tasks(self, tasks, cancel_id):
         futures = self._get_futures(tasks)
+        future_to_task = dict(zip(futures, tasks))
         self._futures[cancel_id] = futures
         try:
             for future, result in dd.as_completed(futures, with_results=True):
                 if future.cancelled():
                     del self._futures[cancel_id]
                     raise JobCancelledError()
-                yield result
+                yield result, future_to_task[future]
         finally:
             if cancel_id in self._futures:
                 del self._futures[cancel_id]

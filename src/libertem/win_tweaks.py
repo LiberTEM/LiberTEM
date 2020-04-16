@@ -41,7 +41,7 @@ def get_console_mode(stream=sys.stdin):
     try:
         if getConsoleMode(file_handle, byref(mode)):
             return mode.value
-    except ctypes.WinError(ctypes.get_last_error())
+    except WinError(get_last_error()):
         logger.error("Failed!!!")
 
 

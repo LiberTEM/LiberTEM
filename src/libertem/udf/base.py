@@ -720,7 +720,7 @@ class UDFRunner:
                 except TypeError:
                     raise TypeError("could not pickle results")
 
-            return self._udf.results, partition
+            return self._udf.results
 
     def _debug_task_pickling(self, tasks):
         if self._debug:
@@ -761,10 +761,10 @@ class UDFRunner:
 
         if progress:
             t = tqdm.tqdm(total=len(tasks))
-        for part_results, partition in executor.run_tasks(tasks, cancel_id):
+        for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            self._udf.set_views_for_partition(partition)
+            self._udf.set_views_for_partition(task.partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()

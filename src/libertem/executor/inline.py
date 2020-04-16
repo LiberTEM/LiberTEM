@@ -21,7 +21,7 @@ class InlineJobExecutor(JobExecutor):
             result = task()
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
-            yield result
+            yield result, task
 
     def run_function(self, fn, *args, **kwargs):
         if self._debug:

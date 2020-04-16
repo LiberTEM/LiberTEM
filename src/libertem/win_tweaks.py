@@ -64,7 +64,7 @@ def disable_quickedit():
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
     except TypeError:
-        logger.error("Incompatible types!")    
+        logger.error("Incompatible types!")
 
 
 if __name__ == "__main__":

@@ -3,19 +3,13 @@ import { connect } from "react-redux";
 import 'semantic-ui-css/semantic.min.css';
 import { Container, Icon, Modal, Popup } from 'semantic-ui-react';
 import About from './About';
+import EmptyStateProps from "./browser/empty_state/Props";
 import ChannelStatus from './channel/components/ChannelStatus';
 import DatasetList from './dataset/components/DatasetList';
 import ErrorList from './errors/components/ErrorList';
 import logo from './images/LiberTEM logo-medium.png';
-import { RootReducer } from "./store";
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        noOfDatasets: state.datasets.ids.length,
-        isVisible: state.openDataset.formVisible,
-        isbusy: state.openDataset.busy,
-    };
-}
+const mapStateToProps = EmptyStateProps
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 

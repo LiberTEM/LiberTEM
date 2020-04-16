@@ -1,15 +1,9 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import libertem from '../../images/libertem_logo.png';
-import { RootReducer } from "../../store";
+import EmptyStateProps from "./Props";
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        noOfDatasets: state.datasets.ids.length,
-        isVisible: state.openDataset.formVisible,
-        isbusy: state.openDataset.busy,
-    };
-}
+const mapStateToProps = EmptyStateProps;
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 

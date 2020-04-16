@@ -1,8 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import github from '../../images/github_logo.png';
-import { RootReducer } from "../../store";
+// import { RootReducer } from "../../store";
+import EmptyStateProps from "./Props";
 
+/*
 const mapStateToProps = (state: RootReducer) => {
     return {
         noOfDatasets: state.datasets.ids.length,
@@ -10,6 +12,9 @@ const mapStateToProps = (state: RootReducer) => {
         isbusy: state.openDataset.busy,
     };
 }
+*/
+
+const mapStateToProps = EmptyStateProps;
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 

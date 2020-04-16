@@ -227,8 +227,11 @@ class RawFileDataSet(DataSet):
         self._enable_direct = enable_direct
 
     def initialize(self, executor):
-        self._filesize = executor.run_function(os.stat, self._path).st_size
+        self._filesize = executor.run_function(self._get_filesize)
         return self
+
+    def _get_filesize(self):
+        return os.stat(self._path).st_size
 
     @property
     def dtype(self):

@@ -12,6 +12,23 @@ from .scheduler import Worker, WorkerSet
 log = logging.getLogger(__name__)
 
 
+class TaskProxy:
+    def __init__(self, task, task_id):
+        self.task = task
+        self.task_id = task_id
+
+    def __getattr__(self, k):
+        if k in ["task"]:
+            return super().__getattr__(k)
+        return getattr(self.task, k)
+
+    def __call__(self, *args, **kwargs):
+        return {
+            "task_result": self.task(),
+            "task_id": self.task_id,
+        }
+
+
 class CommonDaskMixin(object):
     def _task_idx_to_workers(self, workers, idx):
         hosts = list(sorted(workers.hosts()))
@@ -71,18 +88,30 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     def run_job(self, job, cancel_id=None):
         tasks = job.get_tasks()
-        return self.run_tasks(tasks, cancel_id=cancel_id)
+        for result, task in self.run_tasks(tasks, cancel_id=cancel_id):
+            yield result
 
     def run_tasks(self, tasks, cancel_id):
-        futures = self._get_futures(tasks)
-        future_to_task = dict(zip(futures, tasks))
+        tasks = list(tasks)
+        tasks_wrapped = []
+
+        def _id_to_task(task_id):
+            return tasks[task_id]
+
+        for idx, orig_task in enumerate(tasks):
+            tasks_wrapped.append(TaskProxy(orig_task, idx))
+
+        futures = self._get_futures(tasks_wrapped)
         self._futures[cancel_id] = futures
+
         try:
-            for future, result in dd.as_completed(futures, with_results=True):
+            for future, result_wrap in dd.as_completed(futures, with_results=True):
                 if future.cancelled():
                     del self._futures[cancel_id]
                     raise JobCancelledError()
-                yield result, future_to_task[future]
+                result = result_wrap['task_result']
+                task = _id_to_task(result_wrap['task_id'])
+                yield result, task
         finally:
             if cancel_id in self._futures:
                 del self._futures[cancel_id]

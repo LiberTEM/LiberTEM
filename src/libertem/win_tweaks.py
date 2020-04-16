@@ -2,9 +2,20 @@ import sys
 import msvcrt
 import ctypes
 from ctypes import windll, wintypes, byref
+import logging
 
 import win32security
 import pywintypes
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+formatter = logging.Formatter('%(levelname)s : %(message)s : %(asctime)s')
+
+file_handler = logging.FileHandler('win_tweaks.log')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 
 def get_owner_name(full_path, stat):
@@ -27,11 +38,11 @@ def get_console_mode(stream=sys.stdin):
     getConsoleMode.argtypes, getConsoleMode.restype = ([wintypes.HANDLE, wintypes.LPDWORD],
                                                        wintypes.BOOL)
     mode = wintypes.DWORD(0)
-    if getConsoleMode(file_handle, byref(mode)):
-        return mode.value
-    else:
-        err = ctypes.get_last_error()
-        raise ctypes.WinError(err)
+    try:
+        if getConsoleMode(file_handle, byref(mode)):
+            return mode.value
+    except ctypes.WinError(ctypes.get_last_error())
+        logger.error("Failed!!!")
 
 
 def set_console_mode(mode, stream=sys.stdin):
@@ -47,10 +58,13 @@ def set_console_mode(mode, stream=sys.stdin):
 
 
 def disable_quickedit():
-    mode = get_console_mode()
-    mode &= ~ENABLE_QUICK_EDIT
-    mode |= ENABLE_EXTENDED_FLAGS
-    set_console_mode(mode)
+    try:
+        mode = get_console_mode()
+        mode &= ~ENABLE_QUICK_EDIT
+        mode |= ENABLE_EXTENDED_FLAGS
+        set_console_mode(mode)
+    except TypeError:
+        logger.error("Incompatible types!")    
 
 
 if __name__ == "__main__":

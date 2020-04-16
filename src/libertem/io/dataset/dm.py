@@ -47,6 +47,7 @@ class DMDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             "files": [raw_data["path"]],
+            "scan_size": raw_data["scan_size"],
         }
         return data
 
@@ -194,6 +195,7 @@ class DMDataSet(DataSet):
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
         shape = tuple([int(x) for x in shape])
+        print(nav_dims)
         sig_dims = len(first_file.shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),

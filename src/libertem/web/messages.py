@@ -138,6 +138,7 @@ class Message(object):
         def _details(item):
             return {
                 "name":  item["name"],
+                "checked": False,
                 "size":  item["stat"].st_size,
                 "ctime": item["stat"].st_ctime,
                 "mtime": item["stat"].st_mtime,

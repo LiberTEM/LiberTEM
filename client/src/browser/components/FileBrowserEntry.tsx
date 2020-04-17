@@ -80,8 +80,8 @@ export const Cell: React.SFC<{ title?: string }> = ({ children, title }) => {
 
 class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
     public onClick = (e: React.MouseEvent) => {
-        const { onClick } = this.props;
-        if (onClick) {
+        const { onClick, icon } = this.props;
+        if (icon === 'folder' && onClick) {
             onClick();
         }
     }
@@ -100,6 +100,9 @@ class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
         return (
             <div onClick={this.onClick} style={myStyle}>
                 <div style={{ display: "flex", paddingRight: "10px" }}>
+                    {icon ==='file outline' && <div>
+                      <input type="checkbox" checked={details.checked}/>
+                    </div>}
                     <div style={{ width: "20%", flexGrow: 1 }}>
                         <Cell title={details.name}>
                             {icon && <Icon name={icon} />}

@@ -6,6 +6,7 @@ import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
+import { isAdditionalInfo } from "../helpers";
 import { OpenDatasetState } from "../types";
 import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
@@ -50,6 +51,14 @@ const getDefaultDSType = (didReset: boolean, openState: OpenDatasetState) => {
  * @param openState complete OpenDatasetState instance
  */
 
+ // Fix this after separating info from params
+ const mergeCachedParamsInfo = (formCachedParams: any, formDetectedParams: any) => {
+     Object.keys(formDetectedParams).filter((key: string) => isAdditionalInfo(key)).forEach((key: string) => {
+       formCachedParams[key] = formDetectedParams[key];
+     });
+     return formCachedParams;
+ }
+
 const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
     const { formCachedParams, formDetectedParams } = openState;
     if (didReset) {
@@ -62,7 +71,7 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
         return undefined;
     }
     if (formCachedParams) {
-        return formCachedParams;
+        return mergeCachedParamsInfo(formCachedParams, formDetectedParams);
     } else {
         return formDetectedParams;
     }

@@ -12,10 +12,6 @@ from .base import (
 )
 
 
-class DetectFail(Exception):
-    pass
-
-
 # alias for mocking:
 current_time = time.time
 
@@ -156,13 +152,13 @@ class H5DataSet(DataSet):
             with h5py.File(path, 'r'):
                 pass
         except OSError as e:
-            raise DetectFail(repr(e)) from e
+            raise DataSetException(repr(e)) from e
 
     @classmethod
     def detect_params(cls, path, executor):
         try:
             executor.run_function(cls._do_detect, path)
-        except (IOError, OSError, KeyError, ValueError, DetectFail):
+        except (IOError, OSError, KeyError, ValueError, DataSetException):
             # not a h5py file or can't open for some reason:
             return False
 

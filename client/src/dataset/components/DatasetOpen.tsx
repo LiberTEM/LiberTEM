@@ -71,7 +71,10 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
         return undefined;
     }
     if (formCachedParams) {
-        return mergeCachedParamsInfo(formCachedParams, formDetectedParams);
+        if(formDetectedParams) {
+          return mergeCachedParamsInfo(formCachedParams, formDetectedParams);
+        }
+        return formCachedParams;
     } else {
         return formDetectedParams;
     }

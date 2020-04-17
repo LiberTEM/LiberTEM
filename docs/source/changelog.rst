@@ -40,7 +40,7 @@ New features
 * GUI: Downloadable results as HDF5, NPZ, TIFF, and RAW. See
   :ref:`download results` for details. (:pr:`665`)
 * :meth:`libertem.api.Context.load` now automatically detects file
-  type and parameters if :code:`filetype="auto"` is passed. (:pr:`610,621`)
+  type and parameters if :code:`filetype="auto"` is passed. (:pr:`610,621,734`)
 * Relocatable GUI: Allow LiberTEM to run from different URL prefixes, allowing integration into,
   for example, JupyterLab. (:pr:`697`)
 * Run :meth:`~libertem.udf.base.UDFPreprocessMixin.preprocess` also before merge on
@@ -53,8 +53,8 @@ New features
 Bugfixes
 --------
 
-* A number of usability improvements (:pr:`622,639,641,642,659,666,690,699,704`). Thanks and credit
-  to many new contributors from GSoC!
+* A large number of usability improvements (:pr:`622,639,641,642,659,666,690,699,700,704`).
+  Thanks and credit to many new contributors from GSoC!
 * Fixed the buggy "enable Direct I/O" checkbox of the RAW dataset and
   handle unsupported operating systems gracefully. (:pr:`696,659`)
 

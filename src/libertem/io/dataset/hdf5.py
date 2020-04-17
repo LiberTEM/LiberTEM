@@ -147,12 +147,14 @@ class H5DataSet(DataSet):
         return set(["h5", "hdf5", "hspy", "nxs"])
 
     @classmethod
+    def _do_detect(cls, path):
+        with h5py.File(path, 'r'):
+            pass
+
+    @classmethod
     def detect_params(cls, path, executor):
-        def _do_detect():
-            with h5py.File(path, 'r'):
-                pass
         try:
-            executor.run_function(_do_detect)
+            executor.run_function(cls._do_detect, path)
         except (IOError, OSError, KeyError, ValueError):
             # not a h5py file or can't open for some reason:
             return False

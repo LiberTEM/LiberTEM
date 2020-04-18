@@ -32,6 +32,10 @@ export function isAdditionalInfo(param: string) {
   return (Object.keys(AdditionalInfo).some((v) => v === param) ? true : false);
 }
 
+export function hasKey<O>(obj: O, key: keyof any): key is keyof O {
+  return key in obj
+}
+
 type FormToJsonFn<SubmitParams, FormParams> = (inParams: FormParams, path: string) => SubmitParams;
 type PropsToValuesFn<SubmitParams, FormParams> = (props: OpenFormProps<SubmitParams>) => FormParams;
 

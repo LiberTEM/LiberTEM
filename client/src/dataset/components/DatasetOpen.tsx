@@ -6,7 +6,7 @@ import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
-import { isAdditionalInfo, hasKey } from "../helpers";
+import { hasKey, isAdditionalInfo } from "../helpers";
 import { OpenDatasetState } from "../types";
 import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
@@ -75,7 +75,6 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
     if (formCachedParams) {
         if(formDetectedParams) {
           const additionalInfo = getAdditionalInfo(formDetectedParams);
-          console.log({ ...additionalInfo, ...formCachedParams });
           return { ...additionalInfo, ...formCachedParams };
         }
         return formCachedParams;

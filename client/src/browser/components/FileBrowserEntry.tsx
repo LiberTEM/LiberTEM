@@ -7,6 +7,7 @@ interface FileBrowserEntryProps {
     style: object,
     details: DirectoryListingDetails,
     onClick?: () => void,
+    onToggleChange?: () => void,
     icon?: SemanticICONS,
 }
 
@@ -87,7 +88,7 @@ class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
     }
 
     public render() {
-        const { details, style, icon } = this.props;
+        const { details, style, icon, onToggleChange } = this.props;
         const myStyle: React.CSSProperties = {
             cursor: "pointer",
             ...style,
@@ -100,9 +101,11 @@ class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
         return (
             <div onClick={this.onClick} style={myStyle}>
                 <div style={{ display: "flex", paddingRight: "10px" }}>
-                    {icon ==='file outline' && <div>
-                      <input type="checkbox" checked={details.checked}/>
-                    </div>}
+                    {icon ==='file outline' && 
+                    <div>
+                      <input type="checkbox" onChange={onToggleChange} checked={details.checked} />
+                    </div>
+                    }
                     <div style={{ width: "20%", flexGrow: 1 }}>
                         <Cell title={details.name}>
                             {icon && <Icon name={icon} />}

@@ -14,6 +14,7 @@ interface FileEntryProps {
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: FileEntryProps) => {
     return {
         select: () => dispatch(browserActions.Actions.select(ownProps.path, ownProps.details.name)),
+        toggleFile: () => dispatch(browserActions.Actions.toggleFile(ownProps.details.index)),
     };
 }
 
@@ -21,11 +22,11 @@ type MergedProps = FileEntryProps & ReturnType<typeof mapDispatchToProps>;
 
 class FileEntry extends React.Component<MergedProps> {
     public render() {
-        const { details, style, select } = this.props;
+        const { details, style, select, toggleFile } = this.props;
 
         return (
             <FileBrowserEntry onClick={select} style={style} details={details}
-                icon="file outline" />
+                onToggleChange={toggleFile} icon="file outline" />
         )
     }
 }

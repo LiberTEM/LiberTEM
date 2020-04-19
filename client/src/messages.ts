@@ -542,6 +542,7 @@ export interface FSPlace {
 
 export interface DirectoryListingDetails {
     name: string,
+    index: number,
     checked: boolean,
     size: number,
     ctime: number,

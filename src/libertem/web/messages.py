@@ -135,9 +135,10 @@ class Message(object):
         }
 
     def directory_listing(self, path, files, dirs, drives, places):
-        def _details(item):
+        def _details(item,index):
             return {
                 "name":  item["name"],
+                "index": index,
                 "checked": False,
                 "size":  item["stat"].st_size,
                 "ctime": item["stat"].st_ctime,
@@ -152,12 +153,12 @@ class Message(object):
             "places": places,
             "path": path,
             "files": [
-                _details(f)
-                for f in files
+                _details(files[i],i)
+                for i in range(len(files))
             ],
             "dirs": [
-                _details(d)
-                for d in dirs
+                _details(dirs[d],d)
+                for d in range(len(dirs))
             ],
         }
 

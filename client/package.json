@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "proxy": "http://localhost:9000/",
-  "homepage": "/static/",
+  "homepage": "./static/",
   "dependencies": {
     "@types/deep-freeze": "^0.1.2",
     "@types/lodash": "^4.14.149",

@@ -1,9 +1,5 @@
-import {
-    AnalysisDetails, CompoundAnalysisDetails, CreateAnalysisResponse,
-    CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest,
-    CreateOrUpdateCompoundAnalysisRequest, RemoveAnalysisResponse,
-    RemoveCompoundAnalysisResponse
-} from "../messages";
+import { genericDelete, genericPut } from "../helpers/apiHelpers";
+import { AnalysisDetails, CompoundAnalysisDetails, CreateAnalysisResponse, CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest, CreateOrUpdateCompoundAnalysisRequest, RemoveAnalysisResponse, RemoveCompoundAnalysisResponse } from "../messages";
 
 export async function createOrUpdateAnalysis(
     compoundAnalysisId: string, analysisId: string,
@@ -13,20 +9,11 @@ export async function createOrUpdateAnalysis(
         dataset,
         details,
     };
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
-        body: JSON.stringify(payload),
-        credentials: "same-origin",
-        method: "PUT",
-    });
-    return await r.json();
+    return await genericPut(`compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, payload);
 }
 
 export async function removeAnalysis(compoundAnalysisId: string, analysisId: string): Promise<RemoveAnalysisResponse> {
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`, {
-        credentials: "same-origin",
-        method: "DELETE",
-    });
-    return await r.json();
+    return await genericDelete(`compoundAnalyses/${compoundAnalysisId}/analyses/${analysisId}/`)
 }
 
 export async function createOrUpdateCompoundAnalysis(compoundAnalysisId: string, dataset: string, details: CompoundAnalysisDetails): Promise<CreateCompoundAnalysisResponse> {
@@ -34,18 +21,9 @@ export async function createOrUpdateCompoundAnalysis(compoundAnalysisId: string,
         dataset,
         details,
     };
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/`, {
-        body: JSON.stringify(payload),
-        credentials: "same-origin",
-        method: "PUT",
-    });
-    return await r.json();
+    return await genericPut(`compoundAnalyses/${compoundAnalysisId}/`, payload);
 }
 
 export async function removeCompoundAnalysis(compoundAnalysisId: string): Promise<RemoveCompoundAnalysisResponse> {
-    const r = await fetch(`/api/compoundAnalyses/${compoundAnalysisId}/`, {
-        credentials: "same-origin",
-        method: "DELETE",
-    });
-    return await r.json();
+    return await genericDelete(`compoundAnalyses/${compoundAnalysisId}/`)
 }

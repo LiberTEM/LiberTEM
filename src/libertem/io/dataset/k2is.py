@@ -535,10 +535,11 @@ class K2ISDataSet(DataSet):
                 return False
         except DataSetException:
             return False
-        params = {
-            "path": path,
+        return {
+            "parameters": {
+                "path": path
+            }
         }
-        return params
 
     def check_valid(self):
         try:

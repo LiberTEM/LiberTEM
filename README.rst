@@ -90,6 +90,7 @@ and `format-specific documentation <https://libertem.github.io/LiberTEM/referenc
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files
 - `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
 - Nanomegas .blo block files
+- Direct Electron DE5 files (HDF5-based) for `DE-Series <http://www.directelectron.com/de-series/>`_ detectors 
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)

@@ -75,6 +75,8 @@ machine.
 After connection to a cluster, LiberTEM shows a button to start browsing for
 available files. On a local cluster that's simply the local filesystem.
 
+.. note:: See :ref:`sample data` for publicly available datasets.
+
 ..  figure:: ./images/use/browse.png
 
 This opens the file browser dialogue. On top it shows the current directory,

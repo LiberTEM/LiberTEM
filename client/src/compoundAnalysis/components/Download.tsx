@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Button, Dropdown, DropdownProps, Header, Icon, Modal, Popup } from "semantic-ui-react";
 import { AnalysisState } from "../../analysis/types";
+import { getApiBasePath } from "../../helpers/apiHelpers";
 import { JobStatus } from "../../job/types";
 import { RootReducer } from "../../store";
 import { getMetadata } from "../getMetadata";
@@ -17,8 +18,9 @@ const DownloadItems: React.SFC<DownloadItemsProps> = ({
     compoundAnalysis, currentFormat
 }) => {
 
+    const basePath = getApiBasePath();
     const downloadUrl = (analysisId: string) => (
-        `/api/compoundAnalyses/${compoundAnalysis.compoundAnalysis}/analyses/${analysisId}/download/${currentFormat}/`
+        `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/analyses/${analysisId}/download/${currentFormat}/`
     )
 
     const analysesById = useSelector((state: RootReducer) => {
@@ -39,13 +41,24 @@ const DownloadItems: React.SFC<DownloadItemsProps> = ({
         return getMetadata(analysis.details.analysisType).desc;
     }
 
+    const getDownloadChannels = (analysis: AnalysisState) => {
+        if(!analysis.displayedJob) {
+            return [];
+        }
+        return jobsById[analysis.displayedJob].results.filter(
+            result => result.description.includeInDownload
+        ).map(
+            result => result.description.title
+        )
+    }
+
     return (
         <ul>
             {analyses.map((analysis) => {
                 return (
                     <li key={analysis.id}>
                         <a href={downloadUrl(analysis.id)}>
-                            {getAnalysisDescription(analysis)}
+                            {getAnalysisDescription(analysis)} (channels: {getDownloadChannels(analysis).join(", ")})
                         </a>
                     </li>
                 );

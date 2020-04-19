@@ -25,10 +25,10 @@ accessed by pressing F12. You can extend these with additional panels
 and `for Redux <https://github.com/reduxjs/redux-devtools>`_.
 
 These tools can be used for inspecting all frontend-related processes, from network traffic
-up to rendering behavior. Take note of the `/api/events/` websocket connection, where all
+up to rendering behavior. Take note of the :code:`/api/events/` websocket connection, where all
 asynchronous notification and results will be transferred.
 
-Note that you should always debug using the development build of the GUI, using `npm start`,
+Note that you should always debug using the development build of the GUI, using :code:`npm start`,
 as described in :ref:`the contributing section <building the client>`. Otherwise the debugging
 experience may be painful, for example worse error output from react, minified source and
 minified component names, ...
@@ -37,7 +37,7 @@ Debugging the API server
 ------------------------
 
 If the API server returns a server error (500), the detailed exception should be logged
-in the output of `libertem-server`. You can also try
+in the output of :code:`libertem-server`. You can also try
 `enabling the debug mode of tornado <https://www.tornadoweb.org/en/stable/guide/running.html#debug-mode-and-automatic-reloading>`_
 (there is currently no command line flag for this, so you need to change
 :py:mod:`libertem.web.server` accordingly.)

@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
@@ -20,9 +22,10 @@ class AnalysisResult:
     desc : str
         Short description in the GUI
     key : str
-        Key to identify the result in a :class:`AnalysisResultSet`
+        Key to identify the result in an :class:`AnalysisResultSet`
     """
-    def __init__(self, raw_data, visualized, title, desc, key):
+    def __init__(self, raw_data, visualized, title, desc, key, include_in_download=True):
+        self.include_in_download = include_in_download
         self.raw_data = raw_data
         self._visualized = visualized
         self.title = title
@@ -39,7 +42,7 @@ class AnalysisResult:
         return "<AnalysisResult: %s>" % self.key
 
     def __array__(self):
-        return self.raw_data
+        return np.array(self.raw_data)
 
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
@@ -115,7 +118,7 @@ class AnalysisResultSet:
     >>> print(result['mask_1'].title)
     mask 1
     """
-    def __init__(self, results, raw_results=None):
+    def __init__(self, results: typing.List[AnalysisResult], raw_results=None):
         self._results = results
         self.raw_results = raw_results
 

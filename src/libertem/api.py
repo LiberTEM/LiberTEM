@@ -102,7 +102,8 @@ class Context:
             dtype: np.ndarray = None) -> ApplyMasksJob:
         """
         Create a low-level mask application job. Each factory function should, when called,
-        return a numpy array with the same shape as frames in the dataset (so dataset.shape.sig).
+        return a numpy array with the same shape as frames in the dataset
+        (so :code:`dataset.shape.sig`).
 
         .. deprecated:: 0.4.0
             Use :meth:`create_mask_analysis` or :class:`~libertem.udf.masks.ApplyMasksUDF`.
@@ -179,7 +180,7 @@ class Context:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
-        dataset (so dataset.shape.sig).
+        dataset (so :code:`dataset.shape.sig`` ).
 
         This is a more high-level interface than
         :class:`~libertem.udf.masks.ApplyMasksUDF` and differs in the way the
@@ -213,7 +214,7 @@ class Context:
             Specify the dtype of the masks so that mask dtype can be determined without
             calling the mask factory functions. This can be used to override the
             mask dtype in the result dtype determination. As an example, setting
-            this to np.float32 means that masks of type float64 will not switch
+            this to :code:`np.float32` means that returning masks of type float64 will not switch
             the calculation and result dtype to float64 or complex128.
         dtype : numpy.dtype, optional
             Specify the dtype to do the calculation in.
@@ -451,7 +452,8 @@ class Context:
 
         .. deprecated:: 0.4.0
             Use :meth:`libertem.api.Context.create_pick_analysis`,
-            :class:`libertem.udf.raw.PickUDF`, :class:`libertem.udf.masks.ApplyMasksUDF` or
+            :class:`libertem.udf.raw.PickUDF`, :class:`libertem.udf.masks.ApplyMasksUDF`
+            with a subset of an identity matrix and a ROI, or
             a custom UDF (:ref:`user-defined functions`) as a replacement.
             See also :ref:`job deprecation`.
 
@@ -575,8 +577,7 @@ class Context:
         job
             the job or analysis to run
         roi : numpy.ndarray, optional
-            Boolean mask of the navigation dimension. This is curently not supported for all
-            Analysis types and may raise a :class:`TypeError` in that case.
+            Boolean mask of the navigation dimension.
         progress : bool
             Show progress bar
 
@@ -586,7 +587,7 @@ class Context:
             Running a Job returns a :class:`numpy.ndarray`, running
             an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`.
             See the matching :code:`create_*_analysis` function for documentation
-            of the specific AnalysisResultSet subclass or :class:`numpy.ndarray` that
+            of the specific :code:`AnalysisResultSet` subclass or :class:`numpy.ndarray` that
             is being returned.
         """
         # FIXME remove job support after deprecation period

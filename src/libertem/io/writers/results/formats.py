@@ -15,7 +15,7 @@ class HDF5ResultFormat(ResultFormat):
 
     def serialize_to_buffer(self, buf):
         with h5py.File(buf, 'w') as f:
-            for k in self._result_set.keys():
+            for k in self.get_result_keys():
                 f[k] = self._result_set[k]
             # FIXME: add "metadata", for example, what analysis was run that
             # resulted in this file
@@ -38,7 +38,7 @@ class NPZResultFormat(ResultFormat):
     def _get_result_dict(self):
         return {
             k: np.array(self._result_set[k])
-            for k in self._result_set.keys()
+            for k in self.get_result_keys()
         }
 
     def serialize_to_buffer(self, buf):
@@ -72,7 +72,7 @@ class TiffResultFormat(ResultFormat):
         }
 
     def get_channel_images(self):
-        for k in self._result_set.keys():
+        for k in self.get_result_keys():
             result = np.array(self._result_set[k]).astype(np.float32)
             yield Image.fromarray(result)
 
@@ -99,7 +99,7 @@ class RawResultFormat(ResultFormat):
     def _get_result_arr(self):
         return np.stack([
             np.array(self._result_set[k])
-            for k in self._result_set.keys()
+            for k in self.get_result_keys()
         ])
 
     def serialize_to_buffer(self, buf):

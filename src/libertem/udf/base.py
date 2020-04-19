@@ -424,6 +424,7 @@ class UDF(UDFBase):
         self.params = UDFData(kwargs)
         self.task_data = None
         self.results = None
+        self._requires_custom_merge = None
 
     def copy(self):
         return self.__class__(**self._kwargs)
@@ -489,6 +490,19 @@ class UDF(UDFBase):
         """
         raise NotImplementedError()
 
+    @property
+    def requires_custom_merge(self):
+        """
+        Determine if buffers with :code:`kind != 'nav'` are present where
+        the default merge doesn't work
+
+        .. versionadded:: 0.5.0
+        """
+        if self._requires_custom_merge is None:
+            buffers = self.get_result_buffers()
+            self._requires_custom_merge = any(buffer.kind != 'nav' for buffer in buffers.values())
+        return self._requires_custom_merge
+
     def merge(self, dest: Dict[str, np.array], src: Dict[str, np.array]):
         """
         Merge a partial result `src` into the current global result `dest`.
@@ -513,6 +527,11 @@ class UDF(UDFBase):
         This function is running on the leader node, which means `self.results`
         and `self.task_data` are not available.
         """
+        if self.requires_custom_merge:
+            raise NotImplementedError(
+                "Default merging only works for kind='nav' buffers. "
+                "Please implement a suitable custom merge function."
+            )
         for k in dest:
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]
@@ -539,7 +558,7 @@ class UDF(UDFBase):
 
         If you prefer to always use the dataset's native dtype instead of
         floats, you can override this method to return
-        :attr:`UDF.USE_NATIVE_DTYPE`, which is curently identical to
+        :attr:`UDF.USE_NATIVE_DTYPE`, which is currently identical to
         :code:`numpy.bool` and behaves as a neutral element in
         :func:`numpy.result_type`.
 
@@ -701,7 +720,7 @@ class UDFRunner:
                 except TypeError:
                     raise TypeError("could not pickle results")
 
-            return self._udf.results, partition
+            return self._udf.results
 
     def _debug_task_pickling(self, tasks):
         if self._debug:
@@ -742,10 +761,10 @@ class UDFRunner:
 
         if progress:
             t = tqdm.tqdm(total=len(tasks))
-        for part_results, partition in executor.run_tasks(tasks, cancel_id):
+        for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            self._udf.set_views_for_partition(partition)
+            self._udf.set_views_for_partition(task.partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()
@@ -760,8 +779,8 @@ class UDFRunner:
     async def run_for_dataset_async(self, dataset, executor, cancel_id, roi=None):
         tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
-        async for part_results, partition in executor.run_tasks(tasks, cancel_id):
-            self._udf.set_views_for_partition(partition)
+        async for part_results, task in executor.run_tasks(tasks, cancel_id):
+            self._udf.set_views_for_partition(task.partition)
             self._udf.merge(
                 dest=self._udf.results.get_proxy(),
                 src=part_results.get_proxy()

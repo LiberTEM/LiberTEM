@@ -1,27 +1,28 @@
 {
   "files": {
-    "main.css": "./static/static/css/main.fcf0b288.chunk.css",
-    "main.js": "./static/static/js/main.b131140a.chunk.js",
-    "main.js.map": "./static/static/js/main.b131140a.chunk.js.map",
+    "main.css": "./static/static/css/main.fbce021b.chunk.css",
+    "main.js": "./static/static/js/main.37ac069b.chunk.js",
+    "main.js.map": "./static/static/js/main.37ac069b.chunk.js.map",
     "runtime-main.js": "./static/static/js/runtime-main.96e0031a.js",
     "runtime-main.js.map": "./static/static/js/runtime-main.96e0031a.js.map",
     "static/css/2.aad6525a.chunk.css": "./static/static/css/2.aad6525a.chunk.css",
-    "static/js/2.de79bbf4.chunk.js": "./static/static/js/2.de79bbf4.chunk.js",
-    "static/js/2.de79bbf4.chunk.js.map": "./static/static/js/2.de79bbf4.chunk.js.map",
+    "static/js/2.3f99126f.chunk.js": "./static/static/js/2.3f99126f.chunk.js",
+    "static/js/2.3f99126f.chunk.js.map": "./static/static/js/2.3f99126f.chunk.js.map",
     "index.html": "./static/index.html",
-    "precache-manifest.e3a0d3a8c56b19e2dbea91867e6b4e2f.js": "./static/precache-manifest.e3a0d3a8c56b19e2dbea91867e6b4e2f.js",
+    "precache-manifest.31ca760d0e2cf11c7b705e54e9952c49.js": "./static/precache-manifest.31ca760d0e2cf11c7b705e54e9952c49.js",
     "service-worker.js": "./static/service-worker.js",
     "static/css/2.aad6525a.chunk.css.map": "./static/static/css/2.aad6525a.chunk.css.map",
-    "static/css/main.fcf0b288.chunk.css.map": "./static/static/css/main.fcf0b288.chunk.css.map",
-    "static/js/2.de79bbf4.chunk.js.LICENSE.txt": "./static/static/js/2.de79bbf4.chunk.js.LICENSE.txt",
+    "static/css/main.fbce021b.chunk.css.map": "./static/static/css/main.fbce021b.chunk.css.map",
+    "static/js/2.3f99126f.chunk.js.LICENSE.txt": "./static/static/js/2.3f99126f.chunk.js.LICENSE.txt",
     "static/media/LiberTEM logo-medium.png": "./static/static/media/LiberTEM logo-medium.7999e0dc.png",
-    "static/media/semantic.min.css": "./static/static/media/outline-icons.ef60a4f6.woff"
+    "static/media/semantic.min.css": "./static/static/media/outline-icons.ef60a4f6.woff",
+    "static/media/libertem_logo.png": "./static/static/media/libertem_logo.4ecbfe5d.png"
   },
   "entrypoints": [
     "static/js/runtime-main.96e0031a.js",
     "static/css/2.aad6525a.chunk.css",
-    "static/js/2.de79bbf4.chunk.js",
-    "static/css/main.fcf0b288.chunk.css",
-    "static/js/main.b131140a.chunk.js"
+    "static/js/2.3f99126f.chunk.js",
+    "static/css/main.fbce021b.chunk.css",
+    "static/js/main.37ac069b.chunk.js"
   ]
 }

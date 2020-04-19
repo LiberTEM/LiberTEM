@@ -2,6 +2,7 @@
 import { FormikProps, withFormik } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
+import { ConfigState } from "../../config/reducers";
 import { Omit } from "../../helpers/types";
 import { ClusterTypes, ConnectRequestTCP } from "../../messages";
 
@@ -9,6 +10,7 @@ type FormValues = Omit<ConnectRequestTCP, "type">;
 
 interface FormProps {
     onSubmit: (params: ConnectRequestTCP) => void,
+    config: ConfigState,
 }
 
 type MergedProps = FormikProps<FormValues> & FormProps;
@@ -39,8 +41,8 @@ const TCPConnectionForm: React.SFC<MergedProps> = ({
 }
 
 export default withFormik<FormProps, FormValues>({
-    mapPropsToValues: () => ({
-        address: "tcp://localhost:8786",
+    mapPropsToValues: (ownProps: FormProps) => ({
+        address: ownProps.config.lastConnection.address,
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit } = formikBag.props;

@@ -16,6 +16,18 @@ const initialBrowserState: DirectoryBrowserState = {
 
 export function directoryBrowserReducer(state: DirectoryBrowserState = initialBrowserState, action: AllActions): DirectoryBrowserState {
     switch (action.type) {
+        case browserActions.ActionTypes.TOGGLE_FILE:{
+          return Object.assign({}, state, {
+            files: state.files.map((file, index) => {
+              if (index === action.payload.index) {
+                return Object.assign({}, file, {
+                  checked: !file.checked,
+                });
+              }
+              return file;
+            })
+          })
+        }
         case configActions.ActionTypes.FETCHED: {
             return Object.assign({}, state, {
                 path: action.payload.config.cwd,

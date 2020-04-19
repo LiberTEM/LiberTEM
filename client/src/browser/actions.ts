@@ -12,6 +12,7 @@ export enum ActionTypes {
     CANCEL = 'BROWSER_CANCEL',
     SELECT = 'BROWSER_SELECT',
     SELECT_FULL_PATH = 'BROWSER_SELECT_FULL_PATH',
+    TOGGLE_FILE = 'TOGGLE_FILE_CHECKBOX'
 }
 
 export const Actions = {
@@ -24,6 +25,7 @@ export const Actions = {
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
     detectParams: (path: string) => createAction(ActionTypes.DETECT_PARAMS, { path }),
     paramsDetected: (path: string, params: DatasetFormParams) => createAction(ActionTypes.PARAMS_DETECTED, { path, params }),
+    toggleFile: (index: number) => createAction(ActionTypes.TOGGLE_FILE, {index}),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

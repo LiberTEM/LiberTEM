@@ -18,13 +18,22 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
     switch (action.type) {
         case browserActions.ActionTypes.TOGGLE_FILE:{
           return Object.assign({}, state, {
-            files: state.files.map((file, index) => {
-              if (index === action.payload.index) {
+            files: state.files.map((file) => {
+              if (file.index === action.payload.index) {
                 return Object.assign({}, file, {
                   checked: !file.checked,
                 });
               }
               return file;
+            })
+          })
+        }
+        case browserActions.ActionTypes.SELECT_ALL:{
+          return Object.assign({},state,{
+            files: state.files.map((file) => {
+                return Object.assign({}, file, {
+                  checked: true,
+                });
             })
           })
         }

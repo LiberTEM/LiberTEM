@@ -26,6 +26,7 @@ const mapStateToProps = (state: RootReducer) => {
 const mapDispatchToProps = (dispatch: Dispatch) => {
     return {
         cancel: () => dispatch(browserActions.Actions.cancel()),
+        selectAll: () => dispatch(browserActions.Actions.selectAll()),
     };
 }
 
@@ -54,7 +55,7 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
-const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isLoading }) => {
+const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isLoading, selectAll }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
     const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
@@ -91,6 +92,8 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places
             </Segment>
             <Segment>
                 <Button onClick={cancel}>Cancel</Button>
+                <Button onClick={selectAll}>Select All</Button>
+                <Button >Open</Button>
             </Segment>
         </Segment.Group>
     );

@@ -1,12 +1,12 @@
 import { JobList } from "./analysis/types"
 
-/* 
+/*
  * Common
  */
 
 export interface FollowupPart {
     numMessages: number,
-    descriptions: Array<{ title: string, desc: string }>,
+    descriptions: Array<{ title: string, desc: string, includeInDownload: boolean }>,
 }
 
 export interface MsgPartConfig {
@@ -69,6 +69,10 @@ export type ConnectResponse = {
 } | {
     status: "disconnected",
     connection: {},
+} | {
+    status: "error",
+    messageType: string,
+    msg: string,
 }
 
 /*
@@ -90,10 +94,15 @@ export interface DatasetParamsCommon {
     name: string,
 }
 
+export enum AdditionalInfo {
+    dataset_paths = "dataset_paths",
+}
+
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
     ds_path: string,
+    dataset_paths: string[],
     tileshape: number[],
 } & DatasetParamsCommon
 
@@ -514,7 +523,7 @@ export interface CancelJobResponse {
 }
 
 /*
- * fs browser 
+ * fs browser
  */
 
 // some named place, i.e. "Documents", "Home", ...

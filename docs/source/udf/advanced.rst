@@ -296,7 +296,7 @@ available as :attr:`libertem.udf.UDFMeta.roi` and
 behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers
 and aux data with a custom implementation. The :ref:`mask container for tiled
 processing example<slice example>` makes use of these attributes to employ a
-:class:`libertem..common.container.MaskContainer` instead of a :code:`shape="sig"`
+:class:`libertem.common.container.MaskContainer` instead of a :code:`shape="sig"`
 buffer in order to optimize dot product performance and support sparse masks.
 
 The slice is in the reference frame of the dataset, masked by the current ROI,

@@ -58,7 +58,8 @@
         "authorname": "Chandra, Rahul",
         "affiliation": "Chandigarh University" ,
         "github": "irahulcse",
-        "contribution": "Test and update of examples"
+        "contribution": "Test and update of examples",
+        "orcid": "0000-0003-2079-5368"
     },
     {
         "displayname": "Shankhadeep Dey",
@@ -104,6 +105,13 @@
         "contribution": "Single pass numerically stable standard deviation"
     },
     {
+        "displayname": "Sai Sunku",
+        "authorname": "Sunku, Sai",
+        "affiliation": "Columbia University",
+        "github": "saisunku",
+        "contribution": "Bug fixes"
+    },
+    {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
@@ -123,5 +131,13 @@
 		"affiliation": "Jadavpur University",
 		"github": "sayandip18",
 		"contribution": "Modifying the documentation to make it more user-friendly"
+	},
+	{
+	    "displayname": "Barnaby D.A. Levin",
+		"authorname": "Levin, Barnaby D.A.",
+		"affiliation": "Direct Electron",
+		"github": "bdalevin",
+		"contribution": "Discussions, ensuring compatibility with data from Direct Electron cameras",
+		"orcid": "0000-0003-1010-0366"
 	}
 ]

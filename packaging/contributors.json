@@ -48,6 +48,20 @@
         "contribution": "Discussions, work towards mutual compatibility."
     },
     {
+        "displayname": "Simeon Ehrig",
+        "authorname": "Ehrig, Simeon",
+        "affiliation": "HZDR",
+        "github": "SimeonEhrig",
+        "contribution": "Discussions, ptychography integration concepts, GPU integration concepts"
+    },
+    {
+        "displayname": "Alberto Eljarrat Ascunce",
+        "authorname": "Eljarrat Ascunce, Alberto",
+        "affiliation": "HU Berlin",
+        "github": "AEljarrat",
+        "contribution": "Nion Swift hackathon, feedback and discussions"
+    },
+    {
         "displayname": "Peter Ercius",
         "authorname": "Ercius, Peter",
         "affiliation": "Berkeley Lab",
@@ -82,7 +96,7 @@
         "authorname": "Haas, Benedikt",
         "github": "unsimulatable",
         "affiliation": "HU Berlin",
-        "contribution": "Discussions, bug reports"
+        "contribution": "Nion Swift hackathon, discussions, bug reports"
     },
     {
         "displayname": "Chris Hines",
@@ -169,6 +183,13 @@
         "contribution": "Discussions, funding applications"
     },
     {
+        "displayname": "Andreas Mittelberger",
+        "authorname": "Mittelberger, Andreas",
+        "affiliation": "Nion",
+        "github": "Brow71189",
+        "contribution": "Nion Swift integration; feedback and discussions"
+    },
+    {
         "displayname": "Grigore Moldovan",
         "authorname": "Moldovan, Grigore",
         "affiliation": "Point Electronic",
@@ -178,7 +199,7 @@
         "displayname": "Johannes Müller",
         "authorname": "Müller, Johannes",
         "affiliation": "HU Berlin",
-        "contribution": "Discussions"
+        "contribution": "Nion Swift Hackathon, Discussions"
     },
     {
         "displayname": "Eduardo Nebot",
@@ -197,6 +218,13 @@
         "authorname": "Pakzad, Ana",
         "affiliation": "Gatan",
         "contribution": "Discussions, support for implementing K2 raw file format"
+    },
+    {
+        "displayname": "Thomas C. Pekin",
+        "authorname": "Pekin, Thomas C.",
+        "affiliation": "HU Berlin",
+        "github": "tcpekin",
+        "contribution": "Nion Swift hackathon, feedback and discussions"
     },
     {
         "displayname": "Francisco de la Pe\u00f1a",
@@ -223,10 +251,23 @@
         "contribution": "Discussions, system architecture"
     },
     {
+        "displayname": "Marcel Schloz",
+        "authorname": "Schloz, Marcel",
+        "affiliation": "HU Berlin",
+        "contribution": "Nion Swift hackathon, feedback and discussions"
+    },
+    {
         "displayname": "Michael Schuh",
         "authorname": "Schuh, Michael",
         "affiliation": "DESY",
         "contribution": "Discussions, system architecture"
+    },
+    {
+        "displayname": "Sherjeel Shabih",
+        "authorname": "Shabih, Sherjeel",
+        "affiliation": "HU Berlin",
+        "github": "shabihsherjeel",
+        "contribution": "Nion Swift hackathon, feedback and discussions"
     },
     {
         "displayname": "Martin Simson",

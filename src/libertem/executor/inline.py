@@ -12,7 +12,8 @@ class InlineJobExecutor(JobExecutor):
 
     def run_job(self, job, cancel_id=None):
         tasks = job.get_tasks()
-        return self.run_tasks(tasks, cancel_id=job)
+        for result, task in self.run_tasks(tasks, cancel_id=job):
+            yield result
 
     def run_tasks(self, tasks, cancel_id):
         for task in tasks:
@@ -21,7 +22,7 @@ class InlineJobExecutor(JobExecutor):
             result = task()
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
-            yield result
+            yield result, task
 
     def run_function(self, fn, *args, **kwargs):
         if self._debug:

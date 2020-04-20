@@ -2,6 +2,7 @@ import { END, eventChannel, EventChannel } from "redux-saga";
 import { call, delay, fork, put, take } from "redux-saga/effects";
 import uuid from 'uuid/v4';
 import * as datasetActions from '../dataset/actions';
+import { getApiWSURL } from "../helpers/apiHelpers";
 import * as channelActions from "./actions";
 import * as channelMessages from './messages';
 
@@ -38,7 +39,7 @@ function createWebSocketChannel(/* addr */): SocketChannel {
             emit(channelMessages.Messages.error("Error in weboscket connection"));
         }
 
-        const ws = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/events/`);
+        const ws = new WebSocket(getApiWSURL());
         ws.addEventListener("message", onMessage);
         ws.addEventListener("open", onOpen);
         ws.addEventListener("close", onClose);

@@ -1,7 +1,8 @@
 import numpy as np
 
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.buffers import AuxBufferWrapper
+from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
+from libertem.common import Shape
 
 from utils import _mk_random
 
@@ -41,3 +42,12 @@ def test_new_for_partition():
             new_buf._data,
             auxdata.reshape(-1)[ps][roi_part]
         )
+
+def test_buffer_extra_shape_1():
+    buffer = BufferWrapper(kind = 'nav', extra_shape = (2, 3))
+    assert buffer._extra_shape == (2, 3)
+
+def test_buffer_extra_shape_2():
+    shape_obj = Shape(shape = (12, 13, 14, 15), sig_dims = 2)
+    buffer = BufferWrapper(kind = 'nav', extra_shape = shape_obj)
+    assert buffer._extra_shape == (12, 13, 14, 15)

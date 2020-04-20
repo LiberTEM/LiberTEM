@@ -9,7 +9,6 @@ import Error from "./Error";
 const mapStateToProps = (state: RootReducer) => {
     return {
         errors: state.errors,
-        clusterConnected: state.clusterConnection.status === "connected",
         channelConnected: (state.channelStatus.status === "connected" ||
             state.channelStatus.status === "ready"),
     }
@@ -17,10 +16,10 @@ const mapStateToProps = (state: RootReducer) => {
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const ErrorList: React.SFC<MergedProps> = ({ errors, clusterConnected, channelConnected }) => {
+const ErrorList: React.SFC<MergedProps> = ({ errors, channelConnected }) => {
     const numShown = 3;
     const latestErrors = errors.ids.slice(Math.max(0, errors.ids.length - numShown));
-    const showModal = errors.ids.length > 0 && clusterConnected && channelConnected;
+    const showModal = errors.ids.length > 0 && channelConnected;
 
     const dispatch = useDispatch();
 

@@ -1,18 +1,17 @@
+import { genericPut, getApiBasePath } from "../helpers/apiHelpers";
 import { ConnectRequest, ConnectRequestParams, ConnectResponse } from "../messages";
 
-export function connectToCluster(params: ConnectRequestParams): Promise<ConnectResponse> {
+export async function connectToCluster(params: ConnectRequestParams): Promise<ConnectResponse> {
     const payload: ConnectRequest = {
         connection: params
     }
-    return fetch(`/api/config/connection/`, {
-        body: JSON.stringify(payload),
-        credentials: "same-origin",
-        method: "PUT",
-    }).then(r => r.json());
+    return await genericPut("config/connection/", payload);
 }
 
-export function checkClusterConnection(): Promise<ConnectResponse> {
-    return fetch(`/api/config/connection/`, {
+export async function checkClusterConnection(): Promise<ConnectResponse> {
+    const basePath = getApiBasePath();
+    const r = await fetch(`${basePath}config/connection/`, {
         method: 'GET',
-    }).then(r => r.json());
+    });
+    return await r.json();
 }

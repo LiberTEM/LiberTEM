@@ -150,7 +150,7 @@ use it to profile individual slow tests that you identified before:
     =============================== 1 passed, 1 warnings in 7.81 seconds ============================
 
 Platform-dependent code and remote executor
-===========================================
+-------------------------------------------
 
 Platform-dependent code in a lambda function or nested function can lead to
 incompatibilities when run on an executor with remote workers, such as the

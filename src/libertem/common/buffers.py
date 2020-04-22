@@ -300,6 +300,8 @@ class BufferWrapper(object):
         .. versionadded:: 0.5.0
 
         Returns
+        -------
+
         view : np.ndarray
             View into data or contiguous copy if necessary
 
@@ -322,6 +324,8 @@ class BufferWrapper(object):
 
     def flush(self):
         '''
+        Write back any cached contiguous copies
+
         .. versionadded:: 0.5.0
         '''
         for key, view in self._contiguous_cache.items():

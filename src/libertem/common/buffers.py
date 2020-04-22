@@ -39,6 +39,10 @@ def zeros_aligned(size, dtype):
     return res
 
 
+def slice_to_tuple(sl: slice):
+    return (sl.start, sl.stop, sl.step)
+
+
 class BufferWrapper(object):
     """
     Helper class to automatically allocate buffers, either for partitions or
@@ -83,6 +87,7 @@ class BufferWrapper(object):
         self._shape = None
         self._ds_shape = None
         self._roi = None
+        self._contiguous_cache = dict()
 
     def set_roi(self, roi):
         if roi is not None:
@@ -199,12 +204,16 @@ class BufferWrapper(object):
         return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_dataset(self, dataset):
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         return self._data
 
     def get_view_for_partition(self, partition):
         """
         get a view for a single partition in a whole-result-sized buffer
         """
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "nav":
             slice_ = self._slice_for_partition(partition)
             return self._data[slice_.get(nav_only=True)]
@@ -220,6 +229,8 @@ class BufferWrapper(object):
         not the partition itself!)
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self.roi_is_zero:
             raise ValueError("cannot get view for frame with zero ROI")
         if self._kind == "sig":
@@ -246,6 +257,8 @@ class BufferWrapper(object):
         not the partition itself!)
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self.roi_is_zero:
             raise ValueError("cannot get view for tile with zero ROI")
         if self._kind == "sig":
@@ -266,6 +279,52 @@ class BufferWrapper(object):
                 return self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
             return self._data
+
+    def get_contiguous_view_for_tile(self, partition, tile):
+        '''
+        Make a cached contiguous copy of the view for a single tile
+        if necessary.
+
+        Currently this is only necessary for :code:`kind="sig"` buffers.
+        Use :meth:`flush` to write back the cache.
+
+        Boundary conditions:
+        * :code:`tile` has one navigation dimension and at least one
+          signal dimension, i.e. it is not a frame
+        * :code:`tile.tile_slice.get(sig_only=True)` does
+          not overlap for different tiles while the cache is active,
+          i.e. they follow LiberTEM slicing for
+          :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.
+
+        Returns
+        view : np.ndarray
+            View into data or contiguous copy if necessary
+
+        '''
+        if self._kind == "sig":
+            sl = tuple(tile.tile_slice.get(sig_only=True))
+            key = map(slice_to_tuple, sl)
+            if key in self._contiguous_cache:
+                return self._contiguous_cache[key]
+            view = self._data[sl]
+            oldshape = view.shape
+            try:
+                # See if the signal dimension can be flattened
+                # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
+                view.shape = (oldshape[0], -1)
+                view.shape = oldshape
+                return view
+            except AttributeError:
+                view = view.copy()
+                self._contiguous_cache[key] = view
+                return view
+        else:
+            return self.get_view_for_tile(partition, tile)
+
+    def flush(self):
+        for key, view in self._contiguous_cache.items():
+            self._data[key] = view
+        self._contiguous_cache = dict()
 
     def __repr__(self):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (

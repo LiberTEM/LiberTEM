@@ -121,7 +121,7 @@ def sig_exit(signum, frame, shared_state):
 
 def main(host, port, event_registry, shared_state):
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))

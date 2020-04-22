@@ -1,6 +1,6 @@
 import sys
 import logging
-# Changed in 0.5.0: The thread count ist set dynamically
+# Changed in 0.5.0: The thread count is set dynamically
 # on the workers. No need for setting environment variables anymore.
 
 import numpy as np
@@ -22,16 +22,20 @@ if __name__ == '__main__':
     with api.Context() as ctx:
         try:
             path = sys.argv[1]
+            ds = ctx.load(
+                'auto',
+                path=path,
+            )
         except IndexError:
             path = ('C:/Users/weber/Nextcloud/Projects/'
                     'Open Pixelated STEM framework/Data/EMPAD/'
                     'scan_11_x256_y256.emd')
-        ds = ctx.load(
-            'hdf5',
-            path=path,
-            ds_path='experimental/science_data/data',
-            tileshape=(1, 8, 128, 128)
-        )
+            ds = ctx.load(
+                'hdf5',
+                path=path,
+                ds_path='experimental/science_data/data',
+                tileshape=(1, 8, 128, 128)
+            )
 
         (scan_y, scan_x, detector_y, detector_x) = ds.shape
         mask_shape = (detector_y, detector_x)
@@ -43,7 +47,7 @@ if __name__ == '__main__':
 
         analysis = ctx.create_mask_analysis(dataset=ds, factories=[mask])
 
-        result = ctx.run(analysis)
+        result = ctx.run(analysis, progress=True)
 
         # Do something useful with the result:
         print(result)

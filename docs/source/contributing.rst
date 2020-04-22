@@ -26,8 +26,9 @@ For design of new features we roughly follow the `lead user method
 features closely along a non-trivial real-world application in order to make
 sure the developments are appropriate and easy to use in practice. The interface
 for :ref:`user-defined functions`, as an example, follows the requirements
-around implementing and running complex algorithms like :ref:`strain mapping`
-for distributed systems.
+around implementing and running complex algorithms like `strain mapping
+<https://libertem.github.io/LiberTEM-blobfinder/examples.html>`_ for distributed
+systems.
 
 Furthermore we value a systematic approach to development with requirements
 analysis and evaluation of design options as well as iterative design with fast

@@ -16,7 +16,7 @@ from libertem.io.writers.results import formats  # NOQA: F401
 from libertem.io.writers.results.base import ResultFormatRegistry
 
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.functional, pytest.mark.flaky]
 
 
 @pytest.mark.asyncio

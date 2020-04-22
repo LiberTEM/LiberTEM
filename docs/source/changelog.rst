@@ -103,6 +103,8 @@ Misc
   can lead to lock-ups or errors with Python 3.8. The default local Dask.Distributed context works.
 * Improve performance with large tiles. (:pr:`649`)
 * :class:`~libertem.udf.sum.SumUDF` moved to the :mod:`libertem.udf` folder (:pr:`613`).
+* Make sure the signal dimension of result buffer slices can be
+  flattened without creating an implicit copy (:pr:`738`, :issue:`739`)
 
 .. _`v0-4-1`:
 

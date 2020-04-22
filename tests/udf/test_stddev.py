@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import numba
 
-from libertem.udf.stddev import run_stddev, process_tile, merge
+from libertem.udf.stddev import run_stddev, process_tile, merge, reshaped_view
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
@@ -111,3 +111,15 @@ def test_stability(lt_ctx):
     assert N == np.prod(data.shape)
     assert np.allclose(data.sum(), s)
     assert np.allclose(data.var(ddof=N-1), varsum)
+
+
+def test_reshaped_view():
+    data = np.zeros((2, 5))
+    view = data[:, :3]
+    with pytest.raises(AttributeError):
+        reshaped_view(view, (-1, ))
+    view_2 = reshaped_view(data, (-1, ))
+    view_2[0] = 1
+    assert data[0, 0] == 1
+    assert np.all(data[0, 1:] == 0)
+    assert np.all(data[1:] == 0)

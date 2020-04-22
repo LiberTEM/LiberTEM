@@ -2,34 +2,7 @@ import numpy as np
 import numba
 
 from libertem.udf import UDF
-
-
-def reshaped_view(a: np.ndarray, shape):
-    '''
-    Like :meth:`numpy.ndarray.reshape`, just guaranteed to
-    return a view or throw an :class:`AttributeError` if
-    no view can be created.
-
-    .. versionadded:: 0.5.0
-
-    Parameters
-    ----------
-
-    a : numpy.ndarray
-        Array to create a view of
-    shape : tuple
-        Shape of the view to create
-
-    Returns
-    -------
-
-    view : numpy.ndarray
-        View into :code:`a` with shape :code:`shape`
-
-    '''
-    res = a.view()
-    res.shape = shape
-    return res
+from libertem.common.buffers import reshaped_view
 
 
 @numba.njit(fastmath=True)

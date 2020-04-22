@@ -39,6 +39,34 @@ def zeros_aligned(size, dtype):
     return res
 
 
+def reshaped_view(a: np.ndarray, shape):
+    '''
+    Like :meth:`numpy.ndarray.reshape`, just guaranteed to
+    return a view or throw an :class:`AttributeError` if
+    no view can be created.
+
+    .. versionadded:: 0.5.0
+
+    Parameters
+    ----------
+
+    a : numpy.ndarray
+        Array to create a view of
+    shape : tuple
+        Shape of the view to create
+
+    Returns
+    -------
+
+    view : numpy.ndarray
+        View into :code:`a` with shape :code:`shape`
+
+    '''
+    res = a.view()
+    res.shape = shape
+    return res
+
+
 def slice_to_tuple(sl: slice):
     return (sl.start, sl.stop, sl.step)
 

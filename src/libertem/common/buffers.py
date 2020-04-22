@@ -292,13 +292,10 @@ class BufferWrapper(object):
         Currently this is only necessary for :code:`kind="sig"` buffers.
         Use :meth:`flush` to write back the cache.
 
-        Boundary conditions:
-        * :code:`tile` has one navigation dimension and at least one
-          signal dimension, i.e. it is not a frame
-        * :code:`tile.tile_slice.get(sig_only=True)` does
-          not overlap for different tiles while the cache is active,
-          i.e. they follow LiberTEM slicing for
-          :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.
+        Boundary condition: :code:`tile.tile_slice.get(sig_only=True)`
+        does not overlap for different tiles while the cache is active,
+        i.e. the tiles follow LiberTEM slicing for
+        :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.
 
         Returns
         view : np.ndarray

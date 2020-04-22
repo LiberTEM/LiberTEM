@@ -103,14 +103,14 @@ class SERDataSet(DataSet):
         return SERFileSet([
             SERFile(
                 path=self._path,
-                num_frames= self._num_frames,
+                num_frames=self._num_frames,
                 emipath=self._emipath
             )
         ])
 
     def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
-        reader = SERFile(path=self._path, emipath=self._emipath)
+        reader = SERFile(path=self._path, num_frames=None, emipath=self._emipath)
 
         with reader.get_handle() as f1:
             self._num_frames = f1.head['ValidNumberElements']

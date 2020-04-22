@@ -5,15 +5,14 @@ Installation
 
 .. note::
     LiberTEM is currently working with Python 3.6 and Python 3.7. Support for
-    Python 3.8 depends on an upcoming release of Dask.distributed. See also
-    :issue:`452`, :pr:`482`.
+    Python 3.8 depends on a more current release of Dask.distributed we are not
+    compatible with yet. See also :issue:`452`, :pr:`482`.
 
 .. note::
     Distinguish between installing a released version and installing the latest
     development version. Both `installing from PyPi`_ and `installing from a git
     clone`_ use pip, but they do fundamentally different things. :code:`pip
-    install libertem` downloads the latest release from PyPi, which can be
-    somewhat older.
+    install libertem` downloads the latest release from PyPi.
 
     Changing directory to a git clone and running :code:`pip install -e .`
     installs from the local directory in editable mode. "Editable mode" means
@@ -23,8 +22,8 @@ Installation
 
     Installing from a git clone in editable mode is the correct setup for
     development work and using :ref:`the latest features in the development
-    branch <continuous>`. Installing from PyPI is easier and preferred for new
-    users.
+    branch <continuous>`. Installing from PyPI is easier and preferred for
+    production use and for new users.
 
 .. include:: _single_node.rst
 
@@ -60,8 +59,8 @@ To create a new virtualenv for LiberTEM, you can use the following command:
 
     $ virtualenv -p python3 ~/libertem-venv/
 
-If multiple python versions are installed, replace :code:`python3` with 
-:code:`python3.6` or above version.
+If multiple Python versions are installed, replace :code:`python3` with 
+:code:`python3.6` or a later version.
 
 Replace :code:`~/libertem-venv/` with any path where you would like to create
 the venv. You can then activate the virtualenv with
@@ -145,7 +144,8 @@ a git clone:
 
     $ git clone https://github.com/LiberTEM/LiberTEM
 
-Or if you wish to contribute to LiberTEM, follow these steps instead :
+Or, if you wish to contribute to LiberTEM, create a fork of the LiberTEM repository
+by following these steps:
 
 #. Log into your `GitHub <https://github.com/>`_ account.
 
@@ -232,7 +232,7 @@ update the source code with this command:
 The installation with ``pip install -e`` has installed LiberTEM in `"editable"
 mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
 That means the changes pulled from git are active immediately. Only if the
-requirements for installed third-party packages have changed, you can re-run
+requirements for installed third-party packages have changed, you should re-run
 ``pip install -e .`` in order to install any missing packages.
 
 After updating the installation, you can run the updated version by restarting

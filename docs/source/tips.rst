@@ -6,8 +6,10 @@ Tips and tricks
 Using SSH forwarding
 --------------------
 
-To securely connect to a remote instance of LiberTEM, you can use SSH
-forwarding. For example with conda:
+As there is currently no built-in authentication yet, listening on a different host than
+:code:`127.0.0.1` / :code:`localhost` is disabled. As a workaround, if you want
+to access LiberTEM from a different computer, you can use ssh port forwarding.
+For example with conda:
 
 .. code-block:: shell
 

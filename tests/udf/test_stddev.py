@@ -22,10 +22,10 @@ def test_stddev(lt_ctx, use_roi):
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    data = _mk_random(size=(30, 2, 1025), dtype="float32")
+    data = _mk_random(size=(30, 3, 516), dtype="float32")
     # FIXME the tiling in signal dimension can only be tested once MemoryDataSet
     # actually supports it
-    dataset = MemoryDataSet(data=data, tileshape=(3, 1, 1025),
+    dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
                             num_partitions=2, sig_dims=2)
     if use_roi:
         roi = np.random.choice([True, False], size=dataset.shape.nav)

@@ -43,6 +43,10 @@ def slice_to_tuple(sl: slice):
     return (sl.start, sl.stop, sl.step)
 
 
+def tuple_to_slice(tup: tuple):
+    return slice(tup[0], tup[1], tup[2])
+
+
 class BufferWrapper(object):
     """
     Helper class to automatically allocate buffers, either for partitions or
@@ -302,8 +306,8 @@ class BufferWrapper(object):
 
         '''
         if self._kind == "sig":
-            sl = tuple(tile.tile_slice.get(sig_only=True))
-            key = map(slice_to_tuple, sl)
+            sl = tile.tile_slice.get(sig_only=True)
+            key = tuple(map(slice_to_tuple, sl))
             if key in self._contiguous_cache:
                 return self._contiguous_cache[key]
             view = self._data[sl]
@@ -311,7 +315,7 @@ class BufferWrapper(object):
             try:
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
-                view.shape = (oldshape[0], -1)
+                view.shape = (-1, )
                 view.shape = oldshape
                 return view
             except AttributeError:
@@ -323,7 +327,8 @@ class BufferWrapper(object):
 
     def flush(self):
         for key, view in self._contiguous_cache.items():
-            self._data[key] = view
+            sl = tuple(map(tuple_to_slice, key))
+            self._data[sl] = view
         self._contiguous_cache = dict()
 
     def __repr__(self):

@@ -4,6 +4,34 @@ import numba
 from libertem.udf import UDF
 
 
+def reshaped_view(a: np.ndarray, shape):
+    '''
+    Like :meth:`numpy.ndarray.reshape`, just guaranteed to
+    return a view or throw an :class:`AttributeError` if
+    no view can be created.
+
+    .. versionadded:: 0.5.0
+
+    Parameters
+    ----------
+
+    a : numpy.ndarray
+        Array to create a view of
+    shape : tuple
+        Shape of the view to create
+
+    Returns
+    -------
+
+    view : numpy.ndarray
+        View into :code:`a` with shape :code:`shape`
+
+    '''
+    res = a.view()
+    res.shape = shape
+    return res
+
+
 @numba.njit(fastmath=True)
 def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     '''
@@ -255,11 +283,11 @@ class StdDevUDF(UDF):
 
         n = merge(
             dest_n=dest_n,
-            dest_sum=dest['sum'].reshape((-1,)),
-            dest_varsum=dest['varsum'].reshape((-1,)),
+            dest_sum=reshaped_view(dest['sum'], (-1,)),
+            dest_varsum=reshaped_view(dest['varsum'], (-1,)),
             src_n=src_n,
-            src_sum=src['sum'].reshape((-1,)),
-            src_varsum=src['varsum'].reshape((-1,)),
+            src_sum=reshaped_view(src['sum'], (-1,)),
+            src_varsum=reshaped_view(src['varsum'], (-1,)),
         )
         dest['num_frames'][:] = n
 
@@ -292,10 +320,10 @@ class StdDevUDF(UDF):
             self.task_data.num_frames[key] = n_1
         else:
             self.task_data.num_frames[key] = process_tile(
-                tile=tile.reshape((n_1, -1)),
+                tile=reshaped_view(tile, (n_1, -1)),
                 n_0=n_0,
-                sum_inout=self.results.sum.reshape((-1, )),
-                varsum_inout=self.results.varsum.reshape((-1, )),
+                sum_inout=reshaped_view(self.results.sum, (-1, )),
+                varsum_inout=reshaped_view(self.results.varsum, (-1, )),
             )
 
 

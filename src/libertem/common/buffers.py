@@ -297,6 +297,8 @@ class BufferWrapper(object):
         i.e. the tiles follow LiberTEM slicing for
         :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.
 
+        .. versionadded:: 0.5.0
+
         Returns
         view : np.ndarray
             View into data or contiguous copy if necessary
@@ -306,23 +308,22 @@ class BufferWrapper(object):
             sl = tile.tile_slice.get(sig_only=True)
             key = tuple(map(slice_to_tuple, sl))
             if key in self._contiguous_cache:
-                return self._contiguous_cache[key]
-            view = self._data[sl]
-            oldshape = view.shape
-            try:
+                view = self._contiguous_cache[key]
+            else:
+                view = self._data[sl]
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
-                view.shape = (-1, )
-                view.shape = oldshape
-                return view
-            except AttributeError:
-                view = view.copy()
-                self._contiguous_cache[key] = view
-                return view
+                if not view.flags.c_contiguous:
+                    view = view.copy()
+                    self._contiguous_cache[key] = view
+            return view
         else:
             return self.get_view_for_tile(partition, tile)
 
     def flush(self):
+        '''
+        .. versionadded:: 0.5.0
+        '''
         for key, view in self._contiguous_cache.items():
             sl = tuple(map(tuple_to_slice, key))
             self._data[sl] = view

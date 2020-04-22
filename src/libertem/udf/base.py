@@ -185,10 +185,12 @@ class UDFData:
             self._views[k] = buf.get_view_for_tile(partition, tile)
 
     def set_contiguous_view_for_tile(self, partition, tile):
+        # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_contiguous_view_for_tile(partition, tile)
 
     def flush(self):
+        # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
             buf.flush()
 
@@ -360,10 +362,12 @@ class UDFBase:
             ns.set_view_for_tile(partition, tile)
 
     def set_contiguous_views_for_tile(self, partition, tile):
+        # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.set_contiguous_view_for_tile(partition, tile)
 
     def flush(self):
+        # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.flush()
 

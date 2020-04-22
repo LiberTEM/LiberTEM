@@ -140,6 +140,8 @@ class BufferWrapper(object):
         original dataset shape. If a ROI is set, embed the result into a new
         array; unset values have nan value, if supported by the underlying dtype.
         """
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)

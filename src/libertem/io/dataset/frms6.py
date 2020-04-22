@@ -410,7 +410,11 @@ class FRMS6DataSet(DataSet):
             executor.run_function(_read_hdr, hdr_filename)
         except Exception:
             return False
-        return {"path": path}
+        return {
+            "parameters": {
+                "path": path
+            },
+        }
 
     @classmethod
     def get_supported_extensions(cls):

@@ -2,6 +2,7 @@ import { END, eventChannel, EventChannel } from "redux-saga";
 import { call, delay, fork, put, take } from "redux-saga/effects";
 import uuid from 'uuid/v4';
 import * as datasetActions from '../dataset/actions';
+import { getApiWSURL } from "../helpers/apiHelpers";
 import * as channelActions from "./actions";
 import * as channelMessages from './messages';
 
@@ -38,7 +39,7 @@ function createWebSocketChannel(/* addr */): SocketChannel {
             emit(channelMessages.Messages.error("Error in weboscket connection"));
         }
 
-        const ws = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api/events/`);
+        const ws = new WebSocket(getApiWSURL());
         ws.addEventListener("message", onMessage);
         ws.addEventListener("open", onOpen);
         ws.addEventListener("close", onClose);
@@ -100,7 +101,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     break;
                 }
                 case channelMessages.MessageTypes.INITIAL_STATE: {
-                    yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, timestamp));
+                    yield put(channelActions.Actions.initialState(msg.jobs, msg.datasets, msg.compoundAnalyses, msg.analyses, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.JOB_STARTED: {
@@ -113,6 +114,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                 }
                 case channelMessages.MessageTypes.TASK_RESULT: {
                     yield call(handleTaskResult, msg, socketChannel, timestamp);
+                    break;
+                }
+                case channelMessages.MessageTypes.CREATE_DATASET: {
+                    yield put(datasetActions.Actions.created(msg.details));
                     break;
                 }
                 case channelMessages.MessageTypes.DELETE_DATASET: {
@@ -128,6 +133,31 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.cancelled(msg.job));
                     break;
                 }
+                /*
+                // FIXME: server needs to know about compount analyses
+                case channelMessages.MessageTypes.ANALYSIS_CREATED: {
+                    yield put(channelActions.Actions.analysisCreated(
+                        msg.analysis,
+                        msg.dataset,
+                        msg.details,
+                    ));
+                    break;
+                }
+                case channelMessages.MessageTypes.ANALYSIS_UPDATED: {
+                    yield put(channelActions.Actions.analysisUpdated(
+                        msg.analysis,
+                        msg.dataset,
+                        msg.details,
+                    ));
+                    break;
+                }
+                case channelMessages.MessageTypes.ANALYSIS_REMOVED: {
+                    yield put(channelActions.Actions.analysisRemoved(
+                        msg.analysis,
+                    ));
+                    break;
+                }
+                */
             }
         }
     } finally {

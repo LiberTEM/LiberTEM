@@ -1,19 +1,9 @@
 import * as React from "react";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
 import ClusterConnectionForm from "../../cluster/components/ClusterConnectionForm";
+import { assertNotReached } from "../../helpers";
 import { RootReducer } from "../../store";
 import ChannelConnecting from "./ChannelConnecting";
-
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        channelStatus: state.channelStatus,
-        clusterConnection: state.clusterConnection,
-        haveConfig: state.config.haveConfig,
-    }
-}
-
-
-type MergedProps = ReturnType<typeof mapStateToProps>;
 
 const messages = {
     waiting: "Waiting...",
@@ -23,28 +13,44 @@ const messages = {
 const clusterMessages = {
     connected: "Connected, waiting for initial state...",
     unknown: "Connected, fetching cluster status...",
+    connecting : "Connecting to cluster"
 }
 
-const ChannelStatus: React.SFC<MergedProps> = ({ haveConfig, children, channelStatus, clusterConnection }) => {
+const ConnectedNotReady: React.SFC = () => {
+    const haveConfig = useSelector((state: RootReducer) => state.config.haveConfig);
+    const clusterConnection = useSelector((state: RootReducer) => state.clusterConnection);
+
+    if (!haveConfig) {
+        return <ChannelConnecting msg="waiting for configuration..." />;
+    }
+    if (clusterConnection.status === "disconnected") {
+        return <ClusterConnectionForm />
+    } else if (clusterConnection.status === "connected") {
+        return <ChannelConnecting msg={clusterMessages.connected} />;
+    } else if (clusterConnection.status === "unknown") {
+        return <ChannelConnecting msg={clusterMessages.unknown} />;
+    } else if (clusterConnection.status === "connecting") {
+        return <ChannelConnecting msg={clusterMessages.connecting} />
+    }
+    assertNotReached("should not happen");
+}
+
+const ChannelStatus: React.SFC = ({ children }) => {
+    const channelStatus = useSelector((state: RootReducer) => state.channelStatus);
+
     switch (channelStatus.status) {
         case "waiting":
         case "connecting": {
             return <ChannelConnecting msg={messages[channelStatus.status]} />;
         }
         case "connected": {
-            if (!haveConfig) {
-                return <ChannelConnecting msg="waiting for configuration..." />;
-            }
-            if (clusterConnection.status === "disconnected") {
-                return <ClusterConnectionForm />
-            } else if (clusterConnection.status === "connected") {
-                return <ChannelConnecting msg={clusterMessages.connected} />;
-            } else if (clusterConnection.status === "unknown") {
-                return <ChannelConnecting msg={clusterMessages.unknown} />;
-            }
+            return <ConnectedNotReady />
         }
+        case "ready":
+            return <>{children}</>;
+        default:
+            assertNotReached("should not happen");
     }
-    return <>{children}</>;
 }
 
-export default connect(mapStateToProps)(ChannelStatus);
+export default ChannelStatus;

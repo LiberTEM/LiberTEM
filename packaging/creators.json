@@ -58,7 +58,8 @@
         "authorname": "Chandra, Rahul",
         "affiliation": "Chandigarh University" ,
         "github": "irahulcse",
-        "contribution": "Test and update of examples"
+        "contribution": "Test and update of examples",
+        "orcid": "0000-0003-2079-5368"
     },
     {
         "displayname": "Shankhadeep Dey",
@@ -66,6 +67,21 @@
         "affiliation": "Siliguri Institute of Technology",
         "github": "iamshankhadeep",
         "contribution": "Added types to libertem.api.Context #643"
+    },
+    {
+        "displayname": "Sayandip Halder",
+        "authorname": "Halder, Sayandip",
+        "affiliation": "Jadavpur University",
+        "github": "sayandip18",
+        "contribution": "Modifying the documentation to make it more user-friendly"
+    },
+    {
+        "displayname": "Barnaby D.A. Levin",
+        "authorname": "Levin, Barnaby D.A.",
+        "affiliation": "Direct Electron",
+        "github": "bdalevin",
+        "contribution": "Discussions, ensuring compatibility with data from Direct Electron cameras",
+        "orcid": "0000-0003-1010-0366"
     },
     {
         "displayname": "Magnus Nord",
@@ -104,6 +120,13 @@
         "contribution": "Single pass numerically stable standard deviation"
     },
     {
+        "displayname": "Sai Sunku",
+        "authorname": "Sunku, Sai",
+        "affiliation": "Columbia University",
+        "github": "saisunku",
+        "contribution": "Bug fixes"
+    },
+    {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
@@ -116,12 +139,5 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-	{
-	    "displayname": "Sayandip Halder",
-		"authorname": "Halder, Sayandip",
-		"affiliation": "Jadavpur University",
-		"github": "sayandip18",
-		"contribution": "Modifying the documentation to make it more user-friendly"
-	}
+    }
 ]

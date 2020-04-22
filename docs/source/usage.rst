@@ -61,8 +61,8 @@ This then makes LiberTEM that is running on :code:`remote-hostname` available on
 your local host via http://localhost:9000/
 
 
-The user interface
-------------------
+Connecting and opening data
+---------------------------
 
 After starting the server, you can open the GUI in your browser. By default it
 will be at http://localhost:9000 . At the beginning, the GUI shows a prompt to
@@ -75,6 +75,8 @@ machine.
 After connection to a cluster, LiberTEM shows a button to start browsing for
 available files. On a local cluster that's simply the local filesystem.
 
+.. note:: See :ref:`sample data` for publicly available datasets.
+
 ..  figure:: ./images/use/browse.png
 
 This opens the file browser dialogue. On top it shows the current directory,
@@ -85,6 +87,9 @@ are discussed in `Issue #83 <https://github.com/LiberTEM/LiberTEM/issues/83>`_.
 Contributions are highly appreciated! This example opens an HDF5 file.
 
 ..  figure:: ./images/use/open.png
+
+Running analyses
+----------------
 
 After selecting a file, you set the type in the drop-down menu at the top of the
 dialogue above the file name. After that you set the appropriate parameters that
@@ -126,7 +131,7 @@ in scan coordinates on the right.
 Instead of average, you can select "Standard Deviation". This calculates
 standard deviation of all detector frames.
 
-.. figure:: ./images/use/std_dev.png
+..  figure:: ./images/use/std_dev.png
 
 If you are interested in individual frames rather than the average, you can
 switch to "Pick" mode in the "Mode" drop-down menu directly below the detector
@@ -146,7 +151,7 @@ to select a rectangular region. For example if you select "Rect", the
 average/standard deviation is calculated over all images that lie inside selected
 rectangle. You can adjust the rectangle by dragging the handles in the GUI.
 
-.. figure:: ./images/use/rect.png
+..  figure:: ./images/use/rect.png
 
 Some analyses, such as the Center of Mass (COM) analysis, can render the result
 in different ways. You can select the channel in the "Image" drop-down menu
@@ -154,11 +159,20 @@ below the right window.
 
 ..  figure:: ./images/use/image.png
 
-Application-specific documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _`download results`:
 
-For more applications, like strain mapping and crystallinity analysis, please
-see the :doc:`Applications <applications>` section.
+Downloading results
+-------------------
+
+After an analysis has finished running, you can download the results. Clicking the download button
+below the analysis will open a dialog:
+
+..  figure:: ./images/use/download-btn.png
+
+In the download dialog, you can choose between different file formats, and separately
+download the available results.
+
+..  figure:: ./images/use/download-modal.png
 
 Keyboard controls
 ~~~~~~~~~~~~~~~~~
@@ -166,3 +180,9 @@ Keyboard controls
 You can use arrow keys to change the coordinate parameters of any analysis. To
 do this, click on the handle you want to modify, and then use the arrow keys to
 move the handle. Hold shift to move in larger steps.
+
+Application-specific documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For more applications, like strain mapping and crystallinity analysis, please
+see the :doc:`Applications <applications>` section.

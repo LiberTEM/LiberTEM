@@ -1,22 +1,14 @@
 import os
 import pytest
 
+from aio_utils import create_connection
 
 pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
 async def test_browse_localfs(default_raw, base_url, http_client):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
-
+    await create_connection(base_url, http_client)
     browse_path = os.path.dirname(default_raw._path)
     raw_ds_filename = os.path.basename(default_raw._path)
     url = "{}/api/browse/localfs/".format(base_url)
@@ -42,16 +34,7 @@ async def test_browse_localfs(default_raw, base_url, http_client):
 
 @pytest.mark.asyncio
 async def test_browse_localfs_fail(default_raw, base_url, http_client):
-    conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-        }
-    }
-    async with http_client.put(conn_url, json=conn_details) as response:
-        assert response.status == 200
-
+    await create_connection(base_url, http_client)
     browse_path = os.path.join(
         os.path.dirname(default_raw._path),
         "does", "not", "exist"

@@ -50,7 +50,8 @@ Spark <https://spark.apache.org/>`_, `Hadoop file system
 <http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_,
 `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO
 <https://github.com/axboe/fio>`_, `pyXem
-<https://pyxem.github.io/pyxem-website/>`_
+<https://pyxem.github.io/pyxem-website/>`_, `Nion Swift <https://nionswift.readthedocs.io/>`_,
+`Alpaka <http://alpaka-group.github.io/alpaka/>`_
 
 Funding
 ~~~~~~~

@@ -1,20 +1,31 @@
 import jsonschema
 
+from .state import SharedState
+
 
 class Message(object):
     """
     possible messages - the translation of our python datatypes to json types
     """
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, state: SharedState):
+        self.state = state
 
-    def initial_state(self, jobs, datasets):
+    def initial_state(self, jobs, datasets, analyses, compound_analyses):
         return {
             "status": "ok",
             "messageType": "INITIAL_STATE",
             "datasets": datasets,
             "jobs": jobs,
+            "analyses": analyses,
+            "compoundAnalyses": compound_analyses,
+        }
+
+    def cluster_conn_error(self, msg):
+        return {
+            "status": "error",
+            "messageType": "CLUSTER_CONN_ERROR",
+            "msg": msg,
         }
 
     def config(self, config):
@@ -63,12 +74,13 @@ class Message(object):
             "msg": reason,
         }
 
-    def start_job(self, job_id):
+    def start_job(self, job_id, analysis_id):
         return {
             "status": "ok",
             "messageType": "JOB_STARTED",
             "job": job_id,
-            "details": self.data.serialize_job(job_id),
+            "analysis": analysis_id,
+            "details": self.state.job_state.serialize(job_id),
         }
 
     def job_error(self, job_id, msg):
@@ -84,7 +96,7 @@ class Message(object):
             "status": "ok",
             "messageType": "FINISH_JOB",
             "job": job_id,
-            "details": self.data.serialize_job(job_id),
+            "details": self.state.job_state.serialize(job_id),
             "followup": {
                 "numMessages": num_images,
                 "descriptions": image_descriptions,
@@ -174,6 +186,69 @@ class Message(object):
             "msg": "failed to get schema for type %s: %s" % (ds_type, msg),
             "ds_type": ds_type,
         }
+
+    def create_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_CREATED",
+            "analysis": uuid,
+            "dataset": dataset_uuid,
+            "details": {
+                "analysisType": analysis_type,
+                "parameters": parameters,
+            }
+        }
+
+    def update_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_UPDATED",
+            "analysis": uuid,
+            "dataset": dataset_uuid,
+            "details": {
+                "analysisType": analysis_type,
+                "parameters": parameters,
+            }
+        }
+
+    def analysis_removed(self, uuid):
+        return {
+            "status": "ok",
+            "messageType": "ANALYSIS_REMOVED",
+            "analysis": uuid,
+        }
+
+    def analysis_removal_failed(self, uuid, msg):
+        return {
+            "status": "error",
+            "messageType": "ANALYSIS_REMOVAL_FAILED",
+            "analysis": uuid,
+            "msg": msg,
+        }
+
+    def compound_analysis_created(self, serialized):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_CREATED",
+        }
+        msg.update(serialized)
+        return msg
+
+    def compound_analysis_updated(self, serialized):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_UPDATED",
+        }
+        msg.update(serialized)
+        return msg
+
+    def compound_analysis_removed(self, uuid):
+        msg = {
+            "status": "ok",
+            "messageType": "COMPOUND_ANALYSIS_REMOVED",
+            "compoundAnalysis": uuid,
+        }
+        return msg
 
 
 class MessageConverter:

@@ -1,23 +1,36 @@
+.. _`sample data`:
+
 ================
 Sample Datasets
 ================
+
 Public datasets
 ~~~~~~~~~~~~~~~~
-Some data to work with have been obtained from `Zenodo <https://zenodo.org>`_. 
 
-+-------------------------------------------------+----------+---------+----------+----------+
-|   Title                                         |Download  |  Format | Dimension| Size     |
-+=================================================+==========+=========+==========+==========+
-| `Bullseye probe`_                               |`link1`_  | HDF5    | 4D       | 2.1 GB   |             
-+-------------------------------------------------+----------+---------+----------+----------+
-| `Circular probe`_                               |`link2`_  |  HDF5   |  4D      | 2.1 GB   |
-+-------------------------------------------------+----------+---------+----------+----------+
-| `Electron Bessel beam diffraction pattern`_     |`link3`_  | DM3     | 3D       | 2.6 GB   |
-+-------------------------------------------------+----------+---------+----------+----------+
+Some data to work with can be downloaded from Zenodo.
+
++-----------------------------------------------------+-------------------------------------------------------------------+-----------------+---------------------+--------+
+| Link                                                | Description                                                       | Format          | Dimension           | Size   |
++=====================================================+===================================================================+=================+=====================+========+
+| `Bullseye and circular probe diffraction`_          | Scanning convergent beam electron diffraction data                | HDF5 (uint16)   | 4D                  | 2.1 GB |
+| :cite:`ophus_colin_2019_3592520,Zeltmann2019`       | of gold nanoparticles                                             |                 |                     |        |
+|                                                     | (:code:`4DSTEM_experiment/data/datacubes/polyAu_4DSTEM/data`)     |                 | (100, 84, 250, 250) |        |
+|                                                     | and simulated strained gold                                       |                 |                     |        |
+|                                                     | (:code:`4DSTEM_experiment/data/datacubes/simulation_4DSTEM/data`) |                 |                     |        |
+|                                                     | with one file using a standard circular aperture and another      |                 |                     |        |
+|                                                     | using a bullseye aperture.                                        |                 |                     |        |
++-----------------------------------------------------+-------------------------------------------------------------------+-----------------+---------------------+--------+
+| `Electron Bessel beam diffraction`_                 | Scanning convergent beam electron diffraction with ring-shaped    | Stack of DM3    | 3D                  | 2.6 GB |
+| :cite:`giulio_guzzinati_2019_2566137,Guzzinati2019` | aperture and overlapping diffraction orders.                      | (currently only |                     |        |
+|                                                     |                                                                   | scripting)      |                     |        |
++-----------------------------------------------------+-------------------------------------------------------------------+-----------------+---------------------+--------+
 
 Creating random data
 ~~~~~~~~~~~~~~~~~~~~~~~
-Random data can be generated in the following way. It should be kept in mind that the data generated in this way can only be used for simple testing as it has no physical significance.
+
+Random data can be generated in the following way. It should be kept in mind
+that the data generated in this way can only be used for simple testing as it
+has no physical significance.
 
 .. code-block:: python
       
@@ -25,20 +38,16 @@ Random data can be generated in the following way. It should be kept in mind tha
     real_data = np.random.randn(16, 16, 16, 16).astype("float32")
     real_data.tofile("/tmp/real_raw_file.raw")
 
-Now you can load the data through the `Python API`_ in the following way
+Now you can load the data through the :ref:`api documentation` in the following way:
 
 .. code-block:: python
     
     from libertem.api import Context
     ctx = Context()
-    ds = ctx.load("raw", path="/tmp/something.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
+    ds = ctx.load("raw", path="/tmp/real_raw_file.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
     
-Alternatively, you can enter the parameters (scan_size, dtype, detector_size) directly into the load dialog of the GUI. 
+Alternatively, you can enter the parameters (scan_size, dtype, detector_size)
+directly into the load dialog of the GUI.
 
-.. _link1: https://zenodo.org/record/3592520/files/calibrationData_bullseyeProbe.h5?download=1
-.. _link2: https://zenodo.org/record/3592520/files/calibrationData_circularProbe.h5?download=1
-.. _link3: https://zenodo.org/record/2566137/files/experimental_data.7z?download=1
-.. _Bullseye probe: https://zenodo.org/record/3592520#.XmdNN3DhXIU
-.. _Circular probe: https://zenodo.org/record/3592520#.XmdNN3DhXIU  
-.. _Electron Bessel beam diffraction pattern: https://zenodo.org/record/2566137#.XmdNQnDhXIU
-.. _Python API: https://libertem.github.io/LiberTEM/api.html
+.. _`Bullseye and circular probe diffraction`: https://zenodo.org/record/3592520
+.. _`Electron Bessel beam diffraction`: https://zenodo.org/record/2566137

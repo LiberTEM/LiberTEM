@@ -1,9 +1,11 @@
+import typing
+
 import numpy as np
 
 from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
 
 
-class AnalysisResult(object):
+class AnalysisResult:
     """
     This class represents a single 2D image result from an Analysis.
 
@@ -20,9 +22,10 @@ class AnalysisResult(object):
     desc : str
         Short description in the GUI
     key : str
-        Key to identify the result in a :class:`AnalysisResultSet`
+        Key to identify the result in an :class:`AnalysisResultSet`
     """
-    def __init__(self, raw_data, visualized, title, desc, key):
+    def __init__(self, raw_data, visualized, title, desc, key, include_in_download=True):
+        self.include_in_download = include_in_download
         self.raw_data = raw_data
         self._visualized = visualized
         self.title = title
@@ -39,7 +42,7 @@ class AnalysisResult(object):
         return "<AnalysisResult: %s>" % self.key
 
     def __array__(self):
-        return self.raw_data
+        return np.array(self.raw_data)
 
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
@@ -51,7 +54,7 @@ class AnalysisResult(object):
         return self._visualized
 
 
-class AnalysisResultSet(object):
+class AnalysisResultSet:
     """
     Base class for Analysis result sets. :meth:`libertem.api.Context.run`
     returns an instance of this class or a subclass. Many of the subclasses are
@@ -115,7 +118,7 @@ class AnalysisResultSet(object):
     >>> print(result['mask_1'].title)
     mask 1
     """
-    def __init__(self, results, raw_results=None):
+    def __init__(self, results: typing.List[AnalysisResult], raw_results=None):
         self._results = results
         self.raw_results = raw_results
 
@@ -138,6 +141,9 @@ class AnalysisResultSet(object):
     def __len__(self):
         return len(self.results)
 
+    def keys(self):
+        return [r.key for r in self.results]
+
     @property
     def results(self):
         if callable(self._results):
@@ -148,7 +154,7 @@ class AnalysisResultSet(object):
         return iter(self.results)
 
 
-class Analysis(object):
+class Analysis:
     """
     Abstract base class for Analysis classes.
 
@@ -159,16 +165,9 @@ class Analysis(object):
 
     .. versionadded:: 0.3.0
     """
-    pass
-
-
-class BaseAnalysis(Analysis):
-    TYPE = 'JOB'
-
-    def __init__(self, dataset, parameters):
-        self.dataset = dataset
-        self.parameters = self.get_parameters(parameters)
-        self.parameters.update(parameters)
+    # TODO: once we require Py3.8, we can use Literal here:
+    # https://www.python.org/dev/peps/pep-0586/
+    TYPE: str = None
 
     def get_results(self, job_results):
         """
@@ -229,6 +228,27 @@ class BaseAnalysis(Analysis):
         numpy.ndarray or None
             region of interest for which we want to run our analysis
         """
+        raise NotImplementedError()
+
+    def get_complex_results(self, job_result, key_prefix, title, desc):
+        raise NotImplementedError()
+
+    def get_parameters(self, parameters):
+        """
+        Get analysis parameters. Override to set defaults
+        """
+        raise NotImplementedError()
+
+
+class BaseAnalysis(Analysis):
+    TYPE = 'JOB'
+
+    def __init__(self, dataset, parameters):
+        self.dataset = dataset
+        self.parameters = self.get_parameters(parameters)
+        self.parameters.update(parameters)
+
+    def get_roi(self):
         return None
 
     def get_complex_results(self, job_result, key_prefix, title, desc):

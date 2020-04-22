@@ -42,10 +42,14 @@ To use the :class:`~libertem.executor.inline.InlineJobExecutor`, pass it to the
 
 Then, you can continue as usual, loading data, executing your UDF, etc.
 
+.. _`progress bar`:
+
 Using progress bar
 ---------------------
 
-A progress bar is a graphical tool that shows a far a process has progressed.  It can be used to assess the partitioning of data, since the progress is indicated on a per partition basis in the following way:
+A progress bar is a graphical tool that shows a far a process has progressed.
+It can be used to assess the partitioning of data, since the progress is
+indicated on a per partition basis in the following way:
 
 .. code-block:: text
      

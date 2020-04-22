@@ -1,8 +1,11 @@
+import { getApiBasePath } from "../helpers/apiHelpers";
 import { GetConfigResponse } from "../messages";
 
-export function getConfig(): Promise<GetConfigResponse> {
-    return fetch(`/api/config/`, {
+export async function getConfig(): Promise<GetConfigResponse> {
+    const basePath = getApiBasePath();
+    const r = await fetch(`${basePath}config/`, {
         method: "GET",
         credentials: "same-origin",
-    }).then(r => r.json());
+    });
+    return await r.json();
 }

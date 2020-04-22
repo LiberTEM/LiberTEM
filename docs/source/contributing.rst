@@ -93,7 +93,9 @@ organization will review your pull request, and may add comments or ask
 questions. If everything is good to go, your changes will be merged and you can
 delete the branch you created for the pull request.
 
-See also the `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_.
+.. seealso:: `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_
+
+.. seealso:: `How to make a simple GitHub PR (video) <https://www.youtube.com/watch?v=cysuuUtbC6E>`_
 
 .. _`running tests`:
 
@@ -120,8 +122,9 @@ Or specify a specific environment you want to run:
 
     $ tox -e py36
 
-For faster iteration, you can also run only a part of the test suite, without using tox.
-To make this work, first install the test requirements into your virtualenv:
+For faster iteration, you can also run only a part of the test suite, without
+using tox. To make this work, first install the test requirements into your
+virtualenv:
 
 .. code-block:: shell
 
@@ -160,8 +163,9 @@ Another example, to exclude both slow and functional tests:
 
    $ tox -- -m "not functional and not slow"
 
-In these examples, ``--`` separates the the arguments of tox (left of ``--``) from the arguments for pytest on the right.
-List of marks used in our test suite:
+In these examples, ``--`` separates the the arguments of tox (left of ``--``)
+from the arguments for pytest on the right. List of marks used in our test
+suite:
 
 - `slow`: tests that take much more than 1 second to run
 - `functional`: tests that spin up a local dask cluster
@@ -169,8 +173,9 @@ List of marks used in our test suite:
 Code coverage
 ~~~~~~~~~~~~~
 
-After running the tests, you can inspect the test coverage by opening `htmlcov/index.html` in a web browser. When
-creating a pull request, the change in coverage is also reported by the codecov bot. Ideally, the test coverage
+After running the tests, you can inspect the test coverage by opening
+`htmlcov/index.html` in a web browser. When creating a pull request, the change
+in coverage is also reported by the codecov bot. Ideally, the test coverage
 should go up with each pull request, at least it should stay the same.
 
 Running tests for the client
@@ -189,8 +194,9 @@ Then, in the same directory, to run the tests execute:
 
    $ npm test -- --coverage
 
-This will run all tests and report code coverage. If you want to run the tests while developing the client,
-you can run them in watch mode, which is the default:
+This will run all tests and report code coverage. If you want to run the tests
+while developing the client, you can run them in watch mode, which is the
+default:
 
 .. code-block:: shell
 
@@ -208,20 +214,20 @@ On Windows with Anaconda, you have to create named aliases for the Python interp
     REM @echo off is vital so that the file doesn't clutter the output
     REM execute python.exe with the same command line
     @python.exe %*
-    
+
 To execute tests with Python 3.7, you create a new environment with Python 3.7:
 
 .. code-block:: shell
 
     > conda create -n libertem-3.7 python=3.7
-    
+
 Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment alongside :literal:`python3.6.bat` and make it execute the Python interpreter of your new libertem-3.7 environment:
 
 .. code-block:: bat
 
     @echo off
     REM @echo off is vital so that the file doesn't clutter the output
-    REM execute python.exe in a different environment 
+    REM execute python.exe in a different environment
     REM with the same command line
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
@@ -238,7 +244,7 @@ as the surrounding code.
 You can check the code style by running:
 
 .. code-block:: bat
-   
+
    $ tox -e flake8
 
 We recommend using an editor that can check code style on the fly, such as `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
@@ -274,7 +280,7 @@ Building the client
 The LiberTEM client is written in TypeScript, using a combination of React/Redux/Redux-Saga. The
 client communicates with the Python API server using both HTTP and websockets. Because browsers
 can't directly execute TypeScript, there is a build step involved, which translates the TypeScript
-code into JavaScript that is then understood by the browser. 
+code into JavaScript that is then understood by the browser.
 This build step is needed both for development and then again for building the production version.
 
 If you would like to contribute to the client, you first need to set up the development environment.
@@ -290,30 +296,44 @@ the needed build tools and dependencies by changing to the client directory and 
    $ npm install
 
 .. note::
-   
-   It is always a good idea to start development with installing the current dependencies with the
-   above command. Having old versions of dependencies installed may cause the build to fail or
-   cause unpredictable failures.
 
-Once this command finished without errors, you can start a development server (also from the client directory):
+   It is always a good idea to start development with installing the current
+   dependencies with the above command. Having old versions of dependencies
+   installed may cause the build to fail or cause unpredictable failures.
+
+Once this command finished without errors, you can start a development server
+(also from the client directory):
 
 .. code-block:: shell
 
    $ npm run start
 
-This server watches all source files for changes and automatically starts the build process. This server,
-which listens on port 3000, will only be able to serve requests for JavaScript and other static files -
-for handling HTTP API requests you still need to run the Python libertem-server process.
-Run it on the default port (9000) to allow proxying from the front-end server to the API server.
+This server watches all source files for changes and automatically starts the
+build process. The development server, which listens on port 3000, will only be
+able to serve requests for JavaScript and other static files. For handling HTTP
+API requests you still need to run the Python :code:`libertem-server` process on
+the default port (9000) alongside the development server:
 
-To learn more about the build process, please see `the README in the client directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
+.. code-block:: shell
 
-You can then use any editor you like to change the client source files, in the client/src directory.
-We recommend `Visual Studio Code <https://code.visualstudio.com/>`_ for its excellent TypeScript support.
+   $ libertem-server --no-browser
 
-To simplify development and installing from a git checkout, we currently always ship a production build
-of the client in the git repository. When you are creating a pull request for the client, please always
-include a current production build. You can create it using a tox shortcut:
+This allows proxying the HTTP API requests from the front-end server to the API
+server without opening an additional browser window that could interfere with
+the development server.
+
+To learn more about the build process, please see `the README in the client
+directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
+
+You can then use any editor you like to change the client source files, in the
+client/src directory. We recommend `Visual Studio Code
+<https://code.visualstudio.com/>`_ for its excellent TypeScript support.
+
+To simplify development and installing from a git checkout, we currently always
+ship a production build of the client in the git repository. Please always open
+your pull request for the client as WIP and include a rebuilt production build
+after the PR is approved and ready to merge. You can create it using a tox
+shortcut:
 
 .. code-block:: shell
 

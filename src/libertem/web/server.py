@@ -11,73 +11,87 @@ import tornado.websocket
 import tornado.ioloop
 import tornado.escape
 
-from .base import SharedData
+from .state import SharedState
 from .config import ConfigHandler
 from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
 from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
+from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
 
 
 log = logging.getLogger(__name__)
 
 
 class IndexHandler(tornado.web.RequestHandler):
-    def initialize(self, data, event_registry):
-        self.data = data
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
         self.event_registry = event_registry
 
     def get(self):
         self.render("client/index.html")
 
 
-def make_app(event_registry, shared_data):
+def make_app(event_registry, shared_state):
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
     return tornado.web.Application([
-        (r"/", IndexHandler, {"data": shared_data, "event_registry": event_registry}),
+        (r"/", IndexHandler, {"state": shared_state, "event_registry": event_registry}),
         (r"/api/datasets/detect/", DataSetDetectHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/datasets/schema/", DataSetOpenSchema, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/browse/localfs/", LocalFSBrowseHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/jobs/([^/]+)/", JobDetailHandler, {
-            "data": shared_data,
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/", AnalysisDetailHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/download/([^/]+)/",
+        DownloadDetailHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/compoundAnalyses/([^/]+)/", CompoundAnalysisHandler, {
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/events/", ResultEventHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/config/", ConfigHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry
         }),
         (r"/api/config/connection/", ConnectHandler, {
-            "data": shared_data,
+            "state": shared_state,
             "event_registry": event_registry,
         }),
     ], **settings)
 
 
-async def do_stop(shared_data):
+async def do_stop(shared_state):
     log.warning("Exiting...")
     log.debug("closing executor")
-    if shared_data.executor is not None:
-        await shared_data.executor.close()
+    if shared_state.executor_state.executor is not None:
+        await shared_state.executor_state.executor.close()
     loop = asyncio.get_event_loop()
     log.debug("stopping event loop")
     loop.stop()
@@ -96,22 +110,22 @@ async def nannynanny():
         await asyncio.sleep(1)
 
 
-def sig_exit(signum, frame, shared_data):
+def sig_exit(signum, frame, shared_state):
     log.info("Handling sig_exit...")
     loop = tornado.ioloop.IOLoop.instance()
 
     loop.add_callback_from_signal(
-        lambda: asyncio.ensure_future(do_stop(shared_data))
+        lambda: asyncio.ensure_future(do_stop(shared_state))
     )
 
 
-def main(host, port, event_registry, shared_data):
+def main(host, port, event_registry, shared_state):
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
-    app = make_app(event_registry, shared_data)
+    app = make_app(event_registry, shared_state)
     app.listen(address=host, port=port)
     return app
 
@@ -119,14 +133,14 @@ def main(host, port, event_registry, shared_data):
 def run(host, port, browser, local_directory):
     # shared state:
     event_registry = EventRegistry()
-    shared_data = SharedData()
+    shared_state = SharedState()
 
-    shared_data.set_local_directory(local_directory)
-    main(host, port, event_registry, shared_data)
+    shared_state.set_local_directory(local_directory)
+    main(host, port, event_registry, shared_state)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()
-    signal.signal(signal.SIGINT, partial(sig_exit, shared_data=shared_data))
+    signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
     # Strictly necessary only on Windows, but doesn't do harm in any case.
     # FIXME check later if the unknown root cause was fixed upstream
     asyncio.ensure_future(nannynanny())

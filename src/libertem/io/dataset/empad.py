@@ -151,7 +151,7 @@ class EMPADDataSet(DataSet):
             self._path_raw = self._path
 
         try:
-            self._filesize = executor.run_function(os.stat, self._path_raw).st_size
+            self._filesize = executor.run_function(self._get_filesize)
         except OSError as e:
             raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
         self._meta = DataSetMeta(
@@ -160,6 +160,9 @@ class EMPADDataSet(DataSet):
             iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         return self
+
+    def _get_filesize(self):
+        return os.stat(self._path_raw).st_size
 
     @classmethod
     def get_msg_converter(cls):
@@ -182,8 +185,10 @@ class EMPADDataSet(DataSet):
             if not executor.run_function(ds.check_valid):
                 return False
             return {
-                "path": path,
-                "scan_size": ds._scan_size,
+                "parameters": {
+                    "path": path,
+                    "scan_size": ds._scan_size,
+                },
             }
         except Exception:
             return False

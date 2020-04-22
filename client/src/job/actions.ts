@@ -5,7 +5,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    create: (id: string, dataset: string, timestamp: number) => createAction(ActionTypes.CREATE, { id, dataset, timestamp }),
+    create: (id: string, analysis: string, timestamp: number) => createAction(ActionTypes.CREATE, { id, analysis, timestamp }),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

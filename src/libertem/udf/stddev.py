@@ -6,20 +6,13 @@ from libertem.udf import UDF
 
 @numba.njit(fastmath=True)
 def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     '''
     Basic function to perform numerically stable merge.
 
     This function is designed to be inlined in a loop over all pixels in a frame
     to merge an individual pixel, with some parts pre-calculated.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
+    Based on :cite:`Schubert2018`.
 
     Parameters
     ----------
@@ -61,8 +54,6 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
 
 @numba.njit
 def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     """
     Given two sets of buffers, with sum of frames
     and sum of variances, aggregate joint sum of frames
@@ -71,12 +62,7 @@ def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
 
     This is ther numerical workhorse for :meth:`StdDevUDF.merge`.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
+    Based on :cite:`Schubert2018`.
 
     Parameters
     ----------
@@ -192,21 +178,13 @@ def _validate_n(num_frame):
 
 
 class StdDevUDF(UDF):
-    # FIXME manual citation due to issues in CI.
-    # Check if :cite:`Schubert2018` works in a future release
     """
     Compute sum of variances and sum of pixels from the given dataset
 
-    The one-pass algorithm used in this code is taken from the following paper:
+    The one-pass algorithm used in this code is taken from the following
+    paper: :cite:`Schubert2018`.
 
-    Erich Schubert and Michael Gertz. Numerically stable parallel computation of
-    (co-)variance. In `Proceedings of the 30th International Conference on
-    Scientific and Statistical Database Management - SSDBM 18`. ACM Press, 2018.
-    `doi:10.1145/3221269.3223036 <https://doi.org/10.1145/3221269.3223036>`_
-
-    cite:Schubert2018
-
-    ..versionchanged:: 0.5.0.dev0
+    ..versionchanged:: 0.5.0
         Result buffers have been renamed
 
     Examples
@@ -241,15 +219,20 @@ class StdDevUDF(UDF):
                 kind='sig', dtype=dtype
             ),
             'num_frames': self.buffer(
-                kind='single', dtype='object'
+                kind='single', dtype='int'
             ),
             'sum': self.buffer(
                 kind='sig', dtype=dtype
             )
         }
 
-    def preprocess(self):
-        self.results.num_frames[:] = dict()
+    def get_task_data(self):
+        return {
+            'num_frames': dict()
+        }
+
+    def postprocess(self):
+        self.results.num_frames[:] = _validate_n(self.task_data.num_frames)
 
     def merge(self, dest, src):
         """
@@ -267,8 +250,8 @@ class StdDevUDF(UDF):
             Partial results that contains sum of variances, sum of frames, and the
             number of frames of a partition to be merged into the aggregation buffers
         """
-        dest_n = _validate_n(dest['num_frames'][0])
-        src_n = _validate_n(src['num_frames'][0])
+        dest_n = dest['num_frames'][0]
+        src_n = src['num_frames'][0]
 
         n = merge(
             dest_n=dest_n,
@@ -278,8 +261,7 @@ class StdDevUDF(UDF):
             src_sum=src['sum'].reshape((-1,)),
             src_varsum=src['varsum'].reshape((-1,)),
         )
-        for key in src['num_frames'][0]:
-            dest['num_frames'][0][key] = n
+        dest['num_frames'][:] = n
 
     def process_tile(self, tile):
         """
@@ -294,10 +276,10 @@ class StdDevUDF(UDF):
 
         key = self.meta.slice.discard_nav()
 
-        if key not in self.results.num_frames[0]:
-            self.results.num_frames[0][key] = 0
+        if key not in self.task_data.num_frames:
+            self.task_data.num_frames[key] = 0
 
-        n_0 = self.results.num_frames[0][key]
+        n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 
         if n_0 == 0:
@@ -307,9 +289,9 @@ class StdDevUDF(UDF):
             # of variances
             # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html
             self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1)
-            self.results.num_frames[0][key] = n_1
+            self.task_data.num_frames[key] = n_1
         else:
-            self.results.num_frames[0][key] = process_tile(
+            self.task_data.num_frames[key] = process_tile(
                 tile=tile.reshape((n_1, -1)),
                 n_0=n_0,
                 sum_inout=self.results.sum.reshape((-1, )),
@@ -335,7 +317,7 @@ def consolidate_result(udf_result):
         :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
     '''
     udf_result = dict(udf_result.items())
-    num_frames = _validate_n(udf_result['num_frames'].data[0])
+    num_frames = udf_result['num_frames'].data[0]
 
     udf_result['num_frames'] = num_frames
     udf_result['varsum'] = udf_result['varsum'].data
@@ -348,16 +330,18 @@ def consolidate_result(udf_result):
     return udf_result
 
 
-def run_stddev(ctx, dataset, roi=None):
+def run_stddev(ctx, dataset, roi=None, progress=False):
     """
     Compute sum of variances and sum of pixels from the given dataset
 
     One-pass algorithm used in this code is taken from the following paper:
-    "Numerically Stable Parallel Computation of (Co-) Variance"
-    DOI : https://doi.org/10.1145/3221269.3223036
+    :cite:`Schubert2018`.
 
-    ..versionchanged:: 0.5.0.dev0
+    ..versionchanged:: 0.5.0
         Result buffers have been renamed
+
+    ..versionchanged:: 0.5.0
+        Added :code:`progress` parameter for progress bar
 
     Parameters
     ----------
@@ -366,6 +350,8 @@ def run_stddev(ctx, dataset, roi=None):
         dataset to work on
     roi : numpy.ndarray
         Region of interest, see :ref:`udf roi` for more information.
+    progress : bool, optional
+        Show progress bar. Default is :code:`False`.
 
 
     Returns
@@ -382,6 +368,8 @@ def run_stddev(ctx, dataset, roi=None):
     number of frames : pass_results['num_frames']
     """
     stddev_udf = StdDevUDF()
-    pass_results = ctx.run_udf(dataset=dataset, udf=stddev_udf, roi=roi)
+    pass_results = ctx.run_udf(
+        dataset=dataset, udf=stddev_udf, roi=roi, progress=progress
+    )
 
     return consolidate_result(pass_results)

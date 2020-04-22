@@ -160,7 +160,7 @@ class BloDataSet(DataSet):
             raw_dtype=np.dtype("u1"),
             iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
-        self._filesize = executor.run_function(lambda: os.stat(self._path).st_size)
+        self._filesize = executor.run_function(self._get_filesize)
         return self
 
     @classmethod
@@ -171,9 +171,11 @@ class BloDataSet(DataSet):
             if not executor.run_function(ds.check_valid):
                 return False
             return {
-                "path": path,
-                "tileshape": (1, 8) + tuple(ds.shape.sig),
-                "endianess": "<",
+                "parameters": {
+                    "path": path,
+                    "tileshape": (1, 8) + tuple(ds.shape.sig),
+                    "endianess": "<",
+                },
             }
         except Exception:
             return False
@@ -199,6 +201,9 @@ class BloDataSet(DataSet):
     def _read_header(self):
         with open(self._path, 'rb') as f:
             return np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
+
+    def _get_filesize(self):
+        return os.stat(self._path).st_size
 
     @property
     def header(self):

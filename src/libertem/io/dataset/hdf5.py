@@ -147,29 +147,44 @@ class H5DataSet(DataSet):
         return set(["h5", "hdf5", "hspy", "nxs"])
 
     @classmethod
-    def detect_params(cls, path, executor):
-        def _do_detect():
+    def _do_detect(cls, path):
+        try:
             with h5py.File(path, 'r'):
                 pass
+        except OSError as e:
+            raise DataSetException(repr(e)) from e
+
+    @classmethod
+    def detect_params(cls, path, executor):
         try:
-            executor.run_function(_do_detect)
-        except (IOError, OSError, KeyError, ValueError):
+            executor.run_function(cls._do_detect, path)
+        except (IOError, OSError, KeyError, ValueError, DataSetException):
             # not a h5py file or can't open for some reason:
             return False
 
         # try to guess the hdf5 dataset path:
         try:
             datasets = executor.run_function(_get_datasets, path)
-            largest_ds = sorted(datasets, key=lambda i: i[1], reverse=True)[0]
-            name, size, shape, dtype = largest_ds
+            datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
+            dataset_paths = [ds_path[0] for ds_path in datasets_list]
+            name, size, shape, dtype = datasets_list[0]
         except (IndexError, TimeoutError):
-            return {"path": path}
+            return {
+                "parameters": {
+                    "path": path
+                }
+            }
 
         return {
-            "path": path,
-            "ds_path": name,
-            # FIXME: number of frames may not match L3 size
-            "tileshape": (1, 8,) + shape[2:],
+            "parameters": {
+                "path": path,
+                "ds_path": name,
+                # FIXME: number of frames may not match L3 size
+                "tileshape": (1, 8,) + shape[2:],
+            },
+            "info": {
+                "dataset_paths": dataset_paths,
+            }
         }
 
     @property

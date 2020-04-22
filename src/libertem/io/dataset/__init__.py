@@ -25,12 +25,13 @@ def _auto_load(path, executor):
             "please specify the `path` kwarg to allow auto detection"
         )
 
-    params = detect(path, executor=executor)
-    filetype_detected = params.pop('type', None)
+    detected_params = detect(path, executor=executor)
+    filetype_detected = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
         )
+    params = detected_params["parameters"]
     return load(filetype_detected, executor=executor, **params)
 
 
@@ -100,16 +101,18 @@ def get_dataset_cls(filetype):
 
 
 def detect(path, executor):
+    """
+    Returns dataset's detected type, parameters and
+    additional info.
+    """
     for filetype in filetypes.keys():
         try:
             cls = get_dataset_cls(filetype)
-            maybe_params = cls.detect_params(path, executor)
+            params = cls.detect_params(path, executor)
         except (NotImplementedError, DataSetException):
             continue
-        if not maybe_params:
+        if not params:
             continue
-        params = {}
-        params.update(maybe_params)
         params.update({"type": filetype})
         return params
     return {}

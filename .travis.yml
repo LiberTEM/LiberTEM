@@ -1,8 +1,11 @@
 language: python
+os: linux
+dist: xenial
 cache:
   - pip
   - directories:
     - client/node_modules/
+    - $HOME/.pyenv/versions/
 
 install:
   - pip install tox
@@ -15,46 +18,69 @@ after_success:
 
 jobs:
   include:
+    # Linux tests:
     - stage: test
       env: TOXENV=py36
       python: 3.6
     - stage: test
       env: TOXENV=py37
       python: 3.7
-      dist: xenial
-      sudo: true
+
+    # OSX tests:
+    - stage: test
+      os: osx
+      env: TOXENV=py36
+      before_install:
+        - ulimit -n
+        - ulimit -n 4096
+        - eval "$(pyenv init -)"
+        - pyenv install -l
+        - pyenv install --skip-existing 3.6.9
+        - pyenv global 3.6.9
+        - pyenv rehash
+        - python --version
+        - python3 --version
+        - pip3 --version
+        - pip --version
+      language: shell
+    - stage: test
+      os: osx
+      env: TOXENV=py37
+      before_install:
+        - ulimit -n
+        - ulimit -n 4096
+        - eval "$(pyenv init -)"
+        - pyenv install -l
+        - pyenv install --skip-existing 3.7.5
+        - pyenv global 3.7.5
+        - pyenv rehash
+        - python --version
+        - python3 --version
+        - pip3 --version
+        - pip --version
+      language: shell
+
     - stage: test
       env: TOXENV=numba_coverage
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=mypy
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=flake8
       python: 3.7
-      dist: xenial
-      sudo: true
     - stage: test
       env: TOXENV=qa
-      dist: xenial
       python: 3.7
-      sudo: true
     - stage: test
       env: TOXENV=docs-check
       python: 3.7
-      dist: xenial
-      sudo: true
       install:
         - pip install tox
         - sudo apt-get install -y pandoc
     - stage: test
       env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
       python: 3.7
-      dist: xenial
       services:
         - docker
       install:
@@ -65,27 +91,23 @@ jobs:
         - tox -e py37 -- tests/ -m dist
     - stage: test
       language: node_js
-      node_js:
-        - 8
+      node_js: 8
       install:
         - (cd client && npm install)
       script:
         - (cd client && npm run build)
         - (cd client && npm test -- --coverage)
+        - (cd client && npm run lint)
 
     - stage: packaging
       env: TOXENV=docs-deploy
       python: 3.7
-      dist: xenial
-      sudo: true
       install:
         - pip install tox
         - sudo apt-get install -y pandoc
 
     - stage: packaging
-      sudo: require
       python: 3.7
-      dist: xenial
       install:
         - pip install -r scripts/requirements.txt
       script:

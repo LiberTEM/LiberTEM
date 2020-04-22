@@ -1,0 +1,2 @@
+class DataSetException(Exception):
+    pass

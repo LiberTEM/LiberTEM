@@ -8,16 +8,20 @@ from libertem.io.dataset.memory import MemoryDataSet
 def test_simple_example(lt_ctx):
     # creating a dataset where 0:3 frames are strong crystalline, 3:6 frames are weak crystalline,
     #  6:9 frames are amourphous
-    data = np.zeros([3*3, 5, 5]).astype(np.float32)
+    data = np.zeros([3*3, 7, 7]).astype(np.float32)
     # adding high intensity zero order peak for all frames
-    data[:, 2, 2] = 7
+    # The first one different to make sure it shows up weakly in the standard deviation map
+    # This makes sure that we have more peaks than n_peaks, but this one
+    # is intentionally the weakest
+    data[0, 3, 3] = 7.1
+    data[1:, 3, 3] = 7
     # adding strong non-zero order diffraction peaks for 0:3 frames
-    data[0:3, 0, 0] = 2
-    data[0:3, 4, 4] = 2
+    data[0:3, 1, 1] = 2.5
+    data[0:3, 5, 5] = 2
     # adding weak non-zero order diffraction peaks for 0:3 frames
-    data[3:6, 2, 0] = 1
-    data[3:6, 2, 4] = 1
-    dataset = MemoryDataSet(data=data, tileshape=(1, 5, 5),
+    data[3:6, 3, 1] = 1.5
+    data[3:6, 3, 5] = 1
+    dataset = MemoryDataSet(data=data, tileshape=(1, 7, 7),
                             num_partitions=3, sig_dims=2)
     result, coordinates = feature.make_feature_vec(
         ctx=lt_ctx, dataset=dataset, delta=0, n_peaks=4, min_dist=0

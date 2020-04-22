@@ -1,7 +1,7 @@
 
 export interface JobResultType {
     imageURL: string,
-    description: { title: string, desc: string },
+    description: { title: string, desc: string, includeInDownload: boolean },
 }
 
 export enum JobRunning {
@@ -20,7 +20,7 @@ export enum JobStatus {
 
 export interface JobStateCommon {
     id: string,
-    dataset: string,
+    analysis: string,
     status: JobStatus,
     startTimestamp: number,
     results: JobResultType[],

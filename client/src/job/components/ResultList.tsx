@@ -17,22 +17,19 @@ interface ResultListProps {
 }
 
 interface ExternalResultListProps {
-    analysis: string,
-    jobIndex: number,
+    compoundAnalysis: string,
+    analysisIndex: number,
 }
 
 const mapStateToProps = (state: RootReducer, ownProps: ExternalResultListProps) => {
-    const analysis = state.analyses.byId[ownProps.analysis];
-    const jobId = analysis.jobs[ownProps.jobIndex];
-    const job = jobId ? state.jobs.byId[jobId] : undefined;
-    const ds = job ? state.datasets.byId[job.dataset] : undefined;
+    const compoundAnalysis = state.compoundAnalyses.byId[ownProps.compoundAnalysis];
+    const analysis = state.analyses.byId[compoundAnalysis.details.analyses[ownProps.analysisIndex]];
 
     return {
-        currentJob: job,
         jobsById: state.jobs.byId,
         analysis,
-        dataset: ds,
-        jobIndex: ownProps.jobIndex,
+        compoundAnalysis,
+        analysisIndex: ownProps.analysisIndex,
     };
 };
 
@@ -42,6 +39,21 @@ interface ResultListState {
     selectedChannel: number,
 }
 
+const ResultListPlaceholder: React.SFC<{ width: number, height: number }> = ({ width, height }) => {
+    return (
+        <svg
+            style={{
+                display: "block",
+                border: "1px solid black",
+                width: "100%",
+                height: "auto"
+            }}
+            width={width} height={height}
+            viewBox={`0 0 ${width} ${height}`} key={-1} />
+    );
+}
+
+
 class ResultList extends React.Component<MergedProps, ResultListState> {
     public state: ResultListState = { selectedChannel: 0 };
 
@@ -50,58 +62,31 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
         this.setState({ selectedChannel: value });
     }
 
-    public getJob = () => {
-        const { currentJob, analysis, jobsById, jobIndex } = this.props;
-        if (!currentJob) {
-            return;
+    public getJob() {
+        const {
+            analysis, jobsById,
+        } = this.props;
+        if (!analysis || !analysis.displayedJob || !jobsById[analysis.displayedJob]) {
+            return undefined;
         }
-        if (currentJob.results.length > 0) {
-            return currentJob;
-        }
-        const history = analysis.jobHistory[jobIndex];
-
-        if (history === undefined) {
-            return;
-        }
-        for (const tmpJobId of history) {
-            const tmpJob = jobsById[tmpJobId];
-            if (tmpJob.results.length > 0) {
-                return tmpJob;
-            }
-        }
-        return;
+        return jobsById[analysis.displayedJob];
     }
 
-    public render() {
-        const {
-            selectors, analysis, dataset, children, width, height, jobIndex,
-            extraHandles, extraWidgets, subtitle,
-        } = this.props;
-        let msg;
-        let currentResult = (
-            // placeholder:
-            <svg style={{ display: "block", border: "1px solid black", width: "100%", height: "auto" }} width={width} height={height} viewBox={`0 0 ${width} ${height}`} key={-1} />
-        );
-        const job = this.getJob();
-        if (!job || !dataset) {
-            msg = <>&nbsp;</>;
-        } else {
-            currentResult = (
-                <Result analysis={analysis} job={job} dataset={dataset}
-                    extraHandles={extraHandles}
-                    extraWidgets={extraWidgets}
-                    width={width} height={height}
-                    jobIndex={jobIndex}
-                    idx={this.state.selectedChannel}
-                />
-            );
-            if (job.running === JobRunning.DONE) {
-                const dt = (job.endTimestamp - job.startTimestamp) / 1000;
-                msg = <>Analysis done in {dt.toFixed(3)}s</>;
-            } else {
-                msg = <>Analysis running...</>;
-            }
+    public getMsg(job?: JobState) {
+        if (!job) {
+            return <>&nbsp;</>;
         }
+        if (job.running === JobRunning.DONE) {
+            const dt = (job.endTimestamp - job.startTimestamp) / 1000;
+            return <>Analysis done in {dt.toFixed(3)}s</>;
+        } else {
+            return <>Analysis running...</>;
+        }
+    }
+
+    public genericRender(currentResult: React.ReactElement, job?: JobState) {
+        const { subtitle, children, selectors } = this.props;
+        const msg = this.getMsg(job);
         return (
             <div>
                 {currentResult}
@@ -112,6 +97,28 @@ class ResultList extends React.Component<MergedProps, ResultListState> {
                 </Selectors>
                 <p>{subtitle} {msg}</p>
             </div>
+        );
+    }
+
+    public render() {
+        const job = this.getJob();
+        const {
+            width, height,
+            extraHandles, extraWidgets
+        } = this.props;
+
+        if (!job) {
+            return this.genericRender(<ResultListPlaceholder width={width} height={height} />, job);
+        }
+
+        return this.genericRender(
+            <Result job={job}
+                extraHandles={extraHandles}
+                extraWidgets={extraWidgets}
+                width={width} height={height}
+                channel={this.state.selectedChannel}
+            />,
+            job
         );
     }
 }

@@ -1,7 +1,8 @@
+import pytest
 import numpy as np
 
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
+from libertem.common.buffers import BufferWrapper, AuxBufferWrapper, reshaped_view
 from libertem.common import Shape
 
 from utils import _mk_random
@@ -51,3 +52,15 @@ def test_buffer_extra_shape_2():
     shape_obj = Shape(shape = (12, 13, 14, 15), sig_dims = 2)
     buffer = BufferWrapper(kind = 'nav', extra_shape = shape_obj)
     assert buffer._extra_shape == (12, 13, 14, 15)
+
+
+def test_reshaped_view():
+    data = np.zeros((2, 5))
+    view = data[:, :3]
+    with pytest.raises(AttributeError):
+        reshaped_view(view, (-1, ))
+    view_2 = reshaped_view(data, (-1, ))
+    view_2[0] = 1
+    assert data[0, 0] == 1
+    assert np.all(data[0, 1:] == 0)
+    assert np.all(data[1:] == 0)

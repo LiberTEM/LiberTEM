@@ -34,9 +34,16 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 
 .. testsetup:: *
 
-    from libertem import api
+    import distributed as dd
 
-    ctx = api.Context()
+    from libertem import api
+    from libertem.executor.dask import DaskJobExecutor
+
+    # For doctest testing, don't use multiprocessing since it
+    # may trip during the test build.
+    # Using such a Dask client may not work for real datasets in production!
+    client = dd.Client(processes=False)
+    ctx = api.Context(executor=DaskJobExecutor(client=client))
     dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
 
 .. testcode::

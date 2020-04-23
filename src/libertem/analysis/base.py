@@ -203,7 +203,7 @@ class Analysis:
 
     def get_udf_results(self, udf_results, roi):
         """
-        Convert UDF results to a list of :code:`AnalysisResult`\ s,
+        Convert UDF results to a list of :code:`AnalysisResult`\\ s,
         including visualizations.
 
         Parameters

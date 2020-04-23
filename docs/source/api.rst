@@ -35,9 +35,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 .. testsetup:: *
 
     from libertem import api
-    from libertem.executor.inline import InlineJobExecutor
 
-    ctx = api.Context(executor=InlineJobExecutor())
+    ctx = api.Context()
     dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
 
 .. testcode::
@@ -50,5 +49,6 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     # storage to ensure optimal data locality
     dask_array, workers = make_dask_array(dataset)
 
-    # Perform calculations using the worker map.
-    result = dask_array.sum(axis=(-1, -2)).compute(workers=workers)
+    # Use the Dask.distributed client of LiberTEM, since it may not be
+    # the default client:
+    result = ctx.executor.client.compute(dask_array.sum(axis=(-1, -2))).result()

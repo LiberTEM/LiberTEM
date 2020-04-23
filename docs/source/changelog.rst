@@ -23,8 +23,11 @@ Changelog
 .. _latest:
 .. _`v0-5-0`:
 
-0.5.0.rcX / 2020-4-WIP
-######################
+0.5.0 / 2020-4-23
+#################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3763313.svg
+   :target: https://doi.org/10.5281/zenodo.3763313
 
 New features
 ------------
@@ -34,8 +37,7 @@ New features
   :meth:`libertem.udf.base.UDF.aux_data` now. (:pr:`694`)
 * Progress bar support based on :code:`tqdm` that can be enabled by passing
   :code:`progress=True` to :meth:`libertem.api.Context.run_udf`,
-  :meth:`libertem.api.Context.run` and :meth:`libertem.api.Context.map`.
-  See also :ref:`progress bar`. (:pr:`613,670,655`)
+  :meth:`libertem.api.Context.run` and :meth:`libertem.api.Context.map`: :ref:`progress bar`. (:pr:`613,670,655`)
 * Include explicit support for Direct Electron's DE5 format based on HDF5. (:pr:`704`)
 * GUI: Downloadable results as HDF5, NPZ, TIFF, and RAW. See
   :ref:`download results` for details. (:pr:`665`)
@@ -105,6 +107,10 @@ Misc
 * :class:`~libertem.udf.sum.SumUDF` moved to the :mod:`libertem.udf` folder (:pr:`613`).
 * Make sure the signal dimension of result buffer slices can be
   flattened without creating an implicit copy (:pr:`738`, :issue:`739`)
+
+Many thanks to the contributors to this release: :user:`AnandBaburajan`,
+:user:`twentyse7en`, :user:`sayandip18`, :user:`bdalevin`, :user:`saisunku`,
+:user:`Iamshankhadeep`, :user:`abiB27`, :user:`sk1p`, :user:`uellue`
 
 .. _`v0-4-1`:
 

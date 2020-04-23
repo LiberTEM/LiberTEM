@@ -184,6 +184,16 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_tile(partition, tile)
 
+    def set_contiguous_view_for_tile(self, partition, tile):
+        # .. versionadded:: 0.5.0
+        for k, buf in self._get_buffers():
+            self._views[k] = buf.get_contiguous_view_for_tile(partition, tile)
+
+    def flush(self):
+        # .. versionadded:: 0.5.0
+        for k, buf in self._get_buffers():
+            buf.flush()
+
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
             if buf.roi_is_zero:
@@ -350,6 +360,16 @@ class UDFBase:
     def set_views_for_tile(self, partition, tile):
         for ns in [self.params, self.results]:
             ns.set_view_for_tile(partition, tile)
+
+    def set_contiguous_views_for_tile(self, partition, tile):
+        # .. versionadded:: 0.5.0
+        for ns in [self.params, self.results]:
+            ns.set_contiguous_view_for_tile(partition, tile)
+
+    def flush(self):
+        # .. versionadded:: 0.5.0
+        for ns in [self.params, self.results]:
+            ns.flush()
 
     def set_views_for_frame(self, partition, tile, frame_idx):
         for ns in [self.params, self.results]:
@@ -570,6 +590,10 @@ class UDF(UDFBase):
         pass
 
     def buffer(self, kind, extra_shape=(), dtype="float32"):
+        '''
+        Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
+        in :meth:`get_result_buffers`.
+        '''
         return BufferWrapper(kind, extra_shape, dtype)
 
     @classmethod
@@ -684,7 +708,7 @@ class UDFRunner:
 
             for tile in tiles:
                 if method == 'tile':
-                    self._udf.set_views_for_tile(partition, tile)
+                    self._udf.set_contiguous_views_for_tile(partition, tile)
                     self._udf.set_slice(tile.tile_slice)
                     self._udf.process_tile(tile.data)
                 elif method == 'frame':
@@ -702,7 +726,7 @@ class UDFRunner:
                     self._udf.set_views_for_tile(partition, tile)
                     self._udf.set_slice(partition.slice)
                     self._udf.process_partition(tile.data)
-
+            self._udf.flush()
             if hasattr(self._udf, 'postprocess'):
                 self._udf.clear_views()
                 self._udf.postprocess()

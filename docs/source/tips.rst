@@ -148,3 +148,14 @@ use it to profile individual slow tests that you identified before:
         25    0.001    0.000    1.968    0.079 blobfinder.py:741(run_refine)
 
     =============================== 1 passed, 1 warnings in 7.81 seconds ============================
+
+Platform-dependent code and remote executor
+-------------------------------------------
+
+Platform-dependent code in a lambda function or nested function can lead to
+incompatibilities when run on an executor with remote workers, such as the
+:class:`~libertem.executor.dask.DaskJobExecutor`. Instead, the function should
+be defined as part of a module, for example as a stand-alone function or as a
+method of a class. That way, the correct remote implementation for
+platform-dependent code is used on the remote worker since only a reference to
+the function and not the implementation itself is sent over.

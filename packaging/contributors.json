@@ -9,7 +9,7 @@
         "displayname": "Reimar Bauer",
         "authorname": "Bauer, Reimar",
         "affiliation": "FZ J\u00fclich",
-        "contribution": "Help with Google Summer of Code 2019"
+        "contribution": "Help with Google Summer of Code 2019 and 2020"
     },
     {
         "displayname": "Julian Becker",
@@ -206,6 +206,13 @@
         "authorname": "Nebot, Eduardo",
         "affiliation": "Quantum Detectors",
         "contribution": "Support, discussions, sample files, funding applications"
+    },
+    {
+        "displayname": "Terri Oda",
+        "authorname": "Oda, Terri",
+        "affiliation": "Python Software Foundation",
+        "github": "terriko",
+        "contribution": "Managing GSoC 2019 and 2020 under the umbrella of the Python Software Foundation"
     },
     {
         "displayname": "Liam O'Ryan",

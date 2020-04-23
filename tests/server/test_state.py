@@ -4,6 +4,9 @@ import pytest
 from libertem.web.state import JobState, ExecutorState
 
 
+pytestmark = [pytest.mark.flaky]
+
+
 @pytest.mark.asyncio
 async def test_job_state_remove(async_executor):
     executor_state = ExecutorState()

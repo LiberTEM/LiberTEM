@@ -1,5 +1,0 @@
-[Misc] Experimental support for Python 3.8
-==========================================
-
-* LiberTEM works with Python 3.8 for experimental use. A context using a remote Dask.Distributed cluster
-  can lead to lock-ups or errors with this version. The default local Dask.Distributed context works.

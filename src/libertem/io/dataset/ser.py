@@ -35,9 +35,10 @@ class SERDatasetParams(MessageConverter):
 
 
 class SERFile(File3D):
-    def __init__(self, path, emipath=None):
+    def __init__(self, path, num_frames, emipath=None):
         super().__init__()
         self._path = path
+        self._num_frames = num_frames
         self._emipath = emipath
 
     def _get_handle(self):
@@ -50,8 +51,7 @@ class SERFile(File3D):
 
     @property
     def num_frames(self):
-        with self._get_handle() as f1:
-            return f1.head['ValidNumberElements']
+        return self._num_frames
 
     @property
     def start_idx(self):
@@ -96,17 +96,24 @@ class SERDataSet(DataSet):
         self._emipath = emipath
         self._meta = None
         self._filesize = None
+        self._num_frames = None
 
     def _get_fileset(self):
+        assert self._num_frames is not None
         return SERFileSet([
-            SERFile(path=self._path, emipath=self._emipath)
+            SERFile(
+                path=self._path,
+                num_frames=self._num_frames,
+                emipath=self._emipath
+            )
         ])
 
     def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
-        reader = SERFile(path=self._path, emipath=self._emipath)
+        reader = SERFile(path=self._path, num_frames=None, emipath=self._emipath)
 
         with reader.get_handle() as f1:
+            self._num_frames = f1.head['ValidNumberElements']
             if f1.head['ValidNumberElements'] == 0:
                 raise DataSetException("no data found in file")
 

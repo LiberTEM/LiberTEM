@@ -159,6 +159,8 @@ below the right window.
 
 ..  figure:: ./images/use/image.png
 
+.. _`download results`:
+
 Downloading results
 -------------------
 

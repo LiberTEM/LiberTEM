@@ -42,8 +42,6 @@ To use the :class:`~libertem.executor.inline.InlineJobExecutor`, pass it to the
 
 Then, you can continue as usual, loading data, executing your UDF, etc.
 
-.. _`progress bar`:
-
 Using progress bar
 ---------------------
 

@@ -2,6 +2,7 @@ import { call, fork, put, select, take, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import * as channelActions from '../channel/actions';
+import * as clusterActions from '../cluster/actions';
 import * as datasetActions from '../dataset/actions';
 import { GetConfigResponse } from '../messages';
 import { RootReducer } from '../store';
@@ -40,7 +41,8 @@ function* updateLocalStorageConfig() {
     while (true) {
         yield take([
             datasetActions.ActionTypes.CREATE,
-            browserActions.ActionTypes.DIRECTORY_LISTING
+            browserActions.ActionTypes.DIRECTORY_LISTING,
+            clusterActions.ActionTypes.CONNECTED
         ]);
         const config: ConfigState = yield select((state: RootReducer) => state.config);
         setLocalStorage(config);

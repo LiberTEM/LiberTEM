@@ -60,9 +60,17 @@ export function configReducer(state = initialConfigState, action: AllActions): C
             });
         }
         case clusterActions.ActionTypes.CONNECT: {
-            return Object.assign({}, state, {
-                lastConnection: action.payload.params
-            })
+            if (action.payload.params.type === ClusterTypes.LOCAL){
+                const newLastConnection = Object.assign({}, state.lastConnection, {type: ClusterTypes.LOCAL})
+                return Object.assign({}, state, {
+                    lastConnection : newLastConnection
+                })
+            }
+            else {
+                return Object.assign({}, state, {
+                    lastConnection: action.payload.params
+                })
+            }
         }
     }
     return state;

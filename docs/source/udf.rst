@@ -423,6 +423,8 @@ available as properties of :code:`self.params`:
    ctx.run_udf(dataset=dataset, udf=udf)
 
 
+.. _`progress bar`:
+
 Running UDFs
 ------------
 

@@ -70,22 +70,26 @@ def test_shape_eq_4():
     s2 = Shape((16, 16, 128, 128), sig_dims=2)
     assert s1 != s2
 
+
 def test_shape_add_1():
-    s = Shape((12, 13, 14, 15), sig_dims = 0)
+    s = Shape((12, 13, 14, 15), sig_dims=0)
     s_add = s + (1, 2)
     assert tuple(s_add) == (12, 13, 14, 15, 1, 2)
+
 
 def test_shape_add_2():
-    s = Shape((12, 13, 14, 15), sig_dims = 4)
+    s = Shape((12, 13, 14, 15), sig_dims=4)
     s_add = s + (1, 2)
     assert tuple(s_add) == (12, 13, 14, 15, 1, 2)
 
+
 def test_shape_add_3():
-    s = Shape((12, 13, 14, 15), sig_dims = 4)
+    s = Shape((12, 13, 14, 15), sig_dims=4)
     s_add = (1, 2) + s
     assert tuple(s_add) == (1, 2, 12, 13, 14, 15)
 
+
 def test_shape_add_4():
-    s = Shape((12, 13, 14, 15), sig_dims = 0)
+    s = Shape((12, 13, 14, 15), sig_dims=0)
     s_add = (1, 2) + s
     assert tuple(s_add) == (1, 2, 12, 13, 14, 15)

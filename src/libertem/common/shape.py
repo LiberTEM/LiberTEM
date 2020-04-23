@@ -159,14 +159,14 @@ class Shape(object):
         """
         if isinstance(other, tuple):
             if self._sig_dims != 0 and len(self._nav_shape) != 0:
-                raise ValueError("To add a Shape object to a tuple, either the navigation " \
-                                  "or the signal dimensions of the Shape object must be zero")
+                raise ValueError("To add a Shape object to a tuple, either the navigation "
+                                 "or the signal dimensions of the Shape object must be zero")
             elif self._sig_dims == 0 and len(self._nav_shape) == 0:
                 raise ValueError("Shape object is empty")
             elif self._sig_dims == 0:
-                return Shape(self._nav_shape + other, sig_dims = 0)
+                return Shape(self._nav_shape + other, sig_dims=0)
             else:
-                return Shape(self._sig_shape + other, sig_dims = len(self._sig_shape + other))
+                return Shape(self._sig_shape + other, sig_dims=len(self._sig_shape + other))
         else:
             return NotImplemented
 
@@ -176,8 +176,8 @@ class Shape(object):
         """
         if isinstance(other, tuple):
             if self._sig_dims != 0 and len(self._nav_shape) != 0:
-                raise ValueError("To add a Shape object to a tuple, either the navigation " \
-                                  "or the signal dimensions of the Shape object must be zero")
+                raise ValueError("To add a Shape object to a tuple, either the navigation "
+                                 "or the signal dimensions of the Shape object must be zero")
             elif self._sig_dims == 0 and len(self._nav_shape) == 0:
                 raise ValueError("Shape object is empty")
             elif self._sig_dims == 0:

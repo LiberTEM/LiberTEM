@@ -3,6 +3,18 @@ from typing import Union, Tuple, Dict
 
 import psutil
 import numpy as np
+
+try:
+    import cupy
+    import numba.cuda
+except ModuleNotFoundError:
+    cupy = None
+except ImportError as e:
+    # Cupy can be a bit fragile; allow running LiberTEM with
+    # messed-up installation
+    warnings.warn(repr(e), RuntimeWarning)
+    cupy = None
+
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
@@ -694,9 +706,39 @@ class Context:
         cores = psutil.cpu_count(logical=False)
         if cores is None:
             cores = 2
+        if cupy:
+            try:
+                extra_kwargs = {
+                    "nthreads": 1,
+                    "resources": {"CUDA": 1, "GPU_or_CPU": 1}
+                }
+                extra_workers = []
+                # Accessing items of numba.cuda.gpus might throw a CudaSupportError
+                for device in numba.cuda.gpus:
+                    kwargs = extra_kwargs.copy()
+                    kwargs['preload'] = \
+                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device.id}"'
+                    extra_workers.append(kwargs)
+            except numba.cuda.CudaSupportError as e:
+                # Continue running without GPU for now
+                # WIP checking: If cupy can't be installed without proper cuda
+                # configuration, we should let the exception fall
+                # through instead
+                warnings.warn(repr(e), RuntimeWarning)
+            pass
+        else:
+            extra_workers = None
+
         return DaskJobExecutor.make_local(
-            cluster_kwargs={"threads_per_worker": 1, "n_workers": cores},
-            client_kwargs={'set_as_default': False}
+            cluster_kwargs={
+                "threads_per_worker": 1,
+                "n_workers": cores,
+                # CPU-only one core per worker
+                # GPU_or_CPU one core per worker
+                "resources": {"CPU": 1, "GPU_or_CPU": 1}
+            },
+            client_kwargs={'set_as_default': False},
+            extra_workers=extra_workers
         )
 
     def close(self):

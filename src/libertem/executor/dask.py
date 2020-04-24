@@ -1,3 +1,5 @@
+import asyncio
+import multiprocessing
 import functools
 import logging
 import signal
@@ -10,6 +12,14 @@ from .scheduler import Worker, WorkerSet
 
 
 log = logging.getLogger(__name__)
+
+
+def new_worker(*args, **kwargs):
+    async def f():
+        w = await dd.Worker(*args, **kwargs)
+        await w.finished()
+
+    asyncio.get_event_loop().run_until_complete(f())
 
 
 class TaskProxy:
@@ -47,7 +57,7 @@ class CommonDaskMixin(object):
             callables zipped with potential locations
         """
         futures = []
-        for task, locations in fns_and_locations:
+        for task, locations, resources in fns_and_locations:
             submit_kwargs = {}
             if locations is not None:
                 if len(locations) == 0:
@@ -67,7 +77,8 @@ class CommonDaskMixin(object):
             (
                 task,
                 task.get_locations() or self._task_idx_to_workers(
-                    available_workers, task.idx)
+                    available_workers, task.idx),
+                {"CPU": 1}
             )
             for task in tasks
         ])
@@ -151,7 +162,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if all_nodes:
             items = _make_items_all()
         else:
-            items = ((lambda: fn(p), p.get_locations())
+            items = ((lambda: fn(p), p.get_locations(), {"CPU": 1})
                      for p in partitions)
         futures = self._futures_for_locations(items)
         # TODO: do we need cancellation and all that good stuff?
@@ -231,13 +242,14 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+    def make_local(cls, cluster_kwargs=None, client_kwargs=None, extra_workers=None):
         """
         Spin up a local dask cluster
 
         interesting cluster_kwargs:
             threads_per_worker
             n_workers
+            resources
 
         Returns
         -------
@@ -246,6 +258,15 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         """
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
+
+        if extra_workers:
+            for kwargs in extra_workers:
+                p = multiprocessing.Process(
+                    target=new_worker,
+                    args=(cluster.scheduler_address, ),
+                    kwargs=kwargs
+                )
+                p.start()
 
         # Disable handling Ctrl-C on the workers for a local cluster
         # since the nanny restarts workers in that case and that gets mixed

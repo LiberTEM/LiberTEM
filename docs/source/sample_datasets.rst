@@ -70,7 +70,7 @@ has no physical significance. You can then load the data through the
     from libertem.api import Context
     if __name__ == '__main__':
       ctx = Context()
-	    ds = ctx.load("hdf5", path="./hdf5_sample.h5", ds_path="/dataset", tileshape=(1, 4, 16, 16))
+      ds = ctx.load("hdf5", path="./hdf5_sample.h5", ds_path="/dataset", tileshape=(1, 4, 16, 16))
 
 Alternatively, you can enter the parameters (scan_size, dtype, detector_size)
 directly into the load dialog of the GUI.

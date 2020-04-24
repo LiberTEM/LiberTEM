@@ -1,7 +1,6 @@
 import warnings
 from typing import Union, Tuple, Dict
 
-import psutil
 import numpy as np
 from libertem.corrections import CorrectionSet
 from libertem.io.dataset import load, filetypes
@@ -743,13 +742,7 @@ class Context:
         return results['result']
 
     def _create_local_executor(self):
-        cores = psutil.cpu_count(logical=False)
-        if cores is None:
-            cores = 2
-        return DaskJobExecutor.make_local(
-            cluster_kwargs={"threads_per_worker": 1, "n_workers": cores},
-            client_kwargs={'set_as_default': False}
-        )
+        return DaskJobExecutor.make_local()
 
     def close(self):
         self.executor.close()

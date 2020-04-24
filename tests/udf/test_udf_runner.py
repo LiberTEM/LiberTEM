@@ -38,3 +38,66 @@ async def test_async_run_for_dset(async_executor):
     async for (udf_results,) in udf_iter:
         pass
     assert "udf_results" in locals(), "must yield at least one result"
+
+
+class UDF1(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self):
+        pass
+
+    def get_backends(self):
+        return ('numpy',)
+
+
+class UDF2(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self):
+        pass
+
+    def get_backends(self):
+        return ('cupy',)
+
+
+class UDF3(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self):
+        pass
+
+    def get_backends(self):
+        return ('cupy', 'numpy')
+
+
+def test_no_common_backends(default_raw, lt_ctx):
+    runner = UDFRunner([UDF1(), UDF2()])
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    for task in tasks:
+        with pytest.raises(ValueError) as e:
+            task.get_resources()
+        assert e.match("^There is no common supported UDF backend")
+
+
+def test_common_backends_cpu(default_raw, lt_ctx):
+    runner = UDFRunner([UDF1(), UDF3()])
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    for task in tasks:
+        assert task.get_resources() == {'CPU': 1, 'compute': 1}
+
+
+def test_common_backends_gpu(default_raw, lt_ctx):
+    runner = UDFRunner([UDF2(), UDF3()])
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    for task in tasks:
+        assert task.get_resources() == {'CUDA': 1, 'compute': 1}
+
+
+def test_common_backends_compute(default_raw, lt_ctx):
+    runner = UDFRunner([UDF3(), UDF3()])
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    for task in tasks:
+        assert task.get_resources() == {'compute': 1}

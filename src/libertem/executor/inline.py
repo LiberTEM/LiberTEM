@@ -1,6 +1,10 @@
+import os
+from unittest import mock
+
 import cloudpickle
 from .base import JobExecutor
 from .scheduler import Worker, WorkerSet
+from libertem.udf.backend import get_use_cuda
 
 
 class InlineJobExecutor(JobExecutor):
@@ -16,13 +20,19 @@ class InlineJobExecutor(JobExecutor):
             yield result
 
     def run_tasks(self, tasks, cancel_id):
-        for task in tasks:
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(task))
-            result = task()
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(result))
-            yield result, task
+        # The UDFRunner expects one of these environment variable to be set
+        if (os.environ.get("LIBERTEM_USE_CPU") or os.environ.get("LIBERTEM_USE_CUDA")):
+            patch = {}
+        else:
+            patch = {'LIBERTEM_USE_CPU': "0"}
+        with mock.patch.dict(os.environ, patch):
+            for task in tasks:
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(task))
+                result = task()
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(result))
+                yield result, task
 
     def run_function(self, fn, *args, **kwargs):
         if self._debug:
@@ -42,6 +52,10 @@ class InlineJobExecutor(JobExecutor):
         return {"localhost": fn(*args, **kwargs)}
 
     def get_available_workers(self):
+        resources = {"compute": 1, "CPU": 1}
+        if get_use_cuda() is not None:
+            resources["CUDA"] = 1
+
         return WorkerSet([
-            Worker(name='inline', host='localhost')
+            Worker(name='inline', host='localhost', resources=resources)
         ])

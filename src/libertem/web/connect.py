@@ -4,10 +4,11 @@ from functools import partial
 import tornado.web
 
 from libertem.executor.base import AsyncAdapter, sync_to_async
-from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from .messages import Message
 from .base import log_message, ResultHandlerMixin
 from .state import SharedState
+from libertem.utils.devices import detect
 
 log = logging.getLogger(__name__)
 
@@ -49,18 +50,16 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 self.write(msg)
                 return None
         elif connection["type"].lower() == "local":
-            cluster_kwargs = {
-                "threads_per_worker": 1,
+            devices = detect()
+            options = {
                 "local_directory": self.state.get_local_directory()
             }
-            client_kwargs = {'set_as_default': False}
             if "numWorkers" in connection:
-                cluster_kwargs.update({"n_workers": connection["numWorkers"]})
+                devices["cpus"] = range(connection["numWorkers"])
             sync_executor = await sync_to_async(
                 partial(
                     DaskJobExecutor.make_local,
-                    cluster_kwargs=cluster_kwargs,
-                    client_kwargs=client_kwargs
+                    spec=cluster_spec(**devices, options=options),
                 )
             )
         else:

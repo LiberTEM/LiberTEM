@@ -1,4 +1,5 @@
 from typing import Iterable
+import os
 import mmap
 import math
 from contextlib import contextmanager
@@ -47,6 +48,21 @@ def zeros_aligned(size, dtype):
         res = empty_aligned(size, dtype)
         res[:] = 0
     return res
+
+
+def to_numpy(a):
+    # .. versionadded:: 0.6.0.dev0
+    cuda_device = os.environ.get("LIBERTEM_USE_CUDA")
+    if isinstance(a, np.ndarray):
+        return a
+    elif cuda_device:
+        # Try to avoid importing unless necessary
+        import cupy
+        cupy.cuda.Device(cuda_device).use()
+        if isinstance(a, cupy.ndarray):
+            return cupy.asnumpy(a)
+    # Falling through
+    raise TypeError(f"I don't know how to convert {type(a)} here.")
 
 
 def reshaped_view(a: np.ndarray, shape):
@@ -133,8 +149,11 @@ class BufferWrapper(object):
     This class is array_like, so you can directly use it, for example, as argument
     for numpy functions.
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32"):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None):
         """
+        .. versionchanged:: 0.6.0
+            Add option to specify backend, for example CuPy
+
         Parameters
         ----------
         kind : "nav", "sig" or "single"
@@ -148,11 +167,16 @@ class BufferWrapper(object):
 
         dtype : string or numpy dtype
             The dtype of this buffer
+
+        where : string or None
+            :code:`None` means NumPy array, :code:`device` to use a back-end specified
+            in :meth:`allocate`. New in 0.6.0.dev0
         """
 
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
+        self._where = where
         self._data = None
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
@@ -243,20 +267,36 @@ class BufferWrapper(object):
         """
         return self._extra_shape
 
+    @property
+    def where(self):
+        """
+        Get the place where this buffer is to be allocated.
+
+        .. versionadded:: 0.6.0.dev0
+        """
+        return self._where
+
     def __array__(self):
         """
         returns the "wrapped"/reshaped array, see above
         """
         return self.data
 
-    def allocate(self):
+    def allocate(self, backend=None):
         """
         Allocate a new buffer, in the shape previously set
         via one of the `set_shape_*` methods.
+
+        .. versionchanged:: 0.6.0.dev0
+            Support for allocating on device
         """
         assert self._shape is not None
         assert self._data is None
-        self._data = zeros_aligned(self._shape, dtype=self._dtype)
+        if self._where == 'device' and backend is not None:
+            _z = backend.zeros
+        else:
+            _z = zeros_aligned
+        self._data = _z(self._shape, dtype=self._dtype)
 
     def has_data(self):
         return self._data is not None
@@ -402,6 +442,12 @@ class BufferWrapper(object):
         else:
             # Cache flushing not implemented for other kinds
             assert not self._contiguous_cache
+
+    def export(self):
+        '''
+        Convert device array to NumPy array for pickling and merging
+        '''
+        self._data = to_numpy(self._data)
 
     def __repr__(self):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (

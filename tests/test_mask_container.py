@@ -32,7 +32,7 @@ def test_mask_caching_1():
     slice_ = Slice(origin=(0, 0, 0), shape=shape)
     mask_container.get(slice_)
 
-    key = (mask_container.dtype, False, True)
+    key = (mask_container.dtype, False, True, 'numpy')
 
     cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 0
@@ -65,7 +65,7 @@ def test_mask_caching_2():
     slice_ = Slice(origin=(0, 0, 0), shape=shape1)
     mask_container.get(slice_)
 
-    key = (mask_container.dtype, False, True)
+    key = (mask_container.dtype, False, True, 'numpy')
 
     cache_info = mask_container._get_masks_for_slice[key].cache_info()
     assert cache_info.hits == 0

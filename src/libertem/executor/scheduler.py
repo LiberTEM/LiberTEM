@@ -62,15 +62,16 @@ class Worker:
     """
     A reference to a worker process identified by `name` running on `host`.
     """
-    def __init__(self, name, host):
+    def __init__(self, name, host, resources):
         self.name = name
         self.host = host
+        self.resources = resources
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return "<Worker %s on %s>" % (self.name, self.host)
+        return "<Worker %s on %s with %s>" % (self.name, self.host, self.resources)
 
     def __eq__(self, other):
         return self.name == other.name and self.host == other.host

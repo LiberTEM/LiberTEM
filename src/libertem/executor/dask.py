@@ -1,3 +1,4 @@
+from copy import deepcopy
 import functools
 import logging
 import signal
@@ -7,9 +8,78 @@ from dask import distributed as dd
 
 from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
 from .scheduler import Worker, WorkerSet
+from libertem.udf.backend import set_use_cpu, set_use_cuda
+from libertem.utils.devices import detect
 
 
 log = logging.getLogger(__name__)
+
+
+def worker_setup(resource=None, device=None):
+    # Disable handling Ctrl-C on the workers for a local cluster
+    # since the nanny restarts workers in that case and that gets mixed
+    # with Ctrl-C handling of the main process, at least on Windows
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    if resource == "CUDA":
+        set_use_cuda(device)
+    elif resource == "CPU":
+        set_use_cpu(device)
+    else:
+        raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
+
+
+def cluster_spec(cpus, cudas, num_service=1, options=None):
+
+    if options is None:
+        options = {}
+    if options.get("nthreads") is None:
+        options["nthreads"] = 1
+    if options.get("silence_logs") is None:
+        options["silence_logs"] = logging.WARN
+
+    workers_spec = {}
+
+    cpu_options = deepcopy(options)
+    cpu_options["resources"] = {"CPU": 1, "compute": 1}
+    cpu_base_spec = {
+        "cls": dd.Nanny,
+        "options": cpu_options
+    }
+
+    # Service workers not for computation
+
+    service_options = deepcopy(options)
+    service_options["resources"] = {}
+    service_base_spec = {
+        "cls": dd.Nanny,
+        "options": service_options
+    }
+
+    cuda_options = deepcopy(options)
+    cuda_options["resources"] = {"CUDA": 1, "compute": 1}
+    cuda_base_spec = {
+        "cls": dd.Nanny,
+        "options": cuda_options
+    }
+
+    for cpu in cpus:
+        cpu_spec = deepcopy(cpu_base_spec)
+        cpu_spec['options']['preload'] = \
+            f'from libertem.executor.dask import worker_setup; ' + \
+            f'worker_setup(resource="CPU", device={cpu})'
+        workers_spec[f'cpu-{cpu}'] = cpu_spec
+
+    for service in range(num_service):
+        workers_spec[f'service-{service}'] = deepcopy(service_base_spec)
+
+    for cuda in cudas:
+        cuda_spec = deepcopy(cuda_base_spec)
+        cuda_spec['options']['preload'] = \
+            f'from libertem.executor.dask import worker_setup; ' + \
+            f'worker_setup(resource="CUDA", device={cuda})'
+        workers_spec[f'cuda-{cuda}'] = cuda_spec
+
+    return workers_spec
 
 
 class TaskProxy:
@@ -36,28 +106,38 @@ class CommonDaskMixin(object):
         host = hosts[host_idx]
         return workers.filter(lambda w: w.host == host)
 
-    def _futures_for_locations(self, fns_and_locations):
+    def _futures_for_locations(self, fns_and_meta):
         """
         Submit tasks and return the resulting futures
 
         Parameters
         ----------
 
-        fns_and_locations : List[Tuple[callable,WorkerSet]]
-            callables zipped with potential locations
+        fns_and_meta : List[Tuple[callable,WorkerSet, dict]]
+            callables zipped with potential locations and required resources.
         """
+        workers = self.get_available_workers()
         futures = []
-        for task, locations in fns_and_locations:
+        for task, locations, resources in fns_and_meta:
             submit_kwargs = {}
             if locations is not None:
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
+            if not self._resources_available(workers, resources):
+                raise RuntimeError("Requested resources not available in cluster:", resources)
             submit_kwargs['workers'] = locations
+            submit_kwargs['resources'] = resources
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
         return futures
+
+    def _resources_available(self, workers, resources):
+        def filter_fn(worker):
+            return all(worker.resources.get(key, 0) >= resources[key] for key in resources.keys())
+
+        return len(workers.filter(filter_fn))
 
     def _get_futures(self, tasks):
         available_workers = self.get_available_workers()
@@ -67,7 +147,8 @@ class CommonDaskMixin(object):
             (
                 task,
                 task.get_locations() or self._task_idx_to_workers(
-                    available_workers, task.idx)
+                    available_workers, task.idx),
+                task.get_resources()
             )
             for task in tasks
         ])
@@ -75,7 +156,11 @@ class CommonDaskMixin(object):
     def get_available_workers(self):
         info = self.client.scheduler_info()
         return WorkerSet([
-            Worker(name=worker['name'], host=worker['host'])
+            Worker(
+                name=worker['name'],
+                host=worker['host'],
+                resources=worker['resources']
+            )
             for worker in info['workers'].values()
         ])
 
@@ -151,7 +236,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if all_nodes:
             items = _make_items_all()
         else:
-            items = ((lambda: fn(p), p.get_locations())
+            # TODO check if we should request a compute resource
+            items = ((lambda: fn(p), p.get_locations(), {})
                      for p in partitions)
         futures = self._futures_for_locations(items)
         # TODO: do we need cancellation and all that good stuff?
@@ -231,7 +317,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
         """
         Spin up a local dask cluster
 
@@ -244,13 +330,20 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         DaskJobExecutor
             the connected JobExecutor
         """
-        cluster = dd.LocalCluster(**(cluster_kwargs or {}))
-        client = dd.Client(cluster, **(client_kwargs or {}))
+        if spec is None:
+            spec = cluster_spec(**detect())
+        if client_kwargs is None:
+            client_kwargs = {}
+        if client_kwargs.get('set_as_default') is None:
+            client_kwargs['set_as_default'] = False
 
-        # Disable handling Ctrl-C on the workers for a local cluster
-        # since the nanny restarts workers in that case and that gets mixed
-        # with Ctrl-C handling of the main process, at least on Windows
-        client.run(functools.partial(signal.signal, signal.SIGINT, signal.SIG_IGN))
+        if cluster_kwargs is None:
+            cluster_kwargs = {}
+        if cluster_kwargs.get('silence_logs') is None:
+            cluster_kwargs['silence_logs'] = logging.WARN
+
+        cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
+        client = dd.Client(cluster, **(client_kwargs or {}))
 
         return cls(client=client, is_local=True)
 
@@ -272,9 +365,10 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
     @classmethod
-    async def make_local(cls, cluster_kwargs=None, client_kwargs=None):
+    async def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
         executor = await sync_to_async(functools.partial(
             DaskJobExecutor.make_local,
+            spec=spec,
             cluster_kwargs=cluster_kwargs,
             client_kwargs=client_kwargs,
         ))

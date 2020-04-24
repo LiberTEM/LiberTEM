@@ -12,6 +12,7 @@ from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
 from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
 from libertem.corrections import CorrectionSet
+from libertem.udf.backend import get_use_cuda, get_backend
 
 
 log = logging.getLogger(__name__)
@@ -24,17 +25,23 @@ class UDFMeta:
 
     .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
+
+    .. versionchanged:: 0.6.0.dev0
+        Information on compute backend added
     """
 
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
-                 tiling_index: int = 0, corrections=None):
+                 tiling_index: int = 0, corrections=None, backend: str = None):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
         self._input_dtype = input_dtype
         self._tiling_scheme = tiling_scheme
         self._tiling_index = tiling_index
+        if backend is None:
+            backend = 'numpy'
+        self._backend = backend
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
@@ -112,6 +119,19 @@ class UDFMeta:
         """
         return self._corrections
 
+    @property
+    def backend(self) -> str:
+        '''
+        Which compute back-end is used.
+
+        The actual back-end can be accessed as :attr:`libertem.udf.base.UDF.xp`.
+        This additional string information is used since that way the back-end can be probed without
+        importing them all and testing them against :attr:`libertem.udf.base.UDF.xp`.
+
+        Current values are :code:`numpy` (default) or :code:`cupy`.
+        '''
+        return self._backend
+
 
 class UDFData:
     '''
@@ -185,7 +205,7 @@ class UDFData:
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition: Shape, roi: np.ndarray):
+    def allocate_for_part(self, partition: Shape, roi: np.ndarray, backend=None):
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
@@ -193,7 +213,7 @@ class UDFData:
         for k, buf in self._get_buffers():
             buf.set_shape_partition(partition, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
-            buf.allocate()
+            buf.allocate(backend=backend)
 
     def allocate_for_full(self, dataset, roi: np.ndarray):
         for k, buf in self._get_buffers():
@@ -222,6 +242,11 @@ class UDFData:
         # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
             buf.flush()
+
+    def export(self):
+        # .. versionadded:: 0.6.0.dev0
+        for k, buf in self._get_buffers():
+            buf.export()
 
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
@@ -375,7 +400,7 @@ class UDFBase:
 
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
-            ns.allocate_for_part(partition, roi)
+            ns.allocate_for_part(partition, roi, backend=self.xp)
 
     def allocate_for_full(self, dataset, roi):
         for ns in [self.params, self.results]:
@@ -417,11 +442,38 @@ class UDFBase:
     def init_result_buffers(self):
         self.results = UDFData(self.get_result_buffers())
 
+    def export_results(self):
+        # .. versionadded:: 0.6.0.dev0
+        self.results.export()
+
     def set_meta(self, meta):
         self.meta = meta
 
     def set_slice(self, slice_):
         self.meta.slice = slice_
+
+    def set_backend(self, backend):
+        assert backend in self.get_backends()
+        self._backend = backend
+
+    @property
+    def xp(self):
+        # Implemented as property and not variable to avoid pickling issues
+        # tests/udf/test_simple_udf.py::test_udf_pickle
+        if self._backend == 'numpy':
+            return np
+        elif self._backend == 'cupy':
+            # Re-importing should be fast, right?
+            # Importing only here to avoid superfluous import
+            import cupy
+            device = get_use_cuda()
+            if device:
+                cupy.cuda.Device(device).use()
+            # mocking for testing without actual CUDA device
+            # import numpy as cupy
+            return cupy
+        else:
+            raise ValueError(f"Backend name can be 'numpy' or 'cupy', got {self._backend}")
 
     def get_method(self):
         if hasattr(self, 'process_tile'):
@@ -635,15 +687,35 @@ class UDF(UDFBase):
             "total_size": UDF.TILE_SIZE_MAX,
         }
 
+    def get_backends(self):
+        # TODO see interaction with C++ CUDA modules requires a different type than CuPy
+        '''
+        Signal which computation back-ends the UDF can use.
+
+        :code:`numpy` is the default CPU-based computation.
+
+        :code:`cupy` is CUDA-based computation through CuPy.
+
+        .. versionadded:: 0.6.0.dev0
+
+        Returns
+        -------
+
+        backend : Iterable[str]
+            An iterable containing possible values :code:`numpy` (default) and
+            :code:`cupy`
+        '''
+        return ('numpy', )
+
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32"):
+    def buffer(self, kind, extra_shape=(), dtype="float32", where=None):
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
         '''
-        return BufferWrapper(kind, extra_shape, dtype)
+        return BufferWrapper(kind, extra_shape, dtype, where)
 
     @classmethod
     def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):
@@ -708,6 +780,10 @@ class Task(object):
     def get_locations(self):
         return self.partition.get_locations()
 
+    def get_resources(self):
+        # default: run only on CPU and do computation
+        return {'CPU': 1, 'compute': 1}
+
     def __call__(self):
         raise NotImplementedError()
 
@@ -723,6 +799,33 @@ class UDFTask(Task):
         return UDFRunner(self._udfs).run_for_partition(
             self.partition, self._roi, self._corrections,
         )
+
+    def get_resources(self):
+        """
+        Intersection of resources of all UDFs, throws if empty.
+        """
+        backends_for_udfs = [
+            set(udf.get_backends())
+            for udf in self._udfs
+        ]
+        backends = set(backends_for_udfs[0])  # intersection of backends
+        for backend_set in backends_for_udfs:
+            backends.intersection_update(backend_set)
+        if len(backends) == 0:
+            raise ValueError(
+                "There is no common supported UDF backend (have: %r)" % (backends_for_udfs,)
+            )
+        if 'numpy' in backends and 'cupy' in backends:
+            # Can be run on both CPU and CUDA workers
+            return {'compute': 1}
+        elif 'numpy' in backends:
+            # Only run on CPU workers
+            return {'CPU': 1, 'compute': 1}
+        elif 'cupy' in backends:
+            # Only run on CUDA workers
+            return {'CUDA': 1, 'compute': 1}
+        else:
+            raise ValueError(f"UDF backends are {backends}, supported are 'numpy' and 'cupy'")
 
 
 class UDFRunner:
@@ -742,6 +845,7 @@ class UDFRunner:
     def run_for_partition(self, partition: Partition, roi, corrections):
         partition.set_corrections(corrections)
         with set_num_threads(1):
+            backend = get_backend()
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(
                 partition_shape=partition.slice.adjust_for_roi(roi).shape,
@@ -751,9 +855,11 @@ class UDFRunner:
                 input_dtype=dtype,
                 tiling_scheme=None,
                 corrections=corrections,
+                backend=backend,
             )
             udfs = self._udfs
             for udf in udfs:
+                udf.set_backend(backend)
                 udf.set_meta(meta)
                 udf.init_result_buffers()
                 udf.allocate_for_part(partition, roi)
@@ -762,6 +868,8 @@ class UDFRunner:
                     udf.clear_views()
                     udf.preprocess()
             neg = Negotiator()
+            # FIXME take compute backend into consideration as well
+            # Other boundary conditions when moving input data to device
             tiling_scheme = neg.get_scheme(
                 udfs=udfs,
                 partition=partition,
@@ -778,14 +886,18 @@ class UDFRunner:
                 input_dtype=dtype,
                 tiling_scheme=tiling_scheme,
                 corrections=corrections,
+                backend=backend,
             )
             for udf in udfs:
                 udf.set_meta(meta)
             # print("UDF TilingScheme: %r" % tiling_scheme.shape)
 
+            # FIXME pass information on target location (numpy or cupy)
+            # to dataset so that is can already move it there.
+            # In the future, it might even decode data on the device instead of CPU
             tiles = partition.get_tiles(
                 tiling_scheme=tiling_scheme,
-                roi=roi, dest_dtype=dtype
+                roi=roi, dest_dtype=dtype,
             )
 
             for tile in tiles:
@@ -794,7 +906,7 @@ class UDFRunner:
                     if method == 'tile':
                         udf.set_contiguous_views_for_tile(partition, tile)
                         udf.set_slice(tile.tile_slice)
-                        udf.process_tile(tile)
+                        udf.process_tile(udf.xp.asanyarray(tile))
                     elif method == 'frame':
                         tile_slice = tile.tile_slice
                         for frame_idx, frame in enumerate(tile):
@@ -805,11 +917,11 @@ class UDFRunner:
                             )
                             udf.set_slice(frame_slice)
                             udf.set_views_for_frame(partition, tile, frame_idx)
-                            udf.process_frame(frame)
+                            udf.process_frame(udf.xp.asanyarray(frame))
                     elif method == 'partition':
                         udf.set_views_for_tile(partition, tile)
                         udf.set_slice(partition.slice)
-                        udf.process_partition(tile)
+                        udf.process_partition(udf.xp.asanyarray(tile))
             for udf in udfs:
                 udf.flush()
                 if hasattr(udf, 'postprocess'):
@@ -818,6 +930,7 @@ class UDFRunner:
 
                 udf.cleanup()
                 udf.clear_views()
+                udf.export_results()
 
             if self._debug:
                 try:

@@ -46,7 +46,7 @@ class DMDatasetParams(MessageConverter):
 
     def convert_to_python(self, raw_data):
         data = {
-            "files": [raw_data["path"]],
+            "files": raw_data["path"].split(','),
             "scan_size": raw_data["scan_size"],
         }
         return data

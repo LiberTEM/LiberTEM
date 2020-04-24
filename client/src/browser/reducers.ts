@@ -79,6 +79,12 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
                 isOpen: false,
             });
         }
+        case browserActions.ActionTypes.SELECT_FILES: {
+            return Object.assign({}, state, {
+                isLoading: false,
+                isOpen: false,
+            });
+        }
     }
     return state;
 }

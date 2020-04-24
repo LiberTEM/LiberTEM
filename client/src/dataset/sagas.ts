@@ -1,9 +1,9 @@
 import { call, put, select, takeEvery } from 'redux-saga/effects';
 import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
-import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
 import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
+import { DirectoryListingDetails } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, detectDataset, openDataset } from './api';
@@ -83,14 +83,36 @@ export function* openDatasetSagaFullPath(action: ReturnType<typeof browserAction
 }
 
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
-    const config: ConfigState = yield select((state: RootReducer) => state.config);
-    const fullPath = joinPaths(config, action.payload.path, action.payload.name);
+    // const config: ConfigState = yield select((state: RootReducer) => state.config);
+    // const fullPath = joinPaths(config, action.payload.path, action.payload.name);
+    let files: DirectoryListingDetails[] = yield select((state:RootReducer)=>state.browser.files)
+    const path: string = yield select((state:RootReducer)=>state.browser.path)
+    files = files.filter(file => file.checked)
+    let isValid = true;
+    if(files.length > 1 ){
+        const detectedFirstFileName: string = files[0].name.split('.').pop() as string;
+        files.forEach(file => {
+            const detectedFileName: string = file.name.split('.').pop() as string;
+            if(detectedFileName !== detectedFirstFileName || 
+                (detectedFileName !== 'dm3' && detectedFileName !== 'dm4')  ){
+                    isValid = false;
+            }
+        })
+    }
+    if(!isValid){
+        const timestamp = Date.now();
+        const id = uuid();
+        yield put(datasetActions.Actions.error(id,` dataset type is currently not supported in the GUI`, timestamp, id));
+        return;
+    }
+    const fullPath = files.map(file => `${path}/${file.name}` ).toString()
+
     yield call(doOpenDataset, fullPath);
 }
 
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
     yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
-    yield takeEvery(browserActions.ActionTypes.SELECT, openDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT_FILES, openDatasetSaga);
     yield takeEvery(browserActions.ActionTypes.SELECT_FULL_PATH, openDatasetSagaFullPath);
 }

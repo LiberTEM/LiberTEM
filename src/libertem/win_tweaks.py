@@ -42,7 +42,7 @@ def get_console_mode(stream=sys.stdin):
         if getConsoleMode(file_handle, byref(mode)):
             return mode.value
     except ctypes.WinError(ctypes.get_last_error()):
-        logger.error("In win_tweaks.py, getConsoleMode() returns 0.")
+        logger.info("In win_tweaks.py, getConsoleMode() returns 0.")
 
 
 def set_console_mode(mode, stream=sys.stdin):
@@ -64,7 +64,7 @@ def disable_quickedit():
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
     except TypeError:
-        logger.error("In win_tweaks.py, get_console_mode() returns None.")
+        logger.info("In win_tweaks.py, get_console_mode() returns None.")
 
 
 if __name__ == "__main__":

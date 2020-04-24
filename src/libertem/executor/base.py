@@ -112,19 +112,19 @@ class JobExecutor(object):
 class AsyncJobExecutor(object):
     async def run_job(self, job, cancel_id):
         """
-        run a Job
+        Run a Job
         """
         raise NotImplementedError()
 
-    def run_tasks(self, tasks, cancel_id):
+    async def run_tasks(self, tasks, cancel_id):
         """
-        run a number of Tasks
+        Run a number of Tasks, yielding (result, task) tuples
         """
         raise NotImplementedError()
 
     async def run_function(self, fn, *args, **kwargs):
         """
-        run a callable `fn`
+        Run a callable `fn`
         """
         raise NotImplementedError()
 

@@ -206,11 +206,14 @@ class DMDataSet(DataSet):
             return self._scan_size
         return (len(self._get_files()),)
 
-    def initialize(self, executor):
-        self._filesize = executor.run_function(lambda: sum(
+    def _get_filesize(self):
+        return sum(
             os.stat(p).st_size
             for p in self._get_files()
-        ))
+        )
+
+    def initialize(self, executor):
+        self._filesize = executor.run_function(self._get_filesize)
 
         if self._same_offset:
             offset = executor.run_function(_get_offset, self._get_files()[0])
@@ -247,7 +250,11 @@ class DMDataSet(DataSet):
         # FIXME: this doesn't really make sense for file series
         pl = path.lower()
         if pl.endswith(".dm3") or pl.endswith(".dm4"):
-            return {"files": [path]}
+            return {
+                "parameters": {
+                    "files": [path]
+                },
+            }
         return False
 
     @property

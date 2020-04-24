@@ -39,6 +39,42 @@ def zeros_aligned(size, dtype):
     return res
 
 
+def reshaped_view(a: np.ndarray, shape):
+    '''
+    Like :meth:`numpy.ndarray.reshape`, just guaranteed to
+    return a view or throw an :class:`AttributeError` if
+    no view can be created.
+
+    .. versionadded:: 0.5.0
+
+    Parameters
+    ----------
+
+    a : numpy.ndarray
+        Array to create a view of
+    shape : tuple
+        Shape of the view to create
+
+    Returns
+    -------
+
+    view : numpy.ndarray
+        View into :code:`a` with shape :code:`shape`
+
+    '''
+    res = a.view()
+    res.shape = shape
+    return res
+
+
+def slice_to_tuple(sl: slice):
+    return (sl.start, sl.stop, sl.step)
+
+
+def tuple_to_slice(tup: tuple):
+    return slice(tup[0], tup[1], tup[2])
+
+
 class BufferWrapper(object):
     """
     Helper class to automatically allocate buffers, either for partitions or
@@ -83,6 +119,7 @@ class BufferWrapper(object):
         self._shape = None
         self._ds_shape = None
         self._roi = None
+        self._contiguous_cache = dict()
 
     def set_roi(self, roi):
         if roi is not None:
@@ -131,6 +168,8 @@ class BufferWrapper(object):
         original dataset shape. If a ROI is set, embed the result into a new
         array; unset values have nan value, if supported by the underlying dtype.
         """
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
@@ -199,12 +238,16 @@ class BufferWrapper(object):
         return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_dataset(self, dataset):
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         return self._data
 
     def get_view_for_partition(self, partition):
         """
         get a view for a single partition in a whole-result-sized buffer
         """
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "nav":
             slice_ = self._slice_for_partition(partition)
             return self._data[slice_.get(nav_only=True)]
@@ -220,6 +263,8 @@ class BufferWrapper(object):
         not the partition itself!)
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self.roi_is_zero:
             raise ValueError("cannot get view for frame with zero ROI")
         if self._kind == "sig":
@@ -246,6 +291,8 @@ class BufferWrapper(object):
         not the partition itself!)
         """
         assert partition.shape.dims == partition.shape.sig.dims + 1
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
         if self.roi_is_zero:
             raise ValueError("cannot get view for tile with zero ROI")
         if self._kind == "sig":
@@ -266,6 +313,55 @@ class BufferWrapper(object):
                 return self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
             return self._data
+
+    def get_contiguous_view_for_tile(self, partition, tile):
+        '''
+        Make a cached contiguous copy of the view for a single tile
+        if necessary.
+
+        Currently this is only necessary for :code:`kind="sig"` buffers.
+        Use :meth:`flush` to write back the cache.
+
+        Boundary condition: :code:`tile.tile_slice.get(sig_only=True)`
+        does not overlap for different tiles while the cache is active,
+        i.e. the tiles follow LiberTEM slicing for
+        :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.
+
+        .. versionadded:: 0.5.0
+
+        Returns
+        -------
+
+        view : np.ndarray
+            View into data or contiguous copy if necessary
+
+        '''
+        if self._kind == "sig":
+            sl = tile.tile_slice.get(sig_only=True)
+            key = tuple(map(slice_to_tuple, sl))
+            if key in self._contiguous_cache:
+                view = self._contiguous_cache[key]
+            else:
+                view = self._data[sl]
+                # See if the signal dimension can be flattened
+                # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
+                if not view.flags.c_contiguous:
+                    view = view.copy()
+                    self._contiguous_cache[key] = view
+            return view
+        else:
+            return self.get_view_for_tile(partition, tile)
+
+    def flush(self):
+        '''
+        Write back any cached contiguous copies
+
+        .. versionadded:: 0.5.0
+        '''
+        for key, view in self._contiguous_cache.items():
+            sl = tuple(map(tuple_to_slice, key))
+            self._data[sl] = view
+        self._contiguous_cache = dict()
 
     def __repr__(self):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (

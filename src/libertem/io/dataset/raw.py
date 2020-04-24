@@ -190,7 +190,7 @@ class RawFileDataSet(DataSet):
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
-
+        # FIXME execute deprecation after 0.6.0
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
                           "and will be removed after version 0.6.0. "
@@ -227,8 +227,11 @@ class RawFileDataSet(DataSet):
         self._enable_direct = enable_direct
 
     def initialize(self, executor):
-        self._filesize = executor.run_function(os.stat, self._path).st_size
+        self._filesize = executor.run_function(self._get_filesize)
         return self
+
+    def _get_filesize(self):
+        return os.stat(self._path).st_size
 
     @property
     def dtype(self):

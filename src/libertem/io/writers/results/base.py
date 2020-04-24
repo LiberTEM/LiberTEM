@@ -49,6 +49,12 @@ class ResultFormat(metaclass=ResultFormatRegistry):
         """
         raise NotImplementedError()
 
+    def get_result_keys(self):
+        for k in self._result_set.keys():
+            if not self._result_set[k].include_in_download:
+                continue
+            yield k
+
     def get_content_type(self):
         raise NotImplementedError()
 

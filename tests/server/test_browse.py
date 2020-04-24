@@ -3,7 +3,7 @@ import pytest
 
 from aio_utils import create_connection
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.functional, pytest.mark.flaky]
 
 
 @pytest.mark.asyncio

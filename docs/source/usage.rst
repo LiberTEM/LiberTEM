@@ -42,33 +42,15 @@ There are a few command line options available::
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
 
-As there is currently no authentication yet, listening on a different host than
-:code:`127.0.0.1` / :code:`localhost` is disabled. As a workaround, if you want
-to access LiberTEM from a different computer, you can use ssh port forwarding
-(example command for conda):
-
-.. code-block:: shell
-
-     $ ssh -L 9000:localhost:9000 <remote-hostname> "source activate libertem; libertem-server"
-
-Or, with virtualenv:
-
-.. code-block:: shell
-
-     $ ssh -L 9000:localhost:9000 <remote-hostname> "/path/to/virtualenv/bin/libertem-server"
-
-This then makes LiberTEM that is running on :code:`remote-hostname` available on
-your local host via http://localhost:9000/
-
 
 Connecting and opening data
 ---------------------------
 
-After starting the server, you can open the GUI in your browser. By default it
-will be at http://localhost:9000 . At the beginning, the GUI shows a prompt to
-create a local cluster or connect to a running one. The number of workers is
-preset with a number that will likely give optimal performance on the given
-machine.
+After starting the server, you can open the GUI in your browser. If it didn't open
+automatically, you can access it by default at http://localhost:9000 . At the beginning,
+the GUI shows a prompt to create a local cluster or connect to a running one.
+The number of workers is preset with a number that will likely give optimal
+performance on the given machine.
 
 ..  figure:: ./images/use/create.png
 
@@ -84,12 +66,9 @@ below it lists all files and subdirectories in that directory. You select an
 entry by clicking once on it. You can move up one directory with the ".." entry
 on top of the list. The file browser is still very basic. Possible improvements
 are discussed in `Issue #83 <https://github.com/LiberTEM/LiberTEM/issues/83>`_.
-Contributions are highly appreciated! This example opens an HDF5 file.
+Contributions are highly appreciated! This example opens an HDF5 file :cite:`Zeltmann2019`.
 
 ..  figure:: ./images/use/open.png
-
-Running analyses
-----------------
 
 After selecting a file, you set the type in the drop-down menu at the top of the
 dialogue above the file name. After that you set the appropriate parameters that
@@ -102,6 +81,9 @@ See :ref:`Loading using the GUI` for more detailed instructions and
 format-specific information.
 
 ..  figure:: ./images/use/type.png
+
+Running analyses
+----------------
 
 Once a dataset is loaded, you can add analyses to it. As an example we choose a
 "Ring" analysis.
@@ -158,6 +140,8 @@ in different ways. You can select the channel in the "Image" drop-down menu
 below the right window.
 
 ..  figure:: ./images/use/image.png
+
+.. _`download results`:
 
 Downloading results
 -------------------

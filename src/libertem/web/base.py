@@ -3,6 +3,7 @@ import asyncio
 
 from libertem.utils.async_utils import run_blocking
 from libertem.executor.base import JobCancelledError
+from libertem.analysis.base import AnalysisResultSet
 from .messages import Message
 
 log = logging.getLogger(__name__)
@@ -49,7 +50,8 @@ class CORSMixin:
 
 
 class ResultHandlerMixin:
-    async def send_results(self, results, job_id, analysis_id, details, finished=False):
+    async def send_results(self, results: AnalysisResultSet, job_id, analysis_id,
+                           details, finished=False):
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         images = await result_images(results)
@@ -60,7 +62,8 @@ class ResultHandlerMixin:
                 job_id=job_id,
                 num_images=len(results),
                 image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
+                    {"title": result.title, "desc": result.desc,
+                    "includeInDownload": result.include_in_download}
                     for result in results
                 ],
             )
@@ -70,7 +73,8 @@ class ResultHandlerMixin:
                 job_id=job_id,
                 num_images=len(results),
                 image_descriptions=[
-                    {"title": result.title, "desc": result.desc}
+                    {"title": result.title, "desc": result.desc,
+                    "includeInDownload": result.include_in_download}
                     for result in results
                 ],
             )

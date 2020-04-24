@@ -81,7 +81,8 @@ class CrystallinityUDF(UDF):
         self.results.intensity[:] = np.sum(abs(np.fft.rfft2(maskedframe))*h_f_mask)
 
 
-def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None, roi=None):
+def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_rad=None, roi=None,
+                          progress=False):
     """
     Return a value after integration of Fourier spectrum for each frame over ring.
 
@@ -112,6 +113,6 @@ def run_analysis_crystall(ctx, dataset, rad_in, rad_out, real_center=None, real_
     udf = CrystallinityUDF(
         rad_in=rad_in, rad_out=rad_out, real_center=real_center, real_rad=real_rad
         )
-    pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    pass_results = ctx.run_udf(dataset=dataset, udf=udf, roi=roi, progress=progress)
 
     return pass_results

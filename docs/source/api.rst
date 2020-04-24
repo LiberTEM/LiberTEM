@@ -11,7 +11,7 @@ Basic example
 -------------
 
 This is a basic example to load the API, create a local cluster, load a file and
-run an analysis. For a complete example on how to use the Python API, please see the
+run an analysis. For complete examples on how to use the Python API, please see the
 Jupyter notebooks in `the example directory
 <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 

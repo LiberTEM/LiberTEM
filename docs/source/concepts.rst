@@ -23,10 +23,10 @@ In Python, the indices increase linearly with the row. A 3x3 Python matrix is re
 .. code-block:: python
 
     [[0,1,2],
-	[3,4,5],
-	[6,7,8]]
+    [3,4,5],
+    [6,7,8]]
 	
-`This`_ might be helpful for MATLAB users.
+`The official "NumPy for Matlab users" documentation`_ might be helpful for Matlab users.
 
 While our GUI is currently limited to 4D data sets, the Python API does not
 have that limitation. You can load data of arbitraty dimensionality, provided our I/O
@@ -36,4 +36,4 @@ so it should be no problem to load and process for example time series.
 If you want to process data with, for example, 1D or 3D samples, you can write
 :ref:`UDFs <user-defined functions>`. Note that in that case, a "frame" is no longer 2D!
 
-.. _This: https://numpy.org/doc/1.18/user/numpy-for-matlab-users.html#numpy-for-matlab-users
+.. _The official "NumPy for Matlab users" documentation: https://numpy.org/doc/1.18/user/numpy-for-matlab-users.html#numpy-for-matlab-users

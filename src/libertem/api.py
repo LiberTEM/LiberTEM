@@ -65,13 +65,13 @@ class Context:
         you can load and process datasets that are bigger than your available RAM.
         Using fast storage (i.e. SSD) is advisable.
 
-        .. versionchanged:: 0.5.0.dev0
+        .. versionchanged:: 0.5.0
             Added support for filetype="auto"
 
         Parameters
         ----------
         filetype : str
-            one of: %(types)s or auto to automatically determine filetype and parameters
+            one of: %(types)s; or use "auto" to automatically determine filetype and parameters
         args
             passed on to the DataSet implementation
         kwargs
@@ -180,7 +180,7 @@ class Context:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
-        dataset (so :code:`dataset.shape.sig`` ).
+        dataset (so :code:`dataset.shape.sig`).
 
         This is a more high-level interface than
         :class:`~libertem.udf.masks.ApplyMasksUDF` and differs in the way the
@@ -572,6 +572,9 @@ class Context:
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.
 
+        .. versionchanged:: 0.5.0
+            Added the :code:`progress` parameter
+
         Parameters
         ----------
         job
@@ -620,7 +623,10 @@ class Context:
     def run_udf(self, dataset: DataSet, udf: UDF, roi: np.ndarray = None,
                 progress: bool = False) -> Dict[str, BufferWrapper]:
         """
-        Run `udf` on `dataset`.
+        Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
+
+        .. versionchanged:: 0.5.0
+            Added the :code:`progress` parameter
 
         Parameters
         ----------
@@ -645,9 +651,6 @@ class Context:
             a :class:`numpy.ndarray` in many cases because it implements
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
-
-        .. versionchanged:: 0.5.0.dev0
-            Added the progress parameter
         """
         return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi, progress=progress)
 
@@ -655,6 +658,9 @@ class Context:
             progress: bool = False) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
+
+        .. versionchanged:: 0.5.0
+            Added the :code:`progress` parameter
 
         Parameters
         ----------

@@ -11,7 +11,7 @@ from aio_utils import (
 )
 
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.functional, pytest.mark.flaky]
 
 
 def _get_ds_params():

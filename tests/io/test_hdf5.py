@@ -244,7 +244,7 @@ def test_check_valid(hdf5, lt_ctx):
 
 def test_timeout_1(hdf5, lt_ctx):
     with mock.patch('h5py.File.visititems', side_effect=TimeoutError("too slow")):
-        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)
+        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)["parameters"]
         assert list(params.keys()) == ["path"]
 
         ds = H5DataSet(
@@ -258,7 +258,7 @@ def test_timeout_1(hdf5, lt_ctx):
 def test_timeout_2(hdf5, lt_ctx):
     print(threading.enumerate())
     with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[1, 30]):
-        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)
+        params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)["parameters"]
         assert list(params.keys()) == ["path"]
 
     ds = H5DataSet(

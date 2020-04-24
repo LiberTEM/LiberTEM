@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
@@ -22,7 +24,8 @@ class AnalysisResult:
     key : str
         Key to identify the result in an :class:`AnalysisResultSet`
     """
-    def __init__(self, raw_data, visualized, title, desc, key):
+    def __init__(self, raw_data, visualized, title, desc, key, include_in_download=True):
+        self.include_in_download = include_in_download
         self.raw_data = raw_data
         self._visualized = visualized
         self.title = title
@@ -39,7 +42,7 @@ class AnalysisResult:
         return "<AnalysisResult: %s>" % self.key
 
     def __array__(self):
-        return self.raw_data
+        return np.array(self.raw_data)
 
     def get_image(self, save_kwargs=None):
         return encode_image(self.visualized, save_kwargs=save_kwargs)
@@ -115,7 +118,7 @@ class AnalysisResultSet:
     >>> print(result['mask_1'].title)
     mask 1
     """
-    def __init__(self, results, raw_results=None):
+    def __init__(self, results: typing.List[AnalysisResult], raw_results=None):
         self._results = results
         self.raw_results = raw_results
 
@@ -155,6 +158,9 @@ class Analysis:
     """
     Abstract base class for Analysis classes.
 
+    An Analysis is the interface between a UDF and the Web API, and handles
+    visualization of partial and full results.
+
     Passing an instance of an :class:`Analysis` sub-class to
     :meth:`libertem.api.Context.run` will generate an :class:`AnalysisResultSet`.
     The content of this result set is governed by the specific implementation of
@@ -164,7 +170,7 @@ class Analysis:
     """
     # TODO: once we require Py3.8, we can use Literal here:
     # https://www.python.org/dev/peps/pep-0586/
-    TYPE: str = None
+    TYPE: typing.Union[str, None] = None
 
     def get_results(self, job_results):
         """
@@ -197,6 +203,9 @@ class Analysis:
 
     def get_udf_results(self, udf_results, roi):
         """
+        Convert UDF results to a list of :code:`AnalysisResult`\\ s,
+        including visualizations.
+
         Parameters
         ----------
         udf_results : dics
@@ -213,13 +222,17 @@ class Analysis:
 
     def get_udf(self):
         """
-        set TYPE='UDF' on the class and implement this method to run a UDF
+        Set TYPE='UDF' on the class and implement this method to run a UDF
         from this analysis
         """
         raise NotImplementedError()
 
     def get_roi(self):
         """
+        Get the region of interest the UDF should be run on. For example,
+        the parameters could describe some geometry, which this method should
+        convert to a boolean array. See also: :func:`libertem.analysis.getroi.get_roi`
+
         Returns
         -------
         numpy.ndarray or None

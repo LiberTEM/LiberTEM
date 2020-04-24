@@ -58,4 +58,6 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 
     # Use the Dask.distributed client of LiberTEM, since it may not be
     # the default client:
-    result = ctx.executor.client.compute(dask_array.sum(axis=(-1, -2))).result()
+    result = ctx.executor.client.compute(
+        dask_array.sum(axis=(-1, -2))
+    ).result()

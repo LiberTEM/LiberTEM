@@ -1,9 +1,12 @@
+from typing import Iterable
 import mmap
 import math
 from contextlib import contextmanager
 import collections
 
 import numpy as np
+
+from libertem.common.slice import Slice
 
 
 def _alloc_aligned(size, blocksize=4096):
@@ -74,12 +77,8 @@ def reshaped_view(a: np.ndarray, shape):
     return res
 
 
-def slice_to_tuple(sl: slice):
-    return (sl.start, sl.stop, sl.step)
-
-
-def tuple_to_slice(tup: tuple):
-    return slice(tup[0], tup[1], tup[2])
+def disjoint(sl: Slice, slices: Iterable[Slice]):
+    return all(sl.intersection_with(s2).is_null() for s2 in slices)
 
 
 class BufferPool:
@@ -381,15 +380,16 @@ class BufferWrapper(object):
 
         '''
         if self._kind == "sig":
-            sl = tile.tile_slice.get(sig_only=True)
-            key = tuple(map(slice_to_tuple, sl))
+            key = tile.tile_slice.discard_nav()
             if key in self._contiguous_cache:
                 view = self._contiguous_cache[key]
             else:
+                sl = key.get(sig_only=True)
                 view = self._data[sl]
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
                 if not view.flags.c_contiguous:
+                    assert disjoint(key, self._contiguous_cache.iterkeys())
                     view = view.copy()
                     self._contiguous_cache[key] = view
             return view
@@ -402,10 +402,14 @@ class BufferWrapper(object):
 
         .. versionadded:: 0.5.0
         '''
-        for key, view in self._contiguous_cache.items():
-            sl = tuple(map(tuple_to_slice, key))
-            self._data[sl] = view
-        self._contiguous_cache = dict()
+        if self._kind == "sig":
+            for key, view in self._contiguous_cache.items():
+                sl = key.get(sig_only=True)
+                self._data[sl] = view
+            self._contiguous_cache = dict()
+        else:
+            # Cache flushing not implemented for other kinds
+            assert not self._contiguous_cache
 
     def __repr__(self):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (

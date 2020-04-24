@@ -12,7 +12,7 @@ logger.setLevel(logging.ERROR)
 
 formatter = logging.Formatter('%(levelname)s : %(message)s : %(asctime)s')
 
-file_handler = logging.FileHandler('win_tweaks.log')
+file_handler = logging.FileHandler('log_file.log')
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -42,7 +42,7 @@ def get_console_mode(stream=sys.stdin):
         if getConsoleMode(file_handle, byref(mode)):
             return mode.value
     except ctypes.WinError(ctypes.get_last_error()):
-        logger.error("Failed!!!")
+        logger.error("In win_tweaks.py, getConsoleMode() returns 0.")
 
 
 def set_console_mode(mode, stream=sys.stdin):
@@ -64,7 +64,7 @@ def disable_quickedit():
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
     except TypeError:
-        logger.error("Incompatible types!")
+        logger.error("In win_tweaks.py, get_console_mode() returns None.")
 
 
 if __name__ == "__main__":

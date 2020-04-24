@@ -156,6 +156,34 @@ download the available results.
 
 ..  figure:: ./images/use/download-modal.png
 
+Possible error while reopening the server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you try to restart the server, just after closing it, you may get an error message like this
+
+.. code-block:: shell
+
+    OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+
+In such a case all you have to do is kill the process. At first, find the PID using the following command.
+
+.. code-block:: shell
+
+    $ netstat -ano | findstr :9000
+
+You will get something like this as the output. The number on the extreme right is the PID (here, 22896).
+
+.. code-block:: shell
+
+	TCP    127.0.0.1:9000         0.0.0.0:0              LISTENING       22896
+	TCP    [::1]:9000             [::]:0                 LISTENING       22896
+
+Now that you know the PID, run the following command.
+
+.. code-block:: shell
+
+    $ tskill yourPIDnumber
+
 Keyboard controls
 ~~~~~~~~~~~~~~~~~
 

@@ -135,7 +135,7 @@ class Message(object):
         }
 
     def directory_listing(self, path, files, dirs, drives, places):
-        def _details(item,index):
+        def _details(item, index):
             return {
                 "name":  item["name"],
                 "index": index,
@@ -153,11 +153,11 @@ class Message(object):
             "places": places,
             "path": path,
             "files": [
-                _details(files[i],i)
+                _details(files[i], i)
                 for i in range(len(files))
             ],
             "dirs": [
-                _details(dirs[d],d)
+                _details(dirs[d], d)
                 for d in range(len(dirs))
             ],
         }

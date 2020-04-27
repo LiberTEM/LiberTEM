@@ -76,8 +76,7 @@ class CommonDaskMixin(object):
                 task,
                 task.get_locations() or self._task_idx_to_workers(
                     available_workers, task.idx),
-                # TODO get from task
-                {'CUDA': 1, 'compute': 1}
+                task.get_resources()
             )
             for task in tasks
         ])

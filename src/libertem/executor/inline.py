@@ -1,3 +1,6 @@
+import os
+from unittest import mock
+
 import cloudpickle
 from .base import JobExecutor
 from .scheduler import Worker, WorkerSet
@@ -16,13 +19,19 @@ class InlineJobExecutor(JobExecutor):
             yield result
 
     def run_tasks(self, tasks, cancel_id):
-        for task in tasks:
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(task))
-            result = task()
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(result))
-            yield result, task
+        # The UDFRunner expects one of these environment variable to be set
+        if (os.environ.get("LIBERTEM_USE_CPU") or os.environ.get("LIBERTEM_USE_CUDA")):
+            patch = {}
+        else:
+            patch = {'LIBERTEM_USE_CPU': "0"}
+        with mock.patch.dict(os.environ, patch):
+            for task in tasks:
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(task))
+                result = task()
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(result))
+                yield result, task
 
     def run_function(self, fn, *args, **kwargs):
         if self._debug:

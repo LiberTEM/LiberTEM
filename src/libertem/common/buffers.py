@@ -133,8 +133,11 @@ class BufferWrapper(object):
     This class is array_like, so you can directly use it, for example, as argument
     for numpy functions.
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32"):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None):
         """
+        .. versionchanged:: 0.6.0
+            Add option to specify backend, for example CuPy
+
         Parameters
         ----------
         kind : "nav", "sig" or "single"
@@ -148,11 +151,16 @@ class BufferWrapper(object):
 
         dtype : string or numpy dtype
             The dtype of this buffer
+
+        where : string or None
+            :code:`None` means NumPy array, :code:`device` to use a back-end specified
+            in :meth:`allocate`. New in 0.6.0.dev0
         """
 
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
+        self._where = where
         self._data = None
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
@@ -243,20 +251,39 @@ class BufferWrapper(object):
         """
         return self._extra_shape
 
+    @property
+    def where(self):
+        """
+        Get the place where this buffer is to be allocated.
+
+        .. versionadded:: 0.6.0.dev0
+        """
+        return self._where
+
     def __array__(self):
         """
         returns the "wrapped"/reshaped array, see above
         """
         return self.data
 
-    def allocate(self):
+    def allocate(self, backend=None):
         """
         Allocate a new buffer, in the shape previously set
         via one of the `set_shape_*` methods.
+
+        .. versionchanged:: 0.6.0.dev0
+            Support for allocating on device
         """
         assert self._shape is not None
         assert self._data is None
-        self._data = zeros_aligned(self._shape, dtype=self._dtype)
+        if self._where == 'device' and backend is not None:
+            _z = backend.zeros
+        else:
+            _z = zeros_aligned
+        if self.roi_is_zero:
+            self._data = _z(1, dtype=self._dtype)
+        else:
+            self._data = _z(self._shape, dtype=self._dtype)
 
     def has_data(self):
         return self._data is not None

@@ -734,23 +734,19 @@ class Context:
 
         workers_spec['service-0'] = deepcopy(service_base_spec)
 
-        # if cupy:
-        if True:
+        if cupy:
             try:
-                # for device in numba.cuda.gpus:
-                for device_id in range(1):
+                for device in numba.cuda.gpus:
                     cuda_spec = deepcopy(cuda_base_spec)
                     cuda_spec['options']['preload'] = \
-                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device_id}"; \
-                            os.environ["LIBERTEM_USE_CUDA"] = "{device_id}"'
-                    workers_spec[f'cuda-{device_id}'] = cuda_spec
+                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device.id}"; \
+                            os.environ["LIBERTEM_USE_CUDA"] = "{device.id}"'
+                    workers_spec[f'cuda-{device.id}'] = cuda_spec
 
-            # except numba.cuda.CudaSupportError as e:
-            except OSError as e:
-                # Continue running without GPU for now
-                # WIP checking: If cupy can't be installed without proper cuda
-                # configuration, we should let the exception fall
-                # through instead
+            except numba.cuda.CudaSupportError as e:
+                # Continue running without GPU in case of errors
+                # Keep LiberTEM usable with misconfigured CUDA, CuPy or numba.cuda
+                # This DOES happen, ask @uellue!
                 warnings.warn(repr(e), RuntimeWarning)
             pass
 

@@ -8,14 +8,6 @@ import win32security
 import pywintypes
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
-
-formatter = logging.Formatter('%(levelname)s : %(message)s : %(asctime)s')
-
-file_handler = logging.FileHandler('log_file.log')
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
 
 
 def get_owner_name(full_path, stat):
@@ -38,11 +30,11 @@ def get_console_mode(stream=sys.stdin):
     getConsoleMode.argtypes, getConsoleMode.restype = ([wintypes.HANDLE, wintypes.LPDWORD],
                                                        wintypes.BOOL)
     mode = wintypes.DWORD(0)
-    try:
-        if getConsoleMode(file_handle, byref(mode)):
-            return mode.value
-    except ctypes.WinError(ctypes.get_last_error()):
-        logger.info("In win_tweaks.py, getConsoleMode() returns 0.")
+    if getConsoleMode(file_handle, byref(mode)):
+        return mode.value
+    else
+        err = ctypes.get_last_error()
+        raise ctypes.WinError(err)
 
 
 def set_console_mode(mode, stream=sys.stdin):
@@ -64,7 +56,7 @@ def disable_quickedit():
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
     except TypeError:
-        logger.info("In win_tweaks.py, get_console_mode() returns None.")
+        logger.info("Quick Edit could not be disabled. Your console probably doesn not support Quick Edit.")
 
 
 if __name__ == "__main__":

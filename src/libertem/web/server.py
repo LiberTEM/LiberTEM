@@ -119,9 +119,12 @@ def sig_exit(signum, frame, shared_state):
     )
 
 
-def main(host, port, event_registry, shared_state):
+def main(host, port, log_level, event_registry, shared_state):
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f'Invalid log level: {log_level}')
     logging.basicConfig(
-        level=logging.INFO,
+        level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
@@ -130,13 +133,13 @@ def main(host, port, event_registry, shared_state):
     return app
 
 
-def run(host, port, browser, local_directory):
+def run(host, port, browser, local_directory, log_level):
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
-    main(host, port, event_registry, shared_state)
+    main(host, port, log_level, event_registry, shared_state)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()

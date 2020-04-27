@@ -8,13 +8,14 @@ import click
               default='dask-worker-space', type=str)
 @click.option('-b/-n', '--browser/--no-browser',
               help='enable/disable opening the browser', default='True')
+@click.option('-l', '--log-level', help='set logging level', default='INFO')
 # FIXME: the host parameter is currently disabled, as it poses a security risk
 # as long as there is no authentication
 # see also: https://github.com/LiberTEM/LiberTEM/issues/67
 # @click.option('--host', help='host on which the server should listen on',
 #               default="localhost", type=str)
-def main(port, local_directory, browser, host="localhost"):
+def main(port, local_directory, browser, log_level, host="localhost"):
     from libertem.cli_tweaks import console_tweaks
     from .server import run
     console_tweaks()
-    run(host, port, browser, local_directory)
+    run(host, port, browser, local_directory, log_level)

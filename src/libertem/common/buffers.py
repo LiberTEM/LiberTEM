@@ -389,7 +389,7 @@ class BufferWrapper(object):
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
                 if not view.flags.c_contiguous:
-                    assert disjoint(key, self._contiguous_cache.iterkeys())
+                    assert disjoint(key, self._contiguous_cache.keys())
                     view = view.copy()
                     self._contiguous_cache[key] = view
             return view

@@ -61,12 +61,13 @@ def test_run_default(lt_ctx):
     assert np.allclose(res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-class MockDevice:
-    def __init__(self, id):
-        pass
+class MockCuda:
+    class Device:
+        def __init__(self, id):
+            pass
 
-    def use(self):
-        pass
+        def use(self):
+            pass
 
 
 def test_run_cupy(lt_ctx):
@@ -74,7 +75,7 @@ def test_run_cupy(lt_ctx):
     ds = lt_ctx.load("memory", data=data)
 
     with mock.patch.dict(os.environ, {'LIBERTEM_USE_CUDA': "23"}):
-        with mock.patch('numpy.Device', return_value=MockDevice(0), create=True):
+        with mock.patch('numpy.cuda', return_value=MockCuda, create=True):
             res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
 
     for val in res['debug'].data[0].values():

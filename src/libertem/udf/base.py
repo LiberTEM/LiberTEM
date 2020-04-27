@@ -40,7 +40,6 @@ class UDFMeta:
         self._tiling_index = tiling_index
         if backend is None:
             backend = 'numpy'
-        print(f"UDFMeta backend: {backend}")
         self._backend = backend
         if roi is not None:
             roi = roi.reshape(dataset_shape.nav)
@@ -119,7 +118,6 @@ class UDFMeta:
 
         Current values are :code:`numpy` (default) or :code:`cupy`.
         '''
-        print(f"UDFMeta get backend: {self._backend}")
         return self._backend
 
 
@@ -447,7 +445,7 @@ class UDFBase:
             # Re-importing should be fast, right?
             # Importing only here to avoid superfluous import
             import cupy
-            cupy.Device(os.environ["LIBERTEM_USE_CUDA"]).use()
+            cupy.cuda.Device(os.environ["LIBERTEM_USE_CUDA"]).use()
             # mocking for testing without actual CUDA device
             # import numpy as cupy
             return cupy
@@ -812,8 +810,8 @@ class UDFRunner:
             elif os.environ.get("LIBERTEM_USE_CUDA", False):
                 backend = 'cupy'
             else:
-                raise RuntimeError("Environment variables for worker not set. Expecting one of LIBERTEM_USE_CPU or LIBERTEM_USE_CUDA")
-            print(f"backend: {backend}")
+                raise RuntimeError("Environment variables for worker not set. \
+                    Expecting one of LIBERTEM_USE_CPU or LIBERTEM_USE_CUDA")
             self._udf.set_backend(backend)
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(

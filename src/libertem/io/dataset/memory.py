@@ -9,7 +9,8 @@ from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
     LocalFile, LocalFSMMapBackend,
 )
-from libertem.common import Shape
+from libertem.common import Shape, Slice
+from libertem.io.dataset.base import DataTile
 
 
 log = logging.getLogger(__name__)
@@ -19,6 +20,31 @@ class MemBackend(LocalFSMMapBackend):
     def _set_readahead_hints(self, roi, fileset):
         pass
 
+    def _get_tiles_roi(self, tiling_scheme, fileset, read_ranges, roi):
+        ds_sig_shape = tiling_scheme.dataset_shape.sig
+        sig_dims = tiling_scheme.shape.sig.dims
+        slices, ranges, scheme_indices = read_ranges
+
+        fh = fileset[0]
+        memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
+        data_w_roi = memmap[roi.reshape((-1,))]
+
+        for idx in range(slices.shape[0]):
+            origin, shape = slices[idx]
+            scheme_idx = scheme_indices[idx]
+
+            tile_slice = Slice(
+                origin=origin,
+                shape=Shape(shape, sig_dims=sig_dims)
+            )
+            data_slice = tile_slice.get()
+            data = data_w_roi[data_slice]
+            yield DataTile(
+                data,
+                tile_slice=tile_slice,
+                scheme_idx=scheme_idx,
+            )
+
     def get_tiles(self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype):
         if roi is None:
             # support arbitrary tiling in case of no roi
@@ -26,19 +52,9 @@ class MemBackend(LocalFSMMapBackend):
                 for tile in self._get_tiles_straight(tiling_scheme, fileset, read_ranges):
                     yield tile.astype(read_dtype)
         else:
-            # otherwise, require (1, ..., 1, N, Xi, ..., Xj) where the X match the ds shape
-            state = 0
-            for s1, s2 in zip(reversed(tiling_scheme.dataset_shape.sig),
-                              reversed(tiling_scheme.shape.sig)):
-                if state == 0:
-                    if s1 != s2:
-                        state = 1
-                        continue
-                elif state == 1:
-                    assert s2 == 1, "'non-contiguous' base_shape doesn't work with roi yet"
-            yield from super().get_tiles(
-                tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype
-            )
+            with fileset:
+                for tile in self._get_tiles_roi(tiling_scheme, fileset, read_ranges, roi):
+                    yield tile.astype(read_dtype)
 
 
 class MemDatasetParams(MessageConverter):

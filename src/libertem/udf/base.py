@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import Dict
 import logging
 import uuid
+import os
 
 import tqdm
 import cloudpickle
@@ -800,6 +801,20 @@ class UDFTask(Task):
             raise ValueError(
                 "There is no common supported UDF backend (have: %r)" % (backends_for_udfs,)
             )
+        if 'numpy' in backends and 'cupy' in backends:
+            # Can be run on both CPU and CUDA workers
+            return {'compute': 1}
+        elif 'numpy' in backends:
+            # Only run on CPU workers
+            return {'CPU': 1, 'compute': 1}
+        elif 'cupy' in backends:
+            # Only run on CUDA workers
+            return {'CUDA': 1, 'compute': 1}
+        else:
+            raise ValueError(f"UDF backends are {backends}, supported are 'numpy' and 'cupy'")
+
+    def get_resources(self):
+        backends = self._udf.get_backends()
         if 'numpy' in backends and 'cupy' in backends:
             # Can be run on both CPU and CUDA workers
             return {'compute': 1}

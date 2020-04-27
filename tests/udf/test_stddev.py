@@ -23,14 +23,12 @@ def test_stddev(lt_ctx, use_roi):
         Context class for loading dataset and creating jobs on them
     """
     data = _mk_random(size=(30, 3, 516), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
+                            num_partitions=2, sig_dims=2)
     if use_roi:
-        dataset = MemoryDataSet(data=data, tileshape=(3, 2, 516),
-                                num_partitions=2, sig_dims=2)
         roi = np.random.choice([True, False], size=dataset.shape.nav)
         res = run_stddev(lt_ctx, dataset, roi=roi)
     else:
-        dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
-                                num_partitions=2, sig_dims=2)
         roi = np.ones(dataset.shape.nav, dtype=bool)
         res = run_stddev(lt_ctx, dataset)
 

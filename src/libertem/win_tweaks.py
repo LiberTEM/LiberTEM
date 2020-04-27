@@ -32,7 +32,7 @@ def get_console_mode(stream=sys.stdin):
     mode = wintypes.DWORD(0)
     if getConsoleMode(file_handle, byref(mode)):
         return mode.value
-    else
+    else:
         err = ctypes.get_last_error()
         raise ctypes.WinError(err)
 

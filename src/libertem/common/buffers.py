@@ -1,4 +1,5 @@
 from typing import Iterable
+import os
 import mmap
 import math
 from contextlib import contextmanager
@@ -47,6 +48,21 @@ def zeros_aligned(size, dtype):
         res = empty_aligned(size, dtype)
         res[:] = 0
     return res
+
+
+def to_numpy(a):
+    # .. versionadded:: 0.6.0.dev0
+    cuda_device = os.environ.get("LIBERTEM_USE_CUDA")
+    if isinstance(a, np.ndarray):
+        return a
+    elif cuda_device:
+        # Try to avoid importing unless necessary
+        import cupy
+        cupy.cuda.Device(cuda_device).use()
+        if isinstance(a, cupy.ndarray):
+            return cupy.asnumpy(a)
+    # Falling through
+    raise TypeError(f"I don't know how to convert {type(a)} here.")
 
 
 def reshaped_view(a: np.ndarray, shape):
@@ -429,6 +445,12 @@ class BufferWrapper(object):
         else:
             # Cache flushing not implemented for other kinds
             assert not self._contiguous_cache
+
+    def export(self):
+        '''
+        Convert device array to NumPy array for pickling and merging
+        '''
+        self._data = to_numpy(self._data)
 
     def __repr__(self):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (

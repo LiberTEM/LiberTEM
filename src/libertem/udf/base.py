@@ -231,6 +231,11 @@ class UDFData:
         for k, buf in self._get_buffers():
             buf.flush()
 
+    def export(self):
+        # .. versionadded:: 0.6.0.dev0
+        for k, buf in self._get_buffers():
+            buf.export()
+
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
@@ -424,6 +429,10 @@ class UDFBase:
 
     def init_result_buffers(self):
         self.results = UDFData(self.get_result_buffers())
+
+    def export_results(self):
+        # .. versionadded:: 0.6.0.dev0
+        self.results.export()
 
     def set_meta(self, meta):
         self.meta = meta
@@ -894,6 +903,7 @@ class UDFRunner:
 
                 udf.cleanup()
                 udf.clear_views()
+                self._udf.export_results()
 
             if self._debug:
                 try:

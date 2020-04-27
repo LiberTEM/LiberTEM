@@ -56,7 +56,7 @@ def disable_quickedit():
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
     except TypeError:
-        logger.info("Quick Edit could not be disabled. Your console probably doesn not support Quick Edit.")
+        logger.info("Quick Edit couldn't be disabled. Console probably doesn't support Quick Edit.")
 
 
 if __name__ == "__main__":

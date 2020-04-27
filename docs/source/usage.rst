@@ -32,9 +32,9 @@ There are a few command line options available::
     Usage: libertem-server [OPTIONS]
 
     Options:
-      --port INTEGER  port on which the server should listen on
-      --local-directory TEXT    local directory to manage dask-worker-space files
-      --browser / --no-browser  enable/disable opening the browser
+      -p, --port INTEGER  port on which the server should listen on
+      -l, --local-directory TEXT    local directory to manage dask-worker-space files
+      -b, --browser / -n, --no-browser  enable/disable opening the browser
       --help          Show this message and exit.
 
 .. versionadded:: 0.4.0

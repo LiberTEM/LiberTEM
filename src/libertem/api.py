@@ -1,8 +1,10 @@
 import warnings
 from typing import Union, Tuple, Dict
+from copy import deepcopy
 
 import psutil
 import numpy as np
+import dask.distributed as dd
 
 try:
     import cupy
@@ -706,39 +708,55 @@ class Context:
         cores = psutil.cpu_count(logical=False)
         if cores is None:
             cores = 2
-        if cupy:
+        workers_spec = {}
+
+        cpu_base_spec = {
+            "cls": dd.Nanny,
+            "options": {"nthreads": 1, "resources": {"CPU": 1, "compute": 1}}
+        }
+
+        # Service workers not for computation
+        service_base_spec = {
+            "cls": dd.Nanny,
+            "options": {"nthreads": 1, "resources": {}}
+        }
+
+        cuda_base_spec = {
+            "cls": dd.Nanny,
+            "options": {"nthreads": 1, "resources": {"CUDA": 1, "compute": 1}}
+        }
+
+        for core in range(cores):
+            cpu_spec = deepcopy(cpu_base_spec)
+            cpu_spec['options']['preload'] = \
+                f'import os; os.environ["LIBERTEM_USE_CPU"] = "{core}"'
+            workers_spec[f'cpu-{core}'] = cpu_spec
+
+        workers_spec['service-0'] = deepcopy(service_base_spec)
+
+        # if cupy:
+        if True:
             try:
-                extra_kwargs = {
-                    "nthreads": 1,
-                    "resources": {"CUDA": 1, "GPU_or_CPU": 1}
-                }
-                extra_workers = []
-                # Accessing items of numba.cuda.gpus might throw a CudaSupportError
-                for device in numba.cuda.gpus:
-                    kwargs = extra_kwargs.copy()
-                    kwargs['preload'] = \
-                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device.id}"'
-                    extra_workers.append(kwargs)
-            except numba.cuda.CudaSupportError as e:
+                # for device in numba.cuda.gpus:
+                for device_id in range(1):
+                    cuda_spec = deepcopy(cuda_base_spec)
+                    cuda_spec['options']['preload'] = \
+                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device_id}"; \
+                            os.environ["LIBERTEM_USE_CUDA"] = "{device_id}"'
+                    workers_spec[f'cuda-{device_id}'] = cuda_spec
+
+            # except numba.cuda.CudaSupportError as e:
+            except OSError as e:
                 # Continue running without GPU for now
                 # WIP checking: If cupy can't be installed without proper cuda
                 # configuration, we should let the exception fall
                 # through instead
                 warnings.warn(repr(e), RuntimeWarning)
             pass
-        else:
-            extra_workers = None
 
-        return DaskJobExecutor.make_local(
-            cluster_kwargs={
-                "threads_per_worker": 1,
-                "n_workers": cores,
-                # CPU-only one core per worker
-                # GPU_or_CPU one core per worker
-                "resources": {"CPU": 1, "GPU_or_CPU": 1}
-            },
+        return DaskJobExecutor.make_spec(
+            workers_spec=workers_spec,
             client_kwargs={'set_as_default': False},
-            extra_workers=extra_workers
         )
 
     def close(self):

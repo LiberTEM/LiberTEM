@@ -1,5 +1,3 @@
-import asyncio
-import multiprocessing
 import functools
 import logging
 import signal
@@ -14,12 +12,11 @@ from .scheduler import Worker, WorkerSet
 log = logging.getLogger(__name__)
 
 
-def new_worker(*args, **kwargs):
-    async def f():
-        w = await dd.Worker(*args, **kwargs)
-        await w.finished()
-
-    asyncio.get_event_loop().run_until_complete(f())
+def worker_setup():
+    # Disable handling Ctrl-C on the workers for a local cluster
+    # since the nanny restarts workers in that case and that gets mixed
+    # with Ctrl-C handling of the main process, at least on Windows
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 class TaskProxy:
@@ -46,24 +43,25 @@ class CommonDaskMixin(object):
         host = hosts[host_idx]
         return workers.filter(lambda w: w.host == host)
 
-    def _futures_for_locations(self, fns_and_locations):
+    def _futures_for_locations(self, fns_and_meta):
         """
         Submit tasks and return the resulting futures
 
         Parameters
         ----------
 
-        fns_and_locations : List[Tuple[callable,WorkerSet]]
-            callables zipped with potential locations
+        fns_and_meta : List[Tuple[callable,WorkerSet, dict]]
+            callables zipped with potential locations and required resources
         """
         futures = []
-        for task, locations, resources in fns_and_locations:
+        for task, locations, resources in fns_and_meta:
             submit_kwargs = {}
             if locations is not None:
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
             submit_kwargs['workers'] = locations
+            submit_kwargs['resources'] = resources
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
@@ -78,7 +76,8 @@ class CommonDaskMixin(object):
                 task,
                 task.get_locations() or self._task_idx_to_workers(
                     available_workers, task.idx),
-                {"CPU": 1}
+                # TODO get from task
+                {'CUDA': 1, 'compute': 1}
             )
             for task in tasks
         ])
@@ -162,7 +161,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if all_nodes:
             items = _make_items_all()
         else:
-            items = ((lambda: fn(p), p.get_locations(), {"CPU": 1})
+            # TODO check if we should request a compute resource
+            items = ((lambda: fn(p), p.get_locations(), {})
                      for p in partitions)
         futures = self._futures_for_locations(items)
         # TODO: do we need cancellation and all that good stuff?
@@ -242,14 +242,13 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, cluster_kwargs=None, client_kwargs=None, extra_workers=None):
+    def make_local(cls, cluster_kwargs=None, client_kwargs=None):
         """
         Spin up a local dask cluster
 
         interesting cluster_kwargs:
             threads_per_worker
             n_workers
-            resources
 
         Returns
         -------
@@ -258,20 +257,15 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         """
         cluster = dd.LocalCluster(**(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
+        client.run(worker_setup)
 
-        if extra_workers:
-            for kwargs in extra_workers:
-                p = multiprocessing.Process(
-                    target=new_worker,
-                    args=(cluster.scheduler_address, ),
-                    kwargs=kwargs
-                )
-                p.start()
+        return cls(client=client, is_local=True)
 
-        # Disable handling Ctrl-C on the workers for a local cluster
-        # since the nanny restarts workers in that case and that gets mixed
-        # with Ctrl-C handling of the main process, at least on Windows
-        client.run(functools.partial(signal.signal, signal.SIGINT, signal.SIG_IGN))
+    @classmethod
+    def make_spec(cls, workers_spec, client_kwargs=None):
+        cluster = dd.SpecCluster(workers=workers_spec)
+        client = dd.Client(cluster, **client_kwargs)
+        client.run(worker_setup)
 
         return cls(client=client, is_local=True)
 

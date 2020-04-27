@@ -865,13 +865,12 @@ class UDFRunner:
             )
 
             for tile in tiles:
-                tile = self._udf.xp.asanyarray(tile)
                 for udf in udfs:
                     method = udf.get_method()
                     if method == 'tile':
                         udf.set_contiguous_views_for_tile(partition, tile)
                         udf.set_slice(tile.tile_slice)
-                        udf.process_tile(tile)
+                        udf.process_tile(self._udf.xp.asanyarray(tile))
                     elif method == 'frame':
                         tile_slice = tile.tile_slice
                         for frame_idx, frame in enumerate(tile):
@@ -882,11 +881,11 @@ class UDFRunner:
                             )
                             udf.set_slice(frame_slice)
                             udf.set_views_for_frame(partition, tile, frame_idx)
-                            udf.process_frame(frame)
+                            udf.process_frame(self._udf.xp.asanyarray(frame))
                     elif method == 'partition':
                         udf.set_views_for_tile(partition, tile)
                         udf.set_slice(partition.slice)
-                        udf.process_partition(tile)
+                        udf.process_partition(self._udf.xp.asanyarray(tile))
             for udf in udfs:
                 udf.flush()
                 if hasattr(udf, 'postprocess'):

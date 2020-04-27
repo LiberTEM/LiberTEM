@@ -151,6 +151,8 @@ use it to profile individual slow tests that you identified before:
 
     =============================== 1 passed, 1 warnings in 7.81 seconds ============================
 
+.. _`os mismatch`:
+
 Platform-dependent code and remote executor
 -------------------------------------------
 

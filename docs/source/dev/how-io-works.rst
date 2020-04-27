@@ -1,6 +1,27 @@
 How does I/O work in LiberTEM?
 ==============================
 
+Many algorithms benefit from :ref:`tiled` where the same subset in the signal
+dimension is processed for several frames in a row. In many cases, algorithms
+have specific minimum and maximum sizes in signal dimension, navigation
+dimension or total size where they operate efficiently. Smaller sizes might
+increase overheads, while larger sizes might reduce cache efficiency.
+
+At the same time, file formats might operate well within specific size and
+shape limits. The :ref:`k2is` raw format is a prime example where data is saved
+in tiled form and can be processed efficiently in specific tile sizes and
+shapes that follow the native layout. Furthermore, some formats require
+decoding or corrections by the CPU, such as :ref:`frms6`, where tiles that fit
+the L3 cache can speed up subsequent processing steps. Requirements from the
+I/O method such as alignment and efficient block sizes are taken into account
+as well.
+
+The LiberTEM I/O back-end negotiates a tiling scheme between UDF and dataset
+that fulfills requirements from both UDF and dataset side as far as possible.
+However, it is not always guaranteed that the supplied data will fall within
+the requested limits.
+
+
 High-level overview
 ~~~~~~~~~~~~~~~~~~~
 
@@ -70,7 +91,6 @@ example if the decoding functions need additional information.
 As an example when you would generate custom read ranges, have a look at the
 implementations for MIB, K2IS, and FRMS6 - they may not have a direct 1:1 mapping
 to a numpy :code:`dtype`, or the pixels may need to be re-ordered after decoding.
-In these cases, 
 
 Notes for implementing a :class:`~libertem.io.dataset.base.DataSet`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,6 +98,7 @@ Notes for implementing a :class:`~libertem.io.dataset.base.DataSet`
 - Read file header(s) in :meth:`~libertem.io.dataset.base.DataSet.initialize` -
   make sure to do the actual I/O in a function dispatched via the
   :code:`JobExecutor` that is passed to :code:`initialize`.
+  See also :ref:`os mismatch` regarding platform-dependent code.
 - Implement :meth:`~libertem.io.dataset.base.DataSet.check_valid` - this will
   be run on a worker node
 - Implement :meth:`~libertem.io.dataset.base.DataSet.get_msg_converter` - the

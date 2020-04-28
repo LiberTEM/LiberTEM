@@ -1,7 +1,8 @@
 import { AllActions } from "../actions";
 import * as browserActions from '../browser/actions';
+import * as clusterActions from '../cluster/actions'
 import * as datasetActions from '../dataset/actions';
-import { DatasetFormParams, MsgPartConfig } from "../messages";
+import { ClusterTypes, DatasetFormParams, MsgPartConfig } from "../messages";
 import * as configActions from './actions';
 import { makeUnique } from "./helpers";
 
@@ -10,10 +11,14 @@ export interface LocalConfig {
     fileHistory: string[],
     lastOpened: {
         [path: string]: DatasetFormParams
+    },
+    lastConnection: {
+        type: ClusterTypes,
+        address: string
     }
 }
 
-export type ConfigParams = MsgPartConfig & LocalConfig;
+export type ConfigParams = MsgPartConfig & LocalConfig ;
 export type ConfigState = ConfigParams & {
     haveConfig: boolean,
 };
@@ -28,6 +33,10 @@ const initialConfigState: ConfigState = {
     resultFileFormats: {},
     fileHistory: [],
     haveConfig: false,
+    lastConnection: {
+        type: ClusterTypes.LOCAL,
+        address: "tcp://localhost:8786",
+    }
 }
 
 export function configReducer(state = initialConfigState, action: AllActions): ConfigState {
@@ -49,6 +58,19 @@ export function configReducer(state = initialConfigState, action: AllActions): C
                 lastOpened: newLastOpened,
                 fileHistory: newFileHistory,
             });
+        }
+        case clusterActions.ActionTypes.CONNECT: {
+            if (action.payload.params.type === ClusterTypes.LOCAL){
+                const newLastConnection = Object.assign({}, state.lastConnection, {type: ClusterTypes.LOCAL})
+                return Object.assign({}, state, {
+                    lastConnection : newLastConnection
+                })
+            }
+            else {
+                return Object.assign({}, state, {
+                    lastConnection: action.payload.params
+                })
+            }
         }
     }
     return state;

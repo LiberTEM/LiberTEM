@@ -71,7 +71,7 @@ class Context:
         Parameters
         ----------
         filetype : str
-            one of: %(types)s or auto to automatically determine filetype and parameters
+            one of: %(types)s; or use "auto" to automatically determine filetype and parameters
         args
             passed on to the DataSet implementation
         kwargs
@@ -180,7 +180,7 @@ class Context:
         """
         Create a mask application analysis. Each factory function should, when
         called, return a numpy array with the same shape as frames in the
-        dataset (so :code:`dataset.shape.sig`` ).
+        dataset (so :code:`dataset.shape.sig`).
 
         This is a more high-level interface than
         :class:`~libertem.udf.masks.ApplyMasksUDF` and differs in the way the
@@ -623,7 +623,7 @@ class Context:
     def run_udf(self, dataset: DataSet, udf: UDF, roi: np.ndarray = None,
                 progress: bool = False) -> Dict[str, BufferWrapper]:
         """
-        Run :code:`udf` on :code:`dataset`.
+        Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
         .. versionchanged:: 0.5.0
             Added the :code:`progress` parameter

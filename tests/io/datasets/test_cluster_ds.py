@@ -38,7 +38,7 @@ def test_initialization(draw_directory, lt_ctx):
         "dtype": "float32",
     }
     structure = PartitionStructure.from_json(data)
-    ds = ClusterDataSet(path=str(draw_directory), enable_direct=False, structure=structure)
+    ds = ClusterDataSet(path=str(draw_directory), structure=structure)
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
@@ -60,7 +60,7 @@ def test_inconsistent_sidecars_raise_error(dist_ctx, draw_directory):
         "dtype": "float32",
     }
     structure = PartitionStructure.from_json(data)
-    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ClusterDataSet(path=draw_directory, structure=structure)
     ds = ds.initialize(dist_ctx.executor)
     ds.check_valid()
 
@@ -106,7 +106,7 @@ def test_inconsistent_sidecars_raise_error(dist_ctx, draw_directory):
     print(sidecars)
 
     # try to re-open the dataset, should fail:
-    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ClusterDataSet(path=draw_directory, structure=structure)
 
     with pytest.raises(DataSetException) as e:
         ds = ds.initialize(dist_ctx.executor)
@@ -128,7 +128,7 @@ def test_missing_sidecars_are_created(draw_directory, dist_ctx):
         "dtype": "float32",
     }
     structure = PartitionStructure.from_json(data)
-    ds = ClusterDataSet(path=draw_directory, enable_direct=False, structure=structure)
+    ds = ClusterDataSet(path=draw_directory, structure=structure)
     ds = ds.initialize(dist_ctx.executor)
     ds.check_valid()
 

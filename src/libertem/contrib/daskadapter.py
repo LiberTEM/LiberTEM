@@ -15,7 +15,7 @@ def make_dask_array(dataset, dtype='float32', roi=None):
         workers[d] = p.get_locations()
         chunks.append(
             dask.array.from_delayed(
-                d.data,
+                d,
                 dtype=dtype,
                 shape=p.shape
             )

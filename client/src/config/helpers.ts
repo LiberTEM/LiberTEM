@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { MsgPartConfig } from "../messages";
+import { ClusterTypes, MsgPartConfig } from "../messages";
 import { ConfigParams, ConfigState, LocalConfig } from "./reducers";
 
 const CONFIG_KEY = "LiberTEM.config";
@@ -26,6 +26,7 @@ export function setLocalStorage(config: ConfigState): void {
         cwd: config.cwd,
         lastOpened: config.lastOpened,
         fileHistory: config.fileHistory,
+        lastConnection: config.lastConnection,
     }
 
     window.localStorage.setItem(CONFIG_KEY, JSON.stringify(localSettings));
@@ -40,6 +41,10 @@ export function getDefaultLocalConfig(config: MsgPartConfig): LocalConfig {
         lastOpened: {},
         fileHistory: [],
         cwd: "/",
+        lastConnection: {
+            type: ClusterTypes.LOCAL,
+            address: "tcp://localhost:8786"
+        }
     };
 }
 

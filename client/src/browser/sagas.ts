@@ -18,7 +18,7 @@ function* fetchOnRequest() {
         const action: ReturnType<typeof browserActions.Actions.list> = yield take(browserActions.ActionTypes.LIST_DIRECTORY);
 
         const { name, path } = action.payload;
-        const config: ConfigState = yield select((state: RootReducer) => state.config)
+        const config: ConfigState = yield select((state: RootReducer) => state.config);
         const newPath = name !== undefined ? joinPaths(config, path, name) : path;
         yield fork(fetchDirectoryListing, newPath);
     }
@@ -34,7 +34,11 @@ function* fetchDirectoryListing(path: string) {
             const timestamp = Date.now();
             const id = uuid();
             const alternative = result.alternative ? result.alternative : browserState.places.home.path;
-            yield put(browserActions.Actions.error(`Error browsing directory: ${result.msg}`, timestamp, id));
+            // Don't show an error, if it's due to last recent directory not being available
+            const config: ConfigState = yield select((state: RootReducer) => state.config);
+            if (config.cwd !== path) {
+              yield put(browserActions.Actions.error(`Error browsing directory: ${result.msg}`, timestamp, id));
+            }
             yield put(browserActions.Actions.list(alternative));
         }
     } catch (e) {
@@ -49,7 +53,7 @@ function* fetchDirectoryListing(path: string) {
 function* fetchDirectoryListOnOpen() {
     while (true) {
         yield take(browserActions.ActionTypes.OPEN);
-        const config: ConfigState = yield select((state: RootReducer) => state.config)
+        const config: ConfigState = yield select((state: RootReducer) => state.config);
         yield put(browserActions.Actions.list(config.cwd));
     }
 }

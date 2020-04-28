@@ -6,12 +6,55 @@ import numpy as np
 
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
-    FileSet3D, Partition3D, DataSet, DataSetMeta, DataTile
+    FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
+    LocalFile, LocalFSMMapBackend,
 )
-from libertem.common import Shape
+from libertem.common import Shape, Slice
+from libertem.io.dataset.base import DataTile
 
 
 log = logging.getLogger(__name__)
+
+
+class MemBackend(LocalFSMMapBackend):
+    def _set_readahead_hints(self, roi, fileset):
+        pass
+
+    def _get_tiles_roi(self, tiling_scheme, fileset, read_ranges, roi):
+        ds_sig_shape = tiling_scheme.dataset_shape.sig
+        sig_dims = tiling_scheme.shape.sig.dims
+        slices, ranges, scheme_indices = read_ranges
+
+        fh = fileset[0]
+        memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
+        data_w_roi = memmap[roi.reshape((-1,))]
+
+        for idx in range(slices.shape[0]):
+            origin, shape = slices[idx]
+            scheme_idx = scheme_indices[idx]
+
+            tile_slice = Slice(
+                origin=origin,
+                shape=Shape(shape, sig_dims=sig_dims)
+            )
+            data_slice = tile_slice.get()
+            data = data_w_roi[data_slice]
+            yield DataTile(
+                data,
+                tile_slice=tile_slice,
+                scheme_idx=scheme_idx,
+            )
+
+    def get_tiles(self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype):
+        if roi is None:
+            # support arbitrary tiling in case of no roi
+            with fileset:
+                for tile in self._get_tiles_straight(tiling_scheme, fileset, read_ranges):
+                    yield tile.astype(read_dtype)
+        else:
+            with fileset:
+                for tile in self._get_tiles_roi(tiling_scheme, fileset, read_ranges, roi):
+                    yield tile.astype(read_dtype)
 
 
 class MemDatasetParams(MessageConverter):
@@ -49,13 +92,11 @@ class MemDatasetParams(MessageConverter):
         return data
 
 
-class MemoryFile3D(object):
-    def __init__(self, data, check_cast=True):
-        self.num_frames = data.shape[0]
-        self.start_idx = 0
-        self.end_idx = self.num_frames
+class MemoryFile(LocalFile):
+    def __init__(self, data, check_cast=True, *args, **kwargs):
         self._data = data
         self._check_cast = check_cast
+        super().__init__(*args, **kwargs)
 
     def open(self):
         pass
@@ -63,14 +104,14 @@ class MemoryFile3D(object):
     def close(self):
         pass
 
-    def readinto(self, start, stop, out, crop_to=None):
-        slice_ = (...,)
-        if crop_to is not None:
-            slice_ = crop_to.get(sig_only=True)
-        if self._check_cast:
-            assert np.can_cast(self._data.dtype, out.dtype, casting='safe'),\
-                "cannot cast safely between %s and %s" % (self._data.dtype, out.dtype)
-        out[:] = self._data[(slice(start, stop),) + slice_]
+    def mmap(self):
+        return self._data
+
+    def raw_mmap(self):
+        return self._data.view(np.uint8)
+
+    def fileno(self):
+        raise NotImplementedError()
 
 
 class MemoryDataSet(DataSet):
@@ -88,22 +129,27 @@ class MemoryDataSet(DataSet):
     >>> ds = MemoryDataSet(data=data)
     '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
-                 check_cast=True, crop_frames=False, tiledelay=None, datashape=None):
+                 check_cast=True, tiledelay=None, datashape=None, base_shape=None,
+                 force_need_decode=False):
         # For HTTP API testing purposes: Allow to create empty dataset with given shape
         if data is None:
             assert datashape is not None
             data = np.zeros(datashape, dtype=np.float32)
         if num_partitions is None:
             num_partitions = psutil.cpu_count(logical=False)
-        if tileshape is None:
-            sig_shape = data.shape[-sig_dims:]
-            target = 2**20
-            framesize = np.prod(sig_shape)
-            framecount = max(1, min(np.prod(data.shape[:-sig_dims]), int(target / framesize)))
-            tileshape = (framecount, ) + sig_shape
-        assert len(tileshape) == sig_dims + 1
+        # if tileshape is None:
+        #     sig_shape = data.shape[-sig_dims:]
+        #     target = 2**20
+        #     framesize = np.prod(sig_shape)
+        #     framecount = max(1, min(np.prod(data.shape[:-sig_dims]), int(target / framesize)))
+        #     tileshape = (framecount, ) + sig_shape
         self.data = data
-        self.tileshape = Shape(tileshape, sig_dims=sig_dims)
+        if tileshape is None:
+            self.tileshape = None
+        else:
+            assert len(tileshape) == sig_dims + 1
+            self.tileshape = Shape(tileshape, sig_dims=sig_dims)
+        self._base_shape = base_shape
         self.num_partitions = num_partitions
         self.sig_dims = sig_dims
         self._meta = DataSetMeta(
@@ -111,8 +157,8 @@ class MemoryDataSet(DataSet):
             raw_dtype=self.data.dtype,
         )
         self._check_cast = check_cast
-        self._crop_frames = crop_frames
         self._tiledelay = tiledelay
+        self._force_need_decode = force_need_decode
 
     def initialize(self, executor):
         return self
@@ -136,48 +182,78 @@ class MemoryDataSet(DataSet):
         return TypeError("memory data set is not cacheable yet")
 
     def get_partitions(self):
-        fileset = FileSet3D([
-            MemoryFile3D(self.data.reshape(self.shape.flatten_nav()),
-                         check_cast=self._check_cast)
+        fileset = FileSet([
+            MemoryFile(
+                path=None,
+                start_idx=0,
+                end_idx=self.shape.nav.size,
+                native_dtype=self.data.dtype,
+                sig_shape=self.shape.sig,
+                data=self.data.reshape(self.shape.flatten_nav()),
+                check_cast=self._check_cast,
+            )
         ])
 
-        stackheight = int(np.product(self.tileshape[:-self.sig_dims]))
-        for part_slice, start, stop in Partition3D.make_slices(
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self.num_partitions):
             log.debug(
-                "creating partition slice %s start %s stop %s stackheight %s",
-                part_slice, start, stop, stackheight
+                "creating partition slice %s start %s stop %s",
+                part_slice, start, stop,
             )
-            if self._crop_frames:
-                yield CropFramesMemPartition(
-                    meta=self._meta,
-                    partition_slice=part_slice,
-                    fileset=fileset.get_for_range(start, stop),
-                    start_frame=start,
-                    num_frames=stop - start,
-                    stackheight=stackheight,
-                    tileshape=self.tileshape,
-                    tiledelay=self._tiledelay,
-                )
-            else:
-                yield MemPartition(
-                    meta=self._meta,
-                    partition_slice=part_slice,
-                    fileset=fileset.get_for_range(start, stop),
-                    start_frame=start,
-                    num_frames=stop - start,
-                    stackheight=stackheight,
-                    tiledelay=self._tiledelay,
-                )
+            yield MemPartition(
+                meta=self._meta,
+                partition_slice=part_slice,
+                fileset=fileset.get_for_range(start, stop),
+                start_frame=start,
+                num_frames=stop - start,
+                tiledelay=self._tiledelay,
+                tileshape=self.tileshape,
+                base_shape=self._base_shape,
+                force_need_decode=self._force_need_decode,
+            )
 
 
-class MemPartition(Partition3D):
-    def __init__(self, tiledelay, *args, **kwargs):
+class MemPartition(BasePartition):
+    def __init__(self, tiledelay, tileshape, base_shape=None, force_need_decode=False,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tiledelay = tiledelay
+        self._tileshape = tileshape
+        self._force_tileshape = True
+        self._base_shape = base_shape
+        self._force_need_decode = force_need_decode
+
+    def _get_decoder(self):
+        return None
+
+    def _get_io_backend(self):
+        return MemBackend(decoder=self._get_decoder())
+
+    def get_macrotile(self, *args, **kwargs):
+        self._force_tileshape = False
+        mt = super().get_macrotile(*args, **kwargs)
+        self._force_tileshape = True
+        return mt
+
+    def get_base_shape(self):
+        if self._base_shape is not None:
+            return self._base_shape
+        return super().get_base_shape()
+
+    def need_decode(self, read_dtype, roi):
+        if self._force_need_decode:
+            return True
+        return super().need_decode(read_dtype, roi)
 
     def get_tiles(self, *args, **kwargs):
+        # force our own tiling_scheme, if a tileshape is given:
+        if self._tileshape is not None and self._force_tileshape:
+            tiling_scheme = TilingScheme.make_for_shape(
+                tileshape=self._tileshape,
+                dataset_shape=self.meta.shape,
+            )
+            kwargs.update({"tiling_scheme": tiling_scheme})
         tiles = super().get_tiles(*args, **kwargs)
         if self._tiledelay:
             log.debug("delayed get_tiles, tiledelay=%.3f" % self._tiledelay)
@@ -186,22 +262,3 @@ class MemPartition(Partition3D):
                 time.sleep(self._tiledelay)
         else:
             yield from tiles
-
-
-class CropFramesMemPartition(Partition3D):
-    def __init__(self, tileshape, tiledelay, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._tileshape = tileshape
-        self._tiledelay = tiledelay
-
-    def get_tiles(self, *args, **kwargs):
-        crop = self._tileshape[1:]
-        for tile in super().get_tiles(*args, **kwargs):
-            log.debug("tile with slice %r" % tile.tile_slice)
-            for subslice in tile.tile_slice.subslices((self._stackheight,) + crop):
-                if self._tiledelay:
-                    time.sleep(self._tiledelay)
-                yield DataTile(
-                    data=subslice.shift(tile.tile_slice).get(tile.data),
-                    tile_slice=subslice,
-                )

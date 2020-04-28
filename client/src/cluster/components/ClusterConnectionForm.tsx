@@ -17,6 +17,7 @@ const mapDispatchToProps = {
 const mapStateToProps = (state: RootReducer) => {
     return {
         config: state.config,
+        lastConnectionType: state.config.lastConnection.type
     }
 }
 
@@ -34,7 +35,7 @@ interface ConnectionParamsState {
 
 class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParamsState> {
     public state = {
-        clusterType: ClusterTypes.LOCAL,
+        clusterType: this.props.lastConnectionType,
     }
 
     public setType = (type: ClusterTypes) => {
@@ -61,7 +62,7 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
                 return <LocalConnectionForm config={config} onSubmit={this.handleSubmit} />
             }
             case ClusterTypes.TCP: {
-                return <TCPConnectionForm onSubmit={this.handleSubmit} />
+                return <TCPConnectionForm config={config} onSubmit={this.handleSubmit} />
             }
         }
     }

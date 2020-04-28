@@ -42,7 +42,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
 
-            await executor.run_function(ds.check_valid)
             self.dataset_state.register(
                 uuid=uuid,
                 dataset=ds,

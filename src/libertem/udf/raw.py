@@ -35,9 +35,9 @@ class PickUDF(UDF):
         warn_limit = 2**28
         loaded_size = np.prod(sigshape) * navsize * np.dtype(dtype).itemsize
         if loaded_size > warn_limit:
-            log.warning("PickUDF is loading %s bytes, exceeding warning limit %s. \
-                Consider using or implementing an UDF to process data on the worker \
-                nodes instead." % (loaded_size, warn_limit))
+            log.warning("PickUDF is loading %s bytes, exceeding warning limit %s. "
+                "Consider using or implementing an UDF to process data on the worker "
+                "nodes instead." % (loaded_size, warn_limit))
         # We are using a "single" buffer since we mostly load single frames. A
         # "sig" buffer would work as well, but would require a transpose to
         # accomodate multiple frames in the last and not first dimension.

@@ -11,6 +11,8 @@ import FileBrowser from "./FileBrowser";
 export const mapStateToProps = (state: RootReducer) => {
     return {
         isOpen: state.browser.isOpen,
+        busy: state.openDataset.busy,
+        formVisible: state.openDataset.formVisible,
     }
 }
 
@@ -22,8 +24,10 @@ export const mapDispatchToProps = {
 
 type MergedProps = ReturnType<typeof mapStateToProps> & DispatchProps<typeof mapDispatchToProps>;
 
-const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open}) => {
-    if (!isOpen) {
+const BrowserWrapper: React.SFC<MergedProps> = ({ formVisible, isOpen, open, busy }) => {
+    if(formVisible || busy) {
+        return null;
+    } else if (!isOpen) {
         return (
                 <div style={{textAlign: 'center'}}>
                     <TopComponent />
@@ -34,11 +38,11 @@ const BrowserWrapper: React.SFC<MergedProps> = ({ isOpen, open}) => {
                     <BottomComponent />
                 </div>
         );
+    } else {
+        return (
+            <FileBrowser />
+        );
     }
-    return (
-        <FileBrowser />
-    );
-    
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(BrowserWrapper)

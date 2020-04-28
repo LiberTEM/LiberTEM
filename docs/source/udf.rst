@@ -423,6 +423,8 @@ available as properties of :code:`self.params`:
    ctx.run_udf(dataset=dataset, udf=udf)
 
 
+.. _`progress bar`:
+
 Running UDFs
 ------------
 
@@ -434,6 +436,13 @@ pass an instance of your UDF and the dataset you want to run on:
 
     udf = YourUDF(param1="value1")
     res = ctx.run_udf(udf=udf, dataset=dataset)
+
+You can also enable a progress bar:
+
+.. testcode:: run
+
+    udf = YourUDF(param1="value1")
+    res = ctx.run_udf(udf=udf, dataset=dataset, progress=True)
 
 :meth:`~libertem.api.Context.run_udf` returns a :code:`dict`, having the buffer
 names as keys (as defined in :meth:`~libertem.udf.UDF.get_result_buffers`) and

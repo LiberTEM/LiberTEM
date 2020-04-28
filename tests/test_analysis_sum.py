@@ -230,7 +230,7 @@ def test_sum_zero_roi(lt_ctx):
 def test_sum_with_crop_frames(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(7, 8, 8),
-                            num_partitions=2, sig_dims=2, crop_frames=True)
+                            num_partitions=2, sig_dims=2)
 
     analysis = lt_ctx.create_sum_analysis(dataset=dataset)
     res = lt_ctx.run(analysis)

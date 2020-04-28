@@ -44,6 +44,8 @@ Before (using a release candidate package)
   that are supposed to be removed in that release.
 * Full documentation review and update, including link check using
   ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
+* Run complete test suite, including slow tests that are deactivated by default
+  and tests that require sample files.
 * Update the expected version in notes on changes, i.e. from :code:`0.3.0.dev0`
   to :code:`0.3.0` when releasing version 0.3.0.
 * Update and review change log in :code:`docs/source/changelog.rst`, merging
@@ -111,4 +113,5 @@ After releasing on GitHub
 * Update documentation with new links, if necessary
     * Add zenodo badge for the new release to Changelog page
 * Send announcement message on mailing list
+* Edit :code:`setup.cfg` to include flaky tests again
 * Bump version in master branch to next .dev0

@@ -1,7 +1,8 @@
-import pickle
 import json
-from unittest import mock
+import pickle
 import threading
+import itertools
+from unittest import mock
 
 import cloudpickle
 import numpy as np
@@ -10,7 +11,8 @@ import pytest
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.udf.masks import ApplyMasksUDF
+from libertem.io.dataset.base import TilingScheme
+from libertem.common import Shape
 
 from utils import _naive_mask_apply, _mk_random, PixelsumUDF
 
@@ -71,33 +73,57 @@ def test_hdf5_5d_apply_masks(lt_ctx, hdf5_ds_5d):
 
 def test_read_1(lt_ctx, hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
     for p in ds.get_partitions():
-        for t in p.get_tiles():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
 
 def test_read_2(lt_ctx, hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
     for p in ds.get_partitions():
-        for t in p.get_tiles():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
 
 def test_read_3(lt_ctx, random_hdf5):
     # try with smaller partitions:
     ds = H5DataSet(
-        path=random_hdf5.filename, ds_path="data", tileshape=(1, 2, 16, 16),
+        path=random_hdf5.filename, ds_path="data",
         target_size=4096
     )
     ds = ds.initialize(lt_ctx.executor)
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
     for p in ds.get_partitions():
-        for t in p.get_tiles():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
 
@@ -113,7 +139,7 @@ def test_pickle_ds(lt_ctx, hdf5_ds_1):
 
 def test_cloudpickle(lt_ctx, hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16), target_size=512*1024*1024
+        path=hdf5.filename, ds_path="data", target_size=512*1024*1024
     )
 
     pickled = cloudpickle.dumps(ds)
@@ -140,14 +166,22 @@ def test_cloudpickle(lt_ctx, hdf5):
 
 def test_roi_1(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
     p = next(ds.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
     tiles = []
-    for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+    for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
     assert len(tiles) == 1
@@ -158,16 +192,25 @@ def test_roi_1(hdf5, lt_ctx):
 
 def test_roi_3(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        path=hdf5.filename, ds_path="data",
         target_size=12800*2,
     )
     ds = ds.initialize(lt_ctx.executor)
     roi = np.zeros(ds.shape.flatten_nav().nav, dtype=bool)
     roi[24] = 1
 
+    tileshape = Shape(
+        (16,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
     tiles = []
     for p in ds.get_partitions():
-        for tile in p.get_tiles(dest_dtype="float32", roi=roi):
+        for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
             print("tile:", tile)
             tiles.append(tile)
     assert len(tiles) == 1
@@ -179,7 +222,7 @@ def test_roi_3(hdf5, lt_ctx):
 
 def test_roi_4(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        path=hdf5.filename, ds_path="data",
         target_size=12800*2,
     )
     ds = ds.initialize(lt_ctx.executor)
@@ -196,7 +239,7 @@ def test_roi_4(hdf5, lt_ctx):
 
 def test_roi_5(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        path=hdf5.filename, ds_path="data",
         target_size=12800*2,
     )
     ds = ds.initialize(lt_ctx.executor)
@@ -216,7 +259,7 @@ def test_roi_5(hdf5, lt_ctx):
 )
 def test_pick(hdf5, lt_ctx, TYPE):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
     assert len(ds.shape) == 4
@@ -228,7 +271,7 @@ def test_pick(hdf5, lt_ctx, TYPE):
 
 def test_diags(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
     print(ds.diagnostics)
@@ -236,7 +279,7 @@ def test_diags(hdf5, lt_ctx):
 
 def test_check_valid(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
     assert ds.check_valid()
@@ -248,7 +291,7 @@ def test_timeout_1(hdf5, lt_ctx):
         assert list(params.keys()) == ["path"]
 
         ds = H5DataSet(
-            path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+            path=hdf5.filename, ds_path="data",
         )
         ds = ds.initialize(lt_ctx.executor)
         diags = ds.diagnostics
@@ -262,7 +305,7 @@ def test_timeout_2(hdf5, lt_ctx):
         assert list(params.keys()) == ["path"]
 
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
 
@@ -275,7 +318,7 @@ def test_timeout_2(hdf5, lt_ctx):
 @pytest.mark.parametrize("mnp", [None, 1, 4])
 def test_roi_2(random_hdf5, lt_ctx, mnp):
     ds = H5DataSet(
-        path=random_hdf5.filename, ds_path="data", tileshape=(1, 4, 16, 16),
+        path=random_hdf5.filename, ds_path="data",
         min_num_partitions=mnp,
     )
     ds = ds.initialize(lt_ctx.executor)
@@ -324,25 +367,37 @@ def test_roi_2(random_hdf5, lt_ctx, mnp):
 
 def test_cache_key_json_serializable(hdf5, lt_ctx):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 3, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
     json.dumps(ds.get_cache_key())
-
-
-def test_auto_tileshape(chunked_hdf5, lt_ctx):
-    ds = H5DataSet(
-        path=chunked_hdf5.filename, ds_path="data",
-    )
-    ds = ds.initialize(lt_ctx.executor)
-    p = next(ds.get_partitions())
-    t = next(p.get_tiles(dest_dtype="float32", target_size=4*1024))
-    assert tuple(p._get_tileshape("float32", 4*1024)) == (1, 4, 16, 16)
-    assert tuple(t.tile_slice.shape) == (4, 16, 16)
 
 
 def test_no_tileshape(lt_ctx, hdf5_3d):
     ds = lt_ctx.load('HDF5', path=hdf5_3d.filename, ds_path='/data')
 
     udf = PixelsumUDF()
-    res = lt_ctx.run_udf(udf=udf, dataset=ds)
+    lt_ctx.run_udf(udf=udf, dataset=ds)
+
+
+def test_scheme_idx(lt_ctx, hdf5):
+    ds = H5DataSet(
+        path=hdf5.filename, ds_path="data",
+    )
+    ds = ds.initialize(lt_ctx.executor)
+    p = next(ds.get_partitions())
+
+    sig_shape = tuple(ds.shape.sig)
+    tileshape = Shape(
+        (16,) + sig_shape[:-1] + (sig_shape[-1] // 2,),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+
+    for tile, expected_idx in zip(tiles, itertools.cycle([0, 1])):
+        print(tile.scheme_idx, tile.tile_slice)
+        assert tile.scheme_idx == expected_idx

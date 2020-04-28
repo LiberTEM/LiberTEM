@@ -9,8 +9,10 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
+from libertem.io.dataset.base import TilingScheme
+from libertem.common import Shape
 
-BLO_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'default.blo')
+BLO_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_BLO_TESTDATA, reason="need .blo testdata")  # NOQA
@@ -46,7 +48,16 @@ def test_read(default_blo):
     p = next(partitions)
     # FIXME: partition shape can vary by number of cores
     # assert tuple(p.shape) == (11, 121, 144, 144)
-    tiles = p.get_tiles()
+    tileshape = Shape(
+        (8,) + tuple(default_blo.shape.sig),
+        sig_dims=default_blo.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_blo.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (8, 144, 144)
 
@@ -57,8 +68,8 @@ def test_pickle_meta_is_small(default_blo):
     assert len(pickled) < 512
 
 
-def test_pickle_blofile_is_small(default_blo):
-    pickled = pickle.dumps(default_blo._get_blo_file())
+def test_pickle_fileset_is_small(default_blo):
+    pickled = pickle.dumps(default_blo._get_fileset())
     pickle.loads(pickled)
     assert len(pickled) < 1024
 

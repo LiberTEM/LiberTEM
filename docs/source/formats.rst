@@ -9,8 +9,10 @@ function only opens the data set and gives back a handle; running an analysis
 with :meth:`~libertem.api.Context.run` or a UDF with
 :meth:`~libertem.api.Context.run_udf` then streams the data from mass storage.
 
+See :ref:`sample data` for publicly available datasets for testing.
+
 There are two main ways of opening a data set in LiberTEM: using the GUI, or the
-Python API. See :ref:`sample data` for publicly available datasets for testing.
+Python API.
 
 Loading through the API
 ~~~~~~~~~~~~~~~~~~~~~~~

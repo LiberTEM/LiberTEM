@@ -2,15 +2,19 @@ import re
 import io
 import os
 import glob
+import typing
 import logging
 
+import numba
 import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D
+    BasePartition, FileSet, LocalFile, make_get_read_ranges,
+    Decoder, TilingScheme, default_get_read_ranges,
+    DtypeConversionDecoder,
 )
 
 log = logging.getLogger(__name__)
@@ -54,6 +58,7 @@ class MIBDatasetParams(MessageConverter):
 
 def read_hdr_file(path):
     result = {}
+    # FIXME: do this open via the io backend!
     with open(path, "r", encoding='utf-8', errors='ignore') as f:
         for line in f:
             if line.startswith("HDR") or line.startswith("End\t"):
@@ -66,6 +71,7 @@ def read_hdr_file(path):
 
 
 def is_valid_hdr(path):
+    # FIXME: do this open via the io backend!
     with open(path, "r", encoding='utf-8', errors='ignore') as f:
         line = next(f)
         return line.startswith("HDR")
@@ -80,7 +86,192 @@ def scan_size_from_hdr(hdr):
     return scan_size
 
 
-class MIBFile(File3D):
+@numba.njit(inline='always')
+def _mib_r_px_to_bytes(
+    bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
+    frame_footer_bytes, frame_header_bytes,
+    file_idx, read_ranges,
+):
+    # NOTE: bpp is not used, instead we divide by 8 because we have 8 pixels per byte!
+
+    # we are reading a part of a single frame, so we first need to find
+    # the offset caused by headers and footers:
+    footer_offset = frame_footer_bytes * frame_in_file_idx
+    header_offset = frame_header_bytes * (frame_in_file_idx + 1)
+    byte_offset = footer_offset + header_offset
+
+    # now let's figure in the current frame index:
+    # (go down into the file by full frames; `sig_size`)
+    offset = byte_offset + frame_in_file_idx * sig_size // 8
+
+    # offset in px in the current frame:
+    sig_origin_bytes = sig_origin // 8
+
+    start = offset + sig_origin_bytes
+
+    # size of the sig part of the slice:
+    sig_size_bytes = slice_sig_size // 8
+
+    stop = start + sig_size_bytes
+    read_ranges.append((file_idx, start, stop))
+
+
+@numba.njit(inline='always')
+def _mib_r24_px_to_bytes(
+    bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
+    frame_footer_bytes, frame_header_bytes,
+    file_idx, read_ranges,
+):
+    # we are reading a part of a single frame, so we first need to find
+    # the offset caused by headers and footers:
+    footer_offset = frame_footer_bytes * frame_in_file_idx
+    header_offset = frame_header_bytes * (frame_in_file_idx + 1)
+    byte_offset = footer_offset + header_offset
+
+    # now let's figure in the current frame index:
+    # (go down into the file by full frames; `sig_size`)
+    offset = byte_offset + frame_in_file_idx * sig_size * bpp
+
+    # offset in px in the current frame:
+    sig_origin_bytes = sig_origin * bpp
+
+    start = offset + sig_origin_bytes
+
+    # size of the sig part of the slice:
+    sig_size_bytes = slice_sig_size * bpp
+
+    stop = start + sig_size_bytes
+    read_ranges.append((file_idx, start, stop))
+
+    # this is the addition for medipix 24bit raw:
+    # we read the part from the "second 12bit frame"
+    second_frame_offset = sig_size * bpp
+    read_ranges.append((file_idx, start + second_frame_offset, stop + second_frame_offset))
+
+
+mib_r_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r_px_to_bytes)
+mib_r24_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r24_px_to_bytes)
+
+
+@numba.jit(inline='always')
+def decode_r1_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
+    need to be unpacked together.
+    """
+    for stripe in range(inp.shape[0] // 8):
+        for byte in range(8):
+            inp_byte = inp[(stripe + 1) * 8 - (byte + 1)]
+            for bitpos in range(8):
+                out[idx, 64 * stripe + 8 * byte + bitpos] = (inp_byte >> bitpos) & 1
+
+
+@numba.njit(inline='always')
+def decode_r6_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 6bit format: the pixels need to be re-ordered in groups of 8. `inp`
+    should have dtype uint8.
+    """
+    for i in range(out.shape[1]):
+        col = i % 8
+        pos = i // 8
+        out_pos = (pos + 1) * 8 - col - 1
+        out[idx, out_pos] = inp[i]
+
+
+@numba.njit(inline='always')
+def decode_r12_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 12bit format: the pixels need to be re-ordered in groups of 4. `inp`
+    should be an uint8 view on big endian 12bit data (">u2")
+    """
+    for i in range(out.shape[1]):
+        col = i % 4
+        pos = i // 4
+        out_pos = (pos + 1) * 4 - col - 1
+        out[idx, out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+
+
+@numba.njit(inline='always')
+def decode_r24_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 24bit format: a single 24bit consists of two frames that are encoded
+    like the RAW 12bit format, the first contains the most significant bits.
+
+    So after a frame header, there are (512, 256) >u2 values, which then
+    need to be shuffled like in `decode_r12_swap`.
+
+    This decoder function only works together with mib_r24_get_read_ranges
+    which generates twice as many read ranges than normally.
+    """
+    for i in range(out.shape[1]):
+        col = i % 4
+        pos = i // 4
+        out_pos = (pos + 1) * 4 - col - 1
+        out_val = np.uint32((inp[i * 2] << 8) + (inp[i * 2 + 1] << 0))
+        if idx % 2 == 0:  # from first frame: most significant bits
+            out_val = out_val << 12
+        out[idx // 2, out_pos] += out_val
+
+
+class MIBDecoder(Decoder):
+    def __init__(self, kind, dtype, bit_depth):
+        self._kind = kind
+        self._dtype = dtype
+        self._bit_depth = bit_depth
+
+    def do_clear(self):
+        """
+        In case of 24bit raw data, the output buffer needs to be cleared
+        before writing, as we can't decode the whole frame in a single call of the decoder.
+        The `decode_r24_swap` function needs to be able to add to the output
+        buffer, so at the beginning, it needs to be cleared.
+        """
+        if self._kind == 'r' and self._bit_depth == 24:
+            return True
+        return False
+
+    def _get_decode_r(self):
+        # FIXME: R-mode files also mean we are constrained
+        # to tile sizes that are a multiple of 64px in the fastest
+        # dimension! need to take care of this in the negotiation
+        # -> if we make sure full "x-lines" are taken, we are fine
+        bit_depth = self._bit_depth
+        if bit_depth == 1:
+            return decode_r1_swap
+        elif bit_depth == 6:
+            return decode_r6_swap
+        elif bit_depth == 12:
+            return decode_r12_swap
+        elif bit_depth == 24:
+            return decode_r24_swap
+        else:
+            raise ValueError("unknown raw bitdepth")
+
+    def get_decode(self, native_dtype, read_dtype):
+        kind = self._kind
+
+        if kind == "u":
+            return DtypeConversionDecoder().get_decode(
+                native_dtype=native_dtype,
+                read_dtype=read_dtype,
+            )
+        elif kind == "r":
+            # FIXME: on big endian systems, these need to be implemented without byteswapping
+            return self._get_decode_r()
+        else:
+            raise RuntimeError("unknown type of MIB file")
+
+    def get_native_dtype(self, inp_native_dtype, read_dtype):
+        if self._kind == "u":
+            # drop the byteswap from the dtype, if it is there
+            return inp_native_dtype.newbyteorder('N')
+        else:
+            # decode byte-by-byte
+            return np.dtype("u1")
+
+
+class MIBHeaderReader:
     def __init__(self, path, fields=None, sequence_start=None):
         self.path = path
         if fields is None:
@@ -88,46 +279,74 @@ class MIBFile(File3D):
         else:
             self._fields = fields
         self._sequence_start = sequence_start
-        super().__init__()
 
-    def _get_np_dtype(self, dtype):
+    def __repr__(self):
+        return "<MIBHeaderReader: %s>" % self.path
+
+    def _get_np_dtype(self, dtype, bit_depth):
         dtype = dtype.lower()
         num_bits = int(dtype[1:])
         if dtype[0] == "u":
             num_bytes = num_bits // 8
             return np.dtype(">u%d" % num_bytes)
         elif dtype[0] == "r":
-            assert num_bits == 64
-            return np.dtype("uint8")  # the dtype after np.unpackbits
+            if bit_depth == 1:
+                return np.dtype("uint64")
+            elif bit_depth == 6:
+                return np.dtype("uint8")
+            elif bit_depth in (12, 24):  # 24bit raw is two 12bit images after another
+                return np.dtype("uint16")
+            else:
+                raise NotImplementedError("unknown bit depth: %s" % bit_depth)
 
     def read_header(self):
+        # FIXME: do this read via the IO backend!
         with io.open(file=self.path, mode="r", encoding="ascii", errors='ignore') as f:
-            header = f.read(100)
+            header = f.read(1024)
             filesize = os.fstat(f.fileno()).st_size
         parts = header.split(",")
+        header_size_bytes = int(parts[2])
+        parts = [p
+                for p in header[:header_size_bytes].split(",")
+                if '\x00' not in p]
+        self._header_parts = parts
         dtype = parts[6].lower()
         mib_kind = dtype[0]
         image_size = (int(parts[5]), int(parts[4]))
-        header_size_bytes = int(parts[2])
+        # FIXME: There can either be threshold values for all chips, or maybe also
+        # none. For now, we just make use of the fact that the bit depth is
+        # supposed to be the last value.
+        bits_per_pixel_raw = int(parts[-1])
         if mib_kind == "u":
             bytes_per_pixel = int(parts[6][1:]) // 8
             image_size_bytes = image_size[0] * image_size[1] * bytes_per_pixel
+            num_images = filesize // (
+                image_size_bytes + header_size_bytes
+            )
         elif mib_kind == "r":
-            bytes_per_pixel = 1  # after np.unpackbits
-            image_size_bytes = image_size[0] * image_size[1] // 8
+            size_factor = {
+                1: 1/8,
+                6: 1,
+                12: 2,
+                24: 4,
+            }[bits_per_pixel_raw]
+            if bits_per_pixel_raw == 24:
+                image_size = (image_size[0], image_size[1] // 2)
+            image_size_bytes = int(image_size[0] * image_size[1] * size_factor)
+            num_images = filesize // (
+                image_size_bytes + header_size_bytes
+            )
         else:
             raise ValueError("unknown kind: %s" % mib_kind)
 
-        num_images = filesize // (
-            image_size_bytes + header_size_bytes
-        )
         self._fields = {
             'header_size_bytes': header_size_bytes,
-            'dtype': self._get_np_dtype(parts[6]),
+            'dtype': self._get_np_dtype(parts[6], bits_per_pixel_raw),
             'mib_dtype': dtype,
             'mib_kind': mib_kind,
-            'bytes_per_pixel': bytes_per_pixel,
+            'bits_per_pixel': bits_per_pixel_raw,
             'image_size': image_size,
+            'image_size_bytes': image_size_bytes,
             'sequence_first_image': int(parts[1]),
             'filesize': filesize,
             'num_images': num_images,
@@ -148,110 +367,61 @@ class MIBFile(File3D):
             self.read_header()
         return self._fields
 
-    def open(self):
-        self._fh = open(self.path, "rb")
 
-    def close(self):
-        self._fh.close()
-        self._fh = None
+class MIBFile(LocalFile):
+    def __init__(self, header, *args, **kwargs):
+        self._header = header
+        super().__init__(*args, **kwargs)
 
-    def _frames_read_int(self, start, num, method):
-        bpp = self.fields['bytes_per_pixel']
-        hsize = self.fields['header_size_bytes']
-        hsize_px = hsize // bpp
-        assert hsize % bpp == 0
-        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
-        size = size_px * bpp  # bytes
-        imagesize_incl_header = size + hsize  # bytes
+    def _mmap_to_array(self, raw_mmap, start, stop):
+        res = np.frombuffer(raw_mmap, dtype="uint8")
+        cutoff = self._header['num_images'] * (
+            self._header['image_size_bytes'] + self._header['header_size_bytes']
+        )
+        res = res[:cutoff]
+        return res.view(dtype=self._native_dtype).reshape(
+            (self.num_frames, -1)
+        )[:, start:stop]
 
-        if method == "read":
-            readsize = imagesize_incl_header * num
-            buf = self.get_buffer("_frames_read_int", readsize)
 
-            self._fh.seek(start * imagesize_incl_header)
-            bytes_read = self._fh.readinto(buf)
-            assert bytes_read == readsize
-            arr = np.frombuffer(buf, dtype=self.fields['dtype'])
-        elif method == "mmap":
-            arr = np.memmap(self.path, dtype=self.fields['dtype'], mode='r',
-                            offset=start * imagesize_incl_header)
-            # limit to number of frames to read
-            arr = arr[:num * (size_px + hsize_px)]
+class MIBFileSet(FileSet):
+    def __init__(self, kind, dtype, bit_depth, *args, **kwargs):
+        self._kind = kind
+        self._mib_dtype = dtype
+        self._bit_depth = bit_depth
+        super().__init__(*args, **kwargs)
+
+    def _clone(self, *args, **kwargs):
+        return self.__class__(
+            kind=self._kind, dtype=self._mib_dtype, bit_depth=self._bit_depth,
+            *args, **kwargs
+        )
+
+    def get_read_ranges(
+        self, start_at_frame: int, stop_before_frame: int,
+        dtype, tiling_scheme: TilingScheme,
+        roi: typing.Union[np.ndarray, None] = None,
+    ):
+        fileset_arr = self.get_as_arr()
+        bit_depth = self._bit_depth
+        kwargs = dict(
+            start_at_frame=start_at_frame,
+            stop_before_frame=stop_before_frame,
+            roi=roi,
+            depth=tiling_scheme.depth,
+            slices_arr=tiling_scheme.slices_array,
+            fileset_arr=fileset_arr,
+            sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            bpp=np.dtype(dtype).itemsize,
+            frame_header_bytes=self._frame_header_bytes,
+            frame_footer_bytes=self._frame_footer_bytes,
+        )
+        if self._kind == "r" and bit_depth in (1,):
+            return mib_r_get_read_ranges(**kwargs)
+        elif self._kind == "r" and bit_depth in (24,):
+            return mib_r24_get_read_ranges(**kwargs)
         else:
-            raise ValueError("unknown method: %d" % method)
-
-        # reshape (num_frames, pixels) incl. header
-        arr = arr.reshape((num, size_px + hsize_px))
-        # cut off headers
-        arr = arr[:, hsize_px:]
-        return arr
-
-    def _frames_read_bits(self, start, num):
-        """
-        read frames for type r64, that is, pixels are bit-packed into big-endian
-        64bit integers
-        """
-        hsize_px = 8 * self.fields['header_size_bytes']  # unpacked header size
-        size_px = self.fields['image_size'][0] * self.fields['image_size'][1]
-        size = size_px // 8
-        hsize = self.fields['header_size_bytes']
-        imagesize_incl_header = size + hsize
-        readsize = imagesize_incl_header * num
-        buf = self.get_buffer("_frames_read_bits", readsize)
-
-        self._fh.seek(start * imagesize_incl_header)
-        bytes_read = self._fh.readinto(buf)
-        assert bytes_read == readsize
-        raw_data = np.frombuffer(buf, dtype="u1")
-        unpacked = np.unpackbits(raw_data)
-
-        # reshape (num_frames, pixels) incl. header
-        unpacked = unpacked.reshape((num, size_px + hsize_px))
-        # cut off headers
-        unpacked = unpacked[:, hsize_px:]
-
-        arr = unpacked.reshape((num * 4 * 256, 64))[:, ::-1].reshape((num, 256, 256))
-        return arr
-
-    def _frames_read(self, start, num, method="read"):
-        mib_kind = self.fields['mib_kind']
-
-        if mib_kind == "r":
-            arr = self._frames_read_bits(start, num)
-        elif mib_kind == "u":
-            arr = self._frames_read_int(start, num, method)
-
-        # reshape to (num_frames, pixels_y, pixels_x)
-        return arr.reshape((num, self.fields['image_size'][0], self.fields['image_size'][1]))
-
-    def readinto(self, start, stop, out, crop_to=None):
-        """
-        Read a number of frames into an existing buffer, skipping the headers.
-
-        Note: this method is not thread safe!
-
-        Parameters
-        ----------
-
-        stop : int
-            end index
-        start : int
-            index of first frame to read
-        out : buffer
-            output buffer that should fit `stop - start` frames
-        crop_to : Slice
-            crop to the signal part of this Slice
-        """
-        num = stop - start
-        frames = self._frames_read(num=num, start=start, method="read")
-        if crop_to is not None:
-            frames = frames[(...,) + crop_to.get(sig_only=True)]
-        out[:] = frames
-        return out
-
-
-class MIBFileSet(FileSet3D):
-    pass
+            return default_get_read_ranges(**kwargs)
 
 
 class MIBDataSet(DataSet):
@@ -290,13 +460,10 @@ class MIBDataSet(DataSet):
         A tuple (y, x) that specifies the size of the scanned region. It is
         automatically read from the .hdr file if you specify one as `path`.
     """
-    def __init__(self, path, tileshape=None, scan_size=None):
+    def __init__(self, path, tileshape=None, scan_size=None, disable_glob=False):
         super().__init__()
         self._sig_dims = 2
         self._path = path
-        if tileshape is None:
-            tileshape = (1, 3, 256, 256)
-        tileshape = Shape(tileshape, sig_dims=self._sig_dims)
         self._tileshape = tileshape
         if scan_size is not None:
             scan_size = tuple(scan_size)
@@ -308,13 +475,14 @@ class MIBDataSet(DataSet):
         self._scan_size = scan_size
         self._filename_cache = None
         self._files_sorted = None
-        # ._preread_headers() calls ._files() which passes the cached headers down to MIBFile,
-        # if they exist. So we need to make sure to initialize self._headers
+        # ._preread_headers() calls ._files() which passes the cached headers down to
+        # MIBHeaderReader, if they exist. So we need to make sure to initialize self._headers
         # before calling _preread_headers!
         self._headers = {}
         self._meta = None
         self._total_filesize = None
         self._sequence_start = None
+        self._disable_glob = disable_glob
 
     def _do_initialize(self):
         self._headers = self._preread_headers()
@@ -333,11 +501,7 @@ class MIBDataSet(DataSet):
             sig_dims=self._sig_dims
         )
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_dtype=dtype, iocaps={
-            "FRAME_CROPS", "MMAP", "FULL_FRAMES"
-        })
-        if first_file.fields['mib_dtype'] == "r64":
-            meta.iocaps.remove("MMAP")
+        meta = DataSetMeta(shape=shape, raw_dtype=dtype)
         self._meta = meta
         self._total_filesize = sum(
             os.stat(path).st_size
@@ -346,6 +510,11 @@ class MIBDataSet(DataSet):
         self._sequence_start = first_file.fields['sequence_first_image']
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
+        tileshape = self._tileshape
+        if tileshape is None:
+            tileshape = (1, 3) + tuple(self.shape.sig)
+        tileshape = Shape(tileshape, sig_dims=self._sig_dims)
+        self._tileshape = tileshape
         return self
 
     def initialize(self, executor):
@@ -407,13 +576,16 @@ class MIBDataSet(DataSet):
             pattern = "%s*.mib" % path
         else:
             raise DataSetException("unknown extension")
-        fns = glob.glob(pattern)
+        if self._disable_glob:
+            fns = [self._path]
+        else:
+            fns = glob.glob(pattern)
         self._filename_cache = fns
         return fns
 
     def _files(self):
         for path in self._filenames():
-            f = MIBFile(path, fields=self._headers.get(path),
+            f = MIBHeaderReader(path, fields=self._headers.get(path),
                         sequence_start=self._sequence_start)
             yield f
 
@@ -466,36 +638,65 @@ class MIBDataSet(DataSet):
 
     def _get_fileset(self):
         assert self._sequence_start is not None
-        return MIBFileSet(files=self._files_sorted)
+        first_file = self._files_sorted[0]
+        dtype = first_file.fields['dtype']
+        kind = first_file.fields['mib_kind']
+        bit_depth = first_file.fields['bits_per_pixel']
+        header_size = first_file.fields['header_size_bytes']
+        return MIBFileSet(files=[
+            MIBFile(
+                path=f.path,
+                start_idx=f.start_idx,
+                end_idx=f.start_idx + f.num_frames,
+                native_dtype=f.fields['dtype'],
+                sig_shape=f.fields['image_size'],
+                frame_header=f.fields['header_size_bytes'],
+                file_header=0,
+                header=f.fields,
+            )
+            for f in self._files_sorted
+        ], dtype=dtype, kind=kind, bit_depth=bit_depth, frame_header_bytes=header_size)
 
     def _get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB (converted float data) per partition
-        partition_size = 512 * 1024 * 1024 / 4
-        first_file = self._files_sorted[0]
-        if first_file.fields['mib_kind'] == "r":
-            partition_size /= 4
-        else:
-            bpp = first_file.fields['bytes_per_pixel']
-            partition_size /= bpp
-        res = max(self._cores, self._total_filesize // int(partition_size))
+        partition_size_px = 512 * 1024 * 1024 // 4
+        total_size_px = np.prod(self.shape)
+        res = max(self._cores, total_size_px // partition_size_px)
         return res
 
     def get_partitions(self):
+        first_file = self._files_sorted[0]
         fileset = self._get_fileset()
-        for part_slice, start, stop in Partition3D.make_slices(
+        kind = first_file.fields['mib_kind']
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield MIBPartition(
                 meta=self._meta,
-                partition_slice=part_slice,
                 fileset=fileset.get_for_range(start, stop),
+                partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
-                stackheight=self._tileshape[0] * self._tileshape[1],
+                kind=kind,
+                bit_depth=first_file.fields['bits_per_pixel'],
             )
 
     def __repr__(self):
         return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.shape)
+
+
+class MIBPartition(BasePartition):
+    def __init__(self, kind, bit_depth, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._kind = kind
+        self._bit_depth = bit_depth
+
+    def _get_decoder(self):
+        return MIBDecoder(
+            kind=self._kind,
+            dtype=self.meta.raw_dtype,
+            bit_depth=self._bit_depth,
+        )

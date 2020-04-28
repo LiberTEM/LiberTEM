@@ -1,7 +1,7 @@
 .. _`dataset api`:
 
 Data Set API
-------------
+============
 
 This API allows to load and handle data on a distributed system efficiently. Note that you should
 not directly use most dataset methods, but rather use the more high-level tools available, for
@@ -9,12 +9,11 @@ example user-defined functions.
 
 See :ref:`our documentation on loading data <loading data>` for a high-level introduction.
 
-.. automodule:: libertem.io.dataset.base
-   :members:
-   :undoc-members:
-   :special-members: __init__
-
 .. _`formats`:
+
+Formats
+-------
+
 .. _`mib`:
 
 Merlin Medipix (MIB)
@@ -85,3 +84,12 @@ Memory data set
 
 .. autoclass:: libertem.io.dataset.memory.MemoryDataSet
     :special-members: __init__
+
+Internal DataSet API
+--------------------
+
+.. automodule:: libertem.io.dataset.base
+   :members:
+   :undoc-members:
+   :special-members: __init__
+

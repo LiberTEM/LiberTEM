@@ -9,12 +9,12 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.io.dataset.base import DataSetException
+from libertem.io.dataset.base import DataSetException, TilingScheme
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
 from utils import _mk_random
 
-EMPAD_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'EMPAD')
+EMPAD_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
 EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 HAVE_EMPAD_TESTDATA = os.path.exists(EMPAD_RAW) and os.path.exists(EMPAD_XML)
@@ -65,7 +65,11 @@ def test_read_random(random_empad):
     p = next(partitions)
     # FIXME: partition shape can vary by number of cores
     # assert tuple(p.shape) == (2, 16, 128, 128)
-    tiles = p.get_tiles()
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=Shape((16, 128, 128), sig_dims=2),
+        dataset_shape=random_empad.shape,
+    )
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
 
     # ~1MB
@@ -77,7 +81,11 @@ def test_read(default_empad):
     p = next(partitions)
     # FIXME: partition shape can vary by number of cores
     # assert tuple(p.shape) == (2, 16, 128, 128)
-    tiles = p.get_tiles()
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=Shape((16, 128, 128), sig_dims=2),
+        dataset_shape=default_empad.shape,
+    )
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
 
     # ~1MB
@@ -171,9 +179,9 @@ def test_nonexistent():
 def test_detect_fail():
     executor = InlineJobExecutor()
     # does not exist:
-    assert not EMPADDataSet.detect_params("/does/not/exist.raw", executor=executor)["parameters"]
+    assert not EMPADDataSet.detect_params("/does/not/exist.raw", executor=executor)
     # exists but we can't detect any parameters (and we don't know if it even is an EMPAD file)
-    assert not EMPADDataSet.detect_params(EMPAD_RAW, executor=executor)["parameters"]
+    assert not EMPADDataSet.detect_params(EMPAD_RAW, executor=executor)
 
 
 def test_crop_to(default_empad, lt_ctx):

@@ -72,3 +72,12 @@ class PixelsumUDF(UDF):
         assert frame.shape == (16, 16)
         assert self.results.pixelsum.shape == (1,)
         self.results.pixelsum[:] = np.sum(frame)
+
+
+class MockFile:
+    def __init__(self, start_idx, end_idx):
+        self.start_idx = start_idx
+        self.end_idx = end_idx
+
+    def __repr__(self):
+        return "<MockFile: [%d, %d)>" % (self.start_idx, self.end_idx)

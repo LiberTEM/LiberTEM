@@ -373,12 +373,11 @@ class CachedDataSet(DataSet):
     strategy : CacheStrategy
         A class implementing a cache eviction strategy, for example LRUCacheStrategy
     """
-    def __init__(self, source_ds, cache_path, strategy, enable_direct=False):
+    def __init__(self, source_ds, cache_path, strategy):
         self._source_ds = source_ds
         self._cache_path = cache_path
         self._cache_key = self._make_cache_key(source_ds.get_cache_key())
         self._path = os.path.join(cache_path, self._cache_key)
-        self._enable_direct = enable_direct
         self._cluster_ds = None
         self._executor = None
         self._cache_strategy = strategy
@@ -393,7 +392,6 @@ class CachedDataSet(DataSet):
         cluster_ds = ClusterDataSet(
             path=self._path,
             structure=source_structure,
-            enable_direct=self._enable_direct,
         )
         cluster_ds.check_valid()
         self._cluster_ds = cluster_ds.initialize(executor=executor)
@@ -496,12 +494,14 @@ class CachedPartition(Partition):
                 pass
         yield from cached_tiles
 
-    def get_tiles(self, crop_to=None, full_frames=False, mmap=False,
-                  dest_dtype="float32", roi=None, target_size=None):
+    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         cache = self._get_cache()
-        cached_tiles = self._cluster_part.get_tiles(crop_to=crop_to, full_frames=full_frames,
-                                                   mmap=mmap, dest_dtype=dest_dtype, roi=roi,
-                                                   target_size=target_size)
+        cached_tiles = self._cluster_part.get_tiles(
+            tiling_scheme=tiling_scheme,
+            dest_dtype=dest_dtype,
+            roi=roi,
+        )
+
         cache_item = CacheItem(
             dataset=self._cache_key,
             partition=self._idx,
@@ -515,8 +515,9 @@ class CachedPartition(Partition):
             cache.evict(cache_key=self._cache_key, size=self._sizeof())
             # NOTE: source_tiles are in native dtype!
             source_tiles = self._source_part.get_tiles(
-                crop_to=crop_to, full_frames=full_frames, mmap=mmap,
-                dest_dtype=self._cluster_part.dtype, roi=None, target_size=target_size
+                tiling_scheme=tiling_scheme,
+                dest_dtype=self._cluster_part.dtype,
+                roi=None,  # NOTE: want to always cache the whole dataset, thus roi=None
             )
             wh = self._cluster_part.get_write_handle()
             if roi is None:

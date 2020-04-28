@@ -84,7 +84,7 @@ def empty_hdf5(tmpdir_factory):
 @pytest.fixture
 def hdf5_ds_1(hdf5):
     ds = H5DataSet(
-        path=hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
+        path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
@@ -93,7 +93,7 @@ def hdf5_ds_1(hdf5):
 @pytest.fixture
 def hdf5_ds_2(random_hdf5):
     ds = H5DataSet(
-        path=random_hdf5.filename, ds_path="data", tileshape=(1, 5, 16, 16)
+        path=random_hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
@@ -102,7 +102,7 @@ def hdf5_ds_2(random_hdf5):
 @pytest.fixture
 def hdf5_ds_3d(hdf5_3d):
     ds = H5DataSet(
-        path=hdf5_3d.filename, ds_path="data", tileshape=(1, 16, 16)
+        path=hdf5_3d.filename, ds_path="data",
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
@@ -111,7 +111,7 @@ def hdf5_ds_3d(hdf5_3d):
 @pytest.fixture
 def hdf5_ds_5d(hdf5_5d):
     ds = H5DataSet(
-        path=hdf5_5d.filename, ds_path="data", tileshape=(1, 1, 1, 16, 16)
+        path=hdf5_5d.filename, ds_path="data",
     )
     ds = ds.initialize(InlineJobExecutor())
     return ds
@@ -142,6 +142,24 @@ def default_raw(tmpdir_factory):
         path=str(filename),
         scan_size=(16, 16),
         dtype="float32",
+        detector_size=(128, 128),
+    )
+    ds.set_num_cores(2)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
+@pytest.fixture(scope='session')
+def big_endian_raw(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-default'
+    data = utils._mk_random(size=(16, 16, 128, 128), dtype='>u2')
+    data.tofile(str(filename))
+    del data
+    ds = RawFileDataSet(
+        path=str(filename),
+        scan_size=(16, 16),
+        dtype=">u2",
         detector_size=(128, 128),
     )
     ds.set_num_cores(2)

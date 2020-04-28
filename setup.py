@@ -145,6 +145,8 @@ setup(
         "pillow",
         "h5py",
         "psutil",
+        # Contains bug fix relevant for numba in libertem.corrections.detector:
+        "llvmlite>=0.29.0",
         # FIXME numba>=0.49 as soon as released for thread count control #685, #546
         # See also src/libertem/utils/threading.py
         # Bounds checking in Numba

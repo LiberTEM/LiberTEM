@@ -6,7 +6,8 @@ import numpy as np
 
 from libertem.common import Shape
 from .base import (
-    DataSet, File3D, FileSet3D, Partition3D, DataSetException, DataSetMeta,
+    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
+    LocalFile,
 )
 
 log = logging.getLogger(__name__)
@@ -22,88 +23,18 @@ def _get_offset(path):
     return offset
 
 
-class StackedDMFile(File3D):
-    """
-    A single file from a stack of dm files; this class reads directly
-    using offset and size, bypassing the reading of tag structures etc.
-    """
-    def __init__(self, path, start_idx, offset, shape, dtype):
-        """
-        Parameters
-        ----------
-
-        path : string
-
-        start_idx : int
-
-        offset : int
-
-        shape : (int, int)
-
-        dtype : numpy dtype
-        """
-        super().__init__()
-        self._path = path
-        self._start_idx = start_idx
-        self._offset = offset
-        self._shape = shape
-        self._size = int(np.product(shape))
-        self._dtype = np.dtype(dtype)
-        self._fh = None
-
-    @property
-    def dtype(self):
-        return self._dtype
-
-    @property
-    def shape(self):
-        return self._shape
-
-    def open(self):
-        self._fh = open(self._path, "rb")
-
-    def close(self):
-        self._fh.close()
-        self._fh = None
-
-    @property
-    def num_frames(self):
-        """
-        the stacked format contains one frame per dm file
-        """
-        return 1
-
-    @property
-    def start_idx(self):
-        return self._start_idx
-
-    def _read_frame(self):
-        # FIXME: reusing the buffer only works if there are multiple frames per file.
-        # readsize = self._size * self._dtype.itemsize
-        # buf = self.get_buffer("readbuf", readsize)
-        # FIXME: can we get rid of this buffer? maybe only if dtype matches?
-        buf = np.zeros(self._size, dtype=self._dtype)
-        self._fh.seek(self._offset)
-        size_read = self._fh.readinto(buf)
-        assert size_read == self._size * self._dtype.itemsize
-        return buf
-
-    def readinto(self, start, stop, out, crop_to=None):
-        """
-        Read [`start`, `stop`) images from this file into `out`
-        """
-        assert stop - start == 1
-        data = self._read_frame()
-
-        data = data.reshape(self.shape)
-
-        if crop_to is not None:
-            # TODO: maybe limit I/O to the cropped region, too?
-            data = data[crop_to.get(sig_only=True)]
-        out[...] = data
+class StackedDMFile(LocalFile):
+    def _mmap_to_array(self, raw_mmap, start, stop):
+        res = np.frombuffer(raw_mmap, dtype="uint8")
+        cutoff = 0
+        cutoff += np.dtype(self._native_dtype).itemsize * int(np.prod(self._sig_shape))
+        res = res[:cutoff]
+        return res.view(dtype=self._native_dtype).reshape(
+            (self.num_frames, -1)
+        )[:, start:stop]
 
 
-class DMFileSet(FileSet3D):
+class DMFileSet(FileSet):
     pass
 
 
@@ -189,13 +120,15 @@ class DMDataSet(DataSet):
         files = []
         for fn in self._get_files():
             f = StackedDMFile(
-                path=fn, start_idx=start_idx,
-                offset=self._offsets[fn],
-                shape=shape,
-                dtype=raw_dtype,
+                path=fn,
+                start_idx=start_idx,
+                end_idx=start_idx + 1,
+                sig_shape=shape,
+                native_dtype=raw_dtype,
+                file_header=self._offsets[fn],
             )
             files.append(f)
-            start_idx += f.num_frames
+            start_idx += 1  # FIXME: .nav.size?
         return DMFileSet(files)
 
     def _get_files(self):
@@ -232,12 +165,11 @@ class DMDataSet(DataSet):
         self._fileset = executor.run_function(self._get_fileset)
         first_file = next(self._fileset.files_from(0))
         nav_dims = self._get_scan_size()
-        shape = nav_dims + tuple(first_file.shape)
-        sig_dims = len(first_file.shape)
+        shape = nav_dims + tuple(first_file.sig_shape)
+        sig_dims = len(first_file.sig_shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),
-            raw_dtype=first_file.dtype,
-            iocaps={"FULL_FRAMES"},
+            raw_dtype=first_file.native_dtype,
         )
         return self
 
@@ -286,10 +218,10 @@ class DMDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        for part_slice, start, stop in Partition3D.make_slices(
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield BasePartition(
                 meta=self._meta,
                 partition_slice=part_slice,
                 fileset=self._fileset,

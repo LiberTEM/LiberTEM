@@ -11,7 +11,7 @@ Basic example
 -------------
 
 This is a basic example to load the API, create a local cluster, load a file and
-run an analysis. For a complete example on how to use the Python API, please see the
+run an analysis. For complete examples on how to use the Python API, please see the
 Jupyter notebooks in `the example directory
 <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
 
@@ -34,10 +34,16 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 
 .. testsetup:: *
 
-    from libertem import api
-    from libertem.executor.inline import InlineJobExecutor
+    import distributed as dd
 
-    ctx = api.Context(executor=InlineJobExecutor())
+    from libertem import api
+    from libertem.executor.dask import DaskJobExecutor
+
+    # For doctest testing, don't use multiprocessing since it
+    # may trip during the test build.
+    # Using such a Dask client may not work for real datasets in production!
+    client = dd.Client(processes=False)
+    ctx = api.Context(executor=DaskJobExecutor(client=client))
     dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
 
 .. testcode::
@@ -50,5 +56,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     # storage to ensure optimal data locality
     dask_array, workers = make_dask_array(dataset)
 
-    # Perform calculations using the worker map.
-    result = dask_array.sum(axis=(-1, -2)).compute(workers=workers)
+    # Use the Dask.distributed client of LiberTEM, since it may not be
+    # the default client:
+    result = ctx.executor.client.compute(
+        dask_array.sum(axis=(-1, -2))
+    ).result()

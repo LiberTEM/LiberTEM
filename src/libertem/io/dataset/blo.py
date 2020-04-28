@@ -5,7 +5,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    Partition3D, File3D, FileSet3D
+    BasePartition, FileSet, LocalFile,
 )
 from libertem.web.messages import MessageConverter
 
@@ -69,49 +69,7 @@ def get_header_dtype_list(endianess='<'):
     return dtype_list
 
 
-class BloFile(File3D):
-    def __init__(self, path, endianess, meta, offset_2):
-        self._path = path
-        self._offset_2 = offset_2
-        self._endianess = endianess
-        self._meta = meta
-        self._num_frames = meta.shape.nav.nav.size
-
-    @property
-    def num_frames(self):
-        return self._num_frames
-
-    @property
-    def start_idx(self):
-        return 0
-
-    def open(self):
-        self._file = open(self._path, 'rb')
-        data = np.memmap(self._file, mode='r', offset=self._offset_2,
-                         dtype=self._endianess + 'u1')
-        NY, NX, DP_SZ, _ = self._meta.shape
-        data = data.reshape((NY * NX, DP_SZ * DP_SZ + 6))
-        data = data[:, 6:]
-        data = data.reshape((NY * NX, DP_SZ, DP_SZ))
-        self._mmap = data
-
-    def close(self):
-        self._file.close()
-        self._file = None
-        self._mmap = None
-
-    def mmap(self):
-        return self._mmap
-
-    def readinto(self, start, stop, out, crop_to=None):
-        slice_ = (...,)
-        if crop_to is not None:
-            slice_ = crop_to.get(sig_only=True)
-        data = self.mmap()
-        out[:] = data[(slice(start, stop),) + slice_]
-
-
-class BloFileSet(FileSet3D):
+class BloFileSet(FileSet):
     pass
 
 
@@ -158,7 +116,6 @@ class BloDataSet(DataSet):
         self._meta = DataSetMeta(
             shape=self._shape,
             raw_dtype=np.dtype("u1"),
-            iocaps={"MMAP", "FULL_FRAMES", "FRAME_CROPS"},
         )
         self._filesize = executor.run_function(self._get_filesize)
         return self
@@ -199,6 +156,7 @@ class BloDataSet(DataSet):
         return self._shape
 
     def _read_header(self):
+        # FIXME: do this read via the IO backend!
         with open(self._path, 'rb') as f:
             return np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
 
@@ -231,31 +189,35 @@ class BloDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 512MB per partition
-        res = max(self._cores, self._filesize // (512*1024*1024))
+        # let's try to aim for 512MB (converted float data) per partition
+        partition_size_px = 512 * 1024 * 1024 // 4
+        total_size_px = np.prod(self.shape)
+        res = max(self._cores, total_size_px // partition_size_px)
         return res
 
-    def _get_blo_file(self):
-        return BloFile(
-            path=self._path,
-            offset_2=int(self.header['Data_offset_2']),
-            endianess=self._endianess,
-            meta=self._meta,
-        )
+    def _get_fileset(self):
+        return BloFileSet([
+            LocalFile(
+                path=self._path,
+                start_idx=0,
+                end_idx=self.shape.nav.size,
+                native_dtype=self._endianess + "u1",
+                sig_shape=self.shape.sig,
+                frame_header=6,
+                file_header=int(self.header['Data_offset_2']),
+            )
+        ], frame_header_bytes=6)
 
     def get_partitions(self):
-        fileset = BloFileSet([
-            self._get_blo_file()
-        ])
+        fileset = self._get_fileset()
 
-        for part_slice, start, stop in Partition3D.make_slices(
+        for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
-            yield Partition3D(
+            yield BasePartition(
                 meta=self._meta,
-                partition_slice=part_slice,
                 fileset=fileset.get_for_range(start, stop),
+                partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
-                stackheight=self._tileshape[0] * self._tileshape[1],
             )

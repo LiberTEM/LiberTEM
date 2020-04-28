@@ -23,10 +23,10 @@ const BottomComponent: React.SFC<MergedProps> = ({ noOfDatasets, isVisible, isbu
         <div>
             { (!noOfDatasets && !isVisible && !isbusy) ? 
                     <div style={{paddingTop: '5%', paddingBottom: '5%'}}>
-                        <a href='https://libertem.github.io/LiberTEM/' target='_blank' rel='noopener'>Visit LiberTEM documentation</a>
+                        <a href='https://libertem.github.io/LiberTEM/' rel='noopener noreferrer' target='_blank'>Visit LiberTEM documentation</a>
                         <div style={{marginTop: '3%'}}>
                             <img src={github} alt="github" style={{height: '25px', width: '25px', marginLeft: '-25px'}}/>
-                            <a href='https://github.com/LiberTEM/LiberTEM' target='_blank' rel='noopener'>Star us on GitHub</a>
+                            <a href='https://github.com/LiberTEM/LiberTEM' rel='noopener noreferrer' target='_blank'>Star us on GitHub</a>
                         </div>
                     </div>
                     : '' }

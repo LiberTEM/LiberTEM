@@ -119,10 +119,7 @@ def sig_exit(signum, frame, shared_state):
     )
 
 
-def main(host, port, log_level, event_registry, shared_state):
-    numeric_level = getattr(logging, log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f'Invalid log level: {log_level}')
+def main(host, port, numeric_level, event_registry, shared_state):
     logging.basicConfig(
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
@@ -133,13 +130,13 @@ def main(host, port, log_level, event_registry, shared_state):
     return app
 
 
-def run(host, port, browser, local_directory, log_level):
+def run(host, port, browser, local_directory, numeric_level):
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
-    main(host, port, log_level, event_registry, shared_state)
+    main(host, port, numeric_level, event_registry, shared_state)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()
@@ -148,7 +145,3 @@ def run(host, port, browser, local_directory, log_level):
     # FIXME check later if the unknown root cause was fixed upstream
     asyncio.ensure_future(nannynanny())
     loop.run_forever()
-
-
-if __name__ == "__main__":
-    main("0.0.0.0", 9000)

@@ -210,6 +210,10 @@ class RawFileDataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
+    @property
+    def meta(self):
+        return self._meta
+
     @classmethod
     def get_msg_converter(cls):
         return RAWDatasetParams

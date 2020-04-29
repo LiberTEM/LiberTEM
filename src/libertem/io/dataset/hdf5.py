@@ -271,10 +271,11 @@ class H5DataSet(DataSet):
 
 
 class H5Partition(Partition):
-    def __init__(self, reader, slice_nd, *args, **kwargs):
+    def __init__(self, reader, slice_nd, partition_slice, *args, **kwargs):
         self.reader = reader
         self.slice_nd = slice_nd
         self._corrections = None
+        self.slice = partition_slice
         super().__init__(*args, **kwargs)
 
     def _get_subslices(self, tiling_scheme, tileshape_nd):
@@ -369,6 +370,13 @@ class H5Partition(Partition):
 
     def get_locations(self):
         return None
+
+    @property
+    def shape(self):
+        """
+        the shape of the partition
+        """
+        return self.slice.shape.flatten_nav()
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
         '''

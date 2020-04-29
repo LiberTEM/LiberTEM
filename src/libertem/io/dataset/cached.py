@@ -458,20 +458,25 @@ class CachedDataSet(DataSet):
 class CachedPartition(Partition):
     def __init__(self, source_part, cluster_part, meta, partition_slice,
                  cache_key, cache_strategy, db_path, idx, io_backend):
-        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
+        super().__init__(meta=meta, io_backend=io_backend)
         self._source_part = source_part
         self._cluster_part = cluster_part
         self._cache_key = cache_key
         self._cache_strategy = cache_strategy
         self._db_path = db_path
         self._idx = idx
+        self._slice = partition_slice
+
+    @property
+    def shape(self):
+        return self._slice.shape.flatten_nav()
 
     def _get_cache(self):
         cache_stats = CacheStats(self._db_path)
         return Cache(stats=cache_stats, strategy=self._cache_strategy)
 
     def _sizeof(self):
-        return self.slice.shape.size * np.dtype(self.dtype).itemsize
+        return self.shape.size * np.dtype(self.dtype).itemsize
 
     def _write_tiles_noroi(self, wh, source_tiles, dest_dtype):
         """

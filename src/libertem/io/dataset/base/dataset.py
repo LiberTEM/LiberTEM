@@ -96,6 +96,10 @@ class DataSet(object):
         raise NotImplementedError()
 
     @property
+    def meta(self):
+        raise NotImplementedError()
+
+    @property
     def shape(self):
         """
         The shape of the DataSet, as it makes sense for the application domain

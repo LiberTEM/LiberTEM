@@ -19,18 +19,15 @@ class WritablePartition:
         raise NotImplementedError()
 
 
-class Partition(object):
+class Partition:
     def __init__(
-        self, meta: DataSetMeta, partition_slice: Slice, io_backend: IOBackend,
+        self, meta: DataSetMeta, io_backend: IOBackend,
     ):
         """
         Parameters
         ----------
         meta
             The `DataSet`'s `DataSetMeta` instance
-
-        partition_slice
-            The partition slice in non-flattened form
 
         fileset
             The files that are part of this partition (the FileSet may also contain files
@@ -40,10 +37,7 @@ class Partition(object):
             The I/O backend to use for accessing this partition
         """
         self.meta = meta
-        self.slice = partition_slice
         self._io_backend = io_backend
-        if partition_slice.shape.nav.dims != 1:
-            raise ValueError("nav dims should be flat")
 
     @classmethod
     def make_slices(cls, shape, num_partitions, sync_offset=0):
@@ -79,7 +73,7 @@ class Partition(object):
     def set_corrections(self, corrections: CorrectionSet):
         raise NotImplementedError()
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
         raise NotImplementedError()
 
     def get_base_shape(self):
@@ -97,9 +91,10 @@ class Partition(object):
     @property
     def shape(self):
         """
-        the shape of the partition; dimensionality depends on format
+        the shape of the partition; dimensionality depends on format,
+        but navigation axes should always be flat.
         """
-        return self.slice.shape.flatten_nav()
+        raise NotImplementedError()
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
         raise NotImplementedError()
@@ -149,20 +144,30 @@ class BasePartition(Partition):
         io_backend
             The I/O backend to use for accessing this partition
         """
-        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
+        super().__init__(meta=meta, io_backend=io_backend)
         if start_frame < self.meta.image_count:
             self._fileset = fileset.get_for_range(
                 max(0, start_frame), max(0, start_frame + num_frames - 1)
             )
+        if num_frames <= 0:
+            raise ValueError("invalid number of frames: %d" % num_frames)
+        if partition_slice.shape.nav.dims != 1:
+            raise ValueError("nav dims should be flat")
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
-        if num_frames <= 0:
-            raise ValueError("invalid number of frames: %d" % num_frames)
+        self.slice = partition_slice
 
     def get_locations(self):
         # Allow using any worker by default
         return None
+
+    @property
+    def shape(self):
+        """
+        the shape of the partition; dimensionality depends on format
+        """
+        return self.slice.shape.flatten_nav()
 
     def adjust_tileshape(self, tileshape):
         return tileshape
@@ -239,7 +244,7 @@ class BasePartition(Partition):
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
         """
         Return a generator over all DataTiles contained in this Partition.
 

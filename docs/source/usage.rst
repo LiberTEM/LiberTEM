@@ -35,7 +35,9 @@ There are a few command line options available::
       -p, --port INTEGER  port on which the server should listen on
       -d, --local-directory TEXT    local directory to manage dask-worker-space files
       -b, --browser / -n, --no-browser  enable/disable opening the browser
-      -l, --log-level TEXT            set logging level
+      -l, --log-level TEXT            set logging level. Default is 'info'.
+                                      Allowed values are 'critical', 'error',
+                                      'warning', 'info', 'debug'.
       --help          Show this message and exit.
 
 .. versionadded:: 0.4.0

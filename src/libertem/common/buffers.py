@@ -150,7 +150,7 @@ class BufferWrapper(object):
             The dtype of this buffer
         """
 
-        if np.product(tuple(extra_shape)) == 0:
+        if np.product(tuple(extra_shape)) == 0 and kind != "single":
             raise ValueError("invalid extra_shape %r: cannot contain zeros" % (tuple(extra_shape),))
 
         self._extra_shape = tuple(extra_shape)
@@ -260,7 +260,7 @@ class BufferWrapper(object):
         assert self._shape is not None
         assert self._data is None
         if self.roi_is_zero:
-            self._data = zeros_aligned(1, dtype=self._dtype)
+            self._data = np.empty(self._shape, dtype=self._dtype)
         else:
             self._data = zeros_aligned(self._shape, dtype=self._dtype)
 

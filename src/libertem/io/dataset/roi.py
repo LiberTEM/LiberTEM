@@ -57,6 +57,13 @@ class RoiPartition(Partition):
         self._wrapped = wrapped_partitions
         self._roi = roi
 
-    def get_tiles(self, tiling_scheme, dest_dtype, roi=None):
+    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         if roi is not None:
+            # TODO
             raise ValueError("can't combine ROIs yet,")
+        for partition in self._wrapped:
+            yield from partition.get_tiles(
+                tiling_scheme=tiling_scheme,
+                dest_dtype=dest_dtype,
+                roi=roi,
+            )

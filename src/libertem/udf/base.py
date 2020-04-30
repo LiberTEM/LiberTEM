@@ -211,10 +211,7 @@ class UDFData:
 
     def set_view_for_frame(self, partition, tile, frame_idx):
         for k, buf in self._get_buffers():
-            if buf.roi_is_zero:
-                raise ValueError("should not happen")
-            else:
-                self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
+            self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
     def new_for_partition(self, partition, roi: np.ndarray):
         for k, buf in self._get_buffers():

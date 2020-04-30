@@ -150,9 +150,6 @@ class BufferWrapper(object):
             The dtype of this buffer
         """
 
-        if np.product(tuple(extra_shape)) == 0 and kind != "single":
-            raise ValueError("invalid extra_shape %r: cannot contain zeros" % (tuple(extra_shape),))
-
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
@@ -259,10 +256,7 @@ class BufferWrapper(object):
         """
         assert self._shape is not None
         assert self._data is None
-        if self.roi_is_zero:
-            self._data = np.empty(self._shape, dtype=self._dtype)
-        else:
-            self._data = zeros_aligned(self._shape, dtype=self._dtype)
+        self._data = zeros_aligned(self._shape, dtype=self._dtype)
 
     def has_data(self):
         return self._data is not None
@@ -308,8 +302,6 @@ class BufferWrapper(object):
         assert partition.shape.dims == partition.shape.sig.dims + 1
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
-        if self.roi_is_zero:
-            raise ValueError("cannot get view for frame with zero ROI")
         if self._kind == "sig":
             return self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":

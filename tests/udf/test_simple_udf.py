@@ -358,16 +358,16 @@ class InvalidBuffer(UDF):
         pass
 
 
-def test_invalid_extra_shape(lt_ctx):
+def test_extra_shape_with_zero(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
     udf = InvalidBuffer()
-    with pytest.raises(ValueError) as e:
-        lt_ctx.run_udf(dataset=dataset, udf=udf)
+    res = lt_ctx.run_udf(dataset=dataset, udf=udf)
 
-    assert e.match("invalid extra_shape")
+    assert res['wrong'].data.size == 0
+    assert res['wrong'].data.shape == tuple(dataset.shape.nav) + (0,)
 
 
 @pytest.mark.parametrize(

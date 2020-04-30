@@ -55,7 +55,7 @@ def disable_quickedit():
         mode &= ~ENABLE_QUICK_EDIT
         mode |= ENABLE_EXTENDED_FLAGS
         set_console_mode(mode)
-    except TypeError:
+    except OSError:
         logger.info("Quick Edit couldn't be disabled. Console probably doesn't support Quick Edit.")
 
 

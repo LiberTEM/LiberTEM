@@ -2,9 +2,12 @@ import sys
 import msvcrt
 import ctypes
 from ctypes import windll, wintypes, byref
+import logging
 
 import win32security
 import pywintypes
+
+logger = logging.getLogger(__name__)
 
 
 def get_owner_name(full_path, stat):
@@ -47,10 +50,13 @@ def set_console_mode(mode, stream=sys.stdin):
 
 
 def disable_quickedit():
-    mode = get_console_mode()
-    mode &= ~ENABLE_QUICK_EDIT
-    mode |= ENABLE_EXTENDED_FLAGS
-    set_console_mode(mode)
+    try:
+        mode = get_console_mode()
+        mode &= ~ENABLE_QUICK_EDIT
+        mode |= ENABLE_EXTENDED_FLAGS
+        set_console_mode(mode)
+    except OSError:
+        logger.info("Quick Edit couldn't be disabled. Console probably doesn't support Quick Edit.")
 
 
 if __name__ == "__main__":

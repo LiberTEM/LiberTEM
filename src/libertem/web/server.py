@@ -119,9 +119,9 @@ def sig_exit(signum, frame, shared_state):
     )
 
 
-def main(host, port, event_registry, shared_state):
+def main(host, port, numeric_level, event_registry, shared_state):
     logging.basicConfig(
-        level=logging.INFO,
+        level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
@@ -130,13 +130,13 @@ def main(host, port, event_registry, shared_state):
     return app
 
 
-def run(host, port, browser, local_directory):
+def run(host, port, browser, local_directory, numeric_level):
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
-    main(host, port, event_registry, shared_state)
+    main(host, port, numeric_level, event_registry, shared_state)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()
@@ -145,7 +145,3 @@ def run(host, port, browser, local_directory):
     # FIXME check later if the unknown root cause was fixed upstream
     asyncio.ensure_future(nannynanny())
     loop.run_forever()
-
-
-if __name__ == "__main__":
-    main("0.0.0.0", 9000)

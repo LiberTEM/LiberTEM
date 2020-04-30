@@ -33,8 +33,11 @@ There are a few command line options available::
 
     Options:
       -p, --port INTEGER  port on which the server should listen on
-      -l, --local-directory TEXT    local directory to manage dask-worker-space files
+      -d, --local-directory TEXT    local directory to manage dask-worker-space files
       -b, --browser / -n, --no-browser  enable/disable opening the browser
+      -l, --log-level TEXT            set logging level. Default is 'info'.
+                                      Allowed values are 'critical', 'error',
+                                      'warning', 'info', 'debug'.
       --help          Show this message and exit.
 
 .. versionadded:: 0.4.0
@@ -155,6 +158,7 @@ In the download dialog, you can choose between different file formats, and separ
 download the available results.
 
 ..  figure:: ./images/use/download-modal.png
+
 
 Keyboard controls
 ~~~~~~~~~~~~~~~~~

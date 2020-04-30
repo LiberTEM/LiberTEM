@@ -38,7 +38,7 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
 }
 
 export function* doDetectDataset(fullPath: string) {
-    yield put(datasetActions.Actions.detect(fullPath));
+    yield put(datasetActions.Actions.detect(fullPath.split(',')[0]));
     const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
     let detectedParams;
     let shouldOpen = true;
@@ -66,7 +66,7 @@ export function* doOpenDataset(fullPath: string) {
     let detectedParams;
     let shouldOpen = true;
     try {
-      const doDetectDatasetRes = yield call(doDetectDataset, fullPath);
+      const doDetectDatasetRes = yield call(doDetectDataset, fullPath.split(',')[0]);
       detectedParams = doDetectDatasetRes[0];
       shouldOpen = doDetectDatasetRes[1];
     } catch (e) {
@@ -102,7 +102,7 @@ export function* openDatasetSaga(action: ReturnType<typeof browserActions.Action
     if(!isValid){
         const timestamp = Date.now();
         const id = uuid();
-        yield put(datasetActions.Actions.error(id,` dataset type is currently not supported in the GUI`, timestamp, id));
+        yield put(datasetActions.Actions.error(id,` dataset stack is not valid`, timestamp, id));
         return;
     }
     const fullPath = files.map(file => `${path}/${file.name}` ).toString()

@@ -34,14 +34,20 @@ has no physical significance.
 
 **Raw file:**
 
-.. testcode:: createraw
+.. testsetup:: sampledataraw
+
+    import os
+    os.mkdir("temp_sample_raw")
+    os.chdir("temp_sample_raw")
+
+.. testcode:: sampledataraw
 
     # Create sample raw file
     import numpy as np
     sample_data = np.random.randn(16, 16, 16, 16).astype("float32")
     sample_data.tofile("raw_sample.raw")
 
-.. testcode:: loadraw
+.. testcode:: sampledataraw
 
     # Load through Python API
     from libertem.api import Context
@@ -49,9 +55,21 @@ has no physical significance.
       ctx = Context()
       ds = ctx.load("raw", path="./raw_sample.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
 
+.. testcleanup:: sampledataraw
+
+    import shutil
+    os.chdir("..")
+    shutil.rmtree("temp_sample_raw")
+
 **HDF5 file:**
 
-.. testcode:: createHDF5
+.. testsetup:: sampledatahdf5
+
+    import os
+    os.mkdir("temp_sample_hdf5")
+    os.chdir("temp_sample_hdf5")
+
+.. testcode:: sampledatahdf5
 
     # Create sample HDF5 file
     import h5py
@@ -61,13 +79,19 @@ has no physical significance.
     dataset = file.create_dataset("dataset",(16,16,16,16), data=sample_data)
     file.close()
 
-.. testcode:: loadHDF5
+.. testcode:: sampledatahdf5
 
     # Load through Python API
     from libertem.api import Context
     if __name__ == '__main__':
       ctx = Context()
       ds = ctx.load("hdf5", path="./hdf5_sample.h5", ds_path="/dataset")
+
+.. testcleanup:: sampledatahdf5
+
+    import shutil
+    os.chdir("..")
+    shutil.rmtree("temp_sample_hdf5")
 
 Alternatively, you can enter the parameters (scan_size, dtype, detector_size)
 directly into the load dialog of the GUI. For more details on loading, please

@@ -8,6 +8,7 @@ import FileBrowserEntry from "./FileBrowserEntry";
 interface FileEntryProps {
     path: string,
     style: object,
+    isOpenStack: boolean,
     details: DirectoryListingDetails,
 }
 
@@ -22,11 +23,11 @@ type MergedProps = FileEntryProps & ReturnType<typeof mapDispatchToProps>;
 
 class FileEntry extends React.Component<MergedProps> {
     public render() {
-        const { details, style, select, toggleFile } = this.props;
+        const { details, style, select, toggleFile, isOpenStack } = this.props;
 
         return (
             <FileBrowserEntry onClick={select} style={style} details={details}
-                onToggleChange={toggleFile} icon="file outline" />
+                onToggleChange={toggleFile} icon="file outline" isOpenStack={isOpenStack} isFile={true} />
         )
     }
 }

@@ -17,6 +17,7 @@ const mapStateToProps = (state: RootReducer) => {
         files: browser.files,
         dirs: browser.dirs,
         path: browser.path,
+        isOpenStack: browser.isOpenStack,
         drives: browser.drives,
         places: browser.places,
         isLoading: browser.isLoading,
@@ -28,6 +29,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
         cancel: () => dispatch(browserActions.Actions.cancel()),
         selectAll: () => dispatch(browserActions.Actions.selectAll()),
         selectFiles: () => dispatch(browserActions.Actions.selectFiles()),
+        toggleStack: () => dispatch(browserActions.Actions.toggleStack()),
     };
 }
 
@@ -56,10 +58,10 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
-const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isLoading, selectAll, selectFiles }) => {
+const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isOpenStack, isLoading, selectAll,toggleStack, selectFiles }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
-    const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
+    const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} isOpenStack={isOpenStack} />));
     const entries = dirEntries.concat(fileEntries);
 
     const cellFn: EntryFn = ({ index, style }) => {
@@ -91,11 +93,21 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places
                 <FileBrowserHeader />
                 {list}
             </Segment>
-            <Segment>
-                <Button onClick={cancel}>Cancel</Button>
-                <Button onClick={selectAll}>Select All</Button>
-                <Button onClick={selectFiles}>Open</Button>
-            </Segment>
+            {
+                isOpenStack ? (
+                    <Segment>
+                        <Button onClick={cancel}>Cancel</Button>
+                        <Button onClick={selectAll}>Select All</Button>
+                        <Button onClick={toggleStack}>Close Stack</Button>
+                        <Button primary={true} onClick={selectFiles}>Open</Button>
+                    </Segment>
+                ) : (
+                    <Segment>
+                        <Button onClick={cancel}>Cancel</Button>
+                        <Button onClick={toggleStack}>Open Stack</Button>
+                    </Segment>
+                )
+            }
         </Segment.Group>
     );
 }

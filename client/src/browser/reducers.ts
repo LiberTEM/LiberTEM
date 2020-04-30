@@ -6,6 +6,7 @@ import { DirectoryBrowserState } from "./types";
 
 const initialBrowserState: DirectoryBrowserState = {
     isOpen: false,
+    isOpenStack: false,
     isLoading: true,
     path: "/",
     drives: [],
@@ -45,6 +46,11 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
         case browserActions.ActionTypes.OPEN: {
             return Object.assign({}, state, {
                 isOpen: true,
+            })
+        }
+        case browserActions.ActionTypes.TOGGLE_STACK: {
+            return Object.assign({}, state, {
+                isOpenStack: !state.isOpenStack,
             })
         }
         case browserActions.ActionTypes.CANCEL: {

@@ -6,6 +6,8 @@ import { DirectoryListingDetails } from "../../messages";
 interface FileBrowserEntryProps {
     style: object,
     details: DirectoryListingDetails,
+    isOpenStack: boolean,
+    isFile?: boolean,
     onClick?: () => void,
     onToggleChange?: () => void,
     icon?: SemanticICONS,
@@ -81,14 +83,17 @@ export const Cell: React.SFC<{ title?: string }> = ({ children, title }) => {
 
 class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
     public onClick = (e: React.MouseEvent) => {
-        const { onClick, icon } = this.props;
-        if (icon === 'folder' && onClick) {
+        const { isFile, onClick, isOpenStack, onToggleChange } = this.props;
+        if ( !isOpenStack && onClick ) {
+            if( isFile && onToggleChange ){
+                onToggleChange();
+            }
             onClick();
         }
     }
 
     public render() {
-        const { details, style, icon, onToggleChange } = this.props;
+        const { details, style, icon, onToggleChange, isOpenStack } = this.props;
         const myStyle: React.CSSProperties = {
             cursor: "pointer",
             ...style,
@@ -101,7 +106,7 @@ class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
         return (
             <div onClick={this.onClick} style={myStyle}>
                 <div style={{ display: "flex", paddingRight: "10px" }}>
-                    {icon ==='file outline' && 
+                    { isOpenStack && 
                     <div>
                       <input type="checkbox" onChange={onToggleChange} checked={details.checked} />
                     </div>

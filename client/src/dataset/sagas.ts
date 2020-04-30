@@ -113,6 +113,7 @@ export function* openDatasetSaga(action: ReturnType<typeof browserActions.Action
 export function* datasetRootSaga() {
     yield takeEvery(datasetActions.ActionTypes.CREATE, createDatasetSaga);
     yield takeEvery(datasetActions.ActionTypes.DELETE, deleteDatasetSaga);
+    yield takeEvery(browserActions.ActionTypes.SELECT, openDatasetSaga);
     yield takeEvery(browserActions.ActionTypes.SELECT_FILES, openDatasetSaga);
     yield takeEvery(browserActions.ActionTypes.SELECT_FULL_PATH, openDatasetSagaFullPath);
 }

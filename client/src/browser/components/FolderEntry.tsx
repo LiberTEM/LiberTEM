@@ -25,7 +25,7 @@ type MergedProps = FolderEntryProps & ReturnType<typeof mapDispatchToProps>;
 
 const FolderEntry: React.SFC<MergedProps> = ({ list, details, style, onChange }) => {
     return (
-        <FileBrowserEntry onClick={list} style={style} details={details} icon="folder" />
+        <FileBrowserEntry onClick={list} style={style} details={details} icon="folder" isOpenStack={false} />
     )
 }
 

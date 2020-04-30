@@ -7,6 +7,7 @@ export interface FSPlaces {
 export interface DirectoryBrowserState {
     isOpen: boolean,
     isLoading: boolean,
+    isOpenStack: boolean,
     path: string,
     drives: string[],
     places: FSPlaces

@@ -159,6 +159,7 @@ download the available results.
 
 ..  figure:: ./images/use/download-modal.png
 
+
 Keyboard controls
 ~~~~~~~~~~~~~~~~~
 

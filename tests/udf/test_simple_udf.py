@@ -346,28 +346,40 @@ def test_udf_pickle(lt_ctx):
     pickle.loads(pickle.dumps(pixelsum))
 
 
-class InvalidBuffer(UDF):
+class ExtraShapeWithZero(UDF):
     def get_result_buffers(self):
         return {
-            'wrong': self.buffer(
-                kind="nav", dtype="float32", extra_shape=(0,),
+            'testnav': self.buffer(
+                kind="nav", dtype="float32", extra_shape=(0,)
+            ),
+            'testsig': self.buffer(
+                kind="sig", dtype="float32", extra_shape=(0,)
+            ),
+            'testsingle': self.buffer(
+                kind="single", dtype="float32", extra_shape=(0,)
             )
         }
 
     def process_frame(self, frame):
         pass
 
+    def merge(self, dest, src):
+        pass
 
 def test_extra_shape_with_zero(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
                             num_partitions=2, sig_dims=2)
 
-    udf = InvalidBuffer()
+    udf = ExtraShapeWithZero()
     res = lt_ctx.run_udf(dataset=dataset, udf=udf)
 
-    assert res['wrong'].data.size == 0
-    assert res['wrong'].data.shape == tuple(dataset.shape.nav) + (0,)
+    assert res['testnav'].data.size == 0
+    assert res['testnav'].data.shape == tuple(dataset.shape.nav) + (0,)
+    assert res['testsig'].data.size == 0
+    assert res['testsig'].data.shape == tuple(dataset.shape.sig) + (0,)
+    assert res['testsingle'].data.size == 0
+    assert res['testsingle'].data.shape == (0,)
 
 
 @pytest.mark.parametrize(

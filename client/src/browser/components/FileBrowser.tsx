@@ -61,7 +61,7 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
 const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isOpenStack, isLoading, selectAll,toggleStack, selectFiles }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
-    const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} isOpenStack={isOpenStack} />));
+    const fileEntries = sortByKey(files, getSortKey).map((f,i) => ((style: object) => <FileEntry style={style} path={path} details={f} isOpenStack={isOpenStack} index={i} />));
     const entries = dirEntries.concat(fileEntries);
 
     const cellFn: EntryFn = ({ index, style }) => {

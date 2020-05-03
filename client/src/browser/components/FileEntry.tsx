@@ -9,13 +9,14 @@ interface FileEntryProps {
     path: string,
     style: object,
     isOpenStack: boolean,
+    index: number,
     details: DirectoryListingDetails,
 }
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: FileEntryProps) => {
     return {
         select: () => dispatch(browserActions.Actions.select(ownProps.path, ownProps.details.name)),
-        toggleFile: () => dispatch(browserActions.Actions.toggleFile(ownProps.details.index)),
+        toggleFile: (index: number) => dispatch(browserActions.Actions.toggleFile(index)),
     };
 }
 
@@ -23,11 +24,15 @@ type MergedProps = FileEntryProps & ReturnType<typeof mapDispatchToProps>;
 
 class FileEntry extends React.Component<MergedProps> {
     public render() {
-        const { details, style, select, toggleFile, isOpenStack } = this.props;
+        const { details, style, select, toggleFile, isOpenStack, index } = this.props;
+
+        const onToggleChange = () => {
+            toggleFile(index);
+        }
 
         return (
             <FileBrowserEntry onClick={select} style={style} details={details}
-                onToggleChange={toggleFile} icon="file outline" isOpenStack={isOpenStack} isFile={true} />
+                onToggleChange={onToggleChange} icon="file outline" isOpenStack={isOpenStack} isFile={true} />
         )
     }
 }

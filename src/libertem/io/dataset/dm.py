@@ -51,6 +51,7 @@ class DMDatasetParams(MessageConverter):
         }
         return data
 
+
 class StackedDMFile(LocalFile):
     def _mmap_to_array(self, raw_mmap, start, stop):
         res = np.frombuffer(raw_mmap, dtype="uint8")
@@ -195,7 +196,6 @@ class DMDataSet(DataSet):
         nav_dims = self._get_scan_size()
         shape = nav_dims + tuple(first_file.shape)
         shape = tuple([int(x) for x in shape])
-        print(nav_dims)
         sig_dims = len(first_file.shape)
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=sig_dims),
@@ -236,9 +236,6 @@ class DMDataSet(DataSet):
         try:
             with fileDM(first_fn, on_memory=True):
                 pass
-            print("============")
-            print(np.product(self._scan_size), len(self._get_files()))
-            print("===================")
             if (self._scan_size is not None
                     and np.product(self._scan_size) != len(self._get_files())):
                 raise DataSetException("incompatible scan_size")

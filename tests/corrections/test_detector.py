@@ -354,7 +354,7 @@ def test_mask_patch():
         print("Sig dims:", sig_dims)
         print("Exclude: ", exclude)
 
-        masks = (np.random.random((2, ) + sig_dims) - 0.5).astype(np.float64)
+        masks = (np.random.random((2, ) + sig_dims) - 0.3).astype(np.float64)
         data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
         damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
 

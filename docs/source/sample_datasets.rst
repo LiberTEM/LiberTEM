@@ -37,8 +37,9 @@ has no physical significance.
 .. testsetup:: sampledataraw
 
     import os
-    os.mkdir("temp_sample_raw")
-    os.chdir("temp_sample_raw")
+    import tempfile
+    raw_temp = tempfile.TemporaryDirectory()
+    os.chdir(raw_temp.name)
 
 .. testcode:: sampledataraw
 
@@ -57,17 +58,17 @@ has no physical significance.
 
 .. testcleanup:: sampledataraw
 
-    import shutil
     os.chdir("..")
-    shutil.rmtree("temp_sample_raw")
+    raw_temp.cleanup()
 
 **HDF5 file:**
 
 .. testsetup:: sampledatahdf5
 
     import os
-    os.mkdir("temp_sample_hdf5")
-    os.chdir("temp_sample_hdf5")
+    import tempfile
+    hdf5_temp = tempfile.TemporaryDirectory()
+    os.chdir(hdf5_temp.name)
 
 .. testcode:: sampledatahdf5
 
@@ -89,9 +90,8 @@ has no physical significance.
 
 .. testcleanup:: sampledatahdf5
 
-    import shutil
     os.chdir("..")
-    shutil.rmtree("temp_sample_hdf5")
+    hdf5_temp.cleanup()
 
 Alternatively, you can enter the parameters (scan_size, dtype, detector_size)
 directly into the load dialog of the GUI. For more details on loading, please

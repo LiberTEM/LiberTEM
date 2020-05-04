@@ -80,6 +80,13 @@
         "contribution": "Discussions, system architecture"
     },
     {
+        "displayname": "John Gaida",
+        "authorname": "Gaida, John",
+        "affiliation": "Göttingen University",
+        "github": "jhgee",
+        "contribution": "Help with Norpix SEQ support #153 #767"
+    },
+    {
         "displayname": "Wojtek James Goscinski",
         "authorname": "Goscinski, Wojtek James",
         "affiliation": "Monash",

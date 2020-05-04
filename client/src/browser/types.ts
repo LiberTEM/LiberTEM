@@ -9,7 +9,7 @@ export interface DirectoryBrowserState {
     isLoading: boolean,
     path: string,
     drives: string[],
-    places: FSPlaces
+    places: FSPlaces,
     files: DirectoryListingDetails[],
     dirs: DirectoryListingDetails[],
 }

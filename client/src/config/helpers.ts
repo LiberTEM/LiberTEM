@@ -27,6 +27,7 @@ export function setLocalStorage(config: ConfigState): void {
         lastOpened: config.lastOpened,
         fileHistory: config.fileHistory,
         lastConnection: config.lastConnection,
+        starred: config.starred,
     }
 
     window.localStorage.setItem(CONFIG_KEY, JSON.stringify(localSettings));
@@ -44,7 +45,8 @@ export function getDefaultLocalConfig(config: MsgPartConfig): LocalConfig {
         lastConnection: {
             type: ClusterTypes.LOCAL,
             address: "tcp://localhost:8786"
-        }
+        },
+        starred: [],
     };
 }
 

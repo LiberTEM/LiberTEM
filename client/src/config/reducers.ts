@@ -15,7 +15,8 @@ export interface LocalConfig {
     lastConnection: {
         type: ClusterTypes,
         address: string
-    }
+    },
+    starred: string[],
 }
 
 export type ConfigParams = MsgPartConfig & LocalConfig ;
@@ -36,7 +37,8 @@ const initialConfigState: ConfigState = {
     lastConnection: {
         type: ClusterTypes.LOCAL,
         address: "tcp://localhost:8786",
-    }
+    },
+    starred: [],
 }
 
 export function configReducer(state = initialConfigState, action: AllActions): ConfigState {
@@ -70,6 +72,20 @@ export function configReducer(state = initialConfigState, action: AllActions): C
                 return Object.assign({}, state, {
                     lastConnection: action.payload.params
                 })
+            }
+        }
+        case configActions.ActionTypes.TOGGLE_STAR: {
+            const path = action.payload.path;
+            if (state.starred.includes(path)) {
+                return {
+                    ...state,
+                    starred: state.starred.filter(p => p !== path),
+                };
+            } else {
+                return {
+                    ...state,
+                    starred: [path, ...state.starred],
+                };
             }
         }
     }

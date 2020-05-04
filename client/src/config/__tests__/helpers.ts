@@ -1,4 +1,5 @@
-import { joinPaths, makeUnique } from '../helpers'
+import { ClusterTypes } from '../../messages';
+import { joinPaths, makeUnique } from '../helpers';
 import { ConfigState } from '../reducers';
 
 const config: ConfigState = {
@@ -8,6 +9,11 @@ const config: ConfigState = {
     resultFileFormats: {},
     localCores: 0,
     haveConfig: true,
+    lastConnection: {
+        type: ClusterTypes.LOCAL,
+        address: "tcp://localhost:8786",
+    },
+    starred: [],
 };
 
 describe('joinPaths', () => {

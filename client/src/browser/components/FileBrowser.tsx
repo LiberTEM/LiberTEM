@@ -12,7 +12,7 @@ import FolderEntry from "./FolderEntry";
 import PathBar from "./PathBar";
 
 const mapStateToProps = (state: RootReducer) => {
-    const { browser } = state;
+    const { browser, config } = state;
     return {
         files: browser.files,
         dirs: browser.dirs,
@@ -20,6 +20,7 @@ const mapStateToProps = (state: RootReducer) => {
         drives: browser.drives,
         places: browser.places,
         isLoading: browser.isLoading,
+        starred: config.starred,
     };
 }
 
@@ -54,7 +55,7 @@ function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
     });
 }
 
-const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, cancel, isLoading }) => {
+const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, starred, cancel, isLoading }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
     const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
     const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
@@ -83,7 +84,7 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places
                 <Header as="h2">Open dataset</Header>
             </Segment>
             <Segment>
-                <PathBar currentPath={path} drives={drives} places={places} onChange={scrollToTop} />
+                <PathBar currentPath={path} drives={drives} places={places} starred={starred} onChange={scrollToTop} />
             </Segment>
             <Segment>
                 <FileBrowserHeader />

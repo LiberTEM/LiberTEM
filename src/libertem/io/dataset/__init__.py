@@ -16,6 +16,7 @@ filetypes = {
     "empad": "libertem.io.dataset.empad.EMPADDataSet",
     "memory": "libertem.io.dataset.memory.MemoryDataSet",
     "dm": "libertem.io.dataset.dm.DMDataSet",
+    "seq": "libertem.io.dataset.seq.SEQDataSet",
 }
 
 

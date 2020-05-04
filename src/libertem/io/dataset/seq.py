@@ -28,8 +28,10 @@
 
 import os
 import struct
+from typing import Tuple
 
 import numpy as np
+from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
     LocalFile,
@@ -75,11 +77,14 @@ HEADER_FIELDS = [
 
 
 def _read_header(path, fields, offset=0):
+    str_fields = {"name", "description"}
     with open(path, "rb") as _file:
         _file.seek(offset)
         tmp = dict()
         for name, format in fields:
             val = _unpack_header(_file, format)
+            if name in str_fields:
+                val = _decode_str(val)
             tmp[name] = val
 
     return tmp
@@ -96,12 +101,66 @@ def _unpack_header(_file, fs, offset=None):
         return vals
 
 
+def _decode_str(str_in):
+    end_pos = len(str_in)
+    end_mark = b'\x00\x00'
+    if end_mark in str_in:
+        end_pos = str_in.index(end_mark) + 1
+    return str_in[:end_pos].decode("utf16")
+
+
+def _get_image_offset(header):
+    if header['version'] >= 5:
+        return 8192
+    else:
+        return 1024
+
+
+class SEQDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/SEQDatasetParams.schema.json",
+        "title": "SEQDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "SEQ"},
+            "path": {"type": "string"},
+            "scan_size": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2,
+            },
+        },
+        "required": ["type", "path", "scan_size"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            "path": raw_data["path"],
+        }
+        if "scan_size" in raw_data:
+            data["scan_size"] = tuple(raw_data["scan_size"])
+        return data
+
+
 class SEQFileSet(FileSet):
     pass
 
 
 class SEQDataSet(DataSet):
-    def __init__(self, path, scan_size):
+    """
+    Read data from Norpix SEQ files.
+
+    Parameters
+    ----------
+    path
+        Path to the .seq file
+
+    scan_size
+        A tuple that specifies the size of the scanned region/line/...
+    """
+    def __init__(self, path: str, scan_size: Tuple[int]):
         self._path = path
         self._scan_size = scan_size
         self._header = None
@@ -112,13 +171,12 @@ class SEQDataSet(DataSet):
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
+        self._image_offset = _get_image_offset(header)
         if header['version'] >= 5:  # StreamPix version 6
-            self._image_offset = 8192
             # Timestamp = 4-byte unsigned long + 2-byte unsigned short (ms)
             #   + 2-byte unsigned short (us)
             self._timestamp_micro = True
         else:  # Older versions
-            self._image_offset = 1024
             self._timestamp_micro = False
         try:
             dtype = np.dtype('uint%i' % header['bit_depth'])
@@ -126,14 +184,14 @@ class SEQDataSet(DataSet):
             raise DataSetException("unsupported bit depth: %s" % header['bit_depth'])
         frame_size_bytes = header['width'] * header['height'] * dtype.itemsize
         self._footer_size = header['true_image_size'] - frame_size_bytes
-        self._filesize = os.stat(self._filename).st_size
+        self._filesize = os.stat(self._path).st_size
         self._image_count = int(
             (self._filesize - self._image_offset) / header['true_image_size']
         )
         if self._image_count != np.prod(self._scan_size):
             raise DataSetException("scan_size doesn't match number of frames")
         shape = Shape(
-            (self._scan_size,) + (header['height'], header['width']),
+            self._scan_size + (header['height'], header['width']),
             sig_dims=2,
         )
         self._meta = DataSetMeta(
@@ -142,18 +200,49 @@ class SEQDataSet(DataSet):
             dtype=dtype,
             metadata=header,
         )
+        return self
 
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)
+
+    def get_diagnostics(self):
+        header = self._header
+        return [
+            {"name": k, "value": str(v)}
+            for k, v in header.items()
+        ] + [
+            {"name": "Footer size",
+             "value": str(self._footer_size)},
+        ]
 
     @property
     def meta(self):
         return self._meta
 
     @classmethod
+    def get_msg_converter(cls):
+        return SEQDatasetParams
+
+    @classmethod
     def detect_params(cls, path, executor):
-        # TODO: check the MAGIC
-        raise NotImplementedError()
+        header = _read_header(path, HEADER_FIELDS)
+        if header['magic'] != 0xFEED:
+            return False
+        image_offset = _get_image_offset(header)
+        filesize = os.stat(path).st_size
+        image_count = int(
+            (filesize - image_offset) / header['true_image_size']
+        )
+        return {
+            "parameters": {
+                "path": path,
+                "scan_size": str(image_count),
+            }
+        }
+
+    @classmethod
+    def get_supported_extensions(cls):
+        return set(["seq"])
 
     @property
     def dtype(self):
@@ -173,9 +262,9 @@ class SEQDataSet(DataSet):
                 sig_shape=self._meta.shape.sig,
                 frame_footer=self._footer_size,
                 frame_header=0,
-                file_header=0,
+                file_header=self._image_offset,
             )
-        ])
+        ], frame_footer_bytes=self._footer_size)
 
     def check_valid(self):
         if self._header['magic'] != 0xFEED:

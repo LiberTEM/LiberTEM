@@ -88,6 +88,7 @@ export enum DatasetTypes {
     SER = "SER",
     FRMS6 = "FRMS6",
     EMPAD = "EMPAD",
+    SEQ = "SEQ",
 }
 
 export interface DatasetParamsCommon {
@@ -149,7 +150,13 @@ export type DatasetParamsEMPAD = {
     scan_size: number[],
 } & DatasetParamsCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD
+export type DatasetParamsSEQ = {
+    type: DatasetTypes.SEQ,
+    path: string,
+    scan_size: number[],
+} & DatasetParamsCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ
 
 export interface DatasetCreateParams {
     id: string,

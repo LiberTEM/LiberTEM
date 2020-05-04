@@ -59,7 +59,7 @@ Code licensing
 Parts of the SEQ reader are based on the PIMS project,
 which has the following license:
 
-.. code-block:: plain
+.. code-block:: text
 
     Copyright (c) 2013-2014 PIMS contributors
     https://github.com/soft-matter/pims

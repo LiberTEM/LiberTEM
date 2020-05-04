@@ -42,7 +42,8 @@ function* updateLocalStorageConfig() {
         yield take([
             datasetActions.ActionTypes.CREATE,
             browserActions.ActionTypes.DIRECTORY_LISTING,
-            clusterActions.ActionTypes.CONNECTED
+            clusterActions.ActionTypes.CONNECTED,
+            configActions.ActionTypes.TOGGLE_STAR,
         ]);
         const config: ConfigState = yield select((state: RootReducer) => state.config);
         setLocalStorage(config);

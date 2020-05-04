@@ -1,7 +1,8 @@
 import { AllActions } from "../actions";
 import * as browserActions from '../browser/actions';
-import * as clusterActions from '../cluster/actions'
+import * as clusterActions from '../cluster/actions';
 import * as datasetActions from '../dataset/actions';
+import { toggleItemInList } from "../helpers/reducerHelpers";
 import { ClusterTypes, DatasetFormParams, MsgPartConfig } from "../messages";
 import * as configActions from './actions';
 import { makeUnique } from "./helpers";
@@ -76,17 +77,10 @@ export function configReducer(state = initialConfigState, action: AllActions): C
         }
         case configActions.ActionTypes.TOGGLE_STAR: {
             const path = action.payload.path;
-            if (state.starred.includes(path)) {
-                return {
-                    ...state,
-                    starred: state.starred.filter(p => p !== path),
-                };
-            } else {
-                return {
-                    ...state,
-                    starred: [path, ...state.starred],
-                };
-            }
+            return {
+                ...state,
+                starred: toggleItemInList(state.starred, path),
+            };
         }
     }
     return state;

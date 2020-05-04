@@ -79,3 +79,11 @@ export function filterWithPredReadOnly<R>(state: ByIdReadOnly<R>, pred: Predicat
         ids,
     };
 }
+
+export function toggleItemInList<T>(list: T[], item: T): T[] {
+    if (list.includes(item)) {
+        return list.filter(i => i !== item)
+    } else {
+        return [item, ...list];
+    }
+}

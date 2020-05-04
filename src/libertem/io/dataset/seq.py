@@ -225,20 +225,23 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        header = _read_header(path, HEADER_FIELDS)
-        if header['magic'] != 0xFEED:
-            return False
-        image_offset = _get_image_offset(header)
-        filesize = os.stat(path).st_size
-        image_count = int(
-            (filesize - image_offset) / header['true_image_size']
-        )
-        return {
-            "parameters": {
-                "path": path,
-                "scan_size": str(image_count),
+        try:
+            header = _read_header(path, HEADER_FIELDS)
+            if header['magic'] != 0xFEED:
+                return False
+            image_offset = _get_image_offset(header)
+            filesize = os.stat(path).st_size
+            image_count = int(
+                (filesize - image_offset) / header['true_image_size']
+            )
+            return {
+                "parameters": {
+                    "path": path,
+                    "scan_size": str(image_count),
+                }
             }
-        }
+        except OSError:
+            return False
 
     @classmethod
     def get_supported_extensions(cls):

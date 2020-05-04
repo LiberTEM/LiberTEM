@@ -16,6 +16,7 @@ import HDF5ParamsForm from "./HDF5ParamsForm";
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
+import SEQParamsForm from "./SEQParamsForm";
 import SERParamsForm from "./SERParamsForm";
 
 
@@ -51,14 +52,14 @@ const getDefaultDSType = (didReset: boolean, openState: OpenDatasetState) => {
  * @param openState complete OpenDatasetState instance
  */
 
- // Fix this after separating info from params
+// Fix this after separating info from params
 const getAdditionalInfo = (formDetectedParams: DatasetFormParams) => {
-     const additionalInfo = Object.keys(formDetectedParams)
-     .filter(isAdditionalInfo)
-     .reduce((allInfo: object, info: string) => {
-       return hasKey(formDetectedParams, info)? {...allInfo, [info]: formDetectedParams[info] } : {...allInfo};
-     }, {});
-     return additionalInfo;
+    const additionalInfo = Object.keys(formDetectedParams)
+        .filter(isAdditionalInfo)
+        .reduce((allInfo: object, info: string) => {
+            return hasKey(formDetectedParams, info) ? { ...allInfo, [info]: formDetectedParams[info] } : { ...allInfo };
+        }, {});
+    return additionalInfo;
 }
 
 const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
@@ -73,9 +74,9 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
         return undefined;
     }
     if (formCachedParams) {
-        if(formDetectedParams) {
-          const additionalInfo = getAdditionalInfo(formDetectedParams);
-          return { ...additionalInfo, ...formCachedParams };
+        if (formDetectedParams) {
+            const additionalInfo = getAdditionalInfo(formDetectedParams);
+            return { ...additionalInfo, ...formCachedParams };
         }
         return formCachedParams;
     } else {
@@ -169,6 +170,11 @@ const DatasetOpen = () => {
         case DatasetTypes.EMPAD: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             return renderForm(<EMPADParamsForm {...commonParams} initial={initial} />)
+        }
+        case DatasetTypes.SEQ: {
+            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+            return renderForm(<SEQParamsForm {...commonParams} initial={initial} />);
+
         }
     }
     return assertNotReached("unknown dataset type");

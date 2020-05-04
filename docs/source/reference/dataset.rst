@@ -77,6 +77,14 @@ HDF5
 
 .. autoclass:: libertem.io.dataset.hdf5.H5DataSet
 
+
+.. _`seq`:
+
+Norpix SEQ
+~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.seq.SEQDataSet
+
 .. _`memory`:
 
 Memory data set

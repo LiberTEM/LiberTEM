@@ -24,7 +24,7 @@ export type ConfigState = ConfigParams & {
     haveConfig: boolean,
 };
 
-const initialConfigState: ConfigState = {
+export const initialConfigState: ConfigState = {
     version: "",
     revision: "",
     localCores: 0,

@@ -1,26 +1,11 @@
-import { ClusterTypes } from '../../messages';
 import { joinPaths, makeUnique } from '../helpers';
-import { ConfigState } from '../reducers';
-
-const config: ConfigState = {
-    separator: '/', version: '', revision: '', cwd: '/',
-    lastOpened: {},
-    fileHistory: [],
-    resultFileFormats: {},
-    localCores: 0,
-    haveConfig: true,
-    lastConnection: {
-        type: ClusterTypes.LOCAL,
-        address: "tcp://localhost:8786",
-    },
-    starred: [],
-};
+import { initialConfigState } from '../reducers';
 
 describe('joinPaths', () => {
     it('properly joins paths', () => {
-        expect(joinPaths(config, '/', 'home')).toBe("/home");
-        expect(joinPaths(config, '/home', 'something')).toBe("/home/something");
-        expect(joinPaths(config, '/home', '..')).toBe("/home/..");
+        expect(joinPaths(initialConfigState, '/', 'home')).toBe("/home");
+        expect(joinPaths(initialConfigState, '/home', 'something')).toBe("/home/something");
+        expect(joinPaths(initialConfigState, '/home', '..')).toBe("/home/..");
     });
 });
 

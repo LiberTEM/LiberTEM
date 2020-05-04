@@ -174,7 +174,6 @@ const DatasetOpen = () => {
         case DatasetTypes.SEQ: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             return renderForm(<SEQParamsForm {...commonParams} initial={initial} />);
-
         }
     }
     return assertNotReached("unknown dataset type");

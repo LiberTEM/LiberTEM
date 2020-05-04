@@ -144,9 +144,14 @@ class ClusterDataSet(WritableDataSet, DataSet):
     def get_diagnostics(self):
         return []
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         idx_to_workers = self._get_all_workers()
         fileset = self._get_fileset()
+        if ranges is not None:
+            # FIXME: cluster dataset plus roi partitions needs some work
+            raise ValueError(
+                "cannot use pre-defined ranges for this DataSet"
+            )
         for (idx, (start_idx, end_idx)) in enumerate(self._structure.slices):
             part_slice = Slice(
                 origin=(start_idx,) + tuple([0] * self.shape.sig.dims),

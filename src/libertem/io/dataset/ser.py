@@ -238,9 +238,9 @@ class SERDataSet(DataSet):
             )
         ])
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield SERPartition(
                 path=self._path,
                 meta=self._meta,

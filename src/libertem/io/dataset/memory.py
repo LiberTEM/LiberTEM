@@ -268,6 +268,10 @@ class MemoryDataSet(DataSet):
     def shape(self):
         return Shape(self.data.shape, sig_dims=self.sig_dims)
 
+    @property
+    def meta(self):
+        return self._meta
+
     def check_valid(self):
         return True
 
@@ -277,7 +281,7 @@ class MemoryDataSet(DataSet):
     def get_num_partitions(self):
         return self.num_partitions
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = FileSet([
             MemoryFile(
                 path=None,
@@ -290,7 +294,7 @@ class MemoryDataSet(DataSet):
             )
         ])
 
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             log.debug(
                 "creating partition slice %s start %s stop %s",
                 part_slice, start, stop,

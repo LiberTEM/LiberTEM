@@ -1,5 +1,6 @@
 import itertools
 
+from typing import Union
 import numpy as np
 
 from libertem.common import Slice, Shape
@@ -40,7 +41,7 @@ class Partition:
         self._io_backend = io_backend
 
     @classmethod
-    def make_slices(cls, shape, num_partitions, sync_offset=0):
+    def make_slices(cls, shape, num_partitions, ranges=None, sync_offset=0):
         """
         partition a 3D dataset ("list of frames") along the first axis,
         yielding the partition slice, and additionally start and stop frame
@@ -48,9 +49,12 @@ class Partition:
         """
         num_frames = shape.nav.size
         f_per_part = max(1, num_frames // num_partitions)
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
+        if ranges is None:
+            c0 = itertools.count(start=0, step=f_per_part)
+            c1 = itertools.count(start=f_per_part, step=f_per_part)
+            ranges = zip(c0, c1)
+
+        for (start, stop) in ranges:
             if start >= num_frames:
                 break
             stop = min(stop, num_frames)
@@ -94,6 +98,9 @@ class Partition:
         the shape of the partition; dimensionality depends on format,
         but navigation axes should always be flat.
         """
+        raise NotImplementedError()
+
+    def shape_for_roi(self, roi: Union[np.adarray, None]):
         raise NotImplementedError()
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
@@ -169,6 +176,9 @@ class BasePartition(Partition):
         """
         return self.slice.shape.flatten_nav()
 
+    def shape_for_roi(self, roi: Union[np.adarray, None]):
+        return self.slice.adjust_for_roi(roi).shape
+
     def adjust_tileshape(self, tileshape):
         return tileshape
 
@@ -195,9 +205,13 @@ class BasePartition(Partition):
                 roi=roi,
             ))
         except StopIteration:
+            sig_dims = self.slice.shape.sig.dims
             tile_slice = Slice(
-                origin=(self.slice.origin[0], 0, 0),
-                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
+                origin=(self.slice.origin[0],) + tuple([0] * sig_dims),
+                shape=Shape(
+                    (0,) + tuple(self.slice.shape.sig),
+                    sig_dims=sig_dims,
+                ),
             )
             return DataTile(
                 np.zeros(tile_slice.shape, dtype=dest_dtype),

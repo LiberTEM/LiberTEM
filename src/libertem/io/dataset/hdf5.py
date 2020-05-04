@@ -1,3 +1,4 @@
+from typing import Union
 import contextlib
 import warnings
 import time
@@ -250,7 +251,7 @@ class H5DataSet(DataSet):
                 {"name": "datasets", "value": datasets},
             ]
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
         ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
         partition_shape = self.partition_shape(
@@ -377,6 +378,9 @@ class H5Partition(Partition):
         the shape of the partition
         """
         return self.slice.shape.flatten_nav()
+
+    def shape_for_roi(self, roi: Union[np.adarray, None]):
+        return self.slice.adjust_for_roi(roi).shape
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
         '''

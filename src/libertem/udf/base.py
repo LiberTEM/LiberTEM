@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import Dict
+from typing import Dict, List
 import logging
 import uuid
 
@@ -972,7 +972,7 @@ class UDFTask(Task):
 
 
 class UDFRunner:
-    def __init__(self, udfs, debug=False):
+    def __init__(self, udfs: List[UDF], debug=False):
         self._udfs = udfs
         self._debug = debug
 
@@ -1214,6 +1214,7 @@ class UDFRunner:
                 t.update(1)
             for results, udf in zip(part_results, self._udfs):
                 udf.set_views_for_partition(task.partition)
+                udf.set_slice(task.partition.slice)
                 udf.merge(
                     dest=udf.results.get_proxy(),
                     src=results.get_proxy()
@@ -1238,6 +1239,7 @@ class UDFRunner:
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
             for results, udf in zip(part_results, self._udfs):
                 udf.set_views_for_partition(task.partition)
+                udf.set_slice(task.partition.slice)
                 udf.merge(
                     dest=udf.results.get_proxy(),
                     src=results.get_proxy()

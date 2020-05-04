@@ -702,11 +702,11 @@ class MIBDataSet(DataSet):
         res = max(self._cores, total_size_px // partition_size_px)
         return res
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         first_file = self._files_sorted[0]
         fileset = self._get_fileset()
         kind = first_file.fields['mib_kind']
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield MIBPartition(
                 meta=self._meta,
                 fileset=fileset,

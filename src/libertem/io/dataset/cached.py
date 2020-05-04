@@ -429,7 +429,11 @@ class CachedDataSet(DataSet):
         # - ask cache backend if things look valid (i.e. sidecar cache info is OK)
         return True
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
+        if ranges is not None:
+            raise ValueError(
+                "cannot use pre-defined ranges for this DataSet"
+            )
         for idx, (source_part, cluster_part) in enumerate(zip(self._source_ds.get_partitions(),
                                                               self._cluster_ds.get_partitions())):
             yield CachedPartition(
@@ -470,6 +474,9 @@ class CachedPartition(Partition):
     @property
     def shape(self):
         return self._slice.shape.flatten_nav()
+
+    def shape_for_roi(self, roi: Union[np.adarray, None]):
+        return self._slice.adjust_for_roi(roi).shape
 
     def _get_cache(self):
         cache_stats = CacheStats(self._db_path)

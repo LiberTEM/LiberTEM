@@ -257,9 +257,9 @@ class BloDataSet(DataSet):
             )
         ], frame_header_bytes=6)
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield BasePartition(
                 meta=self._meta,
                 fileset=fileset,

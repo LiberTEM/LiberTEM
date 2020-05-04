@@ -679,9 +679,9 @@ class FRMS6DataSet(DataSet):
             gain=self._gain_map,
         )
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield FRMS6Partition(
                 meta=self._meta,
                 partition_slice=part_slice,

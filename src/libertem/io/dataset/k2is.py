@@ -711,11 +711,16 @@ class K2ISDataSet(DataSet):
         res = max(self._cores, total_size_px // partition_size_px)
         return res
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
-        for part_slice, start, stop in K2ISPartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+
+        slices = BasePartition.make_slices(
+            shape=self.shape,
+            num_partitions=self.num_partitions,
+            ranges=ranges,
+        )
+
+        for part_slice, start, stop in slices:
             yield K2ISPartition(
                 meta=self._meta,
                 fileset=fileset.get_for_range(start, stop),

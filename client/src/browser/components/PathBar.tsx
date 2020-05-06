@@ -45,6 +45,7 @@ const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, starred,
     const starOptions = starred.map((path) => ({ key: path, text: path }));
     const isStarred = starred.includes(currentPath);
     const starredIcon = isStarred ? "star" : "star outline";
+    const bookmarkTitle = isStarred ? "Remove from bookmarks" : "Bookmark this location";
 
     return (
         <Menu>
@@ -60,17 +61,20 @@ const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, starred,
                         return <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
                     })}
                     <Dropdown.Header content="Starred" />
+                    {starOptions.length === 0 && 
+                        <Dropdown.Item key="empty" value="empty" content="No bookmarks yet" />
+                    }
                     {starOptions.map((option) => {
                         return <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
                     })}
                 </Dropdown.Menu>
             </Dropdown>
+            <Menu.Item title={bookmarkTitle} icon={starredIcon} onClick={toggleStar} />
             <Menu.Item icon="arrow up" onClick={goUp} />
             <Menu.Item style={{ flexGrow: 1 }}>
                 <PathInput onChange={handleInputChange} initialPath={currentPath} />
             </Menu.Item>
             <Menu.Item icon="refresh" onClick={refresh} />
-            <Menu.Item icon={starredIcon} onClick={toggleStar} />
         </Menu>
     );
 }

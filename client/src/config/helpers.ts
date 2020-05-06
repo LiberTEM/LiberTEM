@@ -13,10 +13,10 @@ export function joinPaths(config: ConfigState, ...parts: string[]) {
 export function mergeLocalStorage(serverConfig: MsgPartConfig): ConfigParams {
     const localSettings = window.localStorage.getItem(CONFIG_KEY);
     if (localSettings === null) {
-        return Object.assign({}, serverConfig, getDefaultLocalConfig(serverConfig));
+        return Object.assign({}, getDefaultLocalConfig(), serverConfig);
     }
     const localSettingsParsed = JSON.parse(localSettings);
-    const defaultConfig = getDefaultLocalConfig(serverConfig);
+    const defaultConfig = getDefaultLocalConfig();
     const mergedConfig = Object.assign({}, defaultConfig, serverConfig, localSettingsParsed);
     return mergedConfig;
 }
@@ -37,7 +37,7 @@ export function clearLocalStorage(): void {
     window.localStorage.removeItem(CONFIG_KEY);
 }
 
-export function getDefaultLocalConfig(config: MsgPartConfig): LocalConfig {
+export function getDefaultLocalConfig(): LocalConfig {
     return {
         lastOpened: {},
         fileHistory: [],

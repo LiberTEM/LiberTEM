@@ -73,6 +73,11 @@ Contributions are highly appreciated! This example opens an HDF5 file :cite:`Zel
 
 ..  figure:: ./images/use/open.png
 
+You can also bookmark locations you frequently need to access, using the
+star icon. The bookmarks are then found under "Go to...".
+
+..  figure:: ./images/use/star.png
+
 After selecting a file, you set the type in the drop-down menu at the top of the
 dialogue above the file name. After that you set the appropriate parameters that
 depend on the file type. Clicking on "Load Dataset" will open the file with the

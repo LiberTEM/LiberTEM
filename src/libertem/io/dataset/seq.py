@@ -75,30 +75,40 @@ HEADER_FIELDS = [
     # More header values not implemented
 ]
 
+HEADER_SIZE = sum([
+    struct.Struct('<' + field[1]).size
+    for field in HEADER_FIELDS
+])
 
-def _read_header(path, fields, offset=0):
+
+def _read_header(path, fields):
+    with open(path, "rb") as fh:
+        fh.seek(0)
+        _unpack_header(fh.read(HEADER_SIZE), fields)
+
+
+def _unpack_header(header_bytes, fields):
     str_fields = {"name", "description"}
-    with open(path, "rb") as _file:
-        _file.seek(offset)
-        tmp = dict()
-        for name, format in fields:
-            val = _unpack_header(_file, format)
-            if name in str_fields:
-                val = _decode_str(val)
-            tmp[name] = val
+    tmp = dict()
+    pos = 0
+    for name, fmt in fields:
+        header_part = header_bytes[pos:]
+        val, size = _unpack_header_field(header_part, fmt)
+        if name in str_fields:
+            val = _decode_str(val)
+        tmp[name] = val
+        pos += size
 
     return tmp
 
 
-def _unpack_header(_file, fs, offset=None):
-    if offset is not None:
-        _file.seek(offset)
+def _unpack_header_field(header_part, fs):
     s = struct.Struct('<' + fs)
-    vals = s.unpack(_file.read(s.size))
+    vals = s.unpack(header_part[:s.size])
     if len(vals) == 1:
-        return vals[0]
+        return vals[0], s.size
     else:
-        return vals
+        return vals, s.size
 
 
 def _decode_str(str_in):

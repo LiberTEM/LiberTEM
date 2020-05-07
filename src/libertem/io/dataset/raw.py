@@ -99,13 +99,17 @@ class RawFileDataSet(DataSet):
         super().__init__()
         # handle backwards-compatability:
         if tileshape is not None:
-            warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
+            warnings.warn(
+                "tileshape argument is ignored and will be removed after 0.6.0",
+                FutureWarning
+            )
         # FIXME execute deprecation after 0.6.0
         if crop_detector_to is not None:
             warnings.warn("crop_detector_to and detector_size_raw are deprecated, "
                           "and will be removed after version 0.6.0. "
-                          "please specify detector_size instead or use EMPAD DataSet",
-                          DeprecationWarning)
+                          "please specify detector_size instead or use a more "
+                          "specific DataSet like EMPAD",
+                          FutureWarning)
             if detector_size is not None:
                 raise ValueError("cannot specify both detector_size and crop_detector_to")
             if detector_size_raw != crop_detector_to:

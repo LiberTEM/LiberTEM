@@ -102,8 +102,12 @@ class H5DataSet(DataSet):
         self.ds_path = ds_path
         self.target_size = target_size
         self.sig_dims = sig_dims
+        # handle backwards-compatability:
         if tileshape is not None:
-            warnings.warn("tileshape argument is deprecated, ignored", DeprecationWarning)
+            warnings.warn(
+                "tileshape argument is ignored and will be removed after 0.6.0",
+                FutureWarning
+            )
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None

@@ -4,6 +4,7 @@ import os
 import glob
 import typing
 import logging
+import warnings
 
 import numba
 import numpy as np
@@ -35,12 +36,6 @@ class MIBDatasetParams(MessageConverter):
                 "minItems": 2,
                 "maxItems": 2,
             },
-            "tileshape": {
-                "type": "array",
-                "items": {"type": "number", "minimum": 1},
-                "minItems": 4,
-                "maxItems": 4,
-            },
         },
         "required": ["type", "path"],
     }
@@ -51,8 +46,6 @@ class MIBDatasetParams(MessageConverter):
         }
         if "scan_size" in raw_data:
             data["scan_size"] = tuple(raw_data["scan_size"])
-        if "tileshape" in raw_data:
-            data["tileshape"] = tuple(raw_data["tileshape"])
         return data
 
 
@@ -451,11 +444,6 @@ class MIBDataSet(DataSet):
     path: str
         Path to either the .hdr file or one of the .mib files
 
-    tileshape: tuple of int, optional
-        Tuning parameter, specifying the size of the smallest data unit
-        we are reading and working on. Will be automatically determined
-        if left None.
-
     scan_size: tuple of int, optional
         A tuple (y, x) that specifies the size of the scanned region. It is
         automatically read from the .hdr file if you specify one as `path`.
@@ -464,7 +452,12 @@ class MIBDataSet(DataSet):
         super().__init__()
         self._sig_dims = 2
         self._path = path
-        self._tileshape = tileshape
+        # handle backwards-compatability:
+        if tileshape is not None:
+            warnings.warn(
+                "tileshape argument is ignored and will be removed after 0.6.0",
+                FutureWarning
+            )
         if scan_size is not None:
             scan_size = tuple(scan_size)
         else:
@@ -510,11 +503,6 @@ class MIBDataSet(DataSet):
         self._sequence_start = first_file.fields['sequence_first_image']
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
-        tileshape = self._tileshape
-        if tileshape is None:
-            tileshape = (1, 3) + tuple(self.shape.sig)
-        tileshape = Shape(tileshape, sig_dims=self._sig_dims)
-        self._tileshape = tileshape
         return self
 
     def initialize(self, executor):
@@ -542,7 +530,6 @@ class MIBDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
-                    "tileshape": (1, 3, 256, 256),
                 },
             }
         elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
@@ -551,7 +538,6 @@ class MIBDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
-                    "tileshape": (1, 3, 256, 256),
                     "scan_size": scan_size,
                 },
             }
@@ -613,16 +599,6 @@ class MIBDataSet(DataSet):
                     "scan_size (%r) does not match number of images (%d)" % (
                         s, num_images
                     )
-                )
-            if self._tileshape.sig != self.shape.sig:
-                raise DataSetException(
-                    "MIB only supports tileshapes that match whole frames, %r != %r" % (
-                        self._tileshape.sig, self.shape.sig
-                    )
-                )
-            if self._tileshape[0] != 1:
-                raise DataSetException(
-                    "MIB only supports tileshapes that don't cross rows"
                 )
         except (IOError, OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

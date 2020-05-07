@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -21,20 +22,14 @@ class BLODatasetParams(MessageConverter):
       "properties": {
         "type": {"const": "BLO"},
         "path": {"type": "string"},
-        "tileshape": {
-            "type": "array",
-            "items": {"type": "number", "minimum": 1},
-            "minItems": 4,
-            "maxItems": 4
-        },
       },
-      "required": ["type", "path", "tileshape"],
+      "required": ["type", "path"],
     }
 
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "tileshape"]
+            for k in ["path"]
         }
         return data
 
@@ -88,19 +83,17 @@ class BloDataSet(DataSet):
     path: str
         Path to the file
 
-    tileshape: tuple of int
-        Tuning parameter, specifying the size of the smallest data unit
-        we are reading and working on. Will be automatically determined
-        if left None.
-
     endianess: str
         either '<' or '>' for little or big endian
     """
     def __init__(self, path, tileshape=None, endianess='<'):
         super().__init__()
-        if tileshape is None:
-            tileshape = (1, 8, 144, 144)
-        self._tileshape = tileshape
+        # handle backwards-compatability:
+        if tileshape is not None:
+            warnings.warn(
+                "tileshape argument is ignored and will be removed after 0.6.0",
+                FutureWarning
+            )
         self._path = path
         self._header = None
         self._endianess = endianess

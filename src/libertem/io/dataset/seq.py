@@ -240,7 +240,7 @@ class SEQDataSet(DataSet):
                     "scan_size": str(image_count),
                 }
             }
-        except OSError:
+        except (OSError, UnicodeDecodeError):
             return False
 
     @classmethod

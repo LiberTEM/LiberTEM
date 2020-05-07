@@ -31,12 +31,15 @@ import struct
 from typing import Tuple
 
 import numpy as np
+from ncempy.io.mrc import mrcReader
+
+from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
     LocalFile,
 )
-from libertem.common import Shape
+from libertem.corrections import CorrectionSet
 
 
 DWORD = 'L'
@@ -84,7 +87,7 @@ HEADER_SIZE = sum([
 def _read_header(path, fields):
     with open(path, "rb") as fh:
         fh.seek(0)
-        _unpack_header(fh.read(HEADER_SIZE), fields)
+        return _unpack_header(fh.read(HEADER_SIZE), fields)
 
 
 def _unpack_header(header_bytes, fields):
@@ -178,6 +181,8 @@ class SEQDataSet(DataSet):
         self._footer_size = None
         self._filesize = None
         self._image_count = None
+        self._dark = None
+        self._gain = None
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -210,7 +215,24 @@ class SEQDataSet(DataSet):
             dtype=dtype,
             metadata=header,
         )
+        self._maybe_load_dark_gain()
         return self
+
+    def _maybe_load_mrc(self, path):
+        if not os.path.exists(path):
+            return None
+        data_dict = mrcReader(path)
+        return np.squeeze(data_dict['data'])
+
+    def _maybe_load_dark_gain(self):
+        self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
+        self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
+
+    def get_correction_data(self):
+        return CorrectionSet(
+            dark=self._dark,
+            gain=self._gain,
+        )
 
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)
@@ -223,6 +245,12 @@ class SEQDataSet(DataSet):
         ] + [
             {"name": "Footer size",
              "value": str(self._footer_size)},
+
+            {"name": "Dark frame included",
+             "value": str(self._dark is not None)},
+
+            {"name": "Gain map included",
+             "value": str(self._gain is not None)},
         ]
 
     @property

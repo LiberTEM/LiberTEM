@@ -266,7 +266,7 @@ def test_ctx_load_old(lt_ctx, default_raw):
             crop_detector_to=(128, 128)
         )
         assert len(w) == 1
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
 
 
 def test_missing_detector_size(lt_ctx, default_raw):

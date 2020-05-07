@@ -22,7 +22,6 @@ pytestmark = pytest.mark.skipif(not HAVE_BLO_TESTDATA, reason="need .blo testdat
 def default_blo():
     ds = BloDataSet(
         path=str(BLO_TESTDATA_PATH),
-        tileshape=(1, 8, 144, 144),
     )
     ds.initialize(InlineJobExecutor())
     return ds

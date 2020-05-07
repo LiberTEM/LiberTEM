@@ -104,7 +104,6 @@ export type DatasetParamsHDF5 = {
     path: string,
     ds_path: string,
     dataset_paths: string[],
-    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsRaw = {
@@ -120,13 +119,11 @@ export type DatasetParamsMIB = {
     type: DatasetTypes.MIB,
     path: string,
     scan_size: number[],
-    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsBLO = {
     type: DatasetTypes.BLO,
     path: string,
-    tileshape: number[],
 } & DatasetParamsCommon
 
 export type DatasetParamsK2IS = {

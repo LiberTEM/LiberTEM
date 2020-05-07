@@ -10,10 +10,8 @@ import { OpenFormProps } from "../types";
 type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
     "path"
     | "type"
-    | "tileshape"
     | "scan_size"
 > & {
-    tileshape: string,
     scan_size: string,
 };
 
@@ -42,11 +40,6 @@ const MIBFileParamsForm: React.SFC<MergedProps> = ({
                 <Field name="name" id="id_name" />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="id_tileshape">Tileshape:</label>
-                <ErrorMessage name="tileshape" />
-                <Field name="tileshape" id="id_tileshape" />
-            </Form.Field>
-            <Form.Field>
                 <label htmlFor="id_scan_size">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
                 <Field name="scan_size" id="id_scan_size" />
@@ -64,13 +57,11 @@ export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
             path,
             type: DatasetTypes.MIB,
             name: values.name,
-            tileshape: parseNumList(values.tileshape),
             scan_size: parseNumList(values.scan_size),
         }
     },
     mapPropsToValues: ({path, initial }) => ({
         name: getInitialName("name",path,initial),
-        tileshape: getInitial("tileshape", "1, 8, 256, 256", initial).toString(),
         scan_size: getInitial("scan_size", "", initial).toString(),
     }),
     type: DatasetTypes.MIB,

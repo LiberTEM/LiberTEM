@@ -1,7 +1,10 @@
 import os
+import sys
 import logging
 import asyncio
 import signal
+import select
+import threading
 import webbrowser
 from functools import partial
 
@@ -130,6 +133,43 @@ def main(host, port, numeric_level, event_registry, shared_state):
     return app
 
 
+def _confirm_exit(shared_state, loop):
+    log.info('interrupted, ')
+    sys.stdout.write("Shutdown libertem server (y/[n])? ")
+    sys.stdout.flush()
+    r, w, x = select.select([sys.stdin], [], [], 5)
+    if r:
+        line = sys.stdin.readline()
+        if line.lower().startswith('y'):
+            log.critical("Shutdown confirmed")
+            # schedule stop on main thread
+            loop.add_callback_from_signal(
+                lambda: asyncio.ensure_future(do_stop(shared_state))
+            )
+            return
+    else:
+        print('No answer for 5s: ')
+    print('Resuming operation ...')
+    # set it back to original SIGINT handler
+    loop.add_callback_from_signal(partial(handle_signal, shared_state))
+
+
+def _handle_exit(signum, frame, shared_state):
+    loop = tornado.ioloop.IOLoop.current()
+    # register more forceful signal handler for ^C^C case
+    signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
+    thread = threading.Thread(target=partial(_confirm_exit, shared_state, loop))
+    thread.daemon = True
+    thread.start()
+
+
+def handle_signal(shared_state):
+    if not sys.platform.startswith('win'):
+        signal.signal(signal.SIGINT, partial(_handle_exit, shared_state=shared_state))
+    else:
+        signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
+
+
 def run(host, port, browser, local_directory, numeric_level):
     # shared state:
     event_registry = EventRegistry()
@@ -140,7 +180,7 @@ def run(host, port, browser, local_directory, numeric_level):
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()
-    signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
+    handle_signal(shared_state)
     # Strictly necessary only on Windows, but doesn't do harm in any case.
     # FIXME check later if the unknown root cause was fixed upstream
     asyncio.ensure_future(nannynanny())

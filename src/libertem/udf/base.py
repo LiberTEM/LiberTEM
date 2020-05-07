@@ -701,13 +701,16 @@ class Task(object):
 
 
 class UDFTask(Task):
-    def __init__(self, partition: Partition, idx, udfs, roi):
+    def __init__(self, partition: Partition, idx, udfs, roi, corrections=None):
         super().__init__(partition=partition, idx=idx)
         self._roi = roi
         self._udfs = udfs
+        self._corrections = corrections
 
     def __call__(self):
-        return UDFRunner(self._udfs).run_for_partition(self.partition, self._roi)
+        return UDFRunner(self._udfs).run_for_partition(
+            self.partition, self._roi, self._corrections,
+        )
 
 
 class UDFRunner:
@@ -724,7 +727,8 @@ class UDFRunner:
             )
         return tmp_dtype
 
-    def run_for_partition(self, partition: Partition, roi):
+    def run_for_partition(self, partition: Partition, roi, corrections):
+        partition.set_corrections(corrections)
         with set_num_threads(1):
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(
@@ -827,7 +831,7 @@ class UDFRunner:
                 )
             )
 
-    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi):
+    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi, corrections):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
@@ -845,11 +849,12 @@ class UDFRunner:
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
 
-        tasks = list(self._make_udf_tasks(dataset, roi))
+        tasks = list(self._make_udf_tasks(dataset, roi, corrections))
         return tasks
 
-    def run_for_dataset(self, dataset: DataSet, executor, roi=None, progress=False):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
+    def run_for_dataset(self, dataset: DataSet, executor,
+                        roi=None, progress=False, corrections=None):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections)
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
@@ -875,8 +880,9 @@ class UDFRunner:
             for udf in self._udfs
         ]
 
-    async def run_for_dataset_async(self, dataset: DataSet, executor, cancel_id, roi=None):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi)
+    async def run_for_dataset_async(self, dataset: DataSet, executor, cancel_id,
+                                    roi=None, corrections=None):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections)
 
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
             for results, udf in zip(part_results, self._udfs):
@@ -902,7 +908,7 @@ class UDFRunner:
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
-    def _make_udf_tasks(self, dataset: DataSet, roi):
+    def _make_udf_tasks(self, dataset: DataSet, roi, corrections):
         for idx, partition in enumerate(dataset.get_partitions()):
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
@@ -913,4 +919,6 @@ class UDFRunner:
                 udf.copy_for_partition(partition, roi)
                 for udf in self._udfs
             ]
-            yield UDFTask(partition=partition, idx=idx, udfs=udfs, roi=roi)
+            yield UDFTask(
+                partition=partition, idx=idx, udfs=udfs, roi=roi, corrections=corrections,
+            )

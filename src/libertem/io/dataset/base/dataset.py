@@ -4,6 +4,7 @@ import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.web.messageconverter import MessageConverter
+from libertem.corrections.corrset import CorrectionSet
 
 
 class DataSet(object):
@@ -145,6 +146,18 @@ class DataSet(object):
 
     def get_cache_key(self):
         raise NotImplementedError()
+
+    def get_correction_data(self):
+        """
+        Correction parameters that are part of this DataSet.
+        This should only be called after the DataSet is initialized.
+
+        Returns
+        -------
+        CorrectionSet
+            correction parameters that are part of this DataSet
+        """
+        return CorrectionSet()
 
 
 class WritableDataSet:

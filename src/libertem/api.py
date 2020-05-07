@@ -3,6 +3,7 @@ from typing import Union, Tuple, Dict
 
 import psutil
 import numpy as np
+from libertem.corrections import CorrectionSet
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.job.masks import ApplyMasksJob
@@ -566,14 +567,21 @@ class Context:
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
 
-    def run(self, job: Union[Job, Analysis],
-            roi: np.ndarray = None, progress: bool = False) -> Union[np.ndarray, AnalysisResultSet]:
+    def run(
+        self, job: Union[Job, Analysis],
+        roi: np.ndarray = None,
+        progress: bool = False,
+        corrections: CorrectionSet = None,
+    ) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.job.base.Job` or :class:`~libertem.analysis.base.Analysis`
         and return the result data.
 
         .. versionchanged:: 0.5.0
             Added the :code:`progress` parameter
+
+        .. versionchanged:: 0.6.0
+            Added the :code:`corrections` parameter
 
         Parameters
         ----------
@@ -583,6 +591,9 @@ class Context:
             Boolean mask of the navigation dimension.
         progress : bool
             Show progress bar
+        corrections
+            Corrections to apply, i.e. dark frame substraction, applying a gain map, ...
+            These are ignored for old job-style analyses.
 
         Returns
         -------
@@ -598,13 +609,15 @@ class Context:
         if hasattr(job, "get_job") or (hasattr(job, "get_udf") and hasattr(job, "get_roi")):
             analysis = job
             if analysis.TYPE == 'JOB':
+                if corrections is not None:
+                    raise TypeError("old-style analyses don't support corrections")
                 job_to_run = analysis.get_job()
             else:
                 if roi is None:
                     roi = analysis.get_roi()
                 udf_results = self.run_udf(
                     dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
-                    progress=progress
+                    progress=progress, corrections=corrections,
                 )
                 return analysis.get_udf_results(udf_results, roi)
         else:
@@ -620,13 +633,20 @@ class Context:
             return analysis.get_results(out)
         return out
 
-    def run_udf(self, dataset: DataSet, udf: UDF, roi: np.ndarray = None,
+    def run_udf(self,
+                dataset: DataSet,
+                udf: UDF,
+                roi: np.ndarray = None,
+                corrections: CorrectionSet = None,
                 progress: bool = False) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
         .. versionchanged:: 0.5.0
             Added the :code:`progress` parameter
+
+        .. versionchanged:: 0.6.0
+            Added the :code:`corrections` parameter
 
         Parameters
         ----------
@@ -642,6 +662,11 @@ class Context:
         progress : bool
             Show progress bar
 
+        corrections
+            Corrections to apply while running the UDF. If none are given,
+            the corrections that are part of the :code:`DataSet` are used,
+            if there are any.
+
         Returns
         -------
         dict
@@ -652,9 +677,15 @@ class Context:
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
         """
-        results = UDFRunner([
-            udf
-        ]).run_for_dataset(dataset, self.executor, roi, progress=progress)
+        if corrections is None:
+            corrections = dataset.get_correction_data()
+        result = UDFRunner([udf]).run_for_dataset(
+            dataset=dataset,
+            executor=self.executor,
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+        )
         return results[0]
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,

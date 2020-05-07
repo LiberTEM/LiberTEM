@@ -119,12 +119,6 @@ class Decoder:
     def get_decode(self, native_dtype, read_dtype):
         raise NotImplementedError()
 
-    def get_dark_frame(self):
-        return None
-
-    def get_gain_map(self):
-        return None
-
 
 class DtypeConversionDecoder(Decoder):
     def _need_byteswap(self, native_dtype, read_dtype):

@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 @pytest.fixture
 def default_mib(lt_ctx):
     scan_size = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
     ds = ds.initialize(lt_ctx.executor)
     return ds
 
@@ -32,7 +32,6 @@ def test_detect(lt_ctx):
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)["parameters"]
     assert params == {
         "path": MIB_TESTDATA_PATH,
-        "tileshape": (1, 3, 256, 256)
     }
 
 
@@ -51,7 +50,7 @@ def test_missing_frames(lt_ctx):
     """
     # one full row of additional frames in the data set than in the file
     scan_size = (33, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
@@ -75,7 +74,7 @@ def test_too_many_frames(lt_ctx):
     """
     # one full row of additional frames in the file
     scan_size = (31, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
@@ -191,7 +190,7 @@ def test_crop_to(default_mib, lt_ctx):
 
 def test_read_at_boundaries(default_mib, lt_ctx):
     scan_size = (32, 32)
-    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, tileshape=(1, 7, 256, 256), scan_size=scan_size)
+    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
     ds_odd = ds_odd.initialize(lt_ctx.executor)
 
     sumjob_odd = lt_ctx.create_sum_analysis(dataset=ds_odd)
@@ -214,7 +213,7 @@ def test_cache_key_json_serializable(default_mib):
 @pytest.mark.dist
 def test_mib_dist(dist_ctx):
     scan_size = (32, 32)
-    ds = MIBDataSet(path="/data/default.mib", tileshape=(1, 3, 256, 256), scan_size=scan_size)
+    ds = MIBDataSet(path="/data/default.mib", scan_size=scan_size)
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)

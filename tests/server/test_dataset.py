@@ -18,7 +18,6 @@ def _get_raw_params(path):
                 "dtype": "float32",
                 "detector_size": [128, 128],
                 "enable_direct": False,
-                "tileshape": [1, 1, 128, 128],
                 "scan_size": [16, 16]
             }
         }
@@ -126,7 +125,6 @@ async def test_initial_state_after_reconnect(default_raw, base_url, http_client,
             'path': raw_path,
             'scan_size': [16, 16],
             'shape': [16, 16, 128, 128],
-            'tileshape': [1, 1, 128, 128],
             'type': 'RAW'
         }
         assert len(initial_msg["datasets"][0]["diagnostics"]) == 2

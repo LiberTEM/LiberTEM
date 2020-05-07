@@ -13,6 +13,7 @@ import scipy.io as sio
 import numpy as np
 import numba
 
+from libertem.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
@@ -302,10 +303,8 @@ decode_frms6_b4 = _make_decode_frms6(4)
 
 
 class FRMS6Decoder(Decoder):
-    def __init__(self, binning, gain_map, dark_frame):
+    def __init__(self, binning):
         self._binning = binning
-        self._gain_map = gain_map
-        self._dark_frame = dark_frame
 
     def get_decode(self, native_dtype, read_dtype):
         return {
@@ -313,12 +312,6 @@ class FRMS6Decoder(Decoder):
             2: decode_frms6_b2,
             4: decode_frms6_b4,
         }[self._binning]
-
-    def get_dark_frame(self):
-        return self._dark_frame
-
-    def get_gain_map(self):
-        return self._gain_map
 
 
 class FRMS6File(LocalFile):
@@ -606,10 +599,14 @@ class FRMS6DataSet(DataSet):
             frame_header_bytes=frame_header_size
         )
 
+    def get_correction_data(self):
+        return CorrectionSet(
+            dark=self._get_dark_frame(),
+            gain=self._get_gain_map(),
+        )
+
     def get_partitions(self):
         fileset = self._get_fileset()
-        gain_map = self._get_gain_map()
-        dark_frame = self._get_dark_frame()
         for part_slice, start, stop in BasePartition.make_slices(
                 shape=self.shape,
                 num_partitions=self._get_num_partitions()):
@@ -621,17 +618,13 @@ class FRMS6DataSet(DataSet):
                 num_frames=stop - start,
                 header=self._headers[0],
                 global_header=self._get_hdr_info(),
-                gain_map=gain_map,
-                dark_frame=dark_frame,
             )
 
 
 class FRMS6Partition(BasePartition):
-    def __init__(self, global_header, header, gain_map=None, dark_frame=None, *args, **kwargs):
+    def __init__(self, global_header, header, *args, **kwargs):
         self._header = header
         self._global_header = global_header
-        self._gain_map = gain_map
-        self._dark_frame = dark_frame
         super().__init__(*args, **kwargs)
 
     def _get_binning(self):
@@ -640,8 +633,6 @@ class FRMS6Partition(BasePartition):
     def _get_decoder(self):
         return FRMS6Decoder(
             binning=self._get_binning(),
-            gain_map=self._gain_map,
-            dark_frame=self._dark_frame,
         )
 
     def validate_tiling_scheme(self, tiling_scheme):

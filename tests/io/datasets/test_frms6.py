@@ -42,7 +42,9 @@ def test_simple_open(default_frms6):
 
 
 def test_detetct(lt_ctx):
-    assert FRMS6DataSet.detect_params(FRMS6_TESTDATA_PATH, lt_ctx.executor)["parameters"] is not False
+    assert FRMS6DataSet.detect_params(
+        FRMS6_TESTDATA_PATH, lt_ctx.executor
+    )["parameters"] is not False
 
 
 def test_check_valid(default_frms6):
@@ -134,7 +136,7 @@ def test_decode(binning):
         for i in range(out.shape[0] * out.shape[1] // binning)
     ]
 
-    decoder = FRMS6Decoder(binning=binning, gain_map=None, dark_frame=None)
+    decoder = FRMS6Decoder(binning=binning)
     decode = decoder.get_decode(native_dtype="u2", read_dtype=np.float32)
 
     for idx, read in enumerate(reads):

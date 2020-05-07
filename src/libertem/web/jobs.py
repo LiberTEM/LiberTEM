@@ -127,8 +127,10 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         t = time.time()
         post_t = time.time()
         window = 0.3
+        # FIXME: allow to set correction data for a dataset via upload and local loading
+        corrections = dataset.get_correction_data()
         result_iter = UDFRunner([udf]).run_for_dataset_async(
-            dataset, executor, roi=roi, cancel_id=job_id,
+            dataset, executor, roi=roi, cancel_id=job_id, corrections=corrections,
         )
         async for (udf_results,) in result_iter:
             window = min(max(window, 2*(t - post_t)), 5)

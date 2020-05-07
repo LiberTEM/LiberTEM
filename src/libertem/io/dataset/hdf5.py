@@ -6,6 +6,7 @@ import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
+from libertem.corrections import CorrectionSet
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
@@ -250,6 +251,7 @@ class H5Partition(Partition):
     def __init__(self, reader, slice_nd, *args, **kwargs):
         self.reader = reader
         self.slice_nd = slice_nd
+        self._corrections = None
         super().__init__(*args, **kwargs)
 
     def _get_subslices(self, tiling_scheme, tileshape_nd):
@@ -258,6 +260,11 @@ class H5Partition(Partition):
         for idx, subslice in enumerate(subslices):
             scheme_idx = idx % scheme_len
             yield scheme_idx, subslice
+
+    def _preprocess(self, tile_data, tile_slice):
+        if self._corrections is None:
+            return
+        self._corrections.apply(tile_data, tile_slice)
 
     def _get_tiles_normal(self, tiling_scheme, tileshape_nd, dest_dtype="float32"):
         data = np.ndarray(tileshape_nd, dtype=dest_dtype)
@@ -276,8 +283,10 @@ class H5Partition(Partition):
                     # reuse buffer
                     buf = data
                 dataset.read_direct(buf, source_sel=tile_slice.get())
+                tile_data = buf.reshape(tile_slice_flat.shape)
+                self._preprocess(tile_data, tile_slice_flat)
                 yield DataTile(
-                    buf.reshape(tile_slice_flat.shape),
+                    tile_data,
                     tile_slice=tile_slice_flat,
                     scheme_idx=scheme_idx,
                 )
@@ -300,8 +309,10 @@ class H5Partition(Partition):
                     origin=(frames_read + frame_offset,) + sig_origin,
                     shape=result_shape,
                 )
+                tile_data = h5ds[idx].reshape(result_shape)
+                self._preprocess(tile_data, tile_slice)
                 yield DataTile(
-                    h5ds[idx].reshape(result_shape),
+                    tile_data,
                     tile_slice=tile_slice,
                     # there is only a single slice in the tiling scheme, so our
                     # scheme_idx is constant 0
@@ -318,6 +329,9 @@ class H5Partition(Partition):
 
     def need_decode(self, roi, read_dtype):
         return True
+
+    def set_corrections(self, corrections: CorrectionSet):
+        self._corrections = corrections
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         extra_nav_dims = self.meta.shape.nav.dims - tiling_scheme.shape.nav.dims

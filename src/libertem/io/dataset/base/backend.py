@@ -8,7 +8,7 @@ from numba.typed import List
 
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
-from libertem.corrections.detector import correct
+from libertem.corrections import CorrectionSet
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
 from .file import File
@@ -53,8 +53,9 @@ def _make_mmap_reader_and_decoder(decode):
 
 
 class LocalFSMMapBackend(IOBackend):
-    def __init__(self, decoder=None):
+    def __init__(self, decoder=None, corrections: CorrectionSet = None):
         self._decoder = decoder
+        self._corrections = corrections
         self._buffer_pool = BufferPool()
 
     def need_copy(self, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None):
@@ -80,6 +81,11 @@ class LocalFSMMapBackend(IOBackend):
             if np.min(fileset_arr[:, 1] - fileset_arr[:, 0]) < tiling_scheme.depth:
                 log.debug("too large for fileset, need copy")
                 return True
+
+        # 4) if we apply corrections, we need to copy
+        if self._corrections is not None and self._corrections.have_corrections():
+            log.debug("have corrections, need copy")
+            return True
 
         return False
 
@@ -142,21 +148,9 @@ class LocalFSMMapBackend(IOBackend):
         return r_n_d
 
     def preprocess(self, data, tile_slice, decoder):
-        dark_frame = decoder.get_dark_frame()
-        gain_map = decoder.get_gain_map()
-        if dark_frame is None and gain_map is None:
+        if self._corrections is None:
             return
-        if dark_frame is not None:
-            dark_frame = dark_frame[tile_slice.get(sig_only=True)]
-        if gain_map is not None:
-            gain_map = gain_map[tile_slice.get(sig_only=True)]
-        correct(
-            buffer=data,
-            dark_image=dark_frame,
-            gain_map=gain_map,
-            excluded_pixels=None,
-            inplace=True,
-        )
+        self._corrections.apply(data, tile_slice)
 
     def _get_tiles_w_copy(self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype):
         if self._decoder is not None:

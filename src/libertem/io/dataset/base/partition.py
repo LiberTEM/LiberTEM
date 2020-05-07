@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 
 from libertem.common import Slice, Shape
+from libertem.corrections import CorrectionSet
 from .tiling import DataTile, TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet
@@ -75,6 +76,9 @@ class Partition(object):
     def validate_tiling_scheme(self, tiling_scheme):
         pass
 
+    def set_corrections(self, corrections: CorrectionSet):
+        raise NotImplementedError()
+
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         raise NotImplementedError()
 
@@ -138,6 +142,7 @@ class BasePartition(Partition):
         self._fileset = fileset.get_for_range(start_frame, start_frame + num_frames - 1)
         self._start_frame = start_frame
         self._num_frames = num_frames
+        self._corrections = CorrectionSet()
         if num_frames <= 0:
             raise ValueError("invalid number of frames: %d" % num_frames)
 
@@ -200,7 +205,13 @@ class BasePartition(Partition):
         )
 
     def _get_io_backend(self):
-        return LocalFSMMapBackend(decoder=self._get_decoder())
+        return LocalFSMMapBackend(
+            decoder=self._get_decoder(),
+            corrections=self._corrections,
+        )
+
+    def set_corrections(self, corrections: CorrectionSet):
+        self._corrections = corrections
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         """

@@ -44,8 +44,8 @@ Loading using the GUI
 ~~~~~~~~~~~~~~~~~~~~~
 
 Using the GUI, mostly the same parameters need to be specified, although some
-are only available in the Python API. Tuples (for example for :code:`scan_size`
-or :code:`tileshape`) have to be entered as comma-separated values. We follow
+are only available in the Python API. Tuples (for example for :code:`scan_size`)
+have to be entered as comma-separated values. We follow
 the NumPy convention here and specify the "fast-access" dimension last, so a
 value of :code:`"42, 21"` would mean the same as specifying :code:`(42, 21)` in
 the Python API, setting :code:`y=42` and :code:`x=21`. Note that the GUI
@@ -61,10 +61,6 @@ There are some common parameters across data set types:
 
 `name`
   The name of the data set, for display purposes. Only used in the GUI.
-`tileshape`
-  A few data set types support setting a tile shape, which is a tuning
-  parameter. It can mostly be ignored and left to the default value. The tile
-  shape is the smallest unit of data we are reading and working on.
 `scan_size`
   In the GUI, we generally support visualizing data containing rectangular 2D scans. For
   some data set types, you can specify a scan_size as a tuple `(y, x)`; for

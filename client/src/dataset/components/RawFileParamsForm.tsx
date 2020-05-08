@@ -1,6 +1,6 @@
 import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
-import { Button, Form } from "semantic-ui-react";
+import { Button, Form, FormFieldProps } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
@@ -29,7 +29,54 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     handleSubmit,
     handleReset,
     onCancel,
+    setFieldValue
 }) => {
+
+    const [scanSize, setScanSize] = React.useState(values.scan_size.length>=2? values.scan_size.split(","): ["",""]);
+
+    const scanRefsArray = React.useRef<FormFieldProps[]>([]);
+
+    const onScanSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const idx = parseInt(e.target.name.split("_")[2]);
+      scanSize[idx] = e.target.value.toString();
+      setScanSize(scanSize);
+      setFieldValue("scan_size", scanSize.toString());
+    };
+
+    const onCommaPress = (e: KeyboardEvent) => {
+        const idx = parseInt((e.target as HTMLInputElement).name.split("_")[2]);
+        if(e.keyCode === 188){
+            idx===(scanSize.length-1)? newScanDim() : scanRefsArray.current[idx+1].focus();
+        }
+    }
+
+    const newScanDim = () => {
+      scanSize.push("");
+      setScanSize(scanSize);
+      setFieldValue("scan_size", scanSize.toString());
+    }
+
+    React.useEffect(() => {
+      if(scanSize.length>2) {
+        scanRefsArray.current[scanSize.length-1].focus();
+      }
+    }, [scanSize.length]);
+
+    const delScanDim = () => {
+      if(scanSize.length > 2) {
+        scanSize.pop();
+        setScanSize(scanSize);
+        setFieldValue("scan_size", scanSize.toString());
+      }
+    }
+
+    const resetScanDims = () => {
+      handleReset();
+      scanSize.length = 0;
+      setScanSize(["",""]);
+      setFieldValue("scan_size", scanSize.toString());
+    }
+
     return (
 
         <Form onSubmit={handleSubmit}>
@@ -41,7 +88,13 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_scan_size">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
-                <Field name="scan_size" id="id_scan_size" />
+                <Form.Group>
+                  {scanSize.map((val, idx) => <Form.Field key={idx} width={2}><Field name={"scan_size_" + idx} id={"id_scan_size_" + idx} type="number" value={val} innerRef={(ref:FormFieldProps) => { scanRefsArray.current[idx] = ref; }} onChange={onScanSizeChange} onKeyDown={onCommaPress} /></Form.Field>)}
+                  <Form.Field>
+                    <Button onClick={newScanDim} type="button" icon="add" basic={true} color="blue" />
+                    <Button onClick={delScanDim} type="button" icon="trash" basic={true} color="grey" />
+                  </Form.Field>
+                </Form.Group>
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
@@ -61,7 +114,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleReset}>Reset</Button>
+            <Button type="button" onClick={resetScanDims}>Reset</Button>
         </Form>
     )
 }

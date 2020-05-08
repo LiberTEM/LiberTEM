@@ -262,6 +262,24 @@ def uint16_raw(tmpdir_factory):
     yield ds
 
 
+@pytest.fixture(scope='session')
+def raw_with_zeros(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-with-zeros'
+    data = np.zeros((16, 16, 128, 128), dtype='float32')
+    data.tofile(str(filename))
+    del data
+    ds = RawFileDataSet(
+        path=str(filename),
+        scan_size=(16, 16),
+        dtype="float32",
+        detector_size=(128, 128),
+    )
+    ds.set_num_cores(2)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
 @pytest.fixture
 def dist_ctx():
     """

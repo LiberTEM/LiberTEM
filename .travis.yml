@@ -8,7 +8,7 @@ cache:
     - $HOME/.pyenv/versions/
 
 install:
-  - pip install tox
+  - pip install -U tox 'virtualenv>19'
 
 script:
   - tox

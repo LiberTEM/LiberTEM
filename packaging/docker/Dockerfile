@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN python3.7 -m venv /venv/
 COPY packaging/docker/requirements.txt /requirements.txt
+RUN /venv/bin/pip install -U pip
 RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt
 
 COPY . /code/

@@ -6,8 +6,7 @@ try:
     import pyfftw
 except ImportError:
     pyfftw = None
-# import numba  FIXME use as soon as 0.49 is released
-# See also setup.py to set version limit for numba
+import numba
 
 
 log = logging.getLogger(__name__)
@@ -28,18 +27,14 @@ else:
         yield
 
 
-# FIXME as soon as numba 0.49 is released
-# @contextmanager
-# def set_numba_threads(n):
-#     numba_threads = numba.get_num_threads(n)
-#     try:
-#         numba.set_num_threads(n)
-#         yield
-#     finally:
-#         numba.set_num_threads(numba_threads)
 @contextmanager
 def set_numba_threads(n):
-    yield
+    numba_threads = numba.get_num_threads()
+    try:
+        numba.set_num_threads(n)
+        yield
+    finally:
+        numba.set_num_threads(numba_threads)
 
 
 @contextmanager

@@ -8,7 +8,7 @@ cache:
     - $HOME/.pyenv/versions/
 
 install:
-  - pip install tox
+  - pip install -U tox 'virtualenv>19'
 
 script:
   - tox
@@ -76,7 +76,7 @@ jobs:
       env: TOXENV=docs-check
       python: 3.7
       install:
-        - pip install tox
+        - pip install -U tox 'virtualenv>19'
         - sudo apt-get install -y pandoc
     - stage: test
       env: DASK_SCHEDULER_ADDRESS=tcp://localhost:8786
@@ -84,7 +84,7 @@ jobs:
       services:
         - docker
       install:
-        - pip install tox pip-tools
+        - pip install -U tox 'virtualenv>19' pip-tools
         - (cd packaging/docker/ && ./update_reqs.sh)
       script:
         - (cd packaging/docker/ && docker-compose up --build -d)
@@ -103,7 +103,7 @@ jobs:
       env: TOXENV=docs-deploy
       python: 3.7
       install:
-        - pip install tox
+        - pip install -U tox 'virtualenv>19'
         - sudo apt-get install -y pandoc
 
     - stage: packaging

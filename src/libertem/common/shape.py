@@ -157,7 +157,7 @@ class Shape(object):
         Right addition adds the tuple to the signal dimensions of the Shape object.
         """
         if isinstance(other, tuple):
-            return Shape(self._nav_shape + self._sig_shape + other, \
+            return Shape(self._nav_shape + self._sig_shape + other,
                  sig_dims=self.sig.dims + len(other))
         else:
             return NotImplemented
@@ -168,7 +168,7 @@ class Shape(object):
         Left addition adds the tuple to the navigation dimensions of the Shape object.
         """
         if isinstance(other, tuple):
-            return Shape(self._nav_shape + other + self._sig_shape, \
+            return Shape(self._nav_shape + other + self._sig_shape,
                  sig_dims=self.sig.dims)
         else:
             return NotImplemented

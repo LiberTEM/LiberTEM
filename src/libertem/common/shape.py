@@ -153,37 +153,23 @@ class Shape(object):
 
     def __add__(self, other):
         """
-        Addition is supported between a Shape object and a tuple.
-        Either the navigation or the signal dimensions of the Shape object must be zero
-        and the tuple is added to the non-zero dimension.
+        Right addition of a Shape object and a tuple.
+        Right addition adds the tuple to the signal dimensions of the Shape object.
         """
         if isinstance(other, tuple):
-            if self._sig_dims != 0 and len(self._nav_shape) != 0:
-                raise ValueError("To add a Shape object to a tuple, either the navigation "
-                                 "or the signal dimensions of the Shape object must be zero")
-            elif self._sig_dims == 0 and len(self._nav_shape) == 0:
-                raise ValueError("Shape object is empty")
-            elif self._sig_dims == 0:
-                return Shape(self._nav_shape + other, sig_dims=0)
-            else:
-                return Shape(self._sig_shape + other, sig_dims=len(self._sig_shape + other))
+            return Shape(self._nav_shape + self._sig_shape + other, \
+                 sig_dims=self.sig.dims + len(other))
         else:
             return NotImplemented
 
     def __radd__(self, other):
         """
-        Reflected addition of a Shape object and a tuple
+        Left addition of a Shape object and a tuple
+        Left addition adds the tuple to the navigation dimensions of the Shape object.
         """
         if isinstance(other, tuple):
-            if self._sig_dims != 0 and len(self._nav_shape) != 0:
-                raise ValueError("To add a Shape object to a tuple, either the navigation "
-                                 "or the signal dimensions of the Shape object must be zero")
-            elif self._sig_dims == 0 and len(self._nav_shape) == 0:
-                raise ValueError("Shape object is empty")
-            elif self._sig_dims == 0:
-                return Shape(other + self._nav_shape, sig_dims=0)
-            else:
-                return Shape(other + self._sig_shape, sig_dims=len(self._sig_shape + other))
+            return Shape(self._nav_shape + other + self._sig_shape, \
+                 sig_dims=self.sig.dims)
         else:
             return NotImplemented
 

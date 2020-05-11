@@ -62,10 +62,22 @@ def test_shape_eq_2():
 def test_shape_eq_3():
     s1 = Shape((16, 16, 128, 128), sig_dims=2)
     s2 = Shape((16 * 16, 128, 128), sig_dims=2)
-    assert s1 != s2
+    assert s1 != s2 and s1.sig.dims == s2.sig.dims
 
 
 def test_shape_eq_4():
     s1 = Shape((17, 16, 128, 128), sig_dims=2)
     s2 = Shape((16, 16, 128, 128), sig_dims=2)
-    assert s1 != s2
+    assert s1 != s2 and s1.sig.dims == s2.sig.dims
+
+
+def test_shape_add_1():
+    s = Shape((12, 13, 14, 15), sig_dims=2)
+    s_add = (1, 2) + s
+    assert tuple(s_add) == (12, 13, 1, 2, 14, 15) and s_add.sig.dims == 2
+
+
+def test_shape_add_2():
+    s = Shape((12, 13, 14, 15), sig_dims=2)
+    s_add = s + (1, 2)
+    assert tuple(s_add) == (12, 13, 14, 15, 1, 2) and s_add.sig.dims == 4

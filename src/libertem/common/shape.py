@@ -151,6 +151,28 @@ class Shape(object):
         values_eq = tuple(self) == tuple(other)
         return dims_eq and values_eq
 
+    def __add__(self, other):
+        """
+        Right addition of a Shape object and a tuple.
+        Right addition adds the tuple to the signal dimensions of the Shape object.
+        """
+        if isinstance(other, tuple):
+            return Shape(self._nav_shape + self._sig_shape + other,
+                 sig_dims=self.sig.dims + len(other))
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        """
+        Left addition of a Shape object and a tuple
+        Left addition adds the tuple to the navigation dimensions of the Shape object.
+        """
+        if isinstance(other, tuple):
+            return Shape(self._nav_shape + other + self._sig_shape,
+                 sig_dims=self.sig.dims)
+        else:
+            return NotImplemented
+
     def __getstate__(self):
         return {
             k: getattr(self, k)

@@ -563,3 +563,8 @@ export interface DirectoryListingResponseError {
 }
 
 export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;
+
+export type ShutdownResponse = {
+    status: "ok"
+    messageType: "SERVER_SHUTDOWN"
+}

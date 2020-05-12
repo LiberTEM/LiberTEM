@@ -33,7 +33,7 @@ def get_backend():
         raise RuntimeError(
             "Both LIBERTEM_USE_CPU and LIBERTEM_USE_CUDA set, expecting at most one"
         )
-    if cuda:
+    if cuda is not None:
         return "cupy"
     else:
         return "numpy"

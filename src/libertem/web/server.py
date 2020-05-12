@@ -14,6 +14,7 @@ import tornado.websocket
 import tornado.ioloop
 import tornado.escape
 
+from .shutdown import ShutdownHandler
 from .state import SharedState
 from .config import ConfigHandler
 from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
@@ -22,7 +23,6 @@ from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
 from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
-
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +76,10 @@ def make_app(event_registry, shared_state):
             "event_registry": event_registry
         }),
         (r"/api/events/", ResultEventHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/shutdown/", ShutdownHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

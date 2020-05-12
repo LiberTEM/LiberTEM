@@ -6,6 +6,7 @@ try:
 except ImportError:
     torch = None
 import sparse
+import cupy
 import scipy.sparse
 import numpy as np
 import cloudpickle
@@ -33,6 +34,19 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
                 # sparse.pydata.org is fastest for masks with few layers
                 # and few entries
                 return m.astype(dtype)
+            elif 'cupy.sparse' in sparse_backend:
+                iis, jjs = m.coords
+                values = m.data
+                if sparse_backend == 'cupy.sparse.csc':
+                    s = scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    assert s.has_canonical_format
+                    return cupy.sparse.csc_matrix(s)
+                elif sparse_backend == 'cupy.sparse.csr':
+                    s = scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    assert s.has_canonical_format
+                    return cupy.sparse.csr_matrix(s)
+                else:
+                    raise ValueError("unknown sparse backend: %s" % sparse_backend)
             elif 'scipy.sparse' in sparse_backend:
                 # Just for calculation: scipy.sparse.csr_matrix is
                 # the fastest for dot product of deep mask stack

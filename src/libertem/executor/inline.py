@@ -4,6 +4,7 @@ from unittest import mock
 import cloudpickle
 from .base import JobExecutor
 from .scheduler import Worker, WorkerSet
+from libertem.udf.backend import get_use_cuda
 
 
 class InlineJobExecutor(JobExecutor):
@@ -51,6 +52,10 @@ class InlineJobExecutor(JobExecutor):
         return {"localhost": fn(*args, **kwargs)}
 
     def get_available_workers(self):
+        resources = {"compute": 1, "CPU": 1}
+        if get_use_cuda() is not None:
+            resources["CUDA"] = 1
+
         return WorkerSet([
-            Worker(name='inline', host='localhost')
+            Worker(name='inline', host='localhost', resources=resources)
         ])

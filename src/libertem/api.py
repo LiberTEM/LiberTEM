@@ -2,7 +2,6 @@ import warnings
 from typing import Union, Tuple, Dict
 
 import numpy as np
-import dask.distributed as dd
 
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet

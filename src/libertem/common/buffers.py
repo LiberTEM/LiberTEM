@@ -296,10 +296,7 @@ class BufferWrapper(object):
             _z = backend.zeros
         else:
             _z = zeros_aligned
-        if self.roi_is_zero:
-            self._data = _z(1, dtype=self._dtype)
-        else:
-            self._data = _z(self._shape, dtype=self._dtype)
+        self._data = _z(self._shape, dtype=self._dtype)
 
     def has_data(self):
         return self._data is not None

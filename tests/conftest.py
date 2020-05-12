@@ -11,7 +11,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
-from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem import api as lt
 
 
@@ -27,12 +27,9 @@ def lt_ctx(inline_executor):
 
 @pytest.fixture
 async def async_executor():
-    cluster_kwargs = {
-        "threads_per_worker": 1,
-        "n_workers": 2,
-    }
+    spec = cluster_spec(cpus=[0, 1], cudas=[])
     sync_executor = await sync_to_async(
-        functools.partial(DaskJobExecutor.make_local, cluster_kwargs=cluster_kwargs)
+        functools.partial(DaskJobExecutor.make_local, spec=spec)
     )
     executor = AsyncAdapter(wrapped=sync_executor)
     yield executor

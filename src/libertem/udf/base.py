@@ -2,7 +2,6 @@ from types import MappingProxyType
 from typing import Dict
 import logging
 import uuid
-import os
 
 import tqdm
 import cloudpickle

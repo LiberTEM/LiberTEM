@@ -77,7 +77,7 @@ class FileTree(object):
         return self.to_string()
 
     def to_string(self, depth=0):
-        padsingle = 4 * f' '
+        padsingle = 4 * ' '
         pad = (depth * padsingle)
         str_left = (self.left is not None and self.left.to_string(depth + 1) or 'None')
         str_right = (self.right is not None and self.right.to_string(depth + 1) or 'None')

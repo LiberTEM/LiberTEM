@@ -6,7 +6,6 @@ try:
 except ImportError:
     torch = None
 import sparse
-import cupy
 import scipy.sparse
 import numpy as np
 import cloudpickle
@@ -35,6 +34,9 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
                 # and few entries
                 return m.astype(dtype)
             elif 'cupy.sparse' in sparse_backend:
+                # Avoid importing unless necessary
+                # cupy can be brittle
+                import cupy
                 iis, jjs = m.coords
                 values = m.data
                 if sparse_backend == 'cupy.sparse.csc':

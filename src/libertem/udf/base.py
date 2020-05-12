@@ -12,6 +12,7 @@ from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
 from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
+from libertem.udf.backend import get_use_cuda, get_backend
 
 
 log = logging.getLogger(__name__)
@@ -454,7 +455,9 @@ class UDFBase:
             # Re-importing should be fast, right?
             # Importing only here to avoid superfluous import
             import cupy
-            cupy.cuda.Device(os.environ["LIBERTEM_USE_CUDA"]).use()
+            device = get_use_cuda()
+            if device:
+                cupy.cuda.Device(device).use()
             # mocking for testing without actual CUDA device
             # import numpy as cupy
             return cupy
@@ -814,13 +817,7 @@ class UDFRunner:
 
     def run_for_partition(self, partition: Partition, roi):
         with set_num_threads(1):
-            if os.environ.get("LIBERTEM_USE_CPU", False):
-                backend = 'numpy'
-            elif os.environ.get("LIBERTEM_USE_CUDA", False):
-                backend = 'cupy'
-            else:
-                raise RuntimeError("Environment variables for worker not set. \
-                    Expecting one of LIBERTEM_USE_CPU or LIBERTEM_USE_CUDA")
+            backend = get_backend()
             self._udf.set_backend(backend)
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(

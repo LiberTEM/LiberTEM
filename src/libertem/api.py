@@ -1,21 +1,8 @@
 import warnings
 from typing import Union, Tuple, Dict
-from copy import deepcopy
 
-import psutil
 import numpy as np
 import dask.distributed as dd
-
-try:
-    import cupy
-    import numba.cuda
-except ModuleNotFoundError:
-    cupy = None
-except ImportError as e:
-    # Cupy can be a bit fragile; allow running LiberTEM with
-    # messed-up installation
-    warnings.warn(repr(e), RuntimeWarning)
-    cupy = None
 
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
@@ -705,55 +692,7 @@ class Context:
         return results['result']
 
     def _create_local_executor(self):
-        cores = psutil.cpu_count(logical=False)
-        if cores is None:
-            cores = 2
-        workers_spec = {}
-
-        cpu_base_spec = {
-            "cls": dd.Nanny,
-            "options": {"nthreads": 1, "resources": {"CPU": 1, "compute": 1}}
-        }
-
-        # Service workers not for computation
-        service_base_spec = {
-            "cls": dd.Nanny,
-            "options": {"nthreads": 1, "resources": {}}
-        }
-
-        cuda_base_spec = {
-            "cls": dd.Nanny,
-            "options": {"nthreads": 1, "resources": {"CUDA": 1, "compute": 1}}
-        }
-
-        for core in range(cores):
-            cpu_spec = deepcopy(cpu_base_spec)
-            cpu_spec['options']['preload'] = \
-                f'import os; os.environ["LIBERTEM_USE_CPU"] = "{core}"'
-            workers_spec[f'cpu-{core}'] = cpu_spec
-
-        workers_spec['service-0'] = deepcopy(service_base_spec)
-
-        if cupy:
-            try:
-                for device in numba.cuda.gpus:
-                    cuda_spec = deepcopy(cuda_base_spec)
-                    cuda_spec['options']['preload'] = \
-                        f'import os; os.environ["CUDA_VISIBLE_DEVICES"] = "{device.id}"; \
-                            os.environ["LIBERTEM_USE_CUDA"] = "{device.id}"'
-                    workers_spec[f'cuda-{device.id}'] = cuda_spec
-
-            except numba.cuda.CudaSupportError as e:
-                # Continue running without GPU in case of errors
-                # Keep LiberTEM usable with misconfigured CUDA, CuPy or numba.cuda
-                # This DOES happen, ask @uellue!
-                warnings.warn(repr(e), RuntimeWarning)
-            pass
-
-        return DaskJobExecutor.make_spec(
-            workers_spec=workers_spec,
-            client_kwargs={'set_as_default': False},
-        )
+        return DaskJobExecutor.make_local()
 
     def close(self):
         self.executor.close()

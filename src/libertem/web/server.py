@@ -134,7 +134,7 @@ def main(host, port, numeric_level, event_registry, shared_state):
 
 
 def _confirm_exit(shared_state, loop):
-    log.info('interrupted, ')
+    log.info('interrupted')
     sys.stdout.write("Shutdown libertem server (y/[n])? ")
     sys.stdout.flush()
     r, w, x = select.select([sys.stdin], [], [], 5)
@@ -164,7 +164,7 @@ def _handle_exit(signum, frame, shared_state):
 
 
 def handle_signal(shared_state):
-    if not sys.platform.startswith('win'):
+    if not sys.platform.startswith('win') and sys.stdin and sys.stdin.isatty():
         signal.signal(signal.SIGINT, partial(_handle_exit, shared_state=shared_state))
     else:
         signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))

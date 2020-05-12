@@ -603,6 +603,13 @@ class UDF(UDFBase):
         return np.float32
 
     def get_tiling_preferences(self):
+        """
+        Configure tiling preferences. Return a dictinary with the
+        following keys:
+
+        - "depth": number of frames/frame parts to stack on top of each other
+        - "total_size": total size of a tile in bytes
+        """
         return {
             "depth": UDF.TILE_DEPTH_DEFAULT,
             "total_size": UDF.TILE_SIZE_MAX,

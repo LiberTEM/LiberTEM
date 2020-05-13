@@ -17,7 +17,7 @@ from libertem.common import Slice
 log = logging.getLogger(__name__)
 
 
-def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
+def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
         stack_height = computed_masks.shape[0]
@@ -27,45 +27,53 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose):
         if transpose:
             # We need the stack transposed in the next step
             m = m.T
-
-        if is_sparse(m):
-            if sparse_backend == 'sparse.pydata':
-                # sparse.pydata.org is fastest for masks with few layers
-                # and few entries
-                return m.astype(dtype)
-            elif 'cupy.sparse' in sparse_backend:
-                # Avoid importing unless necessary
-                # cupy can be brittle
-                import cupy
-                iis, jjs = m.coords
-                values = m.data
-                if sparse_backend == 'cupy.sparse.csc':
-                    s = scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
-                    assert s.has_canonical_format
-                    return cupy.sparse.csc_matrix(s)
-                elif sparse_backend == 'cupy.sparse.csr':
-                    s = scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
-                    assert s.has_canonical_format
-                    return cupy.sparse.csr_matrix(s)
+        if backend == 'numpy':
+            if is_sparse(m):
+                if sparse_backend == 'sparse.pydata':
+                    # sparse.pydata.org is fastest for masks with few layers
+                    # and few entries
+                    return m.astype(dtype)
+                elif 'scipy.sparse' in sparse_backend:
+                    # Just for calculation: scipy.sparse.csr_matrix is
+                    # the fastest for dot product of deep mask stack
+                    iis, jjs = m.coords
+                    values = m.data
+                    if sparse_backend == 'scipy.sparse.csc':
+                        return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    else:
+                        return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
                 else:
-                    raise ValueError("unknown sparse backend: %s" % sparse_backend)
-            elif 'scipy.sparse' in sparse_backend:
-                # Just for calculation: scipy.sparse.csr_matrix is
-                # the fastest for dot product of deep mask stack
-                iis, jjs = m.coords
-                values = m.data
-                if sparse_backend == 'scipy.sparse.csc':
-                    return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
-                else:
-                    return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                    raise ValueError(
+                        "sparse_backend %s not implemented, can be 'scipy.sparse', "
+                        "'scipy.sparse.csc' or 'sparse.pydata'" % sparse_backend)
             else:
-                raise ValueError(
-                    "sparse_backend %s not implemented, can be 'scipy.sparse', "
-                    "'scipy.sparse.csc' or 'sparse.pydata'" % sparse_backend)
-        else:
-            # We convert to the desired type.
-            # This makes sure it is in row major, dense layout as well
-            return m.astype(dtype)
+                # We convert to the desired type.
+                # This makes sure it is in row major, dense layout as well
+                return m.astype(dtype)
+        elif backend == 'cupy':
+            if is_sparse(m):
+                if 'scipy.sparse' in sparse_backend:
+                    # Avoid importing unless necessary
+                    # cupy can be brittle
+                    import cupy
+                    iis, jjs = m.coords
+                    values = m.data
+                    if sparse_backend == 'scipy.sparse.csc':
+                        s = scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        assert s.has_canonical_format
+                        return cupy.sparse.csc_matrix(s)
+                    else:
+                        s = scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        assert s.has_canonical_format
+                        return cupy.sparse.csr_matrix(s)
+                else:
+                    raise ValueError(
+                        "sparse_backend %s not implemented for backend %s, can be 'scipy.sparse' or "
+                        "'scipy.sparse.csc'" % (sparse_backend, backend))
+            else:
+                # We convert to the desired type.
+                # This makes sure it is in row major, dense layout as well
+                return cupy.array(m.astype(dtype))
     return _get_masks_for_slice
 
 
@@ -76,7 +84,7 @@ class MaskContainer(object):
     It allows stacking, cached slicing, transposing and conversion
     to condition the masks for high-performance dot products.
     '''
-    def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None):
+    def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None, backend=None):
         '''
         use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
         '''
@@ -89,6 +97,9 @@ class MaskContainer(object):
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
+        if backend is None:
+            backend = 'numpy'
+        self.backend = backend
         self._get_masks_for_slice = {}
         self.validate_mask_functions()
 
@@ -120,7 +131,7 @@ class MaskContainer(object):
         else:
             return len(self.computed_masks)
 
-    def get(self, key: Slice, dtype=None, sparse_backend=None, transpose=True):
+    def get(self, key: Slice, dtype=None, sparse_backend=None, transpose=True, backend=None):
         if isinstance(key, Slice):
             slice_ = key
         else:
@@ -128,11 +139,14 @@ class MaskContainer(object):
                 "MaskContainer.get() can only be called with "
                 "DataTile/Slice/Partition instances"
             )
+        if backend is None:
+            backend = self.backend
         return self.get_masks_for_slice(
             slice_.discard_nav(),
             dtype=dtype,
             sparse_backend=sparse_backend,
-            transpose=transpose
+            transpose=transpose,
+            backend=backend
         )
 
     @property
@@ -202,18 +216,22 @@ class MaskContainer(object):
             )
         return masks
 
-    def get_masks_for_slice(self, slice_, dtype=None, sparse_backend=None, transpose=True):
+    def get_masks_for_slice(self, slice_, dtype=None, sparse_backend=None,
+            transpose=True, backend='numpy'):
         if dtype is None:
             dtype = self.dtype
         if sparse_backend is None:
             sparse_backend = self.use_sparse
-        key = (dtype, sparse_backend, transpose)
+        if backend is None:
+            backend = self.backend
+        key = (dtype, sparse_backend, transpose, backend)
         if key not in self._get_masks_for_slice:
             self._get_masks_for_slice[key] = _make_mask_slicer(
                 self.computed_masks,
                 dtype=dtype,
                 sparse_backend=sparse_backend,
-                transpose=transpose
+                transpose=transpose,
+                backend=backend
             )
         return self._get_masks_for_slice[key](slice_)
 

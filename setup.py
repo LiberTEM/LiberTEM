@@ -167,6 +167,7 @@ setup(
     extras_require={
         'torch': 'torch',
         'hdbscan': 'hdbscan',
+        'cupy': 'cupy',
     },
     package_dir={"": "src"},
     packages=[

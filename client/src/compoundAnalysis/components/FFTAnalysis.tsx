@@ -182,7 +182,7 @@ const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, datas
 
             title2={<><label> Masking out of zero order diffraction peak <input type="checkbox" name="check" onChange={handleChange} checked={check} /> </label>
             </>}
-            title1="Masking of intergation region in Fourier space"
+            title1="Masking of integration region in Fourier space"
             title3="Result of analysis"
 
         />

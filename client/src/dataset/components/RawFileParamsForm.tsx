@@ -30,7 +30,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     handleSubmit,
     handleReset,
     onCancel,
-    setFieldValue
+    setFieldValue,
 }) => {
 
     const [scanSizeKey,setScanSizeKey] = React.useState("scan_size_key");
@@ -44,7 +44,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
       if(values.scan_size==="") {
         setScanSizeKey("scan_size_key");
       }
-    }, [values.scan_size])
+    }, [values.scan_size]);
 
     return (
 

@@ -14,16 +14,12 @@ log = logging.getLogger(__name__)
 # This might have been the curl in the past!
 # FIXME add unit test
 def divergence(y_centers, x_centers):
-    # "-" since the physical Y coordinate and data Y coordinate are
-    # opposite
-    return -np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
+    return np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
 
 
 def curl_2d(y_centers, x_centers):
-    # Like divergence, just with axes swapped
-    # "+" since the physical Y coordinate and data Y coordinate are
-    # opposite
-    return np.gradient(y_centers, axis=1) + np.gradient(x_centers, axis=0)
+    # Similar divergence, just with axes swapped and sign change
+    return np.gradient(y_centers, axis=1) - np.gradient(x_centers, axis=0)
 
 
 class COMResultSet(AnalysisResultSet):

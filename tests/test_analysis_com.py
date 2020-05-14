@@ -259,3 +259,134 @@ def test_com_default_params(lt_ctx, TYPE):
     )
     analysis.TYPE = TYPE
     lt_ctx.run(analysis)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_divergence(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for i in range(3):
+        for j in range(3):
+            data[i, j, i, j] = 1
+    dataset = MemoryDataSet(
+        data=data,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1,
+
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print(data)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+    assert np.all(res["x"].raw_data == [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+    assert np.all(res["y"].raw_data == [[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+
+    assert np.all(res["divergence"].raw_data == 2)
+    assert np.all(res["curl"].raw_data == 0)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_divergence_2(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for i in range(3):
+        for j in range(3):
+            data[i, j, 2-i, 2-j] = 1
+    dataset = MemoryDataSet(
+        data=data,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1,
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print(data)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+    assert np.all(res["x"].raw_data == [[1, 0, -1], [1, 0, -1], [1, 0, -1]])
+    assert np.all(res["y"].raw_data == [[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
+
+    assert np.all(res["divergence"].raw_data == -2)
+    assert np.all(res["curl"].raw_data == 0)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_curl(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for y in range(3):
+        for x in range(3):
+            data[y, x, x, 2-y] = 1
+    dataset = MemoryDataSet(
+        data=data,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print(data)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+
+    assert np.all(res["x"].raw_data == [[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
+    assert np.all(res["y"].raw_data == [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+
+    assert np.all(res["divergence"].raw_data == 0)
+    assert np.all(res["curl"].raw_data == 2)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_curl_2(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for y in range(3):
+        for x in range(3):
+            data[y, x, 2-x, y] = 1
+    dataset = MemoryDataSet(
+        data=data,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print(data)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+
+    assert np.all(res["x"].raw_data == [[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    assert np.all(res["y"].raw_data == [[1, 0, -1], [1, 0, -1], [1, 0, -1]])
+
+    assert np.all(res["divergence"].raw_data == 0)
+    assert np.all(res["curl"].raw_data == -2)

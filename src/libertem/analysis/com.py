@@ -1,4 +1,3 @@
-from functools import reduce
 import logging
 
 import numpy as np
@@ -12,9 +11,19 @@ from .masks import BaseMasksAnalysis
 log = logging.getLogger(__name__)
 
 
-def divergence(arr):
-    return reduce(np.add, [np.gradient(arr[i], axis=i)
-                           for i in range(len(arr))])
+# This might have been the curl in the past!
+# FIXME add unit test
+def divergence(y_centers, x_centers):
+    # "-" since the physical Y coordinate and data Y coordinate are
+    # opposite
+    return -np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
+
+
+def curl_2d(y_centers, x_centers):
+    # Like divergence, just with axes swapped
+    # "+" since the physical Y coordinate and data Y coordinate are
+    # opposite
+    return np.gradient(y_centers, axis=1) + np.gradient(x_centers, axis=0)
 
 
 class COMResultSet(AnalysisResultSet):
@@ -38,6 +47,8 @@ class COMResultSet(AnalysisResultSet):
         Magnitude of the center of mass shift.
     divergence : libertem.analysis.base.AnalysisResult
         Divergence of the center of mass vector field at a given point
+    curl : libertem.analysis.base.AnalysisResult
+        Curl of the center of mass 2D vector field at a given point. Added in 0.6.0.dev0
     x : libertem.analysis.base.AnalysisResult
         X component of the center of mass shift
     y : libertem.analysis.base.AnalysisResult
@@ -60,23 +71,23 @@ class COMAnalysis(BaseMasksAnalysis):
     # FIXME remove this after UDF version is final
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)
-        img_sum, img_x, img_y = (
+        img_sum, img_y, img_x = (
             job_results[0].reshape(shape),
             job_results[1].reshape(shape),
             job_results[2].reshape(shape)
         )
-        return self.get_generic_results(img_sum, img_x, img_y)
+        return self.get_generic_results(img_sum, img_y, img_x)
 
     def get_udf_results(self, udf_results, roi):
         data = udf_results['intensity'].data
-        img_sum, img_x, img_y = (
+        img_sum, img_y, img_x = (
             data[..., 0],
             data[..., 1],
             data[..., 2],
         )
-        return self.get_generic_results(img_sum, img_x, img_y)
+        return self.get_generic_results(img_sum, img_y, img_x)
 
-    def get_generic_results(self, img_sum, img_x, img_y):
+    def get_generic_results(self, img_sum, img_y, img_x):
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
@@ -102,8 +113,9 @@ class COMAnalysis(BaseMasksAnalysis):
             ])
         else:
             f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
-            d = divergence([x_centers, y_centers])
-            m = np.sqrt(x_centers**2 + y_centers**2)
+            d = divergence(y_centers, x_centers)
+            c = curl_2d(y_centers, x_centers)
+            m = np.sqrt(y_centers**2 + x_centers**2)
 
             return COMResultSet([
                 AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
@@ -113,6 +125,8 @@ class COMAnalysis(BaseMasksAnalysis):
                        key="magnitude", title="magnitude", desc="magnitude of the vector field"),
                 AnalysisResult(raw_data=d, visualized=visualize_simple(d),
                        key="divergence", title="divergence", desc="divergence of the vector field"),
+                AnalysisResult(raw_data=c, visualized=visualize_simple(c),
+                       key="curl", title="curl", desc="curl of the 2D vector field"),
                 AnalysisResult(raw_data=x_centers, visualized=visualize_simple(x_centers),
                        key="x", title="x", desc="x component of the center"),
                 AnalysisResult(raw_data=y_centers, visualized=visualize_simple(y_centers),
@@ -139,11 +153,11 @@ class COMAnalysis(BaseMasksAnalysis):
 
         return [
             disk_mask,
-            lambda: masks.gradient_x(
+            lambda: masks.gradient_y(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
             ) * disk_mask(),
-            lambda: masks.gradient_y(
+            lambda: masks.gradient_x(
                 imageSizeX=detector_x,
                 imageSizeY=detector_y,
             ) * disk_mask(),

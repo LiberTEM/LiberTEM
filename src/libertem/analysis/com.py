@@ -11,6 +11,38 @@ from .masks import BaseMasksAnalysis
 log = logging.getLogger(__name__)
 
 
+def com_masks_factory(detector_y, detector_x, cy, cx, r):
+    def disk_mask():
+        return masks.circular(
+            centerX=cx, centerY=cy,
+            imageSizeX=detector_x,
+            imageSizeY=detector_y,
+            radius=r,
+        )
+
+    return [
+        disk_mask,
+        lambda: masks.gradient_y(
+            imageSizeX=detector_x,
+            imageSizeY=detector_y,
+        ) * disk_mask(),
+        lambda: masks.gradient_x(
+            imageSizeX=detector_x,
+            imageSizeY=detector_y,
+        ) * disk_mask(),
+    ]
+
+
+def center_shifts(img_sum, img_y, img_x, ref_y, ref_x):
+    x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
+    y_centers = np.divide(img_y, img_sum, where=img_sum != 0)
+    x_centers[img_sum == 0] = ref_x
+    y_centers[img_sum == 0] = ref_y
+    x_centers -= ref_x
+    y_centers -= ref_y
+    return (y_centers, x_centers)
+
+
 # This might have been the curl in the past!
 # FIXME add unit test
 def divergence(y_centers, x_centers):
@@ -20,6 +52,10 @@ def divergence(y_centers, x_centers):
 def curl_2d(y_centers, x_centers):
     # Similar divergence, just with axes swapped and sign change
     return np.gradient(y_centers, axis=1) - np.gradient(x_centers, axis=0)
+
+
+def magnitude(y_centers, x_centers):
+    return np.sqrt(y_centers**2 + x_centers**2)
 
 
 class COMResultSet(AnalysisResultSet):
@@ -86,12 +122,7 @@ class COMAnalysis(BaseMasksAnalysis):
     def get_generic_results(self, img_sum, img_y, img_x):
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
-        x_centers = np.divide(img_x, img_sum, where=img_sum != 0)
-        y_centers = np.divide(img_y, img_sum, where=img_sum != 0)
-        x_centers[img_sum == 0] = ref_x
-        y_centers[img_sum == 0] = ref_y
-        x_centers -= ref_x
-        y_centers -= ref_y
+        y_centers, x_centers = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
 
         if img_sum.dtype.kind == 'c':
             x_real, x_imag = np.real(x_centers), np.imag(x_centers)
@@ -111,7 +142,7 @@ class COMAnalysis(BaseMasksAnalysis):
             f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
             d = divergence(y_centers, x_centers)
             c = curl_2d(y_centers, x_centers)
-            m = np.sqrt(y_centers**2 + x_centers**2)
+            m = magnitude(y_centers, x_centers)
 
             return COMResultSet([
                 AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
@@ -132,32 +163,13 @@ class COMAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:
             raise ValueError("can only handle 2D signals currently")
-
-        (detector_y, detector_x) = self.dataset.shape.sig
-
-        cx = self.parameters['cx']
-        cy = self.parameters['cy']
-        r = self.parameters['r']
-
-        def disk_mask():
-            return masks.circular(
-                centerX=cx, centerY=cy,
-                imageSizeX=detector_x,
-                imageSizeY=detector_y,
-                radius=r,
-            )
-
-        return [
-            disk_mask,
-            lambda: masks.gradient_y(
-                imageSizeX=detector_x,
-                imageSizeY=detector_y,
-            ) * disk_mask(),
-            lambda: masks.gradient_x(
-                imageSizeX=detector_x,
-                imageSizeY=detector_y,
-            ) * disk_mask(),
-        ]
+        return com_masks_factory(
+            detector_y=self.dataset.shape.sig[0],
+            detector_x=self.dataset.shape.sig[1],
+            cx=self.parameters['cx'],
+            cy=self.parameters['cy'],
+            r=self.parameters['r'],
+        )
 
     def get_parameters(self, parameters):
         (detector_y, detector_x) = self.dataset.shape.sig

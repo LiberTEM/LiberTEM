@@ -1,15 +1,17 @@
-import * as React from "react";
 import { Field } from "formik";
+import * as React from "react";
 import { Button, Form, FormFieldProps } from "semantic-ui-react";
 
 interface ScanSizeProps {
     value: string,
+    minScan: number,
+    maxScan: number,
     setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void,
 }
 
-const ScanSize: React.FC<ScanSizeProps> = ({ value, setFieldValue }) => {
+const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldValue }) => {
 
-    const [scanSize, setScanSize] = React.useState(value.split(",").length>=2? value.split(","): ["",""]);
+    const [scanSize, setScanSize] = React.useState(value.split(",").length>=minScan? value.split(","): new Array(minScan).fill(""));
 
     const scanRefsArray = React.useRef<FormFieldProps[]>([]);
 
@@ -28,19 +30,21 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, setFieldValue }) => {
     }
 
     const newScanDim = () => {
-      scanSize.push("");
-      setScanSize(scanSize);
-      setFieldValue("scan_size", scanSize.toString());
+      if(scanSize.length < maxScan) {
+        scanSize.push("");
+        setScanSize(scanSize);
+        setFieldValue("scan_size", scanSize.toString());
+      }
     }
 
     React.useEffect(() => {
-      if(scanSize.length > 2) {
+      if(scanSize.length > minScan) {
         scanRefsArray.current[scanSize.length-1].focus();
       }
-    }, [scanSize.length]);
+    }, [scanSize.length, minScan]);
 
     const delScanDim = () => {
-      if(scanSize.length > 2) {
+      if(scanSize.length > minScan) {
         scanSize.pop();
         setScanSize(scanSize);
         setFieldValue("scan_size", scanSize.toString());
@@ -50,10 +54,13 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, setFieldValue }) => {
     return (
       <>
         <Form.Group>
-          {scanSize.map((val, idx) => <Form.Field key={idx} width={2}><Field name={"scan_size_" + idx} id={"id_scan_size_" + idx} type="number" value={val} innerRef={(ref:FormFieldProps) => { scanRefsArray.current[idx] = ref; }} onChange={onScanSizeChange} onKeyDown={onCommaPress} /></Form.Field>)}
+          {scanSize.map((val, idx) => {
+            const scanRef = (ref:FormFieldProps) => { scanRefsArray.current[idx] = ref; }
+            return <Form.Field key={idx} width={2}><Field name={"scan_size_" + idx} id={"id_scan_size_" + idx} type="number" value={val} innerRef={scanRef} onChange={onScanSizeChange} onKeyDown={onCommaPress} /></Form.Field>
+          })}
           <Form.Field>
-            <Button onClick={newScanDim} type="button" icon="add" title="Add dimension" basic={true} color="blue" />
-            <Button onClick={delScanDim} type="button" icon="minus" title="Remove dimension" basic={true} color="grey" />
+            <Button onClick={newScanDim} disabled={scanSize.length === maxScan? true: false} type="button" icon="add" title="Add dimension" basic={true} color="blue" />
+            <Button onClick={delScanDim} disabled={scanSize.length === minScan? true: false} type="button" icon="minus" title="Remove dimension" basic={true} color="blue" />
           </Form.Field>
         </Form.Group>
       </>

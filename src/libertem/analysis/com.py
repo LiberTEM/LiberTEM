@@ -44,7 +44,6 @@ def center_shifts(img_sum, img_y, img_x, ref_y, ref_x):
 
 
 # This might have been the curl in the past!
-# FIXME add unit test
 def divergence(y_centers, x_centers):
     return np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
 

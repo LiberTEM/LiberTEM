@@ -328,13 +328,14 @@ def radial_bins(centerX, centerY, imageSizeX, imageSizeY,
     if radius_inner < 0.5:
         yy = int(np.round(centerY))
         xx = int(np.round(centerX))
-        if use_sparse:
-            index = yy * imageSizeX + xx
-            diff = 1 - slices[0][index] - radius_inner
-            patch = sparse.COO(shape=len(r), data=[diff], coords=[index])
-            slices[0] += patch
-        else:
-            slices[0][yy, xx] = 1 - radius_inner
+        if yy >= 0 and yy < imageSizeY and xx >= 0 and xx < imageSizeX:
+            if use_sparse:
+                index = yy * imageSizeX + xx
+                diff = 1 - slices[0][index] - radius_inner
+                patch = sparse.COO(shape=len(r), data=[diff], coords=[index])
+                slices[0] += patch
+            else:
+                slices[0][yy, xx] = 1 - radius_inner
     if use_sparse:
         return sparse.stack(slices).reshape((-1, imageSizeY, imageSizeX))
     else:

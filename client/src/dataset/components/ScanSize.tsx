@@ -43,7 +43,6 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
     }
 
     React.useEffect(() => {
-      console.log()
       if(scanSize.length > minScan) {
         scanRefsArray.current[scanSize.length-1].focus();
       }

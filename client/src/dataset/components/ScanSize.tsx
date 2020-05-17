@@ -16,9 +16,9 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
 
     const scanRefsArray = React.useRef<HTMLInputElement[]>([]);
 
-    const scanSizeChangeHandle = (idx: number, value: string) => {
+    const scanSizeChangeHandle = (idx: number, val: string) => {
       const newScanSize = [...scanSize];
-      newScanSize[idx] = value;
+      newScanSize[idx] = val;
       setScanSize(newScanSize);
       setFieldValue("scan_size", newScanSize.toString());
     };

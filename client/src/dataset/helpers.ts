@@ -8,6 +8,15 @@ export function parseNumList(nums: string) {
     return nums.split(",").filter(part => part.trim() !== "").map(part => +part);
 }
 
+export function parseNumListWithPadding(nums: string, minLength: number) {
+    let initialList = new Array(minLength).fill("");
+    if(nums) {
+      const value = parseNumList(nums);
+      initialList = (minLength - value.length)>0 ? [...value, ...Array(minLength - value.length).fill("")] : [...value];
+    }
+    return initialList;
+}
+
 export function getInitial<T extends object, K extends keyof T, V>(key: K, otherwise: V, values?: T): V | T[K] {
     if (!values) {
         return otherwise;

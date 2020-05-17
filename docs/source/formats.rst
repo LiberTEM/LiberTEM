@@ -44,8 +44,12 @@ Loading using the GUI
 ~~~~~~~~~~~~~~~~~~~~~
 
 Using the GUI, mostly the same parameters need to be specified, although some
-are only available in the Python API. Note that the GUI
-currently only supports 4D data sets, while the scripting API should handle more
+are only available in the Python API. Tuples (for example for :code:`scan_size`)
+have to be entered as comma-separated values. We follow
+the NumPy convention here and specify the "fast-access" dimension last, so a
+value of :code:`"42, 21"` would mean the same as specifying :code:`(42, 21)` in
+the Python API, setting :code:`y=42` and :code:`x=21`. Note that the GUI
+currently only support 4D data sets, while the scripting API should handle more
 general n-dimensional data.
 
 See also :ref:`the concepts section <concepts>`.
@@ -59,9 +63,9 @@ There are some common parameters across data set types:
   The name of the data set, for display purposes. Only used in the GUI.
 `scan_size`
   In the GUI, we generally support visualizing data containing rectangular 2D scans. For
-  some data set types, you can specify a scan_size as (scan width | scan height); for others
-  it is not even required. When using the Python API, you are free to use n-dimensional
-  `scan_size`, if the data set and chosen analysis supports it.
+  some data set types, you can specify a scan_size as a tuple `(y, x)`.
+  When using the Python API, you are free to use n-dimensional `scan_size`, if the data
+  set and chosen analysis supports it.
 
 .. _`supported formats`:
 

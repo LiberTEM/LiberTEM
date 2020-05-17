@@ -43,9 +43,7 @@ const MIBFileParamsForm: React.SFC<MergedProps> = ({
     }
 
     React.useEffect(() => {
-      if(values.scan_size) {
-        setScanSizeKey("scan_size_key");
-      }
+      setScanSizeKey("scan_size_key");
     }, [values.scan_size]);
 
     return (

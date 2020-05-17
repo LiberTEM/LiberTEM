@@ -17,7 +17,7 @@ const ScanSizePart: React.FC<ScanSizePartProps> = ({ name, id, scanKey, scanSize
    const onCommaPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
       commaPressHandle(scanKey, e.keyCode);
    }
-   return <input type="number" name={name} id={id} onChange={onPartChange} value={value} onKeyDown={onCommaPress} ref={scanRef} />;
+   return <input type="number" name={name} id={id} key={scanKey} onChange={onPartChange} value={value} onKeyDown={onCommaPress} ref={scanRef} />;
 }
 
 export default ScanSizePart;

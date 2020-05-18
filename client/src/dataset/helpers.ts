@@ -11,8 +11,12 @@ export function parseNumList(nums: string) {
 export function parseNumListWithPadding(nums: string, minLength: number) {
     let initialList = new Array(minLength).fill("");
     if(nums) {
-      const value = parseNumList(nums);
-      initialList = (minLength - value.length)>0 ? [...value, ...Array(minLength - value.length).fill("")] : [...value];
+      const value = nums.split(",");
+      if((minLength - value.length)>0) {
+        initialList = [...value, ...Array(minLength - value.length).fill("")];
+      } else {
+          initialList = [...value];
+      }
     }
     return initialList;
 }

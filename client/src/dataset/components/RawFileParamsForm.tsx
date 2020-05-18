@@ -33,17 +33,6 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     setFieldValue,
 }) => {
 
-    const [scanSizeKey, setScanSizeKey] = React.useState("scan_size_key");
-
-    const onReset = () => {
-      handleReset();
-      setScanSizeKey("scan_size_key_empty");
-    }
-
-    React.useEffect(() => {
-        setScanSizeKey("scan_size_key");
-    }, [values.scan_size]);
-
     return (
 
         <Form onSubmit={handleSubmit}>
@@ -55,7 +44,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_scan_size_0">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
-                <ScanSize value={values.scan_size} minScan={2} maxScan={4} setFieldValue={setFieldValue} key={scanSizeKey} />
+                <ScanSize value={values.scan_size} minScan={2} maxScan={4} setFieldValue={setFieldValue} />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
@@ -74,7 +63,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={onReset}>Reset</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }

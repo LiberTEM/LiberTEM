@@ -12,19 +12,13 @@ interface ScanSizeProps {
 
 const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldValue }) => {
 
-    const [scanSize, setScanSize] = React.useState(parseNumListWithPadding(value, minScan));
-
-    React.useEffect(() => {
-      const newScanSizeValue = parseNumListWithPadding(value, minScan);
-      setScanSize(newScanSizeValue);
-    }, [value, minScan]);
-
+    const scanSize = parseNumListWithPadding(value, minScan);
+    
     const scanRefsArray = React.useRef<HTMLInputElement[]>([]);
 
     const scanSizeChangeHandle = (idx: number, val: string) => {
       const newScanSize = [...scanSize];
       newScanSize[idx] = val;
-      setScanSize(newScanSize);
       setFieldValue("scan_size", newScanSize.toString());
     };
 
@@ -40,7 +34,6 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
       if(scanSize.length < maxScan) {
         const newScanSize = [...scanSize];
         newScanSize.push("");
-        setScanSize(newScanSize);
         setFieldValue("scan_size", newScanSize.toString());
       }
     }
@@ -55,7 +48,6 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
       if(scanSize.length > minScan) {
         const newScanSize = [...scanSize];
         newScanSize.pop();
-        setScanSize(newScanSize);
         setFieldValue("scan_size", newScanSize.toString());
       }
     }
@@ -63,13 +55,13 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
     return (
       <>
         <Form.Group>
-          {parseNumListWithPadding(value, minScan).map((val, idx) => {
+          {scanSize.map((val, idx) => {
             const scanRef = (ref:HTMLInputElement) => { scanRefsArray.current[idx] = ref; }
             return <Form.Field width={2} key={idx}><ScanSizePart scanKey={idx} name={"scan_size_" + idx} id={"id_scan_size_" + idx} value={val} scanRef={scanRef} scanSizeChangeHandle={scanSizeChangeHandle} commaPressHandle={commaPressHandle} /></Form.Field>
           })}
           <Form.Field hidden={minScan === maxScan}>
-            <Button onClick={newScanDim} disabled={scanSize.length === maxScan} type="button" icon="add" title="Add dimension" basic={true} color="blue" />
-            <Button onClick={delScanDim} disabled={scanSize.length === minScan} type="button" icon="minus" title="Remove dimension" basic={true} color="blue" />
+            <Button onClick={newScanDim} disabled={scanSize.length === maxScan} type="button" icon="add" title="Add dimension" basic={false} />
+            <Button onClick={delScanDim} disabled={scanSize.length === minScan} type="button" icon="minus" title="Remove dimension" basic={false} />
           </Form.Field>
         </Form.Group>
       </>

@@ -35,17 +35,6 @@ const SEQFileParamsForm: React.SFC<MergedProps> = ({
     setFieldValue,
 }) => {
 
-    const [scanSizeKey, setScanSizeKey] = React.useState("scan_size_key");
-
-    const onReset = () => {
-      handleReset();
-      setScanSizeKey("scan_size_key_empty");
-    }
-
-    React.useEffect(() => {
-      setScanSizeKey("scan_size_key");
-    }, [values.scan_size]);
-
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
@@ -56,11 +45,11 @@ const SEQFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_scan_size_0">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
-                <ScanSize value={values.scan_size} minScan={2} maxScan={4} setFieldValue={setFieldValue} key={scanSizeKey} />
+                <ScanSize value={values.scan_size} minScan={2} maxScan={4} setFieldValue={setFieldValue} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={onReset}>Reset</Button>
+            <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
     )
 }

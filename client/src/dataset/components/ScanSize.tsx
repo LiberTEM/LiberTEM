@@ -14,6 +14,11 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
 
     const [scanSize, setScanSize] = React.useState(parseNumListWithPadding(value, minScan));
 
+    React.useEffect(() => {
+      const newScanSizeValue = parseNumListWithPadding(value, minScan);
+      setScanSize(newScanSizeValue);
+    }, [value, minScan]);
+
     const scanRefsArray = React.useRef<HTMLInputElement[]>([]);
 
     const scanSizeChangeHandle = (idx: number, val: string) => {
@@ -23,14 +28,12 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
       setFieldValue("scan_size", newScanSize.toString());
     };
 
-    const commaPressHandle = (idx: number, keyCode: number) => {
-        if(keyCode === 188){
-            if(idx===(scanSize.length-1)) {
-              newScanDim();
-            } else {
-                scanRefsArray.current[idx+1].focus();
-            }
-        }
+    const commaPressHandle = (idx: number) => {
+      if(idx===(scanSize.length-1)) {
+        newScanDim();
+      } else {
+          scanRefsArray.current[idx+1].focus();
+      }
     }
 
     const newScanDim = () => {
@@ -60,7 +63,7 @@ const ScanSize: React.FC<ScanSizeProps> = ({ value, minScan, maxScan, setFieldVa
     return (
       <>
         <Form.Group>
-          {scanSize.map((val, idx) => {
+          {parseNumListWithPadding(value, minScan).map((val, idx) => {
             const scanRef = (ref:HTMLInputElement) => { scanRefsArray.current[idx] = ref; }
             return <Form.Field width={2} key={idx}><ScanSizePart scanKey={idx} name={"scan_size_" + idx} id={"id_scan_size_" + idx} value={val} scanRef={scanRef} scanSizeChangeHandle={scanSizeChangeHandle} commaPressHandle={commaPressHandle} /></Form.Field>
           })}

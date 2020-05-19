@@ -497,6 +497,7 @@ class K2ISDataSet(DataSet):
     path: str
         Path to one of the files of the data set (either one of the .bin files or the .gtg file)
     """
+
     def __init__(self, path):
         super().__init__()
         self._path = path
@@ -641,7 +642,7 @@ class K2ISDataSet(DataSet):
 
     def _get_fileset(self, with_sync=True):
         sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-        num_frames = int(np.prod(self._get_scansize()))
+        num_frames = int(np.prod(self._scan_size))
         files = [
             K2ISFile(
                 path=path,

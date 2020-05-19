@@ -33,7 +33,6 @@ def dist_frms6(dist_ctx):
     path = "/data/frms6/C16_15_24_151203_019.hdr"
     ds = FRMS6DataSet(path=path)
     ds = ds.initialize(dist_ctx.executor)
-    assert ds._fileset is not None
     return ds
 
 
@@ -104,6 +103,12 @@ def test_dist_process(dist_frms6, dist_ctx):
     analysis = SumAnalysis(dataset=dist_frms6, parameters={"roi": roi})
     dist_ctx.run(analysis)
 
+
+@pytest.mark.dist
+def test_initialize(dist_frms6, dist_ctx):
+    assert dist_frms6._filenames is not None
+    assert dist_frms6._hdr_info is not None
+    assert dist_frms6._hdr_info is not None
 
 # TODO: gain map tests
 # TODO: test load request message

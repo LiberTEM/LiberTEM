@@ -16,7 +16,7 @@ services:
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-1
     image: libertem/libertem
-    command: ["/venv/bin/dask-worker", "tcp://scheduler:8786", "--nthreads", "1", "--nprocs", "2"]
+    command: ["/venv/bin/dask-worker", "tcp://scheduler:8786", "--nthreads", "1", "--nprocs", "2", "--resources", "CPU=1,compute=1"]
     volumes:
       - type: bind
         source: ../../data
@@ -27,7 +27,7 @@ services:
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-2
     image: libertem/libertem
-    command: ["/venv/bin/dask-worker", "tcp://scheduler:8786", "--nthreads", "1", "--nprocs", "2"]
+    command: ["/venv/bin/dask-worker", "tcp://scheduler:8786", "--nthreads", "1", "--nprocs", "2", "--resources", "CPU=1,compute=1"]
     volumes:
       - type: bind
         source: ../../data

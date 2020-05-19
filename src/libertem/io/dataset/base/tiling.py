@@ -428,7 +428,7 @@ class Negotiator:
                 "shape %r (%d) does not fit into size %d" % (shape, np.prod(shape), size_px)
             )
 
-    def get_scheme(self, udfs: List["UDF"], partition, read_dtype: np.dtype, roi: np.ndarray):
+    def get_scheme(self, udfs, partition, read_dtype: np.dtype, roi: np.ndarray):
         """
         Generate a :class:`TilingScheme` instance that is
         compatible with both the given `udf` and the

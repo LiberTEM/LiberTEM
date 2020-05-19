@@ -13,6 +13,7 @@ h5py-cache==1.0           # via ncempy
 h5py==2.10.0              # via libertem (../../setup.py), ncempy
 imagecodecs==2020.2.18    # via tifffile
 imageio==2.8.0            # via scikit-image
+importlib-metadata==1.6.0  # via jsonschema
 joblib==0.15.1            # via scikit-learn
 jsonschema==3.2.0         # via libertem (../../setup.py)
 kiwisolver==1.2.0         # via matplotlib
@@ -39,6 +40,7 @@ threadpoolctl==2.0.0      # via libertem (../../setup.py), scikit-learn
 tifffile==2020.5.11       # via scikit-image
 tornado==6.0.4            # via libertem (../../setup.py)
 tqdm==4.46.0              # via libertem (../../setup.py)
+zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

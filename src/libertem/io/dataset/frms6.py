@@ -369,6 +369,7 @@ class FRMS6DataSet(DataSet):
     gain_map_path : string
         Path to a gain map to apply (.mat format)
     """
+
     def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
         super().__init__()
         self._path = path
@@ -378,7 +379,6 @@ class FRMS6DataSet(DataSet):
         self._meta = None
         self._filenames = None
         self._hdr_info = None
-        self._fileset = None
         if dest_dtype is not None:
             warnings.warn(
                 "dest_dtype is now handled per `get_tiles` call, and ignored here",
@@ -452,7 +452,7 @@ class FRMS6DataSet(DataSet):
         global_header = self._get_hdr_info()
         return [
             {"name": "Offset correction available and enabled",
-             "value": str(self._get_dark_frame() is not None)},
+             "value": str(self._dark_frame is not None)},
         ] + [
             {"name": str(k),
              "value": str(v)}

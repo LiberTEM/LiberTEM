@@ -1,17 +1,22 @@
-import sys
 import os
+import sys
 from unittest import mock
 
+import pytest
 import numpy as np
 
 from libertem.udf.base import UDF
 
 from utils import _mk_random
 
-# Mock CuPy with NumPy
-# FIXME this overrides it for all following tests,
-# is there a better approach?
-sys.modules['cupy'] = np
+
+@pytest.fixture(autouse=True, scope='module')
+def mock_cupy():
+    old_cupy = sys.modules.get('cupy')
+    sys.modules['cupy'] = np
+    yield
+    if old_cupy is not None:
+        sys.modules['cupy'] = old_cupy
 
 
 class DebugUDF(UDF):

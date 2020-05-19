@@ -36,6 +36,9 @@ Or via :code:`tox`:
 
    $ DASK_SCHEDULER_ADDRESS=tcp://localhost:8786 tox -e py37 -- -m dist tests/
 
+All the usual caveats of running a dask distributed cluster apply here as well, for example,
+your local environment must match the environment on the worker containers etc.
+
 After changing LiberTEM code, you need to rebuild and restart the containers. This can be
 done by running:
 

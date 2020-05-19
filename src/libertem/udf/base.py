@@ -899,17 +899,20 @@ class UDFRunner:
                 tiling_scheme=tiling_scheme,
                 roi=roi, dest_dtype=dtype,
             )
-
+            # Guaranteed to be the same by UDFTask.get_resources()
+            xp = udfs[0].xp
             for tile in tiles:
+                # Work-around, should come from dataset later
+                device_tile = xp.asanyarray(tile)
                 for udf in udfs:
                     method = udf.get_method()
                     if method == 'tile':
                         udf.set_contiguous_views_for_tile(partition, tile)
                         udf.set_slice(tile.tile_slice)
-                        udf.process_tile(udf.xp.asanyarray(tile))
+                        udf.process_tile(device_tile)
                     elif method == 'frame':
                         tile_slice = tile.tile_slice
-                        for frame_idx, frame in enumerate(tile):
+                        for frame_idx, frame in enumerate(device_tile):
                             frame_slice = Slice(
                                 origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
                                 shape=Shape((1,) + tuple(tile_slice.shape)[1:],
@@ -917,11 +920,11 @@ class UDFRunner:
                             )
                             udf.set_slice(frame_slice)
                             udf.set_views_for_frame(partition, tile, frame_idx)
-                            udf.process_frame(udf.xp.asanyarray(frame))
+                            udf.process_frame(frame)
                     elif method == 'partition':
                         udf.set_views_for_tile(partition, tile)
                         udf.set_slice(partition.slice)
-                        udf.process_partition(udf.xp.asanyarray(tile))
+                        udf.process_partition(device_tile)
             for udf in udfs:
                 udf.flush()
                 if hasattr(udf, 'postprocess'):

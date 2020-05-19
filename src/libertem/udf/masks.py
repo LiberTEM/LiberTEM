@@ -3,8 +3,6 @@ try:
 except ImportError:
     torch = None
 import numpy as np
-import sparse
-import scipy.sparse
 
 from libertem.udf import UDF
 from libertem.common.container import MaskContainer
@@ -17,7 +15,7 @@ class ApplyMasksUDF(UDF):
     .. versionadded:: 0.4.0
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
-                mask_dtype=None, preferred_dtype=None):
+                mask_dtype=None, preferred_dtype=None, backends=None):
         '''
         Parameters
         ----------
@@ -56,9 +54,14 @@ class ApplyMasksUDF(UDF):
             Let :meth:`get_preferred_input_dtype` return the specified type instead of the
             default `float32`. This can perform the calculation with integer types if both input
             data and mask data are compatible with this.
+        backends : Iterable containing strings "numpy" and/or "cupy", or None
+            Control which back-ends are used. Default is numpy and cupy
         '''
         if use_sparse is True:
             use_sparse = 'scipy.sparse'
+
+        if backends is None:
+            backends = ('numpy', 'cupy')
 
         self._mask_container = None
 
@@ -68,7 +71,8 @@ class ApplyMasksUDF(UDF):
             use_sparse=use_sparse,
             mask_count=mask_count,
             mask_dtype=mask_dtype,
-            preferred_dtype=preferred_dtype
+            preferred_dtype=preferred_dtype,
+            backends=backends
         )
 
     def get_preferred_input_dtype(self):
@@ -99,14 +103,16 @@ class ApplyMasksUDF(UDF):
     def _make_mask_container(self):
         p = self.params
         return MaskContainer(
-            p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count
+            p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
+            backend=self.meta.backend
         )
 
     def get_task_data(self):
         ''
         m = self.meta
         use_torch = self.params.use_torch
-        if torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype():
+        if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
+                or self.meta.backend != 'numpy' or self.masks.use_sparse):
             use_torch = False
         return {
             'use_torch': use_torch,
@@ -119,26 +125,25 @@ class ApplyMasksUDF(UDF):
         count = self.get_mask_count()
         return {
             'intensity': self.buffer(
-                kind='nav', extra_shape=(count, ), dtype=dtype
+                kind='nav', extra_shape=(count, ), dtype=dtype, where='device'
             )
         }
 
+    def get_backends(self):
+        return self.params.backends
+
     def process_tile(self, tile):
         ''
-        masks = self.task_data.masks.get(self.meta.slice, transpose=True)
+        masks = self.task_data.masks.get(self.meta.slice, transpose=True, backend=self.meta.backend)
         flat_data = tile.reshape((tile.shape[0], -1))
-        if isinstance(masks, sparse.SparseArray):
-            result = sparse.dot(flat_data, masks)
-        elif scipy.sparse.issparse(masks):
-            # This is scipy.sparse using the old matrix interface
-            # where "*" is the dot product
-            result = flat_data * masks
-        elif self.task_data.use_torch:
+        if self.task_data.use_torch:
+            # CuPy back-end disables torch in get_task_data
+            # FIXME use GPU torch with CuPy array?
             result = torch.mm(
                 torch.from_numpy(flat_data),
                 torch.from_numpy(masks),
             ).numpy()
         else:
-            result = flat_data.dot(masks)
+            result = flat_data @ masks
         # '+' is the correct merge for dot product
         self.results.intensity[:] += result

@@ -24,6 +24,7 @@ class UDFMeta:
     .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
     """
+
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
                  tiling_index: int = 0):
@@ -104,6 +105,7 @@ class UDFData:
     '''
     Container for result buffers, return value from running UDFs
     '''
+
     def __init__(self, data: Dict[str, BufferWrapper]):
         self._data = data
         self._views = {}
@@ -225,6 +227,7 @@ class UDFFrameMixin:
     '''
     Implement :code:`process_frame` for per-frame processing.
     '''
+
     def process_frame(self, frame: np.ndarray):
         """
         Implement this method to process the data on a frame-by-frame manner.
@@ -250,6 +253,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
+
     def process_tile(self, tile: np.ndarray):
         """
         Implement this method to process the data in a tiled manner.
@@ -275,6 +279,7 @@ class UDFPartitionMixin:
     '''
     Implement :code:`process_partition` for per-partition processing.
     '''
+
     def process_partition(self, partition: np.ndarray):
         """
         Implement this method to process the data partitioned into large
@@ -311,6 +316,7 @@ class UDFPreprocessMixin:
 
     .. versionadded:: 0.3.0
     '''
+
     def preprocess(self):
         """
         Implement this method to preprocess the result data for a partition.
@@ -333,6 +339,7 @@ class UDFPostprocessMixin:
     after the partition data has been completely processed, but before it is returned to the
     master node for the final merging step.
     '''
+
     def postprocess(self):
         """
         Implement this method to postprocess the result data for a partition.
@@ -353,6 +360,7 @@ class UDFBase:
     '''
     Base class for UDFs with helper functions.
     '''
+
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi)
@@ -731,7 +739,7 @@ class UDFRunner:
             method = self._udf.get_method()
             neg = Negotiator()
             tiling_scheme = neg.get_scheme(
-                udf=self._udf,
+                udfs=[self._udf],
                 partition=partition,
                 read_dtype=dtype,
                 roi=roi,

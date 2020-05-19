@@ -1,9 +1,9 @@
 import math
-import typing
+from typing import List, Tuple
 import logging
 
 import numba
-from numba.typed import List
+from numba.typed import List as NumbaList
 import numpy as np
 
 from libertem.common import Slice, Shape
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class TilingScheme:
-    def __init__(self, slices: typing.List[Slice],
+    def __init__(self, slices: List[Slice],
                  tileshape: Shape, dataset_shape: Shape, debug=None):
         self._slices = slices
         self._tileshape = tileshape
@@ -188,7 +188,7 @@ def _default_read_ranges_tile_block(
     px_to_bytes, bpp, frame_header_bytes, frame_footer_bytes, file_idxs,
     slice_offset, extra, sig_shape,
 ):
-    result = List()
+    result = NumbaList()
 
     # positions in the signal dimensions:
     for slice_idx in range(slices_arr.shape[0]):
@@ -202,7 +202,7 @@ def _default_read_ranges_tile_block(
         slice_sig_size = slice_sig_sizes[slice_idx]
         sig_origin = sig_origins[slice_idx]
 
-        read_ranges = List()
+        read_ranges = NumbaList()
 
         # inner "depth" loop along the (flat) navigation axis of a tile:
         for i, inner_frame_idx in enumerate(range(inner_indices_start, inner_indices_stop)):
@@ -239,7 +239,7 @@ def _default_read_ranges_tile_block(
 def make_get_read_ranges(
     px_to_bytes=_default_px_to_bytes,
     read_ranges_tile_block=_default_read_ranges_tile_block,
-) -> typing.Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Translate the `TilingScheme` combined with the `roi` into (pixel)-read-ranges,
     together with their tile slices.
@@ -279,7 +279,7 @@ def make_get_read_ranges(
         slices_arr, fileset_arr, sig_shape,
         bpp, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
     ):
-        result = List()
+        result = NumbaList()
 
         sig_size = np.prod(np.array(sig_shape))
 
@@ -418,6 +418,7 @@ class Negotiator:
     a `TilingScheme` that is compatible with both the `UDF` and the
     `DataSet`, possibly even optimal.
     """
+
     def validate(self, shape, partition_shape, size, itemsize):
         size_px = size // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
@@ -427,7 +428,7 @@ class Negotiator:
                 "shape %r (%d) does not fit into size %d" % (shape, np.prod(shape), size_px)
             )
 
-    def get_scheme(self, udf, partition, read_dtype: np.dtype, roi: np.ndarray):
+    def get_scheme(self, udfs: List["UDF"], partition, read_dtype: np.dtype, roi: np.ndarray):
         """
         Generate a :class:`TilingScheme` instance that is
         compatible with both the given `udf` and the
@@ -436,7 +437,7 @@ class Negotiator:
         Parameters
         ----------
 
-        udf : UDF
+        udfs : List[UDF]
             The concrete UDF to optimize the tiling scheme for.
             Depending on the method (tile, frame, partition)
             and preferred total input size and depth.
@@ -464,11 +465,25 @@ class Negotiator:
         else:
             io_max_size = itemsize * np.prod(partition.shape)
 
-        depth = self._get_min_depth(udf, partition)
-        base_shape = self._get_base_shape(udf, partition)
-        size = self._get_size(
-            io_max_size, udf, itemsize, partition, base_shape,
-        )
+        depths = [
+            self._get_min_depth(udf, partition)
+            for udf in udfs
+        ]
+        depth = max(depths)  # take the largest min-depth
+        base_shape = self._get_base_shape(udfs, partition)
+        sizes = [
+            self._get_size(
+                io_max_size, udf, itemsize, partition, base_shape,
+            )
+            for udf in udfs
+        ]
+        if any(
+            udf.get_method() == "partition"
+            for udf in udfs
+        ):
+            size = max(sizes)  # by partition wants to be big, ...
+        else:
+            size = min(sizes)
         size_px = size // itemsize
 
         # first, scale `base_shape` up to contain at least `min_sig_size` items:
@@ -586,13 +601,15 @@ class Negotiator:
             size = max(base_size, size)
         return size
 
-    def _get_base_shape(self, udf, partition):
-        udf_method = udf.get_method()
-        if udf_method == "frame":
+    def _get_base_shape(self, udfs, partition):
+        methods = [
+            udf.get_method()
+            for udf in udfs
+        ]
+        if any(m == "frame" or m == "partition" for m in methods):
             base_shape = partition.shape.sig
-        elif udf_method == "partition":
-            base_shape = partition.shape.sig
-        elif udf_method == "tile":
+        else:
+            # only by tile:
             base_shape = Shape(
                 partition.get_base_shape(),
                 sig_dims=partition.shape.sig.dims

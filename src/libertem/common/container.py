@@ -78,8 +78,8 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
                         return cupy.sparse.csr_matrix(s)
                 else:
                     raise ValueError(
-                        "sparse_backend %s not implemented for backend %s, can be 'scipy.sparse' or "
-                        "'scipy.sparse.csc'" % (sparse_backend, backend))
+                        "sparse_backend %s not implemented for backend %s, can be "
+                        "'scipy.sparse' or 'scipy.sparse.csc'" % (sparse_backend, backend))
             else:
                 # We convert to the desired type.
                 # This makes sure it is in row major, dense layout as well

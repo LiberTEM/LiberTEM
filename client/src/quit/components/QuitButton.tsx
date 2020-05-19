@@ -2,9 +2,11 @@ import * as React from "react";
 import {  Button, Header, Icon, Modal  } from "semantic-ui-react";
 import { handleSubmit } from "../api"
 
-
 class QuitButton extends React.Component{
-    public state = { modelOpen: false }
+    public state = { 
+        modelOpen: false,
+        shutdown: false,
+    }
 
     public handleOpen = () => {
         this.setState({ modelOpen: true })
@@ -15,7 +17,7 @@ class QuitButton extends React.Component{
     }
 
     public handleQuit = () => {
-        this.handleClose()
+        this.setState({ shutdown: true })
         handleSubmit()
     }
 
@@ -34,11 +36,11 @@ class QuitButton extends React.Component{
                 </p>
             </Modal.Content>
             <Modal.Actions>
-                <Button color='red' onClick={this.handleClose}>
-                    <Icon name='remove'/> No
+                <Button onClick={this.handleClose}>
+                    <Icon name='remove'/> Cancel
                 </Button>
-                <Button color='green' onClick={this.handleQuit} >
-                    <Icon name='checkmark' /> Yes
+                <Button primary={true} loading={this.state.shutdown} disabled={this.state.shutdown} onClick={this.handleQuit} >
+                    <Icon name='checkmark' /> Shutdown
                 </Button>
             </Modal.Actions>
         </Modal>

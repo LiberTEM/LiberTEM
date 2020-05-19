@@ -6,6 +6,7 @@ from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
+from libertem.corrections.coordinates import rotate_deg, flip_y, identity
 
 
 log = logging.getLogger(__name__)
@@ -43,13 +44,14 @@ def center_shifts(img_sum, img_y, img_x, ref_y, ref_x):
     return (y_centers, x_centers)
 
 
-# This might have been the curl in the past!
 def divergence(y_centers, x_centers):
     return np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
 
 
 def curl_2d(y_centers, x_centers):
-    # Similar divergence, just with axes swapped and sign change
+    # https://en.wikipedia.org/wiki/Curl_(mathematics)#Usage
+    # DFy/dx - dFx/dy
+    # axis 0 is y, axis 1 is x
     return np.gradient(y_centers, axis=1) - np.gradient(x_centers, axis=0)
 
 
@@ -65,6 +67,12 @@ class COMResultSet(AnalysisResultSet):
     This analysis is usually applied to datasets with real values. If the dataset contains
     complex numbers, this result contains the keys :attr:`x_real`, :attr:`y_real`,
     :attr:`x_imag`, :attr:`y_imag` instead of the vector field.
+
+    By default, the shift is given in pixel coordinates, i.e. positive x shift goes to the right
+    and positive y shift goes to the bottom. See also :ref:`concepts`.
+
+    .. versionchanged:: 0.6.0.dev0
+        The COM analysis now supports flipping the y axis and rotating the vectors.
 
     .. versionadded:: 0.3.0
 
@@ -121,7 +129,19 @@ class COMAnalysis(BaseMasksAnalysis):
     def get_generic_results(self, img_sum, img_y, img_x):
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
-        y_centers, x_centers = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
+        y_centers_raw, x_centers_raw = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
+        shape = y_centers_raw.shape
+        if self.parameters["flip_y"]:
+            transform = flip_y()
+        else:
+            transform = identity()
+        # Transformations are applied right to left
+        transform = rotate_deg(self.parameters["scan_rotation"]) @ transform
+        print("Transform:", transform)
+        y_centers, x_centers = transform @ (y_centers_raw.reshape(-1), x_centers_raw.reshape(-1))
+
+        y_centers = y_centers.reshape(shape)
+        x_centers = x_centers.reshape(shape)
 
         if img_sum.dtype.kind == 'c':
             x_real, x_imag = np.real(x_centers), np.imag(x_centers)
@@ -176,12 +196,16 @@ class COMAnalysis(BaseMasksAnalysis):
         cx = parameters.get('cx', detector_x / 2)
         cy = parameters.get('cy', detector_y / 2)
         r = parameters.get('r', float('inf'))
+        scan_rotation = parameters.get('scan_rotation', 0.)
+        flip_y = parameters.get('flip_y', False)
         use_sparse = parameters.get('use_sparse', False)
 
         return {
             'cx': cx,
             'cy': cy,
             'r': r,
+            'scan_rotation': scan_rotation,
+            'flip_y': flip_y,
             'use_sparse': use_sparse,
             'mask_count': 3,
             'mask_dtype': np.float32,

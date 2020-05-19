@@ -652,7 +652,10 @@ class Context:
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
         """
-        return UDFRunner(udf).run_for_dataset(dataset, self.executor, roi, progress=progress)
+        results = UDFRunner([
+            udf
+        ]).run_for_dataset(dataset, self.executor, roi, progress=progress)
+        return results[0]
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,
             progress: bool = False) -> BufferWrapper:

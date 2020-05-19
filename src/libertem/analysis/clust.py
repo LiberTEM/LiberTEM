@@ -70,10 +70,10 @@ class ClusterAnalysis(BaseAnalysis):
 
         roi = self.get_sd_roi()
 
-        result_iter = UDFRunner(stddev_udf).run_for_dataset_async(
+        result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
             self.dataset, executor, roi=roi, cancel_id=cancel_id
         )
-        async for sd_udf_results in result_iter:
+        async for (sd_udf_results,) in result_iter:
             pass
 
         if job_is_cancelled():
@@ -112,10 +112,10 @@ class ClusterAnalysis(BaseAnalysis):
             use_sparse=True
         )
 
-        result_iter = UDFRunner(udf).run_for_dataset_async(
+        result_iter = UDFRunner([udf]).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id
         )
-        async for udf_results in result_iter:
+        async for (udf_results,) in result_iter:
             pass
 
         if job_is_cancelled():

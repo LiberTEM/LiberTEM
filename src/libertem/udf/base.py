@@ -24,6 +24,7 @@ class UDFMeta:
     .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
     """
+
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
                  tiling_index: int = 0):
@@ -104,6 +105,7 @@ class UDFData:
     '''
     Container for result buffers, return value from running UDFs
     '''
+
     def __init__(self, data: Dict[str, BufferWrapper]):
         self._data = data
         self._views = {}
@@ -225,6 +227,7 @@ class UDFFrameMixin:
     '''
     Implement :code:`process_frame` for per-frame processing.
     '''
+
     def process_frame(self, frame: np.ndarray):
         """
         Implement this method to process the data on a frame-by-frame manner.
@@ -250,6 +253,7 @@ class UDFTileMixin:
     '''
     Implement :code:`process_tile` for per-tile processing.
     '''
+
     def process_tile(self, tile: np.ndarray):
         """
         Implement this method to process the data in a tiled manner.
@@ -275,6 +279,7 @@ class UDFPartitionMixin:
     '''
     Implement :code:`process_partition` for per-partition processing.
     '''
+
     def process_partition(self, partition: np.ndarray):
         """
         Implement this method to process the data partitioned into large
@@ -311,6 +316,7 @@ class UDFPreprocessMixin:
 
     .. versionadded:: 0.3.0
     '''
+
     def preprocess(self):
         """
         Implement this method to preprocess the result data for a partition.
@@ -333,6 +339,7 @@ class UDFPostprocessMixin:
     after the partition data has been completely processed, but before it is returned to the
     master node for the final merging step.
     '''
+
     def postprocess(self):
         """
         Implement this method to postprocess the result data for a partition.
@@ -353,6 +360,7 @@ class UDFBase:
     '''
     Base class for UDFs with helper functions.
     '''
+
     def allocate_for_part(self, partition, roi):
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi)
@@ -693,22 +701,28 @@ class Task(object):
 
 
 class UDFTask(Task):
-    def __init__(self, partition: Partition, idx, udf, roi):
+    def __init__(self, partition: Partition, idx, udfs, roi):
         super().__init__(partition=partition, idx=idx)
         self._roi = roi
-        self._udf = udf
+        self._udfs = udfs
 
     def __call__(self):
-        return UDFRunner(self._udf).run_for_partition(self.partition, self._roi)
+        return UDFRunner(self._udfs).run_for_partition(self.partition, self._roi)
 
 
 class UDFRunner:
-    def __init__(self, udf, debug=False):
-        self._udf = udf
+    def __init__(self, udfs, debug=False):
+        self._udfs = udfs
         self._debug = debug
 
     def _get_dtype(self, dtype):
-        return np.result_type(self._udf.get_preferred_input_dtype(), dtype)
+        tmp_dtype = dtype
+        for udf in self._udfs:
+            tmp_dtype = np.result_type(
+                udf.get_preferred_input_dtype(),
+                tmp_dtype
+            )
+        return tmp_dtype
 
     def run_for_partition(self, partition: Partition, roi):
         with set_num_threads(1):
@@ -721,17 +735,18 @@ class UDFRunner:
                 input_dtype=dtype,
                 tiling_scheme=None,
             )
-            self._udf.set_meta(meta)
-            self._udf.init_result_buffers()
-            self._udf.allocate_for_part(partition, roi)
-            self._udf.init_task_data()
-            if hasattr(self._udf, 'preprocess'):
-                self._udf.clear_views()
-                self._udf.preprocess()
-            method = self._udf.get_method()
+            udfs = self._udfs
+            for udf in udfs:
+                udf.set_meta(meta)
+                udf.init_result_buffers()
+                udf.allocate_for_part(partition, roi)
+                udf.init_task_data()
+                if hasattr(udf, 'preprocess'):
+                    udf.clear_views()
+                    udf.preprocess()
             neg = Negotiator()
             tiling_scheme = neg.get_scheme(
-                udf=self._udf,
+                udfs=udfs,
                 partition=partition,
                 read_dtype=dtype,
                 roi=roi,
@@ -746,7 +761,8 @@ class UDFRunner:
                 input_dtype=dtype,
                 tiling_scheme=tiling_scheme,
             )
-            self._udf.set_meta(meta)
+            for udf in udfs:
+                udf.set_meta(meta)
             # print("UDF TilingScheme: %r" % tiling_scheme.shape)
 
             tiles = partition.get_tiles(
@@ -755,32 +771,35 @@ class UDFRunner:
             )
 
             for tile in tiles:
-                if method == 'tile':
-                    self._udf.set_contiguous_views_for_tile(partition, tile)
-                    self._udf.set_slice(tile.tile_slice)
-                    self._udf.process_tile(tile)
-                elif method == 'frame':
-                    tile_slice = tile.tile_slice
-                    for frame_idx, frame in enumerate(tile):
-                        frame_slice = Slice(
-                            origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
-                            shape=Shape((1,) + tuple(tile_slice.shape)[1:],
-                                        sig_dims=tile_slice.shape.sig.dims),
-                        )
-                        self._udf.set_slice(frame_slice)
-                        self._udf.set_views_for_frame(partition, tile, frame_idx)
-                        self._udf.process_frame(frame)
-                elif method == 'partition':
-                    self._udf.set_views_for_tile(partition, tile)
-                    self._udf.set_slice(partition.slice)
-                    self._udf.process_partition(tile)
-            self._udf.flush()
-            if hasattr(self._udf, 'postprocess'):
-                self._udf.clear_views()
-                self._udf.postprocess()
+                for udf in udfs:
+                    method = udf.get_method()
+                    if method == 'tile':
+                        udf.set_contiguous_views_for_tile(partition, tile)
+                        udf.set_slice(tile.tile_slice)
+                        udf.process_tile(tile)
+                    elif method == 'frame':
+                        tile_slice = tile.tile_slice
+                        for frame_idx, frame in enumerate(tile):
+                            frame_slice = Slice(
+                                origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
+                                shape=Shape((1,) + tuple(tile_slice.shape)[1:],
+                                            sig_dims=tile_slice.shape.sig.dims),
+                            )
+                            udf.set_slice(frame_slice)
+                            udf.set_views_for_frame(partition, tile, frame_idx)
+                            udf.process_frame(frame)
+                    elif method == 'partition':
+                        udf.set_views_for_tile(partition, tile)
+                        udf.set_slice(partition.slice)
+                        udf.process_partition(tile)
+            for udf in udfs:
+                udf.flush()
+                if hasattr(udf, 'postprocess'):
+                    udf.clear_views()
+                    udf.postprocess()
 
-            self._udf.cleanup()
-            self._udf.clear_views()
+                udf.cleanup()
+                udf.clear_views()
 
             if self._debug:
                 try:
@@ -788,11 +807,13 @@ class UDFRunner:
                 except TypeError:
                     raise TypeError("could not pickle partition")
                 try:
-                    cloudpickle.loads(cloudpickle.dumps(self._udf.results))
+                    cloudpickle.loads(cloudpickle.dumps(
+                        [u.results for u in udfs]
+                    ))
                 except TypeError:
                     raise TypeError("could not pickle results")
 
-            return self._udf.results
+            return tuple(udf.results for udf in udfs)
 
     def _debug_task_pickling(self, tasks):
         if self._debug:
@@ -815,13 +836,14 @@ class UDFRunner:
             dataset_dtype=dataset.dtype,
             input_dtype=self._get_dtype(dataset.dtype),
         )
-        self._udf.set_meta(meta)
-        self._udf.init_result_buffers()
-        self._udf.allocate_for_full(dataset, roi)
+        for udf in self._udfs:
+            udf.set_meta(meta)
+            udf.init_result_buffers()
+            udf.allocate_for_full(dataset, roi)
 
-        if hasattr(self._udf, 'preprocess'):
-            self._udf.set_views_for_dataset(dataset)
-            self._udf.preprocess()
+            if hasattr(udf, 'preprocess'):
+                udf.set_views_for_dataset(dataset)
+                udf.preprocess()
 
         tasks = list(self._make_udf_tasks(dataset, roi))
         return tasks
@@ -836,33 +858,46 @@ class UDFRunner:
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            self._udf.set_views_for_partition(task.partition)
-            self._udf.merge(
-                dest=self._udf.results.get_proxy(),
-                src=part_results.get_proxy()
-            )
+            for results, udf in zip(part_results, self._udfs):
+                udf.set_views_for_partition(task.partition)
+                udf.merge(
+                    dest=udf.results.get_proxy(),
+                    src=results.get_proxy()
+                )
 
         if progress:
             t.close()
-        self._udf.clear_views()
+        for udf in self._udfs:
+            udf.clear_views()
 
-        return self._udf.results.as_dict()
+        return [
+            udf.results.as_dict()
+            for udf in self._udfs
+        ]
 
     async def run_for_dataset_async(self, dataset: DataSet, executor, cancel_id, roi=None):
         tasks = self._prepare_run_for_dataset(dataset, executor, roi)
 
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
-            self._udf.set_views_for_partition(task.partition)
-            self._udf.merge(
-                dest=self._udf.results.get_proxy(),
-                src=part_results.get_proxy()
+            for results, udf in zip(part_results, self._udfs):
+                udf.set_views_for_partition(task.partition)
+                udf.merge(
+                    dest=udf.results.get_proxy(),
+                    src=results.get_proxy()
+                )
+                udf.clear_views()
+            yield tuple(
+                udf.results.as_dict()
+                for udf in self._udfs
             )
-            self._udf.clear_views()
-            yield self._udf.results.as_dict()
         else:
             # yield at least one result (which should be empty):
-            self._udf.clear_views()
-            yield self._udf.results.as_dict()
+            for udf in self._udfs:
+                udf.clear_views()
+            yield tuple(
+                udf.results.as_dict()
+                for udf in self._udfs
+            )
 
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
@@ -874,5 +909,8 @@ class UDFRunner:
                 if np.count_nonzero(roi_for_part) == 0:
                     # roi is empty for this partition, ignore
                     continue
-            udf = self._udf.copy_for_partition(partition, roi)
-            yield UDFTask(partition=partition, idx=idx, udf=udf, roi=roi)
+            udfs = [
+                udf.copy_for_partition(partition, roi)
+                for udf in self._udfs
+            ]
+            yield UDFTask(partition=partition, idx=idx, udfs=udfs, roi=roi)

@@ -29,12 +29,12 @@ async def test_async_run_for_dset(async_executor):
 
     pixelsum = PixelsumUDF()
     roi = np.zeros((256,), dtype=bool)
-    runner = UDFRunner(pixelsum)
+    runner = UDFRunner([pixelsum])
 
     udf_iter = runner.run_for_dataset_async(
         dataset, async_executor, roi=roi, cancel_id="42"
     )
 
-    async for udf_results in udf_iter:
+    async for (udf_results,) in udf_iter:
         pass
     assert "udf_results" in locals(), "must yield at least one result"

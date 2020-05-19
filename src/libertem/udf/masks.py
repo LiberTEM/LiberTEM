@@ -99,14 +99,16 @@ class ApplyMasksUDF(UDF):
     def _make_mask_container(self):
         p = self.params
         return MaskContainer(
-            p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count
+            p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
+            backend=self.meta.backend
         )
 
     def get_task_data(self):
         ''
         m = self.meta
         use_torch = self.params.use_torch
-        if torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype():
+        if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
+                or self.meta.backend != 'numpy'):
             use_torch = False
         return {
             'use_torch': use_torch,
@@ -123,22 +125,35 @@ class ApplyMasksUDF(UDF):
             )
         }
 
+    def get_backends(self):
+        return ('numpy', 'cupy')
+
     def process_tile(self, tile):
         ''
-        masks = self.task_data.masks.get(self.meta.slice, transpose=True)
+        masks = self.task_data.masks.get(self.meta.slice, transpose=True, backend=self.meta.backend)
         flat_data = tile.reshape((tile.shape[0], -1))
+        # This can be "False" or one of the sparse back-end identifiers as string
+        use_sparse = self.task_data.masks.use_sparse
         if isinstance(masks, sparse.SparseArray):
             result = sparse.dot(flat_data, masks)
-        elif scipy.sparse.issparse(masks):
+        elif use_sparse and 'scipy.sparse' in use_sparse:
             # This is scipy.sparse using the old matrix interface
             # where "*" is the dot product
+            # Works the same for cupy.sparse
             result = flat_data * masks
         elif self.task_data.use_torch:
+            # CuPy back-end disables torch in get_task_data
+            # FIXME use GPU torch with CuPy array?
             result = torch.mm(
                 torch.from_numpy(flat_data),
                 torch.from_numpy(masks),
             ).numpy()
         else:
+            # Works for CuPy and NumPy dense arrays
             result = flat_data.dot(masks)
+        # Doesn't make sense to keep result on device since we don't do any
+        # further processing
+        if self.meta.backend == 'cupy':
+            result = result.get()
         # '+' is the correct merge for dot product
         self.results.intensity[:] += result

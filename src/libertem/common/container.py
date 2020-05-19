@@ -59,11 +59,11 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
                 # This makes sure it is in row major, dense layout as well
                 return m.astype(dtype)
         elif backend == 'cupy':
+            # Avoid importing unless necessary
+            # cupy can be brittle
+            import cupy
             if is_sparse(m):
                 if 'scipy.sparse' in sparse_backend:
-                    # Avoid importing unless necessary
-                    # cupy can be brittle
-                    import cupy
                     iis, jjs = m.coords
                     values = m.data
                     if sparse_backend == 'scipy.sparse.csc':

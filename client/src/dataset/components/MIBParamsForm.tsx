@@ -45,7 +45,7 @@ const MIBFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_scan_size_0">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
-                <TupleInput value={values.scan_size} minLen={2} maxLen={4} fieldName="scan_size" setFieldValue={setFieldValue} />
+                <TupleInput value={values.scan_size} minLen={2} maxLen={2} fieldName="scan_size" setFieldValue={setFieldValue} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>

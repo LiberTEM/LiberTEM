@@ -39,9 +39,17 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
                     iis, jjs = m.coords
                     values = m.data
                     if sparse_backend == 'scipy.sparse.csc':
-                        return scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        return scipy.sparse.csc_matrix(
+                            (values, (iis, jjs)),
+                            shape=m.shape,
+                            dtype=dtype
+                        )
                     else:
-                        return scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        return scipy.sparse.csr_matrix(
+                            (values, (iis, jjs)),
+                            shape=m.shape,
+                            dtype=dtype
+                        )
                 else:
                     raise ValueError(
                         "sparse_backend %s not implemented, can be 'scipy.sparse', "
@@ -59,11 +67,13 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
                     iis, jjs = m.coords
                     values = m.data
                     if sparse_backend == 'scipy.sparse.csc':
-                        s = scipy.sparse.csc_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        s = scipy.sparse.csc_matrix(
+                            (values, (iis, jjs)), shape=m.shape, dtype=dtype)
                         assert s.has_canonical_format
                         return cupy.sparse.csc_matrix(s)
                     else:
-                        s = scipy.sparse.csr_matrix((values, (iis, jjs)), shape=m.shape, dtype=dtype)
+                        s = scipy.sparse.csr_matrix(
+                            (values, (iis, jjs)), shape=m.shape, dtype=dtype)
                         assert s.has_canonical_format
                         return cupy.sparse.csr_matrix(s)
                 else:
@@ -84,6 +94,7 @@ class MaskContainer(object):
     It allows stacking, cached slicing, transposing and conversion
     to condition the masks for high-performance dot products.
     '''
+
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None, backend=None):
         '''
         use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'

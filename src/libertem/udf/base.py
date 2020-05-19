@@ -786,7 +786,20 @@ class UDFTask(Task):
         return UDFRunner(self._udfs).run_for_partition(self.partition, self._roi)
 
     def get_resources(self):
-        backends = self._udf.get_backends()
+        """
+        Intersection of resources of all UDFs, throws if empty.
+        """
+        backends_for_udfs = [
+            set(udf.get_backends())
+            for udf in self._udfs
+        ]
+        backends = set(backends_for_udfs[0])  # intersection of backends
+        for backend_set in backends_for_udfs:
+            backends.intersection_update(backend_set)
+        if len(backends) == 0:
+            raise ValueError(
+                "There is no common supported UDF backend (have: %r)" % (backends_for_udfs,)
+            )
         if 'numpy' in backends and 'cupy' in backends:
             # Can be run on both CPU and CUDA workers
             return {'compute': 1}
@@ -899,7 +912,7 @@ class UDFRunner:
 
                 udf.cleanup()
                 udf.clear_views()
-                self._udf.export_results()
+                udf.export_results()
 
             if self._debug:
                 try:

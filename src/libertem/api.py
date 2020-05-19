@@ -253,7 +253,8 @@ class Context:
         )
 
     def create_com_analysis(self, dataset: DataSet, cx: int = None, cy: int = None,
-                            mask_radius: int = None) -> COMAnalysis:
+                            mask_radius: int = None, flip_y: bool = False,
+                            scan_rotation: float = 0.0) -> COMAnalysis:
         """
         Create a center-of-mass (first moment) analysis, possibly masked.
 
@@ -267,6 +268,22 @@ class Context:
             reference center y value
         mask_radius
             mask out intensity outside of mask_radius from (cy, cx)
+        flip_y : bool
+            Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,
+            may have pixel (0, 0) at the lower left corner. This has to be corrected
+            to get the sign of the y shift as well as curl and divergence right. Added in 0.6.0.dev0
+        scan_rotation : float
+            Scan rotation in degrees.
+            The optics of an electron microscope can rotate the image. Furthermore, scan
+            generators may allow scanning in arbitrary directions. This means that the x and y
+            coordinates of the detector image are usually not parallel to the x and y scan
+            coordinates. For interpretation of center of mass sifts, however, the shift vector
+            in detector coordinates has to be put in relation to the position on the sample.
+            The :code:`scan_rotation` parameter can be used to rotate the detector coordinates
+            to match the scan coordinate system. A positive value rotates the displacement
+            vector clock-wise. That means if the detector seems rotated to the right relative
+            to the scan, this value should be negative to counteract this rotation.
+            Added in 0.6.0.dev0
 
         Returns
         -------
@@ -279,7 +296,11 @@ class Context:
         if dataset.shape.sig.dims != 2:
             raise ValueError("incompatible dataset: need two signal dimensions")
         loc = locals()
-        parameters = {name: loc[name] for name in ['cx', 'cy'] if loc[name] is not None}
+        parameters = {
+            name: loc[name]
+            for name in ['cx', 'cy', 'flip_y', 'scan_rotation']
+            if loc[name] is not None
+        }
         if mask_radius is not None:
             parameters['r'] = mask_radius
         analysis = COMAnalysis(

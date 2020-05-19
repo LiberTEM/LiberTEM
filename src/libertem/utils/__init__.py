@@ -1,6 +1,11 @@
 import numpy as np
 
 
+# FIXME we might want to use an external physics or coordinate system package
+# Getting this right and consistent is extremely important for correct
+# interpretation of physical measurements. In particular 4D STEM data
+# and ptychography can get confusing.
+
 def make_cartesian(polar):
     '''
     Accept list of polar vectors, return list of cartesian vectors
@@ -37,6 +42,94 @@ def make_polar(cartesian):
     # (y, x)
     alphas = np.arctan2(cartesian[..., 0], cartesian[..., 1])
     return np.array((ds.T, alphas.T)).T
+
+
+def rotate_precalc(y, x, cos_angle, sin_angle):
+    '''
+    Rotate with pre-calculated entries of
+    the rotation matrix. This is useful when rotating within a loop,
+    in particular when combined with numba.njit of this function for inlining.
+
+    The rotation follows https://en.wikipedia.org/wiki/Rotation_matrix
+
+    In pixel coordinates with y pointing down and x pointing right,
+    the rotation is clockwise. In physical coordinates with y pointing up instead,
+    it is counter-clockwise.
+
+    Parameters
+    ==========
+    y, x : float or numpy.ndarray
+        Y and X components of the vector(s)
+
+    cos_angle, sin_angle : float or numpy.ndarray
+        cos(phi) and sin(phi) of rotation angle phi
+
+    Returns
+    =======
+    y, x : float or numpy.ndarray
+        Y and X components of rotated vector(s)
+
+    .. versionadded:: 0.6.0.dev0
+    '''
+    r_x = cos_angle * x - sin_angle * y
+    r_y = sin_angle * x + cos_angle * y
+    return r_y, r_x
+
+
+def rotate_deg(y, x, degrees):
+    '''
+    Rotate by angle in degrees
+
+    The rotation follows https://en.wikipedia.org/wiki/Rotation_matrix
+
+    In pixel coordinates with y pointing down and x pointing right,
+    the rotation is clockwise. In physical coordinates with y pointing up instead,
+    it is counter-clockwise.
+
+    Parameters
+    ==========
+    y, x : float or numpy.ndarray
+        Y and X components of the vector(s)
+
+    degrees : float or numpy.ndarray
+        Rotation angle in degrees
+
+    Returns
+    =======
+    y, x : float or numpy.ndarray
+        Y and X components of rotated vector(s)
+
+    .. versionadded:: 0.6.0.dev0
+    '''
+    return rotate_rad(y, x, np.pi/180*degrees)
+
+
+def rotate_rad(y, x, radians):
+    '''
+    Rotate by angle in radians
+
+    The rotation follows https://en.wikipedia.org/wiki/Rotation_matrix
+
+    In pixel coordinates with y pointing down and x pointing right,
+    the rotation is clockwise. In physical coordinates with y pointing up instead,
+    it is counter-clockwise.
+
+    Parameters
+    ==========
+    y, x : float or numpy.ndarray
+        Y and X components of the vector(s)
+
+    radians : float or numpy.ndarray
+        Rotation angle in radians
+
+    Returns
+    =======
+    y, x : float or numpy.ndarray
+        Y and X components of rotated vector(s)
+
+    .. versionadded:: 0.6.0.dev0
+    '''
+    return rotate_precalc(y, x, cos_angle=np.cos(radians), sin_angle=np.sin(radians))
 
 
 def regularize_indices(indices):

@@ -5,7 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetParamsRaw, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-import ScanSize from "./ScanSize";
+import TupleInput from "./TupleInput";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
@@ -44,7 +44,7 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="id_scan_size_0">Scan Size:</label>
                 <ErrorMessage name="scan_size" />
-                <ScanSize value={values.scan_size} minScan={2} maxScan={4} setFieldValue={setFieldValue} />
+                <TupleInput value={values.scan_size} minLen={2} maxLen={4} fieldName="scan_size" setFieldValue={setFieldValue} />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
@@ -52,9 +52,9 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                 <Field name="dtype" id="id_dtype" />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="id_detector_size">Detector Size (pixels, example: 256,256):</label>
+                <label htmlFor="id_detector_size_0">Detector Size (pixels, example: 256,256):</label>
                 <ErrorMessage name="detector_size" />
-                <Field name="detector_size" id="id_detector_size" />
+                <TupleInput value={values.detector_size} minLen={2} maxLen={4} fieldName="detector_size" setFieldValue={setFieldValue} />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>

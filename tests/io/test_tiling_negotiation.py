@@ -166,11 +166,6 @@ class UDFUnlimitedDepth(UDF):
         }
 
 
-class UDFByFrame(UDF):
-    def process_frame(self, frame):
-        pass
-
-
 def test_limited_depth():
     data = _mk_random(size=(32, 1860, 2048))
     dataset = MemoryDataSet(
@@ -212,7 +207,7 @@ def test_depth_max_size_max():
 
 
 def test_multi_by_frame_wins():
-    by_frame = UDFByFrame()
+    by_frame = TestUDFFrame()
     other_unlimited = UDFUnlimitedDepth()
     other_best_fit = TestUDFBestFit()
     other_deep = UDFWithLargeDepth()

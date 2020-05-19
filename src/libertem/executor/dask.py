@@ -65,7 +65,7 @@ def cluster_spec(cpus, cudas, num_service=1, options=None):
     for cpu in cpus:
         cpu_spec = deepcopy(cpu_base_spec)
         cpu_spec['options']['preload'] = \
-            f'from libertem.executor.dask import worker_setup; ' + \
+            'from libertem.executor.dask import worker_setup; ' + \
             f'worker_setup(resource="CPU", device={cpu})'
         workers_spec[f'cpu-{cpu}'] = cpu_spec
 
@@ -75,7 +75,7 @@ def cluster_spec(cpus, cudas, num_service=1, options=None):
     for cuda in cudas:
         cuda_spec = deepcopy(cuda_base_spec)
         cuda_spec['options']['preload'] = \
-            f'from libertem.executor.dask import worker_setup; ' + \
+            'from libertem.executor.dask import worker_setup; ' + \
             f'worker_setup(resource="CUDA", device={cuda})'
         workers_spec[f'cuda-{cuda}'] = cuda_spec
 

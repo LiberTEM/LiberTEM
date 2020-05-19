@@ -14,6 +14,9 @@ corresponds to the batch axis in machine learning frameworks.
 
 The "detector" axes are also called "signal axes", and a single 2D image is also called a frame.
 
+Axis order
+==========
+
 We generally follow the numpy convention for axis order, so for a 4D data set,
 you could have a :code:`(ny, nx, sy, sx)` tuple describing the shape.
 
@@ -27,6 +30,33 @@ In Python, the indices increase linearly with the row. A 3x3 Python matrix is re
     [6,7,8]]
 	
 `The official "NumPy for Matlab users" documentation`_ might be helpful for Matlab users.
+
+Coordinate system
+=================
+
+LiberTEM works in pixel coordinates corresponding to array indices. That means
+(0, 0) is on the top left corner, the x axis points to the right and the y axis
+points to the bottom. This follows the usual plotting conventions for pixel
+data.
+
+LiberTEM uses a right-handed coordinate system, which means the z axis points away and positive
+rotations are therefore clock-wise.
+
+.. note::
+    Please note that the data can be saved with different relation of physical coordinates and
+    pixel coordinates. Notably, MIB reference files from Quantum Detectors Merlin cameras have their
+    y axis inverted when displayed with LiberTEM. LiberTEM generally
+    doesn't deal with such transformations in the numerical back-end.
+
+    In :meth:`~libertem.api.Context.create_com_analysis`, a capability to flip the y axis and rotate
+    the shift coordinates is added in version 0.6.0.dev0 to support processing MIB files and
+    calculate results with physical meaning in electron microscopy, such as the curl and divergence.
+    See also :issue:`325`.
+
+    Discussion regarding full support for physical units can be found in :issue:`121`.
+
+Multidimensional data
+=====================
 
 While our GUI is currently limited to 4D data sets, the Python API does not
 have that limitation. You can load data of arbitraty dimensionality, provided our I/O

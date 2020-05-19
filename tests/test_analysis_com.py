@@ -356,6 +356,11 @@ def test_com_curl(lt_ctx, TYPE):
     assert np.all(res["y"].raw_data == [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
 
     assert np.all(res["divergence"].raw_data == 0)
+    # Data "rotating to the right"
+    # Y points down, x points right, right-handed coordinate system: z points away
+    # Right handed coordinate system: The result should be positive
+    # since the patterns are rotated in positive direction
+    # https://commons.wikimedia.org/wiki/File:Right_hand_rule_simple.png
     assert np.all(res["curl"].raw_data == 2)
 
 
@@ -390,3 +395,78 @@ def test_com_curl_2(lt_ctx, TYPE):
 
     assert np.all(res["divergence"].raw_data == 0)
     assert np.all(res["curl"].raw_data == -2)
+
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_curl_flip(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for y in range(3):
+        for x in range(3):
+            data[y, x, 2-x, y] = 1
+    data_flipped = np.flip(data, axis=2)
+    dataset = MemoryDataSet(
+        data=data_flipped,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1,
+        flip_y=True
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print("data", data)
+    print("flipped", data_flipped)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+
+    assert np.all(res["x"].raw_data == [[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    assert np.all(res["y"].raw_data == [[1, 0, -1], [1, 0, -1], [1, 0, -1]])
+
+    assert np.all(res["divergence"].raw_data == 0)
+    assert np.all(res["curl"].raw_data == -2)
+
+@pytest.mark.parametrize(
+    'TYPE', ['JOB', 'UDF']
+)
+def test_com_curl_rotate(lt_ctx, TYPE):
+    data = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    for y in range(3):
+        for x in range(3):
+            data[y, x, 2-x, y] = 1
+    # Rotate 90 degrees clockwise
+    data_90deg = np.zeros_like(data)
+    for y in range(3):
+        for x in range(3):
+            data_90deg[:, :, x, 2-y] = data[:, :, y, x]
+    dataset = MemoryDataSet(
+        data=data_90deg,
+        sig_dims=2,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=1,
+        cx=1,
+        scan_rotation=-90.
+    )
+    analysis.TYPE = TYPE
+    res = lt_ctx.run(analysis)
+
+    print("data", data)
+    print("data_90deg", data_90deg)
+    print("y", res["y"].raw_data)
+    print("x", res["x"].raw_data)
+    print("divergence", res["divergence"].raw_data)
+    print("curl", res["curl"].raw_data)
+
+    assert np.allclose(res["x"].raw_data, [[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    assert np.allclose(res["y"].raw_data, [[1, 0, -1], [1, 0, -1], [1, 0, -1]])
+
+    assert np.allclose(res["divergence"].raw_data, 0)
+    assert np.allclose(res["curl"].raw_data, -2)

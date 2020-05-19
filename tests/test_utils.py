@@ -28,6 +28,50 @@ def test_conversion(points):
     assert(np.allclose(points, ut.make_cartesian(ut.make_polar(points))))
 
 
+def test_rotation():
+    y, x = -1, 2
+    r_y, r_x = ut.rotate_deg(y, x, 90)
+    # Clock-wise with y pointing down
+    assert np.allclose(r_y, 2)
+    assert np.allclose(r_x, 1)
+
+
+def test_rotate_multi():
+    y, x = np.random.random(2) - 0.5
+    angle = 30
+    cos_angle = np.cos(np.pi*angle/180)
+    sin_angle = np.sin(np.pi*angle/180)
+    assert 360 % angle == 0
+    r_y = y
+    r_x = x
+    for i in range(360//angle):
+        r_y2, r_x2 = ut.rotate_deg(
+            y=r_y,
+            x=r_x,
+            degrees=angle
+        )
+        r_y, r_x = ut.rotate_precalc(
+            y=r_y,
+            x=r_x,
+            cos_angle=cos_angle,
+            sin_angle=sin_angle
+        )
+        assert np.allclose(r_y, r_y2)
+        assert np.allclose(r_x, r_x2)
+    print(r_y, r_x)
+    assert np.allclose(r_y, y)
+    assert np.allclose(r_x, x)
+
+
+def test_polar_rotate():
+    y, x, radians = np.random.random(3)
+    ((r, phi),) = ut.make_polar(np.array([(y, x)]))
+    ((r_y, r_x),) = ut.make_cartesian(np.array([(r, phi + radians)]))
+    r_y2, r_x2 = ut.rotate_rad(y, x, radians)
+    assert np.allclose(r_y, r_y2)
+    assert np.allclose(r_x, r_x2)
+
+
 @pytest.mark.parametrize('counts, sampling, visibility, f_angle, gauss, poisson, rtol1, rtol2',
                          [(None, None, None, None, None, None, 1e-5, 2e-2),
                           (500., 6.2, 0.5, 66., 0.7, 1e-4, 6e-2, .3)])

@@ -817,7 +817,6 @@ class UDFRunner:
     def run_for_partition(self, partition: Partition, roi):
         with set_num_threads(1):
             backend = get_backend()
-            self._udf.set_backend(backend)
             dtype = self._get_dtype(partition.dtype)
             meta = UDFMeta(
                 partition_shape=partition.slice.adjust_for_roi(roi).shape,
@@ -830,6 +829,7 @@ class UDFRunner:
             )
             udfs = self._udfs
             for udf in udfs:
+                udf.set_backend(backend)
                 udf.set_meta(meta)
                 udf.init_result_buffers()
                 udf.allocate_for_part(partition, roi)
@@ -875,7 +875,7 @@ class UDFRunner:
                     if method == 'tile':
                         udf.set_contiguous_views_for_tile(partition, tile)
                         udf.set_slice(tile.tile_slice)
-                        udf.process_tile(self._udf.xp.asanyarray(tile))
+                        udf.process_tile(udf.xp.asanyarray(tile))
                     elif method == 'frame':
                         tile_slice = tile.tile_slice
                         for frame_idx, frame in enumerate(tile):
@@ -886,11 +886,11 @@ class UDFRunner:
                             )
                             udf.set_slice(frame_slice)
                             udf.set_views_for_frame(partition, tile, frame_idx)
-                            udf.process_frame(self._udf.xp.asanyarray(frame))
+                            udf.process_frame(udf.xp.asanyarray(frame))
                     elif method == 'partition':
                         udf.set_views_for_tile(partition, tile)
                         udf.set_slice(partition.slice)
-                        udf.process_partition(self._udf.xp.asanyarray(tile))
+                        udf.process_partition(udf.xp.asanyarray(tile))
             for udf in udfs:
                 udf.flush()
                 if hasattr(udf, 'postprocess'):

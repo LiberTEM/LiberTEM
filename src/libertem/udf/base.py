@@ -843,14 +843,7 @@ class UDFRunner:
             )
             udfs = self._udfs
             for udf in udfs:
-                udf.set_backend(backend)
                 udf.set_meta(meta)
-                udf.init_result_buffers()
-                udf.allocate_for_part(partition, roi)
-                udf.init_task_data()
-                if hasattr(udf, 'preprocess'):
-                    udf.clear_views()
-                    udf.preprocess()
             neg = Negotiator()
             # FIXME take compute backend into consideration as well
             # Other boundary conditions when moving input data to device
@@ -860,7 +853,6 @@ class UDFRunner:
                 read_dtype=dtype,
                 roi=roi,
             )
-
             # FIXME: don't fully re-create?
             meta = UDFMeta(
                 partition_shape=partition.slice.adjust_for_roi(roi).shape,
@@ -873,6 +865,14 @@ class UDFRunner:
             )
             for udf in udfs:
                 udf.set_meta(meta)
+                udf.set_backend(backend)
+                udf.init_result_buffers()
+                udf.allocate_for_part(partition, roi)
+                udf.init_task_data()
+                if hasattr(udf, 'preprocess'):
+                    udf.clear_views()
+                    udf.preprocess()
+
             # print("UDF TilingScheme: %r" % tiling_scheme.shape)
 
             # FIXME pass information on target location (numpy or cupy)

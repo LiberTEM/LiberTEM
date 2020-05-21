@@ -18,22 +18,41 @@ log = logging.getLogger(__name__)
 
 class SERDatasetParams(MessageConverter):
     SCHEMA = {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://libertem.org/SERDatasetParams.schema.json",
-      "title": "SERDatasetParams",
-      "type": "object",
-      "properties": {
-          "type": {"const": "SER"},
-          "path": {"type": "string"},
-      },
-      "required": ["type", "path"]
-    }
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/SERDatasetParams.schema.json",
+        "title": "SERDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "SER"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+        },
+        "required": ["type", "path"]
+        }
 
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
             for k in ["path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -75,8 +94,21 @@ class SERDataSet(DataSet):
     ----------
     path: str
         Path to the .ser file
+
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
-    def __init__(self, path, emipath=None):
+    def __init__(self, path, emipath=None, nav_shape=None,
+                 sig_shape=None, sync_offset=0):
         super().__init__()
         self._path = path
         self._meta = None
@@ -86,6 +118,9 @@ class SERDataSet(DataSet):
             warnings.warn(
                 "emipath is not used anymore, as it was removed from ncempy", DeprecationWarning
             )
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
 
     def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
@@ -104,11 +139,23 @@ class SERDataSet(DataSet):
                     for dim in f1.head['Dimensions']
                 ])
             )
-            shape = nav_dims + tuple(data.shape)
-            sig_dims = len(data.shape)
+            self._image_count = int(self._num_frames)
+            if self._nav_shape is None:
+                self._nav_shape = nav_dims
+            if self._sig_shape is None:
+                self._sig_shape = tuple(data.shape)
+            elif int(np.prod(self._sig_shape)) != int(np.prod(data.shape)):
+                raise DataSetException(
+                    "sig_shape must be of size: %s" % int(np.prod(data.shape))
+                )
+            self._nav_shape_product = int(np.prod(self._nav_shape))
+            self._sync_offset_info = self.get_sync_offset_info()
+            self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
             self._meta = DataSetMeta(
-                shape=Shape(shape, sig_dims=sig_dims),
+                shape=self._shape,
                 raw_dtype=dtype,
+                sync_offset=self._sync_offset,
+                image_count=self._image_count,
             )
         return self
 
@@ -126,9 +173,17 @@ class SERDataSet(DataSet):
     @classmethod
     def detect_params(cls, path, executor):
         if path.lower().endswith(".ser"):
+            ds = cls(path)
+            ds = ds.initialize(executor)
             return {
                 "parameters": {
-                    "path": path
+                    "path": path,
+                    "nav_shape": tuple(ds.shape.nav),
+                    "sig_shape": tuple(ds.shape.sig),
+                },
+                "info": {
+                    "image_count": int(np.prod(ds.shape.nav)),
+                    "native_sig_shape": tuple(ds.shape.sig),
                 }
             }
         return False
@@ -155,9 +210,11 @@ class SERDataSet(DataSet):
     def get_cache_key(self):
         return {
             "path": self._path,
+            "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -176,9 +233,7 @@ class SERDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in SERPartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield SERPartition(
                 path=self._path,
                 meta=self._meta,
@@ -217,29 +272,40 @@ class SERPartition(BasePartition):
         self._corrections.apply(tile_data, tile_slice)
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+        sync_offset = self.meta.sync_offset
         shape = Shape((1,) + tuple(self.shape.sig), sig_dims=self.shape.sig.dims)
 
         self.validate_tiling_scheme(tiling_scheme)
 
         start = self._start_frame
-        stop = start + self._num_frames
-        if roi is None:
-            indices = np.arange(start, stop)
-            offset = start
-        else:
-            indices = _roi_to_indices(roi, start, stop)
-            offset = np.count_nonzero(roi.reshape((-1,))[:start])
+        if start < self.meta.image_count:
+            stop = min(start + self._num_frames, self.meta.image_count)
+            if roi is None:
+                indices = np.arange(max(0, start), stop)
+                # in case of a negative sync_offset, 'start' can be negative
+                if start < 0:
+                    offset = abs(sync_offset)
+                else:
+                    offset = start - sync_offset
+            else:
+                indices = _roi_to_indices(roi, max(0, start), stop, sync_offset)
+                # in case of a negative sync_offset, 'start' can be negative
+                if start < 0:
+                    offset = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+                else:
+                    offset = np.count_nonzero(roi.reshape((-1,))[:start - sync_offset])
 
-        with fileSER(self._path) as f:
-            for num, idx in enumerate(indices):
-                tile_slice = Slice(origin=(num + offset, 0, 0), shape=shape)
-                data, metadata = f.getDataset(int(idx))
-                if data.dtype != np.dtype(dest_dtype):
-                    data = data.astype(dest_dtype)
-                data = data.reshape(shape)
-                self._preprocess(data, tile_slice)
-                yield DataTile(
-                    data,
-                    tile_slice=tile_slice,
-                    scheme_idx=0,
-                )
+            with fileSER(self._path) as f:
+                for num, idx in enumerate(indices):
+                    origin = (num + offset,) + tuple([0] * self.shape.sig.dims)
+                    tile_slice = Slice(origin=origin, shape=shape)
+                    data, metadata = f.getDataset(int(idx))
+                    if data.dtype != np.dtype(dest_dtype):
+                        data = data.astype(dest_dtype)
+                    data = data.reshape(shape)
+                    self._preprocess(data, tile_slice)
+                    yield DataTile(
+                        data,
+                        tile_slice=tile_slice,
+                        scheme_idx=0,
+                    )

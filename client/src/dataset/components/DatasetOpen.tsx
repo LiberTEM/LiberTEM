@@ -6,7 +6,6 @@ import { assertNotReached } from "../../helpers";
 import { DatasetFormParams, DatasetTypes } from '../../messages';
 import { RootReducer } from "../../store";
 import * as datasetActions from "../actions";
-import { hasKey, isAdditionalInfo } from "../helpers";
 import { OpenDatasetState } from "../types";
 import BLOParamsForm from "./BLOParamsForm";
 import DatasetTypeSelect from "./DatasetTypeSelect";
@@ -52,16 +51,6 @@ const getDefaultDSType = (didReset: boolean, openState: OpenDatasetState) => {
  * @param openState complete OpenDatasetState instance
  */
 
-// Fix this after separating info from params
-const getAdditionalInfo = (formDetectedParams: DatasetFormParams) => {
-    const additionalInfo = Object.keys(formDetectedParams)
-        .filter(isAdditionalInfo)
-        .reduce((allInfo: object, info: string) => {
-            return hasKey(formDetectedParams, info) ? { ...allInfo, [info]: formDetectedParams[info] } : { ...allInfo };
-        }, {});
-    return additionalInfo;
-}
-
 const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
     const { formCachedParams, formDetectedParams } = openState;
     if (didReset) {
@@ -74,14 +63,46 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
         return undefined;
     }
     if (formCachedParams) {
-        if (formDetectedParams) {
-            const additionalInfo = getAdditionalInfo(formDetectedParams);
-            return { ...additionalInfo, ...formCachedParams };
+        // To handle deprecation of scan_size and detector_size, fix this after complete removal
+        let newFormCachedParams = formCachedParams;
+        if (formCachedParams.scan_size) {
+            newFormCachedParams = {
+                ...newFormCachedParams,
+                nav_shape: formCachedParams.scan_size,
+                scan_size: [],
+            };
         }
-        return formCachedParams;
+        if (formCachedParams.detector_size) {
+            newFormCachedParams = {
+                ...newFormCachedParams,
+                sig_shape: formCachedParams.detector_size,
+                detector_size: [],
+            };
+        }
+        if (!formCachedParams.nav_shape) {
+            newFormCachedParams = {
+                ...newFormCachedParams,
+                nav_shape: formDetectedParams ? formDetectedParams.nav_shape : [],
+            };
+        }
+        if (!formCachedParams.sig_shape) {
+            newFormCachedParams = {
+                ...newFormCachedParams,
+                sig_shape: formDetectedParams ? formDetectedParams.sig_shape : [],
+            };
+        }
+        return newFormCachedParams;
     } else {
         return formDetectedParams;
     }
+}
+
+const getFormInfo = (openState: OpenDatasetState) => {
+    const { formDetectedInfo } = openState;
+    if (formDetectedInfo) {
+        return formDetectedInfo;
+    }
+    return undefined;
 }
 
 /**
@@ -94,6 +115,7 @@ const DatasetOpen = () => {
 
     const [didReset, setReset] = React.useState(false);
     const formInitial = getFormInitial(didReset, openState);
+    const formInfo = getFormInfo(openState);
     const defaultType = getDefaultDSType(didReset, openState);
     const [datasetType, setDatasetType] = React.useState(defaultType);
 
@@ -141,39 +163,48 @@ const DatasetOpen = () => {
     switch (datasetType) {
         case DatasetTypes.HDF5: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<HDF5ParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<HDF5ParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.RAW: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<RawFileParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<RawFileParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.MIB: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<MIBParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<MIBParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.BLO: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<BLOParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<BLOParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.K2IS: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<K2ISParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<K2ISParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.SER: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<SERParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<SERParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.FRMS6: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<FRMS6ParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<FRMS6ParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.EMPAD: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<EMPADParamsForm {...commonParams} initial={initial} />)
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<EMPADParamsForm {...commonParams} initial={initial} info={info} />)
         }
         case DatasetTypes.SEQ: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
-            return renderForm(<SEQParamsForm {...commonParams} initial={initial} />);
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<SEQParamsForm {...commonParams} initial={initial} info={info} />);
         }
     }
     return assertNotReached("unknown dataset type");

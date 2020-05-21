@@ -110,7 +110,7 @@ Notes for implementing a :class:`~libertem.io.dataset.base.DataSet`
   key must be different for :code:`DataSet`\ s that return different data.
 - Implement :meth:`~libertem.io.dataset.base.DataSet.get_partitions`. You may
   want to use the helper function
-  :meth:`~libertem.io.dataset.base.BasePartition.make_slices` to generate
+  :meth:`~libertem.io.dataset.base.DataSet.get_slices` to generate
   slices for a specified number of partitions.
   :meth:`~libertem.io.dataset.base.DataSet.get_partitions` should yield either
   :class:`~libertem.io.dataset.base.BasePartition` instances or instances of

@@ -48,6 +48,8 @@ class ClusterDataSet(WritableDataSet, DataSet):
         self._meta = DataSetMeta(
             shape=structure.shape,
             raw_dtype=np.dtype(structure.dtype),
+            sync_offset=0,
+            image_count=int(np.prod(structure.shape.nav)),
         )
         self._executor = None
 

@@ -21,6 +21,7 @@ def test_pick(lt_ctx):
     assert np.allclose(data[roi], res['intensity'].data)
     assert data.dtype == res['intensity'].data.dtype
 
+
 def test_pick_empty_roi(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(3, 7, 7),

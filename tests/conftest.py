@@ -29,8 +29,8 @@ def _raw_on_workers(tmpdirpath, datadir, filename, ctx):
 
     ds = ctx.load("raw",
                   path=str(filename),
-                  scan_size=(16, 16),
-                  detector_size=(128, 128),
+                  nav_shape=(16, 16),
+                  sig_shape=(128, 128),
                   dtype="float32")
     return ds
 

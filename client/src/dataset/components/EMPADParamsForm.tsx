@@ -2,23 +2,26 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsEMPAD, DatasetTypes } from "../../messages";
-import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
+import { DatasetInfoEMPAD, DatasetParamsEMPAD, DatasetTypes } from "../../messages";
+import { getInitial, getInitialName, parseNumList, validateSyncOffsetAndSigShape, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsEMPADForForm = Omit<DatasetParamsEMPAD,
-    "path"
-    | "type"
-    | "scan_size"
-> & {
-    scan_size: string,
+    "type"
+    | "path"
+    | "nav_shape"
+    | "sig_shape"> & {
+        nav_shape: string,
+        sig_shape: string,
 };
 
-type MergedProps = FormikProps<DatasetParamsEMPADForForm> & OpenFormProps<DatasetParamsEMPAD>;
+type MergedProps = FormikProps<DatasetParamsEMPADForForm> & OpenFormProps<DatasetParamsEMPAD, DatasetInfoEMPAD>;
 
 const EMPADParamsForm: React.SFC<MergedProps> = ({
     values,
+    info,
     touched,
     errors,
     dirty,
@@ -28,7 +31,9 @@ const EMPADParamsForm: React.SFC<MergedProps> = ({
     handleSubmit,
     handleReset,
     onCancel,
+    setFieldValue,
 }) => {
+
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
@@ -36,11 +41,7 @@ const EMPADParamsForm: React.SFC<MergedProps> = ({
                 <ErrorMessage name="name" />
                 <Field name="name" id="id_name" />
             </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_scan_size">Scan Size:</label>
-                <ErrorMessage name="scan_size" />
-                <Field name="scan_size" id="id_scan_size" />
-            </Form.Field>
+            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
@@ -48,18 +49,30 @@ const EMPADParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm>({
-    mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName("name",path,initial),
-        scan_size: getInitial("scan_size", "", initial).toString(),
+export default withValidation<DatasetParamsEMPAD, DatasetParamsEMPADForForm, DatasetInfoEMPAD>({
+    mapPropsToValues: ({ path, initial }) => ({
+        name: getInitialName("name", path, initial),
+        nav_shape: getInitial("nav_shape", "", initial).toString(),
+        sig_shape: getInitial("sig_shape", "", initial).toString(),
+        sync_offset: getInitial("sync_offset", 0, initial),
     }),
     formToJson: (values, path) => {
         return {
             path,
             type: DatasetTypes.EMPAD,
             name: values.name,
-            scan_size: parseNumList(values.scan_size),
+            nav_shape: parseNumList(values.nav_shape),
+            sig_shape: parseNumList(values.sig_shape),
+            sync_offset: values.sync_offset,
         };
+    },
+    customValidation: (values, { info }) => {
+        return validateSyncOffsetAndSigShape(
+            info?.native_sig_shape,
+            values.sig_shape,
+            values.sync_offset,
+            info?.image_count
+        )
     },
     type: DatasetTypes.EMPAD,
 })(EMPADParamsForm);

@@ -2,15 +2,21 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsK2IS, DatasetTypes } from "../../messages";
-import { getInitialName, withValidation } from "../helpers";
+import { DatasetInfoK2IS, DatasetParamsK2IS, DatasetTypes } from "../../messages";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
-    "path" | "type">;
+    "type"
+    | "path"
+    | "nav_shape"
+    | "sig_shape"> & {
+        nav_shape: string,
+        sig_shape: string,
+};
 
-type MergedProps = FormikProps<DatasetParamsK2ISForForm> & OpenFormProps<DatasetParamsK2IS>;
+type MergedProps = FormikProps<DatasetParamsK2ISForForm> & OpenFormProps<DatasetParamsK2IS, DatasetInfoK2IS>;
 
 const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -23,7 +29,9 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     handleSubmit,
     handleReset,
     onCancel,
+    setFieldValue,
 }) => {
+
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
@@ -31,7 +39,6 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
                 <ErrorMessage name="name" />
                 <Field name="name" id="id_name" />
             </Form.Field>
-
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
@@ -39,15 +46,21 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm>({
+export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm, DatasetInfoK2IS>({
     mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName("name",path,initial),
+        name: getInitialName("name", path, initial),
+        nav_shape: getInitial("nav_shape", "", initial).toString(),
+        sig_shape: getInitial("sig_shape", "", initial).toString(),
+        sync_offset: getInitial("sync_offset", 0, initial),
     }),
     formToJson: (values, path) => {
         return {
             path,
             type: DatasetTypes.K2IS,
             name: values.name,
+            nav_shape: parseNumList(values.nav_shape),
+            sig_shape: parseNumList(values.sig_shape),
+            sync_offset: values.sync_offset,
         }
     },
     type: DatasetTypes.K2IS,

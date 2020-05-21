@@ -2,16 +2,24 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Dropdown, DropdownProps, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsHDF5, DatasetTypes } from "../../messages";
-import { getInitial, getInitialName, withValidation } from "../helpers";
+import { DatasetInfoHDF5, DatasetParamsHDF5, DatasetTypes } from "../../messages";
+import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
-type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5, "path" | "type">;
+type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5,
+    "type"
+    | "path"
+    | "nav_shape"
+    | "sig_shape"> & {
+        nav_shape: string,
+        sig_shape: string,
+};
 
-type MergedProps = FormikProps<DatasetParamsHDF5ForForm> & OpenFormProps<DatasetParamsHDF5>;
+type MergedProps = FormikProps<DatasetParamsHDF5ForForm> & OpenFormProps<DatasetParamsHDF5, DatasetInfoHDF5>;
 
 const HDF5ParamsForm: React.SFC<MergedProps> = ({
     values,
+    info,
     touched,
     errors,
     dirty,
@@ -24,7 +32,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     setFieldValue,
 }) => {
 
-    const dsPathOptions = values.dataset_paths.map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
+    const dsPathOptions = info?.dataset_paths.map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
 
     // semantic-ui requires value to be set manually on option selection
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
@@ -35,7 +43,8 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     };
 
     let dsPathInput;
-    const isTimeOut = (values.dataset_paths.length === 0 ) ? true : false;
+    const isTimeOut = (info?.dataset_paths.length === 0 ) ? true : false;
+
     if (isTimeOut) {
       dsPathInput = <Field name="ds_path" id="id_ds_path" />;
     } else {
@@ -61,11 +70,13 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
-    mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName("name",path,initial),
-        dataset_paths: getInitial("dataset_paths", [], initial),
+export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm, DatasetInfoHDF5>({
+    mapPropsToValues: ({ path, initial }) => ({
+        name: getInitialName("name", path, initial),
         ds_path: getInitial("ds_path", "", initial),
+        nav_shape: getInitial("nav_shape", "", initial).toString(),
+        sig_shape: getInitial("sig_shape", "", initial).toString(),
+        sync_offset: getInitial("sync_offset", 0, initial),
     }),
     formToJson: (values, path) => {
         return {
@@ -73,7 +84,9 @@ export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm>({
             type: DatasetTypes.HDF5,
             name: values.name,
             ds_path: values.ds_path,
-            dataset_paths: values.dataset_paths,
+            nav_shape: parseNumList(values.nav_shape),
+            sig_shape: parseNumList(values.sig_shape),
+            sync_offset: values.sync_offset,
         };
     },
     type: DatasetTypes.HDF5,

@@ -112,67 +112,106 @@ export enum DatasetTypes {
 
 export interface DatasetParamsCommon {
     name: string,
+    nav_shape: number[],
+    sig_shape: number[],
+    sync_offset: number,
+    scan_size?: number[],
+    detector_size?: number[],
 }
 
-export enum AdditionalInfo {
-    dataset_paths = "dataset_paths",
+export interface DatasetInfoCommon {
+    image_count: number,
+    native_sig_shape: number[],
 }
 
 export type DatasetParamsHDF5 = {
     type: DatasetTypes.HDF5,
     path: string,
     ds_path: string,
-    dataset_paths: string[],
 } & DatasetParamsCommon
+
+export type DatasetInfoHDF5 = {
+    type: DatasetTypes.HDF5,
+    dataset_paths: string[],
+} & DatasetInfoCommon
 
 export type DatasetParamsRaw = {
     type: DatasetTypes.RAW,
     path: string,
     dtype: string,
-    detector_size: number[],
     enable_direct: boolean,
-    scan_size: number[],
 } & DatasetParamsCommon
+
+export interface DatasetInfoRAW {
+    type: DatasetTypes.RAW,
+}
 
 export type DatasetParamsMIB = {
     type: DatasetTypes.MIB,
     path: string,
-    scan_size: number[],
 } & DatasetParamsCommon
+
+export type DatasetInfoMIB = {
+    type: DatasetTypes.MIB,
+} & DatasetInfoCommon
 
 export type DatasetParamsBLO = {
     type: DatasetTypes.BLO,
     path: string,
 } & DatasetParamsCommon
 
+export type DatasetInfoBLO = {
+    type: DatasetTypes.BLO,
+} & DatasetInfoCommon
+
 export type DatasetParamsK2IS = {
     type: DatasetTypes.K2IS,
     path: string,
 } & DatasetParamsCommon
+
+export type DatasetInfoK2IS = {
+    type: DatasetTypes.K2IS,
+} & DatasetInfoCommon
 
 export type DatasetParamsSER = {
     type: DatasetTypes.SER,
     path: string,
 } & DatasetParamsCommon
 
+export type DatasetInfoSER = {
+    type: DatasetTypes.SER,
+} & DatasetInfoCommon
+
 export type DatasetParamsFRMS6 = {
     type: DatasetTypes.FRMS6,
     path: string,
 } & DatasetParamsCommon
 
+export type DatasetInfoFRMS6 = {
+    type: DatasetTypes.FRMS6,
+} & DatasetInfoCommon
+
 export type DatasetParamsEMPAD = {
     type: DatasetTypes.EMPAD,
     path: string,
-    scan_size: number[],
 } & DatasetParamsCommon
+
+export type DatasetInfoEMPAD = {
+    type: DatasetTypes.EMPAD,
+} & DatasetInfoCommon
 
 export type DatasetParamsSEQ = {
     type: DatasetTypes.SEQ,
     path: string,
-    scan_size: number[],
 } & DatasetParamsCommon
 
+export type DatasetInfoSEQ = {
+    type: DatasetTypes.SEQ,
+} & DatasetInfoCommon
+
 export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ
+
+export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ
 
 export interface DatasetCreateParams {
     id: string,
@@ -239,6 +278,7 @@ export interface DeleteDatasetResponse {
 export interface DetectDatasetSuccessResponse {
     status: "ok",
     datasetParams: DatasetFormParams,
+    datasetInfo: DatasetFormInfo,
 }
 
 export interface DetectDatasetErrorResponse {

@@ -2,26 +2,28 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsMIB, DatasetTypes } from "../../messages";
-import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
+import { DatasetInfoMIB, DatasetParamsMIB, DatasetTypes } from "../../messages";
+import { getInitial, getInitialName, parseNumList, validateSyncOffsetAndSigShape, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-import TupleInput from "./TupleInput";
+import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsMIBForForm = Omit<DatasetParamsMIB,
-    "path"
-    | "type"
-    | "scan_size"
-> & {
-    scan_size: string,
+    "type"
+    | "path"
+    | "nav_shape"
+    | "sig_shape"> & {
+        nav_shape: string,
+        sig_shape: string,
 };
 
 type FormValues = DatasetParamsMIBForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB>;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsMIB, DatasetInfoMIB>;
 
 const MIBFileParamsForm: React.SFC<MergedProps> = ({
     values,
+    info,
     touched,
     errors,
     dirty,
@@ -42,11 +44,7 @@ const MIBFileParamsForm: React.SFC<MergedProps> = ({
                 <ErrorMessage name="name" />
                 <Field name="name" id="id_name" />
             </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_scan_size_0">Scan Size:</label>
-                <ErrorMessage name="scan_size" />
-                <TupleInput value={values.scan_size} minLen={2} maxLen={2} fieldName="scan_size" setFieldValue={setFieldValue} />
-            </Form.Field>
+            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
             <Button primary={true} type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
@@ -54,18 +52,30 @@ const MIBFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm>({
+export default withValidation<DatasetParamsMIB, DatasetParamsMIBForForm, DatasetInfoMIB>({
     formToJson: (values, path) => {
         return {
             path,
             type: DatasetTypes.MIB,
             name: values.name,
-            scan_size: parseNumList(values.scan_size),
+            nav_shape: parseNumList(values.nav_shape),
+            sig_shape: parseNumList(values.sig_shape),
+            sync_offset: values.sync_offset,
         }
     },
-    mapPropsToValues: ({path, initial }) => ({
+    mapPropsToValues: ({ path, initial }) => ({
         name: getInitialName("name",path,initial),
-        scan_size: getInitial("scan_size", "", initial).toString(),
+        nav_shape: getInitial("nav_shape", "", initial).toString(),
+        sig_shape: getInitial("sig_shape", "", initial).toString(),
+        sync_offset: getInitial("sync_offset", 0, initial),
     }),
+    customValidation: (values, { info }) => {
+        return validateSyncOffsetAndSigShape(
+            info?.native_sig_shape,
+            values.sig_shape,
+            values.sync_offset,
+            info?.image_count
+        )
+    },
     type: DatasetTypes.MIB,
 })(MIBFileParamsForm);

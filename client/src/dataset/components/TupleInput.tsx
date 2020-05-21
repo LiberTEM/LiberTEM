@@ -13,7 +13,7 @@ interface TupleInputProps {
 
 const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldName, setFieldValue }) => {
 
-    const tupleInputValue = parseNumListWithPadding(value, minLen);
+    const tupleInputValue = parseNumListWithPadding(value, minLen, maxLen);
 
     const tupleInputRefsArray = React.useRef<HTMLInputElement[]>([]);
 
@@ -38,18 +38,19 @@ const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldNam
         setFieldValue(fieldName, newTupleInputValue.toString());
       }
     }
-
-    React.useEffect(() => {
-      if(tupleInputValue.length > minLen) {
-        tupleInputRefsArray.current[tupleInputValue.length-1].focus();
+    /* Fix this auto focus bug when GUI supports n-D visualizations */
+    /* React.useEffect(() => {
+      if(tupleInputValue.length === tupleInputRefsArray.current.length + 1) {
+        tupleInputRefsArray.current[tupleInputValue.length+1].focus();
       }
-    }, [tupleInputValue.length, minLen]);
+    }, [tupleInputValue, tupleInputRefsArray]); */
 
     const delTupleDim = () => {
       if(tupleInputValue.length > minLen) {
         const newTupleInputValue = [...tupleInputValue];
         newTupleInputValue.pop();
         setFieldValue(fieldName, newTupleInputValue.toString());
+        tupleInputRefsArray.current[tupleInputValue.length-2].focus()
       }
     }
 

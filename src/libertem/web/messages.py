@@ -64,11 +64,12 @@ class Message(object):
             "dataset": dataset,
         }
 
-    def dataset_detect(self, params):
+    def dataset_detect(self, params, info=None):
         return {
             "status": "ok",
             "messageType": "DATASET_DETECTED",
             "datasetParams": params,
+            "datasetInfo": info,
         }
 
     def dataset_detect_failed(self, path,

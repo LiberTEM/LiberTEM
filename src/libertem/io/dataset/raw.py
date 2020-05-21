@@ -1,6 +1,6 @@
 import os
 import warnings
-
+import mmap
 import numpy as np
 
 from libertem.common import Shape
@@ -21,35 +21,59 @@ class RAWDatasetParams(MessageConverter):
             "type": {"const": "RAW"},
             "path": {"type": "string"},
             "dtype": {"type": "string"},
-            "scan_size": {
+            "nav_shape": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
                 "maxItems": 2
             },
-            "detector_size": {
+            "sig_shape": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
                 "maxItems": 2
             },
+            "sync_offset": {"type": "number"},
             "enable_direct": {
                 "type": "boolean"
-            }
+            },
         },
-        "required": ["type", "path", "dtype", "scan_size", "detector_size"]
+        "required": ["type", "path", "nav_shape", "sig_shape", "dtype"]
     }
 
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "dtype", "scan_size", "detector_size", "enable_direct"]
+            for k in ["path", "dtype", "nav_shape", "sig_shape", "enable_direct"]
         }
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
 class RawFile(LocalFile):
-    pass
+    def open(self):
+        f = open(self._path, "rb")
+        self._file = f
+        self._raw_mmap = mmap.mmap(
+            fileno=f.fileno(),
+            length=0,
+            offset=0,
+            access=mmap.ACCESS_READ,
+        )
+        # TODO: self._raw_mmap.madvise(mmap.MADV_HUGEPAGE) - benchmark this!
+        itemsize = np.dtype(self._native_dtype).itemsize
+        assert self._frame_header % itemsize == 0
+        assert self._frame_footer % itemsize == 0
+        start = self._frame_header // itemsize
+        stop = start + int(np.prod(self._sig_shape))
+        if self._raw_mmap.size() % int(np.prod(self._sig_shape)) != 0:
+            new_mmap_size = self.num_frames * (
+                itemsize * np.prod(self.sig_shape, dtype=np.int64)
+            )
+            skip_partial_frame = self._raw_mmap.size() - new_mmap_size
+            self._raw_mmap = memoryview(self._raw_mmap)[:-skip_partial_frame]
+        self._mmap = self._mmap_to_array(self._raw_mmap, start, stop)
 
 
 class RawFileSet(FileSet):
@@ -68,8 +92,8 @@ class RawFileDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("raw", path=path_to_raw, scan_size=(16, 16),
-    ...               dtype="float32", detector_size=(128, 128))
+    >>> ds = ctx.load("raw", path=path_to_raw, nav_shape=(16, 16), sig_shape=(128, 128),
+    ...               sync_offset=0, dtype="float32",)
 
     Parameters
     ----------
@@ -77,25 +101,30 @@ class RawFileDataSet(DataSet):
     path: str
         Path to the file
 
-    scan_size: tuple of int, optional
-        A n-tuple that specifies the size of the scanned region ((y, x), but
+    nav_shape: tuple of int
+        A n-tuple that specifies the size of the navigation region ((y, x), but
         can also be of length 1 for example for a line scan, or length 3 for
         a data cube, for example)
+
+    sig_shape: tuple of int
+        Common case: (height, width); but can be any dimensionality
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
 
     dtype: numpy dtype
         The dtype of the data as it is on disk. Can contain endian indicator, for
         example >u2 for big-endian 16bit data.
-
-    detector_size: tuple of int
-        Common case: (height, width); but can be any dimensionality
 
     enable_direct: bool
         Enable direct I/O. This bypasses the filesystem cache and is useful for
         systems with very fast I/O and for data sets that are much larger than the
         main memory.
     """
-    def __init__(self, path, scan_size, dtype, detector_size=None, enable_direct=False,
-                 detector_size_raw=None, crop_detector_to=None, tileshape=None):
+    def __init__(self, path, dtype, scan_size=None, detector_size=None, enable_direct=False,
+                 detector_size_raw=None, crop_detector_to=None, tileshape=None,
+                 nav_shape=None, sig_shape=None, sync_offset=0):
         super().__init__()
         # handle backwards-compatability:
         if tileshape is not None:
@@ -116,25 +145,58 @@ class RawFileDataSet(DataSet):
                 raise ValueError("RawFileDataSet can't crop detector anymore, "
                                  "please use EMPAD DataSet")
             detector_size = crop_detector_to
-
-        if detector_size is None:
-            raise TypeError("missing 1 required argument: 'detector_size'")
-
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
+        # handle backwards-compatability:
+        if scan_size is not None:
+            warnings.warn(
+                "scan_size argument is deprecated. please specify nav_shape instead",
+                FutureWarning
+            )
+            if nav_shape is not None:
+                raise ValueError("cannot specify both scan_size and nav_shape")
+            self._nav_shape = scan_size
+        if detector_size is not None:
+            warnings.warn(
+                "detector_size argument is deprecated. please specify sig_shape instead",
+                FutureWarning
+            )
+            if sig_shape is not None:
+                raise ValueError("cannot specify both detector_size and sig_shape")
+            self._sig_shape = detector_size
+        if self._nav_shape is None:
+            raise TypeError("missing 1 required argument: 'nav_shape'")
+        if self._sig_shape is None:
+            raise TypeError("missing 1 required argument: 'sig_shape'")
         self._path = path
-        self._scan_size = tuple(scan_size)
-        self._detector_size = tuple(detector_size)
-
-        self._sig_dims = len(self._detector_size)
-        shape = Shape(self._scan_size + self._detector_size, sig_dims=self._sig_dims)
-        self._meta = DataSetMeta(
-            shape=shape,
-            raw_dtype=np.dtype(dtype),
-        )
-        self._filesize = None
+        self._sig_dims = len(self._sig_shape)
+        self._dtype = dtype
         self._enable_direct = enable_direct
+        self._filesize = None
 
     def initialize(self, executor):
         self._filesize = executor.run_function(self._get_filesize)
+        if int(np.prod(self._sig_shape)) > int(self._filesize / np.dtype(self._dtype).itemsize):
+            raise DataSetException(
+                "sig_shape must be less than size: %s" % (
+                    int(self._filesize / np.dtype(self._dtype).itemsize)
+                )
+            )
+        self._image_count = int(
+            self._filesize / (
+                np.dtype(self._dtype).itemsize * np.prod(self._sig_shape, dtype=np.int64)
+            )
+        )
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+        shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
+        self._meta = DataSetMeta(
+            shape=shape,
+            raw_dtype=np.dtype(self._dtype),
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
+        )
         return self
 
     def _get_filesize(self):
@@ -153,12 +215,11 @@ class RawFileDataSet(DataSet):
         return RAWDatasetParams
 
     def _get_fileset(self):
-        num_frames = self._meta.shape.flatten_nav()[0]
         return RawFileSet([
             RawFile(
                 path=self._path,
                 start_idx=0,
-                end_idx=num_frames,
+                end_idx=self._image_count,
                 sig_shape=self.shape.sig,
                 native_dtype=self._meta.raw_dtype,
             )
@@ -177,13 +238,14 @@ class RawFileDataSet(DataSet):
     def get_cache_key(self):
         return {
             "path": self._path,
-            # scan_size + detector_size; included because changing scan_size will change
+            # nav_shape + sig_shape; included because changing nav_shape will change
             # the partition structure and cause errors
             "shape": tuple(self.shape),
             "dtype": str(self.dtype),
+            "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -195,9 +257,7 @@ class RawFileDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield RawPartition(
                 meta=self._meta,
                 fileset=fileset,

@@ -54,7 +54,7 @@ has no physical significance.
     from libertem.api import Context
     if __name__ == '__main__':
       ctx = Context()
-      ds = ctx.load("raw", path="./raw_sample.raw", scan_size=(16, 16), dtype="float32", detector_size=(16, 16))
+      ds = ctx.load("raw", path="./raw_sample.raw", nav_shape=(16, 16), dtype="float32", sig_shape=(16, 16))
 
 .. testcleanup:: sampledataraw
 

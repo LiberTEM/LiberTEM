@@ -12,9 +12,10 @@ def _get_raw_params(path):
                 "path": path,
                 "name": "name.raw",
                 "dtype": "float32",
-                "detector_size": [128, 128],
+                "sig_shape": [128, 128],
                 "enable_direct": False,
-                "scan_size": [16, 16]
+                "nav_shape": [16, 16],
+                "sync_offset": 0
             }
         }
     }

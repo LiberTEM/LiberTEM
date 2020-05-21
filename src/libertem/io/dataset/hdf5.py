@@ -112,6 +112,7 @@ class H5DataSet(DataSet):
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None
+        self._sync_offset = 0
 
     def get_reader(self):
         return H5Reader(
@@ -123,10 +124,15 @@ class H5DataSet(DataSet):
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+            self._image_count = self._shape.nav.size
             self._meta = DataSetMeta(
                 shape=self.shape,
                 raw_dtype=self._dtype,
+                sync_offset=self._sync_offset,
+                image_count=self._image_count,
             )
+            self._nav_shape_product = self._shape.nav.size
+            self._sync_offset_info = self.get_sync_offset_info()
         return self
 
     def initialize(self, executor):
@@ -167,7 +173,7 @@ class H5DataSet(DataSet):
         except (IndexError, TimeoutError, SystemError):
             return {
                 "parameters": {
-                    "path": path
+                    "path": path,
                 }
             }
 
@@ -271,7 +277,7 @@ class H5Partition(Partition):
         self._corrections.apply(tile_data, tile_slice)
 
     def _get_tiles_normal(self, tiling_scheme, tileshape_nd, dest_dtype="float32"):
-        data = np.ndarray(tileshape_nd, dtype=dest_dtype)
+        data = np.zeros(tileshape_nd, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:
             subslices = self._get_subslices(
                 tiling_scheme=tiling_scheme,
@@ -281,7 +287,7 @@ class H5Partition(Partition):
                 tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
                 if tuple(tile_slice.shape) != tuple(tileshape_nd):
                     # at the border, can't reuse buffer
-                    border_data = np.ndarray(tile_slice.shape, dtype=dest_dtype)
+                    border_data = np.zeros(tile_slice.shape, dtype=dest_dtype)
                     buf = border_data
                 else:
                     # reuse buffer

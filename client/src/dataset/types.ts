@@ -1,5 +1,5 @@
 import { ById } from "../helpers/reducerHelpers";
-import { DatasetFormParams, DatasetState } from "../messages";
+import { DatasetFormInfo, DatasetFormParams, DatasetState } from "../messages";
 
 export type DatasetsState = ById<DatasetState>;
 
@@ -10,11 +10,13 @@ export interface OpenDatasetState {
     formPath: string,
     formCachedParams?: DatasetFormParams,
     formDetectedParams?: DatasetFormParams,
+    formDetectedInfo?: DatasetFormInfo,
 }
 
-export interface OpenFormProps<P> {
+export interface OpenFormProps<P, Q> {
     onSubmit: (params: P) => void
     onCancel: () => void,
     path: string,
     initial?: P,
+    info?: Q,
 }

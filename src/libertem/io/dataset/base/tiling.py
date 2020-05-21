@@ -220,7 +220,6 @@ def _default_read_ranges_tile_block(
             [slice_offset + inner_indices_start] + [i for i in slice_origin],
             [inner_indices_stop - inner_indices_start] + [i for i in slice_shape],
         ])
-
         result.append((slice_idx, compressed_slice, read_ranges))
 
     return result
@@ -267,18 +266,28 @@ def make_get_read_ranges(
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, roi, depth,
         slices_arr, fileset_arr, sig_shape,
-        bpp, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
+        bpp, sync_offset=0, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
     ):
         result = NumbaList()
 
         sig_size = np.prod(np.array(sig_shape).astype(np.int64))
 
         if roi is None:
-            frame_indices = np.arange(start_at_frame, stop_before_frame)
-            slice_offset = start_at_frame
+            frame_indices = np.arange(max(0, start_at_frame), stop_before_frame)
+            # in case of a negative sync_offset, start_at_frame can be negative
+            if start_at_frame < 0:
+                slice_offset = abs(sync_offset)
+            else:
+                slice_offset = start_at_frame - sync_offset
         else:
-            frame_indices = _roi_to_indices(roi, start_at_frame, stop_before_frame)
-            slice_offset = np.count_nonzero(roi.reshape((-1,))[:start_at_frame])
+            frame_indices = _roi_to_indices(
+                roi, max(0, start_at_frame), stop_before_frame, sync_offset
+            )
+            # in case of a negative sync_offset, start_at_frame can be negative
+            if start_at_frame < 0:
+                slice_offset = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+            else:
+                slice_offset = np.count_nonzero(roi.reshape((-1,))[:start_at_frame - sync_offset])
 
         num_indices = frame_indices.shape[0]
 

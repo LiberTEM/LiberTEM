@@ -17,7 +17,16 @@ export function convertErrors(errors: ErrorObject[]): FormikErrors<FormikValues>
     return res;
 }
 
-export async function validateOpen(type: string, data: object) {
+export function throwErrors(validateErrors : ErrorObject[] | null = [], customValidateErrors: FormikErrors<FormikValues> = {}) {
+    if (validateErrors || customValidateErrors) {
+        const converted = validateErrors ? { ...convertErrors(validateErrors), customValidateErrors } : customValidateErrors;
+        throw converted;
+    } else {
+        throw new Error("unspecified error while validating fields");
+    }
+}
+
+export async function validateOpen(type: string, data: object, customValidateErrors?: FormikErrors<FormikValues>) {
     return getSchema(type).then((schemaResponse: DataSetOpenSchemaResponse) => {
         if (schemaResponse.status === "error") {
             throw new Error(schemaResponse.msg);
@@ -27,13 +36,8 @@ export async function validateOpen(type: string, data: object) {
         const ajv = new Ajv();
         const validate = ajv.compile(schema);
         const valid = validate(data);
-        if (!valid) {
-            if (validate.errors) {
-                const converted = convertErrors(validate.errors);
-                throw converted;
-            } else {
-                throw new Error("unspecified error while validating fields");
-            }
+        if (!valid || customValidateErrors) {
+            throwErrors(validate.errors, customValidateErrors);
         }
     })
 }

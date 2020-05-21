@@ -12,6 +12,7 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.base import DataSetException, TilingScheme
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
+from libertem.udf.sumsigudf import SumSigUDF
 from utils import _mk_random
 
 from utils import dataset_correction_verification, get_testdata_path
@@ -53,7 +54,7 @@ def random_empad(tmpdir_factory):
     del data
     ds = EMPADDataSet(
         path=str(filename),
-        scan_size=(16, 16),
+        nav_shape=(16, 16),
     )
     ds = ds.initialize(executor)
     yield ds
@@ -180,26 +181,14 @@ def test_correction(default_empad, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
-def test_invalid_size():
-    ds = EMPADDataSet(
-        path=EMPAD_RAW,
-        scan_size=(4, 5),
-    )
-    ds = ds.initialize(InlineJobExecutor())
-    with pytest.raises(DataSetException) as einfo:
-        ds.check_valid()
-
-    assert einfo.match("invalid filesize")
-
-
 def test_nonexistent():
     ds = EMPADDataSet(
         path="/does/not/exist.raw",
-        scan_size=(4, 4),
+        nav_shape=(4, 4),
     )
     with pytest.raises(DataSetException) as einfo:
         ds = ds.initialize(InlineJobExecutor())
-    assert einfo.match("No such file or directory")
+    assert einfo.match("could not open file /does/not/exist.raw")
 
 
 def test_detect_fail():
@@ -229,3 +218,167 @@ def test_empad_dist(dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
+
+
+def test_positive_sync_offset(default_empad, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds_with_offset = lt_ctx.load(
+        "empad", path=EMPAD_XML, sync_offset=sync_offset
+    )
+
+    result = lt_ctx.run_udf(dataset=default_empad, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.image_count - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(default_empad, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds_with_offset = lt_ctx.load(
+        "empad", path=EMPAD_XML, sync_offset=sync_offset
+    )
+
+    result = lt_ctx.run_udf(dataset=default_empad, udf=udf)
+    result = result['intensity'].raw_data[:default_empad._meta.image_count - abs(sync_offset)]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_positive_sync_offset_with_roi(default_empad, lt_ctx):
+    udf = SumSigUDF()
+    result = lt_ctx.run_udf(dataset=default_empad, udf=udf)
+    result = result['intensity'].raw_data
+
+    sync_offset = 2
+
+    ds_with_offset = lt_ctx.load(
+        "empad", path=EMPAD_XML, sync_offset=sync_offset
+    )
+
+    roi = np.random.choice([False], (4, 4))
+    roi[0:1] = True
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
+    result_with_offset = result_with_offset['intensity'].raw_data
+
+    assert np.allclose(result[sync_offset:4 + sync_offset], result_with_offset)
+
+
+def test_negative_sync_offset_with_roi(default_empad, lt_ctx):
+    udf = SumSigUDF()
+    result = lt_ctx.run_udf(dataset=default_empad, udf=udf)
+    result = result['intensity'].raw_data
+
+    sync_offset = -2
+
+    ds_with_offset = lt_ctx.load(
+        "empad", path=EMPAD_XML, sync_offset=sync_offset
+    )
+
+    roi = np.random.choice([False], (4, 4))
+    roi[0:1] = True
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
+    result_with_offset = result_with_offset['intensity'].raw_data
+
+    assert np.allclose(result[:4 + sync_offset], result_with_offset[abs(sync_offset):])
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -20
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "empad",
+            path=EMPAD_XML,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-16, 16\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 20
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "empad",
+            path=EMPAD_XML,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-16, 16\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(lt_ctx):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load("empad", path=EMPAD_XML, nav_shape=(8,))
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    ds_with_2d_nav = lt_ctx.load("empad", path=EMPAD_XML, nav_shape=(4, 2))
+    result_with_2d_nav = lt_ctx.run_udf(dataset=ds_with_2d_nav, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load("empad", path=EMPAD_XML, nav_shape=(2, 2, 2))
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+@pytest.mark.parametrize(
+    "sig_shape", ((16384,), (128, 8, 16))
+)
+def test_reshape_sig(lt_ctx, default_empad, sig_shape):
+    udf = SumSigUDF()
+
+    result = lt_ctx.run_udf(dataset=default_empad, udf=udf)
+    result = result['intensity'].raw_data
+
+    ds_1 = lt_ctx.load("empad", path=EMPAD_XML, sig_shape=sig_shape)
+    result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
+    result_1 = result_1['intensity'].raw_data
+
+    assert np.allclose(result, result_1)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "empad",
+            path=EMPAD_XML,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 16384"
+    )
+
+
+def test_scan_size_deprecation(lt_ctx):
+    scan_size = (2, 2)
+
+    with pytest.warns(FutureWarning):
+        ds = lt_ctx.load(
+            "empad",
+            path=EMPAD_XML,
+            scan_size=scan_size,
+        )
+    assert tuple(ds.shape) == (2, 2, 128, 128)

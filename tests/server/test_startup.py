@@ -18,9 +18,10 @@ def _get_raw_params(path):
                 "type": "RAW",
                 "path": path,
                 "dtype": "float32",
-                "detector_size": [128, 128],
+                "sig_shape": [128, 128],
                 "enable_direct": False,
-                "scan_size": [16, 16]
+                "nav_shape": [16, 16],
+                "sync_offset": 0
             }
         }
     }
@@ -181,10 +182,11 @@ async def test_initial_state_w_existing_ds(
             "type": "RAW",
             "path": raw_path,
             "dtype": "float32",
-            "detector_size": [128, 128],
+            "sig_shape": [128, 128],
             "enable_direct": False,
-            "scan_size": [16, 16],
+            "nav_shape": [16, 16],
             "shape": [16, 16, 128, 128],
+            "sync_offset": 0
         }
 
 

@@ -11,6 +11,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
+from libertem.udf.sumsigudf import SumSigUDF
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -151,3 +152,107 @@ def test_blo_dist(dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)
     assert results[0].raw_data.shape == (144, 144)
+
+
+def test_positive_sync_offset(lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds = lt_ctx.load(
+        "blo", path=BLO_TESTDATA_PATH, nav_shape=(4, 2),
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    ds_with_offset = lt_ctx.load(
+        "blo", path=BLO_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+    )
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.shape.nav.size - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds = lt_ctx.load(
+        "blo", path=BLO_TESTDATA_PATH, nav_shape=(4, 2),
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[:ds._meta.shape.nav.size - abs(sync_offset)]
+
+    ds_with_offset = lt_ctx.load(
+        "blo", path=BLO_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+    )
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -10900
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "blo",
+            path=BLO_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-10890, 10890\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 10900
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "blo",
+            path=BLO_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-10890, 10890\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(lt_ctx):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load("blo", path=BLO_TESTDATA_PATH, nav_shape=(8,))
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    ds_with_2d_nav = lt_ctx.load("blo", path=BLO_TESTDATA_PATH, nav_shape=(4, 2))
+    result_with_2d_nav = lt_ctx.run_udf(dataset=ds_with_2d_nav, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load("blo", path=BLO_TESTDATA_PATH, nav_shape=(2, 2, 2))
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "blo",
+            path=BLO_TESTDATA_PATH,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 20736"
+    )

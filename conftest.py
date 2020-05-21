@@ -98,6 +98,51 @@ def empty_hdf5(tmpdir_factory):
             yield f
 
 
+@pytest.fixture(scope='session')
+def hdf5_4d_data():
+    data = np.random.randn(2, 10, 26, 26).astype("float32")
+    yield data
+
+
+@pytest.fixture(scope='session')
+def hdf5_same_data_3d(tmpdir_factory, hdf5_4d_data):
+    data = hdf5_4d_data.reshape((20, 26, 26))
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-reshape-3d.h5", data=data)
+
+
+@pytest.fixture(scope='session')
+def hdf5_same_data_4d(tmpdir_factory, hdf5_4d_data):
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-reshape-4d.h5", data=hdf5_4d_data)
+
+
+@pytest.fixture(scope='session')
+def hdf5_same_data_5d(tmpdir_factory, hdf5_4d_data):
+    data = hdf5_4d_data.reshape((2, 2, 5, 26, 26))
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-reshape-5d.h5", data=data)
+
+
+@pytest.fixture(scope='session')
+def hdf5_same_data_1d_sig(tmpdir_factory, hdf5_4d_data):
+    data = hdf5_4d_data.reshape((2, 10, 676))
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-reshape-1d-sig.h5", data=data)
+
+
+@pytest.fixture(scope='session')
+def raw_same_dataset_4d(tmpdir_factory, hdf5_4d_data):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-same-data-4d'
+    hdf5_4d_data.tofile(str(filename))
+    ds = RawFileDataSet(
+        path=str(filename),
+        nav_shape=(2, 10),
+        dtype="float32",
+        sig_shape=(26, 26),
+    )
+    ds.set_num_cores(4)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
 @pytest.fixture
 def hdf5_ds_1(hdf5):
     ds = H5DataSet(
@@ -161,9 +206,9 @@ def default_raw(tmpdir_factory, default_raw_data):
     del default_raw_data
     ds = RawFileDataSet(
         path=str(filename),
-        scan_size=(16, 16),
+        nav_shape=(16, 16),
         dtype="float32",
-        detector_size=(128, 128),
+        sig_shape=(128, 128),
     )
     ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())
@@ -173,15 +218,15 @@ def default_raw(tmpdir_factory, default_raw_data):
 @pytest.fixture(scope='session')
 def big_endian_raw(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/raw-test-default'
+    filename = datadir + '/raw-test-default-big-endian'
     data = utils._mk_random(size=(16, 16, 128, 128), dtype='>u2')
     data.tofile(str(filename))
     del data
     ds = RawFileDataSet(
         path=str(filename),
-        scan_size=(16, 16),
+        nav_shape=(16, 16),
         dtype=">u2",
-        detector_size=(128, 128),
+        sig_shape=(128, 128),
     )
     ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())
@@ -216,9 +261,9 @@ def large_raw(large_raw_file):
     filename, shape, dtype = large_raw_file
     ds = RawFileDataSet(
         path=str(filename),
-        scan_size=shape[:2],
+        nav_shape=shape[:2],
         dtype=dtype,
-        detector_size=shape[2:],
+        sig_shape=shape[2:],
     )
     ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())
@@ -228,15 +273,15 @@ def large_raw(large_raw_file):
 @pytest.fixture(scope='session')
 def uint16_raw(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
-    filename = datadir + '/raw-test-default'
+    filename = datadir + '/raw-test-default-uint16'
     data = utils._mk_random(size=(16, 16, 128, 128), dtype='uint16')
     data.tofile(str(filename))
     del data
     ds = RawFileDataSet(
         path=str(filename),
-        scan_size=(16, 16),
+        nav_shape=(16, 16),
         dtype="uint16",
-        detector_size=(128, 128),
+        sig_shape=(128, 128),
     )
     ds = ds.initialize(InlineJobExecutor())
     yield ds
@@ -251,13 +296,23 @@ def raw_with_zeros(tmpdir_factory):
     del data
     ds = RawFileDataSet(
         path=str(filename),
-        scan_size=(16, 16),
+        nav_shape=(16, 16),
         dtype="float32",
-        detector_size=(128, 128),
+        sig_shape=(128, 128),
     )
     ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())
     yield ds
+
+
+@pytest.fixture(scope='session')
+def raw_data_8x8x8x8_path(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/8x8x8x8'
+    data = utils._mk_random(size=(8, 8, 8, 8), dtype='float32')
+    data.tofile(str(filename))
+    del data
+    yield str(filename)
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@
 import os
 import re
 import csv
-import glob
+from glob import glob
 import typing
 import logging
 import warnings
@@ -53,22 +53,41 @@ frame_header_dtype = [
 
 class FRMS6DatasetParams(MessageConverter):
     SCHEMA = {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://libertem.org/FRMS6DatasetParams.schema.json",
-      "title": "FRMS6DatasetParams",
-      "type": "object",
-      "properties": {
-          "type": {"const": "FRMS6"},
-          "path": {"type": "string"},
-      },
-      "required": ["type", "path"]
-    }
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/FRMS6DatasetParams.schema.json",
+        "title": "FRMS6DatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "FRMS6"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+        },
+        "required": ["type", "path"]
+        }
 
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
             for k in ["path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -151,6 +170,28 @@ def _read_file_header(path):
     header['filesize'] = os.stat(path).st_size
     header['path'] = path
     return header
+
+
+def _pattern(path):
+    path, ext = os.path.splitext(path)
+    if ext == ".hdr":
+        pattern = "%s_*.frms6" % path
+    elif ext == ".frms6":
+        pattern = "%s*.frms6" % (
+            re.sub(r'[0-9]+$', '', path)
+        )
+    else:
+        raise DataSetException("unknown extension: %s" % ext)
+    return pattern
+
+
+def _get_sig_shape(path, bin_factor):
+    filenames = list(sorted(glob(_pattern(path))))
+    header = _read_file_header(filenames[0])
+    sig_shape = 2 * header['height'], header['width'] // 2
+    if bin_factor > 1:
+        sig_shape = (sig_shape[0] * bin_factor, sig_shape[1])
+    return sig_shape
 
 
 def _header_valid(header):
@@ -331,7 +372,7 @@ class FRMS6FileSet(FileSet):
 
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
-        dtype, tiling_scheme: TilingScheme,
+        dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
@@ -344,6 +385,7 @@ class FRMS6FileSet(FileSet):
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            sync_offset=sync_offset,
             bpp=np.dtype(dtype).itemsize,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
@@ -368,9 +410,22 @@ class FRMS6DataSet(DataSet):
 
     gain_map_path : string
         Path to a gain map to apply (.mat format)
+
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
 
-    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None):
+    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None,
+                 nav_shape=None, sig_shape=None, sync_offset=0):
         super().__init__()
         self._path = path
         self._gain_map_path = gain_map_path
@@ -379,6 +434,9 @@ class FRMS6DataSet(DataSet):
         self._meta = None
         self._filenames = None
         self._hdr_info = None
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
         if dest_dtype is not None:
             warnings.warn(
                 "dest_dtype is now handled per `get_tiles` call, and ignored here",
@@ -390,7 +448,7 @@ class FRMS6DataSet(DataSet):
         return self._meta.shape
 
     def _do_initialize(self):
-        self._filenames = list(sorted(glob.glob(self._pattern())))
+        self._filenames = list(sorted(glob(_pattern(self._path))))
         self._hdr_info = self._read_hdr_info()
         self._headers = [
             _read_file_header(path)
@@ -406,15 +464,30 @@ class FRMS6DataSet(DataSet):
         if bin_factor > 1:
             frame_size = (frame_size[0] * bin_factor, frame_size[1])
 
-        sig_dims = 2  # FIXME: is there a different cameraMode that doesn't output 2D signals?
         preferred_dtype = np.dtype("<u2")
+
+        self._image_count = int(hdr['signalframes'])
+        if self._nav_shape is None:
+            self._nav_shape = tuple(hdr['stemimagesize'])
+        if self._sig_shape is None:
+            self._sig_shape = frame_size
+        elif int(np.prod(self._sig_shape)) != int(np.prod(frame_size)):
+            print(self._sig_shape, frame_size)
+            raise DataSetException(
+                "sig_shape must be of size: %s" % int(np.prod(frame_size))
+            )
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+
         if self._enable_offset_correction:
             preferred_dtype = np.dtype("float32")
         self._meta = DataSetMeta(
             raw_dtype=np.dtype("<u2"),
             dtype=preferred_dtype,
             metadata={'raw_frame_size': raw_frame_size},
-            shape=Shape(tuple(hdr['stemimagesize']) + frame_size, sig_dims=sig_dims),
+            shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
         self._dark_frame = self._get_dark_frame()
         self._gain_map = self._get_gain_map()
@@ -431,13 +504,23 @@ class FRMS6DataSet(DataSet):
     def detect_params(cls, path, executor):
         hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
-            executor.run_function(_read_dataset_hdr, hdr_filename)
+            hdr = executor.run_function(_read_dataset_hdr, hdr_filename)
+            bin_factor = hdr['readoutmode']['bin']
+            nav_shape = tuple(hdr['stemimagesize'])
+            image_count = int(np.prod(nav_shape))
+            sig_shape = executor.run_function(_get_sig_shape, path, bin_factor)
         except Exception:
             return False
         return {
             "parameters": {
-                "path": path
+                "path": path,
+                "nav_shape": nav_shape,
+                "sig_shape": sig_shape,
             },
+            "info": {
+                "image_count": image_count,
+                "native_sig_shape": sig_shape,
+            }
         }
 
     @classmethod
@@ -472,12 +555,12 @@ class FRMS6DataSet(DataSet):
 
         header = self._headers[0]
         num_frames = _num_frames(header)
-
+        shape = (num_frames,) + tuple(self.shape.sig)
         fs = self._get_fileset([self._headers[0]])
-
+        sig_dims = len(self.shape.sig)
         part_slice = Slice(
-            origin=(0, 0, 0),
-            shape=Shape((num_frames,) + tuple(self.shape.sig), sig_dims=2)
+            origin=tuple([0] * len(shape)),
+            shape=Shape(shape, sig_dims=sig_dims)
         )
         p = FRMS6Partition(
             meta=self._meta,
@@ -516,18 +599,6 @@ class FRMS6DataSet(DataSet):
                 csv_gain_nums = [[float(x) for x in row if x != ''] for row in csv_gain_data]
                 return np.array(csv_gain_nums).T
 
-    def _pattern(self):
-        path, ext = os.path.splitext(self._path)
-        if ext == ".hdr":
-            pattern = "%s_*.frms6" % path
-        elif ext == ".frms6":
-            pattern = "%s*.frms6" % (
-                re.sub(r'[0-9]+$', '', path)
-            )
-        else:
-            raise DataSetException("unknown extension: %s" % ext)
-        return pattern
-
     def _files(self):
         return self._filenames
 
@@ -547,6 +618,8 @@ class FRMS6DataSet(DataSet):
             "path": self._path,
             "enable_offset_correction": self._enable_offset_correction,
             "gain_map_path": self._gain_map_path,
+            "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
     @property
@@ -557,7 +630,7 @@ class FRMS6DataSet(DataSet):
     def raw_dtype(self):
         return self._meta.raw_dtype
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -607,9 +680,7 @@ class FRMS6DataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield FRMS6Partition(
                 meta=self._meta,
                 partition_slice=part_slice,

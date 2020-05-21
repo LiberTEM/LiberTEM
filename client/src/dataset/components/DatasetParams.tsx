@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Table } from "semantic-ui-react";
 import { DatasetState } from "../../messages";
-import { isAdditionalInfo } from "../helpers";
 
 interface DatasetProps {
     dataset: DatasetState
@@ -15,19 +14,23 @@ const renderParamValue = (value: any) => {
     }
 }
 
+const renderRow = (params: any, key:string, idx: number) => {
+    return (
+        <Table.Row key={idx}>
+            <Table.Cell>{key}</Table.Cell>
+            <Table.Cell>{renderParamValue(params[key])}</Table.Cell>
+        </Table.Row>
+    );
+}
+
 const renderParams = (params: any) => {
     return Object.keys(params).map((key: string, idx: number) => {
-        // Only show parameters, not additional info
-        if(!isAdditionalInfo(key)) {
-            return (
-                <Table.Row key={idx}>
-                    <Table.Cell>{key}</Table.Cell>
-                    <Table.Cell>{renderParamValue(params[key])}</Table.Cell>
-                </Table.Row>
-            );
-        }
-        else {
-          return null;
+        if(typeof params[key] === 'object' && !(params[key] instanceof Array)) {
+            return Object.keys(params[key]).map((objKey: string, keyIdx: number) => {
+                return renderRow(params[key], objKey, keyIdx);
+            });
+        } else {
+            return renderRow(params, key, idx);
         }
     })
 }

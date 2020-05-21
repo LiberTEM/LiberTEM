@@ -3,13 +3,19 @@ import typing
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
+from libertem.io.dataset.base import DataSetException
 from libertem.web.messageconverter import MessageConverter
 from libertem.corrections.corrset import CorrectionSet
+from .partition import BasePartition
 
 
 class DataSet(object):
     def __init__(self):
         self._cores = 1
+        self._sync_offset = 0
+        self._sync_offset_info = None
+        self._image_count = 0
+        self._nav_shape_product = 0
 
     def initialize(self, executor):
         """
@@ -30,6 +36,42 @@ class DataSet(object):
 
     def set_num_cores(self, cores):
         self._cores = cores
+
+    def get_sync_offset_info(self):
+        """
+        Check sync_offset specified and returns number of frames skipped and inserted
+        """
+        if not -1*self._image_count < self._sync_offset < self._image_count:
+            raise DataSetException(
+                "sync_offset should be in (%s, %s), which is (-image_count, image_count)"
+                % (-1*self._image_count, self._image_count)
+            )
+        return {
+            "frames_skipped_start": max(0, self._sync_offset),
+            "frames_ignored_end": max(
+                0, self._image_count - self._nav_shape_product - self._sync_offset
+            ),
+            "frames_inserted_start": abs(min(0, self._sync_offset)),
+            "frames_inserted_end": max(
+                0, self._nav_shape_product - self._image_count + self._sync_offset
+            )
+        }
+
+    def get_num_partitions(self):
+        """
+        Returns the number of partitions the dataset should be split into
+        """
+        raise NotImplementedError()
+
+    def get_slices(self):
+        """
+        Return the partition slices for the dataset
+        """
+        return BasePartition.make_slices(
+            shape=self.shape,
+            num_partitions=self.get_num_partitions(),
+            sync_offset=self._sync_offset,
+        )
 
     def get_partitions(self):
         """
@@ -94,9 +136,16 @@ class DataSet(object):
         return self.get_diagnostics() + [
             {"name": "Partition shape",
              "value": str(p.shape)},
-
             {"name": "Number of partitions",
-             "value": str(len(list(self.get_partitions())))}
+             "value": str(len(list(self.get_partitions())))},
+            {"name": "Number of frames skipped at the beginning",
+             "value": self._sync_offset_info["frames_skipped_start"]},
+            {"name": "Number of frames ignored at the end",
+            "value": self._sync_offset_info["frames_ignored_end"]},
+            {"name": "Number of blank frames inserted at the beginning",
+            "value": self._sync_offset_info["frames_inserted_start"]},
+            {"name": "Number of blank frames inserted at the end",
+            "value": self._sync_offset_info["frames_inserted_end"]}
         ]
 
     def get_diagnostics(self):

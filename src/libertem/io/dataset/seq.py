@@ -28,6 +28,7 @@
 
 import os
 import struct
+import warnings
 from typing import Tuple
 
 import numpy as np
@@ -138,22 +139,32 @@ class SEQDatasetParams(MessageConverter):
         "properties": {
             "type": {"const": "SEQ"},
             "path": {"type": "string"},
-            "scan_size": {
+            "nav_shape": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
-                "maxItems": 2,
+                "maxItems": 2
             },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
         },
-        "required": ["type", "path", "scan_size"],
+        "required": ["type", "path", "nav_shape"],
     }
 
     def convert_to_python(self, raw_data):
         data = {
-            "path": raw_data["path"],
+            k: raw_data[k]
+            for k in ["path", "nav_shape"]
         }
-        if "scan_size" in raw_data:
-            data["scan_size"] = tuple(raw_data["scan_size"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -170,17 +181,39 @@ class SEQDataSet(DataSet):
     path
         Path to the .seq file
 
-    scan_size
-        A tuple that specifies the size of the scanned region/line/...
+    nav_shape: tuple of int
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
-    def __init__(self, path: str, scan_size: Tuple[int]):
+    def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
+                 sig_shape: Tuple[int] = None, sync_offset: int = 0):
         self._path = path
-        self._scan_size = scan_size
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
+        # handle backwards-compatability:
+        if scan_size is not None:
+            warnings.warn(
+                "scan_size argument is deprecated. please specify nav_shape instead",
+                FutureWarning
+            )
+            if nav_shape is not None:
+                raise ValueError("cannot specify both scan_size and nav_shape")
+            self._nav_shape = tuple(scan_size)
+        if self._nav_shape is None:
+            raise TypeError("missing 1 required argument: 'nav_shape'")
         self._header = None
         self._meta = None
         self._footer_size = None
         self._filesize = None
-        self._image_count = None
         self._dark = None
         self._gain = None
 
@@ -200,20 +233,26 @@ class SEQDataSet(DataSet):
         frame_size_bytes = header['width'] * header['height'] * dtype.itemsize
         self._footer_size = header['true_image_size'] - frame_size_bytes
         self._filesize = os.stat(self._path).st_size
-        self._image_count = int(
-            (self._filesize - self._image_offset) / header['true_image_size']
-        )
-        if self._image_count != np.prod(self._scan_size):
-            raise DataSetException("scan_size doesn't match number of frames")
-        shape = Shape(
-            self._scan_size + (header['height'], header['width']),
-            sig_dims=2,
-        )
+        self._image_count = int((self._filesize - self._image_offset) / header['true_image_size'])
+
+        if self._sig_shape is None:
+            self._sig_shape = tuple((header['height'], header['width']))
+        elif int(np.prod(self._sig_shape)) != (header['height'] * header['width']):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % (header['height'] * header['width'])
+            )
+
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+        shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
+
         self._meta = DataSetMeta(
             shape=shape,
             raw_dtype=dtype,
             dtype=dtype,
             metadata=header,
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
         self._maybe_load_dark_gain()
         return self
@@ -245,10 +284,8 @@ class SEQDataSet(DataSet):
         ] + [
             {"name": "Footer size",
              "value": str(self._footer_size)},
-
             {"name": "Dark frame included",
              "value": str(self._dark is not None)},
-
             {"name": "Gain map included",
              "value": str(self._gain is not None)},
         ]
@@ -272,10 +309,16 @@ class SEQDataSet(DataSet):
             image_count = int(
                 (filesize - image_offset) / header['true_image_size']
             )
+            sig_shape = tuple((header['height'], header['width']))
             return {
                 "parameters": {
                     "path": path,
-                    "scan_size": str(image_count),
+                    "nav_shape": tuple((image_count,)),
+                    "sig_shape": sig_shape,
+                },
+                "info": {
+                    "image_count": image_count,
+                    "native_sig_shape": sig_shape,
                 }
             }
         except (OSError, UnicodeDecodeError):
@@ -319,9 +362,10 @@ class SEQDataSet(DataSet):
         return {
             "path": self._path,
             "shape": self.shape,
+            "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -329,15 +373,11 @@ class SEQDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        slices = BasePartition.make_slices(
-            shape=self.shape,
-            num_partitions=self._get_num_partitions(),
-        )
         fileset = self._get_fileset()
-        for part_slice, start, stop in slices:
+        for part_slice, start, stop in self.get_slices():
             yield BasePartition(
                 meta=self._meta,
-                fileset=fileset.get_for_range(start, stop),
+                fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,

@@ -1,6 +1,6 @@
 import os
 import logging
-
+import warnings
 from ncempy.io.dm import fileDM
 import numpy as np
 
@@ -46,7 +46,7 @@ class DMFileSet(FileSet):
 
 class DMDataSet(DataSet):
     """
-    Reader for stacks of DM3/DM4 files. Each file should contain a single frame.
+    Reader for stacks of DM3/DM4 files.
 
     Note
     ----
@@ -85,11 +85,18 @@ class DMDataSet(DataSet):
         List of paths to the files that should be loaded. The order is important,
         as it determines the order in the navigation axis.
 
-    scan_size : Tuple[int] or None
+    nav_shape : Tuple[int] or None
         By default, the files are loaded as a 3D stack. You can change this
-        by specifying the scan size, which reshapes the navigation dimensions.
+        by specifying the nav_shape, which reshapes the navigation dimensions.
         Raises a `DataSetException` if the shape is incompatible with the data
         that is loaded.
+
+    sig_shape: Tuple[int], optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
 
     same_offset : bool
         When reading a stack of dm3/dm4 files, it can be expensive to read in
@@ -99,11 +106,23 @@ class DMDataSet(DataSet):
         you can set this parameter and we will skip reading all metadata but
         the one from the first file.
     """
-    def __init__(self, files=None, scan_size=None, same_offset=False):
+    def __init__(self, files=None, scan_size=None, same_offset=False, nav_shape=None,
+                 sig_shape=None, sync_offset=0):
         super().__init__()
         self._meta = None
         self._same_offset = same_offset
-        self._scan_size = tuple(scan_size) if scan_size else scan_size
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
+        # handle backwards-compatability:
+        if scan_size is not None:
+            warnings.warn(
+                "scan_size argument is deprecated. please specify nav_shape instead",
+                FutureWarning
+            )
+            if nav_shape is not None:
+                raise ValueError("cannot specify both scan_size and nav_shape")
+            self._nav_shape = tuple(scan_size)
         self._filesize = None
         self._files = files
         if len(files) == 0:
@@ -113,7 +132,7 @@ class DMDataSet(DataSet):
         self._z_sizes = {}
         self._offsets = {}
 
-    def _get_fileset(self):
+    def _get_sig_shape_and_native_dtype(self):
         first_fn = self._get_files()[0]
         first_file = fileDM(first_fn, on_memory=True)
         if first_file.numObjects == 1:
@@ -122,9 +141,12 @@ class DMDataSet(DataSet):
             idx = 1
         try:
             raw_dtype = first_file._DM2NPDataType(first_file.dataType[idx])
-            shape = (first_file.ySize[idx], first_file.xSize[idx])
+            native_sig_shape = (first_file.ySize[idx], first_file.xSize[idx])
         except IndexError as e:
             raise DataSetException("could not determine dtype or signal shape") from e
+        return native_sig_shape, raw_dtype
+
+    def _get_fileset(self):
         start_idx = 0
         files = []
         for fn in self._get_files():
@@ -133,8 +155,8 @@ class DMDataSet(DataSet):
                 path=fn,
                 start_idx=start_idx,
                 end_idx=start_idx + z_size,
-                sig_shape=shape,
-                native_dtype=raw_dtype,
+                sig_shape=self._meta.shape.sig,
+                native_dtype=self._meta.raw_dtype,
                 file_header=self._offsets[fn],
             )
             files.append(f)
@@ -144,11 +166,6 @@ class DMDataSet(DataSet):
     def _get_files(self):
         return self._files
 
-    def _get_scan_size(self):
-        if self._scan_size:
-            return self._scan_size
-        return (sum(self._z_sizes.values()),)
-
     def _get_filesize(self):
         return sum(
             os.stat(p).st_size
@@ -157,7 +174,6 @@ class DMDataSet(DataSet):
 
     def initialize(self, executor):
         self._filesize = executor.run_function(self._get_filesize)
-
         if self._same_offset:
             metadata = executor.run_function(_get_metadata, self._get_files()[0])
             self._offsets = {
@@ -181,15 +197,26 @@ class DMDataSet(DataSet):
                 fn: metadata[fn]['zsize']
                 for fn in self._get_files()
             }
-        self._fileset = executor.run_function(self._get_fileset)
-        first_file = next(self._fileset.files_from(0))
-        nav_dims = self._get_scan_size()
-        shape = nav_dims + tuple(first_file.sig_shape)
-        sig_dims = len(first_file.sig_shape)
+        self._image_count = sum(self._z_sizes.values())
+        if self._nav_shape is None:
+            self._nav_shape = (sum(self._z_sizes.values()),)
+        native_sig_shape, native_dtype = executor.run_function(self._get_sig_shape_and_native_dtype)
+        if self._sig_shape is None:
+            self._sig_shape = tuple(native_sig_shape)
+        elif int(np.prod(self._sig_shape)) != int(np.prod(native_sig_shape)):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % int(np.prod(native_sig_shape))
+            )
+        shape = self._nav_shape + self._sig_shape
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
-            shape=Shape(shape, sig_dims=sig_dims),
-            raw_dtype=first_file.native_dtype,
+            shape=Shape(shape, sig_dims=len(self._sig_shape)),
+            raw_dtype=native_dtype,
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
+        self._fileset = executor.run_function(self._get_fileset)
         return self
 
     @classmethod
@@ -225,7 +252,7 @@ class DMDataSet(DataSet):
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -234,9 +261,7 @@ class DMDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield BasePartition(
                 meta=self._meta,
                 partition_slice=part_slice,

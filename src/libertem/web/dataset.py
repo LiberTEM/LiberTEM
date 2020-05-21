@@ -103,9 +103,11 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
             self.write(msg)
             return
         params = detected_params["parameters"]
-        params.update({"type": detected_params["type"].upper()})
+        info = {}
         if "info" in detected_params:
-            params.update(detected_params["info"])
-        msg = Message(self.state).dataset_detect(params=params)
+            info = detected_params["info"]
+        params.update({"type": detected_params["type"].upper()})
+        info.update({"type": detected_params["type"].upper()})
+        msg = Message(self.state).dataset_detect(params=params, info=info)
         log_message(msg)
         self.write(msg)

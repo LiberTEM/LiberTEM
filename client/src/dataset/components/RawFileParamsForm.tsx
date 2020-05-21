@@ -2,22 +2,22 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetParamsRaw, DatasetTypes } from "../../messages";
+import { DatasetInfoRAW, DatasetParamsRaw, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
-import TupleInput from "./TupleInput";
+import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
     "type"
     | "path"
-    | "scan_size"
-    | "detector_size"> & {
-        scan_size: string
-        detector_size: string,
+    | "nav_shape"
+    | "sig_shape"> & {
+        nav_shape: string,
+        sig_shape: string,
     };
 
-type MergedProps = FormikProps<DatasetParamsRawForForm> & OpenFormProps<DatasetParamsRaw>;
+type MergedProps = FormikProps<DatasetParamsRawForForm> & OpenFormProps<DatasetParamsRaw, DatasetInfoRAW>;
 
 const RawFileParamsForm: React.SFC<MergedProps> = ({
     values,
@@ -42,25 +42,16 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
                 <Field name="name" id="id_name" />
             </Form.Field>
             <Form.Field>
-                <label htmlFor="id_scan_size_0">Scan Size:</label>
-                <ErrorMessage name="scan_size" />
-                <TupleInput value={values.scan_size} minLen={2} maxLen={2} fieldName="scan_size" setFieldValue={setFieldValue} />
-            </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
+                <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://numpy.org/doc/stable/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
                 <ErrorMessage name="dtype" />
                 <Field name="dtype" id="id_dtype" />
-            </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_detector_size_0">Detector Size (pixels, example: 256,256):</label>
-                <ErrorMessage name="detector_size" />
-                <TupleInput value={values.detector_size} minLen={2} maxLen={2} fieldName="detector_size" setFieldValue={setFieldValue} />
             </Form.Field>
             <Form.Field>
                 <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
                 <ErrorMessage name="enable_direct" />
                 <Field type="checkbox" name="enable_direct" checked={values.enable_direct} id="id_enable_direct" />
             </Form.Field>
+            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} hideInfo={true} setFieldValue={setFieldValue} />
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
@@ -68,13 +59,14 @@ const RawFileParamsForm: React.SFC<MergedProps> = ({
     )
 }
 
-export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
-    mapPropsToValues: ({path, initial }) => ({
-        name: getInitialName("name",path,initial),
+export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm, DatasetInfoRAW>({
+    mapPropsToValues: ({ path, initial }) => ({
+        name: getInitialName("name", path, initial),
         enable_direct: getInitial("enable_direct", false, initial),
-        detector_size: getInitial("detector_size", "", initial).toString(),
-        scan_size: getInitial("scan_size", "", initial).toString(),
         dtype: getInitial("dtype", "float32", initial),
+        nav_shape: getInitial("nav_shape", "", initial).toString(),
+        sig_shape: getInitial("sig_shape", "", initial).toString(),
+        sync_offset: getInitial("sync_offset", 0, initial),
     }),
     formToJson: (values, path) => {
         return {
@@ -83,8 +75,9 @@ export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm>({
             name: values.name,
             dtype: values.dtype,
             enable_direct: values.enable_direct,
-            scan_size: parseNumList(values.scan_size),
-            detector_size: parseNumList(values.detector_size),
+            nav_shape: parseNumList(values.nav_shape),
+            sig_shape: parseNumList(values.sig_shape),
+            sync_offset: values.sync_offset,
         }
     },
     type: DatasetTypes.RAW,

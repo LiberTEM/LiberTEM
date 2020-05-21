@@ -13,6 +13,7 @@ from libertem.udf.raw import PickUDF
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
+from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme
 
 from utils import dataset_correction_verification, get_testdata_path
@@ -25,8 +26,9 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 
 @pytest.fixture
 def default_mib(lt_ctx):
-    scan_size = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
+    nav_shape = (32, 32)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
+    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
     return ds
 
@@ -35,6 +37,8 @@ def test_detect(lt_ctx):
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)["parameters"]
     assert params == {
         "path": MIB_TESTDATA_PATH,
+        "nav_shape": (1024,),
+        "sig_shape": (256, 256)
     }
 
 
@@ -42,57 +46,124 @@ def test_simple_open(default_mib):
     assert tuple(default_mib.shape) == (32, 32, 256, 256)
 
 
-def test_check_valid(default_mib):
-    default_mib.check_valid()
+def test_positive_sync_offset(default_mib, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
 
+    ds_with_offset = MIBDataSet(
+        path=MIB_TESTDATA_PATH, nav_shape=(32, 32), sync_offset=sync_offset
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
 
-@pytest.mark.xfail
-def test_missing_frames(lt_ctx):
-    """
-    there can be some frames missing at the end
-    """
-    # one full row of additional frames in the data set than in the file
-    scan_size = (33, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
-    ds = ds.initialize(lt_ctx.executor)
-    ds.check_valid()
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == 2
+    assert p0.slice.origin == (0, 0, 0)
 
     tileshape = Shape(
-        (16,) + tuple(ds.shape.sig),
-        sig_dims=ds.shape.sig.dims
+        (16,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
     )
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=tileshape,
-        dataset_shape=ds.shape,
+        dataset_shape=ds_with_offset.shape,
     )
 
-    for p in ds.get_partitions():
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
+    assert p.slice.origin == (768, 0, 0)
+    assert p.slice.shape[0] == 256
 
-def test_too_many_frames(lt_ctx):
-    """
-    mib files can contain more frames than the intended scanning dimensions
-    """
-    # one full row of additional frames in the file
-    scan_size = (31, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
-    ds = ds.initialize(lt_ctx.executor)
-    ds.check_valid()
+    result = lt_ctx.run_udf(dataset=default_mib, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.image_count - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(default_mib, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds_with_offset = MIBDataSet(
+        path=MIB_TESTDATA_PATH, nav_shape=(32, 32), sync_offset=sync_offset
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == -2
+    assert p0.slice.origin == (0, 0, 0)
 
     tileshape = Shape(
-        (16,) + tuple(ds.shape.sig),
-        sig_dims=ds.shape.sig.dims
+        (16,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
     )
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=tileshape,
-        dataset_shape=ds.shape,
+        dataset_shape=ds_with_offset.shape,
     )
 
-    for p in ds.get_partitions():
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
+
+    assert p.slice.origin == (768, 0, 0)
+    assert p.slice.shape[0] == 256
+
+    result = lt_ctx.run_udf(dataset=default_mib, udf=udf)
+    result = result['intensity'].raw_data[:default_mib._meta.image_count - abs(sync_offset)]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_offset_smaller_than_nav_shape(lt_ctx):
+    nav_shape = (32, 32)
+    sync_offset = -1030
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mib",
+            path=MIB_TESTDATA_PATH,
+            nav_shape=nav_shape,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-1024, 1024\), which is \(-image_count, image_count\)"
+        )
+
+
+def test_offset_greater_than_nav_shape(lt_ctx):
+    nav_shape = (32, 32)
+    sync_offset = 1030
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mib",
+            path=MIB_TESTDATA_PATH,
+            nav_shape=nav_shape,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-1024, 1024\), which is \(-image_count, image_count\)"
+        )
 
 
 @pytest.mark.with_numba
@@ -207,8 +278,8 @@ def test_crop_to(default_mib, lt_ctx):
 
 
 def test_read_at_boundaries(default_mib, lt_ctx):
-    scan_size = (32, 32)
-    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
+    nav_shape = (32, 32)
+    ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
     ds_odd = ds_odd.initialize(lt_ctx.executor)
 
     sumjob_odd = lt_ctx.create_sum_analysis(dataset=ds_odd)
@@ -230,8 +301,8 @@ def test_cache_key_json_serializable(default_mib):
 
 @pytest.mark.dist
 def test_mib_dist(dist_ctx):
-    scan_size = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
+    nav_shape = (32, 32)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)
@@ -239,7 +310,7 @@ def test_mib_dist(dist_ctx):
 
 
 def test_too_many_files(lt_ctx):
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=(32, 32))
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=(32, 32))
 
     with mock.patch('libertem.io.dataset.mib.glob', side_effect=lambda p: [
             "/a/%d.mib" % i
@@ -253,7 +324,7 @@ def test_too_many_files(lt_ctx):
 
 
 def test_not_too_many_files(lt_ctx):
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=(32, 32))
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=(32, 32))
 
     with mock.patch('libertem.io.dataset.mib.glob', side_effect=lambda p: [
             "/a/%d.mib" % i
@@ -263,3 +334,49 @@ def test_not_too_many_files(lt_ctx):
             ds._filenames()
 
     assert len(record) == 0
+
+
+def test_reshape_nav(lt_ctx):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load("mib", path=MIB_TESTDATA_PATH, nav_shape=(8,))
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    ds_with_2d_nav = lt_ctx.load("mib", path=MIB_TESTDATA_PATH, nav_shape=(4, 2))
+    result_with_2d_nav = lt_ctx.run_udf(dataset=ds_with_2d_nav, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load("mib", path=MIB_TESTDATA_PATH, nav_shape=(2, 2, 2))
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    nav_shape = (32, 32)
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mib",
+            path=MIB_TESTDATA_PATH,
+            nav_shape=nav_shape,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 65536"
+    )
+
+
+def test_scan_size_deprecation(lt_ctx):
+    scan_size = (2, 2)
+
+    with pytest.warns(FutureWarning):
+        ds = lt_ctx.load(
+            "mib",
+            path=MIB_TESTDATA_PATH,
+            scan_size=scan_size,
+        )
+    assert tuple(ds.shape) == (2, 2, 256, 256)

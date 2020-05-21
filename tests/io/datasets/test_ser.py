@@ -4,6 +4,8 @@ import pytest
 import numpy as np
 
 from libertem.udf.sum import SumUDF
+from libertem.io.dataset.ser import SERDataSet
+from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
@@ -13,6 +15,15 @@ SER_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.ser')
 HAVE_SER_TESTDATA = os.path.exists(SER_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_SER_TESTDATA, reason="need SER testdata")
+
+
+@pytest.fixture
+def default_ser(lt_ctx):
+    ds = SERDataSet(path=SER_TESTDATA_PATH)
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+    assert tuple(ds.shape) == (8, 35, 512, 512)
+    return ds
 
 
 def test_smoke(lt_ctx):
@@ -92,3 +103,238 @@ def test_correction(lt_ctx, with_roi):
         roi = None
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+
+
+def test_positive_sync_offset(default_ser, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds_with_offset = SERDataSet(
+        path=SER_TESTDATA_PATH, sync_offset=sync_offset
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == 2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (1,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (210, 0, 0)
+    assert p.slice.shape[0] == 70
+
+    result = lt_ctx.run_udf(dataset=default_ser, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.image_count - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(default_ser, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds_with_offset = SERDataSet(
+        path=SER_TESTDATA_PATH, sync_offset=sync_offset
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == -2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (1,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (210, 0, 0)
+    assert p.slice.shape[0] == 70
+
+    result = lt_ctx.run_udf(dataset=default_ser, udf=udf)
+    result = result['intensity'].raw_data[:default_ser._meta.image_count - abs(sync_offset)]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_positive_sync_offset_with_roi(default_ser, lt_ctx):
+    udf = SumSigUDF()
+    result = lt_ctx.run_udf(dataset=default_ser, udf=udf)
+    result = result['intensity'].raw_data
+
+    sync_offset = 2
+
+    ds_with_offset = lt_ctx.load("ser", path=SER_TESTDATA_PATH, sync_offset=sync_offset)
+
+    roi = np.random.choice([False], (8, 35))
+    roi[0:1] = True
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
+    result_with_offset = result_with_offset['intensity'].raw_data
+
+    assert np.allclose(result[sync_offset:35 + sync_offset], result_with_offset)
+
+
+def test_negative_sync_offset_with_roi(default_ser, lt_ctx):
+    udf = SumSigUDF()
+    result = lt_ctx.run_udf(dataset=default_ser, udf=udf)
+    result = result['intensity'].raw_data
+
+    sync_offset = -2
+
+    ds_with_offset = lt_ctx.load(
+        "ser", path=SER_TESTDATA_PATH, sync_offset=sync_offset
+    )
+
+    roi = np.random.choice([False], (8, 35))
+    roi[0:1] = True
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
+    result_with_offset = result_with_offset['intensity'].raw_data
+
+    assert np.allclose(result[:35 + sync_offset], result_with_offset[abs(sync_offset):])
+
+
+def test_missing_frames(lt_ctx):
+    nav_shape = (10, 35)
+
+    ds = SERDataSet(path=SER_TESTDATA_PATH, nav_shape=nav_shape)
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+
+    tileshape = Shape(
+        (1,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p._start_frame == 348
+    assert p._num_frames == 2
+    assert p.slice.origin == (348, 0, 0)
+    assert p.slice.shape[0] == 2
+    assert t.tile_slice.origin == (279, 0, 0)
+    assert t.tile_slice.shape[0] == 1
+
+
+def test_too_many_frames(lt_ctx):
+    nav_shape = (7, 35)
+
+    ds = SERDataSet(path=SER_TESTDATA_PATH, nav_shape=nav_shape)
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+
+    tileshape = Shape(
+        (1,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -286
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "ser",
+            path=SER_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-280, 280\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 286
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "ser",
+            path=SER_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-280, 280\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(default_ser, lt_ctx):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load("ser", path=SER_TESTDATA_PATH, nav_shape=(8,))
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    ds_with_2d_nav = lt_ctx.load("ser", path=SER_TESTDATA_PATH, nav_shape=(4, 2))
+    result_with_2d_nav = lt_ctx.run_udf(dataset=ds_with_2d_nav, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load("ser", path=SER_TESTDATA_PATH, nav_shape=(2, 2, 2))
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "ser",
+            path=SER_TESTDATA_PATH,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 262144"
+    )

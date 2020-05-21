@@ -23,6 +23,7 @@ def _get_ds_params():
                 "datashape": [256, 32, 32],
                 "tiledelay": 0.1,
                 "num_partitions": 16,
+                "sync_offset": 0,
             }
         }
     }

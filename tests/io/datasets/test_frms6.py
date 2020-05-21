@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import hashlib
 
 import pytest
 import numpy as np
@@ -10,6 +11,7 @@ from libertem.io.dataset.frms6 import (
 )
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.sum import SumAnalysis
+from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 from libertem.udf.raw import PickUDF
@@ -193,3 +195,117 @@ def test_read_invalid_tileshape(default_frms6):
 
     with pytest.raises(ValueError):
         next(p.get_tiles(tiling_scheme=tiling_scheme))
+
+
+def test_positive_sync_offset(lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds = lt_ctx.load(
+        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[:ds._meta.shape.nav.size - sync_offset]
+    result_sha1 = hashlib.sha1()
+    result_sha1.update(result)
+
+    # how to generate the hash below
+    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
+    # udf = SumSigUDF()
+    # result = ctx.run_udf(dataset=ds, udf=udf)
+    # sha1 = hashlib.sha1()
+    # sha1.update(result['intensity'].raw_data[sync_offset:])
+    # sha1.hexdigest()
+    assert result_sha1.hexdigest() == "460278543d8dbbed5080c56450c8669136750b78"
+
+
+def test_negative_sync_offset(default_frms6, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds = lt_ctx.load(
+        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[abs(sync_offset):]
+    result_sha1 = hashlib.sha1()
+    result_sha1.update(result)
+
+    # how to generate the hash below
+    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
+    # udf = SumSigUDF()
+    # result = ctx.run_udf(dataset=ds, udf=udf)
+    # sha1 = hashlib.sha1()
+    # sha1.update(result['intensity'].raw_data[:ds._meta.shape.nav.size + sync_offset])
+    # sha1.hexdigest()
+    assert result_sha1.hexdigest() == "3bc6f0abf253f08bd05f6de5fec6403f09d94b49"
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -65540
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "frms6",
+            path=FRMS6_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-65536, 65536\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 65540
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "frms6",
+            path=FRMS6_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-65536, 65536\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(lt_ctx):
+    udf = SumSigUDF()
+
+    # how to generate the hash below
+    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
+    # udf = SumSigUDF()
+    # result = ctx.run_udf(dataset=ds, udf=udf)
+    # sha1 = hashlib.sha1()
+    # sha1.update(result['intensity'].raw_data)
+    # sha1.hexdigest()
+
+    ds_1 = lt_ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(8,))
+    result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
+
+    result_1_sha1 = hashlib.sha1()
+    result_1_sha1.update(result_1['intensity'].raw_data)
+    assert result_1_sha1.hexdigest() == "ae917373ac2fc15e13903f8d2a07b0545dd59a87"
+
+    ds_2 = lt_ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(2, 2, 2))
+    result_2 = lt_ctx.run_udf(dataset=ds_2, udf=udf)
+
+    result_2_sha1 = hashlib.sha1()
+    result_2_sha1.update(result_2['intensity'].raw_data)
+    assert result_2_sha1.hexdigest() == "ae917373ac2fc15e13903f8d2a07b0545dd59a87"
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "frms6",
+            path=FRMS6_TESTDATA_PATH,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 69696"
+    )

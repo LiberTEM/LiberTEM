@@ -1,4 +1,5 @@
 import os
+import warnings
 from xml.dom import minidom
 
 import numpy as np
@@ -43,10 +44,10 @@ def get_params_from_xml(path):
     node_scan_y = scan_parameters[0].getElementsByTagName("scan_resolution_y")[0]
     node_scan_x = scan_parameters[0].getElementsByTagName("scan_resolution_x")[0]
 
-    scan_y = int(xml_get_text(node_scan_y.childNodes))
-    scan_x = int(xml_get_text(node_scan_x.childNodes))
-    scan_size = (scan_y, scan_x)
-    return path_raw, scan_size
+    nav_y = int(xml_get_text(node_scan_y.childNodes))
+    nav_x = int(xml_get_text(node_scan_x.childNodes))
+    nav_shape = (nav_y, nav_x)
+    return path_raw, nav_shape
     # TODO: read more metadata
 
 
@@ -59,12 +60,19 @@ class EMPADDatasetParams(MessageConverter):
       "properties": {
         "type": {"const": "EMPAD"},
         "path": {"type": "string"},
-        "scan_size": {
+        "nav_shape": {
+            "type": "array",
+            "items": {"type": "number", "minimum": 1},
+            "minItems": 2,
+            "maxItems": 2
+            },
+        "sig_shape": {
             "type": "array",
             "items": {"type": "number", "minimum": 1},
             "minItems": 2,
             "maxItems": 2
         },
+        "sync_offset": {"type": "number"},
       },
       "required": ["type", "path"]
     }
@@ -72,8 +80,14 @@ class EMPADDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "scan_size"]
+            for k in ["path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -96,16 +110,35 @@ class EMPADDataSet(DataSet):
     ----------
     path: str
         Path to either the .xml or the .raw file. If the .xml file given,
-        the `scan_size` parameter can be left out
+        the `nav_shape` parameter can be left out
 
-    scan_size: tuple of int
+    nav_shape: tuple of int, optional
         A tuple (y, x) that specifies the size of the scanned region. It is
         automatically read from the .xml file if you specify one as `path`.
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
-    def __init__(self, path, scan_size=None):
+    def __init__(self, path, scan_size=None, nav_shape=None,
+                 sig_shape=None, sync_offset=0):
         super().__init__()
         self._path = path
-        self._scan_size = scan_size and tuple(scan_size) or None
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
+        # handle backwards-compatability:
+        if scan_size is not None:
+            warnings.warn(
+                "scan_size argument is deprecated. please specify nav_shape instead",
+                FutureWarning
+            )
+            if nav_shape is not None:
+                raise ValueError("cannot specify both scan_size and nav_shape")
+            self._nav_shape = tuple(scan_size)
         self._path_raw = None
         self._meta = None
 
@@ -119,25 +152,51 @@ class EMPADDataSet(DataSet):
             )
 
     def initialize(self, executor):
+        nav_shape_from_XML = None
         lowpath = self._path.lower()
         if lowpath.endswith(".xml"):
-            self._path_raw, self._scan_size = executor.run_function(
+            self._path_raw, nav_shape_from_XML = executor.run_function(
                 self._init_from_xml, self._path
             )
         else:
             if not lowpath.endswith(".raw"):
                 raise DataSetException("path should either be .xml or .raw")
-            if self._scan_size is None:
-                raise DataSetException("need to set or detect scan_size!")
+            if self._nav_shape is None:
+                raise DataSetException("need to set or detect nav_shape!")
             self._path_raw = self._path
 
         try:
             self._filesize = executor.run_function(self._get_filesize)
         except OSError as e:
             raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
+        self._image_count = int(
+            os.stat(self._path_raw).st_size / (
+                int(np.dtype("float32").itemsize) * int(
+                    np.prod(EMPAD_DETECTOR_SIZE_RAW, dtype=np.int64)
+                )
+            )
+        )
+        if self._nav_shape is None and nav_shape_from_XML is not None:
+            self._nav_shape = nav_shape_from_XML
+        elif self._nav_shape is None and nav_shape_from_XML is None:
+            raise ValueError(
+                    "either nav_shape needs to be passed, or path needs to point to the .xml file"
+                )
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        if nav_shape_from_XML:
+            self._image_count = int(np.prod(nav_shape_from_XML))
+        if self._sig_shape is None:
+            self._sig_shape = EMPAD_DETECTOR_SIZE
+        elif int(np.prod(self._sig_shape)) != int(np.prod(EMPAD_DETECTOR_SIZE)):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % int(np.prod(EMPAD_DETECTOR_SIZE))
+            )
+        self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
-            shape=Shape(self._scan_size + EMPAD_DETECTOR_SIZE, sig_dims=2),
+            shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
             raw_dtype=np.dtype("float32"),
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
         return self
 
@@ -156,7 +215,7 @@ class EMPADDataSet(DataSet):
     def detect_params(cls, path, executor):
         """
         Detect parameters. If an `path` is an xml file, we try to automatically
-        set the scan_size, otherwise we can't really detect if this is a EMPAD
+        set the nav_shape, otherwise we can't really detect if this is a EMPAD
         file or something else (maybe from the "trailer" after each frame?)
         """
         try:
@@ -167,8 +226,13 @@ class EMPADDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
-                    "scan_size": ds._scan_size,
+                    "nav_shape": ds._nav_shape,
+                    "sig_shape": ds._sig_shape,
                 },
+                "info": {
+                    "image_count": ds._image_count,
+                    "native_sig_shape": ds._sig_shape,
+                }
             }
         except Exception:
             return False
@@ -182,12 +246,11 @@ class EMPADDataSet(DataSet):
         return self._meta.shape
 
     def _get_fileset(self):
-        num_frames = self._meta.shape.flatten_nav()[0]
         return EMPADFileSet([
             RawFile(
                 path=self._path_raw,
                 start_idx=0,
-                end_idx=num_frames,
+                end_idx=self._image_count,
                 sig_shape=self.shape.sig,
                 native_dtype=self._meta.raw_dtype,
             )
@@ -195,14 +258,6 @@ class EMPADDataSet(DataSet):
 
     def check_valid(self):
         try:
-            # check filesize:
-            framesize = int(np.prod(EMPAD_DETECTOR_SIZE_RAW, dtype=np.int64))
-            num_frames = int(np.prod(self._scan_size))
-            expected_filesize = num_frames * framesize * int(np.dtype("float32").itemsize)
-            if expected_filesize != self._filesize:
-                raise DataSetException("invalid filesize; expected %d, got %d" % (
-                    expected_filesize, self._filesize
-                ))
             fileset = self._get_fileset()
             with fileset:
                 return True
@@ -212,9 +267,11 @@ class EMPADDataSet(DataSet):
     def get_cache_key(self):
         return {
             "path_raw": self._path_raw,
+            "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -224,9 +281,7 @@ class EMPADDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield BasePartition(
                 meta=self._meta,
                 fileset=fileset,

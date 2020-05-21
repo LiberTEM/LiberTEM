@@ -12,11 +12,27 @@ from libertem.udf.sum import SumUDF
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.io.dataset.raw import RAWDatasetParams
+from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
+from libertem.udf.sumsigudf import SumSigUDF
 
 from utils import dataset_correction_verification
+
+
+@pytest.fixture
+def raw_dataset_8x8x8x8(lt_ctx, raw_data_8x8x8x8_path):
+    ds = RawFileDataSet(
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(8, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+    )
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+
+    return ds
 
 
 def test_simple_open(default_raw):
@@ -253,17 +269,19 @@ def test_message_converter_direct():
         "type": "RAW",
         "path": "p",
         "dtype": "d",
-        "scan_size": [16, 16],
-        "detector_size": [8, 8],
+        "nav_shape": [16, 16],
+        "sig_shape": [8, 8],
         "enable_direct": True,
+        "sync_offset": 0,
     }
     converted = RAWDatasetParams().convert_to_python(src)
     assert converted == {
         "path": "p",
         "dtype": "d",
-        "scan_size": [16, 16],
-        "detector_size": [8, 8],
+        "nav_shape": [16, 16],
+        "sig_shape": [8, 8],
         "enable_direct": True,
+        "sync_offset": 0,
     }
 
 
@@ -293,24 +311,24 @@ def test_ctx_load_old(lt_ctx, default_raw):
         lt_ctx.load(
             "raw",
             path=default_raw._path,
-            scan_size=(16, 16),
+            nav_shape=(16, 16),
             dtype="float32",
             detector_size_raw=(128, 128),
             crop_detector_to=(128, 128)
         )
-        assert len(w) == 1
+        assert len(w) == 2
         assert issubclass(w[0].category, FutureWarning)
 
 
-def test_missing_detector_size(lt_ctx, default_raw):
+def test_missing_sig_shape(lt_ctx, default_raw):
     with pytest.raises(TypeError) as e:
         lt_ctx.load(
             "raw",
             path=default_raw._path,
-            scan_size=(16, 16),
+            nav_shape=(16, 16),
             dtype="float32",
         )
-    assert e.match("missing 1 required argument: 'detector_size'")
+    assert e.match("missing 1 required argument: 'sig_shape'")
 
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'),
@@ -319,8 +337,8 @@ def test_load_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",
         path=default_raw._path,
-        scan_size=(16, 16),
-        detector_size=(16, 16),
+        nav_shape=(16, 16),
+        sig_shape=(16, 16),
         dtype="float32",
         enable_direct=True,
     )
@@ -335,8 +353,8 @@ def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
         lt_ctx.load(
             "raw",
             path=default_raw._path,
-            scan_size=(16, 16),
-            detector_size=(16, 16),
+            nav_shape=(16, 16),
+            sig_shape=(16, 16),
             dtype="float32",
             enable_direct=True,
         )
@@ -361,6 +379,303 @@ def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
         roi = None
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+
+
+def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds_with_offset = RawFileDataSet(
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(8, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+        sync_offset=sync_offset,
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == 2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (4,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (48, 0, 0)
+    assert p.slice.shape[0] == 16
+
+    result = lt_ctx.run_udf(dataset=raw_dataset_8x8x8x8, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.image_count - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds_with_offset = RawFileDataSet(
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(8, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+        sync_offset=sync_offset,
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == -2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (4,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    t0 = next(p0.get_tiles(tiling_scheme))
+    assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (48, 0, 0)
+    assert p.slice.shape[0] == 16
+
+    result = lt_ctx.run_udf(dataset=raw_dataset_8x8x8x8, udf=udf)
+    result = result['intensity'].raw_data[:raw_dataset_8x8x8x8._meta.image_count - abs(sync_offset)]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path):
+    ds = RawFileDataSet(
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(10, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+    )
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+
+    tileshape = Shape(
+        (4,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p._start_frame == 60
+    assert p._num_frames == 20
+    assert p.slice.origin == (60, 0, 0)
+    assert p.slice.shape[0] == 20
+    assert t.tile_slice.origin == (60, 0, 0)
+    assert t.tile_slice.shape[0] == 4
+
+
+def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path):
+    ds = RawFileDataSet(
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(6, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+    )
+    ds.set_num_cores(4)
+    ds = ds.initialize(lt_ctx.executor)
+
+    tileshape = Shape(
+        (4,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
+    for p in ds.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+
+def test_offset_smaller_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
+    sync_offset = -70
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "raw",
+            path=raw_data_8x8x8x8_path,
+            nav_shape=(8, 8),
+            sig_shape=(8, 8),
+            dtype="float32",
+            enable_direct=False,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-64, 64\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
+    sync_offset = 70
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "raw",
+            path=raw_data_8x8x8x8_path,
+            nav_shape=(8, 8),
+            sig_shape=(8, 8),
+            dtype="float32",
+            enable_direct=False,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-64, 64\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load(
+        "raw",
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(64,),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+    )
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    result_with_2d_nav = lt_ctx.run_udf(dataset=raw_dataset_8x8x8x8, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load(
+        "raw",
+        path=raw_data_8x8x8x8_path,
+        nav_shape=(2, 4, 8),
+        sig_shape=(8, 8),
+        dtype="float32",
+        enable_direct=False,
+    )
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+def test_too_large_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
+    nav_shape = (8, 8)
+    sig_shape = (65, 65)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "raw",
+            path=raw_data_8x8x8x8_path,
+            nav_shape=nav_shape,
+            sig_shape=sig_shape,
+            dtype="float32",
+        )
+    assert e.match(
+        r"sig_shape must be less than size: 4096"
+    )
+
+
+def test_different_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
+    nav_shape = (8, 8)
+    sig_shape = (4, 4)
+
+    ds = lt_ctx.load(
+        "raw",
+        path=raw_data_8x8x8x8_path,
+        nav_shape=nav_shape,
+        sig_shape=sig_shape,
+        dtype="float32",
+    )
+
+    assert ds._meta.image_count == 256
+
+
+def test_incorrect_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
+    nav_shape = (8, 8)
+    sig_shape = (3, 3)
+
+    ds = lt_ctx.load(
+        "raw",
+        path=raw_data_8x8x8x8_path,
+        nav_shape=nav_shape,
+        sig_shape=sig_shape,
+        dtype="float32",
+    )
+
+    assert ds._meta.image_count == 455
+
+
+def test_scan_size_deprecation(lt_ctx, raw_data_8x8x8x8_path):
+    scan_size = (2, 2)
+
+    with pytest.warns(FutureWarning):
+        ds = lt_ctx.load(
+            "raw",
+            path=raw_data_8x8x8x8_path,
+            scan_size=scan_size,
+            sig_shape=(8, 8),
+            dtype="float32",
+        )
+    assert tuple(ds.shape) == (2, 2, 8, 8)
+
+
+def test_detector_size_deprecation(lt_ctx, raw_data_8x8x8x8_path):
+    detector_size = (8, 8)
+
+    with pytest.warns(FutureWarning):
+        ds = lt_ctx.load(
+            "raw",
+            path=raw_data_8x8x8x8_path,
+            nav_shape=(8, 8),
+            detector_size=detector_size,
+            dtype="float32",
+        )
+    assert tuple(ds.shape) == (8, 8, 8, 8)
 
 
 # TODO: test for dataset with more than 2 sig dims

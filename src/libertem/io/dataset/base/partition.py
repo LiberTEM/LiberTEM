@@ -48,7 +48,7 @@ class Partition(object):
             raise ValueError("nav dims should be flat")
 
     @classmethod
-    def make_slices(cls, shape, num_partitions):
+    def make_slices(cls, shape, num_partitions, sync_offset=0):
         """
         partition a 3D dataset ("list of frames") along the first axis,
         yielding the partition slice, and additionally start and stop frame
@@ -56,7 +56,6 @@ class Partition(object):
         """
         num_frames = shape.nav.size
         f_per_part = max(1, num_frames // num_partitions)
-
         c0 = itertools.count(start=0, step=f_per_part)
         c1 = itertools.count(start=f_per_part, step=f_per_part)
         for (start, stop) in zip(c0, c1):
@@ -68,7 +67,7 @@ class Partition(object):
                 shape=Shape(((stop - start),) + tuple(shape.sig),
                             sig_dims=shape.sig.dims)
             )
-            yield part_slice, start, stop
+            yield part_slice, start + sync_offset, stop + sync_offset
 
     def need_decode(self, read_dtype, roi):
         raise NotImplementedError()
@@ -121,7 +120,7 @@ class BasePartition(Partition):
     """
     def __init__(
         self, meta: DataSetMeta, partition_slice: Slice,
-        fileset: FileSet, start_frame: int, num_frames: int
+        fileset: FileSet, start_frame: int, num_frames: int,
     ):
         """
         Parameters
@@ -143,7 +142,10 @@ class BasePartition(Partition):
             How many frames this partition should contain
         """
         super().__init__(meta=meta, partition_slice=partition_slice)
-        self._fileset = fileset.get_for_range(start_frame, start_frame + num_frames - 1)
+        if start_frame < self.meta.image_count:
+            self._fileset = fileset.get_for_range(
+                max(0, start_frame), max(0, start_frame + num_frames - 1)
+            )
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
@@ -193,7 +195,10 @@ class BasePartition(Partition):
     def need_decode(self, read_dtype, roi):
         io_backend = self._get_io_backend()
         return io_backend.need_copy(
-            roi=roi, native_dtype=self.meta.raw_dtype, read_dtype=read_dtype
+            roi=roi,
+            native_dtype=self.meta.raw_dtype,
+            read_dtype=read_dtype,
+            sync_offset=self.meta.sync_offset,
         )
 
     def _get_decoder(self) -> Decoder:
@@ -202,9 +207,10 @@ class BasePartition(Partition):
     def _get_read_ranges(self, tiling_scheme, roi=None):
         return self._fileset.get_read_ranges(
             start_at_frame=self._start_frame,
-            stop_before_frame=self._start_frame + self._num_frames,
+            stop_before_frame=min(self._start_frame + self._num_frames, self.meta.image_count),
             tiling_scheme=tiling_scheme,
             dtype=self.meta.raw_dtype,
+            sync_offset=self.meta.sync_offset,
             roi=roi,
         )
 
@@ -243,16 +249,18 @@ class BasePartition(Partition):
             in the ROI are considered, and the resulting tile slices are from a coordinate
             system that has the shape `(np.count_nonzero(roi),)`.
         """
-        dest_dtype = np.dtype(dest_dtype)
-        self.validate_tiling_scheme(tiling_scheme)
-        read_ranges = self._get_read_ranges(tiling_scheme, roi)
-        io_backend = self._get_io_backend()
+        if self._start_frame < self.meta.image_count:
+            dest_dtype = np.dtype(dest_dtype)
+            self.validate_tiling_scheme(tiling_scheme)
+            read_ranges = self._get_read_ranges(tiling_scheme, roi)
+            io_backend = self._get_io_backend()
 
-        yield from io_backend.get_tiles(
-            tiling_scheme=tiling_scheme, fileset=self._fileset,
-            read_ranges=read_ranges, roi=roi,
-            native_dtype=self.meta.raw_dtype, read_dtype=dest_dtype
-        )
+            yield from io_backend.get_tiles(
+                tiling_scheme=tiling_scheme, fileset=self._fileset,
+                read_ranges=read_ranges, roi=roi,
+                native_dtype=self.meta.raw_dtype, read_dtype=dest_dtype,
+                sync_offset=self.meta.sync_offset,
+            )
 
     def __repr__(self):
         return "<%s [%d:%d]>" % (

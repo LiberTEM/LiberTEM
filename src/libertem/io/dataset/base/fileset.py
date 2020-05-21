@@ -91,7 +91,7 @@ class FileSet:
 
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
-        dtype, tiling_scheme: TilingScheme,
+        dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
@@ -103,6 +103,7 @@ class FileSet:
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            sync_offset=sync_offset,
             bpp=np.dtype(dtype).itemsize,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,

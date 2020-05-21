@@ -58,7 +58,9 @@ class LocalFSMMapBackend(IOBackend):
         self._corrections = corrections
         self._buffer_pool = BufferPool()
 
-    def need_copy(self, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None):
+    def need_copy(
+        self, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None, sync_offset=0,
+    ):
         # checking conditions in which "straight mmap" is not possible
         # straight mmap means our dataset can just return views into the underlying mmap object
         # as tiles and use them as they are in the UDFs
@@ -75,7 +77,7 @@ class LocalFSMMapBackend(IOBackend):
             log.debug("have decode, need copy")
             return True
 
-        # 3) if we have less frames per file than tile depth, we need to copy, too
+        # 3) if we have less number of frames per file than tile depth, we need to copy
         if tiling_scheme and fileset:
             fileset_arr = fileset.get_as_arr()
             if np.min(fileset_arr[:, 1] - fileset_arr[:, 0]) < tiling_scheme.depth:
@@ -85,6 +87,11 @@ class LocalFSMMapBackend(IOBackend):
         # 4) if we apply corrections, we need to copy
         if self._corrections is not None and self._corrections.have_corrections():
             log.debug("have corrections, need copy")
+            return True
+
+        # 5) if a negative offset is given, we need to copy
+        if sync_offset < 0:
+            log.debug("negative offset is set, need copy")
             return True
 
         return False
@@ -99,7 +106,7 @@ class LocalFSMMapBackend(IOBackend):
             return True
         return False
 
-    def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges):
+    def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges, sync_offset=0):
         """
         Parameters
         ----------
@@ -131,8 +138,13 @@ class LocalFSMMapBackend(IOBackend):
                 origin=origin,
                 shape=Shape(shape, sig_dims=sig_dims)
             )
+            # sync_offset is either zero or positive
+            # in case of negative sync_offset, _get_tiles_w_copy is used
             data_slice = (
-                slice(origin[0] - fh.start_idx, origin[0] - fh.start_idx + shape[0]),
+                slice(
+                    origin[0] - fh.start_idx + sync_offset,
+                    origin[0] - fh.start_idx + shape[0] + sync_offset
+                ),
             ) + tuple([
                 slice(o, (o + s))
                 for (o, s) in zip(origin[1:], shape[1:])
@@ -157,7 +169,9 @@ class LocalFSMMapBackend(IOBackend):
             return
         self._corrections.apply(data, tile_slice)
 
-    def _get_tiles_w_copy(self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype):
+    def _get_tiles_w_copy(
+        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, roi, sync_offset=0
+    ):
         if self._decoder is not None:
             decoder = self._decoder
         else:
@@ -170,7 +184,6 @@ class LocalFSMMapBackend(IOBackend):
         r_n_d = self._r_n_d = self.get_read_and_decode(decode)
 
         native_dtype = decoder.get_native_dtype(native_dtype, read_dtype)
-
         mmaps = List()
         for fh in fileset:
             mmaps.append(np.frombuffer(fh.raw_mmap(), dtype=np.uint8))
@@ -184,17 +197,19 @@ class LocalFSMMapBackend(IOBackend):
         ], key=lambda x: x[0], reverse=True)[0][1]
 
         buf_shape = (tiling_scheme.depth,) + tuple(largest_slice.shape)
-
         need_clear = decoder.do_clear()
 
         with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
             out_decoded = out_decoded.reshape((-1,))
-
             slices = read_ranges[0]
             ranges = read_ranges[1]
             scheme_indices = read_ranges[2]
             for idx in range(slices.shape[0]):
                 origin, shape = slices[idx]
+                tile_slice = Slice(
+                    origin=origin,
+                    shape=Shape(shape, sig_dims=sig_dims)
+                )
                 tile_ranges = ranges[idx]
                 scheme_idx = scheme_indices[idx]
                 out_cut = out_decoded[:np.prod(shape)].reshape((shape[0], -1))
@@ -204,10 +219,6 @@ class LocalFSMMapBackend(IOBackend):
                     out_cut, native_dtype, do_zero=need_clear,
                     origin=origin, shape=shape, ds_shape=ds_shape,
                 )
-                tile_slice = Slice(
-                    origin=origin,
-                    shape=Shape(shape, sig_dims=sig_dims)
-                )
                 data = data.reshape(shape)
                 self.preprocess(data, tile_slice)
                 yield DataTile(
@@ -216,7 +227,10 @@ class LocalFSMMapBackend(IOBackend):
                     scheme_idx=scheme_idx,
                 )
 
-    def get_tiles(self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype):
+    def get_tiles(
+        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
+        sync_offset,
+    ):
         # TODO: how would compression work?
         # TODO: sparse input data? COO format? fill rate? → own pipeline! → later!
         # strategy: assume low (20%?) fill rate, read whole partition and apply ROI in-memory
@@ -228,10 +242,12 @@ class LocalFSMMapBackend(IOBackend):
                 tiling_scheme=tiling_scheme,
                 fileset=fileset,
                 roi=roi,
-                native_dtype=native_dtype, read_dtype=read_dtype,
+                native_dtype=native_dtype,
+                read_dtype=read_dtype,
+                sync_offset=sync_offset,
             ):
                 yield from self._get_tiles_straight(
-                    tiling_scheme, fileset, read_ranges
+                    tiling_scheme, fileset, read_ranges, sync_offset,
                 )
             else:
                 yield from self._get_tiles_w_copy(
@@ -240,6 +256,8 @@ class LocalFSMMapBackend(IOBackend):
                     read_ranges=read_ranges,
                     read_dtype=read_dtype,
                     native_dtype=native_dtype,
+                    roi=roi,
+                    sync_offset=sync_offset,
                 )
 
     def _set_readahead_hints(self, roi, fileset):

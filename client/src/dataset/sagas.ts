@@ -41,11 +41,13 @@ export function* doDetectDataset(fullPath: string) {
     yield put(datasetActions.Actions.detect(fullPath));
     const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
     let detectedParams;
+    let detectedInfo;
     let shouldOpen = true;
     if (detectResult.status === "ok") {
         if (isKnownDatasetType(detectResult.datasetParams.type)) {
           detectedParams = detectResult.datasetParams;
-          yield put(datasetActions.Actions.detected(fullPath, detectResult.datasetParams));
+          detectedInfo = detectResult.datasetInfo;
+          yield put(datasetActions.Actions.detected(fullPath, detectedParams, detectedInfo));
         }
         else {
           const timestamp = Date.now();
@@ -57,23 +59,25 @@ export function* doDetectDataset(fullPath: string) {
     } else {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
-    return [detectedParams, shouldOpen];
+    return [detectedParams, shouldOpen, detectedInfo];
 }
 
 export function* doOpenDataset(fullPath: string) {
     const config: ConfigState = yield select((state: RootReducer) => state.config);
     const cachedParams = config.lastOpened[fullPath];
     let detectedParams;
+    let detectedInfo;
     let shouldOpen = true;
     try {
       const doDetectDatasetRes = yield call(doDetectDataset, fullPath);
       detectedParams = doDetectDatasetRes[0];
       shouldOpen = doDetectDatasetRes[1];
+      detectedInfo = doDetectDatasetRes[2];
     } catch (e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
     if(shouldOpen) {
-      yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams));
+      yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams, detectedInfo));
     }
 }
 

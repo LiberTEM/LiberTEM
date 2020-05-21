@@ -9,7 +9,9 @@ import numpy as np
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
-from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
+from libertem.io.dataset.base import (
+    TilingScheme, Negotiator, Partition, DataSet, get_coordinates
+)
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 
@@ -45,6 +47,8 @@ class UDFMeta:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
         self._slice = None
+        self._coordinates = None
+        self._cached_coordinates = {}
         if corrections is None:
             corrections = CorrectionSet()
         self._corrections = corrections
@@ -134,6 +138,22 @@ class UDFMeta:
         .. versionadded:: 0.6.0
         '''
         return self._device_class
+
+    @property
+    def coordinates(self) -> np.ndarray:
+        """
+        np.ndarray : Array of coordinates that correspond to the frames in the actual
+                     navigation space which are part of the current tile or partition.
+        """
+        # Check if key is present in the cached_coordinates, generate the coords otherwise
+        roi_key = "None" if self._roi is None else tuple(map(tuple, self._roi))
+        key = (self._slice, tuple(self._dataset_shape), roi_key)
+        coords = self._cached_coordinates.get(key)
+        if coords is None:
+            coords = get_coordinates(self._slice, self._dataset_shape, self._roi)
+            self._cached_coordinates.update({key: coords})
+            self._coordinates = coords
+        return coords
 
 
 class UDFData:

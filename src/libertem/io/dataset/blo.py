@@ -22,6 +22,19 @@ class BLODatasetParams(MessageConverter):
       "properties": {
         "type": {"const": "BLO"},
         "path": {"type": "string"},
+        "nav_shape": {
+            "type": "array",
+            "items": {"type": "number", "minimum": 1},
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "sig_shape": {
+            "type": "array",
+            "items": {"type": "number", "minimum": 1},
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "sync_offset": {"type": "number"},
       },
       "required": ["type", "path"],
     }
@@ -31,6 +44,12 @@ class BLODatasetParams(MessageConverter):
             k: raw_data[k]
             for k in ["path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -85,8 +104,21 @@ class BloDataSet(DataSet):
 
     endianess: str
         either '<' or '>' for little or big endian
+
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
-    def __init__(self, path, tileshape=None, endianess='<'):
+    def __init__(self, path, tileshape=None, endianess='<', nav_shape=None,
+                 sig_shape=None, sync_offset=0):
         super().__init__()
         # handle backwards-compatability:
         if tileshape is not None:
@@ -99,16 +131,32 @@ class BloDataSet(DataSet):
         self._endianess = endianess
         self._shape = None
         self._filesize = None
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
 
     def initialize(self, executor):
         self._header = h = executor.run_function(self._read_header)
         NY = int(h['NY'])
         NX = int(h['NX'])
         DP_SZ = int(h['DP_SZ'])
-        self._shape = Shape((NY, NX, DP_SZ, DP_SZ), sig_dims=2)
+        self._image_count = NY * NX
+        if self._nav_shape is None:
+            self._nav_shape = (NY, NX)
+        if self._sig_shape is None:
+            self._sig_shape = (DP_SZ, DP_SZ)
+        elif int(np.prod(self._sig_shape)) != (DP_SZ * DP_SZ):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % (DP_SZ * DP_SZ)
+            )
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+        self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
         self._meta = DataSetMeta(
             shape=self._shape,
             raw_dtype=np.dtype("u1"),
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
         self._filesize = executor.run_function(self._get_filesize)
         return self
@@ -123,9 +171,15 @@ class BloDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
+                    "nav_shape": tuple(ds.shape.nav),
+                    "sig_shape": tuple(ds.shape.sig),
                     "tileshape": (1, 8) + tuple(ds.shape.sig),
                     "endianess": "<",
                 },
+                "info": {
+                    "image_count": int(np.prod(ds.shape.nav)),
+                    "native_sig_shape": tuple(ds.shape.sig),
+                }
             }
         except Exception:
             return False
@@ -176,9 +230,11 @@ class BloDataSet(DataSet):
         return {
             "path": self._path,
             "endianess": self._endianess,
+            "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -193,7 +249,7 @@ class BloDataSet(DataSet):
             LocalFile(
                 path=self._path,
                 start_idx=0,
-                end_idx=self.shape.nav.size,
+                end_idx=self._image_count,
                 native_dtype=self._endianess + "u1",
                 sig_shape=self.shape.sig,
                 frame_header=6,
@@ -203,14 +259,14 @@ class BloDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield BasePartition(
                 meta=self._meta,
-                fileset=fileset.get_for_range(start, stop),
+                fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
             )
+
+    def __repr__(self):
+        return "<BloDataSet of %s shape=%s>" % (self.dtype, self.shape)

@@ -58,10 +58,11 @@ rotations are therefore clock-wise.
 Multidimensional data
 ---------------------
 
-While our GUI is currently limited to 4D data sets, the Python API does not
-have that limitation. You can load data of arbitraty dimensionality, provided our I/O
-routines support the format. Most of our methods are currently built for 2D image data,
-so it should be no problem to load and process for example time series.
+While our GUI is currently limited to 2D visualizations, the Python API does not have that
+limitation. You can load data of arbitraty dimensionality and specify an application-specific shape
+using the GUI or the Python API, provided our I/O routines support the format. Most of our methods
+are currently built for 2D image data, so it should be no problem to load and process for
+example time series.
 
 If you want to process data with, for example, 1D or 3D samples, you can write
 :ref:`UDFs <user-defined functions>`. Note that in that case, a "frame" is no longer 2D!

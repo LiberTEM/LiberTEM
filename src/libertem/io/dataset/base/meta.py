@@ -5,8 +5,8 @@ from libertem.common import Shape
 
 
 class DataSetMeta(object):
-    def __init__(self, shape: Shape, raw_dtype=None, dtype=None,
-                 metadata=None):
+    def __init__(self, shape: Shape, image_count=0, raw_dtype=None, dtype=None, metadata=None,
+                 sync_offset=0):
         """
         shape
             "native" dataset shape, can have any dimensionality
@@ -19,6 +19,13 @@ class DataSetMeta(object):
             if there are post-processing steps done as part of reading, which need a different
             dtype. Assumed equal to raw_dtype if not given
 
+        sync_offset: int, optional
+            If positive, number of frames to skip from start
+            If negative, number of blank frames to insert at start
+
+        image_count
+            Total number of frames in the dataset
+
         metadata
             Any metadata offered by the DataSet, not specified yet
         """
@@ -27,6 +34,8 @@ class DataSetMeta(object):
             dtype = raw_dtype
         self.dtype = np.dtype(dtype)
         self.raw_dtype = np.dtype(raw_dtype)
+        self.image_count = image_count
+        self.sync_offset = sync_offset
         self.metadata = metadata
 
     def __getitem__(self, key):

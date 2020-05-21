@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from libertem.io.dataset.mrc import MRCDataSet
+from libertem.udf.sumsigudf import SumSigUDF
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -65,6 +66,8 @@ def test_detect_1(lt_ctx):
         executor=lt_ctx.executor,
     )["parameters"] == {
         'path': fpath,
+        'nav_shape': (4,),
+        'sig_shape': (1024, 1024)
     }
 
 
@@ -83,3 +86,107 @@ def test_mrc_dist(dist_ctx):
     roi = np.random.choice([True, False], size=4)
     results = dist_ctx.run(analysis, roi=roi)
     assert results[0].raw_data.shape == (1024, 1024)
+
+
+def test_positive_sync_offset(lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds = lt_ctx.load(
+        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    ds_with_offset = lt_ctx.load(
+        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
+    )
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.shape.nav.size - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_negative_sync_offset(default_mrc, lt_ctx):
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds = lt_ctx.load(
+        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
+    )
+
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+    result = result['intensity'].raw_data[:ds._meta.shape.nav.size - abs(sync_offset)]
+
+    ds_with_offset = lt_ctx.load(
+        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
+    )
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -20
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mrc",
+            path=MRC_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-4, 4\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 20
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mrc",
+            path=MRC_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-4, 4\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(lt_ctx):
+    udf = SumSigUDF()
+
+    ds_with_1d_nav = lt_ctx.load("mrc", path=MRC_TESTDATA_PATH, nav_shape=(4,))
+    result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
+    result_with_1d_nav = result_with_1d_nav['intensity'].raw_data
+
+    ds_with_2d_nav = lt_ctx.load("mrc",  path=MRC_TESTDATA_PATH, nav_shape=(2, 2,))
+    result_with_2d_nav = lt_ctx.run_udf(dataset=ds_with_2d_nav, udf=udf)
+    result_with_2d_nav = result_with_2d_nav['intensity'].raw_data
+
+    ds_with_3d_nav = lt_ctx.load("mrc",  path=MRC_TESTDATA_PATH, nav_shape=(1, 2, 2))
+    result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
+    result_with_3d_nav = result_with_3d_nav['intensity'].raw_data
+
+    assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "mrc",
+            path=MRC_TESTDATA_PATH,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 1048576"
+    )

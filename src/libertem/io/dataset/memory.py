@@ -20,15 +20,24 @@ class MemBackend(LocalFSMMapBackend):
     def _set_readahead_hints(self, roi, fileset):
         pass
 
-    def _get_tiles_roi(self, tiling_scheme, fileset, read_ranges, roi):
+    def _get_tiles_roi(self, tiling_scheme, fileset, read_ranges, roi, sync_offset):
         ds_sig_shape = tiling_scheme.dataset_shape.sig
         sig_dims = tiling_scheme.shape.sig.dims
         slices, ranges, scheme_indices = read_ranges
 
         fh = fileset[0]
         memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
-        data_w_roi = memmap[roi.reshape((-1,))]
-
+        if sync_offset == 0:
+            flat_roi = roi.reshape((-1,))
+        elif sync_offset > 0:
+            flat_roi = np.full(roi.reshape((-1,)).shape, False)
+            flat_roi[:sync_offset] = False
+            flat_roi[sync_offset:] = roi.reshape((-1,))[:-sync_offset]
+        else:
+            flat_roi = np.full(roi.reshape((-1,)).shape, False)
+            flat_roi[sync_offset:] = False
+            flat_roi[:sync_offset] = roi.reshape((-1,))[-sync_offset:]
+        data_w_roi = memmap[flat_roi]
         for idx in range(slices.shape[0]):
             origin, shape = slices[idx]
             scheme_idx = scheme_indices[idx]
@@ -37,7 +46,15 @@ class MemBackend(LocalFSMMapBackend):
                 origin=origin,
                 shape=Shape(shape, sig_dims=sig_dims)
             )
-            data_slice = tile_slice.get()
+            if sync_offset >= 0:
+                data_slice = tile_slice.get()
+            else:
+                frames_to_skip = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+                data_slice = Slice(
+                    origin=(origin[0] - frames_to_skip,) + tuple(origin[-sig_dims:]),
+                    shape=Shape(shape, sig_dims=sig_dims)
+                )
+                data_slice = data_slice.get()
             data = data_w_roi[data_slice]
             yield DataTile(
                 data,
@@ -45,17 +62,31 @@ class MemBackend(LocalFSMMapBackend):
                 scheme_idx=scheme_idx,
             )
 
-    def get_tiles(self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype):
+    def get_tiles(
+        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
+        sync_offset,
+    ):
         if roi is None:
             # support arbitrary tiling in case of no roi
             with fileset:
-                for tile in self._get_tiles_straight(tiling_scheme, fileset, read_ranges):
-                    data = tile.astype(read_dtype)
-                    self.preprocess(data, tile.tile_slice)
-                    yield data
+                if sync_offset >= 0:
+                    for tile in self._get_tiles_straight(
+                        tiling_scheme, fileset, read_ranges, sync_offset
+                    ):
+                        data = tile.astype(read_dtype)
+                        self.preprocess(data, tile.tile_slice)
+                        yield data
+                else:
+                    for tile in self._get_tiles_w_copy(
+                        tiling_scheme, fileset, read_ranges, read_dtype, native_dtype,
+                        roi, sync_offset,
+                    ):
+                        yield tile
         else:
             with fileset:
-                for tile in self._get_tiles_roi(tiling_scheme, fileset, read_ranges, roi):
+                for tile in self._get_tiles_roi(
+                    tiling_scheme, fileset, read_ranges, roi, sync_offset
+                ):
                     data = tile.astype(read_dtype)
                     self.preprocess(data, tile.tile_slice)
                     yield data
@@ -82,6 +113,19 @@ class MemDatasetParams(MessageConverter):
             "check_cast": {"type": "boolean"},
             "crop_frames": {"type": "boolean"},
             "tiledelay": {"type": "number"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
         },
         "required": ["type", "tileshape", "num_partitions"],
     }
@@ -93,6 +137,12 @@ class MemDatasetParams(MessageConverter):
                       "crop_frames", "tiledelay", "datashape"]
             if k in raw_data
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -134,7 +184,7 @@ class MemoryDataSet(DataSet):
     '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,
-                 force_need_decode=False):
+                 force_need_decode=False, nav_shape=None, sig_shape=None, sync_offset=0):
         # For HTTP API testing purposes: Allow to create empty dataset with given shape
         if data is None:
             assert datashape is not None
@@ -148,21 +198,39 @@ class MemoryDataSet(DataSet):
         #     framecount = max(1, min(np.prod(data.shape[:-sig_dims]), int(target / framesize)))
         #     tileshape = (framecount, ) + sig_shape
         self.data = data
-        if tileshape is None:
-            self.tileshape = None
-        else:
-            assert len(tileshape) == sig_dims + 1
-            self.tileshape = Shape(tileshape, sig_dims=sig_dims)
         self._base_shape = base_shape
         self.num_partitions = num_partitions
         self.sig_dims = sig_dims
-        self._meta = DataSetMeta(
-            shape=self.shape,
-            raw_dtype=self.data.dtype,
-        )
+        if nav_shape is None:
+            self._nav_shape = self.shape.nav
+        else:
+            self._nav_shape = tuple(nav_shape)
+        if sig_shape is None:
+            self._sig_shape = self.shape.sig
+        else:
+            self._sig_shape = tuple(sig_shape)
+            self.sig_dims = len(self._sig_shape)
+        self._sync_offset = sync_offset
         self._check_cast = check_cast
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
+        self._image_count = int(np.prod(self._nav_shape))
+        self._shape = Shape(
+            tuple(self._nav_shape) + tuple(self._sig_shape), sig_dims=self.sig_dims
+        )
+        if tileshape is None:
+            self.tileshape = None
+        else:
+            assert len(tileshape) == self.sig_dims + 1
+            self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+        self._meta = DataSetMeta(
+            shape=self._shape,
+            raw_dtype=self.data.dtype,
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
+        )
 
     def initialize(self, executor):
         return self
@@ -185,12 +253,15 @@ class MemoryDataSet(DataSet):
     def get_cache_key(self):
         return TypeError("memory data set is not cacheable yet")
 
+    def get_num_partitions(self):
+        return self.num_partitions
+
     def get_partitions(self):
         fileset = FileSet([
             MemoryFile(
                 path=None,
                 start_idx=0,
-                end_idx=self.shape.nav.size,
+                end_idx=self._image_count,
                 native_dtype=self.data.dtype,
                 sig_shape=self.shape.sig,
                 data=self.data.reshape(self.shape.flatten_nav()),
@@ -198,9 +269,7 @@ class MemoryDataSet(DataSet):
             )
         ])
 
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self.num_partitions):
+        for part_slice, start, stop in self.get_slices():
             log.debug(
                 "creating partition slice %s start %s stop %s",
                 part_slice, start, stop,
@@ -208,7 +277,7 @@ class MemoryDataSet(DataSet):
             yield MemPartition(
                 meta=self._meta,
                 partition_slice=part_slice,
-                fileset=fileset.get_for_range(start, stop),
+                fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
                 tiledelay=self._tiledelay,

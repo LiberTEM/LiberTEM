@@ -1,5 +1,5 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
-import { DatasetCreateParams, DatasetFormParams, DatasetState } from '../messages';
+import { DatasetCreateParams, DatasetFormInfo, DatasetFormParams, DatasetState } from '../messages';
 
 export enum ActionTypes {
     OPEN = 'DATASET_OPEN',
@@ -15,7 +15,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    open: (path: string, cachedParams?: DatasetFormParams, detectedParams?: DatasetFormParams) => createAction(ActionTypes.OPEN, { path, cachedParams, detectedParams }),
+    open: (path: string, cachedParams?: DatasetFormParams, detectedParams?: DatasetFormParams, detectedInfo?: DatasetFormInfo) => createAction(ActionTypes.OPEN, { path, cachedParams, detectedParams, detectedInfo }),
     cancelOpen: () => createAction(ActionTypes.CANCEL_OPEN),
     create: (dataset: DatasetCreateParams) => createAction(ActionTypes.CREATE, { dataset }),
     created: (dataset: DatasetState) => createAction(ActionTypes.CREATED, { dataset }),
@@ -23,7 +23,7 @@ export const Actions = {
     delete: (dataset: string) => createAction(ActionTypes.DELETE, { dataset }),
     deleted: (dataset: string) => createAction(ActionTypes.DELETED, { dataset }),
     detect: (path: string) => createAction(ActionTypes.DETECT, { path }),
-    detected: (path: string, params: DatasetFormParams) => createAction(ActionTypes.DETECTED, { path, params }),
+    detected: (path: string, params: DatasetFormParams, info: DatasetFormInfo) => createAction(ActionTypes.DETECTED, { path, params, info }),
     detectFailed: (path: string) => createAction(ActionTypes.DETECT_FAILED, { path }),
 }
 

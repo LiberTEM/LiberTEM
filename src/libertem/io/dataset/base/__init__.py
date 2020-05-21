@@ -16,6 +16,7 @@ from .backend import (
 from .decode import (
     Decoder, DtypeConversionDecoder, decode_swap_2, decode_swap_4,
 )
+from .coordinates import get_coordinates
 
 __all__ = [
     'DataSetException', 'DataSetMeta', 'PartitionStructure',
@@ -25,5 +26,5 @@ __all__ = [
     'FileTree', 'TilingScheme', 'LocalFSMMapBackend',
     'default_get_read_ranges', 'make_get_read_ranges',
     'Decoder', 'DtypeConversionDecoder', 'Negotiator',
-    'decode_swap_2', 'decode_swap_4',
+    'decode_swap_2', 'decode_swap_4', 'get_coordinates',
 ]

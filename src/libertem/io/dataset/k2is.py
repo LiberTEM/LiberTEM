@@ -464,7 +464,7 @@ class K2FileSet(FileSet):
 
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
-        dtype, tiling_scheme: TilingScheme,
+        dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
@@ -476,6 +476,7 @@ class K2FileSet(FileSet):
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            sync_offset=sync_offset,
             bpp=np.dtype(dtype).itemsize,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
@@ -507,15 +508,21 @@ class K2ISDataSet(DataSet):
         # skip_frames is applied after synchronization.
         self._skip_frames = -1
         self._files = None
+        self._sync_offset = 0
 
     def _do_initialize(self):
         self._files = self._get_files()
         self._get_syncer(do_sync=True)
         self._scan_size = self._get_scansize()
+        self._image_count = int(np.prod(self._scan_size))
+        self._nav_shape_product = self._image_count
+        self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
                      sig_dims=2),
             raw_dtype=np.dtype("uint16"),
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
         )
         return self
 
@@ -569,8 +576,8 @@ class K2ISDataSet(DataSet):
             return False
         return {
             "parameters": {
-                "path": path
-            }
+                "path": path,
+            },
         }
 
     def check_valid(self):

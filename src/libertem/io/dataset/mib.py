@@ -30,22 +30,34 @@ class MIBDatasetParams(MessageConverter):
         "properties": {
             "type": {"const": "MIB"},
             "path": {"type": "string"},
-            "scan_size": {
+            "nav_shape": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1},
                 "minItems": 2,
-                "maxItems": 2,
+                "maxItems": 2
             },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
         },
         "required": ["type", "path"],
     }
 
     def convert_to_python(self, raw_data):
         data = {
-            "path": raw_data["path"],
+            k: raw_data[k]
+            for k in ["path"]
         }
-        if "scan_size" in raw_data:
-            data["scan_size"] = tuple(raw_data["scan_size"])
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -70,13 +82,45 @@ def is_valid_hdr(path):
         return line.startswith("HDR")
 
 
-def scan_size_from_hdr(hdr):
+def nav_shape_from_hdr(hdr):
     num_frames, scan_x = (
         int(hdr['Frames in Acquisition (Number)']),
         int(hdr['Frames per Trigger (Number)'])
     )
-    scan_size = (num_frames // scan_x, scan_x)
-    return scan_size
+    nav_shape = (num_frames // scan_x, scan_x)
+    return nav_shape
+
+
+def get_filenames(path, disable_glob=False):
+    if disable_glob:
+        return [path]
+    path, ext = os.path.splitext(path)
+    ext = ext.lower()
+    if ext == '.mib':
+        pattern = "%s*.mib" % (
+            re.sub(r'[0-9]+$', '', path)
+        )
+    elif ext == '.hdr':
+        pattern = "%s*.mib" % path
+    else:
+        raise DataSetException("unknown extension")
+    return glob(pattern)
+
+
+def get_image_count_and_sig_shape(path):
+    fns = get_filenames(path)
+    count = 0
+    files = []
+    for path in fns:
+        f = MIBHeaderReader(path)
+        count += f.fields['num_images']
+        files.append(f)
+    try:
+        first_file = list(sorted(files, key=lambda f: f.fields['sequence_first_image']))[0]
+        sig_shape = first_file.fields['image_size']
+        return count, sig_shape
+    except IndexError:
+        raise DataSetException("no files found")
 
 
 @numba.njit(inline='always')
@@ -392,7 +436,7 @@ class MIBFileSet(FileSet):
 
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
-        dtype, tiling_scheme: TilingScheme,
+        dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
@@ -405,6 +449,7 @@ class MIBFileSet(FileSet):
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            sync_offset=sync_offset,
             bpp=np.dtype(dtype).itemsize,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
@@ -422,7 +467,7 @@ class MIBDataSet(DataSet):
     """
     MIB data sets consist of one or more `.mib` files, and optionally
     a `.hdr` file. The HDR file is used to automatically set the
-    `scan_size` parameter from the fields "Frames per Trigger" and "Frames
+    `nav_shape` parameter from the fields "Frames per Trigger" and "Frames
     in Acquisition." When loading a MIB data set, you can either specify
     the path to the HDR file, or choose one of the MIB files. The MIB files
     are assumed to follow a naming pattern of some non-numerical prefix,
@@ -444,14 +489,26 @@ class MIBDataSet(DataSet):
     path: str
         Path to either the .hdr file or one of the .mib files
 
-    scan_size: tuple of int, optional
-        A tuple (y, x) that specifies the size of the scanned region. It is
-        automatically read from the .hdr file if you specify one as `path`.
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Common case: (height, width); but can be any dimensionality
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
-    def __init__(self, path, tileshape=None, scan_size=None, disable_glob=False):
+    def __init__(self, path, tileshape=None, scan_size=None, disable_glob=False,
+                 nav_shape=None, sig_shape=None, sync_offset=0):
         super().__init__()
         self._sig_dims = 2
         self._path = path
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._sync_offset = sync_offset
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn(
@@ -459,13 +516,17 @@ class MIBDataSet(DataSet):
                 FutureWarning
             )
         if scan_size is not None:
-            scan_size = tuple(scan_size)
-        else:
-            if not path.lower().endswith(".hdr"):
-                raise ValueError(
-                    "either scan_size needs to be passed, or path needs to point to a .hdr file"
+            warnings.warn(
+                "scan_size argument is deprecated. please specify nav_shape instead",
+                FutureWarning
+            )
+            if nav_shape is not None:
+                raise ValueError("cannot specify both scan_size and nav_shape")
+            self._nav_shape = tuple(scan_size)
+        if self._nav_shape is None and not path.lower().endswith(".hdr"):
+            raise ValueError(
+                    "either nav_shape needs to be passed, or path needs to point to a .hdr file"
                 )
-        self._scan_size = scan_size
         self._filename_cache = None
         self._files_sorted = None
         # ._preread_headers() calls ._files() which passes the cached headers down to
@@ -486,16 +547,18 @@ class MIBDataSet(DataSet):
             first_file = self._files_sorted[0]
         except IndexError:
             raise DataSetException("no files found")
-        if self._scan_size is None:
+        if self._nav_shape is None:
             hdr = read_hdr_file(self._path)
-            self._scan_size = scan_size_from_hdr(hdr)
-        shape = Shape(
-            self._scan_size + first_file.fields['image_size'],
-            sig_dims=self._sig_dims
-        )
+            self._nav_shape = nav_shape_from_hdr(hdr)
+        if self._sig_shape is None:
+            self._sig_shape = first_file.fields['image_size']
+        elif int(np.prod(self._sig_shape)) != int(np.prod(first_file.fields['image_size'])):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % int(np.prod(first_file.fields['image_size']))
+            )
+        self._sig_dims = len(self._sig_shape)
+        shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
         dtype = first_file.fields['dtype']
-        meta = DataSetMeta(shape=shape, raw_dtype=dtype)
-        self._meta = meta
         self._total_filesize = sum(
             os.stat(path).st_size
             for path in self._filenames()
@@ -503,6 +566,15 @@ class MIBDataSet(DataSet):
         self._sequence_start = first_file.fields['sequence_first_image']
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
+        self._image_count = self._num_images()
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
+        self._meta = DataSetMeta(
+            shape=shape,
+            raw_dtype=dtype,
+            sync_offset=self._sync_offset,
+            image_count=self._image_count,
+        )
         return self
 
     def initialize(self, executor):
@@ -527,21 +599,25 @@ class MIBDataSet(DataSet):
     def detect_params(cls, path, executor):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
-            return {
-                "parameters": {
-                    "path": path,
-                },
-            }
+            image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)
+            nav_shape = tuple((image_count,))
         elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
             hdr = executor.run_function(read_hdr_file, path)
-            scan_size = scan_size_from_hdr(hdr)
-            return {
-                "parameters": {
-                    "path": path,
-                    "scan_size": scan_size,
-                },
+            image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)
+            nav_shape = nav_shape_from_hdr(hdr)
+        else:
+            return False
+        return {
+            "parameters": {
+                "path": path,
+                "nav_shape": nav_shape,
+                "sig_shape": sig_shape
+            },
+            "info": {
+                "image_count": image_count,
+                "native_sig_shape": sig_shape,
             }
-        return False
+        }
 
     def _preread_headers(self):
         res = {}
@@ -552,20 +628,7 @@ class MIBDataSet(DataSet):
     def _filenames(self):
         if self._filename_cache is not None:
             return self._filename_cache
-        path, ext = os.path.splitext(self._path)
-        ext = ext.lower()
-        if ext == '.mib':
-            pattern = "%s*.mib" % (
-                re.sub(r'[0-9]+$', '', path)
-            )
-        elif ext == '.hdr':
-            pattern = "%s*.mib" % path
-        else:
-            raise DataSetException("unknown extension")
-        if self._disable_glob:
-            fns = [self._path]
-        else:
-            fns = glob(pattern)
+        fns = get_filenames(self._path)
         if len(fns) > 16384:
             warnings.warn(
                 "Saving data in many small files (here: %d) is not efficient, please increase "
@@ -591,31 +654,21 @@ class MIBDataSet(DataSet):
     @property
     def shape(self):
         """
-        the 4D shape imprinted by number of images and scan_size
+        the shape specified or imprinted by nav_shape from the HDR file
         """
         return self._meta.shape
 
     def check_valid(self):
-        try:
-            s = self._scan_size
-            num_images = self._num_images()
-            # FIXME: read hdr file and check if num images matches the number there
-            if s[0] * s[1] > num_images:
-                raise DataSetException(
-                    "scan_size (%r) does not match number of images (%d)" % (
-                        s, num_images
-                    )
-                )
-        except (IOError, OSError, KeyError, ValueError) as e:
-            raise DataSetException("invalid dataset: %s" % e)
+        pass
 
     def get_cache_key(self):
         return {
             "path": self._path,
             # shape is included here because the structure will be invalid if you open
-            # the same .mib file with a different scan_size; should be no issue if you
+            # the same .mib file with a different nav_shape; should be no issue if you
             # open via the .hdr file
             "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
     def _get_fileset(self):
@@ -631,7 +684,7 @@ class MIBDataSet(DataSet):
                 start_idx=f.start_idx,
                 end_idx=f.start_idx + f.num_frames,
                 native_dtype=f.fields['dtype'],
-                sig_shape=f.fields['image_size'],
+                sig_shape=self._meta.shape.sig,
                 frame_header=f.fields['header_size_bytes'],
                 file_header=0,
                 header=f.fields,
@@ -639,7 +692,7 @@ class MIBDataSet(DataSet):
             for f in self._files_sorted
         ], dtype=dtype, kind=kind, bit_depth=bit_depth, frame_header_bytes=header_size)
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -653,12 +706,10 @@ class MIBDataSet(DataSet):
         first_file = self._files_sorted[0]
         fileset = self._get_fileset()
         kind = first_file.fields['mib_kind']
-        for part_slice, start, stop in BasePartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield MIBPartition(
                 meta=self._meta,
-                fileset=fileset.get_for_range(start, stop),
+                fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,

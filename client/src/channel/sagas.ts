@@ -1,21 +1,20 @@
 import { END, eventChannel, EventChannel } from "redux-saga";
 import { call, delay, fork, put, take } from "redux-saga/effects";
-import uuid from 'uuid/v4';
-import * as datasetActions from '../dataset/actions';
+import uuid from "uuid/v4";
+import * as datasetActions from "../dataset/actions";
 import { getApiWSURL } from "../helpers/apiHelpers";
 import * as channelActions from "./actions";
-import * as channelMessages from './messages';
+import * as channelMessages from "./messages";
 
 type SocketChannel = EventChannel<channelMessages.Messages>;
 
-
 /**
  * create typesafe messages from the websocket messages
- * 
+ *
  * also creates some synthetic events like open, close, error
  */
 function createWebSocketChannel(/* addr */): SocketChannel {
-    return eventChannel(emit => {
+    return eventChannel((emit) => {
         function onMessage(msg: MessageEvent) {
             if (msg.data instanceof Blob) {
                 // TODO: cleanup createObjectURL results somewhere
@@ -64,15 +63,16 @@ export function* webSocketSaga() {
     while (true) {
         const socketChannel = yield call(createWebSocketChannel);
         yield fork(actionsFromChannel, socketChannel);
-        const action: channelActions.Actions = yield take([
-            channelActions.ActionTypes.OPEN,
-            channelActions.ActionTypes.CLOSE,
-        ]);
+        const action: channelActions.Actions = yield take([channelActions.ActionTypes.OPEN, channelActions.ActionTypes.CLOSE]);
         if (action.type === channelActions.ActionTypes.OPEN) {
-            yield take([
+            const isShutdown: channelActions.Actions = yield take([
                 channelActions.ActionTypes.CLOSE,
                 channelActions.ActionTypes.ERROR,
+                channelActions.ActionTypes.CLOSE_LOOP,
             ]);
+            if (isShutdown.type === channelActions.ActionTypes.CLOSE_LOOP) {
+                break;
+            }
         }
         yield delay(1000);
     }
@@ -168,7 +168,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
 export function* handleBinaryParts(numParts: number, socketChannel: SocketChannel) {
     const parts: channelMessages.BinaryMessage[] = [];
     while (parts.length < numParts) {
-        const binMsg = yield take(socketChannel)
+        const binMsg = yield take(socketChannel);
         parts.push(binMsg);
     }
     return parts;

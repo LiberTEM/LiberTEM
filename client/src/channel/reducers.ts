@@ -10,6 +10,7 @@ export enum ChannelStatusCodes {
     CONNECTED = "connected",
     READY = "ready",
     WAITING = "waiting",
+    DISCONNECTED = "disconnected"
 }
 
 const initialChannelState: ChannelStatusReducer = {
@@ -26,6 +27,9 @@ export function channelStatusReducer(state = initialChannelState, action: AllAct
         }
         case channelActions.ActionTypes.CLOSE: {
             return { status: ChannelStatusCodes.WAITING };
+        }
+        case channelActions.ActionTypes.SHUTDOWN: {
+            return { status: ChannelStatusCodes.DISCONNECTED }
         }
     }
     return state;

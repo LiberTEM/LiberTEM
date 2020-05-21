@@ -4,6 +4,7 @@ import ClusterConnectionForm from "../../cluster/components/ClusterConnectionFor
 import { assertNotReached } from "../../helpers";
 import { RootReducer } from "../../store";
 import ChannelConnecting from "./ChannelConnecting";
+import ChannelShutdown from './ChannelShutdown'
 
 const messages = {
     waiting: "Waiting...",
@@ -13,7 +14,7 @@ const messages = {
 const clusterMessages = {
     connected: "Connected, waiting for initial state...",
     unknown: "Connected, fetching cluster status...",
-    connecting : "Connecting to cluster"
+    connecting: "Connecting to cluster"
 }
 
 const ConnectedNotReady: React.SFC = () => {
@@ -48,6 +49,8 @@ const ChannelStatus: React.SFC = ({ children }) => {
         }
         case "ready":
             return <>{children}</>;
+        case "disconnected":
+            return <ChannelShutdown />
         default:
             assertNotReached("should not happen");
     }

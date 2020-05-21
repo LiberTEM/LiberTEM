@@ -1,8 +1,14 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Button, Header, Icon, Modal } from "semantic-ui-react";
-import { handleSubmit } from "../api";
+import * as channelActions from "../../channel/actions";
 import { RootReducer } from "../../store";
+import { doShutdown } from "../api";
+
+const mapDispatchToProps = {
+    closeLoopAction: channelActions.Actions.closeloop,
+    shutdownAction: channelActions.Actions.shutdown,
+};
 
 const mapStateToProps = (state: RootReducer) => {
     return {
@@ -10,7 +16,7 @@ const mapStateToProps = (state: RootReducer) => {
     };
 };
 
-type MergedProps = ReturnType<typeof mapStateToProps>;
+type MergedProps = DispatchProps<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
 class ShutdownButton extends React.Component<MergedProps> {
     public state = {
@@ -28,26 +34,29 @@ class ShutdownButton extends React.Component<MergedProps> {
 
     public handleShutdown = () => {
         this.setState({ shutdown: true });
-        handleSubmit();
+        doShutdown().then((response) => {
+            const timestamp = Date.now();
+            this.props.closeLoopAction(timestamp);
+        });
     };
 
-    //rename renderForm
-    public handleModal() {
-        const { shutdown } = this.state;
-        const { channel } = this.props;
-
-        if (channel === "waiting" && shutdown) {
+    public componentDidUpdate() {
+        if (this.props.channel === "waiting" && this.state.shutdown) {
+            const timestamp = Date.now();
             this.setState({ shutdown: false });
             this.modalClose();
+            this.props.shutdownAction(timestamp);
         }
     }
 
     public render() {
-        {
-            this.handleModal();
-        }
         return (
-            <Modal trigger={<Button content="Shutdown" icon="shutdown" onClick={this.modalOpen} labelPosition="left" floated="right" />} open={this.state.modal} onClose={this.modalClose} size="mini">
+            <Modal
+                trigger={<Button content="Shutdown" icon="shutdown" onClick={this.modalOpen} labelPosition="left" floated="right" />}
+                open={this.state.modal}
+                onClose={this.modalClose}
+                size="mini"
+            >
                 <Header icon="shutdown" content="Confirm shutdown" />
                 <Modal.Content>
                     <p>Do you want to shutdown ?</p>
@@ -65,4 +74,4 @@ class ShutdownButton extends React.Component<MergedProps> {
     }
 }
 
-export default connect(mapStateToProps)(ShutdownButton);
+export default connect(mapStateToProps, mapDispatchToProps)(ShutdownButton);

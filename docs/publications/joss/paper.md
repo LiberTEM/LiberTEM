@@ -135,7 +135,7 @@ over the data.
 The main focus in LiberTEM has been achieving very high throughput, responsive
 GUI interaction and scalability for both offline and live data processing. These
 requirements resulted in a distinctive way of handling data in combination with
-an adapted programming model. Ensuring compatibility and interoperability with
+a matching programming model. Ensuring compatibility and interoperability with
 other solutions like [Gatan Microscopy Suite
 (GMS)](http://www.gatan.com/products/tem-analysis/gatan-microscopy-suite-software),
 Dask, HyperSpy [@Pena2019], pyXem [@Johnstone2019],

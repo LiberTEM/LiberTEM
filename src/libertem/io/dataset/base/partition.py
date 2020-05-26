@@ -1,4 +1,5 @@
 import itertools
+from typing import Union
 
 from typing import Union
 import numpy as np
@@ -100,7 +101,7 @@ class Partition:
         """
         raise NotImplementedError()
 
-    def shape_for_roi(self, roi: Union[np.adarray, None]):
+    def shape_for_roi(self, roi: Union[np.ndarray, None]):
         raise NotImplementedError()
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
@@ -176,7 +177,7 @@ class BasePartition(Partition):
         """
         return self.slice.shape.flatten_nav()
 
-    def shape_for_roi(self, roi: Union[np.adarray, None]):
+    def shape_for_roi(self, roi: Union[np.ndarray, None]):
         return self.slice.adjust_for_roi(roi).shape
 
     def adjust_tileshape(self, tileshape):

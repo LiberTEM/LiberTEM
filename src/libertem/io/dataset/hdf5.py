@@ -379,7 +379,7 @@ class H5Partition(Partition):
         """
         return self.slice.shape.flatten_nav()
 
-    def shape_for_roi(self, roi: Union[np.adarray, None]):
+    def shape_for_roi(self, roi: Union[np.ndarray, None]):
         return self.slice.adjust_for_roi(roi).shape
 
     def get_macrotile(self, dest_dtype="float32", roi=None):

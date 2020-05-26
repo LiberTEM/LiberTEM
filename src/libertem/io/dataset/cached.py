@@ -475,7 +475,7 @@ class CachedPartition(Partition):
     def shape(self):
         return self._slice.shape.flatten_nav()
 
-    def shape_for_roi(self, roi: Union[np.adarray, None]):
+    def shape_for_roi(self, roi: Union[np.ndarray, None]):
         return self._slice.adjust_for_roi(roi).shape
 
     def _get_cache(self):

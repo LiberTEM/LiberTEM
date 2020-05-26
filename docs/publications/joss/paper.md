@@ -53,7 +53,7 @@ bibliography: paper.bib
 Increases in the data rates of detectors for electron microscopy (EM) have
 outpaced increases in network, mass storage and memory bandwidth by two orders
 of magnitude between 2009 and 2019 [@Weber2018]. The LiberTEM open source
-platform [@Clausen2019a] is designed to match the growing performance
+platform [@Clausen2020] is designed to match the growing performance
 requirements of EM data processing [@Weber2020].
 
 # Motivation

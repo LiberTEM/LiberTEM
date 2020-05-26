@@ -43,7 +43,6 @@ class ShutdownButton extends React.Component<MergedProps> {
     public componentDidUpdate() {
         if (this.props.channel === "waiting" && this.state.shutdown) {
             const timestamp = Date.now();
-            this.setState({ shutdown: false });
             this.modalClose();
             this.props.shutdownAction(timestamp);
         }
@@ -52,8 +51,18 @@ class ShutdownButton extends React.Component<MergedProps> {
     public render() {
         return (
             <Modal
-                trigger={<Button content="Shutdown" icon="shutdown" onClick={this.modalOpen} labelPosition="left" floated="right" />}
+                trigger={
+                    <Button
+                        content="Shutdown"
+                        icon="shutdown"
+                        onClick={this.modalOpen}
+                        disabled={this.state.shutdown}
+                        labelPosition="left"
+                        floated="right"
+                    />
+                }
                 open={this.state.modal}
+                closeOnDimmerClick={false}
                 onClose={this.modalClose}
                 size="mini"
             >

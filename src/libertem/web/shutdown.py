@@ -1,6 +1,5 @@
 import tornado
 import logging
-import asyncio
 
 from .state import SharedState
 

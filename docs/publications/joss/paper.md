@@ -110,19 +110,17 @@ tabular data in the case of Spark and Hadoop. It includes interfaces to the
 established Python-based numerical processing tools, supports a number of
 relevant file formats for EM data, and features optimized data paths for
 numerical data that eliminate unnecessary copies and allow cache-efficient
-processing. As a result, [it can reach more than four times the throughput of
-Spark-based processing](https://github.com/LiberTEM/LiberTEM/issues/18) for the
-same operations on typical data sets.
+processing.
 
-Compared to tools such as Dask arrays for NumPy-based distributed
-computations [@Rocklin2015], LiberTEM is developed towards low-latency
-interactive feedback for GUI display as well as future applications for
-high-throughput distributed live data processing. As a consequence, data
-reduction operations in LiberTEM are not defined as top-down operations like in
-the case of Dask arrays, but as bottom-up streaming operations that work on
-small portions of the input data. Since LiberTEM can work efficiently on smaller
-data portions that fit into the L3 cache of typical CPUs, it can be more than a
-factor of two faster than equivalent implementations based on Dask arrays.
+Compared to tools such as Dask arrays for NumPy-based distributed computations
+[@Rocklin2015], LiberTEM is developed towards low-latency interactive feedback
+for GUI display as well as future applications for high-throughput distributed
+live data processing. As a consequence, data reduction operations in LiberTEM
+are not defined as top-down operations like in the case of Dask arrays that are
+then broken down into a graph of lower-level operations, but as explicitly
+defined bottom-up streaming operations that work on small portions of the input
+data. That way, LiberTEM can work efficiently on smaller data portions that fit
+into the L3 cache of typical CPUs.
 
 When compared to Dask arrays that try to emulate NumPy arrays as closely as
 possible, the data and programming model of LiberTEM is more rigid and closely

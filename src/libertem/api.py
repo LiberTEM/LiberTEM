@@ -679,7 +679,7 @@ class Context:
         """
         if corrections is None:
             corrections = dataset.get_correction_data()
-        result = UDFRunner([udf]).run_for_dataset(
+        results = UDFRunner([udf]).run_for_dataset(
             dataset=dataset,
             executor=self.executor,
             roi=roi,

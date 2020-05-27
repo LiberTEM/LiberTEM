@@ -1,5 +1,6 @@
 import tornado
 import logging
+import asyncio
 
 from .state import SharedState
 
@@ -15,9 +16,10 @@ class ShutdownHandler(tornado.web.RequestHandler):
         log.info("Handling shutdown button")
         if self.state.executor_state.executor is not None:
             await self.state.executor_state.executor.close()
-        self.write({
+            self.state.executor_state.executor = None
+        await self.finish({
             "status": "ok",
             "messageType": "SERVER_SHUTDOWN"
         })
-        await self.flush()
+        await asyncio.sleep(1)
         tornado.ioloop.IOLoop.current().stop()

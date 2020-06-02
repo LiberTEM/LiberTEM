@@ -4,7 +4,7 @@ import pytest
 from libertem.web.state import JobState, ExecutorState
 
 
-pytestmark = [pytest.mark.flaky]
+pytestmark = []
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import threading
 
 import pytest
 
@@ -62,6 +63,51 @@ def shared_state():
     return SharedState()
 
 
+class ServerThread(threading.Thread):
+    def __init__(self, port, shared_state, *args, **kwargs):
+        super().__init__(name='LiberTEM-background', *args, **kwargs)
+        self.stop_event = threading.Event()
+        self.start_event = threading.Event()
+        self.port = port
+        self.shared_state = shared_state
+        self.loop = None
+
+    async def stop(self):
+        self.server.stop()
+        await self.server.close_all_connections()
+        if self.shared_state.executor_state.have_executor():
+            await self.shared_state.executor_state.get_executor().close()
+        self.loop.stop()
+
+    async def wait_for_stop(self):
+        """
+        background task to periodically check if the main thread wants
+        us to stop
+        """
+        while True:
+            if self.stop_event.is_set():
+                await self.stop()
+                break
+            await asyncio.sleep(0.1)
+
+    def run(self):
+        try:
+            self.loop = loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.set_debug(True)
+
+            event_registry = EventRegistry()
+            app = make_app(event_registry, self.shared_state)
+            self.server = app.listen(address="127.0.0.1", port=self.port)
+            # self.shared_state.set_server(self.server)
+
+            asyncio.ensure_future(self.wait_for_stop())
+            self.start_event.set()
+            loop.run_forever()
+        finally:
+            self.loop.stop()
+
+
 @pytest.fixture(scope="function")
 async def server_port(unused_tcp_port_factory, shared_state):
     """
@@ -70,16 +116,17 @@ async def server_port(unused_tcp_port_factory, shared_state):
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     port = unused_tcp_port_factory()
-    event_registry = EventRegistry()
-    app = make_app(event_registry, shared_state)
+
     print("starting server at port {}".format(port))
-    server = app.listen(address="127.0.0.1", port=port)
+    thread = ServerThread(port, shared_state)
+    thread.start()
+    assert thread.start_event.wait(timeout=1), "server thread failed to start"
     yield port
     print("stopping server at port {}".format(port))
-    server.stop()
-    await server.close_all_connections()
-    if shared_state.executor_state.have_executor():
-        await shared_state.executor_state.get_executor().close()
+    thread.stop_event.set()
+    thread.join(timeout=5)
+    if thread.is_alive():
+        raise RuntimeError("thread did not stop in the given timeout")
 
 
 @pytest.fixture(scope="function")

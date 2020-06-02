@@ -109,12 +109,10 @@ class ServerThread(threading.Thread):
 
 
 @pytest.fixture(scope="function")
-async def server_port(unused_tcp_port_factory, shared_state):
+def server_port(unused_tcp_port_factory, shared_state):
     """
     start a LiberTEM API server on a unused port
     """
-    loop = asyncio.get_event_loop()
-    loop.set_debug(True)
     port = unused_tcp_port_factory()
 
     print("starting server at port {}".format(port))
@@ -124,7 +122,7 @@ async def server_port(unused_tcp_port_factory, shared_state):
     yield port
     print("stopping server at port {}".format(port))
     thread.stop_event.set()
-    thread.join(timeout=5)
+    thread.join(timeout=15)
     if thread.is_alive():
         raise RuntimeError("thread did not stop in the given timeout")
 

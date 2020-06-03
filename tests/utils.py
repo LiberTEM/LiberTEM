@@ -1,3 +1,6 @@
+import datetime
+import time
+
 import numpy as np
 
 
@@ -54,7 +57,7 @@ def _fullgrid(zero, a, b, index, skip_zero=False):
 
 
 def assert_msg(msg, msg_type, status='ok'):
-    print(msg, msg_type, status)
+    print(time.time(), datetime.datetime.now(), msg, msg_type, status)
     assert msg['status'] == status
     assert msg['messageType'] == msg_type,\
         "expected: {}, is: {}".format(msg_type, msg['messageType'])

@@ -1,6 +1,5 @@
 import tornado
 import logging
-import asyncio
 
 from .state import SharedState
 
@@ -21,5 +20,4 @@ class ShutdownHandler(tornado.web.RequestHandler):
             "status": "ok",
             "messageType": "SERVER_SHUTDOWN"
         })
-        await asyncio.sleep(1)
         tornado.ioloop.IOLoop.current().stop()

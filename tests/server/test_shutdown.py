@@ -3,7 +3,7 @@ import pytest
 from utils import assert_msg
 from aio_utils import create_connection
 
-pytestmark = [pytest.mark.functional, pytest.mark.flaky]
+pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio

@@ -49,7 +49,7 @@ affiliations:
    index: 3
  - name: University of Antwerp, EMAT
    index: 4
- - name: APJ Abdul Kalam Technological University
+ - name: Government Engineering College Sreekrishnapuram
    index: 5
 
 date: 12 December 2019

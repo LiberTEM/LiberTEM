@@ -20,7 +20,7 @@ authors:
     affiliation: "1, 3"
     orcid: 0000-0002-6296-4492
   - name: Anand Baburajan
-    affiliation: 5
+    affiliation: 6
   - name: Abijith Bahuleyan
     affiliation: 5
   - name: Jan Caron
@@ -49,6 +49,8 @@ affiliations:
    index: 4
  - name: APJ Abdul Kalam Technological University
    index: 5
+ - name: Government Engineering College Sreekrishnapuram
+   index: 6
 
 date: 12 December 2019
 bibliography: paper.bib

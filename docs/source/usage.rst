@@ -46,8 +46,8 @@ There are a few command line options available::
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
 
 
-Connecting and opening data
----------------------------
+Connecting
+----------
 
 After starting the server, you can open the GUI in your browser. If it didn't open
 automatically, you can access it by default at http://localhost:9000 . At the beginning,
@@ -56,6 +56,48 @@ The number of workers is preset with a number that will likely give optimal
 performance on the given machine.
 
 ..  figure:: ./images/use/create.png
+
+Starting a custom cluster
+-------------------------
+
+LiberTEM can connect to a running dask cluster. To start a cluster, first run a scheduler:
+
+.. code-block:: shell
+
+    (libertem) $ dask-scheduler --host localhost
+
+LiberTEM requires specific resource tags and environment settings on the dask workers.
+The easiest way to start workers with the appropriate settings is
+
+.. code-block:: shell
+
+    (libertem) $ libertem-worker tcp://localhost:8786
+
+There are a few command line options available:
+
+    Usage: libertem-worker [OPTIONS] [SCHEDULER]
+
+    Options:
+    -k, --kind TEXT             Worker kind. Currently only "dask" is
+                                implemented.
+    -d, --local-directory TEXT  local directory to manage temporary files
+    -c, --n-cpus INTEGER        Number of CPUs to use, defaults to number of CPU
+                                cores without hyperthreading.
+    -u, --cudas TEXT            List of CUDA device IDs to use, defaults to all
+                                detected CUDA devices. Use "" to deactivate
+                                CUDA.
+    -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
+                                values are 'critical', 'error', 'warning',
+                                'info', 'debug'.
+    --help                      Show this message and exit.
+
+.. versionadded:: 0.6.0
+
+For a cluster setup, you can run the scheduler on the appropriate network interface and
+run workers on all cluster nodes to connect to the scheduler.
+
+Opening data
+------------
 
 After connection to a cluster, LiberTEM shows a button to start browsing for
 available files. On a local cluster that's simply the local filesystem.

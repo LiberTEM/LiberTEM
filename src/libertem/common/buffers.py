@@ -8,6 +8,7 @@ import collections
 import numpy as np
 
 from libertem.common.slice import Slice
+from .backend import get_use_cuda
 
 
 def _alloc_aligned(size, blocksize=4096):
@@ -52,13 +53,12 @@ def zeros_aligned(size, dtype):
 
 def to_numpy(a):
     # .. versionadded:: 0.6.0.dev0
-    cuda_device = os.environ.get("LIBERTEM_USE_CUDA")
+    cuda_device = get_use_cuda()
     if isinstance(a, np.ndarray):
         return a
-    elif cuda_device:
+    elif cuda_device is not None:
         # Try to avoid importing unless necessary
         import cupy
-        cupy.cuda.Device(cuda_device).use()
         if isinstance(a, cupy.ndarray):
             return cupy.asnumpy(a)
     # Falling through

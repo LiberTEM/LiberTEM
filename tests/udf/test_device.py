@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 
 from libertem.udf.base import UDF
+import libertem.common.backend as bae
 
 from utils import _mk_random
 
@@ -31,8 +32,8 @@ class DebugUDF(UDF):
         self.results.debug[0] = dict()
 
     def process_partition(self, partition):
-        cpu = os.environ.get("LIBERTEM_USE_CPU", None)
-        cuda = os.environ.get("LIBERTEM_USE_CUDA", None)
+        cpu = bae.get_use_cpu()
+        cuda = bae.get_use_cuda()
         self.results.debug[0][self.meta.slice] = (cpu, cuda)
         self.results.on_device[:] += self.xp.sum(partition, axis=0)
         self.results.backend[:] = self.meta.backend
@@ -59,7 +60,7 @@ def test_run_default(lt_ctx):
     res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
 
     for val in res['debug'].data[0].values():
-        assert val == ("0", None)
+        assert val == (0, None)
 
     assert np.all(res['backend'].data == 'numpy')
 
@@ -79,27 +80,53 @@ def test_run_cupy(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     ds = lt_ctx.load("memory", data=data)
 
+    use_cpu = bae.get_use_cpu()
+    use_cuda = bae.get_use_cuda()
+    backend = bae.get_backend()
+
     with mock.patch.dict(os.environ, {'LIBERTEM_USE_CUDA': "23"}):
-        with mock.patch('numpy.cuda', return_value=MockCuda, create=True):
+        # This should set the same environment variable as the mock above
+        # so that it will be unset after the "with"
+        bae.set_use_cuda(23)
+        with mock.patch('numba.cuda', return_value=MockCuda, create=True):
             res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
 
     for val in res['debug'].data[0].values():
-        assert val == (None, "23")
+        assert val == (None, 23)
+
+    # We make sure that the mocking was successful, i.e.
+    # restored the previous state
+    assert use_cpu == bae.get_use_cpu()
+    assert use_cuda == bae.get_use_cuda()
+    assert backend == bae.get_backend()
 
     assert np.all(res['backend'].data == 'cupy')
 
     assert np.allclose(res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-@mock.patch.dict(os.environ, {'LIBERTEM_USE_CPU': "42"})
 def test_run_numpy(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     ds = lt_ctx.load("memory", data=data)
 
-    res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
+    use_cpu = bae.get_use_cpu()
+    use_cuda = bae.get_use_cuda()
+    backend = bae.get_backend()
+
+    with mock.patch.dict(os.environ, {'LIBERTEM_USE_CPU': "42"}):
+        # This should set the same environment variable as the mock above
+        # so that it will be unset after the "with"
+        bae.set_use_cpu(42)
+        res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
 
     for val in res['debug'].data[0].values():
-        assert val == ("42", None)
+        assert val == (42, None)
+
+    # We make sure that the mocking was successful, i.e.
+    # restored the previous state
+    assert use_cpu == bae.get_use_cpu()
+    assert use_cuda == bae.get_use_cuda()
+    assert backend == bae.get_backend()
 
     assert np.all(res['backend'].data == 'numpy')
 

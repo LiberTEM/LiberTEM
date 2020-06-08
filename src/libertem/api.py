@@ -658,7 +658,8 @@ class Context:
                 udf: UDF,
                 roi: np.ndarray = None,
                 corrections: CorrectionSet = None,
-                progress: bool = False) -> Dict[str, BufferWrapper]:
+                progress: bool = False,
+                backends=None) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -687,6 +688,9 @@ class Context:
             the corrections that are part of the :code:`DataSet` are used,
             if there are any.
 
+        backends : None or iterable containing 'numpy' and / or 'cupy'
+            Restrict the back-end, mostly for testing purposes for hybrid UDFs.
+
         Returns
         -------
         dict
@@ -705,6 +709,7 @@ class Context:
             roi=roi,
             progress=progress,
             corrections=corrections,
+            backends=backends,
         )
         return results[0]
 

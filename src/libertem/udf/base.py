@@ -12,7 +12,7 @@ from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
 from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
 from libertem.corrections import CorrectionSet
-from libertem.udf.backend import get_use_cuda, get_backend
+from libertem.common.backend import get_use_cuda, get_backend
 
 
 log = logging.getLogger(__name__)
@@ -466,9 +466,6 @@ class UDFBase:
             # Re-importing should be fast, right?
             # Importing only here to avoid superfluous import
             import cupy
-            device = get_use_cuda()
-            if device:
-                cupy.cuda.Device(device).use()
             # mocking for testing without actual CUDA device
             # import numpy as cupy
             return cupy
@@ -528,6 +525,7 @@ class UDF(UDFBase):
             `self.params.the_key_here`, will automatically return a view corresponding
             to the current unit of data (frame, tile, partition).
         """
+        self._backend = 'numpy'  # default so that self.xp can always be used
         self._kwargs = kwargs
         self.params = UDFData(kwargs)
         self.task_data = None
@@ -781,7 +779,54 @@ class Task(object):
         return self.partition.get_locations()
 
     def get_resources(self):
+        '''
+        Specify the resources that a Task will use.
+
+        The resources are designed to work with resource tags in Dask clusters:
+        See https://distributed.dask.org/en/latest/resources.html
+
+        The resources allow scheduling of CPU-only compute, CUDA-only compute,
+        (CPU or CUDA) hybrid compute, and service tasks in such a way that all
+        resources are used without oversubscription.
+
+        Each CPU worker gets one CPU and one compute resource assigned. Each
+        CUDA worker gets one CUDA and one compute resource assigned. A service
+        worker doesn't get any resources assigned.
+
+        A CPU-only task consumes one CPU and one compute resource, i.e. it will
+        be scheduled only on CPU workers. A CUDA-only task consumes one CUDA and
+        one compute resource, i.e. it will only be scheduled on CUDA workers. A
+        hybrid task that can run on both CPU or CUDA only consumes a compute
+        resource, i.e. it can be scheduled on CPU or CUDA workers. A service
+        task doesn't request any resources and can therefore run on CPU, CUDA
+        and service workers.
+
+        Which device a hybrid task uses is only decided at runtime by the
+        environment variables that are set on each worker process.
+
+        That way, CPU-only and CUDA-only tasks can run in parallel without
+        oversubscription, and hybrid tasks use whatever compute workers are free
+        at the time.
+
+        Compute tasks will not run on service workers, so that these can serve
+        shorter service tasks with lower latency.
+
+        At the moment, workers only get a single "item" of each resource
+        assigned since we run one process per CPU. Requesting more of a resource
+        than any of the workers has causes a :class:`RuntimeError`, including
+        requesting a resource that is not available at all.
+
+        For that reason one has to make sure that the workers are set up with
+        the correct resources and matching environment.
+        :meth:`libertem.utils.devices.detect`,
+        :meth:`libertem.executor.dask.cluster_spec` and
+        :meth:`libertem.executor.dask.DaskJobExecutor.make_local` can be used to
+        set up a local cluster correctly.
+
+        .. versionadded:: 0.6.0
+        '''
         # default: run only on CPU and do computation
+        # No CUDA support for the deprecated Job interface
         return {'CPU': 1, 'compute': 1}
 
     def __call__(self):
@@ -789,10 +834,11 @@ class Task(object):
 
 
 class UDFTask(Task):
-    def __init__(self, partition: Partition, idx, udfs, roi, corrections=None):
+    def __init__(self, partition: Partition, idx, udfs, roi, backends, corrections=None):
         super().__init__(partition=partition, idx=idx)
         self._roi = roi
         self._udfs = udfs
+        self._backends = backends
         self._corrections = corrections
 
     def __call__(self):
@@ -803,6 +849,8 @@ class UDFTask(Task):
     def get_resources(self):
         """
         Intersection of resources of all UDFs, throws if empty.
+
+        See docstring of super class for details.
         """
         backends_for_udfs = [
             set(udf.get_backends())
@@ -811,9 +859,13 @@ class UDFTask(Task):
         backends = set(backends_for_udfs[0])  # intersection of backends
         for backend_set in backends_for_udfs:
             backends.intersection_update(backend_set)
+        # Limit to externally specified backends
+        if self._backends is not None:
+            backends = set(self._backends).intersection(backends)
         if len(backends) == 0:
             raise ValueError(
-                "There is no common supported UDF backend (have: %r)" % (backends_for_udfs,)
+                "There is no common supported UDF backend (have: %r, limited to %r)"
+                % (backends_for_udfs, self._backends)
             )
         if 'numpy' in backends and 'cupy' in backends:
             # Can be run on both CPU and CUDA workers
@@ -845,108 +897,122 @@ class UDFRunner:
     def run_for_partition(self, partition: Partition, roi, corrections):
         partition.set_corrections(corrections)
         with set_num_threads(1):
-            backend = get_backend()
-            dtype = self._get_dtype(partition.dtype)
-            meta = UDFMeta(
-                partition_shape=partition.slice.adjust_for_roi(roi).shape,
-                dataset_shape=partition.meta.shape,
-                roi=roi,
-                dataset_dtype=partition.dtype,
-                input_dtype=dtype,
-                tiling_scheme=None,
-                corrections=corrections,
-                backend=backend,
-            )
-            udfs = self._udfs
-            for udf in udfs:
-                udf.set_backend(backend)
-                udf.set_meta(meta)
-                udf.init_result_buffers()
-                udf.allocate_for_part(partition, roi)
-                udf.init_task_data()
-                if hasattr(udf, 'preprocess'):
-                    udf.clear_views()
-                    udf.preprocess()
-            neg = Negotiator()
-            # FIXME take compute backend into consideration as well
-            # Other boundary conditions when moving input data to device
-            tiling_scheme = neg.get_scheme(
-                udfs=udfs,
-                partition=partition,
-                read_dtype=dtype,
-                roi=roi,
-            )
-
-            # FIXME: don't fully re-create?
-            meta = UDFMeta(
-                partition_shape=partition.slice.adjust_for_roi(roi).shape,
-                dataset_shape=partition.meta.shape,
-                roi=roi,
-                dataset_dtype=partition.dtype,
-                input_dtype=dtype,
-                tiling_scheme=tiling_scheme,
-                corrections=corrections,
-                backend=backend,
-            )
-            for udf in udfs:
-                udf.set_meta(meta)
-            # print("UDF TilingScheme: %r" % tiling_scheme.shape)
-
-            # FIXME pass information on target location (numpy or cupy)
-            # to dataset so that is can already move it there.
-            # In the future, it might even decode data on the device instead of CPU
-            tiles = partition.get_tiles(
-                tiling_scheme=tiling_scheme,
-                roi=roi, dest_dtype=dtype,
-            )
-            # Guaranteed to be the same by UDFTask.get_resources()
-            xp = udfs[0].xp
-            for tile in tiles:
-                # Work-around, should come from dataset later
-                device_tile = xp.asanyarray(tile)
+            try:
+                previous_id = False
+                backend = get_backend()
+                if backend == 'cupy':
+                    # Avoid importing if not used
+                    import cupy
+                    device = get_use_cuda()
+                    previous_id = cupy.cuda.Device().id
+                    cupy.cuda.Device(device).use()
+                dtype = self._get_dtype(partition.dtype)
+                meta = UDFMeta(
+                    partition_shape=partition.slice.adjust_for_roi(roi).shape,
+                    dataset_shape=partition.meta.shape,
+                    roi=roi,
+                    dataset_dtype=partition.dtype,
+                    input_dtype=dtype,
+                    tiling_scheme=None,
+                    backend=backend,
+                    corrections=corrections,
+                )
+                udfs = self._udfs
                 for udf in udfs:
-                    method = udf.get_method()
-                    if method == 'tile':
-                        udf.set_contiguous_views_for_tile(partition, tile)
-                        udf.set_slice(tile.tile_slice)
-                        udf.process_tile(device_tile)
-                    elif method == 'frame':
-                        tile_slice = tile.tile_slice
-                        for frame_idx, frame in enumerate(device_tile):
-                            frame_slice = Slice(
-                                origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
-                                shape=Shape((1,) + tuple(tile_slice.shape)[1:],
-                                            sig_dims=tile_slice.shape.sig.dims),
-                            )
-                            udf.set_slice(frame_slice)
-                            udf.set_views_for_frame(partition, tile, frame_idx)
-                            udf.process_frame(frame)
-                    elif method == 'partition':
-                        udf.set_views_for_tile(partition, tile)
-                        udf.set_slice(partition.slice)
-                        udf.process_partition(device_tile)
-            for udf in udfs:
-                udf.flush()
-                if hasattr(udf, 'postprocess'):
+                    udf.set_backend(backend)
+                    udf.set_meta(meta)
+                    udf.init_result_buffers()
+                    udf.allocate_for_part(partition, roi)
+                    udf.init_task_data()
+                    if hasattr(udf, 'preprocess'):
+                        udf.clear_views()
+                        udf.preprocess()
+                neg = Negotiator()
+                # FIXME take compute backend into consideration as well
+                # Other boundary conditions when moving input data to device
+                tiling_scheme = neg.get_scheme(
+                    udfs=udfs,
+                    partition=partition,
+                    read_dtype=dtype,
+                    roi=roi,
+                )
+
+                # FIXME: don't fully re-create?
+                meta = UDFMeta(
+                    partition_shape=partition.slice.adjust_for_roi(roi).shape,
+                    dataset_shape=partition.meta.shape,
+                    roi=roi,
+                    dataset_dtype=partition.dtype,
+                    input_dtype=dtype,
+                    tiling_scheme=tiling_scheme,
+                    backend=backend,
+                    corrections=corrections,
+                )
+                for udf in udfs:
+                    udf.set_meta(meta)
+                # print("UDF TilingScheme: %r" % tiling_scheme.shape)
+
+                # FIXME pass information on target location (numpy or cupy)
+                # to dataset so that is can already move it there.
+                # In the future, it might even decode data on the device instead of CPU
+                tiles = partition.get_tiles(
+                    tiling_scheme=tiling_scheme,
+                    roi=roi, dest_dtype=dtype,
+                )
+                # Guaranteed to be the same by UDFTask.get_resources()
+                xp = udfs[0].xp
+                for tile in tiles:
+                    # Work-around, should come from dataset later
+                    device_tile = xp.asanyarray(tile)
+                    for udf in udfs:
+                        method = udf.get_method()
+                        if method == 'tile':
+                            udf.set_contiguous_views_for_tile(partition, tile)
+                            udf.set_slice(tile.tile_slice)
+                            udf.process_tile(device_tile)
+                        elif method == 'frame':
+                            tile_slice = tile.tile_slice
+                            for frame_idx, frame in enumerate(device_tile):
+                                frame_slice = Slice(
+                                    origin=(
+                                        tile_slice.origin[0] + frame_idx,
+                                    ) + tile_slice.origin[1:],
+                                    shape=Shape(
+                                        (1,) + tuple(tile_slice.shape)[1:],
+                                        sig_dims=tile_slice.shape.sig.dims
+                                    ),
+                                )
+                                udf.set_slice(frame_slice)
+                                udf.set_views_for_frame(partition, tile, frame_idx)
+                                udf.process_frame(frame)
+                        elif method == 'partition':
+                            udf.set_views_for_tile(partition, tile)
+                            udf.set_slice(partition.slice)
+                            udf.process_partition(device_tile)
+                for udf in udfs:
+                    udf.flush()
+                    if hasattr(udf, 'postprocess'):
+                        udf.clear_views()
+                        udf.postprocess()
+
+                    udf.cleanup()
                     udf.clear_views()
-                    udf.postprocess()
+                    udf.export_results()
 
-                udf.cleanup()
-                udf.clear_views()
-                udf.export_results()
-
-            if self._debug:
-                try:
-                    cloudpickle.loads(cloudpickle.dumps(partition))
-                except TypeError:
-                    raise TypeError("could not pickle partition")
-                try:
-                    cloudpickle.loads(cloudpickle.dumps(
-                        [u.results for u in udfs]
-                    ))
-                except TypeError:
-                    raise TypeError("could not pickle results")
-
+                if self._debug:
+                    try:
+                        cloudpickle.loads(cloudpickle.dumps(partition))
+                    except TypeError:
+                        raise TypeError("could not pickle partition")
+                    try:
+                        cloudpickle.loads(cloudpickle.dumps(
+                            [u.results for u in udfs]
+                        ))
+                    except TypeError:
+                        raise TypeError("could not pickle results")
+            finally:
+                if previous_id:
+                    cupy.cuda.Device(previous_id).use()
             return tuple(udf.results for udf in udfs)
 
     def _debug_task_pickling(self, tasks):
@@ -961,7 +1027,7 @@ class UDFRunner:
                 )
             )
 
-    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi, corrections):
+    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi, corrections, backends):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
@@ -980,12 +1046,12 @@ class UDFRunner:
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
 
-        tasks = list(self._make_udf_tasks(dataset, roi, corrections))
+        tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
         return tasks
 
     def run_for_dataset(self, dataset: DataSet, executor,
-                        roi=None, progress=False, corrections=None):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections)
+                        roi=None, progress=False, corrections=None, backends=None):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections, backends)
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
@@ -1039,7 +1105,7 @@ class UDFRunner:
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
-    def _make_udf_tasks(self, dataset: DataSet, roi, corrections):
+    def _make_udf_tasks(self, dataset: DataSet, roi, corrections, backends):
         for idx, partition in enumerate(dataset.get_partitions()):
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
@@ -1052,4 +1118,5 @@ class UDFRunner:
             ]
             yield UDFTask(
                 partition=partition, idx=idx, udfs=udfs, roi=roi, corrections=corrections,
+                backends=backends,
             )

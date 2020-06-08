@@ -207,6 +207,23 @@ Or from git checkout:
 
     (libertem) $ pip install -e .[torch]
 
+CuPy
+~~~~
+
+GPU support is based on `CuPy <https://cupy.chainer.org/>`_.
+
+.. code-block:: shell
+
+    (libertem) $ pip install "libertem[cupy]"
+
+Or from git checkout:
+
+.. code-block:: shell
+
+    (libertem) $ pip install -e .[cupy]
+
+.. versionadded:: 0.6.0
+
 Other extra packages
 ~~~~~~~~~~~~~~~~~~~~
 

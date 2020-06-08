@@ -21,6 +21,32 @@ For more details, please see :ref:`loading data`, :ref:`dataset api` and
 .. include:: /../../examples/basic.py
     :code:
 
+To control how many CPUs and which CUDA devices are used, you can specify them as follows:
+
+.. testcode:: cluster
+
+    from libertem import api
+    from libertem.executor.dask import DaskJobExecutor, cluster_spec
+    from libertem.utils.devices import detect
+
+    # Find out what would be used, if you like
+    # returns dictionary with keys "cpus" and "cudas", each with a list of device ids
+    devices = detect()
+
+    # Example: Deactivate CUDA devices by removing them from the device dictionary
+    devices.pop('cudas', None)
+
+    # Example: Use 3 CPUs. The IDs are ignored at the moment, i.e. no CPU pinning
+    devices['cpus'] = range(3)
+
+    # Generate a spec for a Dask.distributed SpecCluster
+    # Relevant kwargs match the dictionary entries
+    spec = cluster_spec(**devices)
+    # Start a local cluster with the custom spec
+    with DaskJobExecutor.make_local(spec=spec) as executor:
+        ctx = api.Context(executor=executor)
+        ...
+
 For a full API reference, please see :ref:`reference`.
 
 To go beyond the included capabilities of LiberTEM, you can implement your own using :ref:`user-defined functions`.
@@ -32,7 +58,7 @@ Integration with Dask arrays
 
 The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
-.. testsetup:: *
+.. testsetup:: daskarray
 
     import distributed as dd
 
@@ -46,7 +72,7 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     ctx = api.Context(executor=DaskJobExecutor(client=client))
     dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
 
-.. testcode::
+.. testcode:: daskarray
 
     from libertem.contrib.daskadapter import make_dask_array
 

@@ -609,8 +609,6 @@ class Context:
         if hasattr(job, "get_job") or (hasattr(job, "get_udf") and hasattr(job, "get_roi")):
             analysis = job
             if analysis.TYPE == 'JOB':
-                if corrections is not None:
-                    raise TypeError("old-style analyses don't support corrections")
                 job_to_run = analysis.get_job()
             else:
                 if roi is None:
@@ -625,6 +623,8 @@ class Context:
 
         if roi is not None:
             raise TypeError("old-style analyses don't support ROIs")
+        if corrections is not None:
+            raise TypeError("old-style analyses don't support corrections")
         out = job_to_run.get_result_buffer()
         for tiles in self.executor.run_job(job_to_run):
             for tile in tiles:

@@ -34,7 +34,8 @@ nodes, clusters and cloud services. On clusters it can use fast distributed
 local storage on high-performance SSDs. That way it achieves `very high
 aggregate IO performance
 <https://libertem.github.io/LiberTEM/performance.html>`_ on a compact and
-cost-efficient system built from stock components.
+cost-efficient system built from stock components. All CPU cores and CUDA devices in
+a system can be used in parallel.
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
 installation of Python 3 and the required packages will likely work as well. The
@@ -51,10 +52,15 @@ The short version:
     $ source ~/libertem-venv/bin/activate
     (libertem) $ pip install "libertem[torch]"
 
+    # optional for GPU support
+    (libertem) $ pip install cupy
+
 Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!
 
-Deployment as a single-node system for a local user is thoroughly tested and can be considered stable. Deployment on a cluster is
-experimental and still requires some additional work, see `Issue #105 <https://github.com/LiberTEM/LiberTEM/issues/105>`_.
+Deployment as a single-node system for a local user is thoroughly tested and can
+be considered stable. Deployment on a cluster is experimental and still requires
+some additional work, see `Issue #105
+<https://github.com/LiberTEM/LiberTEM/issues/105>`_.
 
 Applications
 ------------
@@ -68,23 +74,35 @@ Applications
 
 Please see `the applications section <https://libertem.github.io/LiberTEM/applications.html>`_ of our documentation for details!
 
-The Python API and user-defined functions (UDFs) can be used for more complex operations with arbitrary masks and other features like data export. There are example Jupyter notebooks available in the `examples directory <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_.
-If you are having trouble running the examples, please let us know, either by filing an issue
-or by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
+The Python API and user-defined functions (UDFs) can be used for more complex
+operations with arbitrary masks and other features like data export. There are
+example Jupyter notebooks available in the `examples directory
+<https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_. If you are having
+trouble running the examples, please let us know, either by filing an issue or
+by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 
-LiberTEM is suitable as a high-performance processing backend for other applications, including live data streams. `Contact us <https://gitter.im/LiberTEM/Lobby>`_ if you are interested!
+LiberTEM is suitable as a high-performance processing backend for other
+applications, including live data streams. `Contact us
+<https://gitter.im/LiberTEM/Lobby>`_ if you are interested!
 
-
-LiberTEM is evolving rapidly and prioritizes features following user demand and contributions. In the future we'd like to implement live acquisition, and more analysis methods for all applications of pixelated STEM and other large-scale detector data.
-If you like to influence the direction this
-project is taking, or if you'd like to `contribute <https://libertem.github.io/LiberTEM/contributing.html>`_, please join our `gitter chat <https://gitter.im/LiberTEM/Lobby>`_
-and our `general mailing list <https://groups.google.com/forum/#!forum/libertem>`_.
+LiberTEM is evolving rapidly and prioritizes features following user demand and
+contributions. In the future we'd like to implement live acquisition, and more
+analysis methods for all applications of pixelated STEM and other large-scale
+detector data. If you like to influence the direction this project is taking, or
+if you'd like to `contribute
+<https://libertem.github.io/LiberTEM/contributing.html>`_, please join our
+`gitter chat <https://gitter.im/LiberTEM/Lobby>`_ and our `general mailing list
+<https://groups.google.com/forum/#!forum/libertem>`_.
 
 File formats
 ------------
 
-LiberTEM currently opens most file formats used for pixelated STEM. See `our general information on loading data <https://libertem.github.io/LiberTEM/formats.html>`_
-and `format-specific documentation <https://libertem.github.io/LiberTEM/reference/dataset.html#formats>`_ for more information!
+LiberTEM currently opens most file formats used for pixelated STEM. See `our
+general information on loading data
+<https://libertem.github.io/LiberTEM/formats.html>`_ and `format-specific
+documentation
+<https://libertem.github.io/LiberTEM/reference/dataset.html#formats>`_ for more
+information!
 
 - Raw binary files
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files

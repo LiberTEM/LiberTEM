@@ -74,7 +74,33 @@ You can then use all usual debugging facilities, including
 `pdb <https://docs.python.org/3.7/library/pdb.html>`_ and
 `the %pdb magic of ipython/Jupyter <https://ipython.org/ipython-doc/3/interactive/magics.html#magic-pdb>`_.
 
-If the problem is only reproducible using the default executor, you will have to follow the
+The :class:`libertem.executor.inline.InlineJobExecutor` uses a single CPU core
+by default. It can be switched to GPU processing to test CuPy-enabled UDFs by
+calling :meth:`libertem.common.backend.set_use_cuda` with the device ID to use.
+:code:`libertem.common.backend.set_use_cpu(0)` switches back to CPU processing.
+
+.. testsetup::
+
+    from libertem.udf.masks import ApplyMasksUDF
+
+    udf = ApplyMasksUDF(factories=[lambda:np.ones(dataset.shape)])
+
+.. testcode::
+
+   from libertem.executor.inline import InlineJobExecutor
+   from libertem import api as lt
+   from libertem.utils.devices import detect
+   from libertem.common.backends import set_use_cpu, set_use_cuda
+
+   ctx = lt.Context(executor=InlineJobExecutor())
+
+   cudas = detect()['cudas']
+   if cudas:
+       set_use_cuda(cudas[0])
+   ctx.run_udf(dataset=dataset, udf=udf)
+   set_use_cpu(0)
+
+If a problem is only reproducible using the default executor, you will have to follow the
 `debugging instructions of dask-distributed <https://docs.dask.org/en/latest/debugging.html>`_.
 As the API server can't use the synchronous :class:`~libertem.executor.inline.InlineJobExecutor`,
 this is also the case when debugging problems that only occur in context of the API server.

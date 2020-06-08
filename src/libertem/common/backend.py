@@ -18,6 +18,10 @@ def get_use_cpu():
     ret = os.environ.get("LIBERTEM_USE_CPU")
     if ret is not None:
         ret = int(ret)
+    elif get_use_cuda() is None:
+        # If no variable is set, return CPU 0
+        # For example inline executor or test code
+        ret = 0
     return ret
 
 

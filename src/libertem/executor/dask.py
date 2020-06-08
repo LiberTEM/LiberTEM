@@ -8,7 +8,7 @@ from dask import distributed as dd
 
 from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
 from .scheduler import Worker, WorkerSet
-from libertem.udf.backend import set_use_cpu, set_use_cuda
+from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.utils.devices import detect
 
 
@@ -346,6 +346,12 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         client = dd.Client(cluster, **(client_kwargs or {}))
 
         return cls(client=client, is_local=True)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
 
 class AsyncDaskJobExecutor(AsyncAdapter):

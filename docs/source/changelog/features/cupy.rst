@@ -1,4 +1,4 @@
 [Feature] Transparent GPU processing with CuPy
 ==============================================
 
-* Process data on CPUs, GPUs or both (FIXME PR, docs link)
+* Process data on CPUs, CUDA devices or both (:pr:`760`, :ref:`udf cupy`)

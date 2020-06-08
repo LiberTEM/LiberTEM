@@ -290,6 +290,10 @@ that matches the dataset or partition via
 :attr:`libertem.udf.UDFMeta.dataset_shape` and
 :attr:`libertem.udf.UDFMeta.partition_shape`.
 
+The currently used compute back-end can be accessed through
+:attr:`libertem.udf.UDFMeta.backend`. It defaults to 'numpy' and can be 'cupy'
+for UDFs that make use of :ref:`udf cupy` support.
+
 For more advanced applications, the ROI and currently processed data portion are
 available as :attr:`libertem.udf.UDFMeta.roi` and
 :attr:`libertem.udf.UDFMeta.slice`. This allows to replace the built-in masking
@@ -361,6 +365,49 @@ way, unsafe conversions are performed explicitly in the UDF rather than
 indirectly in the back-end.
 
 .. versionadded:: 0.4.0
+
+.. _`udf cupy`:
+
+CuPy support
+------------
+
+LiberTEM can use CUDA devices through `CuPy <https://cupy.chainer.org/>`_. Since
+CuPy largely replicates the NumPy array interface, any UDF that uses NumPy for
+its main processing can likely be ported to use both CPUs and CUDA devices in
+parallel. Some adjustments are often necessary to account for minor differences
+between NumPy and CuPy. CuPy is most beneficial for compute-heavy tasks with
+good CUDA math libarary support such as large Fourier transforms or matrix
+products.
+
+In order to activate CuPy processing, a UDF can overwrite the
+:meth:`~libertem.udf.base.UDF.get_backends` method. By default this returns
+:code:`('numpy',)`, indicating only NumPy support. By returning :code:`('numpy',
+'cupy')` or :code:`('cupy',)`, a UDF activates being run on both CUDA and CPU
+workers, or exclusively on CUDA workers.
+
+The :attr:`libertem.udf.base.UDF.xp` property points to the :code:`numpy` or
+:code:`cupy` module, depending which back-end is currently used. By using
+:code:`self.xp` instead of the usual :code:`np` for NumPy, one can write UDFs
+that use the same code for CUDA and CPU processing.
+
+Result buffers can be declared as device arrays by setting
+:code:`self.buffer(..., where='device')` in
+:meth:`~libertem.udf.base.UDF.get_result_buffers`. That allows to keep data in
+the device until a partition is completely processed and the result is exported
+to the leader node.
+
+The input argument for :code:`process_*()` functions is already provided as a
+CuPy array instead of NumPy array if CuPy is used.
+
+A UDF should only use one GPU at a time. The correct device to use is set in the
+back-end and should not be modified in the UDF itself.
+
+The :meth:`~libertem.api.Context.run_udf` method allows setting the
+:code:`backends` attribute to :code:`('numpy',)` or :code:`('cupy',)` to
+restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
+useful for testing.
+
+.. versionadded:: 0.6.0
 
 .. _auto UDF:
 

@@ -133,7 +133,7 @@ def flatten_filter(excluded_pixels, repairs, sig_shape):
     return (excluded_flat, repair_flat)
 
 
-def correct(buffer, dark_image=None, gain_map=None, excluded_pixels=None, inplace=False):
+def correct(buffer, dark_image=None, gain_map=None, excluded_pixels=None, inplace=False, sig_shape=None):
     '''
     Function to perform detector corrections
 
@@ -166,7 +166,6 @@ def correct(buffer, dark_image=None, gain_map=None, excluded_pixels=None, inplac
     '''
     s = buffer.shape
 
-    sig_shape = None
     if dark_image is not None:
         sig_shape = dark_image.shape
         dark_image = dark_image.flatten()
@@ -174,7 +173,7 @@ def correct(buffer, dark_image=None, gain_map=None, excluded_pixels=None, inplac
         sig_shape = gain_map.shape
         gain_map = gain_map.flatten()
     if sig_shape is None:
-        raise ValueError("need either `dark_image` or `gain_map`")
+        raise ValueError("need either `dark_image`, `gain_map`, or `sig_shape`")
     nav_shape = s[0:-len(sig_shape)]
 
     if inplace:

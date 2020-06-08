@@ -1078,8 +1078,8 @@ class UDFRunner:
         ]
 
     async def run_for_dataset_async(self, dataset: DataSet, executor, cancel_id,
-                                    roi=None, corrections=None):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections)
+                                    roi=None, corrections=None, backends=None):
+        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections, backends)
 
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
             for results, udf in zip(part_results, self._udfs):

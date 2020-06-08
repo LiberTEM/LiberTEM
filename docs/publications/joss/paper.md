@@ -31,6 +31,9 @@ authors:
   - name: Rahul Chandra
     affiliation: 2
     orcid: 0000-0003-2079-5368
+  - name: Sayandip Halder
+    affiliation: 6
+    orcid: 0000-0003-0224-3746
   - name: Magnus Nord
     affiliation: 4
     orcid: 0000-0001-7981-5293
@@ -51,6 +54,8 @@ affiliations:
    index: 4
  - name: Government Engineering College Sreekrishnapuram
    index: 5
+ - name: Jadavpur University
+   index: 6
 
 date: 12 December 2019
 bibliography: paper.bib

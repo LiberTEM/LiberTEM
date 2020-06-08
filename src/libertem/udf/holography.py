@@ -24,7 +24,6 @@
 # see: https://github.com/LiberTEM/LiberTEM
 
 import numpy as np
-from numpy.fft import fftshift, fft2, ifft2
 from libertem.udf import UDF
 
 
@@ -139,7 +138,7 @@ class HoloReconstructUDF(UDF):
         else:
             dtype = np.complex128
         return {
-            "wave": self.buffer(kind="nav", dtype=dtype, extra_shape=extra_shape)
+            "wave": self.buffer(kind="nav", dtype=dtype, extra_shape=extra_shape, where='device')
         }
 
     def get_task_data(self):
@@ -173,7 +172,7 @@ class HoloReconstructUDF(UDF):
         slice_fft = (slice(y_min, y_max), slice(x_min, x_max))
 
         kwargs = {
-            'aperture': aperture,
+            'aperture': self.xp.array(aperture),
             'slice': slice_fft
         }
         return kwargs
@@ -195,12 +194,15 @@ class HoloReconstructUDF(UDF):
         aperture = self.task_data.aperture
         slice_fft = self.task_data.slice
 
-        fft_frame = fft2(frame) / np.prod(frame_size)
-        fft_frame = np.roll(fft_frame, sb_pos, axis=(0, 1))
+        fft_frame = self.xp.fft.fft2(frame) / np.prod(frame_size)
+        fft_frame = self.xp.roll(fft_frame, sb_pos, axis=(0, 1))
 
-        fft_frame = fftshift(fftshift(fft_frame)[slice_fft])
+        fft_frame = self.xp.fft.fftshift(self.xp.fft.fftshift(fft_frame)[slice_fft])
 
         fft_frame = fft_frame * aperture
 
-        wav = ifft2(fft_frame) * np.prod(frame_size)
+        wav = self.xp.fft.ifft2(fft_frame) * np.prod(frame_size)
         self.results.wave[:] = wav
+
+    def get_backends(self):
+        return ('numpy', 'cupy')

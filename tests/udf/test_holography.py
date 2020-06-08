@@ -1,10 +1,21 @@
+import pytest
 import numpy as np
+
 from libertem.udf.holography import HoloReconstructUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.generate import hologram_frame
+from libertem.utils.devices import detect
+from libertem.common.backend import set_use_cpu, set_use_cuda
 
 
-def test_holo_reconstruction(lt_ctx):
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_holo_reconstruction(lt_ctx, backend):
+    if backend == 'cupy':
+        cudas = detect()['cudas']
+        if not cudas:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
     # Prepare image parameters and mesh
     nx, ny = (5, 7)
     sx, sy = (64, 64)
@@ -46,9 +57,13 @@ def test_holo_reconstruction(lt_ctx):
     holo_job = HoloReconstructUDF(out_shape=(sx, sy),
                                   sb_position=sb_position,
                                   sb_size=sb_size)
-    w_holo = lt_ctx.run_udf(dataset=dataset_holo, udf=holo_job)['wave'].data
-
-    w_ref = lt_ctx.run_udf(dataset=dataset_ref, udf=holo_job)['wave'].data
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        w_holo = lt_ctx.run_udf(dataset=dataset_holo, udf=holo_job)['wave'].data
+        w_ref = lt_ctx.run_udf(dataset=dataset_ref, udf=holo_job)['wave'].data
+    finally:
+        set_use_cpu(0)
 
     w = w_holo / w_ref
 

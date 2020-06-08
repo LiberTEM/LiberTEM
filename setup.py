@@ -183,6 +183,7 @@ setup(
     entry_points={
         'console_scripts': [
             'libertem-server=libertem.web.cli:main',
+            'libertem-worker=libertem.executor.cli:main',
         ]
     },
     cmdclass={

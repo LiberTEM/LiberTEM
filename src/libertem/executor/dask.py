@@ -379,3 +379,26 @@ class AsyncDaskJobExecutor(AsyncAdapter):
             client_kwargs=client_kwargs,
         ))
         return cls(wrapped=executor)
+
+
+def cli_worker(scheduler, local_directory, cpus, cudas, log_level):
+    import asyncio
+
+    options = {
+        "silence_logs": log_level,
+        "local_directory": local_directory
+
+    }
+
+    spec = cluster_spec(cpus=cpus, cudas=cudas, options=options)
+
+    async def run(spec):
+        workers = []
+        for name, spec in spec.items():
+            cls = spec['cls']
+            worker = await cls(scheduler, name=name, **spec['options'])
+            workers.append(worker)
+        for w in workers:
+            await w.finished()
+
+    asyncio.get_event_loop().run_until_complete(run(spec))

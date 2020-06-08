@@ -11,6 +11,7 @@ from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
 from libertem.utils.threading import set_num_threads
 from libertem.io.dataset.base import TilingScheme, Negotiator, Partition, DataSet
+from libertem.corrections import CorrectionSet
 
 
 log = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class UDFMeta:
 
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
-                 tiling_index: int = 0):
+                 tiling_index: int = 0, corrections=None):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
@@ -38,6 +39,9 @@ class UDFMeta:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
         self._slice = None
+        if corrections is None:
+            corrections = CorrectionSet()
+        self._corrections = corrections
 
     @property
     def slice(self) -> Slice:
@@ -99,6 +103,14 @@ class UDFMeta:
         .. versionadded:: 0.4.0
         """
         return self._input_dtype
+
+    @property
+    def corrections(self) -> CorrectionSet:
+        """
+        CorrectionSet : correction data that is available, either from the dataset
+        or specified by the user
+        """
+        return self._corrections
 
 
 class UDFData:
@@ -738,6 +750,7 @@ class UDFRunner:
                 dataset_dtype=partition.dtype,
                 input_dtype=dtype,
                 tiling_scheme=None,
+                corrections=corrections,
             )
             udfs = self._udfs
             for udf in udfs:
@@ -764,6 +777,7 @@ class UDFRunner:
                 dataset_dtype=partition.dtype,
                 input_dtype=dtype,
                 tiling_scheme=tiling_scheme,
+                corrections=corrections,
             )
             for udf in udfs:
                 udf.set_meta(meta)
@@ -839,6 +853,7 @@ class UDFRunner:
             roi=roi,
             dataset_dtype=dataset.dtype,
             input_dtype=self._get_dtype(dataset.dtype),
+            corrections=corrections,
         )
         for udf in self._udfs:
             udf.set_meta(meta)

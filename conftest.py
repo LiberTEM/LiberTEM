@@ -132,12 +132,16 @@ def ds_complex():
 
 
 @pytest.fixture(scope='session')
-def default_raw(tmpdir_factory):
+def default_raw_data():
+    return utils._mk_random(size=(16, 16, 128, 128), dtype='float32')
+
+
+@pytest.fixture(scope='session')
+def default_raw(tmpdir_factory, default_raw_data):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-default'
-    data = utils._mk_random(size=(16, 16, 128, 128), dtype='float32')
-    data.tofile(str(filename))
-    del data
+    default_raw_data.tofile(str(filename))
+    del default_raw_data
     ds = RawFileDataSet(
         path=str(filename),
         scan_size=(16, 16),

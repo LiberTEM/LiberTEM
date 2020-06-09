@@ -23,7 +23,9 @@ For more details, please see :ref:`loading data`, :ref:`dataset api` and
 
 To control how many CPUs and which CUDA devices are used, you can specify them as follows:
 
-.. testcode:: cluster
+.. Not run with docs-check since it doesn't play well with launching a multiprocessing
+   cluster
+.. code-block:: python
 
     from libertem import api
     from libertem.executor.dask import DaskJobExecutor, cluster_spec
@@ -34,7 +36,7 @@ To control how many CPUs and which CUDA devices are used, you can specify them a
     devices = detect()
 
     # Example: Deactivate CUDA devices by removing them from the device dictionary
-    devices.pop('cudas', None)
+    devices['cudas'] = []
 
     # Example: Use 3 CPUs. The IDs are ignored at the moment, i.e. no CPU pinning
     devices['cpus'] = range(3)

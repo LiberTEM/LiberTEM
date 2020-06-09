@@ -1,5 +1,6 @@
 import click
 import logging
+import socket
 
 from libertem.utils.devices import detect
 
@@ -17,9 +18,11 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 @click.option('-u', '--cudas', type=str, default=None,
               help='List of CUDA device IDs to use, defaults to all detected CUDA devices. '
               'Use "" to deactivate CUDA.')
+@click.option('-n', '--name', help='Name of the cluster node, defaults to host name',
+              type=str)
 @click.option('-l', '--log-level', help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
-def main(kind, scheduler, local_directory, n_cpus, cudas, log_level):
+def main(kind, scheduler, local_directory, n_cpus, cudas, name, log_level):
     from libertem.cli_tweaks import console_tweaks
     if kind != 'dask':
         raise NotImplementedError(f"Currently only worker kind 'dask' is implemented, got {kind}.")
@@ -40,5 +43,14 @@ def main(kind, scheduler, local_directory, n_cpus, cudas, log_level):
         cudas = list(defaults['cudas'])
     else:
         cudas = list(map(int, cudas.split(',')))
+    if not name:
+        name = socket.gethostname()
 
-    cli_worker(scheduler, local_directory, cpus, cudas, numeric_level)
+    cli_worker(
+        scheduler=scheduler,
+        local_directory=local_directory,
+        cpus=cpus,
+        cudas=cudas,
+        name=name,
+        log_level=numeric_level
+    )

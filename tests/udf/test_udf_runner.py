@@ -75,7 +75,7 @@ class UDF3(UDF):
 
 def test_no_common_backends(default_raw, lt_ctx):
     runner = UDFRunner([UDF1(), UDF2()])
-    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None, backends=None))
     for task in tasks:
         with pytest.raises(ValueError) as e:
             task.get_resources()
@@ -84,20 +84,20 @@ def test_no_common_backends(default_raw, lt_ctx):
 
 def test_common_backends_cpu(default_raw, lt_ctx):
     runner = UDFRunner([UDF1(), UDF3()])
-    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None, backends=None))
     for task in tasks:
         assert task.get_resources() == {'CPU': 1, 'compute': 1}
 
 
 def test_common_backends_gpu(default_raw, lt_ctx):
     runner = UDFRunner([UDF2(), UDF3()])
-    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None, backends=None))
     for task in tasks:
         assert task.get_resources() == {'CUDA': 1, 'compute': 1}
 
 
 def test_common_backends_compute(default_raw, lt_ctx):
     runner = UDFRunner([UDF3(), UDF3()])
-    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None))
+    tasks = list(runner._make_udf_tasks(dataset=default_raw, roi=None, backends=None))
     for task in tasks:
         assert task.get_resources() == {'compute': 1}

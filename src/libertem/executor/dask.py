@@ -15,7 +15,7 @@ from libertem.utils.devices import detect
 log = logging.getLogger(__name__)
 
 
-def worker_setup(resource=None, device=None):
+def worker_setup(resource, device):
     # Disable handling Ctrl-C on the workers for a local cluster
     # since the nanny restarts workers in that case and that gets mixed
     # with Ctrl-C handling of the main process, at least on Windows
@@ -28,7 +28,7 @@ def worker_setup(resource=None, device=None):
         raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
 
 
-def cluster_spec(cpus, cudas, num_service=1, options=None):
+def cluster_spec(cpus, cudas, name='default', num_service=1, options=None):
 
     if options is None:
         options = {}
@@ -67,17 +67,17 @@ def cluster_spec(cpus, cudas, num_service=1, options=None):
         cpu_spec['options']['preload'] = \
             'from libertem.executor.dask import worker_setup; ' + \
             f'worker_setup(resource="CPU", device={cpu})'
-        workers_spec[f'cpu-{cpu}'] = cpu_spec
+        workers_spec[f'{name}-cpu-{cpu}'] = cpu_spec
 
     for service in range(num_service):
-        workers_spec[f'service-{service}'] = deepcopy(service_base_spec)
+        workers_spec[f'{name}-service-{service}'] = deepcopy(service_base_spec)
 
     for cuda in cudas:
         cuda_spec = deepcopy(cuda_base_spec)
         cuda_spec['options']['preload'] = \
             'from libertem.executor.dask import worker_setup; ' + \
             f'worker_setup(resource="CUDA", device={cuda})'
-        workers_spec[f'cuda-{cuda}'] = cuda_spec
+        workers_spec[f'{name}-cuda-{cuda}'] = cuda_spec
 
     return workers_spec
 
@@ -381,7 +381,7 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
 
-def cli_worker(scheduler, local_directory, cpus, cudas, log_level):
+def cli_worker(scheduler, local_directory, cpus, cudas, name, log_level):
     import asyncio
 
     options = {
@@ -390,7 +390,7 @@ def cli_worker(scheduler, local_directory, cpus, cudas, log_level):
 
     }
 
-    spec = cluster_spec(cpus=cpus, cudas=cudas, options=options)
+    spec = cluster_spec(cpus=cpus, cudas=cudas, name=name, options=options)
 
     async def run(spec):
         workers = []

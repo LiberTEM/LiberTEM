@@ -83,14 +83,14 @@ calling :meth:`libertem.common.backend.set_use_cuda` with the device ID to use.
 
     from libertem.udf.masks import ApplyMasksUDF
 
-    udf = ApplyMasksUDF(factories=[lambda:np.ones(dataset.shape)])
+    udf = ApplyMasksUDF(mask_factories=[lambda:np.ones(dataset.shape.sig)])
 
 .. testcode::
 
    from libertem.executor.inline import InlineJobExecutor
    from libertem import api as lt
    from libertem.utils.devices import detect
-   from libertem.common.backends import set_use_cpu, set_use_cuda
+   from libertem.common.backend import set_use_cpu, set_use_cuda
 
    ctx = lt.Context(executor=InlineJobExecutor())
 

@@ -290,9 +290,9 @@ that matches the dataset or partition via
 :attr:`libertem.udf.UDFMeta.dataset_shape` and
 :attr:`libertem.udf.UDFMeta.partition_shape`.
 
-The currently used compute back-end can be accessed through
-:attr:`libertem.udf.UDFMeta.backend`. It defaults to 'numpy' and can be 'cupy'
-for UDFs that make use of :ref:`udf cupy` support.
+The currently used compute device class can be accessed through
+:attr:`libertem.udf.UDFMeta.device_class`. It defaults to 'cpu' and can be 'cuda'
+for UDFs that make use of :ref:`udf cuda` support.
 
 For more advanced applications, the ROI and currently processed data portion are
 available as :attr:`libertem.udf.UDFMeta.roi` and
@@ -366,7 +366,7 @@ indirectly in the back-end.
 
 .. versionadded:: 0.4.0
 
-.. _`udf cupy`:
+.. _`udf cuda`:
 
 CuPy support
 ------------
@@ -376,14 +376,18 @@ CuPy largely replicates the NumPy array interface, any UDF that uses NumPy for
 its main processing can likely be ported to use both CPUs and CUDA devices in
 parallel. Some adjustments are often necessary to account for minor differences
 between NumPy and CuPy. CuPy is most beneficial for compute-heavy tasks with
-good CUDA math libarary support such as large Fourier transforms or matrix
+good CUDA math library support such as large Fourier transforms or matrix
 products.
 
 In order to activate CuPy processing, a UDF can overwrite the
 :meth:`~libertem.udf.base.UDF.get_backends` method. By default this returns
 :code:`('numpy',)`, indicating only NumPy support. By returning :code:`('numpy',
 'cupy')` or :code:`('cupy',)`, a UDF activates being run on both CUDA and CPU
-workers, or exclusively on CUDA workers.
+workers, or exclusively on CUDA workers. Using :code:`cuda` instead of
+:code:`cupy` schedules on CUDA workers, but without using the CuPy library. This
+is useful for running code that uses CUDA in a different way, for example
+integration of C++ CUDA code, and allows to skip installation of CuPy in this
+situation
 
 The :attr:`libertem.udf.base.UDF.xp` property points to the :code:`numpy` or
 :code:`cupy` module, depending which back-end is currently used. By using
@@ -403,7 +407,7 @@ A UDF should only use one GPU at a time. The correct device to use is set in the
 back-end and should not be modified in the UDF itself.
 
 The :meth:`~libertem.api.Context.run_udf` method allows setting the
-:code:`backends` attribute to :code:`('numpy',)` or :code:`('cupy',)` to
+:code:`backends` attribute to :code:`('numpy',)` or :code:`('cupy',)`/:code:`('cuda',)` to
 restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
 useful for testing.
 

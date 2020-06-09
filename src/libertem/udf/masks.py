@@ -100,11 +100,19 @@ class ApplyMasksUDF(UDF):
             self._mask_container = self._make_mask_container()
         return self._mask_container
 
+    @property
+    def backend(self):
+        if self.meta.device_class == 'cuda':
+            backend = 'cupy'
+        else:
+            backend = 'numpy'
+        return backend
+
     def _make_mask_container(self):
         p = self.params
         return MaskContainer(
             p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
-            backend=self.meta.backend
+            backend=self.backend
         )
 
     def get_task_data(self):
@@ -112,11 +120,11 @@ class ApplyMasksUDF(UDF):
         m = self.meta
         use_torch = self.params.use_torch
         if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
-                or self.meta.backend != 'numpy' or self.masks.use_sparse):
+                or self.meta.device_class != 'cpu' or self.masks.use_sparse):
             use_torch = False
         return {
             'use_torch': use_torch,
-            'masks': self.masks
+            'masks': self.masks,
         }
 
     def get_result_buffers(self):
@@ -134,7 +142,7 @@ class ApplyMasksUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        masks = self.task_data.masks.get(self.meta.slice, transpose=True, backend=self.meta.backend)
+        masks = self.task_data.masks.get(self.meta.slice, transpose=True)
         flat_data = tile.reshape((tile.shape[0], -1))
         if self.task_data.use_torch:
             # CuPy back-end disables torch in get_task_data

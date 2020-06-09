@@ -688,8 +688,9 @@ class Context:
             the corrections that are part of the :code:`DataSet` are used,
             if there are any.
 
-        backends : None or iterable containing 'numpy' and / or 'cupy'
-            Restrict the back-end, mostly for testing purposes for hybrid UDFs.
+        backends : None or iterable containing 'numpy', 'cupy' and/or 'cuda'
+            Restrict the back-end to a subset of the capabilities of the UDF.
+            This can be useful for testing hybrid UDFs.
 
         Returns
         -------

@@ -78,18 +78,18 @@ There are a few command line options available:
     Usage: libertem-worker [OPTIONS] [SCHEDULER]
 
     Options:
-    -k, --kind TEXT             Worker kind. Currently only "dask" is
-                                implemented.
-    -d, --local-directory TEXT  local directory to manage temporary files
-    -c, --n-cpus INTEGER        Number of CPUs to use, defaults to number of CPU
-                                cores without hyperthreading.
-    -u, --cudas TEXT            List of CUDA device IDs to use, defaults to all
-                                detected CUDA devices. Use "" to deactivate
-                                CUDA.
-    -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
-                                values are 'critical', 'error', 'warning',
-                                'info', 'debug'.
-    --help                      Show this message and exit.
+        -k, --kind TEXT             Worker kind. Currently only "dask" is
+                                    implemented.
+        -d, --local-directory TEXT  local directory to manage temporary files
+        -c, --n-cpus INTEGER        Number of CPUs to use, defaults to number of CPU
+                                    cores without hyperthreading.
+        -u, --cudas TEXT            List of CUDA device IDs to use, defaults to all
+                                    detected CUDA devices. Use "" to deactivate
+                                    CUDA.
+        -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
+                                    values are 'critical', 'error', 'warning',
+                                    'info', 'debug'.
+        --help                      Show this message and exit.
 
 .. versionadded:: 0.6.0
 

@@ -36,8 +36,8 @@ class DebugUDF(UDF):
         cuda = bae.get_use_cuda()
         self.results.debug[0][self.meta.slice] = (cpu, cuda)
         self.results.on_device[:] += self.xp.sum(partition, axis=0)
-        self.results.backend[:] = self.meta.backend
-        print(f"meta backend {self.meta.backend}")
+        self.results.backend[:] = self.meta.device_class
+        print(f"meta device_class {self.meta.device_class}")
 
     def merge(self, dest, src):
         de, sr = dest['debug'][0], src['debug'][0]
@@ -62,7 +62,7 @@ def test_run_default(lt_ctx):
     for val in res['debug'].data[0].values():
         assert val == (0, None)
 
-    assert np.all(res['backend'].data == 'numpy')
+    assert np.all(res['backend'].data == 'cpu')
 
     assert np.allclose(res['on_device'].data, data.sum(axis=(0, 1)))
 
@@ -82,13 +82,14 @@ def test_run_cupy(lt_ctx):
 
     use_cpu = bae.get_use_cpu()
     use_cuda = bae.get_use_cuda()
-    backend = bae.get_backend()
+    backend = bae.get_device_class()
 
     with mock.patch.dict(os.environ, {'LIBERTEM_USE_CUDA': "23"}):
         # This should set the same environment variable as the mock above
         # so that it will be unset after the "with"
         bae.set_use_cuda(23)
-        with mock.patch('numba.cuda', return_value=MockCuda, create=True):
+        # add `numpy.cuda` so we can make `numpy` work as a mock replacement for `cupy` 
+        with mock.patch('numpy.cuda', return_value=MockCuda, create=True):
             res = lt_ctx.run_udf(udf=DebugUDF(), dataset=ds)
 
     for val in res['debug'].data[0].values():
@@ -98,9 +99,9 @@ def test_run_cupy(lt_ctx):
     # restored the previous state
     assert use_cpu == bae.get_use_cpu()
     assert use_cuda == bae.get_use_cuda()
-    assert backend == bae.get_backend()
+    assert backend == bae.get_device_class()
 
-    assert np.all(res['backend'].data == 'cupy')
+    assert np.all(res['backend'].data == 'cuda')
 
     assert np.allclose(res['on_device'].data, data.sum(axis=(0, 1)))
 
@@ -111,7 +112,7 @@ def test_run_numpy(lt_ctx):
 
     use_cpu = bae.get_use_cpu()
     use_cuda = bae.get_use_cuda()
-    backend = bae.get_backend()
+    backend = bae.get_device_class()
 
     with mock.patch.dict(os.environ, {'LIBERTEM_USE_CPU': "42"}):
         # This should set the same environment variable as the mock above
@@ -126,8 +127,8 @@ def test_run_numpy(lt_ctx):
     # restored the previous state
     assert use_cpu == bae.get_use_cpu()
     assert use_cuda == bae.get_use_cuda()
-    assert backend == bae.get_backend()
+    assert backend == bae.get_device_class()
 
-    assert np.all(res['backend'].data == 'numpy')
+    assert np.all(res['backend'].data == 'cpu')
 
     assert np.allclose(res['on_device'].data, data.sum(axis=(0, 1)))

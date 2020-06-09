@@ -1,5 +1,4 @@
 from typing import Iterable
-import os
 import mmap
 import math
 from contextlib import contextmanager
@@ -282,7 +281,7 @@ class BufferWrapper(object):
         """
         return self.data
 
-    def allocate(self, backend=None):
+    def allocate(self, lib=None):
         """
         Allocate a new buffer, in the shape previously set
         via one of the `set_shape_*` methods.
@@ -292,8 +291,8 @@ class BufferWrapper(object):
         """
         assert self._shape is not None
         assert self._data is None
-        if self._where == 'device' and backend is not None:
-            _z = backend.zeros
+        if self._where == 'device' and lib is not None:
+            _z = lib.zeros
         else:
             _z = zeros_aligned
         self._data = _z(self._shape, dtype=self._dtype)

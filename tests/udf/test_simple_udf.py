@@ -339,7 +339,7 @@ def test_udf_pickle(lt_ctx):
         roi=None,
         dataset_dtype="float32",
         input_dtype="float32",
-        backend="numpy",
+        device_class="cpu",
     )
     pixelsum.set_backend("numpy")
     pixelsum.set_meta(meta)
@@ -367,6 +367,7 @@ class ExtraShapeWithZero(UDF):
 
     def merge(self, dest, src):
         pass
+
 
 def test_extra_shape_with_zero(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")

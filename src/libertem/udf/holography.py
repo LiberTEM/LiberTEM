@@ -24,6 +24,7 @@
 # see: https://github.com/LiberTEM/LiberTEM
 
 import numpy as np
+
 from libertem.udf import UDF
 
 
@@ -138,7 +139,7 @@ class HoloReconstructUDF(UDF):
         else:
             dtype = np.complex128
         return {
-            "wave": self.buffer(kind="nav", dtype=dtype, extra_shape=extra_shape, where='device')
+            "wave": self.buffer(kind="nav", dtype=dtype, extra_shape=extra_shape)
         }
 
     def get_task_data(self):
@@ -202,6 +203,11 @@ class HoloReconstructUDF(UDF):
         fft_frame = fft_frame * aperture
 
         wav = self.xp.fft.ifft2(fft_frame) * np.prod(frame_size)
+        # FIXME check if result buffer with where='device' and export is faster
+        # than exporting frame by frame, as implemented now.
+        if self.meta.device_class == 'cuda':
+            # That means xp is cupy
+            wav = self.xp.asnumpy(wav)
         self.results.wave[:] = wav
 
     def get_backends(self):

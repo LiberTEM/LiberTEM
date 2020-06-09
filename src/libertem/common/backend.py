@@ -9,7 +9,6 @@ def get_use_cuda():
 
 
 def set_use_cuda(cuda_device: int):
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(cuda_device)
     os.environ["LIBERTEM_USE_CUDA"] = str(cuda_device)
     os.environ.pop("LIBERTEM_USE_CPU", None)
 
@@ -30,7 +29,7 @@ def set_use_cpu(cpu: int):
     os.environ["LIBERTEM_USE_CPU"] = str(cpu)
 
 
-def get_backend():
+def get_device_class():
     cuda = get_use_cuda()
     cpu = get_use_cpu()
     if cpu is not None and cuda is not None:
@@ -38,6 +37,6 @@ def get_backend():
             "Both LIBERTEM_USE_CPU and LIBERTEM_USE_CUDA set, expecting at most one"
         )
     if cuda is not None:
-        return "cupy"
+        return "cuda"
     else:
-        return "numpy"
+        return "cpu"

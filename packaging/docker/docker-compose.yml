@@ -16,7 +16,7 @@ services:
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-1
     image: libertem/libertem
-    command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n_cpus", "2", "--cudas", ""]
+    command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
         source: ../../data
@@ -27,7 +27,7 @@ services:
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-2
     image: libertem/libertem
-    command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n_cpus", "2", "--cudas", ""]
+    command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
         source: ../../data

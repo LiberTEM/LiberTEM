@@ -1,8 +1,13 @@
 import warnings
+import logging
 
 import psutil
 
 import numba.cuda
+
+
+logger = logging.getLogger(__name__)
+
 
 try:
     import cupy
@@ -27,9 +32,9 @@ def detect():
         # Keep LiberTEM usable with misconfigured CUDA, CuPy or numba.cuda
         # This DOES happen, ask @uellue!
         cudas = []
-        warnings.warn(repr(e), RuntimeWarning)
+        logger.info(repr(e))
     return {
-        "cpus": range(cores),
+        "cpus": list(range(cores)),
         "cudas": cudas
     }
 

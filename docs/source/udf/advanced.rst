@@ -403,11 +403,16 @@ to the leader node.
 The input argument for :code:`process_*()` functions is already provided as a
 CuPy array instead of NumPy array if CuPy is used.
 
-A UDF should only use one GPU at a time. The correct device to use is set in the
-back-end and should not be modified in the UDF itself.
+A UDF should only use one GPU at a time. If :code:`cupy` is used, the correct
+device to use is set within CuPy in the back-end and should not be modified in
+the UDF itself. If :code:`cuda` is used, it is the responsibility of the user to
+set the device ID to the value returned by
+:meth:`libertem.common.backend.get_use_cuda`. The environment variable
+:code:`CUDA_VISIBLE_DEVICES` can be set `before` any CUDA library is loaded to
+control which devices are visible.
 
 The :meth:`~libertem.api.Context.run_udf` method allows setting the
-:code:`backends` attribute to :code:`('numpy',)` or :code:`('cupy',)`/:code:`('cuda',)` to
+:code:`backends` attribute to :code:`('numpy',)` :code:`('cupy',)` or :code:`('cuda',)` to
 restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
 useful for testing.
 

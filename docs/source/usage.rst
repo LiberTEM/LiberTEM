@@ -73,7 +73,7 @@ The easiest way to start workers with the appropriate settings is
 
     (libertem) $ libertem-worker tcp://localhost:8786
 
-There are a few command line options available:
+There are a few command line options available::
 
     Usage: libertem-worker [OPTIONS] [SCHEDULER]
 

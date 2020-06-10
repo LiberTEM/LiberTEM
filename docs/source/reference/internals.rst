@@ -32,3 +32,19 @@ a high-level introduction.
    :members:
    :undoc-members:
    :special-members: __init__
+
+CPU and CUDA devices
+~~~~~~~~~~~~~~~~~~~~
+
+These methods get and set information that controls on which devices a
+computation runs.
+
+.. automodule:: libertem.common.backend
+   :members:
+   :undoc-members:
+   :special-members: __init__
+
+.. automodule:: libertem.utils.devices
+   :members:
+   :undoc-members:
+   :special-members: __init__

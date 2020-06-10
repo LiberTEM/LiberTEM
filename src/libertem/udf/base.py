@@ -1056,7 +1056,7 @@ class UDFRunner:
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
                 (meta, tiling_scheme, dtype) = self._init_udfs(
-                    numpy_udfs, cupy_udfs, partition, roi, device_class
+                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class
                 )
                 # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)

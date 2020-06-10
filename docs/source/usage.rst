@@ -53,7 +53,8 @@ After starting the server, you can open the GUI in your browser. If it didn't op
 automatically, you can access it by default at http://localhost:9000 . At the beginning,
 the GUI shows a prompt to create a local cluster or connect to a running one.
 The number of workers is preset with a number that will likely give optimal
-performance on the given machine.
+performance on the given machine. You can also select which CUDA devices to use, if you have
+any (needs to have a working cupy installation).
 
 ..  figure:: ./images/use/create.png
 

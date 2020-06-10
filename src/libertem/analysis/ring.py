@@ -4,6 +4,25 @@ from libertem import masks
 from .masks import SingleMaskAnalysis
 
 
+# Inherit from helper class
+class RingTemplate():
+
+    def __init__(self):
+        self.short_name = "ring"
+        self.api = "create_ring_analysis"
+
+    def convert_params(self, raw_params, ds):
+        params = [f'dataset={ds}']
+        for k in ['cx', 'cy', 'ri', 'ro']:
+            params.append(f'{k}={raw_params[k]}')
+        return ' ,'.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(np.squeeze(ring_result['intensity'].data))"]
+        return '\n'.join(plot)
+
+
 class RingMaskAnalysis(SingleMaskAnalysis):
     TYPE = 'UDF'
 
@@ -49,3 +68,7 @@ class RingMaskAnalysis(SingleMaskAnalysis):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_temp_helper(cls):
+        return RingTemplate

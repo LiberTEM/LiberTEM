@@ -20,6 +20,8 @@ where an :class:`~libertem.executor.inline.InlineJobExecutor` runs tasks.
 
 def get_use_cuda():
     '''
+    .. versionadded:: 0.6.0
+
     Returns
     -------
     id : int or None
@@ -35,6 +37,8 @@ def set_use_cuda(cuda_device: int):
     '''
     This sets a CUDA device ID and unsets any CPU ID
 
+    .. versionadded:: 0.6.0
+
     Parameters
     ----------
     cuda_device : int
@@ -46,6 +50,8 @@ def set_use_cuda(cuda_device: int):
 
 def get_use_cpu():
     '''
+    .. versionadded:: 0.6.0
+
     Returns
     -------
     id : int or None
@@ -67,6 +73,8 @@ def set_use_cpu(cpu: int):
     '''
     This sets a CPU device ID and unsets any CUDA ID
 
+    .. versionadded:: 0.6.0
+
     Parameters
     ----------
     cpu : int
@@ -78,6 +86,8 @@ def set_use_cpu(cpu: int):
 
 def get_device_class():
     '''
+    .. versionadded:: 0.6.0
+
     Returns
     -------
     class : str

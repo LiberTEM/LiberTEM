@@ -116,6 +116,8 @@ class UDFMeta:
         """
         CorrectionSet : correction data that is available, either from the dataset
         or specified by the user
+
+        .. versionadded:: 0.6.0
         """
         return self._corrections
 
@@ -129,6 +131,8 @@ class UDFMeta:
         importing them all and testing them against :attr:`libertem.udf.base.UDF.xp`.
 
         Current values are :code:`cpu` (default) or :code:`cuda`.
+
+        .. versionadded:: 0.6.0
         '''
         return self._device_class
 
@@ -278,7 +282,7 @@ class UDFFrameMixin:
 
         Parameters
         ----------
-        frame : numpy.ndarray
+        frame : numpy.ndarray or cupy.ndarray
             A single frame or signal element from the dataset.
             The shape is the same as `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 2D, for spectra 1D etc.
@@ -304,7 +308,7 @@ class UDFTileMixin:
 
         Parameters
         ----------
-        tile : numpy.ndarray
+        tile : numpy.ndarray or cupy.ndarray
             A small number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
@@ -338,7 +342,7 @@ class UDFPartitionMixin:
 
         Parameters
         ----------
-        partition : numpy.ndarray
+        partition : numpy.ndarray or cupy.ndarray
             A large number N of frames or signal elements from the dataset.
             The shape is (N,) + `dataset.shape.sig`. In case of pixelated
             STEM / scanning diffraction data this is 3D, for spectra 2D etc.
@@ -458,6 +462,13 @@ class UDFBase:
 
     @property
     def xp(self):
+        '''
+        Compute back-end library to use.
+
+        Generally, use :code:`self.xp` instead of :code`np` to use NumPy or CuPy transparently
+
+        .. versionadded:: 0.6.0
+        '''
         # Implemented as property and not variable to avoid pickling issues
         # tests/udf/test_simple_udf.py::test_udf_pickle
         if self._backend == 'numpy' or self._backend == 'cuda':
@@ -696,7 +707,7 @@ class UDF(UDFBase):
 
         :code:`cupy` is CUDA-based computation through CuPy.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
 
         Returns
         -------

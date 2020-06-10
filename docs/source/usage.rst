@@ -90,7 +90,7 @@ There are a few command line options available::
     -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
                                 values are 'critical', 'error', 'warning',
                                 'info', 'debug'.
-  --help                      Show this message and exit.
+    --help                      Show this message and exit.
 
 .. versionadded:: 0.6.0
 

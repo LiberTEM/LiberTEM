@@ -667,7 +667,7 @@ class Context:
             Added the :code:`progress` parameter
 
         .. versionchanged:: 0.6.0
-            Added the :code:`corrections` parameter
+            Added the :code:`corrections` and :code:`backends` parameter
 
         Parameters
         ----------

@@ -24,6 +24,8 @@ def detect():
     '''
     Detect which devices are present
 
+    .. versionadded:: 0.6.0
+
     Returns
     -------
     dict
@@ -53,6 +55,8 @@ def detect():
 def has_cupy():
     '''
     Probe if :code:`cupy` was loaded successfully.
+
+    .. versionadded:: 0.6.0
 
     This is an optional dependency with special integration for UDFs. See
     :ref:`udf cuda` for details.

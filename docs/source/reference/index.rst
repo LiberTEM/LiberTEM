@@ -15,6 +15,7 @@ Reference
    dask
    cluster-ds
    caching
+   corrections
 
 Indices and tables
 ------------------

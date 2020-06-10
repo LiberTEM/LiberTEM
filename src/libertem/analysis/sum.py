@@ -6,6 +6,21 @@ from libertem.analysis.getroi import get_roi
 from libertem.udf.sum import SumUDF
 
 
+class SumTemplate():
+
+    def __init__(self):
+        self.short_name = "sum"
+        self.api = "create_sum_analysis"
+
+    def convert_params(self, raw_params, ds):
+        return f"dataset={ds}"
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(sum_result['intensity'].raw_data)"]
+        return '\n'.join(plot)
+
+
 class SumResultSet(AnalysisResultSet):
     """
     Running a :class:`SumAnalysis` via :meth:`libertem.api.Context.run`
@@ -73,3 +88,7 @@ class SumAnalysis(BaseAnalysis):
                            ),
                            key="intensity", title="intensity", desc="sum of frames"),
         ])
+
+    @classmethod
+    def get_temp_helper(cls):
+        return SumTemplate

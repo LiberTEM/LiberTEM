@@ -56,7 +56,7 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
             }
             if "numWorkers" in connection:
                 devices["cpus"] = range(connection["numWorkers"])
-            devices["cudas"] = connection["cudas"]
+            devices["cudas"] = connection.get("cudas", [])
 
             sync_executor = await sync_to_async(
                 partial(

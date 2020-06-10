@@ -46,7 +46,8 @@ async def test_get_config(base_url, http_client):
         config = await response.json()
         assert set(config.keys()) == set(["status", "messageType", "config"])
         assert set(config['config'].keys()) == set([
-            "version", "revision", "localCores", "cwd", "separator", "resultFileFormats",
+            "version", "revision", "localCores", "cwd",
+            "separator", "resultFileFormats", "devices",
         ])
 
 

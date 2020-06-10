@@ -56,10 +56,7 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
             }
             if "numWorkers" in connection:
                 devices["cpus"] = range(connection["numWorkers"])
-            # Deactivate GPU support in local cluster until GUI allows deactivation
-            # to not interfere with other applications using the GPU
-            # FIXME implement GUI interface https://github.com/LiberTEM/LiberTEM/issues/803
-            devices["cudas"] = []
+            devices["cudas"] = connection["cudas"]
 
             sync_executor = await sync_to_async(
                 partial(

@@ -4,8 +4,11 @@ import { Button, Form } from "semantic-ui-react";
 import { ConfigState } from "../../config/reducers";
 import { Omit } from "../../helpers/types";
 import { ClusterTypes, ConnectRequestLocalCluster } from "../../messages";
+import { GPUSelector } from "./GPUSelector";
 
-type FormValues = Omit<ConnectRequestLocalCluster, "type">;
+type FormValues = Omit<ConnectRequestLocalCluster, "type"> & {
+    cudas: number[],
+};
 
 interface FormProps {
     onSubmit: (params: ConnectRequestLocalCluster) => void,
@@ -15,6 +18,7 @@ interface FormProps {
 type MergedProps = FormikProps<FormValues> & FormProps;
 
 const LocalConnectionForm: React.SFC<MergedProps> = ({
+    config,
     values,
     touched,
     errors,
@@ -23,6 +27,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
     handleChange,
     handleBlur,
     handleSubmit,
+    setFieldValue,
     handleReset,
 }) => {
     return (
@@ -34,6 +39,10 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
                     onBlur={handleBlur} />
                 {errors.numWorkers && touched.numWorkers && errors.numWorkers}
             </Form.Field>
+            <Form.Field>
+                <label htmlFor="cudas">CUDA devices to use</label>
+                <GPUSelector name="cudas" config={config} setFieldValue={setFieldValue} />
+            </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Connect</Button>
         </Form>
     )
@@ -42,6 +51,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
 export default withFormik<FormProps, FormValues>({
     mapPropsToValues: (ownProps: FormProps) => ({
         numWorkers: ownProps.config.localCores,
+        cudas: [],
     }),
     handleSubmit: (values, formikBag) => {
         const { onSubmit } = formikBag.props;

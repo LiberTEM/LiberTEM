@@ -29,6 +29,10 @@ export const initialConfigState: ConfigState = {
     version: "",
     revision: "",
     localCores: 0,
+    devices: {
+        cpus: [] as number[],
+        cudas: [] as number[],
+    },
     cwd: "/",
     separator: "/",
     lastOpened: {},

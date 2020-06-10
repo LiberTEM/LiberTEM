@@ -11,6 +11,7 @@ from libertem.analysis.base import AnalysisResultSet
 from libertem.io.dataset.base import DataSetException
 from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA
+from libertem.utils import devices
 
 
 class ExecutorState:
@@ -314,11 +315,14 @@ class SharedState:
         return self.local_directory
 
     def get_config(self):
+        detected_devices = devices.detect()
+        detected_devices["cpus"] = list(detected_devices["cpus"])
         return {
             "version": libertem.__version__,
             "resultFileFormats": ResultFormatRegistry.get_available_formats(),
             "revision": libertem.revision,
             "localCores": self.get_local_cores(),
+            "devices": detected_devices,
             "cwd": os.getcwd(),
             # '/' works on Windows, too.
             "separator": '/'

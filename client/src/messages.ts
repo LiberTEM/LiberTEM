@@ -13,6 +13,10 @@ export interface MsgPartConfig {
     version: string,
     revision: string,
     localCores: number,
+    devices: {
+        cpus: number[],
+        cudas: number[],
+    }
     cwd: string,
     separator: string,
     resultFileFormats: {
@@ -50,6 +54,7 @@ export const ClusterTypeMetadata: { [s: string]: { [s: string]: string } } = {
 export interface ConnectRequestLocalCluster {
     type: ClusterTypes.LOCAL,
     numWorkers?: number,
+    cudas: number[],
 }
 
 export interface ConnectRequestTCP {

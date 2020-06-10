@@ -34,7 +34,7 @@ class CorrectionSet:
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
-            excluded_pixels = sparse.COO(excluded_pixels)
+            excluded_pixels = sparse.COO(excluded_pixels, prune=True)
         self._excluded_pixels = excluded_pixels
 
     def get_dark_frame(self):

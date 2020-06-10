@@ -29,6 +29,7 @@ async def create_connection(base_url, http_client):
         'connection': {
             'type': 'local',
             'numWorkers': 2,
+            'cudas': [],
         }
     }
     print("checkpoint 0")

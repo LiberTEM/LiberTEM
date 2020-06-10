@@ -6,12 +6,13 @@ from libertem.corrections.detector import correct
 
 
 class CorrectionSet:
+    """
+    A set of corrections to apply.
+
+    .. versionadded:: 0.6.0
+    """
     def __init__(self, dark=None, gain=None, excluded_pixels=None):
         """
-        A set of corrections to apply.
-
-        .. versionadded:: 0.6.0
-
         Parameters
         ----------
         dark : np.ndarray

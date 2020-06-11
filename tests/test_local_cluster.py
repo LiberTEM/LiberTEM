@@ -177,7 +177,6 @@ def test_start_local_cudaonly(hdf5_ds_1):
     spec = cluster_spec(cpus=(), cudas=cudas)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
-        # Uses ApplyMasksUDF, which supports CuPy
         udf_res = ctx.run_udf(udf=DebugUDF(backends=('cuda', )), dataset=hdf5_ds_1)
         # No CPU compute resources
         with pytest.raises(RuntimeError):

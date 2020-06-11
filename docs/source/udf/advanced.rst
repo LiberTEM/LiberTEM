@@ -387,7 +387,7 @@ workers, or exclusively on CUDA workers. Using :code:`cuda` instead of
 :code:`cupy` schedules on CUDA workers, but without using the CuPy library. This
 is useful for running code that uses CUDA in a different way, for example
 integration of C++ CUDA code, and allows to skip installation of CuPy in this
-situation
+situation.
 
 The :attr:`libertem.udf.base.UDF.xp` property points to the :code:`numpy` or
 :code:`cupy` module, depending which back-end is currently used. By using

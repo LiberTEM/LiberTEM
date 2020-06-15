@@ -41,16 +41,11 @@ class PickResultSet(AnalysisResultSet):
     pass
 
 
-class PickFrameAnalysis(BaseAnalysis):
+class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
     TYPE = 'UDF'
     """
     Pick a single, complete frame from a dataset
     """
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "PICK_FRAME",
-        }
 
     def get_origin(self):
         dims = self.dataset.shape.nav.dims

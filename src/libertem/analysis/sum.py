@@ -58,14 +58,8 @@ class SumResultSet(AnalysisResultSet):
     pass
 
 
-class SumAnalysis(BaseAnalysis):
+class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "SUM_FRAMES",
-        }
 
     def get_udf(self):
         dest_dtype = np.dtype(self.dataset.dtype)

@@ -1,5 +1,5 @@
 from string import Template
-from libertem.analysis.base import AnalysisRegistry
+from libertem.analysis.base import Analysis
 
 
 class CodeTemplate():
@@ -67,7 +67,7 @@ class CodeTemplate():
 
             an_type = analysis['analysisType']
             an_params = analysis['parameters']
-            cls = AnalysisRegistry.get_analysis_by_type(an_type)['class']
+            cls = Analysis.get_analysis_by_type(an_type)
             helperCls = cls.get_template_helper()
             helper = helperCls()
 

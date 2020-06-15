@@ -3,14 +3,8 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.sumsigudf as sumsigudf
 
 
-class SumSigAnalysis(BaseAnalysis):
+class SumSigAnalysis(BaseAnalysis, id_="SUM_SIG"):
     TYPE = "UDF"
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "SUM_SIG",
-        }
 
     def get_udf(self):
         return sumsigudf.SumSigUDF()

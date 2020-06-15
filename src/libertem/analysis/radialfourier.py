@@ -42,7 +42,7 @@ class RadialFourierResultSet(AnalysisResultSet):
     pass
 
 
-class RadialFourierAnalysis(BaseMasksAnalysis):
+class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
     '''
     The Radial Fourier Analysis can be used to characterize
     atomic ordering in materials, in particular for low intensities where
@@ -61,12 +61,6 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
     '''
 
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "RADIAL_FOURIER",
-        }
 
     def get_udf_results(self, udf_results, roi):
         # Here, we reconstruct the shape of the Job result

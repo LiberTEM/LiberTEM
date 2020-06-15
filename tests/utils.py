@@ -7,6 +7,7 @@ import numpy as np
 from libertem.masks import to_dense
 from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
+import libertem.common.backend as bae
 
 
 def _naive_mask_apply(masks, data):
@@ -84,3 +85,51 @@ class MockFile:
 
     def __repr__(self):
         return "<MockFile: [%d, %d)>" % (self.start_idx, self.end_idx)
+
+
+class DebugDeviceUDF(UDF):
+    def __init__(self, backends=None):
+        if backends is None:
+            backends = ('cupy', 'numpy')
+        super().__init__(backends=backends)
+
+    def get_result_buffers(self):
+        return {
+            'device_id': self.buffer(kind="single", dtype="object"),
+            'on_device': self.buffer(kind="sig", dtype=np.float32, where="device"),
+            'device_class': self.buffer(kind="nav", dtype="object"),
+            'backend': self.buffer(kind="single", dtype="object"),
+        }
+
+    def preprocess(self):
+        self.results.device_id[0] = dict()
+        self.results.backend[0] = dict()
+
+    def process_partition(self, partition):
+        cpu = bae.get_use_cpu()
+        cuda = bae.get_use_cuda()
+        self.results.device_id[0][self.meta.slice] = {
+            "cpu": cpu,
+            "cuda": cuda
+        }
+        self.results.on_device[:] += self.xp.sum(partition, axis=0)
+        self.results.device_class[:] = self.meta.device_class
+        self.results.backend[0][self.meta.slice] = str(self.xp)
+        print(f"meta device_class {self.meta.device_class}")
+
+    def merge(self, dest, src):
+        de, sr = dest['device_id'][0], src['device_id'][0]
+        for key, value in sr.items():
+            assert key not in de
+            de[key] = value
+
+        de, sr = dest['backend'][0], src['backend'][0]
+        for key, value in sr.items():
+            assert key not in de
+            de[key] = value
+
+        dest['on_device'][:] += src['on_device']
+        dest['device_class'][:] = src['device_class']
+
+    def get_backends(self):
+        return self.params.backends

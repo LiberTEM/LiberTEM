@@ -41,14 +41,13 @@ def detect():
     try:
         cudas = [device.id for device in numba.cuda.gpus]
     except numba.cuda.CudaSupportError as e:
-        # Continue running without GPU in case of errors
-        # Keep LiberTEM usable with misconfigured CUDA, CuPy or numba.cuda
-        # This DOES happen, ask @uellue!
+        # Continue running without GPU or in case of errors
         cudas = []
         logger.info(repr(e))
     return {
         "cpus": list(range(cores)),
-        "cudas": cudas
+        "cudas": cudas,
+        "has_cupy": has_cupy(),
     }
 
 
@@ -58,7 +57,7 @@ def has_cupy():
 
     .. versionadded:: 0.6.0
 
-    This is an optional dependency with special integration for UDFs. See
+    CuPy is an optional dependency with special integration for UDFs. See
     :ref:`udf cuda` for details.
     '''
     return cupy is not None

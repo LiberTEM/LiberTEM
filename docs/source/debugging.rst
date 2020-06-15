@@ -94,9 +94,9 @@ calling :meth:`libertem.common.backend.set_use_cuda` with the device ID to use.
 
    ctx = lt.Context(executor=InlineJobExecutor())
 
-   cudas = detect()['cudas']
-   if cudas:
-       set_use_cuda(cudas[0])
+   d = detect()
+   if d['cudas'] and d['has_cupy']:
+       set_use_cuda(d['cudas'][0])
    ctx.run_udf(dataset=dataset, udf=udf)
    set_use_cpu(0)
 

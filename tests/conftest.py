@@ -28,7 +28,7 @@ def lt_ctx(inline_executor):
 
 @pytest.fixture
 async def async_executor():
-    spec = cluster_spec(cpus=[0, 1], cudas=[])
+    spec = cluster_spec(cpus=[0, 1], cudas=[], has_cupy=False)
     sync_executor = await sync_to_async(
         functools.partial(DaskJobExecutor.make_local, spec=spec)
     )

@@ -13,8 +13,9 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 )
 def test_holo_reconstruction(lt_ctx, backend):
     if backend == 'cupy':
+        d = detect()
         cudas = detect()['cudas']
-        if not cudas:
+        if not d['cudas'] or not d['has_cupy']:
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
     # Prepare image parameters and mesh
     nx, ny = (5, 7)
@@ -33,7 +34,7 @@ def test_holo_reconstruction(lt_ctx, backend):
 
     # Prepare phase image
     phase_ref = np.pi * msx * (mnx.max() - mnx) * mny / sx**2 \
-                + np.pi * msy * mnx * (mny.max() - mny) / sy**2
+        + np.pi * msy * mnx * (mny.max() - mny) / sy**2
 
     # Generate holograms
     holo = np.zeros_like(phase_ref)

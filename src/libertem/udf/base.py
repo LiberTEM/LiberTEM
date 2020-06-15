@@ -800,26 +800,33 @@ class Task(object):
 
         The resources allow scheduling of CPU-only compute, CUDA-only compute,
         (CPU or CUDA) hybrid compute, and service tasks in such a way that all
-        resources are used without oversubscription.
+        resources are used without oversubscription. Furthermore, they
+        distinguish if the given resource can be accessed with a transparent
+        NumPy ndarray interface -- namely if CuPy is installed to access CUDA
+        resources.
 
-        Each CPU worker gets one CPU and one compute resource assigned. Each
-        CUDA worker gets one CUDA and one compute resource assigned. A service
-        worker doesn't get any resources assigned.
+        Each CPU worker gets one CPU, one compute and one ndarray resource
+        assigned. Each CUDA worker gets one CUDA and one compute resource
+        assigned. If CuPy is installed, it additionally gets an ndarray resource
+        assigned. A service worker doesn't get any resources assigned.
 
-        A CPU-only task consumes one CPU and one compute resource, i.e. it will
-        be scheduled only on CPU workers. A CUDA-only task consumes one CUDA and
-        one compute resource, i.e. it will only be scheduled on CUDA workers. A
-        hybrid task that can run on both CPU or CUDA only consumes a compute
-        resource, i.e. it can be scheduled on CPU or CUDA workers. A service
-        task doesn't request any resources and can therefore run on CPU, CUDA
-        and service workers.
+        A CPU-only task consumes one CPU, one ndarray and one compute resource,
+        i.e. it will be scheduled only on CPU workers. A CUDA-only task consumes
+        one CUDA, one compute and possibly an ndarray resource, i.e. it will
+        only be scheduled on CUDA workers. A hybrid task that can run on both
+        CPU or CUDA using a transparent ndarray interface only consumes a
+        compute and an ndarray resource, i.e. it can be scheduled on CPU workers
+        or CUDA workers with CuPy. A service task doesn't request any resources
+        and can therefore run on CPU, CUDA and service workers.
 
         Which device a hybrid task uses is only decided at runtime by the
         environment variables that are set on each worker process.
 
         That way, CPU-only and CUDA-only tasks can run in parallel without
         oversubscription, and hybrid tasks use whatever compute workers are free
-        at the time.
+        at the time. Furthermore, it allows using CUDA without installing CuPy.
+        See https://github.com/LiberTEM/LiberTEM/pull/760 for detailed
+        discussion.
 
         Compute tasks will not run on service workers, so that these can serve
         shorter service tasks with lower latency.
@@ -840,7 +847,7 @@ class Task(object):
         '''
         # default: run only on CPU and do computation
         # No CUDA support for the deprecated Job interface
-        return {'CPU': 1, 'compute': 1}
+        return {'CPU': 1, 'compute': 1, 'ndarray': 1}
 
     def __call__(self):
         raise NotImplementedError()
@@ -865,33 +872,41 @@ class UDFTask(Task):
 
         See docstring of super class for details.
         """
-        backends_for_udfs = [
-            set(udf.get_backends())
-            for udf in self._udfs
-        ]
-        backends = set(backends_for_udfs[0])  # intersection of backends
-        for backend_set in backends_for_udfs:
-            backends.intersection_update(backend_set)
+        needs_cuda = 0
+        needs_cpu = 0
+        needs_ndarray = 0
+        backends_for_udfs = []
+        for udf in self._udfs:
+            b = udf.get_backends()
+            if isinstance(b, str):
+                b = (b, )
+            backends_for_udfs.append(set(b))
+
         # Limit to externally specified backends
-        if self._backends is not None:
-            backends = set(self._backends).intersection(backends)
-        if len(backends) == 0:
+        for backend_set in backends_for_udfs:
+            if self._backends is not None:
+                b = self._backends
+                if isinstance(b, str):
+                    b = (b, )
+                backends = set(b).intersection(backend_set)
+            else:
+                backends = backend_set
+            needs_cuda += 'numpy' not in backends
+            needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
+            needs_ndarray += 'cuda' not in backends
+        if needs_cuda and needs_cpu:
             raise ValueError(
                 "There is no common supported UDF backend (have: %r, limited to %r)"
                 % (backends_for_udfs, self._backends)
             )
-        if 'numpy' in backends and ('cupy' in backends or 'cuda' in backends):
-            # Can be run on both CPU and CUDA workers
-            return {'compute': 1}
-        elif 'numpy' in backends:
-            # Only run on CPU workers
-            return {'CPU': 1, 'compute': 1}
-        elif ('cupy' in backends or 'cuda' in backends):
-            # Only run on CUDA workers
-            return {'CUDA': 1, 'compute': 1}
-        else:
-            raise ValueError(f"UDF backends are {backends}, supported are "
-                "'numpy', 'cuda' and 'cupy'")
+        result = {'compute': 1}
+        if needs_cpu:
+            result['CPU'] = 1
+        if needs_cuda:
+            result['CUDA'] = 1
+        if needs_ndarray:
+            result['ndarray'] = 1
+        return result
 
 
 class UDFRunner:

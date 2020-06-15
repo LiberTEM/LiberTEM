@@ -73,8 +73,42 @@ class UDF3(UDF):
         return ('cupy', 'numpy')
 
 
+class UDF4(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self):
+        pass
+
+    def get_backends(self):
+        return ('cuda',)
+
+
+class UDF5(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self):
+        pass
+
+    def get_backends(self):
+        # Single string instead of tuple
+        return 'cuda'
+
+
 def test_no_common_backends(default_raw, lt_ctx):
     runner = UDFRunner([UDF1(), UDF2()])
+    tasks = list(runner._make_udf_tasks(
+        dataset=default_raw, roi=None, corrections=None, backends=None
+    ))
+    for task in tasks:
+        with pytest.raises(ValueError) as e:
+            task.get_resources()
+        assert e.match("^There is no common supported UDF backend")
+
+
+def test_no_common_backends_2(default_raw, lt_ctx):
+    runner = UDFRunner([UDF1(), UDF4()])
     tasks = list(runner._make_udf_tasks(
         dataset=default_raw, roi=None, corrections=None, backends=None
     ))
@@ -90,7 +124,7 @@ def test_common_backends_cpu(default_raw, lt_ctx):
         dataset=default_raw, roi=None, corrections=None, backends=None
     ))
     for task in tasks:
-        assert task.get_resources() == {'CPU': 1, 'compute': 1}
+        assert task.get_resources() == {'CPU': 1, 'compute': 1, 'ndarray': 1}
 
 
 def test_common_backends_gpu(default_raw, lt_ctx):
@@ -99,7 +133,25 @@ def test_common_backends_gpu(default_raw, lt_ctx):
         dataset=default_raw, roi=None, corrections=None, backends=None
     ))
     for task in tasks:
-        assert task.get_resources() == {'CUDA': 1, 'compute': 1}
+        assert task.get_resources() == {'CUDA': 1, 'compute': 1, 'ndarray': 1}
+
+
+def test_common_backends_gpu_2(default_raw, lt_ctx):
+    runner = UDFRunner([UDF2(), UDF4()])
+    tasks = list(runner._make_udf_tasks(
+        dataset=default_raw, roi=None, corrections=None, backends=None
+    ))
+    for task in tasks:
+        assert task.get_resources() == {'CUDA': 1, 'compute': 1, 'ndarray': 1}
+
+
+def test_common_backends_gpu_3(default_raw, lt_ctx):
+    runner = UDFRunner([UDF3(), UDF4()])
+    tasks = list(runner._make_udf_tasks(
+        dataset=default_raw, roi=None, corrections=None, backends=None
+    ))
+    for task in tasks:
+        assert task.get_resources() == {'CUDA': 1, 'compute': 1, 'ndarray': 1}
 
 
 def test_common_backends_compute(default_raw, lt_ctx):
@@ -108,4 +160,13 @@ def test_common_backends_compute(default_raw, lt_ctx):
         dataset=default_raw, roi=None, corrections=None, backends=None
     ))
     for task in tasks:
-        assert task.get_resources() == {'compute': 1}
+        assert task.get_resources() == {'compute': 1, 'ndarray': 1}
+
+
+def test_common_backends_string(default_raw, lt_ctx):
+    runner = UDFRunner([UDF4(), UDF5()])
+    tasks = list(runner._make_udf_tasks(
+        dataset=default_raw, roi=None, corrections=None, backends=None
+    ))
+    for task in tasks:
+        assert task.get_resources() == {'CUDA': 1, 'compute': 1}

@@ -28,7 +28,7 @@ def worker_setup(resource, device):
         raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
 
 
-def cluster_spec(cpus, cudas, name='default', num_service=1, options=None):
+def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=None):
 
     if options is None:
         options = {}
@@ -40,7 +40,7 @@ def cluster_spec(cpus, cudas, name='default', num_service=1, options=None):
     workers_spec = {}
 
     cpu_options = deepcopy(options)
-    cpu_options["resources"] = {"CPU": 1, "compute": 1}
+    cpu_options["resources"] = {"CPU": 1, "compute": 1, "ndarray": 1}
     cpu_base_spec = {
         "cls": dd.Nanny,
         "options": cpu_options
@@ -57,6 +57,8 @@ def cluster_spec(cpus, cudas, name='default', num_service=1, options=None):
 
     cuda_options = deepcopy(options)
     cuda_options["resources"] = {"CUDA": 1, "compute": 1}
+    if has_cupy:
+        cuda_options["resources"]["ndarray"] = 1
     cuda_base_spec = {
         "cls": dd.Nanny,
         "options": cuda_options
@@ -381,7 +383,7 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
 
-def cli_worker(scheduler, local_directory, cpus, cudas, name, log_level):
+def cli_worker(scheduler, local_directory, cpus, cudas, has_cupy, name, log_level):
     import asyncio
 
     options = {
@@ -390,7 +392,7 @@ def cli_worker(scheduler, local_directory, cpus, cudas, name, log_level):
 
     }
 
-    spec = cluster_spec(cpus=cpus, cudas=cudas, name=name, options=options)
+    spec = cluster_spec(cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options)
 
     async def run(spec):
         workers = []

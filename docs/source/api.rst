@@ -38,6 +38,9 @@ To control how many CPUs and which CUDA devices are used, you can specify them a
     # Example: Deactivate CUDA devices by removing them from the device dictionary
     devices['cudas'] = []
 
+    # Example: Deactivate CuPy integration
+    devices['has_cupy'] = False
+
     # Example: Use 3 CPUs. The IDs are ignored at the moment, i.e. no CPU pinning
     devices['cpus'] = range(3)
 

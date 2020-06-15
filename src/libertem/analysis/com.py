@@ -104,14 +104,8 @@ class COMResultSet(AnalysisResultSet):
     pass
 
 
-class COMAnalysis(BaseMasksAnalysis):
+class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "CENTER_OF_MASS",
-        }
 
     # FIXME remove this after UDF version is final
     def get_results(self, job_results):

@@ -4,14 +4,8 @@ import sparse
 from .masks import SingleMaskAnalysis
 
 
-class PointMaskAnalysis(SingleMaskAnalysis):
+class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "APPLY_POINT_SELECTOR",
-        }
 
     def get_description(self):
         return "intensity of the integration over the selected point"

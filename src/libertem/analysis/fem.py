@@ -5,14 +5,8 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.FEM as FEM
 
 
-class FEMAnalysis(BaseAnalysis):
+class FEMAnalysis(BaseAnalysis, id_="FEM"):
     TYPE = "UDF"
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "FEM",
-        }
 
     def get_udf(self):
         center = (self.parameters["cy"], self.parameters["cx"])

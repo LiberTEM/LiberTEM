@@ -4,14 +4,8 @@ import libertem.udf.stddev as std
 from libertem.analysis.getroi import get_roi
 
 
-class SDAnalysis(BaseAnalysis):
+class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "SD_FRAMES",
-        }
 
     def get_udf(self):
         return std.StdDevUDF()

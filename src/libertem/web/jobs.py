@@ -3,7 +3,7 @@ import logging
 
 import tornado.web
 
-from libertem.analysis.base import AnalysisRegistry
+from libertem.analysis.base import Analysis
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
@@ -30,7 +30,8 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         params = analysis_details["parameters"]
 
         # print(AnalysisRegistry.get_analysis_by_type())
-        analysis = AnalysisRegistry.get_analysis_by_type(analysis_type)['class'](
+        print(Analysis.registry)
+        analysis = Analysis.get_analysis_by_type(analysis_type)(
             dataset=ds,
             parameters=params,
         )

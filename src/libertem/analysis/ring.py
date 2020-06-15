@@ -23,14 +23,8 @@ class RingTemplate():
         return '\n'.join(plot)
 
 
-class RingMaskAnalysis(SingleMaskAnalysis):
+class RingMaskAnalysis(SingleMaskAnalysis, id_="APPLY_RING_MASK"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "APPLY_RING_MASK",
-        }
 
     def get_description(self):
         return "intensity of the integration over the selected ring"

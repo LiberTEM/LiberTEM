@@ -3,14 +3,8 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.crystallinity as crystal
 
 
-class ApplyFFTMask(BaseAnalysis):
+class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
     TYPE = "UDF"
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "APPLY_FFT_MASK",
-        }
 
     def get_udf(self):
         rad_in = self.parameters["rad_in"]

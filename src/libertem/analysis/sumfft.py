@@ -6,14 +6,8 @@ from .base import AnalysisResult, AnalysisResultSet
 import numpy as np
 
 
-class SumfftAnalysis(SumAnalysis):
+class SumfftAnalysis(SumAnalysis, id_="FFTSUM_FRAMES"):
     TYPE = 'UDF'
-
-    @classmethod
-    def get_analysis_info(cls):
-        return {
-            "type": "FFTSUM_FRAMES",
-        }
 
     def get_udf_results(self, udf_results, roi):
         job_results = np.array(udf_results['intensity'])

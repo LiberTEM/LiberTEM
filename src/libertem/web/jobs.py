@@ -7,6 +7,7 @@ from libertem.analysis.base import Analysis
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
+from libertem.analysis.base import Analysis
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
 from libertem.utils.async_utils import run_blocking

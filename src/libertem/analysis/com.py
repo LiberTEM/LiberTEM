@@ -107,6 +107,12 @@ class COMResultSet(AnalysisResultSet):
 class COMAnalysis(BaseMasksAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "CENTER_OF_MASS",
+        }
+
     # FIXME remove this after UDF version is final
     def get_results(self, job_results):
         shape = tuple(self.dataset.shape.nav)

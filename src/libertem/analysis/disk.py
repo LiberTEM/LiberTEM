@@ -7,6 +7,12 @@ from .masks import SingleMaskAnalysis
 class DiskMaskAnalysis(SingleMaskAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "APPLY_DISK_MASK",
+        }
+
     def get_description(self):
         return "intensity of the integration over the selected disk"
 

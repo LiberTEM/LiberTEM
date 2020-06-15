@@ -7,6 +7,12 @@ from libertem.analysis.getroi import get_roi
 class SDAnalysis(BaseAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "SD_FRAMES",
+        }
+
     def get_udf(self):
         return std.StdDevUDF()
 

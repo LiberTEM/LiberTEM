@@ -26,6 +26,12 @@ class RingTemplate():
 class RingMaskAnalysis(SingleMaskAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "APPLY_RING_MASK",
+        }
+
     def get_description(self):
         return "intensity of the integration over the selected ring"
 
@@ -70,5 +76,5 @@ class RingMaskAnalysis(SingleMaskAnalysis):
         }
 
     @classmethod
-    def get_temp_helper(cls):
+    def get_template_helper(cls):
         return RingTemplate

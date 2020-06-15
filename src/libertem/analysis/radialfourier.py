@@ -62,6 +62,12 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
 
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "RADIAL_FOURIER",
+        }
+
     def get_udf_results(self, udf_results, roi):
         # Here, we reconstruct the shape of the Job result
         # so that we don't have to change the involved

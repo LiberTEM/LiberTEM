@@ -9,6 +9,12 @@ import numpy as np
 class SumfftAnalysis(SumAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "FFTSUM_FRAMES",
+        }
+
     def get_udf_results(self, udf_results, roi):
         job_results = np.array(udf_results['intensity'])
         real_rad = self.parameters.get("real_rad")

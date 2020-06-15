@@ -61,6 +61,12 @@ class SumResultSet(AnalysisResultSet):
 class SumAnalysis(BaseAnalysis):
     TYPE = 'UDF'
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "SUM_FRAMES",
+        }
+
     def get_udf(self):
         dest_dtype = np.dtype(self.dataset.dtype)
         if dest_dtype.kind not in ('c', 'f'):
@@ -90,5 +96,5 @@ class SumAnalysis(BaseAnalysis):
         ])
 
     @classmethod
-    def get_temp_helper(cls):
+    def get_template_helper(cls):
         return SumTemplate

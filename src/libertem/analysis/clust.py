@@ -18,6 +18,12 @@ from libertem.masks import _make_circular_mask
 class ClusterAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "CLUST",
+        }
+
     def get_udf(self):
         # FIXME: we don't have all parameters available here to actually construct
         # a useful udf instance - this should be optional for Analysis subclasses

@@ -154,7 +154,26 @@ class AnalysisResultSet:
         return iter(self.results)
 
 
-class Analysis:
+class AnalysisRegistry(type):
+
+    registry = {}
+
+    def __init__(cls, name, args, bases):
+
+        analysis_info = cls.get_analysis_info()
+
+        if analysis_info is None:
+            return
+        cls.registry[analysis_info['type']] = {
+            "class": cls,
+        }
+
+    @classmethod
+    def get_analysis_by_type(cls, type_):
+        return cls.registry[type_]
+
+
+class Analysis(metaclass=AnalysisRegistry):
     """
     Abstract base class for Analysis classes.
 
@@ -248,6 +267,10 @@ class Analysis:
         Get analysis parameters. Override to set defaults
         """
         raise NotImplementedError()
+
+    @classmethod
+    def get_analysis_info(cls):
+        return None
 
 
 class BaseAnalysis(Analysis):

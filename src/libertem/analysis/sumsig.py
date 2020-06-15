@@ -6,6 +6,12 @@ import libertem.udf.sumsigudf as sumsigudf
 class SumSigAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "SUM_SIG",
+        }
+
     def get_udf(self):
         return sumsigudf.SumSigUDF()
 

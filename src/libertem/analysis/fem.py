@@ -8,6 +8,12 @@ import libertem.udf.FEM as FEM
 class FEMAnalysis(BaseAnalysis):
     TYPE = "UDF"
 
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "FEM",
+        }
+
     def get_udf(self):
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]

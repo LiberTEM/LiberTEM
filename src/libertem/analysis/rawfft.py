@@ -4,6 +4,13 @@ from .raw import PickFrameAnalysis
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis):
+
+    @classmethod
+    def get_analysis_info(cls):
+        return {
+            "type": "PICK_FFT_FRAME",
+        }
+
     def get_results(self, job_results):
         # Make sure we don't use legacy code from superclasses
         raise NotImplementedError

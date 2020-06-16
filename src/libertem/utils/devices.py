@@ -33,6 +33,8 @@ def detect():
         Each containing
         a list of devices. Only physical CPU cores are counted, i.e. no
         hyperthreading.
+        Additionally it has the key :code:`'has_cupy'`, which signals
+        if cupy is installed and available.
     '''
     cores = psutil.cpu_count(logical=False)
     if cores is None:

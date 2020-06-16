@@ -149,8 +149,7 @@ setup(
         "llvmlite>=0.29.0",
         # https://github.com/LiberTEM/LiberTEM/issues/763
         # https://github.com/LiberTEM/LiberTEM/issues/783
-        # FIXME update blobfinder to work with 0.50
-        "numba==0.49.1",
+        "numba>=0.49.1",
         "ncempy>=1.4",
         'pywin32!=226;platform_system=="Windows"',
         # FIXME pull request #259
@@ -162,7 +161,8 @@ setup(
         'msgpack<1',  # FIXME: remove after distributed is fixed
         'tqdm',
         # FIXME remove in 0.7.0 after blobfinder deprecation
-        'libertem-blobfinder',
+        # Ensure compatibility with numba>=0.50
+        'libertem-blobfinder>=0.4.1',
         'threadpoolctl'
     ],
     extras_require={

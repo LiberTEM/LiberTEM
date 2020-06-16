@@ -145,8 +145,6 @@ setup(
         "pillow",
         "h5py",
         "psutil",
-        # Contains bug fix relevant for numba in libertem.corrections.detector:
-        "llvmlite>=0.29.0",
         # https://github.com/LiberTEM/LiberTEM/issues/763
         # https://github.com/LiberTEM/LiberTEM/issues/783
         "numba>=0.49.1",

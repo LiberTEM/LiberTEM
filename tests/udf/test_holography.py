@@ -9,7 +9,9 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    # CuPy support deactivated due to https://github.com/LiberTEM/LiberTEM/issues/815
+    # 'backend', ['numpy', 'cupy']
+    'backend', ['numpy']
 )
 def test_holo_reconstruction(lt_ctx, backend):
     if backend == 'cupy':

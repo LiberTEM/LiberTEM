@@ -211,4 +211,6 @@ class HoloReconstructUDF(UDF):
         self.results.wave[:] = wav
 
     def get_backends(self):
-        return ('numpy', 'cupy')
+        # CuPy support deactivated due to https://github.com/LiberTEM/LiberTEM/issues/815
+        return ('numpy',)
+        # return ('numpy', 'cupy')

@@ -32,6 +32,7 @@ export const initialConfigState: ConfigState = {
     devices: {
         cpus: [] as number[],
         cudas: [] as number[],
+        has_cupy: false,
     },
     cwd: "/",
     separator: "/",

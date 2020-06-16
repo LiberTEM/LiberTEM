@@ -16,6 +16,7 @@ export interface MsgPartConfig {
     devices: {
         cpus: number[],
         cudas: number[],
+        has_cupy: boolean,
     }
     cwd: string,
     separator: string,

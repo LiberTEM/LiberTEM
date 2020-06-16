@@ -60,8 +60,8 @@ def test_start_local_default(hdf5_ds_1):
     )
     if cudas:
         assert np.all(cuda_only['device_class'].data == 'cuda')
-    if cupy_only is not None:
-        assert np.all(cupy_only['device_class'].data == 'cuda')
+        if cupy_only is not None:
+            assert np.all(cupy_only['device_class'].data == 'cuda')
     assert np.all(numpy_only['device_class'].data == 'cpu')
 
 

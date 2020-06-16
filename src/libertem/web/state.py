@@ -316,7 +316,6 @@ class SharedState:
 
     def get_config(self):
         detected_devices = devices.detect()
-        detected_devices["cpus"] = list(detected_devices["cpus"])
         return {
             "version": libertem.__version__,
             "resultFileFormats": ResultFormatRegistry.get_available_formats(),

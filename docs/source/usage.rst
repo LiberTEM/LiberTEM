@@ -67,8 +67,9 @@ LiberTEM can connect to a running dask cluster. To start a cluster, first run a 
 
     (libertem) $ dask-scheduler --host localhost
 
-LiberTEM requires specific resource tags and environment settings on the dask workers.
-The easiest way to start workers with the appropriate settings is
+GPU support in LiberTEM requires specific resource tags and environment settings
+on the dask workers. The easiest way to start workers with the appropriate
+settings is
 
 .. code-block:: shell
 

@@ -4,16 +4,19 @@ from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.analysis.getroi import get_roi
 from libertem.udf.sum import SumUDF
+from .helper import GeneratorHelper
 
 
-class SumTemplate():
+class SumTemplate(GeneratorHelper):
 
-    def __init__(self):
-        self.short_name = "sum"
-        self.api = "create_sum_analysis"
+    short_name = "sum"
+    api = "create_sum_analysis"
 
-    def convert_params(self, raw_params, ds):
-        return f"dataset={ds}"
+    def __init__(self, params):
+        self.params = params
+
+    def convert_params(self):
+        return f"dataset=ds"
 
     def get_plot(self):
         plot = ["plt.figure()",

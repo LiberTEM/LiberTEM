@@ -9,9 +9,30 @@ from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
-
+from .helper import GeneratorHelper
 
 log = logging.getLogger(__name__)
+
+
+class RadialTemplate(GeneratorHelper):
+
+    short_name = "radial"
+    api = "create_radial_fourier_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def convert_params(self):
+        params = [f'dataset=ds']
+        for k in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        # wrong visualization
+        plot = ["plt.figure()",
+                "plt.imshow(radial_result['intensity'].raw_data)"]
+        return '\n'.join(plot)
 
 
 class RadialFourierResultSet(AnalysisResultSet):
@@ -259,3 +280,6 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             'mask_count': mask_count,
             'mask_dtype': np.complex64,
         }
+    @classmethod
+    def get_template_helper(cls):
+        return RadialTemplate

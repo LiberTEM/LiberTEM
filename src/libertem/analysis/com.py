@@ -7,9 +7,31 @@ from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from libertem.corrections.coordinates import rotate_deg, flip_y, identity
-
+from .helper import GeneratorHelper
 
 log = logging.getLogger(__name__)
+
+
+class ComTemplate(GeneratorHelper):
+
+    short_name = "com"
+    api = "create_com_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def convert_params(self):
+        params = [f'dataset=ds']
+        for k in ['cx', 'cy']:
+            params.append(f'{k}={self.params[k]}')
+        params.append(f"mask_radius={self.params['r']}")
+        return ', '.join(params)
+
+    def get_plot(self):
+        # any other better way to plot ?
+        plot = ["plt.figure()",
+                "plt.imshow(com_result['intensity'].data / com_result['intensity'].data.max())"]
+        return '\n'.join(plot)
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):
@@ -209,3 +231,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             'mask_count': 3,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return ComTemplate

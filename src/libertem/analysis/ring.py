@@ -2,20 +2,22 @@ import numpy as np
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
 
 
-# Inherit from helper class
-class RingTemplate():
+class RingTemplate(GeneratorHelper):
 
-    def __init__(self):
-        self.short_name = "ring"
-        self.api = "create_ring_analysis"
+    short_name = "ring"
+    api = "create_ring_analysis"
 
-    def convert_params(self, raw_params, ds):
-        params = [f'dataset={ds}']
+    def __init__(self, params):
+        self.params = params
+
+    def convert_params(self):
+        params = [f'dataset=ds']
         for k in ['cx', 'cy', 'ri', 'ro']:
-            params.append(f'{k}={raw_params[k]}')
-        return ' ,'.join(params)
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
 
     def get_plot(self):
         plot = ["plt.figure()",

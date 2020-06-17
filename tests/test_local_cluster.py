@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import distributed as dd
 
 from libertem import api
 from utils import _naive_mask_apply, _mk_random
@@ -216,4 +217,46 @@ def test_start_local_cudaonly(hdf5_ds_1):
     assert set(found.keys()) == set(cudas)
 
     assert np.all(udf_res['device_class'].data == 'cuda')
+    assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
+
+
+@pytest.mark.functional
+def test_use_plain_dask(hdf5_ds_1):
+    # We deactivate the resource scheduling and run on a plain dask cluster
+    hdf5_ds_1.set_num_cores(2)
+    mask = _mk_random(size=(16, 16))
+    with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data)
+    with dd.LocalCluster(n_workers=2, threads_per_worker=1) as cluster:
+        client = dd.Client(cluster, set_as_default=False)
+        executor = DaskJobExecutor(client=client)
+        ctx = api.Context(executor=executor)
+        analysis = ctx.create_mask_analysis(
+            dataset=hdf5_ds_1, factories=[lambda: mask]
+        )
+        results = ctx.run(analysis)
+        udf_res = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+        # Requesting CuPy, which is not available
+        with pytest.raises(RuntimeError):
+            _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy',)), dataset=hdf5_ds_1)
+
+    assert np.allclose(
+        results.mask_0.raw_data,
+        expected
+    )
+
+    for val in udf_res['device_id'].data[0].values():
+        print(val)
+        # no CUDA
+        assert val["cuda"] is None
+        # Default without worker setup
+        assert val["cpu"] == 0
+
+    for val in udf_res['backend'].data[0].values():
+        print(val)
+        # no CUDA
+        assert 'numpy' in val
+
+    assert np.all(udf_res['device_class'].data == 'cpu')
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))

@@ -126,10 +126,17 @@ class CommonDaskMixin(object):
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
-            if not self._resources_available(workers, resources):
-                raise RuntimeError("Requested resources not available in cluster:", resources)
+            # This is set in the constructor of DaskJobExecutor
+            if self.lt_resources:
+                if not self._resources_available(workers, resources):
+                    raise RuntimeError("Requested resources not available in cluster:", resources)
+                submit_kwargs['resources'] = resources
+            else:
+                if 'CUDA' in resources:
+                    raise RuntimeError(
+                        "Requesting CUDA resource on a cluster without resource management."
+                    )
             submit_kwargs['workers'] = locations
-            submit_kwargs['resources'] = resources
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
@@ -140,6 +147,15 @@ class CommonDaskMixin(object):
             return all(worker.resources.get(key, 0) >= resources[key] for key in resources.keys())
 
         return len(workers.filter(filter_fn))
+
+    def has_libertem_resources(self):
+        workers = self.get_available_workers()
+
+        def has_resources(worker):
+            r = worker.resources
+            return 'compute' in r and (('CPU' in r and 'ndarray' in r) or 'CUDA' in r)
+
+        return len(workers.filter(has_resources)) > 0
 
     def _get_futures(self, tasks):
         available_workers = self.get_available_workers()
@@ -168,9 +184,12 @@ class CommonDaskMixin(object):
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):
-    def __init__(self, client, is_local=False):
+    def __init__(self, client, is_local=False, lt_resources=None):
         self.is_local = is_local
         self.client = client
+        if lt_resources is None:
+            lt_resources = self.has_libertem_resources()
+        self.lt_resources = lt_resources
         self._futures = {}
 
     def run_job(self, job, cancel_id=None):
@@ -347,7 +366,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
 
-        return cls(client=client, is_local=True)
+        return cls(client=client, is_local=True, lt_resources=True)
 
     def __enter__(self):
         return self

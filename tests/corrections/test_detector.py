@@ -104,17 +104,13 @@ def test_detector_correction():
         print("Sig dims:", sig_dims)
         print("Exclude: ", exclude)
 
-        try:
-            corrected = detector.correct(
-                buffer=damaged_data,
-                dark_image=dark_image,
-                gain_map=gain_map,
-                excluded_pixels=exclude,
-                inplace=False
-            )
-        except detector.RepairValueError as e:
-            print(e)
-            continue
+        corrected = detector.correct(
+            buffer=damaged_data,
+            dark_image=dark_image,
+            gain_map=gain_map,
+            excluded_pixels=exclude,
+            inplace=False
+        )
 
         _check_result(
             data=data, corrected=corrected,
@@ -162,17 +158,13 @@ def test_detector_patch():
         print("Sig dims:", sig_dims)
         print("Exclude: ", exclude)
 
-        try:
-            corrected = detector.correct(
-                buffer=damaged_data,
-                dark_image=dark_image,
-                gain_map=gain_map,
-                excluded_pixels=exclude,
-                inplace=False
-            )
-        except detector.RepairValueError as e:
-            print(e)
-            continue
+        corrected = detector.correct(
+            buffer=damaged_data,
+            dark_image=dark_image,
+            gain_map=gain_map,
+            excluded_pixels=exclude,
+            inplace=False
+        )
 
         _check_result(
             data=data, corrected=corrected,
@@ -210,17 +202,13 @@ def test_detector_patch_overlapping():
         print("Sig dims:", sig_dims)
         print("Exclude: ", exclude)
 
-        try:
-            corrected = detector.correct(
-                buffer=damaged_data,
-                dark_image=dark_image,
-                gain_map=gain_map,
-                excluded_pixels=exclude,
-                inplace=False
-            )
-        except detector.RepairValueError as e:
-            print(e)
-            continue
+        corrected = detector.correct(
+            buffer=damaged_data,
+            dark_image=dark_image,
+            gain_map=gain_map,
+            excluded_pixels=exclude,
+            inplace=False
+        )
 
         _check_result(
             data=data, corrected=corrected,

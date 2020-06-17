@@ -126,21 +126,26 @@ class CommonDaskMixin(object):
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
-            # This is set in the constructor of DaskJobExecutor
-            if self.lt_resources:
-                if not self._resources_available(workers, resources):
-                    raise RuntimeError("Requested resources not available in cluster:", resources)
-                submit_kwargs['resources'] = resources
-            else:
-                if 'CUDA' in resources:
-                    raise RuntimeError(
-                        "Requesting CUDA resource on a cluster without resource management."
-                    )
+            submit_kwargs['resources'] = self._validate_resources(workers, resources)
             submit_kwargs['workers'] = locations
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
         return futures
+
+    def _validate_resources(self, workers, resources):
+        # This is set in the constructor of DaskJobExecutor
+        if self.lt_resources:
+            if not self._resources_available(workers, resources):
+                raise RuntimeError("Requested resources not available in cluster:", resources)
+            result = resources
+        else:
+            if 'CUDA' in resources:
+                raise RuntimeError(
+                    "Requesting CUDA resource on a cluster without resource management."
+                )
+            result = {}
+        return result
 
     def _resources_available(self, workers, resources):
         def filter_fn(worker):

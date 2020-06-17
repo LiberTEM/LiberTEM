@@ -50,43 +50,23 @@ class CodeTemplate():
 
     def analysis(self):
 
+        # move this to analysis subclass
         temp_docs = ["# $analysis",
                      "**description**"]
-
-        temp_roi = ["roi_params = $roi_params",
-                    "roi = get_roi(roi_params, ds.shape.nav)"]
-
-        temp_analysis = ["${short}_analysis = ctx.$analysis_api($params)",
-                         "$roi",
-                         "udf = ${short}_analysis.get_udf()",
-                         "${short}_result = ctx.run_udf(ds, udf, roi, progress=True)"]
 
         form_analysis = []
 
         for analysis in self.compound_analysis:
 
-            an_type = analysis['analysisType']
-            an_params = analysis['parameters']
-            cls = Analysis.get_analysis_by_type(an_type)
+            type = analysis['analysisType']
+            params = analysis['parameters']
+            cls = Analysis.get_analysis_by_type(type)
             helperCls = cls.get_template_helper()
-            helper = helperCls()
-
-            analysis_api = helper.api
-            short = helper.short_name
+            helper = helperCls(params)
 
             plot_ = helper.get_plot()
-            docs_ = self.format_template(temp_docs, {'analysis': an_type})
-
-            if 'roi' in an_params.keys():
-                data = {'roi_params': an_params}
-                roi = self.format_template(temp_roi, data)
-            else:
-                roi = "roi = None"
-
-            params = helper.convert_params(an_params, 'ds')
-
-            data = {'short': short, 'analysis_api': analysis_api, 'params': params, 'roi': roi}
-            analy_ = self.format_template(temp_analysis, data)
+            analy_ = helper.get_analysis()
+            docs_ = self.format_template(temp_docs, {'analysis': type})
 
             form_analysis.append((docs_, analy_, plot_))
 

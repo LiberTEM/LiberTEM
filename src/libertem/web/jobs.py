@@ -26,11 +26,11 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         ds = self.state.dataset_state[analysis_state['dataset']]
 
         analysis_details = analysis_state["details"]
+        # remove
+        print(analysis_details)
         analysis_type = analysis_details["analysisType"]
         params = analysis_details["parameters"]
 
-        # print(AnalysisRegistry.get_analysis_by_type())
-        print(Analysis.registry)
         analysis = Analysis.get_analysis_by_type(analysis_type)(
             dataset=ds,
             parameters=params,

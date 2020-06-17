@@ -2,6 +2,13 @@ from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.stddev as std
 from libertem.analysis.getroi import get_roi
+from .helper import GeneratorHelper
+
+
+class SDTemplate(GeneratorHelper):
+
+    short_name = "sd"
+    api = ""
 
 
 class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
@@ -22,3 +29,7 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
                            key="intensity", title="intensity",
                            desc="SD of frames"),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return SDTemplate

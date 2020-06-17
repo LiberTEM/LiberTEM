@@ -4,6 +4,27 @@ from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
 from libertem.udf.raw import PickUDF
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .helper import GeneratorHelper
+
+
+class PickTemplate(GeneratorHelper):
+
+    short_name = "pick"
+    api = "create_pick_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def convert_params(self):
+        params = [f'dataset=ds']
+        for k in ['x', 'y']:
+            params.append(f'{k}={self.params[k]}')
+        return ' ,'.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(np.squeeze(pick_result['intensity'].data))"]
+        return '\n'.join(plot)
 
 
 class PickResultSet(AnalysisResultSet):
@@ -133,3 +154,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                            key="intensity", title="intensity",
                            desc="the frame at %s" % (coords,)),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return PickTemplate

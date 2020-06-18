@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import threading
+import pkg_resources
 
 import pytest
 
@@ -168,3 +169,9 @@ def a():
 @pytest.fixture
 def b():
     return np.array([1, 0])
+
+
+@pytest.mark.hookwrapper
+def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_info, commit_info):
+    machine_info["freeze"] = [(d.key, d.version) for d in pkg_resources.working_set]
+    yield

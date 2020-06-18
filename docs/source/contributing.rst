@@ -179,6 +179,31 @@ After running the tests, you can inspect the test coverage by opening
 in coverage is also reported by the codecov bot. Ideally, the test coverage
 should go up with each pull request, at least it should stay the same.
 
+Benchmarking
+~~~~~~~~~~~~
+
+LiberTEM uses `pytest-benchmark
+<https://pytest-benchmark.readthedocs.io/en/latest/usage.html>`_ to benchmark
+certain performance-critical parts of the code. Benchmarking is disabled by
+default. You can enable the benchmarks ad-hoc using
+
+.. code-block:: shell
+
+   $ pytest --benchmark-enable tests/
+
+In order to record a complete benchmark run for later comparison, you can use
+
+.. code-block:: shell
+
+   $ tox -e benchmark
+
+This saves the benchmark data as a JSON file in a subfolder of
+:code:`benchmark_results`. A process to commit such results and report them in a
+convenient fashion is to be developed. See :issue:`198`, feedback welcome!
+
+.. versionadded:: 0.6.0
+   First benchmark included to resolve :issue:`814`, benchmark coverage will grow over time.
+
 Running tests for the client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

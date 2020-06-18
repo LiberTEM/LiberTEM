@@ -26,3 +26,4 @@ data
 *.DS_Store
 *.idea
 .mypy_cache/
+.benchmarks

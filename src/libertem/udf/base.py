@@ -242,10 +242,10 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_contiguous_view_for_tile(partition, tile)
 
-    def flush(self):
+    def flush(self, debug=False):
         # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
-            buf.flush()
+            buf.flush(debug=debug)
 
     def export(self):
         # .. versionadded:: 0.6.0.dev0
@@ -427,10 +427,10 @@ class UDFBase:
         for ns in [self.params, self.results]:
             ns.set_contiguous_view_for_tile(partition, tile)
 
-    def flush(self):
+    def flush(self, debug=False):
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
-            ns.flush()
+            ns.flush(debug=debug)
 
     def set_views_for_frame(self, partition, tile, frame_idx):
         for ns in [self.params, self.results]:
@@ -1023,7 +1023,7 @@ class UDFRunner:
     def _wrapup_udfs(self, numpy_udfs, cupy_udfs, partition):
         udfs = numpy_udfs + cupy_udfs
         for udf in udfs:
-            udf.flush()
+            udf.flush(self._debug)
             if hasattr(udf, 'postprocess'):
                 udf.clear_views()
                 udf.postprocess()

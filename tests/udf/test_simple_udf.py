@@ -3,9 +3,12 @@ import pickle
 import numpy as np
 import pytest
 
-from libertem.udf import UDF
+from libertem.udf.base import UDF, UDFRunner
 from libertem.udf.base import UDFMeta
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.utils.devices import detect
+from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.common.buffers import reshaped_view
 
 from utils import _mk_random
 
@@ -454,3 +457,53 @@ def test_with_progress_bar(lt_ctx):
     pixelsum = PixelsumUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, progress=True)
     # TODO: maybe assert that some output happened on stderr?
+
+
+class ReshapedViewUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            "sigbuf": self.buffer(kind="sig", dtype=np.int, where="device")
+        }
+
+    def process_tile(self, tile):
+        flat_tile = reshaped_view(tile, (tile.shape[0], -1))
+        flat_buf = reshaped_view(self.results.sigbuf, (-1, ))
+        flat_buf[:] = 1
+
+    def merge(self, dest, src):
+        dest["sigbuf"][:] = src["sigbuf"][:]
+
+
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_noncontiguous_tiles(lt_ctx, backend, benchmark):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+
+    data = _mk_random(size=(30, 3, 256), dtype="float32")
+    dataset = MemoryDataSet(
+        data=data, tileshape=(3, 2, 2),
+        num_partitions=2, sig_dims=2
+    )
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        udf = ReshapedViewUDF()
+        res = benchmark(lt_ctx.run_udf, udf=udf, dataset=dataset)
+        partition = next(dataset.get_partitions())
+        p_udf = udf.copy_for_partition(partition=partition, roi=None)
+        # Enabling debug=True checks for disjoint cache keys
+        part_res = UDFRunner([p_udf], debug=True).run_for_partition(
+            partition=partition,
+            roi=None,
+            corrections=None,
+        )
+
+    finally:
+        set_use_cpu(0)
+
+    assert np.all(res["sigbuf"].data == 1)

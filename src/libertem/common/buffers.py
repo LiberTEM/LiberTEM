@@ -420,14 +420,13 @@ class BufferWrapper(object):
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
                 if not view.flags.c_contiguous:
-                    assert disjoint(key, self._contiguous_cache.keys())
                     view = view.copy()
                     self._contiguous_cache[key] = view
             return view
         else:
             return self.get_view_for_tile(partition, tile)
 
-    def flush(self):
+    def flush(self, debug=False):
         '''
         Write back any cached contiguous copies
 
@@ -437,10 +436,14 @@ class BufferWrapper(object):
             for key, view in self._contiguous_cache.items():
                 sl = key.get(sig_only=True)
                 self._data[sl] = view
+                if debug:
+                    assert disjoint(key, self._contiguous_cache.keys())
             self._contiguous_cache = dict()
         else:
-            # Cache flushing not implemented for other kinds
-            assert not self._contiguous_cache
+            if self._contiguous_cache:
+                raise RuntimeError(
+                    f"Contiguous cache not implemented for kind {self._kind}."
+                )
 
     def export(self):
         '''

@@ -473,6 +473,9 @@ class ReshapedViewUDF(UDF):
     def merge(self, dest, src):
         dest["sigbuf"][:] = src["sigbuf"][:]
 
+    def get_backends(self):
+        return ('numpy', 'cupy')
+
 
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']

@@ -179,6 +179,8 @@ After running the tests, you can inspect the test coverage by opening
 in coverage is also reported by the codecov bot. Ideally, the test coverage
 should go up with each pull request, at least it should stay the same.
 
+.. _`benchmarking`:
+
 Benchmarking
 ~~~~~~~~~~~~
 

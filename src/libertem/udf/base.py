@@ -978,30 +978,30 @@ class UDFRunner:
             udf.set_meta(meta)
         return (meta, tiling_scheme, dtype)
 
-    def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):
-        def run_tile(udfs, tile, device_tile):
-            for udf in udfs:
-                method = udf.get_method()
-                if method == 'tile':
-                    udf.set_contiguous_views_for_tile(partition, tile)
-                    udf.set_slice(tile.tile_slice)
-                    udf.process_tile(device_tile)
-                elif method == 'frame':
-                    tile_slice = tile.tile_slice
-                    for frame_idx, frame in enumerate(device_tile):
-                        frame_slice = Slice(
-                            origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
-                            shape=Shape((1,) + tuple(tile_slice.shape)[1:],
-                                        sig_dims=tile_slice.shape.sig.dims),
-                        )
-                        udf.set_slice(frame_slice)
-                        udf.set_views_for_frame(partition, tile, frame_idx)
-                        udf.process_frame(frame)
-                elif method == 'partition':
-                    udf.set_views_for_tile(partition, tile)
-                    udf.set_slice(partition.slice)
-                    udf.process_partition(device_tile)
+    def _run_tile(self, udfs, partition, tile, device_tile):
+        for udf in udfs:
+            method = udf.get_method()
+            if method == 'tile':
+                udf.set_contiguous_views_for_tile(partition, tile)
+                udf.set_slice(tile.tile_slice)
+                udf.process_tile(device_tile)
+            elif method == 'frame':
+                tile_slice = tile.tile_slice
+                for frame_idx, frame in enumerate(device_tile):
+                    frame_slice = Slice(
+                        origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
+                        shape=Shape((1,) + tuple(tile_slice.shape)[1:],
+                                    sig_dims=tile_slice.shape.sig.dims),
+                    )
+                    udf.set_slice(frame_slice)
+                    udf.set_views_for_frame(partition, tile, frame_idx)
+                    udf.process_frame(frame)
+            elif method == 'partition':
+                udf.set_views_for_tile(partition, tile)
+                udf.set_slice(partition.slice)
+                udf.process_partition(device_tile)
 
+    def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):
         # FIXME pass information on target location (numpy or cupy)
         # to dataset so that is can already move it there.
         # In the future, it might even decode data on the device instead of CPU
@@ -1014,11 +1014,11 @@ class UDFRunner:
             xp = cupy_udfs[0].xp
 
         for tile in tiles:
-            run_tile(numpy_udfs, tile, tile)
+            self._run_tile(numpy_udfs, partition, tile, tile)
             if cupy_udfs:
                 # Work-around, should come from dataset later
                 device_tile = xp.asanyarray(tile)
-                run_tile(cupy_udfs, tile, device_tile)
+                self._run_tile(cupy_udfs, partition, tile, device_tile)
 
     def _wrapup_udfs(self, numpy_udfs, cupy_udfs, partition):
         udfs = numpy_udfs + cupy_udfs

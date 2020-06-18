@@ -3,7 +3,6 @@ import functools
 import logging
 import signal
 
-import tornado.util
 from dask import distributed as dd
 
 from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter

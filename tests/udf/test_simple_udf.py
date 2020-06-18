@@ -480,14 +480,14 @@ class ReshapedViewUDF(UDF):
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
-def test_noncontiguous_tiles(lt_ctx, backend, benchmark):
+def test_noncontiguous_tiles(lt_ctx, backend):
     if backend == 'cupy':
         d = detect()
         cudas = detect()['cudas']
         if not d['cudas'] or not d['has_cupy']:
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
 
-    data = _mk_random(size=(30, 3, 256), dtype="float32")
+    data = _mk_random(size=(30, 3, 7), dtype="float32")
     dataset = MemoryDataSet(
         data=data, tileshape=(3, 2, 2),
         num_partitions=2, sig_dims=2
@@ -496,7 +496,7 @@ def test_noncontiguous_tiles(lt_ctx, backend, benchmark):
         if backend == 'cupy':
             set_use_cuda(cudas[0])
         udf = ReshapedViewUDF()
-        res = benchmark(lt_ctx.run_udf, udf=udf, dataset=dataset)
+        res = lt_ctx.run_udf(udf=udf, dataset=dataset)
         partition = next(dataset.get_partitions())
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
         # Enabling debug=True checks for disjoint cache keys

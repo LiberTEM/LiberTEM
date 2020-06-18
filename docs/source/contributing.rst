@@ -171,6 +171,15 @@ suite:
 - `slow`: tests that take much more than 1 second to run
 - `functional`: tests that spin up a local dask cluster
 
+CUDA
+~~~~
+
+To run tests that require CuPy using tox, you can specify the CUDA version with the test environment:
+
+.. code-block:: shell
+
+    $ tox -e py36-cuda101
+
 Code coverage
 ~~~~~~~~~~~~~
 
@@ -195,16 +204,23 @@ default. You can enable the benchmarks ad-hoc using
 
 In order to record a complete benchmark run for later comparison, you can use
 
+.. note::
+   This requires :code:`tox>=3.15` since we are using generative section names
+   in :code:`tox.ini`.
+
 .. code-block:: shell
 
    $ tox -e benchmark
+   $ # alternatively
+   $ tox -e benchmark-cuda101
+   $ tox -e benchmark-cuda102
 
 This saves the benchmark data as a JSON file in a subfolder of
 :code:`benchmark_results`. A process to commit such results and report them in a
 convenient fashion is to be developed. See :issue:`198`, feedback welcome!
 
 .. versionadded:: 0.6.0
-   First benchmark included to resolve :issue:`814`, benchmark coverage will grow over time.
+   First benchmark included to help resolve :issue:`814`, benchmark coverage will grow over time.
 
 Running tests for the client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

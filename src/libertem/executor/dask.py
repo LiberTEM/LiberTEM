@@ -323,10 +323,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
     def close(self):
         if self.is_local:
             if self.client.cluster is not None:
-                try:
-                    self.client.cluster.close(timeout=1)
-                except tornado.util.TimeoutError:
-                    pass
+                self.client.cluster.close(timeout=30)
         self.client.close()
 
     @classmethod

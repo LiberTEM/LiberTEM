@@ -200,7 +200,7 @@ default. You can enable the benchmarks ad-hoc using
 
 .. code-block:: shell
 
-   $ pytest --benchmark-enable tests/
+   $ pytest --benchmark-enable benchmarks/
 
 In order to record a complete benchmark run for later comparison, you can use
 
@@ -220,7 +220,7 @@ This saves the benchmark data as a JSON file in a subfolder of
 convenient fashion is to be developed. See :issue:`198`, feedback welcome!
 
 .. versionadded:: 0.6.0
-   First benchmark included to help resolve :issue:`814`, benchmark coverage will grow over time.
+   First benchmarks included to help resolve :issue:`814`, benchmark coverage will grow over time.
 
 Running tests for the client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

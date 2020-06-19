@@ -49,8 +49,12 @@ if __name__ == '__main__':
     # com_details = {'analysisType': 'CENTER_OF_MASS', 'parameters': {'shape': 'com', 'cx': 125, 'cy': 125, 'r': 57.99711815561959}}
     # radial_details = {'analysisType': 'RADIAL_FOURIER', 'parameters': {'shape': 'radial_fourier', 'cx': 125, 'cy': 125, 'ri': 62.5, 'ro': 125, 'n_bins': 1, 'max_order': 8}}
     # disk_details = {'analysisType': 'APPLY_DISK_MASK', 'parameters': {'shape': 'disk', 'cx': 125, 'cy': 125, 'r': 62.5}}
-    point_details = {'analysisType': 'APPLY_POINT_SELECTOR', 'parameters': {'shape': 'point', 'cx': 125, 'cy': 125}}
-    comp_an = [sum_details, point_details]
+    # point_details = {'analysisType': 'APPLY_POINT_SELECTOR', 'parameters': {'shape': 'point', 'cx': 125, 'cy': 125}}
+    # sumfft_analysis = {'analysisType': 'FFTSUM_FRAMES', 'parameters': {'real_rad': 74.42426047250348, 'real_centerx': 125, 'real_centery': 125}}
+    # fft_analysis = {'analysisType': 'APPLY_FFT_MASK', 'parameters': {'rad_in': 45.1905896366885, 'rad_out': 111.10283899146317, 'real_rad': 74.42426047250348, 'real_centerx': 125, 'real_centery': 125}}
+    # fem_analysis = {'analysisType': 'FEM', 'parameters': {'shape': 'ring', 'cx': 127.04130643611913, 'cy': 127.16738932643455, 'ri': 48.871277617675304, 'ro': 106.02785782901057}}
+    sd_analysis = {'analysisType': 'SD_FRAMES', 'parameters': {'roi': {}}}
+    comp_an = [sum_details, sd_analysis]
 
     conn = {'type': 'local', 'url': 'http://tcp.localhost:9000'}
 

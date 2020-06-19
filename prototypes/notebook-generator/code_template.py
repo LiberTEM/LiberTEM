@@ -50,10 +50,6 @@ class CodeTemplate():
 
     def analysis(self):
 
-        # move this to analysis subclass
-        temp_docs = ["# $analysis",
-                     "**description**"]
-
         form_analysis = []
 
         for analysis in self.compound_analysis:
@@ -66,7 +62,7 @@ class CodeTemplate():
 
             plot_ = helper.get_plot()
             analy_ = helper.get_analysis()
-            docs_ = self.format_template(temp_docs, {'analysis': type})
+            docs_ = helper.get_docs()
 
             form_analysis.append((docs_, analy_, plot_))
 

@@ -15,6 +15,11 @@ class PickTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    def get_docs(self):
+        docs = ["# PICK Analysis",
+                "***about pick analysis ***"]
+        return '\n'.join(docs)
+
     def convert_params(self):
         params = [f'dataset=ds']
         for k in ['x', 'y']:

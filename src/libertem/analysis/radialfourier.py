@@ -22,6 +22,11 @@ class RadialTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    def get_docs(self):
+        docs = ["# Radial Fourier Analysis",
+                "***about rad analysis ***"]
+        return '\n'.join(docs)
+
     def convert_params(self):
         params = [f'dataset=ds']
         for k in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']:

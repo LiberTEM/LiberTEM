@@ -4,27 +4,25 @@
 #
 #    pip-compile --output-file=requirements.txt ../../setup.py
 #
+
 attrs==19.3.0             # via jsonschema
 click==7.1.2              # via libertem (../../setup.py)
 cloudpickle==1.4.1        # via libertem (../../setup.py)
 cycler==0.10.0            # via matplotlib
 decorator==4.4.2          # via networkx
-h5py-cache==1.0           # via ncempy
 h5py==2.10.0              # via libertem (../../setup.py), ncempy
-imagecodecs==2020.2.18    # via tifffile
 imageio==2.8.0            # via scikit-image
-importlib-metadata==1.6.0  # via jsonschema
 joblib==0.15.1            # via scikit-learn
 jsonschema==3.2.0         # via libertem (../../setup.py)
 kiwisolver==1.2.0         # via matplotlib
-libertem-blobfinder==0.4.0  # via libertem (../../setup.py)
-llvmlite==0.32.1          # via libertem (../../setup.py), numba
-matplotlib==3.2.1         # via libertem (../../setup.py), ncempy, scikit-image
+libertem-blobfinder==0.4.1  # via libertem (../../setup.py)
+llvmlite==0.33.0          # via numba
+matplotlib==3.2.2         # via libertem (../../setup.py), ncempy, scikit-image
 msgpack==0.6.2            # via libertem (../../setup.py)
-ncempy==1.5.0             # via libertem (../../setup.py)
+ncempy==1.6.0             # via libertem (../../setup.py)
 networkx==2.4             # via scikit-image
-numba==0.49.1             # via libertem (../../setup.py), libertem-blobfinder, sparse
-numpy==1.18.4             # via h5py, imageio, libertem (../../setup.py), libertem-blobfinder, matplotlib, ncempy, numba, pywavelets, scikit-image, scikit-learn, scipy, sparse, tifffile
+numba==0.50.0             # via libertem (../../setup.py), libertem-blobfinder, sparse
+numpy==1.18.5             # via h5py, imageio, libertem (../../setup.py), libertem-blobfinder, matplotlib, ncempy, numba, pywavelets, scikit-image, scikit-learn, scipy, sparse, tifffile
 pillow==7.1.2             # via imageio, libertem (../../setup.py), scikit-image
 psutil==5.7.0             # via libertem (../../setup.py)
 pyparsing==2.4.7          # via matplotlib
@@ -32,15 +30,14 @@ pyrsistent==0.16.0        # via jsonschema
 python-dateutil==2.8.1    # via matplotlib
 pywavelets==1.1.1         # via scikit-image
 scikit-image==0.17.2      # via libertem (../../setup.py)
-scikit-learn==0.23.0      # via libertem (../../setup.py)
+scikit-learn==0.23.1      # via libertem (../../setup.py)
 scipy==1.4.1              # via libertem (../../setup.py), ncempy, scikit-image, scikit-learn, sparse
-six==1.14.0               # via cycler, h5py, jsonschema, pyrsistent, python-dateutil
+six==1.15.0               # via cycler, h5py, jsonschema, pyrsistent, python-dateutil
 sparse==0.10.0            # via libertem (../../setup.py)
-threadpoolctl==2.0.0      # via libertem (../../setup.py), scikit-learn
-tifffile==2020.5.11       # via scikit-image
+threadpoolctl==2.1.0      # via libertem (../../setup.py), scikit-learn
+tifffile==2020.6.3        # via scikit-image
 tornado==6.0.4            # via libertem (../../setup.py)
-tqdm==4.46.0              # via libertem (../../setup.py)
-zipp==3.1.0               # via importlib-metadata
+tqdm==4.46.1              # via libertem (../../setup.py)
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

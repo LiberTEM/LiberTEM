@@ -67,6 +67,24 @@ const DownloadItems: React.SFC<DownloadItemsProps> = ({
     )
 }
 
+interface DownloadItemsProps {
+    compoundAnalysis: CompoundAnalysisState,
+}
+
+const DownloadScripts: React.SFC<DownloadItemsProps> = ({compoundAnalysis}) => {
+
+    const basePath = getApiBasePath();
+    const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`
+
+    const handleDownload = () => {
+        fetch(downloadUrl)
+    }
+
+    return(
+        <Button onClick={handleDownload}>Notebook</Button>
+    )
+}
+
 interface DownloadProps {
     compoundAnalysis: CompoundAnalysisState,
 }
@@ -112,6 +130,10 @@ const Download: React.SFC<DownloadProps> = ({ compoundAnalysis }) => {
             <Popup.Content>
                 <Header as="h3">Available results:</Header>
                 <DownloadItems compoundAnalysis={compoundAnalysis} currentFormat={currentFormat} />
+            </Popup.Content>
+            <Popup.Content>
+                <Header as="h3">Available scripts:</Header>
+                <DownloadScripts compoundAnalysis={compoundAnalysis} />
             </Popup.Content>
         </Modal>
     );

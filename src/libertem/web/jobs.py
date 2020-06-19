@@ -7,7 +7,6 @@ from libertem.analysis.base import Analysis
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
-from libertem.analysis.base import Analysis
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
 from libertem.utils.async_utils import run_blocking
@@ -27,8 +26,6 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         ds = self.state.dataset_state[analysis_state['dataset']]
 
         analysis_details = analysis_state["details"]
-        # remove
-        print(analysis_details)
         analysis_type = analysis_details["analysisType"]
         params = analysis_details["parameters"]
 

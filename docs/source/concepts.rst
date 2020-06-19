@@ -15,7 +15,7 @@ corresponds to the batch axis in machine learning frameworks.
 The "detector" axes are also called "signal axes", and a single 2D image is also called a frame.
 
 Axis order
-==========
+----------
 
 We generally follow the numpy convention for axis order, so for a 4D data set,
 you could have a :code:`(ny, nx, sy, sx)` tuple describing the shape.
@@ -32,7 +32,7 @@ In Python, the indices increase linearly with the row. A 3x3 Python matrix is re
 `The official "NumPy for Matlab users" documentation`_ might be helpful for Matlab users.
 
 Coordinate system
-=================
+-----------------
 
 LiberTEM works in pixel coordinates corresponding to array indices. That means
 (0, 0) is on the top left corner, the x axis points to the right and the y axis
@@ -56,7 +56,7 @@ rotations are therefore clock-wise.
     Discussion regarding full support for physical units can be found in :issue:`121`.
 
 Multidimensional data
-=====================
+---------------------
 
 While our GUI is currently limited to 4D data sets, the Python API does not
 have that limitation. You can load data of arbitraty dimensionality, provided our I/O

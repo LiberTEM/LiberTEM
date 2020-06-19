@@ -1,5 +1,6 @@
 import tornado
 import logging
+from .notebook_generator.notebook_generator import notebook_generator
 
 from .state import SharedState
 
@@ -13,7 +14,16 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
 
     async def get(self, compoundUuid: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]
-        analysisList = compoundAnalysis['details']['analyses']
-
-        for analysis_id in analysisList:
-            print(self.state.analysis_state[analysis_id]['details'])
+        analysis_ids = compoundAnalysis['details']['analyses']
+        ds_id = self.state.analysis_state[analysis_ids[0]]['dataset']
+        ds = self.state.dataset_state.datasets[ds_id]
+        dataset = {
+            "type": ds["params"]["params"]["type"],
+            "params": ds['converted']
+        }
+        analysis_details = []
+        for id in analysis_ids:
+            analysis_details.append(self.state.analysis_state[id]['details'])
+        # TODO: replace hardcoding
+        conn = {'type': 'local'}
+        notebook_generator(conn, dataset, analysis_details)

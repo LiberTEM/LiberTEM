@@ -87,8 +87,8 @@ jobs:
         - pip install -U tox 'virtualenv>19' pip-tools
         - (cd packaging/docker/ && ./update_reqs.sh)
       script:
-        - (cd packaging/docker/ && docker-compose up --build -d)
-        - tox -e py37 -- tests/ -m dist
+        - (cd packaging/docker/ && docker-compose build)
+        - (cd packaging/docker/ && docker-compose run tests)
     - stage: test
       language: node_js
       node_js: 8

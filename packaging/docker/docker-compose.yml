@@ -21,6 +21,8 @@ services:
       - type: bind
         source: ../../data
         target: /data
+    depends_on:
+      - scheduler
   worker-2:
     build:
       context: ../../
@@ -32,3 +34,67 @@ services:
       - type: bind
         source: ../../data
         target: /data
+    depends_on:
+      - scheduler
+  ipy-controller:
+    build:
+      context: ../../
+      dockerfile: packaging/docker/Dockerfile
+    hostname: ipy-controller
+    image: libertem/libertem
+    command: ["/venv/bin/ipcontroller", "--ip='*'"]
+    volumes:
+      - ipyconfig:/root/.ipython/
+  ipy-worker-1:
+    build:
+      context: ../../
+      dockerfile: packaging/docker/Dockerfile
+    hostname: ipy-worker-1
+    image: libertem/libertem
+    command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
+    volumes:
+      - ipyconfig:/root/.ipython/
+      - type: bind
+        source: ../../data
+        target: /data
+    depends_on:
+      - scheduler
+  ipy-worker-2:
+    build:
+      context: ../../
+      dockerfile: packaging/docker/Dockerfile
+    hostname: ipy-worker-2
+    image: libertem/libertem
+    command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
+    volumes:
+      - ipyconfig:/root/.ipython/
+      - type: bind
+        source: ../../data
+        target: /data
+    depends_on:
+      - scheduler
+  tests:
+    build:
+      context: ../../
+      dockerfile: packaging/docker/Dockerfile
+    hostname: tests
+    image: libertem/libertem
+    working_dir: /code/
+    environment:
+      - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
+    command: ["/venv/bin/pytest", "tests/", "-m", "dist", "--pdb"]
+    volumes:
+      - ipyconfig:/root/.ipython/
+      - type: bind
+        source: ../../data
+        target: /data
+    depends_on:
+      - scheduler
+      - worker-1
+      - worker-2
+      - ipy-controller
+      - ipy-worker-1
+      - ipy-worker-2
+
+volumes:
+  ipyconfig:

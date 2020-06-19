@@ -2,6 +2,32 @@ import numpy as np
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
+
+
+class DiskTemplate(GeneratorHelper):
+
+    short_name = "disk"
+    api = "create_disk_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_docs(self):
+        docs = ["# Disk Analysis",
+                "***about disk analysis ***"]
+        return '\n'.join(docs)
+
+    def convert_params(self):
+        params = [f'dataset=ds']
+        for k in ['cx', 'cy', 'r']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(np.squeeze(disk_result['intensity'].data))"]
+        return '\n'.join(plot)
 
 
 class DiskMaskAnalysis(SingleMaskAnalysis, id_="APPLY_DISK_MASK"):
@@ -48,3 +74,7 @@ class DiskMaskAnalysis(SingleMaskAnalysis, id_="APPLY_DISK_MASK"):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return DiskTemplate

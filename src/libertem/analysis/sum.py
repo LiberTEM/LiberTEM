@@ -15,6 +15,11 @@ class SumTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    def get_docs(self):
+        docs = ["# SUM Analysis",
+                "***about sum analysis ***"]
+        return '\n'.join(docs)
+
     def convert_params(self):
         return f"dataset=ds"
 

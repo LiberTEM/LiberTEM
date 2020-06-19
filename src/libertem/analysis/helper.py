@@ -22,6 +22,9 @@ class GeneratorHelper:
     def get_plot(self):
         return None
 
+    def get_docs(self):
+        return None
+
     def get_roi_code(self):
 
         if 'roi' in self.params.keys():

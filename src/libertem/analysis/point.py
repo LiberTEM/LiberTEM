@@ -2,6 +2,34 @@ import numpy as np
 import sparse
 
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
+
+
+class PointTemplate(GeneratorHelper):
+
+    short_name = "point"
+    api = "create_point_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_docs(self):
+        docs = ["# Point Analysis",
+                "***about point analysis ***"]
+        return '\n'.join(docs)
+
+    def convert_params(self):
+        params = [f'dataset=ds']
+        x = self.params['cx']
+        y = self.params['cy']
+        params.append(f'x={x}')
+        params.append(f'y={y}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(np.squeeze(point_result['intensity'].data))"]
+        return '\n'.join(plot)
 
 
 class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
@@ -44,3 +72,7 @@ class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return PointTemplate

@@ -47,8 +47,10 @@ if __name__ == '__main__':
     sum_details = {'analysisType': 'SUM_FRAMES', 'parameters': {'roi': {'shape': 'disk', 'cx': 42, 'cy': 50, 'r': 10.5}}}
     # pick_details = {'analysisType': "PICK_FRAME", 'parameters': {'x': 21, 'y': 59}}
     # com_details = {'analysisType': 'CENTER_OF_MASS', 'parameters': {'shape': 'com', 'cx': 125, 'cy': 125, 'r': 57.99711815561959}}
-    radial_details = {'analysisType': 'RADIAL_FOURIER', 'parameters': {'shape': 'radial_fourier', 'cx': 125, 'cy': 125, 'ri': 62.5, 'ro': 125, 'n_bins': 1, 'max_order': 8}}
-    comp_an = [sum_details, radial_details]
+    # radial_details = {'analysisType': 'RADIAL_FOURIER', 'parameters': {'shape': 'radial_fourier', 'cx': 125, 'cy': 125, 'ri': 62.5, 'ro': 125, 'n_bins': 1, 'max_order': 8}}
+    # disk_details = {'analysisType': 'APPLY_DISK_MASK', 'parameters': {'shape': 'disk', 'cx': 125, 'cy': 125, 'r': 62.5}}
+    point_details = {'analysisType': 'APPLY_POINT_SELECTOR', 'parameters': {'shape': 'point', 'cx': 125, 'cy': 125}}
+    comp_an = [sum_details, point_details]
 
     conn = {'type': 'local', 'url': 'http://tcp.localhost:9000'}
 

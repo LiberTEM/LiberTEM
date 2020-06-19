@@ -8,7 +8,27 @@ from .helper import GeneratorHelper
 class SDTemplate(GeneratorHelper):
 
     short_name = "sd"
-    api = ""
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return "from libertem.analysis import SDAnalysis"
+
+    def get_docs(self):
+        docs = ["# SD Analysis",
+                "***about sd analysis ***"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [f"sd_analysis = SDAnalysis(dataset=ds, parameters={self.params})",
+                         "sd_result = ctx.run(sd_analysis, progress=True)"]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(sd_result.intensity.visualized)"]
+        return '\n'.join(plot)
 
 
 class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):

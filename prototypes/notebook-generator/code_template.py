@@ -3,10 +3,21 @@ from libertem.analysis.base import Analysis
 
 
 class CodeTemplate():
+
     def __init__(self, connection, dataset, compound_analysis):
         self.conn = connection
         self.ds = dataset
         self.compound_analysis = compound_analysis
+
+        self.analysis_helper = {}
+        for analysis in self.compound_analysis:
+
+            type = analysis['analysisType']
+            params = analysis['parameters']
+            cls = Analysis.get_analysis_by_type(type)
+            helperCls = cls.get_template_helper()
+            helper = helperCls(params)
+            self.analysis_helper[type] = helper
 
     def format_template(self, template, data):
         template = "\n".join(template)
@@ -26,6 +37,11 @@ class CodeTemplate():
                     "import numpy as np",
                     "from libertem.analysis.getroi import get_roi",
                     "import numpy as np"]
+
+        for helper in self.analysis_helper.values():
+            extra_dep = helper.get_dependency()
+            if extra_dep is not None:
+                temp_dep.append(extra_dep)
 
         return '\n'.join(temp_dep)
 
@@ -52,13 +68,7 @@ class CodeTemplate():
 
         form_analysis = []
 
-        for analysis in self.compound_analysis:
-
-            type = analysis['analysisType']
-            params = analysis['parameters']
-            cls = Analysis.get_analysis_by_type(type)
-            helperCls = cls.get_template_helper()
-            helper = helperCls(params)
+        for helper in self.analysis_helper.values():
 
             plot_ = helper.get_plot()
             analy_ = helper.get_analysis()

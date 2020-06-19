@@ -14,6 +14,9 @@ class GeneratorHelper:
         template = "\n".join(template)
         return Template(template).substitute(data)
 
+    def get_dependency():
+        return None
+
     def convert_params(self):
         return None
 

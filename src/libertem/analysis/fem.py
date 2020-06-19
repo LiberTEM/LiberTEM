@@ -1,8 +1,34 @@
 from libertem.viz import visualize_simple
 
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-
+from .helper import GeneratorHelper
 import libertem.udf.FEM as FEM
+
+
+class FEMTemplate(GeneratorHelper):
+
+    short_name = "fem"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return "from libertem.analysis import FEMAnalysis"
+
+    def get_docs(self):
+        docs = ["# FEM Analysis",
+                "***about fem analysis ***"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [f"fem_analysis = FEMAnalysis(dataset=ds, parameters={self.params})",
+                         "fem_result = ctx.run(fem_analysis, progress=True)"]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(fem_result.intensity.visualized)"]
+        return '\n'.join(plot)
 
 
 class FEMAnalysis(BaseAnalysis, id_="FEM"):
@@ -23,3 +49,7 @@ class FEMAnalysis(BaseAnalysis, id_="FEM"):
                            key="intensity", title="intensity",
                            desc="result from SD calculation over ring"),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return FEMTemplate

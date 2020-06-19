@@ -1,6 +1,33 @@
 import numpy as np
 from libertem.masks import _make_circular_mask
 from .raw import PickFrameAnalysis
+from .helper import GeneratorHelper
+
+
+class PickfftTemplate(GeneratorHelper):
+
+    short_name = "pickfft"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return "from libertem.analysis import PickFFTFrameAnalysis"
+
+    def get_docs(self):
+        docs = ["# PICK FFT Analysis",
+                "***about pickfft analysis ***"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [f"pickfft_analysis = PickFFTFrameAnalysis(dataset=ds, parameters={self.params})",
+                         "pickfft_result = ctx.run(pickfft_analysis, progress=True)"]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(pickfft_result.intensity.visualized)"]
+        return '\n'.join(plot)
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
@@ -28,3 +55,7 @@ class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
         else:
             fft_data = np.fft.fftshift(abs(np.fft.fft2(data)))
         return self.get_generic_results(fft_data)
+
+    @classmethod
+    def get_template_helper(cls):
+        return PickfftTemplate

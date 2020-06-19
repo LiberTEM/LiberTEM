@@ -19,6 +19,9 @@ class GeneratorHelper:
     def convert_params(self):
         return None
 
+    def get_dependency(self):
+        return None
+
     def get_plot(self):
         return None
 

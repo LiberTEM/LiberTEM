@@ -76,12 +76,14 @@ const DownloadScripts: React.SFC<DownloadItemsProps> = ({compoundAnalysis}) => {
     const basePath = getApiBasePath();
     const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`
 
-    const handleDownload = () => {
-        fetch(downloadUrl)
-    }
-
     return(
-        <Button onClick={handleDownload}>Notebook</Button>
+        <ul>
+            <li>
+                <a href={downloadUrl}>
+                    notebook (description)
+                </a>
+            </li>
+        </ul>
     )
 }
 

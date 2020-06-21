@@ -1,3 +1,4 @@
+import io
 import nbformat as nbf
 from .code_template import CodeTemplate
 
@@ -16,9 +17,9 @@ class notebook:
         self.nb['cells'].append(new_cell)
 
     def generate(self):
-        fname = 'notebook.ipynb'
-        with open(fname, 'w') as f:
-            nbf.write(self.nb, f)
+        f = io.StringIO()
+        nbf.write(self.nb, f)
+        return f
 
 
 def notebook_generator(conn, dataset, comp):
@@ -39,16 +40,4 @@ def notebook_generator(conn, dataset, comp):
         nb.add_code(analysis)
         nb.add_code(plot)
 
-    nb.generate()
-
-
-if __name__ == '__main__':
-
-    ring_details = {'analysisType': 'APPLY_RING_MASK', 'parameters': {'shape': 'ring', 'cx': 125, 'cy': 125, 'ri': 62.5, 'ro': 125}}
-    sum_details = {'analysisType': 'SUM_FRAMES', 'parameters': {'roi': {'shape': 'disk', 'cx': 42, 'cy': 50, 'r': 10.5}}}
-    comp_an = [sum_details, ring_details]
-    conn = {'type': 'local', 'url': 'http://tcp.localhost:9000'}
-    dataset = {"type": "HDF5", "params": {'path': "/home/abi/Documents/LiberTEM_data/calibrationData_circularProbe.h5",
-               'ds_path': "4DSTEM_experiment/data/datacubes/polyAu_4DSTEM/data"}}
-
-    notebook_generator(conn, dataset, comp_an)
+    return nb.generate()

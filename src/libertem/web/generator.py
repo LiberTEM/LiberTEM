@@ -1,3 +1,4 @@
+import io
 import tornado
 import logging
 from .notebook_generator.notebook_generator import notebook_generator
@@ -24,6 +25,11 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
         analysis_details = []
         for id in analysis_ids:
             analysis_details.append(self.state.analysis_state[id]['details'])
-        # TODO: replace hardcoding
-        conn = {'type': 'local'}
-        notebook_generator(conn, dataset, analysis_details)
+        conn = self.state.executor_state.get_cluster_params()
+        buf = notebook_generator(conn, dataset, analysis_details)
+        self.set_header('Content-Type', 'ipynb')
+        self.set_header(
+            'Content-Disposition',
+            'attachment; filename="comp_notebook.ipynb"',
+        )
+        self.write(buf.getvalue())

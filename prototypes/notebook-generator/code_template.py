@@ -5,7 +5,7 @@ from libertem.analysis.base import Analysis
 class CodeTemplate():
 
     def __init__(self, connection, dataset, compound_analysis):
-        self.conn = connection
+        self.conn = connection['connection']
         self.ds = dataset
         self.compound_analysis = compound_analysis
 

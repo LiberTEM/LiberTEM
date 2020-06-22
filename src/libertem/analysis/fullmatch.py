@@ -130,6 +130,7 @@ class FullMatcher(grm.Matcher):
 
         >>> peaks = np.array([
         ...     # First peak is zero if not specified otherwise
+        ...     # Base lattice vectors (32, 0) and (0, 32)
         ...     (64, 64),
         ...     (32, 32), (32, 64), (32, 96),
         ...     (64, 32), (64, 96),
@@ -137,10 +138,10 @@ class FullMatcher(grm.Matcher):
         ... ])
         >>> matcher = FullMatcher()
         >>> (matches, unmatched, weak) = matcher.full_match(peaks)
-        >>> print(matches[0])
-        zero: [64. 64.]
-        a: [32.  0.]
-        b: [2.90077857e-15 3.20000000e+01]
+        >>> m = matches[0]
+        >>> assert np.allclose(m.zero, (64, 64))
+        >>> assert np.allclose(m.a, (32, 0))
+        >>> assert np.allclose(m.b, (0, 32))
         '''
         class ExitException(Exception):
             pass

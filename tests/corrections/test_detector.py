@@ -133,6 +133,61 @@ def test_detector_correction():
 
 
 @pytest.mark.with_numba
+def test_detector_uint8():
+    for i in range(10):
+        print(f"Loop number {i}")
+        num_nav_dims = np.random.choice([1, 2, 3])
+        num_sig_dims = np.random.choice([1, 2, 3])
+
+        nav_dims = tuple(np.random.randint(low=8, high=16, size=num_nav_dims))
+        sig_dims = tuple(np.random.randint(low=8, high=16, size=num_sig_dims))
+
+        data = np.ones(nav_dims + sig_dims, dtype=np.uint8)
+
+        exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=2)
+
+        gain_map = np.ones(sig_dims)
+        dark_image = (np.random.random(sig_dims) * 3).astype(np.uint8)
+
+        damaged_data = data.copy()
+        # We don't do that since it is set to 1 above
+        # damaged_data /= gain_map
+        damaged_data += dark_image
+
+        damaged_data = damaged_data.astype(np.uint8)
+
+        print("Nav dims: ", nav_dims)
+        print("Sig dims:", sig_dims)
+        print("Exclude: ", exclude)
+
+        corrected = detector.correct(
+            buffer=damaged_data,
+            dark_image=dark_image,
+            gain_map=gain_map,
+            excluded_pixels=exclude,
+            inplace=False
+        )
+
+        assert corrected.dtype.kind == 'f'
+
+        _check_result(
+            data=data, corrected=corrected,
+            atol=1e-8, rtol=1e-5
+        )
+        # Make sure we didn't do it in place
+        assert not np.allclose(corrected, damaged_data)
+
+        with pytest.raises(TypeError):
+            detector.correct(
+                buffer=damaged_data,
+                dark_image=dark_image,
+                gain_map=gain_map,
+                excluded_pixels=exclude,
+                inplace=True
+            )
+
+
+@pytest.mark.with_numba
 def test_detector_patch():
     for i in range(10):
         print(f"Loop number {i}")

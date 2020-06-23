@@ -1,10 +1,10 @@
-|gitter|_ |travis|_ |appveyor|_ |zenodo|_ |github|_ |codeclimate|_ |joss|_
+|gitter|_ |travis|_ |appveyor|_ |github|_ |codeclimate|_ |joss|_ |zenodo|_ 
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
 
-.. |travis| image:: https://api.travis-ci.org/LiberTEM/LiberTEM.svg?branch=master
-.. _travis: https://travis-ci.org/LiberTEM/LiberTEM
+.. |travis| image:: https://travis-ci.com/LiberTEM/LiberTEM.svg?branch=master
+.. _travis: https://travis-ci.com/github/LiberTEM/LiberTEM
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/wokeo6ee2frq481m/branch/master?svg=true
 .. _appveyor: https://ci.appveyor.com/project/sk1p/libertem

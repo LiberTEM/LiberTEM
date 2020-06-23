@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 
-from libertem.udf.base import UDF, UDFRunner
-from libertem.udf.base import UDFMeta
+from libertem.udf.base import UDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -24,6 +23,9 @@ class NoopSigUDF(UDF):
         return ('numpy', 'cupy')
 
 
+@pytest.mark.benchmark(
+    group="udf"
+)
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )

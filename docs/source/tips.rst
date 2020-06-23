@@ -163,3 +163,37 @@ be defined as part of a module, for example as a stand-alone function or as a
 method of a class. That way, the correct remote implementation for
 platform-dependent code is used on the remote worker since only a reference to
 the function and not the implementation itself is sent over.
+
+Benchmark Numba compilation time
+--------------------------------
+
+One has to capture the very first execution of a jitted function and compare it
+with subsequent executions to measure its compilation time. By default,
+pytest-benchmark performs calibration runs and possibly warmup rounds that don't
+report the very first run.
+
+The only way to completely disable this is to use the `pedantic mode
+<https://pytest-benchmark.readthedocs.io/en/latest/pedantic.html>`_ specifying
+no warmup rounds and two rounds with one iteration each:
+
+.. code-block:: python
+
+   @numba.njit
+    def hello():
+        return "world"
+
+
+    @pytest.mark.compilation
+    @pytest.mark.benchmark(
+        group="compilation"
+    )
+    def test_numba_compilation(benchmark):
+        benchmark.extra_info["mark"] = "compilation"
+        benchmark.pedantic(hello, warmup_rounds=0, rounds=2, iterations=1)
+
+That way the maximum is the first run with compilation, and the minimum is the
+second one without compilation. Tests are marked as compilation tests in the
+extra info as well to aid later data evaluation. Note that the compilation tests
+will have poor statistics since it only runs once. If you have an idea on how to
+collect better statistics, please `let us know
+<https://github.com/LiberTEM/LiberTEM/issues/new>`_!

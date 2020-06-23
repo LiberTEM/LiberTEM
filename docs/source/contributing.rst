@@ -195,12 +195,20 @@ Benchmarking
 
 LiberTEM uses `pytest-benchmark
 <https://pytest-benchmark.readthedocs.io/en/latest/usage.html>`_ to benchmark
-certain performance-critical parts of the code. Benchmarking is disabled by
-default. You can enable the benchmarks ad-hoc using
+certain performance-critical parts of the code. You can run the benchmarks
+ad-hoc using
 
 .. code-block:: shell
 
-   $ pytest --benchmark-enable benchmarks/
+   $ pytest benchmarks/
+
+The benchmarks for Numba compilation time are disabled by default since Numba
+caches compilation results, i.e. one has to make sure that benchmarked functions
+were not previously run in the same interpreter. To run them, you can use
+
+.. code-block:: shell
+
+   $ pytest -m compilation benchmarks/
 
 In order to record a complete benchmark run for later comparison, you can use
 

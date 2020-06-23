@@ -82,7 +82,7 @@ services:
     working_dir: /code/
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
-    command: ["/venv/bin/pytest", "tests/", "-m", "dist", "--pdb"]
+    command: ["/venv/bin/pytest", "tests/", "-m", "dist"]
     volumes:
       - ipyconfig:/root/.ipython/
       - type: bind

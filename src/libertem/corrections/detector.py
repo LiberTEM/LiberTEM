@@ -181,9 +181,12 @@ def correct(
     nav_shape = s[0:-len(sig_shape)]
 
     if inplace:
+        if buffer.dtype.kind not in ('f', 'c'):
+            raise TypeError("In-place correction only supported for floating point data.")
         out = buffer
     else:
-        out = buffer.copy()
+        # astype() is always a copy even if it is the same dtype
+        out = buffer.astype(np.result_type(np.float32, buffer))
 
     if excluded_pixels is None:
         excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.int)

@@ -426,7 +426,7 @@ async def http_client():
     # adjusted event_loop scope. if we have many API tests
     # maybe reconsider.
     async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=20)
+        timeout=aiohttp.ClientTimeout(total=30)
     ) as session:
         yield session
 

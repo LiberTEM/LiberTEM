@@ -6,8 +6,13 @@ import pickle
 import numpy as np
 import pytest
 import warnings
+import sparse
 
 from libertem.udf.sum import SumUDF
+from libertem.udf.raw import PickUDF
+from libertem.udf.masks import ApplyMasksUDF
+from libertem.corrections import CorrectionSet
+from libertem.corrections.detector import correct
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
@@ -118,6 +123,47 @@ def test_pick_analysis(default_raw, lt_ctx, TYPE):
     assert np.count_nonzero(results[0].raw_data) > 0
 
 
+def test_correction_default(default_raw, lt_ctx):
+    ds = default_raw
+    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
+
+    gain = np.random.random(ds.shape.sig) + 1
+    dark = np.random.random(ds.shape.sig) - 0.5
+    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
+
+    def mask_factory():
+        s = tuple(ds.shape.sig)
+        return sparse.eye(np.prod(s)).reshape((-1, *s))
+
+    # This one casts to float
+    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
+    # This one uses native input data
+    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
+    corrected = correct(
+        buffer=data['intensity'].data.reshape(ds.shape),
+        dark_image=dark,
+        gain_map=gain,
+        excluded_pixels=exclude,
+        inplace=False
+    )
+
+    print(pick_res['intensity'].data.dtype)
+    print(mask_res['intensity'].data.dtype)
+    print(corrected.dtype)
+
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        corrected
+    )
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        mask_res['intensity'].data.reshape(ds.shape),
+    )
+
+
 @pytest.mark.with_numba
 def test_roi_1(default_raw, lt_ctx):
     p = next(default_raw.get_partitions())
@@ -162,6 +208,47 @@ def test_uint16_as_float32(uint16_raw, lt_ctx):
     roi[0:stackheight + 2] = 1
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
+
+
+def test_correction_uint16(uint16_raw, lt_ctx):
+    ds = uint16_raw
+    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
+
+    gain = np.random.random(ds.shape.sig) + 1
+    dark = np.random.random(ds.shape.sig) - 0.5
+    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
+
+    def mask_factory():
+        s = tuple(ds.shape.sig)
+        return sparse.eye(np.prod(s)).reshape((-1, *s))
+
+    # This one casts to float
+    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
+    # This one uses native input data
+    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
+    corrected = correct(
+        buffer=data['intensity'].data.reshape(ds.shape),
+        dark_image=dark,
+        gain_map=gain,
+        excluded_pixels=exclude,
+        inplace=False
+    )
+
+    print(pick_res['intensity'].data.dtype)
+    print(mask_res['intensity'].data.dtype)
+    print(corrected.dtype)
+
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        corrected
+    )
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        mask_res['intensity'].data.reshape(ds.shape),
+    )
 
 
 def test_macrotile_normal(lt_ctx, default_raw):
@@ -313,6 +400,47 @@ def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
 def test_big_endian(big_endian_raw, lt_ctx):
     udf = SumUDF()
     lt_ctx.run_udf(udf=udf, dataset=big_endian_raw)
+
+
+def test_correction_big_endian(big_endian_raw, lt_ctx):
+    ds = big_endian_raw
+    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
+
+    gain = np.random.random(ds.shape.sig) + 1
+    dark = np.random.random(ds.shape.sig) - 0.5
+    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
+
+    def mask_factory():
+        s = tuple(ds.shape.sig)
+        return sparse.eye(np.prod(s)).reshape((-1, *s))
+
+    # This one casts to float
+    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
+    # This one uses native input data
+    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
+    corrected = correct(
+        buffer=data['intensity'].data.reshape(ds.shape),
+        dark_image=dark,
+        gain_map=gain,
+        excluded_pixels=exclude,
+        inplace=False
+    )
+
+    print(pick_res['intensity'].data.dtype)
+    print(mask_res['intensity'].data.dtype)
+    print(corrected.dtype)
+
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        corrected
+    )
+    assert np.allclose(
+        pick_res['intensity'].data.reshape(ds.shape),
+        mask_res['intensity'].data.reshape(ds.shape),
+    )
 
 
 # TODO: test for dataset with more than 2 sig dims

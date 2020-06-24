@@ -115,6 +115,7 @@ jobs:
   
   allow_failures:
     - env: TOXENV=mypy    
+    - os: osx
 branches:
   except:
     - # Do not build tags that we create when we upload to GitHub Releases

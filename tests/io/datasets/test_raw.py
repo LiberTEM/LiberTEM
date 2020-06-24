@@ -6,19 +6,17 @@ import pickle
 import numpy as np
 import pytest
 import warnings
-import sparse
 
 from libertem.udf.sum import SumUDF
-from libertem.udf.raw import PickUDF
-from libertem.udf.masks import ApplyMasksUDF
-from libertem.corrections import CorrectionSet
-from libertem.corrections.detector import correct
+
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
+
+from utils import dataset_correction_verification
 
 
 def test_simple_open(default_raw):
@@ -123,45 +121,19 @@ def test_pick_analysis(default_raw, lt_ctx, TYPE):
     assert np.count_nonzero(results[0].raw_data) > 0
 
 
-def test_correction_default(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction_default(default_raw, lt_ctx, with_roi):
     ds = default_raw
-    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
 
-    gain = np.random.random(ds.shape.sig) + 1
-    dark = np.random.random(ds.shape.sig) - 0.5
-    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
 
-    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
-    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
-
-    def mask_factory():
-        s = tuple(ds.shape.sig)
-        return sparse.eye(np.prod(s)).reshape((-1, *s))
-
-    # This one casts to float
-    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
-    # This one uses native input data
-    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
-    corrected = correct(
-        buffer=data['intensity'].data.reshape(ds.shape),
-        dark_image=dark,
-        gain_map=gain,
-        excluded_pixels=exclude,
-        inplace=False
-    )
-
-    print(pick_res['intensity'].data.dtype)
-    print(mask_res['intensity'].data.dtype)
-    print(corrected.dtype)
-
-    assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
-        corrected
-    )
-    assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
-        mask_res['intensity'].data.reshape(ds.shape),
-    )
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 @pytest.mark.with_numba
@@ -210,45 +182,19 @@ def test_uint16_as_float32(uint16_raw, lt_ctx):
     tiles = list(tiles)
 
 
-def test_correction_uint16(uint16_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction_uint16(uint16_raw, lt_ctx, with_roi):
     ds = uint16_raw
-    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
 
-    gain = np.random.random(ds.shape.sig) + 1
-    dark = np.random.random(ds.shape.sig) - 0.5
-    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
 
-    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
-    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
-
-    def mask_factory():
-        s = tuple(ds.shape.sig)
-        return sparse.eye(np.prod(s)).reshape((-1, *s))
-
-    # This one casts to float
-    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
-    # This one uses native input data
-    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
-    corrected = correct(
-        buffer=data['intensity'].data.reshape(ds.shape),
-        dark_image=dark,
-        gain_map=gain,
-        excluded_pixels=exclude,
-        inplace=False
-    )
-
-    print(pick_res['intensity'].data.dtype)
-    print(mask_res['intensity'].data.dtype)
-    print(corrected.dtype)
-
-    assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
-        corrected
-    )
-    assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
-        mask_res['intensity'].data.reshape(ds.shape),
-    )
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_macrotile_normal(lt_ctx, default_raw):
@@ -407,55 +353,14 @@ def test_big_endian(big_endian_raw, lt_ctx):
 )
 def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
     ds = big_endian_raw
+
     if with_roi:
         roi = np.zeros(ds.shape.nav, dtype=bool)
         roi[:1] = True
     else:
         roi = None
 
-    shape = (-1, *tuple(ds.shape.sig))
-    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi)
-
-    gain = np.random.random(ds.shape.sig) + 1
-    dark = np.random.random(ds.shape.sig) - 0.5
-    exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
-
-    exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
-    corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
-
-    def mask_factory():
-        s = tuple(ds.shape.sig)
-        return sparse.eye(np.prod(s)).reshape((-1, *s))
-
-    # This one casts to float
-    mask_res = lt_ctx.run_udf(
-        udf=ApplyMasksUDF(mask_factory),
-        dataset=ds,
-        corrections=corrset,
-        roi=roi,
-    )
-    # This one uses native input data
-    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
-    corrected = correct(
-        buffer=data['intensity'].raw_data.reshape(shape),
-        dark_image=dark,
-        gain_map=gain,
-        excluded_pixels=exclude,
-        inplace=False
-    )
-
-    print(pick_res['intensity'].raw_data.dtype)
-    print(mask_res['intensity'].raw_data.dtype)
-    print(corrected.dtype)
-
-    assert np.allclose(
-        pick_res['intensity'].raw_data.reshape(shape),
-        corrected
-    )
-    assert np.allclose(
-        pick_res['intensity'].raw_data.reshape(shape),
-        mask_res['intensity'].raw_data.reshape(shape),
-    )
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 # TODO: test for dataset with more than 2 sig dims

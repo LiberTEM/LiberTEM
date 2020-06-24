@@ -137,8 +137,7 @@ setup(
         "numpy",
         "scipy",
         "sparse",
-        "distributed>=2.2.0,<2.9;python_version<'3.8'",
-        "distributed>=2.11.0;python_version>='3.8'",
+        "distributed>=2.19.0",
         "click",
         "tornado>=5",
         "matplotlib",
@@ -156,7 +155,6 @@ setup(
         'cloudpickle',
         'jsonschema',
         'scikit-learn',
-        'msgpack<1',  # FIXME: remove after distributed is fixed
         'tqdm',
         # FIXME remove in 0.7.0 after blobfinder deprecation
         # Ensure compatibility with numba>=0.50

@@ -8,7 +8,7 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 
 
 @click.command()
-@click.argument('scheduler', default="http://localhost:8786", type=str)
+@click.argument('scheduler', default="tcp://localhost:8786", type=str)
 @click.option('-k', '--kind', help='Worker kind. Currently only "dask" is implemented.',
               default="dask", type=str)
 @click.option('-d', '--local-directory', help='local directory to manage temporary files',

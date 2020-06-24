@@ -18,42 +18,27 @@ run the following:
 
 .. code:: shell
 
-   $ docker-compose up
+   $ docker-compose build
+   $ docker-compose up scheduler worker-1 worker-2 ipy-controller ipy-worker-1 ipy-worker-2
 
 Note that you need to run the above command as a user that can access the docker daemon,
 for example by being in the :code:`docker` group. The containers are running as long as
 the :code:`docker-compose` command is running, so you can stop them using :code:`Ctrl-C`.
 
-You can then run the distributed tests using (from the repository root directory):
+You can then run the distributed tests using (from the same directory):
 
 .. code:: shell
 
-   $ DASK_SCHEDULER_ADDRESS=tcp://localhost:8786 pytest -m dist tests/
+   $ docker-compose run --rm tests
 
-Or via :code:`tox`:
+As we are running the tests in a docker container, the environment of the `tests` container
+will automatically match the environment of the workers.
 
-.. code:: shell
-
-   $ DASK_SCHEDULER_ADDRESS=tcp://localhost:8786 tox -e py37 -- -m dist tests/
-
-All the usual caveats of running a dask distributed cluster apply here as well, for example,
-your local environment must match the environment on the worker containers etc.
-
-After changing LiberTEM code, you need to rebuild and restart the containers. This can be
-done by running:
-
-.. code:: shell
-
-   $ docker-compose build && docker-compose up
-
-Or, as one command:
-
-.. code:: shell
-
-   $ docker-compose up --build
+After changing LiberTEM code, you need to rebuild and restart the containers. Just cancel the first
+:code:`docker-compose up` run using CTRL-C and start from the top.
 
 The rebuild should be faster than the initial build, which is accomplished by careful
-use of the layer caching feature of docker. This also menas that you need to update
+use of the layer caching feature of docker. This also menas that you may need to update
 the :code:`packaging/docker/requirements.txt` file by running the provided
 script :code:`update_reqs.sh` when the dependencies of LiberTEM change, or when new
-versions of dependencies are released.
+versions of dependencies are released. In CI, this is done automatically.

@@ -60,8 +60,6 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 devices["cpus"] = range(connection["numWorkers"])
             devices["cudas"] = connection.get("cudas", [])
 
-            print(pool.submit(lambda: asyncio.get_event_loop()).result())
-
             sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
                 spec=cluster_spec(**devices, options=options)
             ), pool=pool)

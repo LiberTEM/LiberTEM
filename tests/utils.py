@@ -2,12 +2,17 @@ import datetime
 import time
 
 import numpy as np
+import sparse
 
 
 from libertem.masks import to_dense
 from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
 import libertem.common.backend as bae
+from libertem.udf.raw import PickUDF
+from libertem.udf.masks import ApplyMasksUDF
+from libertem.corrections import CorrectionSet
+from libertem.corrections.detector import correct
 
 
 def _naive_mask_apply(masks, data):
@@ -133,3 +138,66 @@ class DebugDeviceUDF(UDF):
 
     def get_backends(self):
         return self.params.backends
+
+
+def dataset_correction_verification(ds, roi, lt_ctx):
+    for i in range(10):
+        shape = (-1, *tuple(ds.shape.sig))
+        uncorr = CorrectionSet()
+        data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi, corrections=uncorr)
+
+        gain = np.random.random(ds.shape.sig) + 1
+        dark = np.random.random(ds.shape.sig) - 0.5
+        exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+        exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+        corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
+
+        def mask_factory():
+            s = tuple(ds.shape.sig)
+            return sparse.eye(np.prod(s)).reshape((-1, *s))
+
+        # This one casts to float
+        mask_res = lt_ctx.run_udf(
+            udf=ApplyMasksUDF(mask_factory),
+            dataset=ds,
+            corrections=corrset,
+            roi=roi,
+        )
+        # This one uses native input data
+        pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
+        corrected = correct(
+            buffer=data['intensity'].raw_data.reshape(shape),
+            dark_image=dark,
+            gain_map=gain,
+            excluded_pixels=exclude,
+            inplace=False
+        )
+
+        corrected_inplace = correct(
+            buffer=data['intensity'].raw_data.reshape(shape).copy(),
+            dark_image=dark,
+            gain_map=gain,
+            excluded_pixels=exclude,
+            inplace=True
+        )
+
+        print("Exclude: ", exclude)
+
+        print(pick_res['intensity'].raw_data.dtype)
+        print(mask_res['intensity'].raw_data.dtype)
+        print(corrected.dtype)
+
+        assert np.allclose(
+            corrected_inplace,
+            corrected
+        )
+
+        assert np.allclose(
+            pick_res['intensity'].raw_data.reshape(shape),
+            corrected
+        )
+        assert np.allclose(
+            pick_res['intensity'].raw_data.reshape(shape),
+            mask_res['intensity'].raw_data.reshape(shape),
+        )

@@ -1,5 +1,6 @@
 import os
 import logging
+import warnings
 import contextlib
 
 import numpy as np
@@ -37,13 +38,12 @@ class SERDatasetParams(MessageConverter):
 
 
 class SERFile:
-    def __init__(self, path, num_frames, emipath=None):
+    def __init__(self, path, num_frames):
         self._path = path
         self._num_frames = num_frames
-        self._emipath = emipath
 
     def _get_handle(self):
-        return fileSER(self._path, emifile=self._emipath)
+        return fileSER(self._path)
 
     @contextlib.contextmanager
     def get_handle(self):
@@ -75,21 +75,21 @@ class SERDataSet(DataSet):
     ----------
     path: str
         Path to the .ser file
-
-    emipath: str
-        Path to EMI file (currently unused)
     """
     def __init__(self, path, emipath=None):
         super().__init__()
         self._path = path
-        self._emipath = emipath
         self._meta = None
         self._filesize = None
         self._num_frames = None
+        if emipath is not None:
+            warnings.warn(
+                "emipath is not used anymore, as it was removed from ncempy", DeprecationWarning
+            )
 
     def _do_initialize(self):
         self._filesize = os.stat(self._path).st_size
-        reader = SERFile(path=self._path, num_frames=None, emipath=self._emipath)
+        reader = SERFile(path=self._path, num_frames=None)
 
         with reader.get_handle() as f1:
             self._num_frames = f1.head['ValidNumberElements']
@@ -143,7 +143,7 @@ class SERDataSet(DataSet):
 
     def check_valid(self):
         try:
-            with fileSER(self._path, emifile=self._emipath) as f1:
+            with fileSER(self._path) as f1:
                 if f1.head['ValidNumberElements'] == 0:
                     raise DataSetException("no data found in file")
                 if f1.head['DataTypeID'] not in (0x4120, 0x4122):
@@ -171,7 +171,6 @@ class SERDataSet(DataSet):
             SERFile(
                 path=self._path,
                 num_frames=self._num_frames,
-                emipath=self._emipath
             )
         ])
 

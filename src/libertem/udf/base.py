@@ -914,8 +914,11 @@ class UDFRunner:
         self._udfs = udfs
         self._debug = debug
 
-    def _get_dtype(self, dtype):
-        tmp_dtype = dtype
+    def _get_dtype(self, dtype, corrections):
+        if corrections is not None:
+            tmp_dtype = np.result_type(np.float32, dtype)
+        else:
+            tmp_dtype = dtype
         for udf in self._udfs:
             tmp_dtype = np.result_type(
                 udf.get_preferred_input_dtype(),
@@ -924,7 +927,7 @@ class UDFRunner:
         return tmp_dtype
 
     def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class):
-        dtype = self._get_dtype(partition.dtype)
+        dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
             dataset_shape=partition.meta.shape,
@@ -1113,7 +1116,7 @@ class UDFRunner:
             dataset_shape=dataset.shape,
             roi=roi,
             dataset_dtype=dataset.dtype,
-            input_dtype=self._get_dtype(dataset.dtype),
+            input_dtype=self._get_dtype(dataset.dtype, corrections),
             corrections=corrections,
         )
         for udf in self._udfs:

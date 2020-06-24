@@ -134,10 +134,8 @@ def flatten_filter(excluded_pixels, repairs, sig_shape):
 
 
 def correct(
-    buffer,
-    dark_image=None, gain_map=None, excluded_pixels=None,
-    inplace=False, sig_shape=None,
-):
+        buffer, dark_image=None, gain_map=None, excluded_pixels=None,
+        inplace=False, sig_shape=None):
     '''
     Function to perform detector corrections
 

@@ -402,9 +402,19 @@ def test_big_endian(big_endian_raw, lt_ctx):
     lt_ctx.run_udf(udf=udf, dataset=big_endian_raw)
 
 
-def test_correction_big_endian(big_endian_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
     ds = big_endian_raw
-    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds)
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    shape = (-1, *tuple(ds.shape.sig))
+    data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi)
 
     gain = np.random.random(ds.shape.sig) + 1
     dark = np.random.random(ds.shape.sig) - 0.5
@@ -418,28 +428,33 @@ def test_correction_big_endian(big_endian_raw, lt_ctx):
         return sparse.eye(np.prod(s)).reshape((-1, *s))
 
     # This one casts to float
-    mask_res = lt_ctx.run_udf(udf=ApplyMasksUDF(mask_factory), dataset=ds, corrections=corrset)
+    mask_res = lt_ctx.run_udf(
+        udf=ApplyMasksUDF(mask_factory),
+        dataset=ds,
+        corrections=corrset,
+        roi=roi,
+    )
     # This one uses native input data
-    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset)
+    pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
     corrected = correct(
-        buffer=data['intensity'].data.reshape(ds.shape),
+        buffer=data['intensity'].raw_data.reshape(shape),
         dark_image=dark,
         gain_map=gain,
         excluded_pixels=exclude,
         inplace=False
     )
 
-    print(pick_res['intensity'].data.dtype)
-    print(mask_res['intensity'].data.dtype)
+    print(pick_res['intensity'].raw_data.dtype)
+    print(mask_res['intensity'].raw_data.dtype)
     print(corrected.dtype)
 
     assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
+        pick_res['intensity'].raw_data.reshape(shape),
         corrected
     )
     assert np.allclose(
-        pick_res['intensity'].data.reshape(ds.shape),
-        mask_res['intensity'].data.reshape(ds.shape),
+        pick_res['intensity'].raw_data.reshape(shape),
+        mask_res['intensity'].raw_data.reshape(shape),
     )
 
 

@@ -35,16 +35,6 @@ def _raw_on_workers(tmpdirpath, datadir, filename, ctx):
     return ds
 
 
-def _raw_on_workers_cleanup(tmpdirpath):
-    # FIXME: this may litter /tmp/ with empty directories, as we only remove our own
-    # tmpdirpath, but as we run these tests in docker containers, they are eventually
-    # cleaned up anyways:
-    files = os.listdir(tmpdirpath)
-    shutil.rmtree(tmpdirpath, ignore_errors=True)
-    print("removed %s" % tmpdirpath)
-    return tmpdirpath, files
-
-
 @pytest.fixture
 def raw_on_workers(dist_ctx, tmpdir_factory):
     """
@@ -59,7 +49,12 @@ def raw_on_workers(dist_ctx, tmpdir_factory):
     yield ds
 
     def _cleanup():
-        _raw_on_workers_cleanup(tmpdirpath)
+        # NOTE: can't call a function defined in conftest here, as `conftest` is not available
+        # as a module on the worker nodes
+        files = os.listdir(tmpdirpath)
+        shutil.rmtree(tmpdirpath, ignore_errors=True)
+        print("removed %s" % tmpdirpath)
+        return tmpdirpath, files
 
     print("raw_on_workers cleanup: %s" % (dist_ctx.executor.run_each_host(_cleanup),))
 
@@ -78,6 +73,11 @@ def raw_on_workers_ipy(ipy_ctx, tmpdir_factory):
     yield ds
 
     def _cleanup():
-        _raw_on_workers_cleanup(tmpdirpath)
+        # NOTE: can't call a function defined in conftest here, as `conftest` is not available
+        # as a module on the worker nodes
+        files = os.listdir(tmpdirpath)
+        shutil.rmtree(tmpdirpath, ignore_errors=True)
+        print("removed %s" % tmpdirpath)
+        return tmpdirpath, files
 
     print("raw_on_workers cleanup: %s" % (ipy_ctx.executor.run_each_host(_cleanup),))

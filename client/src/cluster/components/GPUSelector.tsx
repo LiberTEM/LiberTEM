@@ -19,10 +19,13 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
     const myHandleChange = (e: React.ChangeEvent<any>, data: DropdownProps) => {
         setFieldValue(name, data.value);
     }
-    const disabled = !config.devices.has_cupy;
+    const hasCupy = config.devices.has_cupy;
+    const haveCudaDevices = config.devices.cudas.length > 0;
+    const disabled = hasCupy || !haveCudaDevices;
+    const showWarning = !hasCupy && haveCudaDevices;
     return (
         <>
-            {disabled ?
+            {showWarning ?
                 <Message warning={true} visible={true}>
                     <Message.Header>No cupy installation found</Message.Header>
                     <p>

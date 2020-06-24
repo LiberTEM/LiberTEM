@@ -197,13 +197,21 @@ class MyStopIteration(Exception):
 
 
 class AsyncAdapter(AsyncJobExecutor):
-    def __init__(self, wrapped):
+    def __init__(self, wrapped, pool=None):
         """
         Wrap a synchronous JobExecutor and allow to use it as AsyncJobExecutor. All methods are
         converted to async and executed in a separate thread.
         """
         self._wrapped = wrapped
-        self._pool = concurrent.futures.ThreadPoolExecutor(1)
+        if pool is None:
+            pool = AsyncAdapter.make_pool()
+        self._pool = pool
+
+    @classmethod
+    def make_pool(cls):
+        pool = concurrent.futures.ThreadPoolExecutor(1)
+        pool.submit(lambda: asyncio.set_event_loop(asyncio.new_event_loop())).result()
+        return pool
 
     def ensure_sync(self):
         return self._wrapped

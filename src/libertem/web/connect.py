@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from functools import partial
 
@@ -39,11 +40,12 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
         # TODO: extract json request data stuff into mixin?
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
+        pool = AsyncAdapter.make_pool()
         if connection["type"].lower() == "tcp":
             try:
                 sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
                     scheduler_uri=connection['address'],
-                ))
+                ), pool=pool)
             except Exception as e:
                 msg = Message(self.state).cluster_conn_error(msg=str(e))
                 log_message(msg)
@@ -58,15 +60,14 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 devices["cpus"] = range(connection["numWorkers"])
             devices["cudas"] = connection.get("cudas", [])
 
-            sync_executor = await sync_to_async(
-                partial(
-                    DaskJobExecutor.make_local,
-                    spec=cluster_spec(**devices, options=options),
-                )
-            )
+            print(pool.submit(lambda: asyncio.get_event_loop()).result())
+
+            sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
+                spec=cluster_spec(**devices, options=options)
+            ), pool=pool)
         else:
             raise ValueError("unknown connection type")
-        executor = AsyncAdapter(wrapped=sync_executor)
+        executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
         await self.state.executor_state.set_executor(executor, request_data)
         await self.state.dataset_state.verify()
         datasets = await self.state.dataset_state.serialize_all()

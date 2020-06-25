@@ -211,6 +211,11 @@ class SERPartition(BasePartition):
     def get_base_shape(self):
         return (1,) + tuple(self.shape.sig)
 
+    def _preprocess(self, tile_data, tile_slice):
+        if self._corrections is None:
+            return
+        self._corrections.apply(tile_data, tile_slice)
+
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         shape = Shape((1,) + tuple(self.shape.sig), sig_dims=self.shape.sig.dims)
 
@@ -231,6 +236,7 @@ class SERPartition(BasePartition):
                 data, metadata = f.getDataset(int(idx))
                 if data.dtype != np.dtype(dest_dtype):
                     data = data.astype(dest_dtype)
+                self._preprocess(data, tile_slice)
                 yield DataTile(
                     data.reshape(shape),
                     tile_slice=tile_slice,

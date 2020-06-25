@@ -14,6 +14,8 @@ from libertem.udf import UDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
+from utils import dataset_correction_verification
+
 K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                                   'data', 'Capture52', 'Capture52_.gtg')
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
@@ -179,6 +181,22 @@ def test_pick_analysis(default_k2is, lt_ctx, TYPE):
     analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
+
+
+@pytest.mark.parametrize(
+    # Default is too large for test without ROI
+    "with_roi", (True, )
+)
+def test_correction(default_k2is, lt_ctx, with_roi):
+    ds = default_k2is
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_dataset_is_picklable(default_k2is):

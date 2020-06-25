@@ -7,6 +7,9 @@ import numpy as np
 from libertem.io.dataset.base import PartitionStructure, DataSetException
 from libertem.io.dataset.cluster import ClusterDataSet
 
+# FIXME test on actual data structure, including correction
+# from utils import dataset_correction_verification
+
 
 @pytest.fixture(scope='function')
 def draw_directory(tmpdir_factory):

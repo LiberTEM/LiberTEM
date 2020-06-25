@@ -7,6 +7,8 @@ import pytest
 
 from libertem.io.dataset.dm import DMDataSet
 
+from utils import dataset_correction_verification
+
 
 DM_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
@@ -37,6 +39,21 @@ def test_read_roi(default_dm, lt_ctx):
     sha1 = hashlib.sha1()
     sha1.update(sumres.intensity.raw_data)
     assert sha1.hexdigest() == "e94ed671e20ccce33d288fbcadd0f54691a29b9c"
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(default_dm, lt_ctx, with_roi):
+    ds = default_dm
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_detect_1(lt_ctx):

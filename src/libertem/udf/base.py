@@ -915,7 +915,7 @@ class UDFRunner:
         self._debug = debug
 
     def _get_dtype(self, dtype, corrections):
-        if corrections is not None:
+        if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
         else:
             tmp_dtype = dtype

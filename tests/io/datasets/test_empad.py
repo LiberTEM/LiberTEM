@@ -14,6 +14,8 @@ from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
 from utils import _mk_random
 
+from utils import dataset_correction_verification
+
 EMPAD_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
 EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
@@ -152,6 +154,21 @@ def test_pick_analysis(default_empad, lt_ctx, TYPE):
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(default_empad, lt_ctx, with_roi):
+    ds = default_empad
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_invalid_size():

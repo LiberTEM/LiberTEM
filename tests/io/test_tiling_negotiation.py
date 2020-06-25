@@ -1,5 +1,7 @@
+import sparse
 import numpy as np
 
+from libertem.corrections import CorrectionSet
 from libertem.io.dataset.base import Negotiator
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf import UDF
@@ -184,6 +186,37 @@ def test_limited_depth():
     assert scheme._debug["need_decode"]
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (17, 930, 16)
+
+
+def test_correction_size_overflow():
+    data = _mk_random(size=(32, 1860, 2048))
+    dataset = MemoryDataSet(
+        data=data,
+        num_partitions=1,
+        sig_dims=2,
+        base_shape=(1, 930, 16),
+        force_need_decode=True,
+    )
+
+    neg = Negotiator()
+    p = next(dataset.get_partitions())
+    udf = UDFWithLargeDepth()
+
+    excluded_coords = np.array([
+        (930, ),
+        (16, )
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=dataset.shape.sig, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+
+    scheme = neg.get_scheme(
+        udfs=[udf], partition=p, read_dtype=np.float32, roi=None,
+        corrections=corr,
+    )
+    print(scheme._debug)
+    assert scheme._debug["need_decode"]
+    assert scheme.shape.sig.dims == 2
+    assert tuple(scheme.shape) == (4, 1860, 32)
 
 
 def test_depth_max_size_max():

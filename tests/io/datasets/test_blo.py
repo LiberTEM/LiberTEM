@@ -136,6 +136,7 @@ def test_correction(default_blo, lt_ctx, with_roi):
     else:
         roi = None
 
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx, exclude=[(55, 92), (61, 31)])
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 

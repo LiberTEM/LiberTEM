@@ -1,7 +1,6 @@
 import pytest
 import numba
 
-first = False
 
 @numba.njit
 def hello():

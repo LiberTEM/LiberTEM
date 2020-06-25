@@ -42,7 +42,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="cudas">
                     CUDA devices to use{' '}
-                    <Modal trigger={ <Icon name="info circle" link={true}></Icon>}>
+                    <Modal trigger={<Icon name="info circle" link={true}/>}>
                         <Modal.Header>
                             CUDA information
                         </Modal.Header>

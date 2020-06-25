@@ -7,6 +7,8 @@ from libertem.udf.sum import SumUDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
+from utils import dataset_correction_verification
+
 SER_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.ser')
 HAVE_SER_TESTDATA = os.path.exists(SER_TESTDATA_PATH)
 
@@ -75,3 +77,18 @@ def test_with_udf(lt_ctx):
             result[tile.tile_slice.get(sig_only=True)] += np.sum(tile.data, axis=0)
 
     assert np.allclose(udf_results['intensity'].data, result)
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(lt_ctx, with_roi):
+    ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)

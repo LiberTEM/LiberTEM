@@ -420,7 +420,8 @@ class Negotiator:
     `DataSet`, possibly even optimal.
     """
 
-    def validate(self, shape, partition_shape, size, itemsize):
+    def validate(self, shape, partition, size, itemsize, base_shape):
+        partition_shape = partition.shape
         size_px = size // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
             raise ValueError("generated tileshape does not fit the partition")
@@ -428,6 +429,12 @@ class Negotiator:
             raise ValueError(
                 "shape %r (%d) does not fit into size %d" % (shape, np.prod(shape), size_px)
             )
+        for dim in range(len(base_shape)):
+            if shape[dim] % base_shape[dim] != 0:
+                raise ValueError(
+                    f"The shape {shape} is incompatible with base "
+                    f"shape {base_shape} in dimension {dim}."
+                )
 
     def get_scheme(
             self, udfs, partition, read_dtype: np.dtype, roi: np.ndarray,
@@ -467,10 +474,8 @@ class Negotiator:
         # (signal buffers should fit into the L2 cache)
         min_sig_size = 4 * 4096 // itemsize
 
-        need_decode = (
-            partition.need_decode(roi=roi, read_dtype=read_dtype)
-            or (corrections is not None and corrections.have_corrections())
-        )
+        # This already takes corrections into account through a different pathway
+        need_decode = partition.need_decode(roi=roi, read_dtype=read_dtype)
 
         if need_decode:
             io_max_size = 1*2**20
@@ -523,24 +528,29 @@ class Negotiator:
 
         # the partition has a "veto" on the tileshape:
         tileshape = partition.adjust_tileshape(tileshape)
-        # The correction has to make sure that there are no excluded pixels
-        # at tile boundaries
-        tileshape_corrected = corrections.adjust_tileshape(tileshape, tuple(partition.shape.sig))
-        # the partition has a "veto" on the tileshape again:
-        tileshape_final = partition.adjust_tileshape(tileshape_corrected)
-        # Clash between what the dataset and the corrections want
-        if tileshape_corrected != tileshape_final:
-            # switch to single full frames
-            # This should always be possible
-            log.warning(
-                "Incompatibility between correction and dataset tiling, switching "
-                "to single full frames. This may reduce performance."
+        if corrections is not None and corrections.have_corrections():
+            # The correction has to make sure that there are no excluded pixels
+            # at tile boundaries
+            tileshape_corrected = corrections.adjust_tileshape(
+                tile_shape=tileshape,
+                sig_shape=tuple(partition.shape.sig),
+                base_shape=full_base_shape,
             )
-            tileshape = (1, *tuple(partition.shape.sig))
-        else:
-            tileshape = tileshape_final
+            # the partition has a "veto" on the tileshape again:
+            tileshape_final = partition.adjust_tileshape(tileshape_corrected)
+            # Clash between what the dataset and the corrections want
+            if tileshape_corrected != tileshape_final:
+                # switch to single full frames
+                # This should always be possible
+                log.warning(
+                    "Incompatibility between correction and dataset tiling, switching "
+                    "to single full frames. This may reduce performance."
+                )
+                tileshape = (1, *tuple(partition.shape.sig))
+            else:
+                tileshape = tileshape_final
 
-        self.validate(tileshape, partition.shape, size, itemsize)
+        self.validate(tileshape, partition, size, itemsize, full_base_shape)
         return TilingScheme.make_for_shape(
             tileshape=Shape(tileshape, sig_dims=partition.shape.sig.dims),
             dataset_shape=partition.meta.shape,

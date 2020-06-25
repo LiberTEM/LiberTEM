@@ -147,7 +147,7 @@ class LocalFSMMapBackend(IOBackend):
         _r_n_d_cache[key] = r_n_d
         return r_n_d
 
-    def preprocess(self, data, tile_slice, decoder):
+    def preprocess(self, data, tile_slice):
         if self._corrections is None:
             return
         self._corrections.apply(data, tile_slice)
@@ -204,7 +204,7 @@ class LocalFSMMapBackend(IOBackend):
                     shape=Shape(shape, sig_dims=sig_dims)
                 )
                 data = data.reshape(shape)
-                self.preprocess(data, tile_slice, decoder)
+                self.preprocess(data, tile_slice)
                 yield DataTile(
                     data,
                     tile_slice=tile_slice,

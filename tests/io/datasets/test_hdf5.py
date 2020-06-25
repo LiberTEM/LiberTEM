@@ -15,6 +15,7 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
 from utils import _naive_mask_apply, _mk_random, PixelsumUDF
+from utils import dataset_correction_verification
 
 
 @pytest.mark.parametrize(
@@ -69,6 +70,21 @@ def test_hdf5_5d_apply_masks(lt_ctx, hdf5_ds_5d):
         results.mask_0.raw_data,
         expected
     )
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(hdf5_ds_1, lt_ctx, with_roi):
+    ds = hdf5_ds_1
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_read_1(lt_ctx, hdf5):

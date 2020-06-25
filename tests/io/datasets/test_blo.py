@@ -12,6 +12,8 @@ from libertem.io.dataset.blo import BloDataSet
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
+from utils import dataset_correction_verification
+
 BLO_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
 
@@ -120,6 +122,21 @@ def test_pick_analysis(default_blo, lt_ctx, TYPE):
     analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (144, 144)
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(default_blo, lt_ctx, with_roi):
+    ds = default_blo
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_cache_key_json_serializable(default_blo):

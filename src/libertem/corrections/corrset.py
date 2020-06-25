@@ -85,17 +85,18 @@ class CorrectionSet:
             sig_shape=tuple(tile_slice.shape.sig),
         )
 
-    def adjust_tileshape(self, tile_shape, sig_shape):
+    def adjust_tileshape(self, tile_shape, sig_shape, base_shape):
         excluded_pixels = self.get_excluded_pixels()
         if excluded_pixels is None:
             return tile_shape
-        if tile_shape[1:] == sig_shape:
+        if excluded_pixels.nnz == 0:
             return tile_shape
         excluded_list = excluded_pixels.coords
         adjusted_shape = np.array(tile_shape)
+        base_shape = np.array(base_shape)
         # Map of dimensions that should be shrunk
         # We have to grow or shrink monotonously to not cycle
-        shrink = (adjusted_shape[1:] >= 4)
+        shrink = (adjusted_shape[1:] >= base_shape[1:] * 4)
         # Try to iteratively reduce or increase tile size
         # per signal dimension in case of intersections of tile boundaries
         # with the patching environment
@@ -113,16 +114,18 @@ class CorrectionSet:
                     # Pixel on the left side of boundary
                     if boundary - 1 in excluded_list[dim - 1]:
                         if shrink[dim - 1]:
-                            adjusted_shape[dim] -= 2
+                            # If base_shape[dim] is 1, 2 is valid as well
+                            adjusted_shape[dim] -= max(2, base_shape[dim])
                         else:
-                            adjusted_shape[dim] += 1
+                            adjusted_shape[dim] += base_shape[dim]
                         clean = False
                     # Pixel on the right side of boundary
                     if boundary in excluded_list[dim - 1]:
                         if shrink[dim - 1]:
-                            adjusted_shape[dim] -= 1
+                            adjusted_shape[dim] -= base_shape[dim]
                         else:
-                            adjusted_shape[dim] += 2
+                            # If base_shape[dim] is 1, 2 is valid as well
+                            adjusted_shape[dim] += max(2, base_shape[dim])
                         clean = False
             if clean:
                 break

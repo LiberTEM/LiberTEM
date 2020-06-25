@@ -174,24 +174,11 @@ def dataset_correction_verification(ds, roi, lt_ctx):
             inplace=False
         )
 
-        corrected_inplace = correct(
-            buffer=data['intensity'].raw_data.reshape(shape).copy(),
-            dark_image=dark,
-            gain_map=gain,
-            excluded_pixels=exclude,
-            inplace=True
-        )
-
         print("Exclude: ", exclude)
 
         print(pick_res['intensity'].raw_data.dtype)
         print(mask_res['intensity'].raw_data.dtype)
         print(corrected.dtype)
-
-        assert np.allclose(
-            corrected_inplace,
-            corrected
-        )
 
         assert np.allclose(
             pick_res['intensity'].raw_data.reshape(shape),

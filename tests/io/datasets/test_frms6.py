@@ -14,6 +14,8 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 from libertem.udf.raw import PickUDF
 
+from utils import dataset_correction_verification
+
 FRMS6_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                                  'data', 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
@@ -78,6 +80,22 @@ def test_pick_analysis(default_frms6, lt_ctx, TYPE):
     analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (264, 264)
+
+
+@pytest.mark.parametrize(
+    # Default is too large for test without ROI
+    "with_roi", (True, )
+)
+def test_correction(default_frms6, lt_ctx, with_roi):
+    ds = default_frms6
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 def test_pickle_is_small(default_frms6):

@@ -50,11 +50,15 @@ class MemBackend(LocalFSMMapBackend):
             # support arbitrary tiling in case of no roi
             with fileset:
                 for tile in self._get_tiles_straight(tiling_scheme, fileset, read_ranges):
-                    yield tile.astype(read_dtype)
+                    data = tile.astype(read_dtype)
+                    self.preprocess(data, tile.tile_slice)
+                    yield data
         else:
             with fileset:
                 for tile in self._get_tiles_roi(tiling_scheme, fileset, read_ranges, roi):
-                    yield tile.astype(read_dtype)
+                    data = tile.astype(read_dtype)
+                    self.preprocess(data, tile.tile_slice)
+                    yield data
 
 
 class MemDatasetParams(MessageConverter):
@@ -228,7 +232,7 @@ class MemPartition(BasePartition):
         return None
 
     def _get_io_backend(self):
-        return MemBackend(decoder=self._get_decoder())
+        return MemBackend(decoder=self._get_decoder(), corrections=self._corrections)
 
     def get_macrotile(self, *args, **kwargs):
         self._force_tileshape = False

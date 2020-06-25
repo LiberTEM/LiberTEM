@@ -14,6 +14,8 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
 from libertem.io.dataset.base import TilingScheme
 
+from utils import dataset_correction_verification
+
 MIB_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
 
@@ -169,6 +171,21 @@ def test_pick_analysis(default_mib, lt_ctx, TYPE):
     analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(default_mib, lt_ctx, with_roi):
+    ds = default_mib
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 @pytest.mark.with_numba

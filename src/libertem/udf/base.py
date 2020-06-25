@@ -964,6 +964,7 @@ class UDFRunner:
             partition=partition,
             read_dtype=dtype,
             roi=roi,
+            corrections=corrections,
         )
 
         # FIXME: don't fully re-create?

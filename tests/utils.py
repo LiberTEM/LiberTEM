@@ -141,7 +141,7 @@ class DebugDeviceUDF(UDF):
 
 
 def dataset_correction_verification(ds, roi, lt_ctx):
-    for i in range(10):
+    for i in range(1):
         shape = (-1, *tuple(ds.shape.sig))
         uncorr = CorrectionSet()
         data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi, corrections=uncorr)

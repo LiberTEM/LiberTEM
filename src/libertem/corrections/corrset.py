@@ -84,3 +84,58 @@ class CorrectionSet:
             inplace=True,
             sig_shape=tuple(tile_slice.shape.sig),
         )
+
+    def adjust_tileshape(self, tile_shape, sig_shape):
+        excluded_pixels = self.get_excluded_pixels()
+        if excluded_pixels is None:
+            return tile_shape
+        if tile_shape[1:] == sig_shape:
+            return tile_shape
+        excluded_list = excluded_pixels.coords
+        adjusted_shape = np.array(tile_shape)
+        # Map of dimensions that should be shrunk
+        # We have to grow or shrink monotonously to not cycle
+        shrink = (adjusted_shape[1:] >= 4)
+        # Try to iteratively reduce or increase tile size
+        # per signal dimension in case of intersections of tile boundaries
+        # with the patching environment
+        # until we avoid all excluded pixels.
+        # This may fail in case of many excluded pixels or full excluded rows/columns,
+        # depending on the tiling scheme. In that case,
+        # swith to full frames while preserving tile size if possible.
+        for repeat in range(4):
+            clean = True
+            for dim in range(1, len(adjusted_shape)):
+                start = adjusted_shape[dim]
+                stop = sig_shape[dim - 1]
+                step = adjusted_shape[dim]
+                for boundary in range(start, stop, step):
+                    # Pixel on the left side of boundary
+                    if boundary - 1 in excluded_list[dim - 1]:
+                        if shrink[dim - 1]:
+                            adjusted_shape[dim] -= 2
+                        else:
+                            adjusted_shape[dim] += 1
+                        clean = False
+                    # Pixel on the right side of boundary
+                    if boundary in excluded_list[dim - 1]:
+                        if shrink[dim - 1]:
+                            adjusted_shape[dim] -= 1
+                        else:
+                            adjusted_shape[dim] += 2
+                        clean = False
+            if clean:
+                break
+            if np.any(adjusted_shape <= 0) or np.any(adjusted_shape[1:] > sig_shape):
+                # We didn't find a solution
+                clean = False
+                break
+        if clean:
+            return tuple(adjusted_shape)
+        else:
+            # No solution found, switch to full frames
+            # at constant tile size
+            n_pix = np.prod(tile_shape)
+            n_pix_frame = np.prod(sig_shape)
+            n_frames = max(1, n_pix // n_pix_frame)
+            return (n_frames, *sig_shape)

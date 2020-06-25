@@ -137,7 +137,6 @@ class COMAnalysis(BaseMasksAnalysis):
             transform = identity()
         # Transformations are applied right to left
         transform = rotate_deg(self.parameters["scan_rotation"]) @ transform
-        print("Transform:", transform)
         y_centers, x_centers = transform @ (y_centers_raw.reshape(-1), x_centers_raw.reshape(-1))
 
         y_centers = y_centers.reshape(shape)

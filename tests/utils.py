@@ -140,7 +140,10 @@ class DebugDeviceUDF(UDF):
         return self.params.backends
 
 
-def dataset_correction_verification(ds, roi, lt_ctx):
+def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
+    """
+    compare correct function w/ corrected pick
+    """
     for i in range(1):
         shape = (-1, *tuple(ds.shape.sig))
         uncorr = CorrectionSet()
@@ -148,7 +151,48 @@ def dataset_correction_verification(ds, roi, lt_ctx):
 
         gain = np.random.random(ds.shape.sig) + 1
         dark = np.random.random(ds.shape.sig) - 0.5
-        exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+        if exclude is None:
+            exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+
+        exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+        corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
+
+        # This one uses native input data
+        pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
+        corrected = correct(
+            buffer=data['intensity'].raw_data.reshape(shape),
+            dark_image=dark,
+            gain_map=gain,
+            excluded_pixels=exclude,
+            inplace=False
+        )
+
+        print("Exclude: ", exclude)
+
+        print(pick_res['intensity'].raw_data.dtype)
+        print(corrected.dtype)
+
+        assert np.allclose(
+            pick_res['intensity'].raw_data.reshape(shape),
+            corrected
+        )
+
+
+def dataset_correction_masks(ds, roi, lt_ctx, exclude=None):
+    """
+    compare correction via sparse mask multiplication w/ correct function
+    """
+    for i in range(1):
+        shape = (-1, *tuple(ds.shape.sig))
+        uncorr = CorrectionSet()
+        data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi, corrections=uncorr)
+
+        gain = np.random.random(ds.shape.sig) + 1
+        dark = np.random.random(ds.shape.sig) - 0.5
+
+        if exclude is None:
+            exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
 
         exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
         corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
@@ -165,7 +209,6 @@ def dataset_correction_verification(ds, roi, lt_ctx):
             roi=roi,
         )
         # This one uses native input data
-        pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
         corrected = correct(
             buffer=data['intensity'].raw_data.reshape(shape),
             dark_image=dark,
@@ -176,15 +219,10 @@ def dataset_correction_verification(ds, roi, lt_ctx):
 
         print("Exclude: ", exclude)
 
-        print(pick_res['intensity'].raw_data.dtype)
         print(mask_res['intensity'].raw_data.dtype)
         print(corrected.dtype)
 
         assert np.allclose(
-            pick_res['intensity'].raw_data.reshape(shape),
-            corrected
-        )
-        assert np.allclose(
-            pick_res['intensity'].raw_data.reshape(shape),
             mask_res['intensity'].raw_data.reshape(shape),
+            corrected
         )

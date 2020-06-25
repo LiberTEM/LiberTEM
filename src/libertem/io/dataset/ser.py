@@ -237,9 +237,10 @@ class SERPartition(BasePartition):
                 data, metadata = f.getDataset(int(idx))
                 if data.dtype != np.dtype(dest_dtype):
                     data = data.astype(dest_dtype)
+                data = data.reshape(shape)
                 self._preprocess(data, tile_slice)
                 yield DataTile(
-                    data.reshape(shape),
+                    data,
                     tile_slice=tile_slice,
                     scheme_idx=0,
                 )

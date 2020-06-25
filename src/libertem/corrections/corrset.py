@@ -96,7 +96,7 @@ class CorrectionSet:
         base_shape = np.array(base_shape)
         # Map of dimensions that should be shrunk
         # We have to grow or shrink monotonously to not cycle
-        shrink = (adjusted_shape[1:] >= base_shape[1:] * 4)
+        shrink = (adjusted_shape >= base_shape * 4)
         # Try to iteratively reduce or increase tile size
         # per signal dimension in case of intersections of tile boundaries
         # with the patching environment
@@ -104,32 +104,37 @@ class CorrectionSet:
         # This may fail in case of many excluded pixels or full excluded rows/columns,
         # depending on the tiling scheme. In that case,
         # swith to full frames while preserving tile size if possible.
-        for repeat in range(4):
+        # FIXME may have to be adjusted to be balenced to real data and excluded pixel
+        # incidence
+        # FIXME benchmark to gauge performance impact
+        for repeat in range(32):
             clean = True
-            for dim in range(1, len(adjusted_shape)):
+            for dim in range(0, len(adjusted_shape)):
                 start = adjusted_shape[dim]
-                stop = sig_shape[dim - 1]
+                stop = sig_shape[dim]
                 step = adjusted_shape[dim]
                 for boundary in range(start, stop, step):
                     # Pixel on the left side of boundary
-                    if boundary - 1 in excluded_list[dim - 1]:
-                        if shrink[dim - 1]:
+                    if boundary - 1 in excluded_list[dim]:
+                        if shrink[dim]:
                             # If base_shape[dim] is 1, 2 is valid as well
                             adjusted_shape[dim] -= max(2, base_shape[dim])
                         else:
                             adjusted_shape[dim] += base_shape[dim]
                         clean = False
+                        break
                     # Pixel on the right side of boundary
-                    if boundary in excluded_list[dim - 1]:
-                        if shrink[dim - 1]:
+                    if boundary in excluded_list[dim]:
+                        if shrink[dim]:
                             adjusted_shape[dim] -= base_shape[dim]
                         else:
                             # If base_shape[dim] is 1, 2 is valid as well
                             adjusted_shape[dim] += max(2, base_shape[dim])
                         clean = False
+                        break
             if clean:
                 break
-            if np.any(adjusted_shape <= 0) or np.any(adjusted_shape[1:] > sig_shape):
+            if np.any(adjusted_shape <= 0) or np.any(adjusted_shape > sig_shape):
                 # We didn't find a solution
                 clean = False
                 break
@@ -137,8 +142,4 @@ class CorrectionSet:
             return tuple(adjusted_shape)
         else:
             # No solution found, switch to full frames
-            # at constant tile size
-            n_pix = np.prod(tile_shape)
-            n_pix_frame = np.prod(sig_shape)
-            n_frames = max(1, n_pix // n_pix_frame)
-            return (n_frames, *sig_shape)
+            return sig_shape

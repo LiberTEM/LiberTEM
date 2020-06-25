@@ -69,8 +69,8 @@ def test_patch_pixels_only_excluded_pixels(lt_ctx, default_raw, default_raw_data
 
 def test_tileshape_adjustment_1():
     sig_shape = (123, 456)
-    tile_shape = (23, 17, 42)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 42)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (17, ),
         (42, )
@@ -80,13 +80,13 @@ def test_tileshape_adjustment_1():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 16, 41)
+    assert adjusted == (16, 41)
 
 
 def test_tileshape_adjustment_2():
     sig_shape = (123, 456)
-    tile_shape = (23, 17, 42)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 42)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (17*2 - 1, ),
         (42, )
@@ -96,13 +96,13 @@ def test_tileshape_adjustment_2():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 15, 41)
+    assert adjusted == (15, 41)
 
 
 def test_tileshape_adjustment_3():
     sig_shape = (123, 456)
-    tile_shape = (23, 17, 42)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 42)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (122, ),
         (23, )
@@ -112,13 +112,13 @@ def test_tileshape_adjustment_3():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 17, 42)
+    assert adjusted == (17, 42)
 
 
 def test_tileshape_adjustment_4():
     sig_shape = (123, 456)
-    tile_shape = (23, 17, 1)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 1)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (122, ),
         (0, )
@@ -128,13 +128,13 @@ def test_tileshape_adjustment_4():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 17, 2)
+    assert adjusted == (17, 2)
 
 
 def test_tileshape_adjustment_5():
     sig_shape = (123, 1)
-    tile_shape = (23, 17, 1)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 1)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (122, ),
         (0, )
@@ -144,13 +144,13 @@ def test_tileshape_adjustment_5():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 17, 1)
+    assert adjusted == (17, 1)
 
 
 def test_tileshape_adjustment_6():
     sig_shape = (123, 456)
-    tile_shape = (23, 17, 1)
-    base_shape = (1, 1, 1)
+    tile_shape = (17, 1)
+    base_shape = (1, 1)
     excluded_coords = np.array([
         (range(123)),
         np.zeros(123, dtype=int)
@@ -161,13 +161,13 @@ def test_tileshape_adjustment_6():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     # Switch to full frames since there's no tiling solution
-    assert adjusted == (1, 123, 456)
+    assert adjusted == (123, 456)
 
 
 def test_tileshape_adjustment_7():
     sig_shape = (123, 456)
-    tile_shape = (23, 14, 42)
-    base_shape = (1, 7, 1)
+    tile_shape = (14, 42)
+    base_shape = (7, 1)
     excluded_coords = np.array([
         (14, ),
         (42, )
@@ -177,4 +177,4 @@ def test_tileshape_adjustment_7():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (23, 21, 41)
+    assert adjusted == (21, 41)

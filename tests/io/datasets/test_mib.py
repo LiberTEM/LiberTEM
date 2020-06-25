@@ -184,7 +184,7 @@ def test_correction(default_mib, lt_ctx, with_roi):
         roi[:1] = True
     else:
         roi = None
-
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx, exclude=[(45, 144), (124, 30)])
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 

@@ -105,6 +105,10 @@ class Partition(object):
         raise NotImplementedError()
 
     def adjust_tileshape(self, tileshape):
+        """
+        Final veto of the Partition in the tileshape negotiation process,
+        make sure that corrections are taken into account!
+        """
         raise NotImplementedError()
 
     def get_locations(self):

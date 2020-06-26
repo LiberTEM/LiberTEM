@@ -16,8 +16,7 @@ class FEMTemplate(GeneratorHelper):
         return ["from libertem.analysis import FEMAnalysis"]
 
     def get_docs(self):
-        docs = ["# FEM Analysis",
-                "***about fem analysis ***"]
+        docs = ["# FEM Analysis"]
         return '\n'.join(docs)
 
     def get_analysis(self):

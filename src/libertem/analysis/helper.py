@@ -1,36 +1,37 @@
-# duplicate : Maintaining this version only
-
-from string import Template
 from pypandoc import convert_text
+from libertem.web.notebook_generator.code_template import TemplateBase
 
 
-class GeneratorHelper:
+class GeneratorHelper(TemplateBase):
 
     short_name = None
     api = None
-    temp_analysis = ["${short}_analysis = ctx.$analysis_api($params)",
-                     "$roi",
-                     "udf = ${short}_analysis.get_udf()",
-                     "${short}_result = ctx.run_udf(ds, udf, roi, progress=True)"]
 
     def __init__(self, params):
         self.params = params
 
-    # common in here and code_template
-    def format_template(self, template, data):
-        template = "\n".join(template)
-        return Template(template).substitute(data)
-
     def get_dependency(self):
+        """
+        Get analysis dependencies.
+        """
         return None
 
     def convert_params(self):
+        """
+        Format analysis parameters.
+        """
         return None
 
     def get_plot(self):
+        """
+        Get code for ploting analysis.
+        """
         return None
 
     def get_docs(self):
+        """
+        Get documentation for analysis.
+        """
         return None
 
     def format_docs(self, docs_rst):
@@ -45,10 +46,8 @@ class GeneratorHelper:
     def get_roi_code(self):
 
         if 'roi' in self.params.keys():
-            temp_roi = ["roi_params = $roi_params",
-                        "roi = get_roi(roi_params, ds.shape.nav)"]
             data = {'roi_params': self.params['roi']}
-            roi = self.format_template(temp_roi, data)
+            roi = self.format_template(self.temp_roi, data)
         else:
             roi = f"roi = {self.short_name}_analysis.get_roi()"
 

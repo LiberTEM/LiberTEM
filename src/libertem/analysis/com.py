@@ -44,7 +44,7 @@ class ComTemplate(GeneratorHelper):
             plot.append(f'axes.set_title("{channel}")')
             plot.append(f'axes.imshow(com_result.{channel}.visualized)')
 
-        print('\n'.join(plot))
+        return '\n'.join(plot)
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):

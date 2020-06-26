@@ -33,8 +33,7 @@ class ClusterTemplate(GeneratorHelper):
         return dep
 
     def get_docs(self):
-        docs = ["# Cluster Analysis",
-                "***about cluster analysis ***"]
+        docs = ["# Cluster Analysis"]
         return '\n'.join(docs)
 
     def get_analysis(self):

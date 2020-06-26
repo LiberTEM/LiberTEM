@@ -18,8 +18,7 @@ class SumfftTemplate(GeneratorHelper):
         return ["from libertem.analysis import SumfftAnalysis"]
 
     def get_docs(self):
-        docs = ["# SUM FFT Analysis",
-                "***about sumfft analysis ***"]
+        docs = ["# SUM FFT Analysis"]
         return '\n'.join(docs)
 
     def get_analysis(self):

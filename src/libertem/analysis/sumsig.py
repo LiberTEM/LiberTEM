@@ -15,8 +15,7 @@ class SumSigTemplate(GeneratorHelper):
         return ["from libertem.analysis import SumSigAnalysis"]
 
     def get_docs(self):
-        docs = ["# SumSig Analysis",
-                "***about sumsig analysis ***"]
+        docs = ["# SumSig Analysis"]
         return '\n'.join(docs)
 
     def get_analysis(self):

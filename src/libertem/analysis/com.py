@@ -1,5 +1,5 @@
 import logging
-
+import inspect
 import numpy as np
 
 from libertem import masks
@@ -16,13 +16,18 @@ class ComTemplate(GeneratorHelper):
 
     short_name = "com"
     api = "create_com_analysis"
+    temp = GeneratorHelper.temp_analysis
+    temp_analysis = temp + ["com_result = com_analysis.get_udf_results(com_result, roi)"]
+    temp_analysis.append("print(com_result)")
 
     def __init__(self, params):
         self.params = params
 
     def get_docs(self):
-        docs = ["# COM Analysis",
-                "***about com analysis ***"]
+        docs = ["# COM Analysis"]
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_com_analysis)
+        docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
@@ -33,10 +38,13 @@ class ComTemplate(GeneratorHelper):
         return ', '.join(params)
 
     def get_plot(self):
-        # any other better way to plot ?
-        plot = ["plt.figure()",
-                "plt.imshow(com_result['intensity'].data / com_result['intensity'].data.max())"]
-        return '\n'.join(plot)
+        plot = []
+        for channel in ["field", "magnitude", "curl"]:
+            plot.append("fig, axes = plt.subplots()")
+            plot.append(f'axes.set_title("{channel}")')
+            plot.append(f'axes.imshow(com_result.{channel}.visualized)')
+
+        print('\n'.join(plot))
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):

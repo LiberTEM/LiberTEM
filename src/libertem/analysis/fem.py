@@ -13,7 +13,7 @@ class FEMTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import FEMAnalysis"
+        return ["from libertem.analysis import FEMAnalysis"]
 
     def get_docs(self):
         docs = ["# FEM Analysis",

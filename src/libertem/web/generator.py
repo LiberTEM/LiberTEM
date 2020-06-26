@@ -22,14 +22,17 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
             "type": ds["params"]["params"]["type"],
             "params": ds['converted']
         }
+        main_type = compoundAnalysis['details']['mainType'].lower()
+        ds_name = '_'.join(ds["params"]["params"]["name"].split(".")[:-1])
+
         analysis_details = []
         for id in analysis_ids:
             analysis_details.append(self.state.analysis_state[id]['details'])
         conn = self.state.executor_state.get_cluster_params()
         buf = notebook_generator(conn, dataset, analysis_details)
-        self.set_header('Content-Type', 'ipynb')
+        self.set_header('Content-Type', 'application/vnd.jupyter.cells')
         self.set_header(
             'Content-Disposition',
-            'attachment; filename="comp_notebook.ipynb"',
+            f'attachment; filename="{main_type}_{ds_name}.ipynb"',
         )
         self.write(buf.getvalue())

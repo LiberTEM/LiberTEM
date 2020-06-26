@@ -1,4 +1,5 @@
 import logging
+import inspect
 from functools import partial
 
 import numpy as np
@@ -18,13 +19,18 @@ class RadialTemplate(GeneratorHelper):
 
     short_name = "radial"
     api = "create_radial_fourier_analysis"
+    temp = GeneratorHelper.temp_analysis
+    temp_analysis = temp + ["radial_result = radial_analysis.get_udf_results(radial_result, roi)"]
+    temp_analysis.append("print(radial_result)")
 
     def __init__(self, params):
         self.params = params
 
     def get_docs(self):
-        docs = ["# Radial Fourier Analysis",
-                "***about rad analysis ***"]
+        docs = ["# Radial Fourier Analysis"]
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
+        docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
@@ -34,9 +40,12 @@ class RadialTemplate(GeneratorHelper):
         return ', '.join(params)
 
     def get_plot(self):
-        # wrong visualization
-        plot = ["plt.figure()",
-                "plt.imshow(radial_result['intensity'].raw_data)"]
+        plot = []
+        channels = ["dominant_0", "absolute_0_0", "absolute_0_1"]
+        for channel in channels:
+            plot.append("fig, axes = plt.subplots()")
+            plot.append(f'axes.set_title("{channel}")')
+            plot.append(f'axes.imshow(radial_result.{channel}.visualized)')
         return '\n'.join(plot)
 
 

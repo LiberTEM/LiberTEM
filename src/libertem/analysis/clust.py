@@ -13,6 +13,40 @@ from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF, consolidate_result
 from libertem import masks
 from libertem.masks import _make_circular_mask
+from .helper import GeneratorHelper, temp_cluster_controller
+
+
+class ClusterTemplate(GeneratorHelper):
+
+    short_name = "cluster"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        dep = ["from libertem.analysis import ClusterAnalysis",
+               "from libertem.udf.stddev import StdDevUDF, consolidate_result",
+               "from libertem.masks import _make_circular_mask",
+               "from skimage.feature import peak_local_max",
+               "import sparse",
+               "from libertem.udf.masks import ApplyMasksUDF"]
+        return dep
+
+    def get_docs(self):
+        docs = ["# Cluster Analysis",
+                "***about cluster analysis ***"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [f"parameters={self.params}",
+                         "cluster_analysis = ClusterAnalysis(dataset=ds, parameters=parameters)"]
+        temp_analysis.append(temp_cluster_controller)
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(cluster_result['intensity'].visualized)"]
+        return '\n'.join(plot)
 
 
 class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
@@ -127,3 +161,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
             roi=roi,
         )
         await send_results(results, True)
+
+    @classmethod
+    def get_template_helper(cls):
+        return ClusterTemplate

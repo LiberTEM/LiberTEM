@@ -266,29 +266,6 @@ class Analysis:
         """
         raise NotImplementedError()
 
-    @classmethod
-    def get_analysis_by_type(cls, type_):
-        analysis_by_type = {
-            "APPLY_DISK_MASK": "DiskMaskAnalysis",
-            "APPLY_RING_MASK": "RingMaskAnalysis",
-            "FFTSUM_FRAMES": "SumfftAnalysis",
-            "APPLY_POINT_SELECTOR": "PointMaskAnalysis",
-            "CENTER_OF_MASS": "COMAnalysis",
-            "RADIAL_FOURIER": "RadialFourierAnalysis",
-            "SUM_FRAMES": "SumAnalysis",
-            "PICK_FRAME": "PickFrameAnalysis",
-            "FEM": "FEMAnalysis",
-            "PICK_FFT_FRAME": "PickFFTFrameAnalysis",
-            "APPLY_FFT_MASK": "ApplyFFTMask",
-            "SD_FRAMES": "SDAnalysis",
-            "SUM_SIG": "SumSigAnalysis",
-            "CLUST": "ClusterAnalysis"
-        }
-
-        module = importlib.import_module('libertem.analysis')
-        cls = getattr(module, analysis_by_type[type_])
-        return cls
-
 
 class BaseAnalysis(Analysis):
     TYPE = 'JOB'

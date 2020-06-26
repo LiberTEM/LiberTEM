@@ -41,7 +41,7 @@ class CodeTemplate():
         for helper in self.analysis_helper.values():
             extra_dep = helper.get_dependency()
             if extra_dep is not None:
-                temp_dep.append(extra_dep)
+                temp_dep.extend(extra_dep)
 
         return '\n'.join(temp_dep)
 
@@ -51,7 +51,9 @@ class CodeTemplate():
     def connection(self):
         docs = ["# Connection"]
         if (self.conn['type'] == "cluster"):
-            docs.append("***more about cluster conn")
+            link = "https://libertem.github.io/LiberTEM/usage.html#starting-a-custom-cluster"
+            more_info = f"[For more info]({link})"
+            docs.append(f"Connecting to dask cluster, {more_info}")
             temp_conn = ['cluster = executor.dask.DaskJobExecutor.connect("$conn_url")',
                          "ctx = lt.Context(executor=cluster)"]
             data = {'conn_url': self.conn['url']}
@@ -59,7 +61,7 @@ class CodeTemplate():
             docs = '\n'.join(docs)
             return ctx, docs
         else:
-            docs.append("**more about local conn**")
+            docs.append("This starts a local cluster that is accessible through ctx.")
             ctx = "ctx = lt.Context()"
             docs = '\n'.join(docs)
             return ctx, docs

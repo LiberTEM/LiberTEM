@@ -13,11 +13,11 @@ class SDTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import SDAnalysis"
+        return ["from libertem.analysis import SDAnalysis"]
 
     def get_docs(self):
         docs = ["# SD Analysis",
-                "***about sd analysis ***"]
+                "Calculates standard deviation of all detector frames."]
         return '\n'.join(docs)
 
     def get_analysis(self):

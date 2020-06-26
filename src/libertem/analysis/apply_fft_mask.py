@@ -12,7 +12,7 @@ class FFTMaskTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import ApplyFFTMask"
+        return ["from libertem.analysis import ApplyFFTMask"]
 
     def get_docs(self):
         docs = ["# FFT Analysis",

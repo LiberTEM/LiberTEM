@@ -1,5 +1,5 @@
 import numpy as np
-
+import inspect
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.analysis.getroi import get_roi
@@ -16,12 +16,14 @@ class SumTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# SUM Analysis",
-                "***about sum analysis ***"]
+        docs = ["# SUM Analysis"]
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_sum_analysis)
+        docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
-        return f"dataset=ds"
+        return "dataset=ds"
 
     def get_plot(self):
         plot = ["plt.figure()",

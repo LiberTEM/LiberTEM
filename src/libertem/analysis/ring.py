@@ -1,4 +1,5 @@
 import numpy as np
+import inspect
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
@@ -14,8 +15,10 @@ class RingTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# Ring Analysis",
-                "***about ring analysis ***"]
+        docs = ["# Ring Analysis"]
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_ring_analysis)
+        docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):

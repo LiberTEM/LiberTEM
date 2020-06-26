@@ -3,7 +3,7 @@ import nbformat as nbf
 from .code_template import CodeTemplate
 
 
-class notebook:
+class Notebook:
 
     def __init__(self):
         self.nb = nbf.v4.new_notebook()

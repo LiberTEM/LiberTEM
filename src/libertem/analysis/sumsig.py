@@ -12,7 +12,7 @@ class SumSigTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import SumSigAnalysis"
+        return ["from libertem.analysis import SumSigAnalysis"]
 
     def get_docs(self):
         docs = ["# SumSig Analysis",

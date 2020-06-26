@@ -12,7 +12,7 @@ class PickfftTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import PickFFTFrameAnalysis"
+        return ["from libertem.analysis import PickFFTFrameAnalysis"]
 
     def get_docs(self):
         docs = ["# PICK FFT Analysis",

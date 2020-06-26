@@ -1,4 +1,5 @@
 import numpy as np
+import inspect
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
@@ -14,8 +15,10 @@ class DiskTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# Disk Analysis",
-                "***about disk analysis ***"]
+        docs = ["# Disk Analysis"]
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_disk_analysis)
+        docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):

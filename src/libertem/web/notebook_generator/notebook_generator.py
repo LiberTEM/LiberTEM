@@ -3,7 +3,7 @@ import nbformat as nbf
 from .code_template import CodeTemplate
 
 
-class notebook:
+class Notebook:
 
     def __init__(self):
         self.nb = nbf.v4.new_notebook()
@@ -24,7 +24,7 @@ class notebook:
 
 def notebook_generator(conn, dataset, comp):
     # initialization
-    nb = notebook()
+    nb = Notebook()
     instance = CodeTemplate(conn, dataset, comp)
 
     nb.add_code(instance.dependency())

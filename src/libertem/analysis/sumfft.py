@@ -15,7 +15,7 @@ class SumfftTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return "from libertem.analysis import SumfftAnalysis"
+        return ["from libertem.analysis import SumfftAnalysis"]
 
     def get_docs(self):
         docs = ["# SUM FFT Analysis",

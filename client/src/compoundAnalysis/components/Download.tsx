@@ -80,7 +80,7 @@ const DownloadScripts: React.SFC<DownloadItemsProps> = ({compoundAnalysis}) => {
         <ul>
             <li>
                 <a href={downloadUrl}>
-                    notebook (description)
+                    notebook corresponding to analysis
                 </a>
             </li>
         </ul>

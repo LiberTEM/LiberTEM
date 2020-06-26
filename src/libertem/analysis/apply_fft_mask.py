@@ -15,8 +15,7 @@ class FFTMaskTemplate(GeneratorHelper):
         return ["from libertem.analysis import ApplyFFTMask"]
 
     def get_docs(self):
-        docs = ["# FFT Analysis",
-                "***about fft analysis ***"]
+        docs = ["# FFT Analysis"]
         return '\n'.join(docs)
 
     def get_analysis(self):

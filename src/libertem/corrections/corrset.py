@@ -24,10 +24,10 @@ def factorizations(n, primes):
 
 def min_disjunct_multiplier(excluded, size):
     '''
-    Calculate minimum integer i for which i * n not in "excluded" for any n > 0
+    Calculate a small integer i for which i * n not in "excluded" for any n > 0
 
     To make sure that the tile shape negotiation retains as much flexibility as possible,
-    it is important to find the smallest integer and not just any integer that fulfills
+    it is important to find a small integer and not just any integer that fulfills
     this condition.
     '''
     # This is guaranteed to include "size" for realistic dimension sizes

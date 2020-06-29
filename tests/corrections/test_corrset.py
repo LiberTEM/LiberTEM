@@ -197,3 +197,29 @@ def test_tileshape_adjustment_8():
     )
     print(adjusted)
     assert adjusted != (1014, 1024)
+
+
+def test_tileshape_adjustment_fuzz():
+    for n in range(10):
+        sig_shape = (np.random.randint(1, 2**12), np.random.randint(1, 2**12))
+        print("Sig shape", sig_shape)
+        tile_shape = (1, 1)
+        base_shape = (1, 1)
+        size = max(1, max(sig_shape) // 10)
+        excluded_coords = np.vstack([
+            np.random.randint(0, sig_shape[0], size=size),
+            np.random.randint(0, sig_shape[1], size=size),
+        ])
+        print("excluded_coords", excluded_coords.shape, excluded_coords)
+        excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+        corr = CorrectionSet(excluded_pixels=excluded_pixels)
+        adjusted = corr.adjust_tileshape(
+            tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+        )
+        print(adjusted)
+        for dim in range(2):
+            excluded_set = frozenset(excluded_coords[dim])
+            right_boundaries = set(range(adjusted[dim], sig_shape[dim], adjusted[dim]))
+            left_boundaries = set(range(adjusted[dim]-1, sig_shape[dim], adjusted[dim]))
+            boundaries = right_boundaries.union(left_boundaries)
+            assert excluded_set.isdisjoint(boundaries)

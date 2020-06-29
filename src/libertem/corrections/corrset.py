@@ -1,8 +1,36 @@
 import numpy as np
 import sparse
+import primesieve
 
 from libertem.common import Slice
 from libertem.corrections.detector import correct
+
+
+def factorizations(n, primes):
+    n = np.array(n)
+    debug_n = n
+    factorization = np.zeros((len(n), len(primes)), dtype=n.dtype)
+    if np.max(n) > np.max(primes):
+        raise ValueError("np.max(n) > np.max(primes)")
+    while np.any(n > 1):
+        zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
+        factorization[zero_modulos] += 1
+        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
+        n = n // f
+
+    assert np.all(np.prod(primes ** factorization, axis=1) == debug_n)
+    return factorization
+
+
+def min_disjunct_multiplier(excluded, size):
+    # Unless size => inf, this is guaranteed to include "size"
+    primes = np.array(primesieve.primes(size*2))
+    if len(excluded):
+        fac = factorizations(np.array(excluded), primes)
+        ceiling = primes ** (np.max(fac, axis=0) + 1)
+        return int(np.min(ceiling))
+    else:
+        return 1
 
 
 class CorrectionSet:
@@ -113,25 +141,42 @@ class CorrectionSet:
                 start = adjusted_shape[dim]
                 stop = sig_shape[dim]
                 step = adjusted_shape[dim]
-                for boundary in range(start, stop, step):
+                # Nothing to adjust, could trip downstream logic
+                if stop <= 1:
+                    continue
+                if step == 1:
+                    forbidden = np.concatenate((excluded_list[dim], excluded_list[dim] + 1))
+                    nonzero_filter = forbidden != 0
+                    m = min(stop, min_disjunct_multiplier(forbidden[nonzero_filter], stop))
+                    if not np.all(nonzero_filter):
+                        m = max(m, 2)
+                    if adjusted_shape[dim] != m:
+                        adjusted_shape[dim] = m
+                        clean = False
+                else:
+                    excluded_set = frozenset(excluded_list[dim])
+                    right_boundary_set = frozenset(range(start, stop, step))
+                    left_boundary_set = frozenset(range(start-1, stop-1, step))
+
+                    right_of = not right_boundary_set.isdisjoint(excluded_set)
+                    left_of = not left_boundary_set.isdisjoint(excluded_set)
+
                     # Pixel on the left side of boundary
-                    if boundary - 1 in excluded_list[dim]:
+                    if left_of:
                         if shrink[dim]:
                             # If base_shape[dim] is 1, 2 is valid as well
                             adjusted_shape[dim] -= max(2, base_shape[dim])
                         else:
                             adjusted_shape[dim] += base_shape[dim]
                         clean = False
-                        break
                     # Pixel on the right side of boundary
-                    if boundary in excluded_list[dim]:
+                    if right_of:
                         if shrink[dim]:
                             adjusted_shape[dim] -= base_shape[dim]
                         else:
                             # If base_shape[dim] is 1, 2 is valid as well
                             adjusted_shape[dim] += max(2, base_shape[dim])
                         clean = False
-                        break
             if clean:
                 break
             if np.any(adjusted_shape <= 0) or np.any(adjusted_shape > sig_shape):

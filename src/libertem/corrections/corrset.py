@@ -23,9 +23,25 @@ def factorizations(n, primes):
 
 
 def min_disjunct_multiplier(excluded, size):
-    # Unless size => inf, this is guaranteed to include "size"
+    '''
+    Calculate minimum integer i for which i * n not in "excluded" for any n > 0
+
+    To make sure that the tile shape negotiation retains as much flexibility as possible,
+    it is important to find the smallest integer and not just any integer that fulfills
+    this condition.
+    '''
+    # This is guaranteed to include "size" for realistic dimension sizes
     primes = np.array(primesieve.primes(size*2))
     if len(excluded):
+        # If two integers are equal, their prime factor decompositions
+        # are equal, too.
+        # We find the global maximum power for each of the prime factors
+        # that construct the elements of "excluded".
+        # By choosing a number that has one power more, we make sure
+        # that multiples of that number can never be equal to one of the excluded
+        # elements: The prime factor decompositions of any multiple of that number
+        # will always contain that additional power and thus never be equal the prime
+        # factor decomposition of an excluded pixel.
         fac = factorizations(np.array(excluded), primes)
         ceiling = primes ** (np.max(fac, axis=0) + 1)
         return int(np.min(ceiling))

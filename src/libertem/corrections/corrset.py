@@ -132,8 +132,6 @@ class CorrectionSet:
         # This may fail in case of many excluded pixels or full excluded rows/columns,
         # depending on the tiling scheme. In that case,
         # swith to full frames while preserving tile size if possible.
-        # FIXME may have to be adjusted to be balenced to real data and excluded pixel
-        # incidence
         for repeat in range(32):
             clean = True
             for dim in range(0, len(adjusted_shape)):
@@ -143,10 +141,12 @@ class CorrectionSet:
                 # Nothing to adjust, could trip downstream logic
                 if stop <= 1:
                     continue
-                if step == 1:
+                if step == 1 and base_shape[dim] == 1:
                     forbidden = np.concatenate((excluded_list[dim], excluded_list[dim] + 1))
+                    forbidden = forbidden[forbidden < stop]
                     nonzero_filter = forbidden != 0
                     m = min(stop, min_disjunct_multiplier(forbidden[nonzero_filter], stop))
+                    # In case we have a zero where the existing logic doesn't work
                     if not np.all(nonzero_filter):
                         m = max(m, 2)
                     if adjusted_shape[dim] != m:

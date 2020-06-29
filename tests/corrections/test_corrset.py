@@ -6,6 +6,17 @@ from libertem.corrections import CorrectionSet
 from libertem.udf.sum import SumUDF
 
 
+def _validate(excluded_coords, adjusted, sig_shape):
+    for dim in range(len(excluded_coords)):
+        excluded_set = frozenset(excluded_coords[dim])
+        right_boundaries = set(range(adjusted[dim], sig_shape[dim], adjusted[dim]))
+        # The stop at sig_shape[dim]-1 ignores pixels that are on the very right of the sig shape,
+        # which are OK
+        left_boundaries = set(range(adjusted[dim]-1, sig_shape[dim]-1, adjusted[dim]))
+        boundaries = right_boundaries.union(left_boundaries)
+        assert excluded_set.isdisjoint(boundaries)
+
+
 @pytest.mark.parametrize("gain,dark", [
     (np.zeros((128, 128)), np.ones((128, 128))),
     (np.zeros((128, 128)), None),
@@ -81,6 +92,7 @@ def test_tileshape_adjustment_1():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (16, 41)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_2():
@@ -97,6 +109,7 @@ def test_tileshape_adjustment_2():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (15, 41)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_3():
@@ -113,6 +126,7 @@ def test_tileshape_adjustment_3():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (17, 42)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_4():
@@ -129,6 +143,7 @@ def test_tileshape_adjustment_4():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (17, 2)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_5():
@@ -145,6 +160,7 @@ def test_tileshape_adjustment_5():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (17, 1)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_6():
@@ -162,6 +178,7 @@ def test_tileshape_adjustment_6():
     )
     # Switch to full frames since there's no tiling solution
     assert adjusted == (123, 456)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_7():
@@ -178,6 +195,7 @@ def test_tileshape_adjustment_7():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (21, 41)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_8():
@@ -197,6 +215,41 @@ def test_tileshape_adjustment_8():
     )
     print(adjusted)
     assert adjusted != (1014, 1024)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+def test_tileshape_adjustment_9():
+    sig_shape = (123, 456)
+    tile_shape = (8, 1)
+    base_shape = (2, 1)
+    excluded_coords = np.array([
+        (122, ),
+        (455, )
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    assert adjusted == (8, 2)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+def test_tileshape_adjustment_10():
+    sig_shape = (122, 455)
+    tile_shape = (8, 1)
+    base_shape = (2, 1)
+    excluded_coords = np.array([
+        (121, ),
+        (454, )
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    assert adjusted == (8, 3)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
 def test_tileshape_adjustment_fuzz():
@@ -217,9 +270,4 @@ def test_tileshape_adjustment_fuzz():
             tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
         )
         print(adjusted)
-        for dim in range(2):
-            excluded_set = frozenset(excluded_coords[dim])
-            right_boundaries = set(range(adjusted[dim], sig_shape[dim], adjusted[dim]))
-            left_boundaries = set(range(adjusted[dim]-1, sig_shape[dim], adjusted[dim]))
-            boundaries = right_boundaries.union(left_boundaries)
-            assert excluded_set.isdisjoint(boundaries)
+        _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)

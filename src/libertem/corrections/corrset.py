@@ -134,7 +134,6 @@ class CorrectionSet:
         # swith to full frames while preserving tile size if possible.
         # FIXME may have to be adjusted to be balenced to real data and excluded pixel
         # incidence
-        # FIXME benchmark to gauge performance impact
         for repeat in range(32):
             clean = True
             for dim in range(0, len(adjusted_shape)):

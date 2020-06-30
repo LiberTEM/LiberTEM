@@ -3,6 +3,7 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.feature_extraction.image import grid_to_graph
 import numpy as np
 import sparse
+import inspect
 
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
@@ -13,7 +14,7 @@ from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF, consolidate_result
 from libertem import masks
 from libertem.masks import _make_circular_mask
-from .helper import GeneratorHelper, temp_cluster_controller
+from .helper import GeneratorHelper
 
 
 class ClusterTemplate(GeneratorHelper):
@@ -32,6 +33,22 @@ class ClusterTemplate(GeneratorHelper):
                "from libertem.udf.masks import ApplyMasksUDF"]
         return dep
 
+    def temp_cluster_controller(self):
+        controller = inspect.getsource(ClusterAnalysis.controller)
+        # remove indentation
+        controller = controller.replace("\n        ", "\n")
+        controller = controller.split("\n\n")
+        temp_controller = []
+        controller[1] = controller[1].replace("self", "cluster_analysis")
+        controller[4] = controller[4].replace("self.", "")
+        controller[7] = controller[7].replace("self.dataset", "ds")
+        controller[2] = "sd_udf_results = ctx.run_udf(dataset=ds, udf=stddev_udf, roi=roi, progress=True)"
+        temp_controller.extend(controller[1:9])
+        result = ["udf_results = ctx.run_udf(dataset=ds, udf=udf, progress=True)",
+                  "cluster_result = cluster_analysis.get_udf_results(udf_results=udf_results, roi=roi)"]
+        temp_controller.append("\n".join(result))
+        return '\n\n'.join(temp_controller)
+
     def get_docs(self):
         docs = ["# Cluster Analysis"]
         return '\n'.join(docs)
@@ -39,7 +56,7 @@ class ClusterTemplate(GeneratorHelper):
     def get_analysis(self):
         temp_analysis = [f"parameters={self.params}",
                          "cluster_analysis = ClusterAnalysis(dataset=ds, parameters=parameters)"]
-        temp_analysis.append(temp_cluster_controller)
+        temp_analysis.append(self.temp_cluster_controller())
         return '\n'.join(temp_analysis)
 
     def get_plot(self):
@@ -99,8 +116,8 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         return roi
 
     async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
-        stddev_udf = StdDevUDF()
 
+        stddev_udf = StdDevUDF()
         roi = self.get_sd_roi()
 
         result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
@@ -108,7 +125,6 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         )
         async for (sd_udf_results,) in result_iter:
             pass
-
         if job_is_cancelled():
             raise JobCancelledError()
 

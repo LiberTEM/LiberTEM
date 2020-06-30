@@ -1,7 +1,7 @@
 import re
 import io
 import os
-import glob
+from glob import glob
 import typing
 import logging
 import warnings
@@ -565,7 +565,13 @@ class MIBDataSet(DataSet):
         if self._disable_glob:
             fns = [self._path]
         else:
-            fns = glob.glob(pattern)
+            fns = glob(pattern)
+        if len(fns) > 16384:
+            warnings.warn(
+                "Saving data in many small files (here: %d) is not efficient, please increase "
+                "the \"Images Per File\" parameter when acquiring data",
+                RuntimeWarning
+            )
         self._filename_cache = fns
         return fns
 

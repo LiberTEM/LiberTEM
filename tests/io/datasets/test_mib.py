@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -218,3 +219,30 @@ def test_mib_dist(dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
+
+
+def test_too_many_files(lt_ctx):
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=(32, 32))
+
+    with mock.patch('libertem.io.dataset.mib.glob', side_effect=lambda p: [
+            "/a/%d.mib" % i
+            for i in range(256*256)
+    ]):
+        with pytest.warns(RuntimeWarning) as record:
+            ds._filenames()
+
+    assert len(record) == 1
+    assert "Saving data in many small files" in record[0].message.args[0]
+
+
+def test_not_too_many_files(lt_ctx):
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=(32, 32))
+
+    with mock.patch('libertem.io.dataset.mib.glob', side_effect=lambda p: [
+            "/a/%d.mib" % i
+            for i in range(256)
+    ]):
+        with pytest.warns(None) as record:
+            ds._filenames()
+
+    assert len(record) == 0

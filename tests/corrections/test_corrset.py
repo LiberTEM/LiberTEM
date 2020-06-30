@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
 import sparse
+import primesieve.numpy
 
 from libertem.corrections import CorrectionSet
+from libertem.corrections.corrset import factorizations
 from libertem.udf.sum import SumUDF
 
 
@@ -15,6 +17,13 @@ def _validate(excluded_coords, adjusted, sig_shape):
         left_boundaries = set(range(adjusted[dim]-1, sig_shape[dim]-1, adjusted[dim]))
         boundaries = right_boundaries.union(left_boundaries)
         assert excluded_set.isdisjoint(boundaries)
+
+
+def test_factorizations():
+    n = np.random.randint(1, 2**12, 100)
+    primes = primesieve.numpy.primes(np.max(n))
+    fac = factorizations(n, primes)
+    assert np.all(np.prod(primes ** fac, axis=1) == n)
 
 
 @pytest.mark.parametrize("gain,dark", [
@@ -168,7 +177,7 @@ def test_tileshape_adjustment_6():
     tile_shape = (17, 1)
     base_shape = (1, 1)
     excluded_coords = np.array([
-        (range(123)),
+        range(123),
         np.zeros(123, dtype=int)
     ])
     excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
@@ -176,8 +185,59 @@ def test_tileshape_adjustment_6():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    # Switch to full frames since there's no tiling solution
-    assert adjusted == (123, 456)
+    assert adjusted == (123, 2)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+def test_tileshape_adjustment_6_1():
+    sig_shape = (123, 456)
+    tile_shape = (122, 1)
+    base_shape = (1, 1)
+    excluded_coords = np.array([
+        range(123),
+        np.zeros(123, dtype=int)
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    print(adjusted)
+    assert adjusted == (123, 2)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+def test_tileshape_adjustment_6_2():
+    sig_shape = (123, 456)
+    tile_shape = (1, 1)
+    base_shape = (1, 1)
+    excluded_coords = np.array([
+        range(123),
+        np.zeros(123, dtype=int)
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    assert adjusted == (123, 2)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+def test_tileshape_adjustment_6_3():
+    sig_shape = (123, 456)
+    tile_shape = (1, 1)
+    base_shape = (1, 1)
+    excluded_coords = np.array([
+        range(123),
+        range(0, 246, 2)
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    assert adjusted == (123, 256)
     _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 

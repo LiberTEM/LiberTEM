@@ -49,6 +49,11 @@ To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwardin
 Connecting
 ----------
 
+.. note:: 
+
+   The GUI is tested to work on Firefox and Chromium-based browsers for now, if you
+   cannot use a compatible browser for some reason, please `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_!
+
 After starting the server, you can open the GUI in your browser. If it didn't open
 automatically, you can access it by default at http://localhost:9000 . At the beginning,
 the GUI shows a prompt to create a local cluster or connect to a running one.

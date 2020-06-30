@@ -1,6 +1,6 @@
 import numpy as np
 import sparse
-import primesieve
+import primesieve.numpy
 
 from libertem.common import Slice
 from libertem.corrections.detector import correct
@@ -8,21 +8,21 @@ from libertem.corrections.detector import correct
 
 def factorizations(n, primes):
     n = np.array(n)
-    debug_n = n
     factorization = np.zeros((len(n), len(primes)), dtype=n.dtype)
-    if np.max(n) > np.max(primes):
-        raise ValueError("np.max(n) > np.max(primes)")
+    if np.max(n) > np.max(primes) * 2:
+        raise ValueError(
+            "np.max(n) > np.max(primes) * 2, probably not enough primes."
+        )
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
         f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
         n = n // f
 
-    assert np.all(np.prod(primes ** factorization, axis=1) == debug_n)
     return factorization
 
 
-def min_disjunct_multiplier(excluded, size):
+def min_disjunct_multiplier(excluded):
     '''
     Calculate a small integer i for which i * n not in "excluded" for any n > 0
 
@@ -30,11 +30,9 @@ def min_disjunct_multiplier(excluded, size):
     it is important to find a small integer and not just any integer that fulfills
     this condition.
     '''
-    # This is guaranteed to include "size" for realistic dimension sizes
-    primes = np.array(primesieve.primes(size*2))
     if len(excluded):
         # If two integers are equal, their prime factor decompositions
-        # are equal, too.
+        # are equal, too, and vice versa.
         # We find the global maximum power for each of the prime factors
         # that construct the elements of "excluded".
         # By choosing a number that has one power more, we make sure
@@ -42,6 +40,7 @@ def min_disjunct_multiplier(excluded, size):
         # elements: The prime factor decompositions of any multiple of that number
         # will always contain that additional power and thus never be equal the prime
         # factor decomposition of an excluded pixel.
+        primes = primesieve.numpy.primes(max(np.max(excluded), 2))
         fac = factorizations(np.array(excluded), primes)
         ceiling = primes ** (np.max(fac, axis=0) + 1)
         return int(np.min(ceiling))
@@ -137,6 +136,7 @@ class CorrectionSet:
             return tile_shape
         excluded_list = excluded_pixels.coords
         adjusted_shape = np.array(tile_shape)
+        sig_shape = np.array(sig_shape)
         base_shape = np.array(base_shape)
         # Map of dimensions that should be shrunk
         # We have to grow or shrink monotonously to not cycle
@@ -149,7 +149,7 @@ class CorrectionSet:
         # depending on the tiling scheme. In that case,
         # swith to full frames while preserving tile size if possible.
         for repeat in range(32):
-            clean = True
+            clean = np.ones(len(adjusted_shape), dtype=bool)
             for dim in range(0, len(adjusted_shape)):
                 start = adjusted_shape[dim]
                 stop = sig_shape[dim]
@@ -158,48 +158,73 @@ class CorrectionSet:
                 if stop <= 1:
                     continue
                 if step == 1 and base_shape[dim] == 1:
-                    forbidden = np.concatenate((excluded_list[dim], excluded_list[dim] + 1))
-                    forbidden = forbidden[forbidden < stop]
-                    nonzero_filter = forbidden != 0
-                    m = min(stop, min_disjunct_multiplier(forbidden[nonzero_filter], stop))
-                    # In case we have a zero where the existing logic doesn't work
-                    if not np.all(nonzero_filter):
-                        m = max(m, 2)
-                    if adjusted_shape[dim] != m:
-                        adjusted_shape[dim] = m
-                        clean = False
+                    clean[dim] = adjust_direct(
+                        clean=clean[dim],
+                        adjusted_shape_inout=adjusted_shape,
+                        dim=dim,
+                        excluded_list=excluded_list,
+                        stop=stop,
+                    )
                 else:
-                    excluded_set = frozenset(excluded_list[dim])
-                    right_boundary_set = frozenset(range(start, stop, step))
-                    left_boundary_set = frozenset(range(start-1, stop-1, step))
-
-                    right_of = not right_boundary_set.isdisjoint(excluded_set)
-                    left_of = not left_boundary_set.isdisjoint(excluded_set)
-
-                    # Pixel on the left side of boundary
-                    if left_of:
-                        if shrink[dim]:
-                            # If base_shape[dim] is 1, 2 is valid as well
-                            adjusted_shape[dim] -= max(2, base_shape[dim])
-                        else:
-                            adjusted_shape[dim] += base_shape[dim]
-                        clean = False
-                    # Pixel on the right side of boundary
-                    if right_of:
-                        if shrink[dim]:
-                            adjusted_shape[dim] -= base_shape[dim]
-                        else:
-                            # If base_shape[dim] is 1, 2 is valid as well
-                            adjusted_shape[dim] += max(2, base_shape[dim])
-                        clean = False
-            if clean:
+                    clean[dim] = adjust_heuristic(
+                        clean=clean[dim],
+                        adjusted_shape_inout=adjusted_shape,
+                        base_shape=base_shape,
+                        shrink=shrink,
+                        dim=dim,
+                        excluded_list=excluded_list,
+                        start=start,
+                        stop=stop,
+                        step=step,
+                    )
+            if np.all(clean):
                 break
-            if np.any(adjusted_shape <= 0) or np.any(adjusted_shape > sig_shape):
-                # We didn't find a solution
-                clean = False
-                break
-        if clean:
-            return tuple(adjusted_shape)
+        invalid = np.logical_or(
+            np.logical_not(clean),
+            adjusted_shape <= 0,
+            adjusted_shape > sig_shape
+        )
+        adjusted_shape[invalid] = sig_shape[invalid]
+        return tuple(adjusted_shape)
+
+
+def adjust_direct(clean, adjusted_shape_inout, dim, excluded_list, stop):
+    forbidden = np.concatenate((excluded_list[dim], excluded_list[dim] + 1))
+    forbidden = forbidden[forbidden < stop]
+    nonzero_filter = forbidden != 0
+    m = min(stop, min_disjunct_multiplier(forbidden[nonzero_filter]))
+    # In case we have a zero where the existing logic doesn't work
+    if not np.all(nonzero_filter):
+        m = max(m, 2)
+    if adjusted_shape_inout[dim] != m:
+        adjusted_shape_inout[dim] = m
+        clean = False
+    return clean
+
+
+def adjust_heuristic(clean, adjusted_shape_inout, base_shape, shrink, dim,
+        excluded_list, start, stop, step):
+    excluded_set = frozenset(excluded_list[dim])
+    right_boundary_set = frozenset(range(start, stop, step))
+    left_boundary_set = frozenset(range(start-1, stop-1, step))
+
+    right_of = not right_boundary_set.isdisjoint(excluded_set)
+    left_of = not left_boundary_set.isdisjoint(excluded_set)
+
+    # Pixel on the left side of boundary
+    if left_of:
+        if shrink[dim]:
+            # If base_shape[dim] is 1, 2 is valid as well
+            adjusted_shape_inout[dim] -= max(2, base_shape[dim])
         else:
-            # No solution found, switch to full frames
-            return sig_shape
+            adjusted_shape_inout[dim] += base_shape[dim]
+        clean = False
+    # Pixel on the right side of boundary
+    if right_of:
+        if shrink[dim]:
+            adjusted_shape_inout[dim] -= base_shape[dim]
+        else:
+            # If base_shape[dim] is 1, 2 is valid as well
+            adjusted_shape_inout[dim] += max(2, base_shape[dim])
+        clean = False
+    return clean

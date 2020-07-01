@@ -10,6 +10,7 @@ def _get_raw_params(path):
             "params": {
                 "type": "raw",
                 "path": path,
+                "name": "name.raw",
                 "dtype": "float32",
                 "detector_size": [128, 128],
                 "enable_direct": False,

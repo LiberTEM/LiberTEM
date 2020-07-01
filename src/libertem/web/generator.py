@@ -1,4 +1,3 @@
-import io
 import tornado
 import logging
 from .notebook_generator.notebook_generator import notebook_generator

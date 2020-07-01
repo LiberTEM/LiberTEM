@@ -148,35 +148,14 @@ class CorrectionSet:
         # This may fail in case of many excluded pixels or full excluded rows/columns,
         # depending on the tiling scheme. In that case,
         # swith to full frames while preserving tile size if possible.
-        for repeat in range(32):
-            clean = np.ones(len(adjusted_shape), dtype=bool)
-            for dim in range(0, len(adjusted_shape)):
-                start = adjusted_shape[dim]
-                stop = sig_shape[dim]
-                step = adjusted_shape[dim]
-                # Nothing to adjust, could trip downstream logic
-                if stop <= 1:
-                    continue
-                if step == 1 and base_shape[dim] == 1:
-                    clean[dim] = adjust_direct(
-                        clean=clean[dim],
-                        adjusted_shape_inout=adjusted_shape,
-                        dim=dim,
-                        excluded_list=excluded_list,
-                        stop=stop,
-                    )
-                else:
-                    clean[dim] = adjust_heuristic(
-                        clean=clean[dim],
-                        adjusted_shape_inout=adjusted_shape,
-                        base_shape=base_shape,
-                        shrink=shrink,
-                        dim=dim,
-                        excluded_list=excluded_list,
-                        start=start,
-                        stop=stop,
-                        step=step,
-                    )
+        for repeat in range(7):
+            clean = adjust_iteration(
+                adjusted_shape_inout=adjusted_shape,
+                sig_shape=sig_shape,
+                base_shape=base_shape,
+                shrink=shrink,
+                excluded_list=excluded_list
+            )
             if np.all(clean):
                 break
         invalid = np.logical_or(
@@ -188,7 +167,35 @@ class CorrectionSet:
         return tuple(adjusted_shape)
 
 
-def adjust_direct(clean, adjusted_shape_inout, dim, excluded_list, stop):
+def adjust_iteration(adjusted_shape_inout, sig_shape, base_shape, shrink, excluded_list):
+    clean = np.ones(len(adjusted_shape_inout), dtype=bool)
+    for dim in range(0, len(adjusted_shape_inout)):
+        # Nothing to adjust, could trip downstream logic
+        if sig_shape[dim] <= 1:
+            continue
+        if adjusted_shape_inout[dim] == 1 and base_shape[dim] == 1:
+            clean[dim] = adjust_direct(
+                clean=clean[dim],
+                adjusted_shape_inout=adjusted_shape_inout,
+                sig_shape=sig_shape,
+                dim=dim,
+                excluded_list=excluded_list,
+            )
+        else:
+            clean[dim] = adjust_heuristic(
+                clean=clean[dim],
+                adjusted_shape_inout=adjusted_shape_inout,
+                base_shape=base_shape,
+                sig_shape=sig_shape,
+                shrink=shrink,
+                dim=dim,
+                excluded_list=excluded_list,
+            )
+    return clean
+
+
+def adjust_direct(clean, adjusted_shape_inout, sig_shape, dim, excluded_list):
+    stop = sig_shape[dim]
     forbidden = np.concatenate((excluded_list[dim], excluded_list[dim] + 1))
     forbidden = forbidden[forbidden < stop]
     nonzero_filter = forbidden != 0
@@ -202,8 +209,11 @@ def adjust_direct(clean, adjusted_shape_inout, dim, excluded_list, stop):
     return clean
 
 
-def adjust_heuristic(clean, adjusted_shape_inout, base_shape, shrink, dim,
-        excluded_list, start, stop, step):
+def adjust_heuristic(clean, adjusted_shape_inout, base_shape, sig_shape, shrink, dim,
+        excluded_list):
+    start = adjusted_shape_inout[dim]
+    stop = sig_shape[dim]
+    step = adjusted_shape_inout[dim]
     excluded_set = frozenset(excluded_list[dim])
     right_boundary_set = frozenset(range(start, stop, step))
     left_boundary_set = frozenset(range(start-1, stop-1, step))

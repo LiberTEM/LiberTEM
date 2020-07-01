@@ -21,8 +21,12 @@ from libertem.corrections import CorrectionSet
         np.array([
             range(1024),
             range(1024),
+        ]),
+        # Column that prevents tiling in one dimension
+        np.array([
+            range(1024),
+            np.full(1024, 3),
         ])
-
     )
 )
 def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords):

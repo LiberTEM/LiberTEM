@@ -1,5 +1,5 @@
 from pypandoc import convert_text
-from libertem.web.notebook_generator.code_template import TemplateBase
+from libertem.web.notebook_generator.template import TemplateBase
 
 
 class GeneratorHelper(TemplateBase):

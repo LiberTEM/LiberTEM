@@ -19,8 +19,10 @@ class PickfftTemplate(GeneratorHelper):
         return '\n'.join(docs)
 
     def get_analysis(self):
-        temp_analysis = [f"pickfft_analysis = PickFFTFrameAnalysis(dataset=ds, parameters={self.params})",
-                         "pickfft_result = ctx.run(pickfft_analysis, progress=True)"]
+        temp_analysis = [
+                f"pickfft_analysis = PickFFTFrameAnalysis(dataset=ds, parameters={self.params})",
+                "pickfft_result = ctx.run(pickfft_analysis, progress=True)"
+                ]
         return '\n'.join(temp_analysis)
 
     def get_plot(self):

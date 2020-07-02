@@ -1,5 +1,5 @@
 import logging
-import inspect
+# import inspect
 from functools import partial
 
 import numpy as np
@@ -28,13 +28,13 @@ class RadialTemplate(GeneratorHelper):
 
     def get_docs(self):
         docs = ["# Radial Fourier Analysis"]
-        from libertem.api import Context
-        docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
-        docs.append(self.format_docs(docs_rst))
+        # from libertem.api import Context
+        # docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
+        # docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
-        params = [f'dataset=ds']
+        params = ['dataset=ds']
         for k in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']:
             params.append(f'{k}={self.params[k]}')
         return ', '.join(params)
@@ -294,6 +294,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             'mask_count': mask_count,
             'mask_dtype': np.complex64,
         }
+
     @classmethod
     def get_template_helper(cls):
         return RadialTemplate

@@ -1,5 +1,5 @@
 import numpy as np
-import inspect
+# import inspect
 from libertem.viz import visualize_simple
 from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
@@ -18,13 +18,13 @@ class PickTemplate(GeneratorHelper):
 
     def get_docs(self):
         docs = ["# Pick Analysis"]
-        from libertem.api import Context
-        docs_rst = inspect.getdoc(Context.create_pick_analysis)
-        docs.append(self.format_docs(docs_rst))
+        # from libertem.api import Context
+        # docs_rst = inspect.getdoc(Context.create_pick_analysis)
+        # docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
-        params = [f'dataset=ds']
+        params = ['dataset=ds']
         for k in ['x', 'y']:
             params.append(f'{k}={self.params[k]}')
         return ' ,'.join(params)

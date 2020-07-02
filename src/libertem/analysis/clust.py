@@ -42,10 +42,12 @@ class ClusterTemplate(GeneratorHelper):
         controller[1] = controller[1].replace("self", "cluster_analysis")
         controller[4] = controller[4].replace("self.", "")
         controller[7] = controller[7].replace("self.dataset", "ds")
-        controller[2] = "sd_udf_results = ctx.run_udf(dataset=ds, udf=stddev_udf, roi=roi, progress=True)"
+        controller[2] = "sd_udf_results = ctx.run_udf(dataset=ds,\
+                         udf=stddev_udf, roi=roi, progress=True)"
         temp_controller.extend(controller[1:9])
         result = ["udf_results = ctx.run_udf(dataset=ds, udf=udf, progress=True)",
-                  "cluster_result = cluster_analysis.get_udf_results(udf_results=udf_results, roi=roi)"]
+                  "cluster_result = cluster_analysis.get_udf_results\
+                  (udf_results=udf_results, roi=roi)"]
         temp_controller.append("\n".join(result))
         return '\n\n'.join(temp_controller)
 

@@ -160,7 +160,9 @@ setup(
         # Ensure compatibility with numba>=0.50
         'libertem-blobfinder>=0.4.1',
         'threadpoolctl',
-        'primesieve'
+        'primesieve',
+        'nbformat',
+        'nbconvert',
     ],
     extras_require={
         'torch': 'torch',

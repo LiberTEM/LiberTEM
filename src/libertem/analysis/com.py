@@ -1,5 +1,5 @@
 import logging
-import inspect
+# import inspect
 import numpy as np
 
 from libertem import masks
@@ -25,13 +25,13 @@ class ComTemplate(GeneratorHelper):
 
     def get_docs(self):
         docs = ["# COM Analysis"]
-        from libertem.api import Context
-        docs_rst = inspect.getdoc(Context.create_com_analysis)
-        docs.append(self.format_docs(docs_rst))
+        # from libertem.api import Context
+        # docs_rst = inspect.getdoc(Context.create_com_analysis)
+        # docs.append(self.format_docs(docs_rst))
         return '\n'.join(docs)
 
     def convert_params(self):
-        params = [f'dataset=ds']
+        params = ['dataset=ds']
         for k in ['cx', 'cy']:
             params.append(f'{k}={self.params[k]}')
         params.append(f"mask_radius={self.params['r']}")

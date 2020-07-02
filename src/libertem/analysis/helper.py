@@ -1,4 +1,3 @@
-from pypandoc import convert_text
 from libertem.web.notebook_generator.template import TemplateBase
 
 
@@ -34,14 +33,14 @@ class GeneratorHelper(TemplateBase):
         """
         return None
 
-    def format_docs(self, docs_rst):
-        """
-        function to convert RST to MD format
-        """
-        output = convert_text(docs_rst, 'commonmark', format='rst')
-        # converting heading level
-        output = output.replace('#', '###')
-        return output
+    # def format_docs(self, docs_rst):
+    #     """
+    #     function to convert RST to MD format
+    #     """
+    #     output = convert_text(docs_rst, 'commonmark', format='rst')
+    #     # converting heading level
+    #     output = output.replace('#', '###')
+    #     return output
 
     def get_roi_code(self):
 

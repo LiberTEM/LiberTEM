@@ -1,5 +1,5 @@
 import logging
-# import inspect
+import inspect
 import numpy as np
 
 from libertem import masks
@@ -24,11 +24,11 @@ class ComTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# COM Analysis"]
-        # from libertem.api import Context
-        # docs_rst = inspect.getdoc(Context.create_com_analysis)
-        # docs.append(self.format_docs(docs_rst))
-        return '\n'.join(docs)
+        title = "COM Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_com_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
 
     def convert_params(self):
         params = ['dataset=ds']

@@ -2,6 +2,10 @@ from libertem.web.notebook_generator.template import TemplateBase
 
 
 class GeneratorHelper(TemplateBase):
+    """
+    Helper class for generating code corresponding
+    to analysis subclasses
+    """
 
     short_name = None
     api = None
@@ -33,17 +37,17 @@ class GeneratorHelper(TemplateBase):
         """
         return None
 
-    # def format_docs(self, docs_rst):
-    #     """
-    #     function to convert RST to MD format
-    #     """
-    #     output = convert_text(docs_rst, 'commonmark', format='rst')
-    #     # converting heading level
-    #     output = output.replace('#', '###')
-    #     return output
+    def format_docs(self, title, docs_rst):
+        """
+        function to format docs for notebook
+        """
+        docs = f'# {title}\n\n<pre>{docs_rst}</pre>'
+        return docs
 
     def get_roi_code(self):
-
+        '''
+        Get code for roi
+        '''
         if 'roi' in self.params.keys():
             data = {'roi_params': self.params['roi']}
             roi = self.format_template(self.temp_roi, data)
@@ -53,7 +57,11 @@ class GeneratorHelper(TemplateBase):
         return roi
 
     def get_analysis(self):
-
+        '''
+        get code corresponding to create and run analysis.
+        override for adding specific code for analysis
+        subclasses.
+        '''
         params_ = self.convert_params()
         roi = self.get_roi_code()
 

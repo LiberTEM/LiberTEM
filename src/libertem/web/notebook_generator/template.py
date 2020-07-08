@@ -2,6 +2,9 @@ from string import Template
 
 
 class TemplateBase:
+    '''
+    Base class for template strings.
+    '''
 
     temp_ds = ['params = $params',
                'ds = ctx.load("$type", **params)']

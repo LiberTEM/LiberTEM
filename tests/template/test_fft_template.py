@@ -1,53 +1,71 @@
-from libertem.web.notebook_generator.code_template import CodeTemplate
-
-sum_fft_default = '''
-sumfft_analysis = SumfftAnalysis(dataset=ds, parameters={'real_rad': 62.5, \
-'real_centerx': 125, 'real_centery': 125})
-sumfft_result = ctx.run(sumfft_analysis, progress=True)
-'''
-sum_fft_plot = '''
-plt.figure()
-plt.imshow(sumfft_result.intensity.visualized)
-'''
-
-fft_default = '''
-fft_analysis = ApplyFFTMask(dataset=ds, parameters={'rad_in': 62.5, \
-'rad_out': 125, 'real_rad': 62.5, 'real_centerx': 125, 'real_centery': 125})
-fft_result = ctx.run(fft_analysis, progress=True)
-'''
-
-fft_plot = '''
-plt.figure()
-plt.imshow(fft_result.intensity.visualized)
-'''
+import io
+import nbformat
+from libertem.web.notebook_generator.notebook_generator import notebook_generator
+from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 
 def test_sum_fft_default():
     conn = {'connection': {'type': 'local'}}
-    dataset = {'type': 'HDF5', 'params': {}}
-    params = {'real_rad': 62.5, 'real_centerx': 125, 'real_centery': 125}
-    comp_analysis = [{'analysisType': 'FFTSUM_FRAMES', 'parameters': params}]
-    instance = CodeTemplate(conn, dataset, comp_analysis)
-    docs, analysis, plot = instance.analysis()[0]
-    assert sum_fft_default.strip('\n') == analysis
-    assert sum_fft_plot.strip('\n') == plot
 
-    dependency = instance.dependency()
-    temp_dep = "from libertem.analysis import SumfftAnalysis"
-    assert temp_dep in dependency
+    dataset = {
+        "type": "HDF5",
+        "params": {
+            "path": "./hdf5_sample.h5",
+            "ds_path": "/dataset"
+            },
+    }
+
+    # TODO: check for better params
+    analysis = [{
+            "analysisType": 'FFTSUM_FRAMES',
+            "parameters": {
+                'real_rad': 8,
+                'real_centerx': 6,
+                'real_centery': 6,
+                }
+    }]
+
+    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = io.StringIO(notebook.getvalue())
+    nb = nbformat.read(notebook, as_version=4)
+    # TODO: remove the kernel
+    ep = ExecutePreprocessor(timeout=600)
+    try:
+        out = ep.preprocess(nb, {"metadata": {"path": "."}})
+    except CellExecutionError:
+        out = None
+    assert out is not None
 
 
 def test_fft_analysis():
-    conn = {'connection': {'type': 'local'}}
-    dataset = {'type': 'HDF5', 'params': {}}
-    params = {'rad_in': 62.5, 'rad_out': 125, 'real_rad': 62.5,
-              'real_centerx': 125, 'real_centery': 125}
-    comp_analysis = [{'analysisType': 'APPLY_FFT_MASK', 'parameters': params}]
-    instance = CodeTemplate(conn, dataset, comp_analysis)
-    docs, analysis, plot = instance.analysis()[0]
-    assert fft_default.strip('\n') == analysis
-    assert fft_plot.strip('\n') == plot
 
-    dependency = instance.dependency()
-    temp_dep = "from libertem.analysis import ApplyFFTMask"
-    assert temp_dep in dependency
+    conn = {'connection': {'type': 'local'}}
+
+    dataset = {
+        "type": "HDF5",
+        "params": {
+            "path": "./hdf5_sample.h5",
+            "ds_path": "/dataset"
+            },
+    }
+
+    analysis = [{
+            "analysisType": 'APPLY_FFT_MASK',
+            "parameters": {
+                    'rad_in': 4,
+                    'rad_out': 8,
+                    'real_rad': 4,
+                    'real_centerx': 8,
+                    'real_centery': 8
+                    }
+    }]
+
+    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = io.StringIO(notebook.getvalue())
+    nb = nbformat.read(notebook, as_version=4)
+    ep = ExecutePreprocessor(timeout=600)
+    try:
+        out = ep.preprocess(nb, {"metadata": {"path": "."}})
+    except CellExecutionError:
+        out = None
+    assert out is not None

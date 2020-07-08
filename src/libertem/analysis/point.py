@@ -1,6 +1,6 @@
 import numpy as np
 import sparse
-# import inspect
+import inspect
 
 from .masks import SingleMaskAnalysis
 from .helper import GeneratorHelper
@@ -15,11 +15,11 @@ class PointTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# Point Analysis"]
-        # from libertem.api import Context
-        # docs_rst = inspect.getdoc(Context.create_point_analysis)
-        # docs.append(self.format_docs(docs_rst))
-        return '\n'.join(docs)
+        title = "Point Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_point_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
 
     def convert_params(self):
         params = ['dataset=ds']

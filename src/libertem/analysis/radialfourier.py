@@ -1,5 +1,5 @@
 import logging
-# import inspect
+import inspect
 from functools import partial
 
 import numpy as np
@@ -27,10 +27,10 @@ class RadialTemplate(GeneratorHelper):
         self.params = params
 
     def get_docs(self):
-        docs = ["# Radial Fourier Analysis"]
-        # from libertem.api import Context
-        # docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
-        # docs.append(self.format_docs(docs_rst))
+        title = "Radial Fourier Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
+        docs = self.format_docs(title, docs_rst)
         return '\n'.join(docs)
 
     def convert_params(self):

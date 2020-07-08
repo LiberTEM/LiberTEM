@@ -214,8 +214,8 @@ download the available results.
 
 ..  figure:: ./images/use/download-modal.png
 
-Also you can download jupyter notebook corresponding to the compound analysis and
-continue working with same parameters.
+You can also download a Jupyter notebook corresponding to the analysis and
+continue working with the same parameters using scripting.
 
 .. figure:: ./images/use/download-jupyter.png
 

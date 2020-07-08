@@ -1,47 +1,72 @@
-from libertem.web.notebook_generator.code_template import CodeTemplate
-
-sd_default = '''
-sd_analysis = SDAnalysis(dataset=ds, parameters={'roi': {}})
-sd_result = ctx.run(sd_analysis, progress=True)
-'''
-
-sd_roi = '''
-sd_analysis = SDAnalysis(dataset=ds, parameters={'roi': {'shape': 'disk', 'cx': \
-42, 'cy': 50, 'r': 10.5}})
-sd_result = ctx.run(sd_analysis, progress=True)
-'''
-
-sd_plot = '''
-plt.figure()
-plt.imshow(sd_result.intensity.visualized)
-'''
+import io
+import nbformat
+from libertem.web.notebook_generator.notebook_generator import notebook_generator
+from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 
 def test_sd_default():
-    conn = {'connection': {'type': 'local'}}
-    dataset = {'type': 'HDF5', 'params': {}}
-    params = {'roi': {}}
-    comp_analysis = [{'analysisType': 'SD_FRAMES', 'parameters': params}]
-    instance = CodeTemplate(conn, dataset, comp_analysis)
-    docs, analysis, plot = instance.analysis()[0]
-    assert sd_default.strip('\n') == analysis
-    assert sd_plot.strip('\n') == plot
 
-    dependency = instance.dependency()
-    temp_dep = "from libertem.analysis import SDAnalysis"
-    assert temp_dep in dependency
+    conn = {"connection": {"type": "local"}}
+
+    dataset = {
+        "type": "HDF5",
+        "params": {
+            "path": "./hdf5_sample.h5",
+            "ds_path": "/dataset"
+            },
+    }
+
+    analysis = [{
+            "analysisType": 'SD_FRAMES',
+            "parameters": {
+                    "roi": {}
+                    }
+            }]
+
+    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = io.StringIO(notebook.getvalue())
+    nb = nbformat.read(notebook, as_version=4)
+    # TODO: remove the kernel
+    ep = ExecutePreprocessor(timeout=600)
+    try:
+        out = ep.preprocess(nb, {"metadata": {"path": "."}})
+    except CellExecutionError:
+        out = None
+    assert out is not None
 
 
 def test_sd_roi():
-    conn = {'connection': {'type': 'local'}}
-    dataset = {'type': 'HDF5', 'params': {}}
-    params = {'roi': {'shape': 'disk', 'cx': 42, 'cy': 50, 'r': 10.5}}
-    comp_analysis = [{'analysisType': 'SD_FRAMES', 'parameters': params}]
-    instance = CodeTemplate(conn, dataset, comp_analysis)
-    docs, analysis, plot = instance.analysis()[0]
-    assert sd_roi.strip('\n') == analysis
-    assert sd_plot.strip('\n') == plot
 
-    dependency = instance.dependency()
-    temp_dep = "from libertem.analysis import SDAnalysis"
-    assert temp_dep in dependency
+    conn = {"connection": {"type": "local"}}
+
+    dataset = {
+        "type": "HDF5",
+        "params": {
+            "path": "./hdf5_sample.h5",
+            "ds_path": "/dataset"
+            },
+    }
+
+    roi_params = {
+        "shape": "disk",
+        "cx": 8,
+        "cy": 8,
+        "r": 6
+    }
+
+    analysis = [{
+                "analysisType": 'SD_FRAMES',
+                "parameters": {
+                            "roi": roi_params
+                            }
+                }]
+
+    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = io.StringIO(notebook.getvalue())
+    nb = nbformat.read(notebook, as_version=4)
+    ep = ExecutePreprocessor(timeout=600)
+    try:
+        out = ep.preprocess(nb, {"metadata": {"path": "."}})
+    except CellExecutionError:
+        out = None
+    assert out is not None

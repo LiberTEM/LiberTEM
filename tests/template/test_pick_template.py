@@ -1,24 +1,35 @@
-from libertem.web.notebook_generator.code_template import CodeTemplate
-
-pick_default = '''
-pick_analysis = ctx.create_pick_analysis(dataset=ds ,x=42 ,y=50)
-roi = pick_analysis.get_roi()
-udf = pick_analysis.get_udf()
-pick_result = ctx.run_udf(ds, udf, roi, progress=True)
-'''
-
-pick_plot = '''
-plt.figure()
-plt.imshow(np.squeeze(pick_result['intensity'].data))
-'''
+import io
+import nbformat
+from libertem.web.notebook_generator.notebook_generator import notebook_generator
+from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 
 def test_pick_analysis():
+
     conn = {'connection': {'type': 'local'}}
-    dataset = {'type': 'HDF5', 'params': {}}
-    params = {'x': 42, 'y': 50}
-    comp_analysis = [{'analysisType': 'PICK_FRAME', 'parameters': params}]
-    instance = CodeTemplate(conn, dataset, comp_analysis)
-    docs, analysis, plot = instance.analysis()[0]
-    assert pick_default.strip('\n') == analysis
-    assert pick_plot.strip('\n') == plot
+
+    dataset = {
+        "type": "HDF5",
+        "params": {
+            "path": "./hdf5_sample.h5",
+            "ds_path": "/dataset"
+            },
+    }
+
+    analysis = [{
+            "analysisType": 'PICK_FRAME',
+            "parameters": {
+                        'x': 5,
+                        'y': 5,
+                        }
+    }]
+
+    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = io.StringIO(notebook.getvalue())
+    nb = nbformat.read(notebook, as_version=4)
+    ep = ExecutePreprocessor(timeout=600)
+    try:
+        out = ep.preprocess(nb, {"metadata": {"path": "."}})
+    except CellExecutionError:
+        out = None
+    assert out is not None

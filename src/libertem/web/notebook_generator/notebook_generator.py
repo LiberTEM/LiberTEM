@@ -41,9 +41,10 @@ def notebook_generator(conn, dataset, comp):
     nb.add_code(ctx)
     nb.add_code(instance.dataset())
 
-    for docs, analysis, plot in instance.analysis():
+    for docs, analysis, plot, save in instance.analysis():
         nb.add_doc(docs)
         nb.add_code(analysis)
         nb.add_code(plot)
+        nb.add_code(save)
 
     return nb.generate()

@@ -19,6 +19,14 @@ class ComTemplate(GeneratorHelper):
     temp = GeneratorHelper.temp_analysis
     temp_analysis = temp + ["com_result = com_analysis.get_udf_results(com_result, roi)"]
     temp_analysis.append("print(com_result)")
+    channels = [
+        "field",
+        "magnitude",
+        "divergence",
+        "curl",
+        "x",
+        "y"
+    ]
 
     def __init__(self, params):
         self.params = params
@@ -39,12 +47,19 @@ class ComTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = []
-        for channel in ["field", "magnitude", "curl"]:
+        for channel in self.channels[:3]:
             plot.append("fig, axes = plt.subplots()")
             plot.append(f'axes.set_title("{channel}")')
             plot.append(f'axes.imshow(com_result.{channel}.visualized)')
 
         return '\n'.join(plot)
+
+    def get_save(self):
+        save = []
+        for channel in self.channels:
+            save.append(f"np.save('com_result_{channel}.npy', com_result['{channel}'].raw_data)")
+
+        return '\n'.join(save)
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):

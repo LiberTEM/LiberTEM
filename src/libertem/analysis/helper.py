@@ -37,6 +37,14 @@ class GeneratorHelper(TemplateBase):
         """
         return None
 
+    def get_save(self):
+        '''
+        Get code for saving result.
+        '''
+        data = {'short': self.short_name}
+        save = self.format_template(self.temp_save, data)
+        return save
+
     def format_docs(self, title, docs_rst):
         """
         function to format docs for notebook

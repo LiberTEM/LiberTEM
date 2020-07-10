@@ -26,6 +26,8 @@ class TemplateBase:
     temp_roi = ["roi_params = $roi_params",
                 "roi = get_roi(roi_params, ds.shape.nav)"]
 
+    temp_save = ["np.save('${short}_result.npy', ${short}_result['intensity'])"]
+
     def format_template(self, template, data):
         template = "\n".join(template)
         return Template(template).substitute(data)

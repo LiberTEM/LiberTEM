@@ -5,3 +5,4 @@ pytest-xdist
 aiohttp
 websockets
 pytest-benchmark
+ipykernel

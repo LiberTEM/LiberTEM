@@ -31,7 +31,7 @@ class RadialTemplate(GeneratorHelper):
         from libertem.api import Context
         docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
         docs = self.format_docs(title, docs_rst)
-        return '\n'.join(docs)
+        return docs
 
     def convert_params(self):
         params = ['dataset=ds']
@@ -47,6 +47,14 @@ class RadialTemplate(GeneratorHelper):
             plot.append(f'axes.set_title("{channel}")')
             plot.append(f'axes.imshow(radial_result.{channel}.visualized)')
         return '\n'.join(plot)
+
+    def get_save(self):
+        save = []
+        channels = ["dominant_0", "absolute_0_0", "absolute_0_1"]
+        for channel in channels:
+            result = f"radial_result['{channel}'].raw_data"
+            save.append(f"np.save('radial_result_{channel}.npy', {result})")
+        return '\n'.join(save)
 
 
 class RadialFourierResultSet(AnalysisResultSet):

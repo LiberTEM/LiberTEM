@@ -21,7 +21,7 @@ class PickTemplate(GeneratorHelper):
         from libertem.api import Context
         docs_rst = inspect.getdoc(Context.create_pick_analysis)
         docs = self.format_docs(title, docs_rst)
-        return '\n'.join(docs)
+        return docs
 
     def convert_params(self):
         params = ['dataset=ds']

@@ -75,7 +75,7 @@ const DownloadScripts: React.SFC<DownloadItemsProps> = ({compoundAnalysis}) => {
 
     const basePath = getApiBasePath();
     const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`
-    if (compoundAnalysis['details']['mainType'] === 'CLUST') {
+    if (compoundAnalysis[`details`][`mainType`] === 'CLUST') {
         return(
             <ul>
                 <li>

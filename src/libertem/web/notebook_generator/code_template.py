@@ -69,7 +69,8 @@ class CodeTemplate(TemplateBase):
             plot_ = helper.get_plot()
             analy_ = helper.get_analysis()
             docs_ = helper.get_docs()
+            save_ = helper.get_save()
 
-            form_analysis.append((docs_, analy_, plot_))
+            form_analysis.append((docs_, analy_, plot_, save_))
 
         return form_analysis

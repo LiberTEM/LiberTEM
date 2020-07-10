@@ -333,3 +333,18 @@ def test_k2is_dist(dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis, roi=roi)
     assert results[0].raw_data.shape == (1860, 2048)
+
+
+def test_no_integer_overflow(default_k2is):
+    p0 = next(default_k2is.get_partitions())
+
+    tileshape = Shape(
+        (16, 930, 16),
+        sig_dims=2,
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    t0 = next(p0.get_tiles(tiling_scheme))

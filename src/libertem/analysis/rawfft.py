@@ -14,6 +14,7 @@ class PickfftTemplate(GeneratorHelper):
     def get_dependency(self):
         return ["from libertem.analysis import PickFFTFrameAnalysis"]
 
+    # FIXME write and include documentation
     def get_docs(self):
         docs = ["# PICK FFT Analysis"]
         return '\n'.join(docs)

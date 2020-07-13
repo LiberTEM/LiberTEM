@@ -5,7 +5,7 @@ import nbformat
 from temp_utils import _get_hdf5_params
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from libertem.analysis.getroi import get_roi
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+from nbconvert.preprocessors import ExecutePreprocessor
 
 
 def test_sum_default(hdf5_ds_1, tmpdir_factory):
@@ -21,21 +21,17 @@ def test_sum_default(hdf5_ds_1, tmpdir_factory):
                     }
             }]
 
-    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = notebook_generator(conn, dataset, analysis, save=True)
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel='libertem-env')
-    try:
-        out = ep.preprocess(nb, {"metadata": {"path": datadir}})
-        data_path = os.path.join(datadir, 'sum_result.npy')
-        result = np.load(data_path)
-        with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
-            data = h5ds[:]
-        expected = data.sum(axis=(0, 1))
-        assert np.allclose(expected, result)
-    except CellExecutionError:
-        out = None
-    assert out is not None
+    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    data_path = os.path.join(datadir, 'sum_result.npy')
+    result = np.load(data_path)
+    with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+    expected = data.sum(axis=(0, 1))
+    assert np.allclose(expected, result)
 
 
 def test_sum_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
@@ -57,26 +53,22 @@ def test_sum_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
                             }
                 }]
 
-    notebook = notebook_generator(conn, dataset, analysis)
+    notebook = notebook_generator(conn, dataset, analysis, save=True)
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel='libertem-env')
-    try:
-        out = ep.preprocess(nb, {"metadata": {"path": datadir}})
-        data_path = os.path.join(datadir, 'sum_result.npy')
-        results = np.load(data_path)
+    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    data_path = os.path.join(datadir, 'sum_result.npy')
+    results = np.load(data_path)
 
-        analysis = lt_ctx.create_sum_analysis(
-                                dataset=hdf5_ds_1,
-                            )
-        roi = get_roi(roi_params, hdf5_ds_1.shape.nav)
-        udf = analysis.get_udf()
-        expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
+    analysis = lt_ctx.create_sum_analysis(
+                            dataset=hdf5_ds_1,
+                        )
+    roi = get_roi(roi_params, hdf5_ds_1.shape.nav)
+    udf = analysis.get_udf()
+    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
 
-        assert np.allclose(
-            results,
-            expected['intensity'].data,
-        )
-    except CellExecutionError:
-        out = None
-    assert out is not None
+    assert np.allclose(
+        results,
+        expected['intensity'].data,
+    )

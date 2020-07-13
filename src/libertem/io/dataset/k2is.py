@@ -662,7 +662,7 @@ class K2ISDataSet(DataSet):
         """
         # let's try to aim for 512MB (converted float data) per partition
         partition_size_px = 512 * 1024 * 1024 // 4
-        total_size_px = np.prod(self.shape)
+        total_size_px = np.prod(self.shape, dtype=np.int64)
         res = max(self._cores, total_size_px // partition_size_px)
         return res
 

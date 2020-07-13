@@ -33,7 +33,7 @@ def bytes_aligned(size):
 
 
 def empty_aligned(size, dtype):
-    size_flat = np.product(size)
+    size_flat = np.prod(size, dtype=np.int64)
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size_flat)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
@@ -42,7 +42,7 @@ def empty_aligned(size, dtype):
 
 
 def zeros_aligned(size, dtype):
-    if dtype == np.object or np.product(size) == 0:
+    if dtype == np.object or np.prod(size, dtype=np.int64) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)
@@ -105,7 +105,7 @@ class BufferPool:
 
     @contextmanager
     def zeros(self, size, dtype):
-        if dtype == np.object or np.product(size) == 0:
+        if dtype == np.object or np.prod(size, dtype=np.int64) == 0:
             yield np.zeros(size, dtype=dtype)
         else:
             with self.empty(size, dtype) as res:
@@ -114,7 +114,7 @@ class BufferPool:
 
     @contextmanager
     def empty(self, size, dtype):
-        size_flat = np.product(size)
+        size_flat = np.prod(size, dtype=np.int64)
         dtype = np.dtype(dtype)
         with self.bytes(dtype.itemsize * size_flat) as buf:
             # self.bytes may give us more memory (for alignment reasons), so
@@ -302,7 +302,7 @@ class BufferWrapper(object):
 
     @property
     def roi_is_zero(self):
-        return np.product(self._shape) == 0
+        return np.prod(self._shape) == 0
 
     def _slice_for_partition(self, partition):
         """
@@ -483,7 +483,7 @@ class AuxBufferWrapper(BufferWrapper):
             new_data = self._data[ps]
         buf.set_buffer(new_data, is_global=False)
         buf.set_roi(roi)
-        assert np.product(new_data.shape) > 0
+        assert np.prod(new_data.shape) > 0
         assert not buf._data_coords_global
         return buf
 

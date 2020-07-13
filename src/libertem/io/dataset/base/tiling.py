@@ -425,10 +425,10 @@ class Negotiator:
         size_px = size // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
             raise ValueError("generated tileshape does not fit the partition")
-        if np.prod(shape, dtype=np.uint64) > size_px:
+        if np.prod(shape, dtype=np.int64) > size_px:
             raise ValueError(
                 "shape %r (%d) does not fit into size %d" % (
-                    shape, np.prod(shape, dtype=np.uint64), size_px
+                    shape, np.prod(shape, dtype=np.int64), size_px
                 )
             )
         for dim in range(len(base_shape)):
@@ -482,7 +482,7 @@ class Negotiator:
         if need_decode:
             io_max_size = 1*2**20
         else:
-            io_max_size = itemsize * np.prod(partition.shape, dtype=np.uint64)
+            io_max_size = itemsize * np.prod(partition.shape, dtype=np.int64)
 
         depths = [
             self._get_min_depth(udf, partition)
@@ -525,7 +525,7 @@ class Negotiator:
         min_base_shape = self._scale_base_shape(base_shape, min_factors)
 
         # considering the min size, calculate the max depth:
-        max_depth = size_px // np.prod(min_base_shape, dtype=np.uint64)
+        max_depth = size_px // np.prod(min_base_shape, dtype=np.int64)
         if depth > max_depth:
             depth = max_depth
 
@@ -574,7 +574,7 @@ class Negotiator:
             for s, cs in zip(shape, containing_shape)
         )
         prelim_shape = self._scale_base_shape(shape, factors)
-        rest = size / np.prod(prelim_shape, dtype=np.uint64)
+        rest = size / np.prod(prelim_shape, dtype=np.int64)
         if rest < 1:
             rest = 1
         for idx in range(len(shape)):
@@ -586,7 +586,7 @@ class Negotiator:
                 factor = max_factor
             factors[idx] = factor
             prelim_shape = self._scale_base_shape(shape, factors)
-            rest = max(1, math.floor(size / np.prod(prelim_shape, dtype=np.uint64)))
+            rest = max(1, math.floor(size / np.prod(prelim_shape, dtype=np.int64)))
         return factors
 
     def _scale_base_shape(self, base_shape, factors):
@@ -613,8 +613,8 @@ class Negotiator:
         Calculate the maximum tile size in bytes
         """
         udf_method = udf.get_method()
-        partition_size = itemsize * np.prod(partition.shape, dtype=np.uint64)
-        partition_size_sig = itemsize * np.prod(partition.shape.sig, dtype=np.uint64)
+        partition_size = itemsize * np.prod(partition.shape, dtype=np.int64)
+        partition_size_sig = itemsize * np.prod(partition.shape.sig, dtype=np.int64)
         if udf_method == "frame":
             size = max(self._get_default_size(), partition_size_sig)
         elif udf_method == "partition":
@@ -628,7 +628,7 @@ class Negotiator:
 
             # if the base_shape is larger than the current maximum size,
             # we need to increase the size:
-            base_size = itemsize * np.prod(base_shape, dtype=np.uint64)
+            base_size = itemsize * np.prod(base_shape, dtype=np.int64)
             size = max(base_size, size)
         return size
 

@@ -38,7 +38,7 @@ def get_partition_shape(dataset_shape: Shape, target_size_items: int, min_num: i
 
     for dim in reversed(dataset_shape.nav):
         proposed_shape = (dim,) + current_p_shape
-        proposed_size = np.prod(proposed_shape, dtype=np.uint64) * sig_size
+        proposed_size = np.prod(proposed_shape, dtype=np.int64) * sig_size
         if proposed_size <= target_size_items:
             current_p_shape = proposed_shape
         else:

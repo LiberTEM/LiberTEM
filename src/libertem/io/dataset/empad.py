@@ -180,8 +180,8 @@ class EMPADDataSet(DataSet):
     def check_valid(self):
         try:
             # check filesize:
-            framesize = int(np.product(EMPAD_DETECTOR_SIZE_RAW))
-            num_frames = int(np.product(self._scan_size))
+            framesize = int(np.prod(EMPAD_DETECTOR_SIZE_RAW, dtype=np.int64))
+            num_frames = int(np.prod(self._scan_size))
             expected_filesize = num_frames * framesize * int(np.dtype("float32").itemsize)
             if expected_filesize != self._filesize:
                 raise DataSetException("invalid filesize; expected %d, got %d" % (

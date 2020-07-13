@@ -27,7 +27,9 @@ class StackedDMFile(LocalFile):
     def _mmap_to_array(self, raw_mmap, start, stop):
         res = np.frombuffer(raw_mmap, dtype="uint8")
         cutoff = 0
-        cutoff += np.dtype(self._native_dtype).itemsize * int(np.prod(self._sig_shape))
+        cutoff += (
+            np.dtype(self._native_dtype).itemsize * int(np.prod(self._sig_shape, dtype=np.int64))
+        )
         res = res[:cutoff]
         return res.view(dtype=self._native_dtype).reshape(
             (self.num_frames, -1)
@@ -203,7 +205,7 @@ class DMDataSet(DataSet):
             with fileDM(first_fn, on_memory=True):
                 pass
             if (self._scan_size is not None
-                    and np.product(self._scan_size) != len(self._get_files())):
+                    and np.prod(self._scan_size) != len(self._get_files())):
                 raise DataSetException("incompatible scan_size")
             return True
         except (IOError, OSError) as e:

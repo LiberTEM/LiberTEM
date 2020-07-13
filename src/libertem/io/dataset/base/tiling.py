@@ -282,7 +282,7 @@ def make_get_read_ranges(
     ):
         result = NumbaList()
 
-        sig_size = np.prod(np.array(sig_shape))
+        sig_size = np.prod(np.array(sig_shape).astype(np.int64))
 
         if roi is None:
             frame_indices = np.arange(start_at_frame, stop_before_frame)
@@ -300,7 +300,7 @@ def make_get_read_ranges(
         # this should be `np.prod(..., axis=-1)``, which is not supported by numba yet:
         # slices that divide the signal dimensions:
         slice_sig_sizes = np.array([
-            np.prod(slices_arr[slice_idx, 1, :])
+            np.prod(slices_arr[slice_idx, 1, :].astype(np.int64))
             for slice_idx in range(slices_arr.shape[0])
         ])
 

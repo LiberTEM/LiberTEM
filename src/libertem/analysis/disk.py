@@ -29,7 +29,8 @@ class DiskTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(np.squeeze(disk_result['intensity'].data))"]
+                "plt.imshow(disk_result['intensity'])",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

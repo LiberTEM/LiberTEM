@@ -48,10 +48,7 @@ def test_com_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
                                 cy=0,
                                 mask_radius=8
                             )
-    roi = com_analysis.get_roi()
-    udf = com_analysis.get_udf()
-    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi, progress=True)
-    expected = com_analysis.get_udf_results(expected, roi)
+    expected = lt_ctx.run(com_analysis)
 
     assert np.allclose(results["field"], expected["field"].raw_data)
     assert np.allclose(results["magnitude"], expected["magnitude"].raw_data)

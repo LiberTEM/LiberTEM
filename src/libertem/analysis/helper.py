@@ -3,8 +3,11 @@ from libertem.web.notebook_generator.template import TemplateBase
 
 class GeneratorHelper(TemplateBase):
     """
-    Helper class for generating code corresponding
-    to analysis subclasses
+    Helper class for generating code corresponding to analysis.
+
+    code for creating and running analysis, saving the result,
+    plotting the result, documentation, specific dependencies
+    are generated.
     """
 
     short_name = None
@@ -52,18 +55,6 @@ class GeneratorHelper(TemplateBase):
         docs = f'# {title}\n\n<pre>{docs_rst}</pre>'
         return docs
 
-    def get_roi_code(self):
-        '''
-        Get code for roi
-        '''
-        if 'roi' in self.params.keys():
-            data = {'roi_params': self.params['roi']}
-            roi = self.format_template(self.temp_roi, data)
-        else:
-            roi = f"roi = {self.short_name}_analysis.get_roi()"
-
-        return roi
-
     def get_analysis(self):
         '''
         get code corresponding to create and run analysis.
@@ -71,12 +62,12 @@ class GeneratorHelper(TemplateBase):
         subclasses.
         '''
         params_ = self.convert_params()
-        roi = self.get_roi_code()
 
-        data = {'short': self.short_name,
-                'analysis_api': self.api,
-                'params': params_,
-                'roi': roi}
+        data = {
+            'short': self.short_name,
+            'analysis_api': self.api,
+            'params': params_,
+        }
 
         analy_ = self.format_template(self.temp_analysis, data)
 

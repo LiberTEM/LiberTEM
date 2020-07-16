@@ -3,6 +3,7 @@ import numpy as np
 import io
 import nbformat
 from temp_utils import _get_hdf5_params
+from libertem.udf.sum import SumUDF
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from libertem.analysis.getroi import get_roi
 from nbconvert.preprocessors import ExecutePreprocessor
@@ -61,14 +62,14 @@ def test_sum_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
     data_path = os.path.join(datadir, 'sum_result.npy')
     results = np.load(data_path)
 
-    analysis = lt_ctx.create_sum_analysis(
-                            dataset=hdf5_ds_1,
-                        )
+    # analysis = lt_ctx.create_sum_analysis(
+    #                         dataset=hdf5_ds_1,
+    #                     )
     roi = get_roi(roi_params, hdf5_ds_1.shape.nav)
-    udf = analysis.get_udf()
+    udf = SumUDF()
     expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
 
     assert np.allclose(
         results,
-        expected['intensity'].data,
+        expected['intensity'].raw_data,
     )

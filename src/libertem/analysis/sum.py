@@ -10,24 +10,38 @@ from .helper import GeneratorHelper
 class SumTemplate(GeneratorHelper):
 
     short_name = "sum"
-    api = "create_sum_analysis"
 
     def __init__(self, params):
         self.params = params
 
+    def get_dependency(self):
+        return [
+            "from matplotlib import colors",
+            "from libertem.analysis.getroi import get_roi",
+            "from libertem.udf.sum import SumUDF"
+        ]
+
     def get_docs(self):
         title = "SUM Analysis"
-        from libertem.api import Context
-        docs_rst = inspect.getdoc(Context.create_sum_analysis)
+        docs_rst = inspect.getdoc(SumUDF)
         docs = self.format_docs(title, docs_rst)
         return docs
 
-    def convert_params(self):
-        return "dataset=ds"
+    def get_analysis(self):
+        temp_analysis = [
+                f"roi_params = {self.params['roi']}",
+                "roi = get_roi(roi_params, ds.shape.nav)",
+                "sum_udf = SumUDF()",
+                "sum_result = ctx.run_udf(dataset=ds, udf=sum_udf, roi=roi)"
+                ]
+        return '\n'.join(temp_analysis)
 
     def get_plot(self):
-        plot = ["plt.figure()",
-                "plt.imshow(sum_result['intensity'].raw_data)"]
+        plot = [
+            "plt.figure()",
+            "plt.imshow(sum_result['intensity'], norm=colors.LogNorm())",
+            "plt.colorbar()",
+         ]
         return '\n'.join(plot)
 
 

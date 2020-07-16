@@ -35,9 +35,7 @@ def test_pick_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
                                     x=4,
                                     y=4,
                                 )
-    roi = analysis.get_roi()
-    udf = analysis.get_udf()
-    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
+    expected = lt_ctx.run(analysis)
     assert np.allclose(
         results,
         expected['intensity'].raw_data,

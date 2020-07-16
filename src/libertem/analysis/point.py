@@ -31,7 +31,8 @@ class PointTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(np.squeeze(point_result['intensity'].data))"]
+                "plt.imshow(point_result['intensity'])",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

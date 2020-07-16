@@ -3,7 +3,7 @@ import os
 import numpy as np
 import nbformat
 from temp_utils import _get_hdf5_params
-from libertem.analysis import FEMAnalysis
+from libertem.udf.FEM import FEMUDF
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from nbconvert.preprocessors import ExecutePreprocessor
 
@@ -36,12 +36,9 @@ def test_fem_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
     data_path = os.path.join(datadir, 'fem_result.npy')
     results = np.load(data_path)
 
-    analysis = FEMAnalysis(
-                        dataset=hdf5_ds_1,
-                        parameters=params
-                        )
-    expected = lt_ctx.run(analysis)
+    analysis = FEMUDF(center=(1,1), rad_in=0, rad_out=1)
+    expected = lt_ctx.run_udf(dataset=hdf5_ds_1, udf=analysis)
     assert np.allclose(
         results,
-        expected['intensity'].raw_data,
+        expected['intensity'],
     )

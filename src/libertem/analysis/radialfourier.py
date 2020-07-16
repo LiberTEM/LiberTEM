@@ -20,11 +20,13 @@ class RadialTemplate(GeneratorHelper):
     short_name = "radial"
     api = "create_radial_fourier_analysis"
     temp = GeneratorHelper.temp_analysis
-    temp_analysis = temp + ["radial_result = radial_analysis.get_udf_results(radial_result, roi)"]
-    temp_analysis.append("print(radial_result)")
+    temp_analysis = temp + ["print(radial_result)"]
 
     def __init__(self, params):
         self.params = params
+
+    def get_dependency(self):
+        return ["import matplotlib.cm as cm"]
 
     def get_docs(self):
         title = "Radial Fourier Analysis"
@@ -41,11 +43,16 @@ class RadialTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = []
-        channels = ["dominant_0", "absolute_0_0", "absolute_0_1"]
+        plot.append("fig, axes = plt.subplots()")
+        plot.append('axes.set_title("dominant_0")')
+        plot.append(
+            "plt.imshow(radial_result.dominant_0, cmap=cm.tab20, vmin=0, vmax=20)"
+        )
+        channels = ["absolute_0_0", "phase_0_1"]
         for channel in channels:
             plot.append("fig, axes = plt.subplots()")
             plot.append(f'axes.set_title("{channel}")')
-            plot.append(f'axes.imshow(radial_result.{channel}.visualized)')
+            plot.append(f'axes.imshow(radial_result.{channel})')
         return '\n'.join(plot)
 
     def get_save(self):

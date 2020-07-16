@@ -50,10 +50,7 @@ def test_radial_fourier_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
                                             n_bins=2,
                                             max_order=23
                                     )
-    roi = analysis.get_roi()
-    udf = analysis.get_udf()
-    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi, progress=True)
-    expected = analysis.get_udf_results(expected, roi)
+    expected = lt_ctx.run(analysis)
 
     assert np.allclose(results["dominant_0"], expected["dominant_0"].raw_data)
     assert np.allclose(results["absolute_0_0"], expected["absolute_0_0"].raw_data)

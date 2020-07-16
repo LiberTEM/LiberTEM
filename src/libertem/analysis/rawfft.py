@@ -12,7 +12,8 @@ class PickfftTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return ["from libertem.analysis import PickFFTFrameAnalysis"]
+        return ["from libertem.analysis import PickFFTFrameAnalysis",
+                "from matplotlib import colors"]
 
     # FIXME write and include documentation
     def get_docs(self):
@@ -28,7 +29,8 @@ class PickfftTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(pickfft_result.intensity.visualized)"]
+                "plt.imshow(pickfft_result.intensity, norm=colors.LogNorm())",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

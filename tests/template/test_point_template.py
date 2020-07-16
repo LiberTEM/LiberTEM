@@ -32,10 +32,8 @@ def test_point_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     results = np.load(data_path)
 
     analysis = lt_ctx.create_point_analysis(dataset=hdf5_ds_1, x=8, y=8)
-    roi = analysis.get_roi()
-    udf = analysis.get_udf()
-    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
+    expected = lt_ctx.run(analysis)
     assert np.allclose(
         results,
-        expected['intensity'].data,
+        expected['intensity'].raw_data,
     )

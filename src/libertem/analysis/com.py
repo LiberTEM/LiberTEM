@@ -17,8 +17,7 @@ class ComTemplate(GeneratorHelper):
     short_name = "com"
     api = "create_com_analysis"
     temp = GeneratorHelper.temp_analysis
-    temp_analysis = temp + ["com_result = com_analysis.get_udf_results(com_result, roi)"]
-    temp_analysis.append("print(com_result)")
+    temp_analysis = temp + ["print(com_result)"]
     channels = [
         "field",
         "magnitude",

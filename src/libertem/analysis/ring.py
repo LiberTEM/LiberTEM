@@ -29,7 +29,8 @@ class RingTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(np.squeeze(ring_result['intensity'].data))"]
+                "plt.imshow(ring_result['intensity'])",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

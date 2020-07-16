@@ -37,11 +37,9 @@ def test_disk_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
                                         cx=8,
                                         cy=8,
                                         r=5)
-    roi = disk_analysis.get_roi()
-    udf = disk_analysis.get_udf()
-    expected = lt_ctx.run_udf(hdf5_ds_1, udf, roi)
+    expected = lt_ctx.run(disk_analysis)
 
     assert np.allclose(
         results,
-        expected['intensity'].data,
+        expected['intensity'].raw_data,
     )

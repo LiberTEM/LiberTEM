@@ -15,8 +15,12 @@ class SumfftTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return ["from libertem.analysis import SumfftAnalysis"]
+        return [
+            "from libertem.analysis import SumfftAnalysis",
+            "from matplotlib import colors",
+        ]
 
+    # FIXME write and include documentation
     def get_docs(self):
         docs = ["# SUM FFT Analysis"]
         return '\n'.join(docs)
@@ -28,7 +32,8 @@ class SumfftTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(sumfft_result.intensity.visualized)"]
+                "plt.imshow(sumfft_result.intensity, norm=colors.LogNorm())",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

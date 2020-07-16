@@ -16,6 +16,9 @@ class PickTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    def get_dependency(self):
+        return ["from matplotlib import colors"]
+
     def get_docs(self):
         title = "Pick Analysis"
         from libertem.api import Context
@@ -27,11 +30,12 @@ class PickTemplate(GeneratorHelper):
         params = ['dataset=ds']
         for k in ['x', 'y']:
             params.append(f'{k}={self.params[k]}')
-        return ' ,'.join(params)
+        return ', '.join(params)
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(np.squeeze(pick_result['intensity'].data))"]
+                "plt.imshow(pick_result['intensity'], norm=colors.LogNorm())",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

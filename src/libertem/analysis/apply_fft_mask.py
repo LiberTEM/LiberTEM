@@ -14,6 +14,7 @@ class FFTMaskTemplate(GeneratorHelper):
     def get_dependency(self):
         return ["from libertem.analysis import ApplyFFTMask"]
 
+    # FIXME write and include documentation
     def get_docs(self):
         docs = ["# FFT Analysis"]
         return '\n'.join(docs)
@@ -25,7 +26,8 @@ class FFTMaskTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(fft_result.intensity.visualized)"]
+                "plt.imshow(fft_result.intensity)",
+                "plt.colorbar()"]
         return '\n'.join(plot)
 
 

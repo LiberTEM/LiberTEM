@@ -1,3 +1,4 @@
+import inspect
 from libertem.viz import visualize_simple
 
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
@@ -13,20 +14,36 @@ class FEMTemplate(GeneratorHelper):
         self.params = params
 
     def get_dependency(self):
-        return ["from libertem.analysis import FEMAnalysis"]
+        return ["from libertem.udf.FEM import FEMUDF"]
 
     def get_docs(self):
-        docs = ["# FEM Analysis"]
-        return '\n'.join(docs)
+        title = "FEM Analysis"
+        docs_rst = inspect.getdoc(FEM.FEMUDF)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        cx = self.params['cx']
+        cy = self.params['cy']
+        ri = self.params['ri']
+        ro = self.params['ro']
+        params = f"center=({cx},{cy}), rad_in={ri}, rad_out={ro}"
+        return params
 
     def get_analysis(self):
-        temp_analysis = [f"fem_analysis = FEMAnalysis(dataset=ds, parameters={self.params})",
-                         "fem_result = ctx.run(fem_analysis, progress=True)"]
+        params = self.convert_params()
+        temp_analysis = [
+                    f"fem_udf = FEMUDF({params})",
+                    "fem_result = ctx.run_udf(dataset=ds, udf=fem_udf)",
+        ]
         return '\n'.join(temp_analysis)
 
     def get_plot(self):
-        plot = ["plt.figure()",
-                "plt.imshow(fem_result.intensity.visualized)"]
+        plot = [
+            "plt.figure()",
+            "plt.imshow(fem_result['intensity'])",
+            "plt.colorbar()",
+        ]
         return '\n'.join(plot)
 
 

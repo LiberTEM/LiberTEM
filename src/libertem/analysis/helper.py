@@ -55,6 +55,32 @@ class GeneratorHelper(TemplateBase):
         docs = f'# {title}\n\n<pre>{docs_rst}</pre>'
         return docs
 
+    def get_roi(self):
+        """
+        Get code for roi
+        """
+        roi = ["nx, ny = ds.shape.nav"]
+        params = self.params['roi']
+        if params == {}:
+            roi = ["roi = None"]
+
+        elif params["shape"] == "disk":
+            x = params["cx"]
+            y = params["cy"]
+            r = params["r"]
+            p = f"centerX={x}, centerY={y}, imageSizeX=nx, imageSizeY=ny, radius={r}"
+            roi.append(f"roi = masks.circular({p})")
+
+        elif params["shape"] == "rect":
+            x = params['x']
+            y = params['y']
+            width = params['width']
+            height = params['height']
+            p = f"X={x}, Y={y}, Width={width}, Height={height}, imageSizeX=nx, imageSizeY=ny"
+            roi.append(f"roi = masks.rectangular({p})")
+
+        return '\n'.join(roi)
+
     def get_analysis(self):
         '''
         get code corresponding to create and run analysis.

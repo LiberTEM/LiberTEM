@@ -16,7 +16,7 @@ class SDTemplate(GeneratorHelper):
     def get_dependency(self):
         return [
             "from matplotlib import colors",
-            "from libertem.analysis.getroi import get_roi",
+            "from libertem import masks",
             "from libertem.udf.stddev import StdDevUDF"
             ]
 
@@ -27,9 +27,9 @@ class SDTemplate(GeneratorHelper):
         return docs
 
     def get_analysis(self):
+        roi = self.get_roi()
         temp_analysis = [
-                    f"roi_params = {self.params['roi']}",
-                    "roi = get_roi(roi_params, ds.shape.nav)",
+                    f"{roi}",
                     "sd_udf  = StdDevUDF()",
                     "sd_result = ctx.run_udf(dataset=ds, udf=sd_udf)",
                     ]

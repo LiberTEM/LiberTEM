@@ -17,7 +17,7 @@ class SumTemplate(GeneratorHelper):
     def get_dependency(self):
         return [
             "from matplotlib import colors",
-            "from libertem.analysis.getroi import get_roi",
+            "from libertem import masks",
             "from libertem.udf.sum import SumUDF"
         ]
 
@@ -28,9 +28,9 @@ class SumTemplate(GeneratorHelper):
         return docs
 
     def get_analysis(self):
+        roi = self.get_roi()
         temp_analysis = [
-                f"roi_params = {self.params['roi']}",
-                "roi = get_roi(roi_params, ds.shape.nav)",
+                f"{roi}",
                 "sum_udf = SumUDF()",
                 "sum_result = ctx.run_udf(dataset=ds, udf=sum_udf, roi=roi)"
                 ]

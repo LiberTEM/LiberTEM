@@ -31,7 +31,7 @@ class PickfftTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(pickfft_result.intensity, norm=colors.LogNorm())",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):

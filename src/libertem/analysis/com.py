@@ -51,7 +51,7 @@ class ComTemplate(GeneratorHelper):
             plot.append(f'axes.set_title("{channel}")')
             plot.append(f'axes.imshow(com_result.{channel}.visualized)')
 
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
     def get_save(self):
         save = []

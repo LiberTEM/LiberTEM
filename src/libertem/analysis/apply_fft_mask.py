@@ -28,7 +28,7 @@ class FFTMaskTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(fft_result.intensity)",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):

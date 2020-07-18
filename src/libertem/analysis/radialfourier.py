@@ -25,8 +25,12 @@ class RadialTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    # FIXME : `libertem.viz` is not referenced in doc
     def get_dependency(self):
-        return ["import matplotlib.cm as cm"]
+        return [
+            "import matplotlib.cm as cm",
+            "from libertem.viz import CMAP_CIRCULAR_DEFAULT, cmaps"
+        ]
 
     def get_docs(self):
         title = "Radial Fourier Analysis"
@@ -42,18 +46,26 @@ class RadialTemplate(GeneratorHelper):
         return ', '.join(params)
 
     def get_plot(self):
-        plot = []
-        plot.append("fig, axes = plt.subplots()")
-        plot.append('axes.set_title("dominant_0")')
-        plot.append(
-            "plt.imshow(radial_result.dominant_0, cmap=cm.tab20, vmin=0, vmax=20)"
-        )
-        channels = ["absolute_0_0", "phase_0_1"]
-        for channel in channels:
-            plot.append("fig, axes = plt.subplots()")
-            plot.append(f'axes.set_title("{channel}")')
-            plot.append(f'axes.imshow(radial_result.{channel})')
-        return '\n'.join(plot)
+        cells = []
+        cells.append([
+            "fig, axes = plt.subplots()",
+            'axes.set_title("dominant_0")',
+            "plt.imshow(radial_result.dominant_0, cmap=cm.tab20, vmin=0, vmax=20)",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("absolute_0_0")',
+            "axes.imshow(radial_result.absolute_0_0)",
+        ])
+        cells.append([
+            "imag = radial_result.complex_0_1.raw_data.imag",
+            "real = radial_result.complex_0_1.raw_data.real",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("complex_0_1")',
+            "plt.imshow(CMAP_CIRCULAR_DEFAULT.rgb_from_vector((imag, real)))",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("phase_0_1")',
+            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=cmaps["perception_circular"])'
+        ])
+        return ['\n'.join(cell) for cell in cells]
 
     def get_save(self):
         save = []

@@ -41,7 +41,7 @@ class SDTemplate(GeneratorHelper):
             "plt.imshow(sd_result['varsum'], norm=colors.LogNorm())",
             "plt.colorbar()",
         ]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
     def get_save(self):
         save = "np.save('sd_result.npy', sd_result['varsum'])"

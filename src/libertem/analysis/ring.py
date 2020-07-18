@@ -31,7 +31,7 @@ class RingTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(ring_result['intensity'])",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class RingMaskAnalysis(SingleMaskAnalysis, id_="APPLY_RING_MASK"):

@@ -26,7 +26,7 @@ class SumSigTemplate(GeneratorHelper):
     def get_plot(self):
         plot = ["plt.figure()",
                 "plt.imshow(sumsig_result.intensity.visualized)"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class SumSigAnalysis(BaseAnalysis, id_="SUM_SIG"):

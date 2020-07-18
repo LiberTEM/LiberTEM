@@ -34,7 +34,7 @@ class SumfftTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(sumfft_result.intensity, norm=colors.LogNorm())",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class SumfftAnalysis(SumAnalysis, id_="FFTSUM_FRAMES"):

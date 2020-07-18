@@ -33,7 +33,7 @@ class PointTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(point_result['intensity'])",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):

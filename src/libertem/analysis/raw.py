@@ -36,7 +36,7 @@ class PickTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(pick_result['intensity'], norm=colors.LogNorm())",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class PickResultSet(AnalysisResultSet):

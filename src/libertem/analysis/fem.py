@@ -44,7 +44,7 @@ class FEMTemplate(GeneratorHelper):
             "plt.imshow(fem_result['intensity'])",
             "plt.colorbar()",
         ]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class FEMAnalysis(BaseAnalysis, id_="FEM"):

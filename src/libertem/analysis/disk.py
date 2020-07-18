@@ -31,7 +31,7 @@ class DiskTemplate(GeneratorHelper):
         plot = ["plt.figure()",
                 "plt.imshow(disk_result['intensity'])",
                 "plt.colorbar()"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class DiskMaskAnalysis(SingleMaskAnalysis, id_="APPLY_DISK_MASK"):

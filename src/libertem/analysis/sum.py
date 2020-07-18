@@ -42,7 +42,7 @@ class SumTemplate(GeneratorHelper):
             "plt.imshow(sum_result['intensity'], norm=colors.LogNorm())",
             "plt.colorbar()",
          ]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class SumResultSet(AnalysisResultSet):

@@ -44,10 +44,11 @@ def notebook_generator(conn, dataset, comp, save=False):
     nb.add_code(ctx)
     nb.add_code(instance.dataset())
 
-    for docs, analysis, plot, store in instance.analysis():
+    for docs, analysis, plots, store in instance.analysis():
         nb.add_doc(docs)
         nb.add_code(analysis)
-        nb.add_code(plot)
+        for plot in plots:
+            nb.add_code(plot)
         if save:
             nb.add_code(store)
 

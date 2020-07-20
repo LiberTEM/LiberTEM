@@ -220,7 +220,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                        key="y_imag", title="y [imag]", desc="y component of the center"),
             ])
         else:
-            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers))
+            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector(np.broadcast_arrays(y_centers, x_centers, 0))
             d = divergence(y_centers, x_centers)
             c = curl_2d(y_centers, x_centers)
             m = magnitude(y_centers, x_centers)

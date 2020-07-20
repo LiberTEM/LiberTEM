@@ -25,11 +25,10 @@ class RadialTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
-    # FIXME : `libertem.viz` is not referenced in doc
     def get_dependency(self):
         return [
             "import matplotlib.cm as cm",
-            "from libertem.viz import CMAP_CIRCULAR_DEFAULT, cmaps"
+            "from empyre.vis.colors import ColormapCubehelix, ColormapPerception"
         ]
 
     def get_docs(self):
@@ -58,12 +57,13 @@ class RadialTemplate(GeneratorHelper):
         cells.append([
             "imag = radial_result.complex_0_1.raw_data.imag",
             "real = radial_result.complex_0_1.raw_data.real",
+            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
             "fig, axes = plt.subplots()",
             'axes.set_title("complex_0_1")',
-            "plt.imshow(CMAP_CIRCULAR_DEFAULT.rgb_from_vector((imag, real)))",
+            "plt.imshow(ch.rgb_from_vector(np.broadcast_arrays(imag, real, 0)))",
             "fig, axes = plt.subplots()",
             'axes.set_title("phase_0_1")',
-            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=cmaps["perception_circular"])'
+            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=ColormapPerception())'
         ])
         return ['\n'.join(cell) for cell in cells]
 

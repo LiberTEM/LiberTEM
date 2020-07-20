@@ -164,6 +164,7 @@ setup(
         'nbformat',
         'nbconvert',
         'autopep8',
+        'empyre',
     ],
     extras_require={
         'torch': 'torch',

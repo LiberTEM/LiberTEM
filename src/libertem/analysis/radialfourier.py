@@ -209,7 +209,10 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                     )
             for b in range(n_bins):
                 data = job_results[b, 0]
-                f = partial(CMAP_CIRCULAR_DEFAULT.rgb_from_vector, (data.imag, data.real))
+                f = partial(
+                    CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
+                    np.broadcast_arrays(data.imag, data.real, 0)
+                )
                 sets.append(
                     AnalysisResult(
                         raw_data=data,
@@ -221,8 +224,9 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 )
                 for o in range(1, orders):
                     data = job_results[b, o] / normal[b]
-                    f = partial(CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                        (data.imag, data.real), vmax=max_absolute
+                    f = partial(
+                        CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
+                        np.broadcast_arrays(data.imag, data.real, 0), vmax=max_absolute
                     )
                     sets.append(
                         AnalysisResult(

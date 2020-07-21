@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Menu, Modal, Popup } from "semantic-ui-react";
 import About from "./About";
+import ClusterStatus from "./clusterStatus/Cluster"
 import QuitButton from "./shutdown/components/ShutdownButton";
 
 const HeaderMenu: React.SFC = () => {
@@ -15,6 +16,9 @@ const HeaderMenu: React.SFC = () => {
                 </Modal>
             </Menu.Item>
             <Menu.Menu position="right">
+                <Menu.Item>
+                    <ClusterStatus />
+                </Menu.Item>
                 <Menu.Item>
                     <QuitButton />
                 </Menu.Item>

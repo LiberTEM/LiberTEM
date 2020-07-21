@@ -30,6 +30,14 @@ class ComTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    # FIXME : remove the note
+    def get_dependency(self):
+        return [
+            "# note: visulization requires Python 3.7 and empyre",
+            "# install empyre: pip install empyre",
+            "from empyre.vis.colors import ColormapCubehelix"
+        ]
+
     def get_docs(self):
         title = "COM Analysis"
         from libertem.api import Context
@@ -45,8 +53,14 @@ class ComTemplate(GeneratorHelper):
         return ', '.join(params)
 
     def get_plot(self):
-        plot = []
-        for channel in self.channels[:3]:
+        plot = [
+            "fig, axes = plt.subplots()",
+            'axes.set_title("field")',
+            "y_centers, x_centers = com_result.field.raw_data",
+            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
+            "axes.imshow(ch.rgb_from_vector(np.broadcast_arrays(y_centers, x_centers, 0)))"
+        ]
+        for channel in self.channels[1:3]:
             plot.append("fig, axes = plt.subplots()")
             plot.append(f'axes.set_title("{channel}")')
             plot.append(f'axes.imshow(com_result.{channel}.visualized)')

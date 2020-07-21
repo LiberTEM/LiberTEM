@@ -49,7 +49,6 @@ class CodeTemplate(TemplateBase):
             if analysis_dep is not None:
                 extra_dep.extend(analysis_dep)
         dep = self.temp_dep + extra_dep
-        dep = list(set(dep))
         return '\n'.join(dep)
 
     def initial_setup(self):

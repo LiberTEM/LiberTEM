@@ -28,7 +28,7 @@ def test_ring_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     notebook = notebook_generator(conn, dataset, analysis, save=True)
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
-    ep = ExecutePreprocessor(timeout=600, kernel='libertem-env')
+    ep = ExecutePreprocessor(timeout=600)
     out = ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'ring_result.npy')
     results = np.load(data_path)

@@ -45,7 +45,7 @@ def test_scale_factors():
     ) == [2, 128]
 
 
-class TestUDF(UDF):
+class TilingUDF(UDF):
     def process_tile(self, tile):
         pass
 
@@ -56,7 +56,7 @@ class TestUDF(UDF):
         }
 
 
-class TestUDFBestFit(UDF):
+class TilingUDFBestFit(UDF):
     def process_tile(self, tile):
         pass
 
@@ -67,12 +67,12 @@ class TestUDFBestFit(UDF):
         }
 
 
-class TestUDFFrame(UDF):
+class TilingUDFFrame(UDF):
     def process_frame(self, frame):
         pass
 
 
-class TestUDFPartition(UDF):
+class TilingUDFPartition(UDF):
     def process_partition(self, partition):
         pass
 
@@ -80,7 +80,7 @@ class TestUDFPartition(UDF):
 def test_get_scheme_tile(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
-    udf = TestUDFBestFit()
+    udf = TilingUDFBestFit()
     scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
     assert scheme.shape.sig.dims == 2
     print(neg._get_udf_size_pref(udf))
@@ -92,7 +92,7 @@ def test_get_scheme_tile(default_raw):
 def test_get_scheme_frame(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
-    udf = TestUDFFrame()
+    udf = TilingUDFFrame()
     scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (16, 128, 128)
@@ -101,7 +101,7 @@ def test_get_scheme_frame(default_raw):
 def test_get_scheme_partition(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
-    udf = TestUDFPartition()
+    udf = TilingUDFPartition()
     scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (128, 128, 128)
@@ -120,7 +120,7 @@ def test_get_scheme_upper_size_1():
 
     neg = Negotiator()
     p = next(dataset.get_partitions())
-    udf = TestUDFBestFit()
+    udf = TilingUDFBestFit()
     scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (65, 28, 144)
@@ -140,7 +140,7 @@ def test_get_scheme_upper_size_2():
 
     neg = Negotiator()
     p = next(dataset.get_partitions())
-    udf = TestUDFBestFit()
+    udf = TilingUDFBestFit()
     scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (124, 8, 264)
@@ -240,9 +240,9 @@ def test_depth_max_size_max():
 
 
 def test_multi_by_frame_wins():
-    by_frame = TestUDFFrame()
+    by_frame = TilingUDFFrame()
     other_unlimited = UDFUnlimitedDepth()
-    other_best_fit = TestUDFBestFit()
+    other_best_fit = TilingUDFBestFit()
     other_deep = UDFWithLargeDepth()
 
     udfs = [
@@ -271,7 +271,7 @@ def test_multi_by_frame_wins():
 
 def test_multi_no_by_frame_small_size_wins():
     other_unlimited = UDFUnlimitedDepth()
-    other_best_fit = TestUDFBestFit()
+    other_best_fit = TilingUDFBestFit()
     other_deep = UDFWithLargeDepth()
 
     udfs = [
@@ -303,9 +303,9 @@ def test_multi_partition_wins():
     # and accumulating the whole partition into a buffer, then running process_partition
     # after the tile loop.
     other_unlimited = UDFUnlimitedDepth()
-    other_best_fit = TestUDFBestFit()
+    other_best_fit = TilingUDFBestFit()
     other_deep = UDFWithLargeDepth()
-    udf_partition = TestUDFPartition()
+    udf_partition = TilingUDFPartition()
 
     udfs = [
         udf_partition,

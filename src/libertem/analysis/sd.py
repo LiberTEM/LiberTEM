@@ -35,11 +35,12 @@ class SDTemplate(GeneratorHelper):
                     ]
         return '\n'.join(temp_analysis)
 
+    # FIXME  `plt.colorbar()` creates error while testing
+    # moreinfo  https://github.com/LiberTEM/LiberTEM/pull/801#pullrequestreview-453173083
     def get_plot(self):
         plot = [
             "plt.figure()",
             "plt.imshow(sd_result['varsum'], norm=colors.LogNorm())",
-            "plt.colorbar()",
         ]
         return ['\n'.join(plot)]
 

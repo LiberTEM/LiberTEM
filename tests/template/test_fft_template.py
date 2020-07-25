@@ -8,11 +8,11 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_sum_fft_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_sum_fft_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     params = {
@@ -35,7 +35,7 @@ def test_sum_fft_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     results = np.load(data_path)
 
     analysis = SumfftAnalysis(
-                          dataset=hdf5_ds_1,
+                          dataset=hdf5_ds_2,
                           parameters=params
                         )
     expected = lt_ctx.run(analysis)
@@ -45,11 +45,11 @@ def test_sum_fft_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     )
 
 
-def test_fft_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_fft_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     params = {
@@ -74,7 +74,7 @@ def test_fft_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
     results = np.load(data_path)
 
     analysis = ApplyFFTMask(
-                    dataset=hdf5_ds_1,
+                    dataset=hdf5_ds_2,
                     parameters=params
                 )
     expected = lt_ctx.run(analysis)

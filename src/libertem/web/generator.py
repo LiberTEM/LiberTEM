@@ -22,7 +22,7 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
             "params": ds['converted']
         }
         main_type = compoundAnalysis['details']['mainType'].lower()
-        ds_name = '_'.join(ds["params"]["params"]["name"].split(".")[:-1])
+        ds_name = ds["params"]["params"]["name"]
 
         analysis_details = []
         for id in analysis_ids:

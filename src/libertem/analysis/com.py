@@ -63,7 +63,7 @@ class ComTemplate(GeneratorHelper):
         for channel in self.channels[1:3]:
             plot.append("fig, axes = plt.subplots()")
             plot.append(f'axes.set_title("{channel}")')
-            plot.append(f'axes.imshow(com_result.{channel}.visualized)')
+            plot.append(f'axes.imshow(com_result.{channel}.raw_data)')
 
         return ['\n'.join(plot)]
 

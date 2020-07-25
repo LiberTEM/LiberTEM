@@ -7,11 +7,11 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_disk_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_disk_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     analysis = [{
@@ -33,7 +33,7 @@ def test_disk_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     results = np.load(data_path)
 
     disk_analysis = lt_ctx.create_disk_analysis(
-                                        dataset=hdf5_ds_1,
+                                        dataset=hdf5_ds_2,
                                         cx=8,
                                         cy=8,
                                         r=5)

@@ -8,11 +8,11 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_fem_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_fem_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     params = {
@@ -37,7 +37,7 @@ def test_fem_analysis(hdf5_ds_1, tmpdir_factory, lt_ctx):
     results = np.load(data_path)
 
     analysis = FEMUDF(center=(1,1), rad_in=0, rad_out=1)
-    expected = lt_ctx.run_udf(dataset=hdf5_ds_1, udf=analysis)
+    expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=analysis)
     assert np.allclose(
         results,
         expected['intensity'],

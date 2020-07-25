@@ -31,7 +31,7 @@ class SDTemplate(GeneratorHelper):
         temp_analysis = [
                     f"{roi}",
                     "sd_udf  = StdDevUDF()",
-                    "sd_result = ctx.run_udf(dataset=ds, udf=sd_udf)",
+                    "sd_result = ctx.run_udf(dataset=ds, roi=roi, udf=sd_udf)",
                     ]
         return '\n'.join(temp_analysis)
 

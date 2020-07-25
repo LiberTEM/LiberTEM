@@ -9,11 +9,11 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 
 @pytest.mark.skip(reason="requires `empyre`")
-def test_radial_fourier_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     analysis = [{
@@ -44,7 +44,7 @@ def test_radial_fourier_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
         data_path = os.path.join(datadir, f"radial_result_{channel}.npy")
         results[channel] = np.load(data_path)
         analysis = lt_ctx.create_radial_fourier_analysis(
-                                            dataset=hdf5_ds_1,
+                                            dataset=hdf5_ds_2,
                                             cx=0,
                                             cy=0,
                                             ri=0,

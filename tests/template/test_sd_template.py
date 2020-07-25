@@ -9,11 +9,11 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_sd_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
     params = {"roi": {}}
     analysis = [{
@@ -29,18 +29,18 @@ def test_sd_default(hdf5_ds_1, tmpdir_factory, lt_ctx):
     data_path = os.path.join(datadir, 'sd_result.npy')
     results = np.load(data_path)
     udf = StdDevUDF()
-    expected = lt_ctx.run_udf(dataset=hdf5_ds_1, udf=udf)
+    expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=udf)
     assert np.allclose(
         results,
         expected['varsum'].raw_data,
     )
 
 
-def test_sd_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
+def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 
     conn = {'connection': {'type': 'local'}}
-    path = hdf5_ds_1.path
+    path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 
     roi_params = {
@@ -65,7 +65,7 @@ def test_sd_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
     out = ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sd_result.npy')
     results = np.load(data_path)
-    nx, ny = hdf5_ds_1.shape.nav
+    nx, ny = hdf5_ds_2.shape.nav
     roi = masks.rectangular(
                 X=roi_params["x"],
                 Y=roi_params["y"],
@@ -74,7 +74,7 @@ def test_sd_roi(hdf5_ds_1, tmpdir_factory, lt_ctx):
                 imageSizeX=nx,
                 imageSizeY=ny)
     udf = StdDevUDF()
-    expected = lt_ctx.run_udf(dataset=hdf5_ds_1, udf=udf, roi=roi)
+    expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=udf, roi=roi)
     assert np.allclose(
         results,
         expected['varsum'].raw_data,

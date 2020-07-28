@@ -25,7 +25,8 @@ class SumSigTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(sumsig_result.intensity.visualized)"]
+                "plt.imshow(sumsig_result.intensity.raw_data)",
+                "plt.colorbar()"]
         return ['\n'.join(plot)]
 
 

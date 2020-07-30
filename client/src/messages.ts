@@ -574,3 +574,16 @@ export interface ShutdownResponse {
     status: "ok",
     messageType: "SERVER_SHUTDOWN",
 }
+
+export interface  CopyAnalysis{
+    analysis: string,
+    plot: string[],
+}
+
+export interface CopyNotebookResponse {
+    dependency: string,
+    initial_setup: string,
+    ctx: string,
+    dataset: string,
+    analysis: CopyAnalysis[],
+}

@@ -1,4 +1,4 @@
-import { getApiBasePath,genericDelete, genericPut } from "../helpers/apiHelpers";
+import { genericDelete, genericPut, getApiBasePath } from "../helpers/apiHelpers";
 import { AnalysisDetails, CompoundAnalysisDetails, CopyNotebookResponse, CreateAnalysisResponse, CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest, CreateOrUpdateCompoundAnalysisRequest, RemoveAnalysisResponse, RemoveCompoundAnalysisResponse } from "../messages";
 
 export async function createOrUpdateAnalysis(

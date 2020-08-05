@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Button, Icon, List, Modal } from "semantic-ui-react";
+import { Button, List, Modal, Segment } from "semantic-ui-react";
 import { RootReducer } from "../store";
 
 const mapStateToProps = (state: RootReducer) => {
@@ -33,10 +33,15 @@ const TCPStatus: React.SFC<MergedProps> = ({ address }) => {
                 </List.Item>
                 <List.Item>
                     <List.Content>
-                        <Button icon={true} labelPosition="left" onClick={copyToClipboard}>
-                            <Icon name="copy" />
-                            Connection code
-                        </Button>
+                        <Segment.Group>
+                            <Segment as="h5">Connection code</Segment>
+                            <Segment>
+                                <Button floated={"right"} icon={"copy"} onClick={copyToClipboard} />
+                                {code.split("\n").map((item, i) => {
+                                    return <p key={i}>{item}</p>;
+                                })}
+                            </Segment>
+                        </Segment.Group>
                     </List.Content>
                 </List.Item>
             </List>

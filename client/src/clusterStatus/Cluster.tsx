@@ -18,9 +18,9 @@ type MergedProps = ReturnType<typeof mapStateToProps>;
 const ClusterStatus: React.SFC<MergedProps> = ({ type, connection }) => {
     const clusterDetails = () => {
         if (connection === "connected" && type === "LOCAL") {
-            return <TCPStatus />;
-        } else if (connection === "connected" && type === "TCP") {
             return <LocalStatus />;
+        } else if (connection === "connected" && type === "TCP") {
+            return <TCPStatus />;
         } else {
             return <NotConnected />;
         }

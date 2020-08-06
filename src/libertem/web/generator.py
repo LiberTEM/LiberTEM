@@ -1,7 +1,7 @@
 import tornado
 import logging
 from .notebook_generator.notebook_generator import notebook_generator
-from .notebook_generator.copy import copyNotebook
+from .notebook_generator.copy import copy_notebook
 
 from .state import SharedState
 
@@ -57,5 +57,5 @@ class CopyScriptHandler(tornado.web.RequestHandler):
         for id in analysis_ids:
             analysis_details.append(self.state.analysis_state[id]['details'])
         conn = self.state.executor_state.get_cluster_params()
-        notebook = copyNotebook(conn, dataset, analysis_details)
+        notebook = copy_notebook(conn, dataset, analysis_details)
         self.write(notebook)

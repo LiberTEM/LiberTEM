@@ -1,7 +1,7 @@
 from .code_template import CodeTemplate
 
 
-def copyNotebook(conn, dataset, comp):
+def copy_notebook(conn, dataset, comp):
     instance = CodeTemplate(conn, dataset, comp)
     analy = []
     for _, analysis, plot, _ in instance.analysis():

@@ -116,11 +116,9 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         return (
             <Segment padded={true}>
                 <Button floated={"right"} icon={"copy"} onClick={copy} />
-                <p>
-                    {code.split("\n").map((item, i) => {
-                        return <p key={i}>{item}</p>;
-                    })}
-                </p>
+                {code.split("\n").map((item, i) => {
+                    return <p key={i}>{item}</p>;
+                })}
             </Segment>
         );
     };
@@ -131,28 +129,36 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         navigator.clipboard.writeText(`${firstPart}\n\n${secondPart}`);
     };
 
-    return (
-        <Modal trigger={<Button onClick={copyNotebook}>Copy cells</Button>} open={openModal} onClose={closeModal}>
-            <Modal.Header>
-                Notebook
-                <Button icon={true} labelPosition="left" floated={"right"} onClick={copyCompleteNotebook}>
-                    <Icon name="copy" />
-                    Complete notebook
-                </Button>
-            </Modal.Header>
-            <Modal.Content scrolling={true}>
-                {[notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].map(cell)}
-                {notebook.analysis.map(analysis => {
-                    return (
-                        <>
-                            {cell(analysis.analysis)}
-                            {analysis.plot.map(cell)}
-                        </>
-                    );
-                })}
-            </Modal.Content>
-        </Modal>
-    );
+    if (compoundAnalysis[`details`][`mainType`] === "CLUST") {
+        return (
+            <ul>
+                <li>Under Development</li>
+            </ul>
+        );
+    } else {
+        return (
+            <Modal trigger={<Button onClick={copyNotebook}>Copy cells</Button>} open={openModal} onClose={closeModal}>
+                <Modal.Header>
+                    Notebook
+                    <Button icon={true} labelPosition="left" floated={"right"} onClick={copyCompleteNotebook}>
+                        <Icon name="copy" />
+                        Complete notebook
+                    </Button>
+                </Modal.Header>
+                <Modal.Content scrolling={true}>
+                    {[notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].map(cell)}
+                    {notebook.analysis.map(analysis => {
+                        return (
+                            <>
+                                {cell(analysis.analysis)}
+                                {analysis.plot.map(cell)}
+                            </>
+                        );
+                    })}
+                </Modal.Content>
+            </Modal>
+        );
+    }
 }; 
 
 

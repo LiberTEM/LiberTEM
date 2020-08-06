@@ -30,7 +30,7 @@ export async function removeCompoundAnalysis(compoundAnalysisId: string): Promis
 
 export async function getNotebook(compoundAnalysisId: string): Promise<CopyNotebookResponse>{
     const basePath = getApiBasePath();
-    const url = `${basePath}compoundAnalyses/${compoundAnalysisId}/copy/notebook`;
+    const url = `${basePath}compoundAnalyses/${compoundAnalysisId}/copy/notebook/`;
     const r = await fetch(url, {
         method: 'GET',
         credentials: "same-origin",

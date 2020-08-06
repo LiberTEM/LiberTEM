@@ -72,7 +72,7 @@ def make_app(event_registry, shared_state):
             "state": shared_state,
             "event_registry": event_registry
         }),
-        (r"/api/compoundAnalyses/([^/]+)/copy/notebook", CopyScriptHandler, {
+        (r"/api/compoundAnalyses/([^/]+)/copy/notebook/", CopyScriptHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

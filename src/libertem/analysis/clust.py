@@ -4,6 +4,7 @@ from sklearn.feature_extraction.image import grid_to_graph
 import numpy as np
 import sparse
 import inspect
+import re
 
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
@@ -24,47 +25,75 @@ class ClusterTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
+    def format_code(self, code):
+        code = re.sub(r"self\.|self, |self", "", code)
+        # remove indentation
+        code = code.split("\n")
+        for idx, line in enumerate(code):
+            code[idx] = line[4:]
+        return "\n".join(code)
+
     def get_dependency(self):
-        dep = ["from libertem.analysis import ClusterAnalysis",
-               "from libertem.udf.stddev import StdDevUDF, consolidate_result",
-               "from libertem.masks import _make_circular_mask",
-               "from skimage.feature import peak_local_max",
-               "import sparse",
-               "from libertem.udf.masks import ApplyMasksUDF"]
+        dep = [
+           "from libertem.analysis import ClusterAnalysis",
+           "from libertem.udf.stddev import StdDevUDF, consolidate_result",
+           "from libertem.masks import _make_circular_mask",
+           "from skimage.feature import peak_local_max",
+           "import sparse",
+           "from sklearn.feature_extraction.image import grid_to_graph",
+           "from libertem.udf.masks import ApplyMasksUDF",
+           "from sklearn.cluster import AgglomerativeClustering",
+           "from libertem.analysis.base import AnalysisResult, AnalysisResultSet",
+           "from libertem.viz import visualize_simple",
+        ]
         return dep
 
     def temp_cluster_controller(self):
-        controller = inspect.getsource(ClusterAnalysis.controller)
-        # remove indentation
-        controller = controller.replace("\n        ", "\n")
-        controller = controller.split("\n\n")
-        temp_controller = []
-        controller[1] = controller[1].replace("self", "cluster_analysis")
-        controller[4] = controller[4].replace("self.", "")
-        controller[7] = controller[7].replace("self.dataset", "ds")
-        controller[2] = "sd_udf_results = ctx.run_udf(dataset=ds,\
-                         udf=stddev_udf, roi=roi, progress=True)"
-        temp_controller.extend(controller[1:9])
-        result = ["udf_results = ctx.run_udf(dataset=ds, udf=udf, progress=True)",
-                  "cluster_result = cluster_analysis.get_udf_results\
-                  (udf_results=udf_results, roi=roi)"]
-        temp_controller.append("\n".join(result))
-        return '\n\n'.join(temp_controller)
+        temp_controller = [
+                        "dataset = ds",
+                        "roi, sd_udf_results = get_sd_results()",
+                        "cluster_udf = get_cluster_udf(sd_udf_results)",
+                        "udf_results = ctx.run_udf(dataset=ds, udf=cluster_udf, progress=True)",
+                        "cluster_result = get_udf_results(udf_results, roi)",
+        ]
+        return '\n'.join(temp_controller)
 
     def get_docs(self):
         docs = ["# Cluster Analysis"]
         return '\n'.join(docs)
 
+    def get_run_sd_udf(self):
+        indent = " "*4
+        temp_run_sd = [
+            "def run_sd_udf(roi, stddev_udf):",
+            f"{indent}sd_udf_results = ctx.run_udf(dataset=ds, udf=stddev_udf, roi=roi)",
+            f"{indent}return roi, consolidate_result(sd_udf_results)"
+        ]
+        return "\n".join(temp_run_sd)
+
     def get_analysis(self):
-        temp_analysis = [f"parameters={self.params}",
-                         "cluster_analysis = ClusterAnalysis(dataset=ds, parameters=parameters)"]
-        temp_analysis.append(self.temp_cluster_controller())
-        return '\n'.join(temp_analysis)
+        udf_results = self.format_code(inspect.getsource(ClusterAnalysis.get_udf_results))
+        sd_roi = self.format_code(inspect.getsource(ClusterAnalysis.get_sd_roi))
+        cluster_udf = self.format_code(inspect.getsource(ClusterAnalysis.get_cluster_udf))
+        sd_results = self.format_code(inspect.getsource(ClusterAnalysis.get_sd_results))
+        run_sd_udf = self.get_run_sd_udf()
+        cluster_controller = self.temp_cluster_controller()
+
+        temp_analysis = [
+                    f"parameters={self.params}\ndataset=ds",
+                    f"{sd_roi}",
+                    f"{run_sd_udf}",
+                    f"{sd_results}",
+                    f"{cluster_udf}",
+                    f"{udf_results}",
+                    f"{cluster_controller}"
+                    ]
+        return '\n\n'.join(temp_analysis)
 
     def get_plot(self):
         plot = ["plt.figure()",
                 "plt.imshow(cluster_result['intensity'].visualized)"]
-        return '\n'.join(plot)
+        return ['\n'.join(plot)]
 
 
 class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
@@ -117,20 +146,22 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
             raise NotImplementedError("unknown shape %s" % params["shape"])
         return roi
 
-    async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
-
-        stddev_udf = StdDevUDF()
-        roi = self.get_sd_roi()
-
+    async def run_sd_udf(self, roi, stddev_udf):
         result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
-            self.dataset, executor, roi=roi, cancel_id=cancel_id
+            self.dataset, self.executor, roi=roi, cancel_id=self.cancel_id
         )
         async for (sd_udf_results,) in result_iter:
             pass
-        if job_is_cancelled():
+        if self.job_is_cancelled():
             raise JobCancelledError()
+        return roi, consolidate_result(sd_udf_results)
 
-        sd_udf_results = consolidate_result(sd_udf_results)
+    def get_sd_results(self):
+        stddev_udf = StdDevUDF()
+        roi = self.get_sd_roi()
+        return self.run_sd_udf(roi, stddev_udf)
+
+    def get_cluster_udf(self, sd_udf_results):
 
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
@@ -162,6 +193,16 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
             mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.uint8,
             use_sparse=True
         )
+        return udf
+
+    async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
+
+        self.cancel_id = cancel_id
+        self.executor = executor
+        self.job_is_cancelled = job_is_cancelled
+
+        roi, sd_udf_results = await self.get_sd_results()
+        udf = self.get_cluster_udf(sd_udf_results)
 
         result_iter = UDFRunner([udf]).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id

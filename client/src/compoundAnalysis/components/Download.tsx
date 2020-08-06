@@ -74,7 +74,6 @@ interface DownloadItemsProps {
 }
 
 const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
-
     const initialAnalysis: CopyAnalysis[] = [
         {
             analysis: "",
@@ -124,68 +123,46 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
     };
 
     useEffect(() => {
-        copyNotebook()
-    })
+        copyNotebook();
+    });
 
-    if (compoundAnalysis[`details`][`mainType`] === "CLUST") {
-        return (
-            <ul>
-                <li>Under Development</li>
-            </ul>
-        );
-    } else {
-        return (
-            <>
-                <Segment clearing={true}>
-                    <Header floated={"left"}>Notebook</Header>
-                    <Button icon={true} labelPosition="left" floated={"right"} onClick={copyCompleteNotebook}>
-                        <Icon name="copy" />
-                        Complete notebook
-                    </Button>
-                </Segment>
-                <Modal.Content scrolling={true}>
-                    {[notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].map(cell)}
-                    {notebook.analysis.map(analysis => {
-                        return (
-                            <>
-                                {cell(analysis.analysis)}
-                                {analysis.plot.map(cell)}
-                            </>
-                        );
-                    })}
-                </Modal.Content>
-            </>
-        );
-    }
+    return (
+        <>
+            <Segment clearing={true}>
+                <Header floated={"left"}>Notebook</Header>
+                <Button icon={true} labelPosition="left" floated={"right"} onClick={copyCompleteNotebook}>
+                    <Icon name="copy" />
+                    Complete notebook
+                </Button>
+            </Segment>
+            <Modal.Content scrolling={true}>
+                {[notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].map(cell)}
+                {notebook.analysis.map(analysis => {
+                    return (
+                        <>
+                            {cell(analysis.analysis)}
+                            {analysis.plot.map(cell)}
+                        </>
+                    );
+                })}
+            </Modal.Content>
+        </>
+    );
 }; 
 
 
-const DownloadScripts: React.SFC<DownloadItemsProps> = ({compoundAnalysis}) => {
-
+const DownloadScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
     const basePath = getApiBasePath();
-    const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`
+    const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`;
 
-    
-    if (compoundAnalysis[`details`][`mainType`] === 'CLUST') {
-        return(
-            <ul>
-                <li>
-                    Under Development
-                </li>
-            </ul>
-        )
-        } else {
-            return(
-                <ul>
-                    <li>
-                        <a href={downloadUrl}>
-                            notebook corresponding to analysis
-                        </a>
-                    </li>
-                </ul>
-            )
-        }
-}
+    return (
+        <ul>
+            <li>
+                <a href={downloadUrl}>notebook corresponding to analysis</a>
+            </li>
+        </ul>
+    );
+};
 
 interface DownloadProps {
     compoundAnalysis: CompoundAnalysisState,

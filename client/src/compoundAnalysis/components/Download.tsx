@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Button, Dropdown, DropdownProps, Header, Icon, Modal, Segment, Tab} from "semantic-ui-react";
 import { AnalysisState } from "../../analysis/types";
@@ -74,7 +74,6 @@ interface DownloadItemsProps {
 }
 
 const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
-    const [openModal, setOpen] = useState(false);
 
     const initialAnalysis: CopyAnalysis[] = [
         {
@@ -91,10 +90,6 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         analysis: initialAnalysis,
     });
 
-    const closeModal = () => {
-        setOpen(false);
-    };
-
     const copyNotebook = async () => {
         await getNotebook(compoundAnalysis.compoundAnalysis).then(CurrentNotebook => {
             setNotebook({
@@ -104,7 +99,6 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
                 dataset: CurrentNotebook.dataset,
                 analysis: CurrentNotebook.analysis,
             });
-            setOpen(true);
         });
     };
 
@@ -129,6 +123,10 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         navigator.clipboard.writeText(`${firstPart}\n\n${secondPart}`);
     };
 
+    useEffect(() => {
+        copyNotebook()
+    })
+
     if (compoundAnalysis[`details`][`mainType`] === "CLUST") {
         return (
             <ul>
@@ -137,14 +135,14 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         );
     } else {
         return (
-            <Modal trigger={<Button onClick={copyNotebook}>Copy cells</Button>} open={openModal} onClose={closeModal}>
-                <Modal.Header>
-                    Notebook
+            <>
+                <Segment clearing={true}>
+                    <Header floated={"left"}>Notebook</Header>
                     <Button icon={true} labelPosition="left" floated={"right"} onClick={copyCompleteNotebook}>
                         <Icon name="copy" />
                         Complete notebook
                     </Button>
-                </Modal.Header>
+                </Segment>
                 <Modal.Content scrolling={true}>
                     {[notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].map(cell)}
                     {notebook.analysis.map(analysis => {
@@ -156,7 +154,7 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
                         );
                     })}
                 </Modal.Content>
-            </Modal>
+            </>
         );
     }
 }; 
@@ -247,7 +245,6 @@ const Download: React.SFC<DownloadProps> = ({ compoundAnalysis }) => {
             menuItem: "Copy notebook",
             render: () => (
                 <Tab.Pane>
-                    <Header as="h3">Available scripts: </Header>
                     <CopyScripts compoundAnalysis={compoundAnalysis} />
                 </Tab.Pane>
             ),

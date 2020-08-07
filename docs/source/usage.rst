@@ -49,7 +49,7 @@ To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwardin
 Connecting
 ----------
 
-.. note:: 
+.. note::
 
    The GUI is tested to work on Firefox and Chromium-based browsers for now, if you
    cannot use a compatible browser for some reason, please `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_!
@@ -218,6 +218,11 @@ You can also download a Jupyter notebook corresponding to the analysis and
 continue working with the same parameters using scripting.
 
 .. figure:: ./images/use/download-jupyter.png
+
+Or copy individual cells of Jupyter notebook directly from GUI, also option
+to copy the complete source code.
+
+.. figure:: ./images/use/copy-jupyter.png
 
 Keyboard controls
 ~~~~~~~~~~~~~~~~~

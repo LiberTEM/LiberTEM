@@ -53,7 +53,7 @@ def test_detect_2(lt_ctx):
     assert DMDataSet.detect_params(
         path="nofile.someext",
         executor=lt_ctx.executor,
-    )["parameters"] is False
+    ) is False
 
 
 def test_same_offset(lt_ctx):

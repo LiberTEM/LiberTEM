@@ -171,9 +171,9 @@ def test_nonexistent():
 def test_detect_fail():
     executor = InlineJobExecutor()
     # does not exist:
-    assert not EMPADDataSet.detect_params("/does/not/exist.raw", executor=executor)["parameters"]
+    assert not EMPADDataSet.detect_params("/does/not/exist.raw", executor=executor)
     # exists but we can't detect any parameters (and we don't know if it even is an EMPAD file)
-    assert not EMPADDataSet.detect_params(EMPAD_RAW, executor=executor)["parameters"]
+    assert not EMPADDataSet.detect_params(EMPAD_RAW, executor=executor)
 
 
 def test_crop_to(default_empad, lt_ctx):

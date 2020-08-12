@@ -89,18 +89,6 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         analysis: initialAnalysis,
     });
 
-    const copyNotebook = async () => {
-        await getNotebook(compoundAnalysis.compoundAnalysis).then(CurrentNotebook => {
-            setNotebook({
-                dependency: CurrentNotebook.dependency,
-                initial_setup: CurrentNotebook.initial_setup,
-                ctx: CurrentNotebook.ctx,
-                dataset: CurrentNotebook.dataset,
-                analysis: CurrentNotebook.analysis,
-            });
-        });
-    };
-
     const cell = (code: string) => {
         const copy = () => {
             navigator.clipboard.writeText(code);
@@ -109,22 +97,34 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
         return (
             <Segment padded={true}>
                 <Button floated={"right"} icon={"copy"} onClick={copy} />
-                {code.split("\n").map((item, i) => {
-                    return <p key={i}>{item}</p>;
-                })}
+                <pre>{code}</pre>
             </Segment>
         );
     };
 
     const copyCompleteNotebook = () => {
         const firstPart = [notebook.dependency, notebook.initial_setup, notebook.ctx, notebook.dataset].join("\n\n");
-        const secondPart = notebook.analysis.map(analysis => `${analysis.analysis}\n${analysis.plot.join("\n\n")}`);
+        const joinCode = (analysis: CopyAnalysis) => {
+                return `${analysis.analysis}\n${analysis.plot.join("\n\n")}`
+        }
+        const secondPart = notebook.analysis.map(joinCode).join("\n\n");
         navigator.clipboard.writeText(`${firstPart}\n\n${secondPart}`);
     };
 
     useEffect(() => {
+        const copyNotebook = async () => {
+            await getNotebook(compoundAnalysis.compoundAnalysis).then(CurrentNotebook => {
+                setNotebook({
+                    dependency: CurrentNotebook.dependency,
+                    initial_setup: CurrentNotebook.initial_setup,
+                    ctx: CurrentNotebook.ctx,
+                    dataset: CurrentNotebook.dataset,
+                    analysis: CurrentNotebook.analysis,
+                });
+            });
+        };
         copyNotebook();
-    });
+    }, [compoundAnalysis.compoundAnalysis]);
 
     return (
         <>

@@ -33,7 +33,7 @@ class CodeTemplate(TemplateBase):
         ds_type = self.ds['type']
         ds_params = self.ds['params']
         data = {'type': ds_type, 'params': ds_params}
-        return self.format_template(self.temp_ds, data)
+        return self.code_formatter(self.format_template(self.temp_ds, data))
 
     def dependency(self):
         """
@@ -49,7 +49,7 @@ class CodeTemplate(TemplateBase):
             if analysis_dep is not None:
                 extra_dep.extend(analysis_dep)
         dep = self.temp_dep + extra_dep
-        return '\n'.join(dep)
+        return self.code_formatter('\n'.join(dep))
 
     def initial_setup(self):
         return "%matplotlib nbagg"
@@ -75,10 +75,10 @@ class CodeTemplate(TemplateBase):
 
         for helper in self.analysis_helper.values():
 
-            plot_ = helper.get_plot()
-            analy_ = helper.get_analysis()
-            docs_ = helper.get_docs()
-            save_ = helper.get_save()
+            plot_ = list(map(self.code_formatter, helper.get_plot()))
+            analy_ = self.code_formatter(helper.get_analysis())
+            docs_ = self.code_formatter(helper.get_docs())
+            save_ = self.code_formatter(helper.get_save())
 
             form_analysis.append((docs_, analy_, plot_, save_))
 

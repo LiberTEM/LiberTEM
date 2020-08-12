@@ -163,6 +163,7 @@ setup(
         'primesieve',
         'nbformat',
         'nbconvert',
+        'autopep8',
     ],
     extras_require={
         'torch': 'torch',

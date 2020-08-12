@@ -9,6 +9,17 @@ Changelog
     ctx = api.Context(executor=InlineJobExecutor())
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
 
+.. _continuous:
+.. _`v0-6-0`:
+
+0.6.0.dev0 (continuous)
+#######################
+
+.. toctree::
+   :glob:
+
+   changelog/*/*
+
 .. _latest:
 .. _`v0-5-1`:
 

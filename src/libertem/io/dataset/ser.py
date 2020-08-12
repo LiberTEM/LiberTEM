@@ -42,7 +42,7 @@ class SERFile(File3D):
         self._emipath = emipath
 
     def _get_handle(self):
-        return fileSER(self._path, emifile=self._emipath)
+        return fileSER(self._path)
 
     @contextlib.contextmanager
     def get_handle(self):
@@ -165,7 +165,7 @@ class SERDataSet(DataSet):
 
     def check_valid(self):
         try:
-            with fileSER(self._path, emifile=self._emipath) as f1:
+            with fileSER(self._path) as f1:
                 if f1.head['ValidNumberElements'] == 0:
                     raise DataSetException("no data found in file")
                 if f1.head['DataTypeID'] not in (0x4120, 0x4122):

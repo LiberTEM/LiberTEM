@@ -1,3 +1,4 @@
+import autopep8
 from string import Template
 
 
@@ -23,6 +24,9 @@ class TemplateBase:
                      "${short}_result = ctx.run(${short}_analysis, progress=True)"]
 
     temp_save = ["np.save('${short}_result.npy', ${short}_result['intensity'])"]
+
+    def code_formatter(self, code):
+        return autopep8.fix_code(code)
 
     def format_template(self, template, data):
         template = "\n".join(template)

@@ -9,22 +9,21 @@ Changelog
     ctx = api.Context(executor=InlineJobExecutor())
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
 
-.. _continuous:
-.. _`v0-6-0`:
-
-0.6.0.dev0 (continuous)
-#######################
-
-.. toctree::
-   :glob:
-
-   changelog/*/*
-
 .. _latest:
+.. _`v0-5-1`:
+
+0.5.1 / 2020-08-12
+##################
+
+Bugfixes
+--------
+
+* Allow installation with latest dask distributed on Python 3.6 and 3.7
+
 .. _`v0-5-0`:
 
 0.5.0 / 2020-04-23
-#################
+##################
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3763313.svg
    :target: https://doi.org/10.5281/zenodo.3763313

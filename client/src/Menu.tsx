@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Menu, Modal, Popup } from "semantic-ui-react";
 import About from "./About";
-import ClusterStatus from "./clusterStatus/Cluster"
+import ClusterStatus from "./clusterStatus/components/Cluster"
 import QuitButton from "./shutdown/components/ShutdownButton";
 
 const HeaderMenu: React.SFC = () => {

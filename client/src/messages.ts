@@ -81,6 +81,19 @@ export type ConnectResponse = {
     msg: string,
 }
 
+export type HostDetails = {
+    host: string,
+    cpu: number,
+    cuda: number,
+    service: number,
+}
+
+export type GetClusterDetails = {
+    status: "ok",
+    messageType: string,
+    details: HostDetails[],
+}
+
 /*
  * Dataset
  */

@@ -15,7 +15,8 @@ export interface LocalConfig {
     },
     lastConnection: {
         type: ClusterTypes,
-        address: string
+        address: string,
+        numWorker: number,
     },
     starred: string[],
 }
@@ -43,6 +44,7 @@ export const initialConfigState: ConfigState = {
     lastConnection: {
         type: ClusterTypes.LOCAL,
         address: "tcp://localhost:8786",
+        numWorker: 1,
     },
     starred: [],
 }
@@ -68,15 +70,16 @@ export function configReducer(state = initialConfigState, action: AllActions): C
             });
         }
         case clusterActions.ActionTypes.CONNECT: {
-            if (action.payload.params.type === ClusterTypes.LOCAL){
-                const newLastConnection = Object.assign({}, state.lastConnection, {type: ClusterTypes.LOCAL})
+            if (action.payload.params.type === ClusterTypes.LOCAL) {
+                const newLastConnection = Object.assign({}, state.lastConnection, { type: ClusterTypes.LOCAL, numWorker: action.payload.params.numWorkers })
                 return Object.assign({}, state, {
-                    lastConnection : newLastConnection
+                    lastConnection: newLastConnection
                 })
             }
             else {
+                const newLastConnection = Object.assign({}, state.lastConnection, { type: ClusterTypes.TCP, address: action.payload.params.address })
                 return Object.assign({}, state, {
-                    lastConnection: action.payload.params
+                    lastConnection: newLastConnection
                 })
             }
         }

@@ -16,7 +16,7 @@ import tornado.escape
 
 from .shutdown import ShutdownHandler
 from .state import SharedState
-from .config import ConfigHandler
+from .config import ConfigHandler, ClusterDetailHandler
 from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
 from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
@@ -93,6 +93,10 @@ def make_app(event_registry, shared_state):
             "event_registry": event_registry
         }),
         (r"/api/config/", ConfigHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/config/cluster/", ClusterDetailHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

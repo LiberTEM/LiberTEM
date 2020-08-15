@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Button, Modal, Popup } from "semantic-ui-react";
-import { RootReducer } from "../store";
+import { RootReducer } from "../../store";
 import LocalStatus from "./localStatus";
 import NotConnected from "./NotConnected";
 import TCPStatus from "./TCPStatus";
@@ -27,7 +27,7 @@ const ClusterStatus: React.SFC<MergedProps> = ({ type, connection }) => {
     };
 
     return (
-        <Modal trigger={<Button content={connection} />} size="mini">
+        <Modal trigger={<Button content={connection} />} size="small">
             <Popup.Header>Connection Info</Popup.Header>
             <Popup.Content>{clusterDetails()}</Popup.Content>
         </Modal>

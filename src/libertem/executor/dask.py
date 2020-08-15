@@ -186,6 +186,26 @@ class CommonDaskMixin(object):
             for worker in info['workers'].values()
         ])
 
+    def get_resource_details(self):
+        workers = self.get_available_workers()
+        details = {}
+
+        for worker in workers:
+            if worker.name.startswith("tcp"):
+                host_name = worker.host
+                resource = 'cpu'
+            else:
+                host_name, resource, _ = worker.name.split('-')
+
+            if host_name not in details.keys():
+                details[host_name] = {
+                                 'cpu': 0,
+                                 'cuda': 0,
+                                 'service': 0,
+                            }
+            details[host_name][resource] += 1
+        return details
+
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):
     def __init__(self, client, is_local=False, lt_resources=None):

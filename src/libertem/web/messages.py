@@ -34,6 +34,13 @@ class Message(object):
             "config": config,
         }
 
+    def cluster_details(self, details):
+        return {
+            "status": "ok",
+            "messageType": "CLUSTER_DETAILS",
+            "details": details,
+        }
+
     def create_dataset(self, dataset, details):
         return {
             "status": "ok",

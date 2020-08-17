@@ -30,7 +30,7 @@ from libertem.corrections import CorrectionSet
     )
 )
 def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords):
-    sig_shape = (1014, 1024)
+    sig_shape = (1024, 1024)
     tile_shape = base_shape
     excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
     corr = CorrectionSet(excluded_pixels=excluded_pixels)

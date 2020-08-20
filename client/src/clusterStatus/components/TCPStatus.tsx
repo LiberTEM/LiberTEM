@@ -1,12 +1,17 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { Button, List, Header, Modal, Segment} from "semantic-ui-react";
+import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
+import { HostDetails } from "../../messages";
 import { RootReducer } from "../../store";
-import { HostDetails } from "../../messages"
-import { getClusterDetail } from "../api"
+import { getClusterDetail } from "../api";
 
 const ClusterDetails = () => {
+    const [clustOverview, setOverview]= useState({
+            host: 0,
+            cpu: 0,
+            cuda: 0,
+    })
     const initialHost: HostDetails[] = [
         {
             host: "",
@@ -22,6 +27,18 @@ const ClusterDetails = () => {
         details: initialHost,
     });
 
+    const [idx, setIdx] = useState(false);
+    const [expandMsg, setMsg] = useState("More Info");
+
+    const handleClick = () => {
+        setIdx(!idx);
+        if (expandMsg === "More Info") {
+            setMsg("Less Info");
+        } else {
+            setMsg("More Info");
+        }
+    };
+
     useEffect(() => {
         const getData = async () => {
             await getClusterDetail().then(currentDetails => {
@@ -30,22 +47,54 @@ const ClusterDetails = () => {
                     messageType: currentDetails.messageType,
                     details: currentDetails.details,
                 });
+                const overview = {
+                    host: 0,
+                    cpu: 0,
+                    cuda: 0,
+                }
+                currentDetails.details.forEach((node)=>{
+                    overview.host+=1
+                    overview.cpu+=node.cpu
+                    overview.cuda+=node.cuda
+                })
+                setOverview(overview)
             });
         };
         getData();
     }, []);
 
-    return clusterDetails.details.map((details: HostDetails) => {
+    const clusterExpanded = clusterDetails.details.map((details: HostDetails) => {
         return (
             <Segment>
-            <List.Item>
-                <List.Content>host : {details.host}</List.Content>
-                <List.Content>CPU : {details.cpu}</List.Content>
-                <List.Content>CUDA : {details.cuda}</List.Content>
-            </List.Item>
+                <List.Item  key={details.host}>
+                    <List.Content>host : {details.host}</List.Content>
+                    <List.Content>CPU : {details.cpu}</List.Content>
+                    <List.Content>CUDA : {details.cuda}</List.Content>
+                </List.Item>
             </Segment>
         );
     });
+
+    return (
+        <>
+            <Segment>
+                <List.Item>
+                    <List.Content>host : {clustOverview.host}</List.Content>
+                    <List.Content>CPU : {clustOverview.cpu}</List.Content>
+                    <List.Content>CUDA : {clustOverview.cuda}</List.Content>
+                </List.Item>
+            </Segment>
+            <Accordion>
+                <Accordion.Title active={idx} onClick={handleClick}>
+                    <Icon name="dropdown" />
+                    {expandMsg}
+                </Accordion.Title>
+                <Accordion.Content active={idx}>
+                    <Segment.Group>{clusterExpanded}</Segment.Group>
+                </Accordion.Content>
+            </Accordion>
+        </>
+    );
 };
 
 const mapStateToProps = (state: RootReducer) => {

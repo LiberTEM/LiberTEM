@@ -81,14 +81,14 @@ export type ConnectResponse = {
     msg: string,
 }
 
-export type HostDetails = {
+export interface HostDetails {
     host: string,
     cpu: number,
     cuda: number,
     service: number,
 }
 
-export type GetClusterDetails = {
+export interface GetClusterDetails {
     status: "ok",
     messageType: string,
     details: HostDetails[],

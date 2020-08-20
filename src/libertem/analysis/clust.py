@@ -91,7 +91,7 @@ class ClusterTemplate(GeneratorHelper):
 
     def get_plot(self):
         plot = ["plt.figure()",
-                "plt.imshow(cluster_result['intensity'].visualized)"]
+                "plt.imshow(cluster_result['intensity'].raw_data)"]
         return ['\n'.join(plot)]
 
 

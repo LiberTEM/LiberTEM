@@ -1,14 +1,15 @@
 import { AllActions } from "../actions";
-import { ConnectRequestParams } from "../messages";
+import { ConnectRequestParams, HostDetails } from "../messages";
 import * as clusterActions from './actions';
 
 export type ClusterConnectionState = {
     status: "connected",
     params: ConnectRequestParams,
+    details: HostDetails[]
 } | {
     status: "disconnected",
 } | {
-    status: "unknown",
+    status: "unknown"
 } | {
     status: "connecting"
 }
@@ -28,6 +29,7 @@ export function clusterConnectionReducer(state = initialClusterConnectionState, 
             return {
                 status: "connected",
                 params: action.payload.params,
+                details: action.payload.details,
             }
         }
         case clusterActions.ActionTypes.CONNECTING: {

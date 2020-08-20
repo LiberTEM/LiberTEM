@@ -88,7 +88,7 @@ export interface HostDetails {
     service: number,
 }
 
-export interface GetClusterDetails {
+export interface ClusterDetailsResponse {
     status: "ok",
     messageType: string,
     details: HostDetails[],

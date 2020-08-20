@@ -1,30 +1,13 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { connect } from "react-redux";
 import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
-import { HostDetails } from "../../messages";
-import { RootReducer } from "../../store";
-import { getClusterDetail } from "../api";
+import { HostDetails } from "../messages";
 
-const ClusterDetails = () => {
-    const [clustOverview, setOverview]= useState({
-            host: 0,
-            cpu: 0,
-            cuda: 0,
-    })
-    const initialHost: HostDetails[] = [
-        {
-            host: "",
-            cpu: 0,
-            cuda: 0,
-            service: 0,
-        },
-    ];
-
-    const [clusterDetails, setClusterDetails] = useState({
-        status: "",
-        messageType: "",
-        details: initialHost,
+const ClusterDetails = (details: HostDetails[]) => {
+    const [clustOverview, setOverview] = useState({
+        host: 0,
+        cpu: 0,
+        cuda: 0,
     });
 
     const [idx, setIdx] = useState(false);
@@ -40,36 +23,26 @@ const ClusterDetails = () => {
     };
 
     useEffect(() => {
-        const getData = async () => {
-            await getClusterDetail().then(currentDetails => {
-                setClusterDetails({
-                    status: currentDetails.status,
-                    messageType: currentDetails.messageType,
-                    details: currentDetails.details,
-                });
-                const overview = {
-                    host: 0,
-                    cpu: 0,
-                    cuda: 0,
-                }
-                currentDetails.details.forEach((node)=>{
-                    overview.host+=1
-                    overview.cpu+=node.cpu
-                    overview.cuda+=node.cuda
-                })
-                setOverview(overview)
-            });
+        const overview = {
+            host: 0,
+            cpu: 0,
+            cuda: 0,
         };
-        getData();
-    }, []);
+        details.forEach(node => {
+            overview.host += 1;
+            overview.cpu += node.cpu;
+            overview.cuda += node.cuda;
+        });
+        setOverview(overview);
+    }, [details]);
 
-    const clusterExpanded = clusterDetails.details.map((details: HostDetails) => {
+    const clusterExpanded = details.map((node: HostDetails) => {
         return (
-            <Segment>
-                <List.Item  key={details.host}>
-                    <List.Content>host : {details.host}</List.Content>
-                    <List.Content>CPU : {details.cpu}</List.Content>
-                    <List.Content>CUDA : {details.cuda}</List.Content>
+            <Segment key={node.host}>
+                <List.Item >
+                    <List.Content>host : {node.host}</List.Content>
+                    <List.Content>CPU : {node.cpu}</List.Content>
+                    <List.Content>CUDA : {node.cuda}</List.Content>
                 </List.Item>
             </Segment>
         );
@@ -97,15 +70,12 @@ const ClusterDetails = () => {
     );
 };
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        address: state.config.lastConnection.address,
-    };
-};
+interface TCPStatusProps {
+    address: string;
+    details: HostDetails[];
+}
 
-type MergedProps = ReturnType<typeof mapStateToProps>;
-
-const TCPStatus: React.SFC<MergedProps> = ({ address }) => {
+const TCPStatus: React.SFC<TCPStatusProps> = ({ address, details }) => {
     const template = [
         `import libertem.api as lt`,
         `import distributed as dd`,
@@ -124,12 +94,10 @@ const TCPStatus: React.SFC<MergedProps> = ({ address }) => {
     return (
         <Modal.Content>
             <List>
-                <Header as='h4'attached='top'>
-                Connected to {address}
+                <Header as="h4" attached="top">
+                    Connected to {address}
                 </Header>
-                <Segment.Group >
-                {ClusterDetails()}
-                </Segment.Group>
+                <Segment.Group>{ClusterDetails(details)}</Segment.Group>
                 <List.Item>
                     <List.Content>
                         <Segment.Group>
@@ -148,4 +116,4 @@ const TCPStatus: React.SFC<MergedProps> = ({ address }) => {
     );
 };
 
-export default connect(mapStateToProps)(TCPStatus);
+export default TCPStatus;

@@ -45,7 +45,7 @@ export function getDefaultLocalConfig(): LocalConfig {
         lastConnection: {
             type: ClusterTypes.LOCAL,
             address: "tcp://localhost:8786",
-            numWorker: 1,
+            cudas: [],
         },
         starred: [],
     };

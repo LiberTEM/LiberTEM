@@ -1,5 +1,5 @@
 import { ActionsUnion, createAction } from '../helpers/actionHelpers';
-import { ConnectRequestParams } from '../messages';
+import { ConnectRequestParams, HostDetails } from '../messages';
 
 export enum ActionTypes {
     NOT_CONNECTED = 'CLUSTER_NOT_CONNECTED',
@@ -14,7 +14,7 @@ export const Actions = {
     notConnected: () => createAction(ActionTypes.NOT_CONNECTED),
     connect: (params: ConnectRequestParams) => createAction(ActionTypes.CONNECT, { params },),
     connecting: () => createAction(ActionTypes.CONNECTING),
-    connected: (params: ConnectRequestParams) => createAction(ActionTypes.CONNECTED, { params }),
+    connected: (params: ConnectRequestParams, details: HostDetails[] ) => createAction(ActionTypes.CONNECTED, { params, details }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
 
 }

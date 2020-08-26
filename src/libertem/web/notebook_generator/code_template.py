@@ -14,10 +14,11 @@ class CodeTemplate(TemplateBase):
     specific code are handled in `libertem.analysis.helper`.
     """
 
-    def __init__(self, connection, dataset, compound_analysis):
+    def __init__(self, connection, dataset, compound_analysis, type="notebook"):
         self.conn = connection['connection']
         self.ds = dataset
         self.compound_analysis = compound_analysis
+        self.type = type
 
         self.analysis_helper = {}
         for analysis in self.compound_analysis:
@@ -53,10 +54,17 @@ class CodeTemplate(TemplateBase):
             if analysis_dep is not None:
                 extra_dep.extend(analysis_dep)
         dep = self.temp_dep + extra_dep
+        if self.type == 'script':
+            dep.append("import logging")
+        if (self.conn['type'] == "TCP"):
+            dep.append("from libertem.executor.dask import DaskJobExecutor")
         return self.code_formatter('\n'.join(dep))
 
     def initial_setup(self):
-        return "%matplotlib nbagg"
+        if self.type == 'notebook':
+            return "%matplotlib nbagg"
+        else:
+            return "logging.basicConfig(level=logging.WARNING)"
 
     def connection(self):
         docs = ["# Connection"]

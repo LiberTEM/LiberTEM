@@ -76,7 +76,7 @@ def make_app(event_registry, shared_state):
             "state": shared_state,
             "event_registry": event_registry
         }),
-        (r"/api/compoundAnalyses/([^/]+)/download/notebook/", DownloadScriptHandler, {
+        (r"/api/compoundAnalyses/([^/]+)/download/([^/]+)/", DownloadScriptHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

@@ -2,6 +2,7 @@ import tornado
 import logging
 from .notebook_generator.notebook_generator import notebook_generator
 from .notebook_generator.copy import copy_notebook
+from .notebook_generator.script import script_generator
 
 from .state import SharedState
 
@@ -13,7 +14,7 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
         self.state = state
         self.event_registry = event_registry
 
-    async def get(self, compoundUuid: str):
+    async def get(self, compoundUuid: str, file_format_id: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]
         analysis_ids = compoundAnalysis['details']['analyses']
         ds_id = self.state.analysis_state[analysis_ids[0]]['dataset']
@@ -29,13 +30,22 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
         for id in analysis_ids:
             analysis_details.append(self.state.analysis_state[id]['details'])
         conn = self.state.executor_state.get_cluster_params()
-        buf = notebook_generator(conn, dataset, analysis_details)
-        self.set_header('Content-Type', 'application/vnd.jupyter.cells')
-        self.set_header(
-            'Content-Disposition',
-            f'attachment; filename="{main_type}_{ds_name}.ipynb"',
-        )
-        self.write(buf.getvalue())
+        if (file_format_id == "ipynb"):
+            buf = notebook_generator(conn, dataset, analysis_details)
+            self.set_header('Content-Type', 'application/vnd.jupyter.cells')
+            self.set_header(
+                'Content-Disposition',
+                f'attachment; filename="{main_type}_{ds_name}.ipynb"',
+            )
+            self.write(buf.getvalue())
+        elif (file_format_id == "py"):
+            buf = script_generator(conn, dataset, analysis_details)
+            self.set_header('Content-Type', 'text/x-python')
+            self.set_header(
+                'Content-Disposition',
+                f'attachment; filename="{main_type}_{ds_name}.py"',
+            )
+            self.write(buf)
 
 
 class CopyScriptHandler(tornado.web.RequestHandler):

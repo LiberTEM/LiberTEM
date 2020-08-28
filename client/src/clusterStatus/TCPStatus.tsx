@@ -40,9 +40,9 @@ const ClusterDetails = (details: HostDetails[]) => {
         return (
             <Segment key={node.host}>
                 <List.Item >
-                    <List.Content>host : {node.host}</List.Content>
-                    <List.Content>CPU : {node.cpu}</List.Content>
-                    <List.Content>CUDA : {node.cuda}</List.Content>
+                    <List.Content>Number of hosts : {node.host}</List.Content>
+                    <List.Content>Number of CPU workers : {node.cpu}</List.Content>
+                    <List.Content>Number of CUDA workers : {node.cuda}</List.Content>
                 </List.Item>
             </Segment>
         );
@@ -52,9 +52,9 @@ const ClusterDetails = (details: HostDetails[]) => {
         <>
             <Segment>
                 <List.Item>
-                    <List.Content>host : {clustOverview.host}</List.Content>
-                    <List.Content>CPU : {clustOverview.cpu}</List.Content>
-                    <List.Content>CUDA : {clustOverview.cuda}</List.Content>
+                    <List.Content>Number of hosts : {clustOverview.host}</List.Content>
+                    <List.Content>Number of CPU workers : {clustOverview.cpu}</List.Content>
+                    <List.Content>Number of CUDA workers : {clustOverview.cuda}</List.Content>
                 </List.Item>
             </Segment>
             <Accordion>
@@ -104,9 +104,11 @@ const TCPStatus: React.SFC<TCPStatusProps> = ({ address, details }) => {
                             <Segment as="h5">Connection code</Segment>
                             <Segment>
                                 <Button floated={"right"} icon={"copy"} onClick={copyToClipboard} />
-                                {code.split("\n").map((item, i) => {
-                                    return <p key={i}>{item}</p>;
-                                })}
+                                <pre>
+                                    <code>
+                                        {code}
+                                    </code>
+                                </pre>
                             </Segment>
                         </Segment.Group>
                     </List.Content>

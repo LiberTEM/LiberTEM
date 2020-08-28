@@ -14,7 +14,7 @@ const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas, details }) 
 
     useEffect(() => {
         if (cudas.length === 0) {
-            setcudaText("Not selected");
+            setcudaText("None selected");
         } else {
             const ids = cudas
                 .map(id => {
@@ -32,13 +32,15 @@ const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas, details }) 
                     <List.Content as="h4">Connected to local cluster</List.Content>
                 </List.Item>
                 <List.Item>
-                    <List.Content>Local core : {localCore}</List.Content>
+                    <List.Content>Number of local core : {localCore}</List.Content>
                 </List.Item>
                 <List.Item>
-                    <List.Content>CPU : {details[0].cpu} </List.Content>
+                    <List.Content>Number of CPU workers : {details[0].cpu} </List.Content>
                 </List.Item>
                 <List.Item>
-                    <List.Content>CUDA : {details[0].cuda}</List.Content>
+                    <List.Content>Number of CUDA workers : {details[0].cuda}</List.Content>
+                </List.Item>
+                <List.Item>
                     <List.Content>Selected CUDA devices : {cudaText}</List.Content>
                 </List.Item>
             </List>

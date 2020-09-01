@@ -387,6 +387,11 @@ def rectangular(X, Y, Width, Height, imageSizeX, imageSizeY):
         xmin = X
         ymax = Y
         xmax = X+Width
+    else:
+        ymin = 0
+        xmin = 0
+        ymax = -1
+        xmax = -1
     ymin = int(ymin)
     xmin = int(xmin)
     ymax = int(ymax)

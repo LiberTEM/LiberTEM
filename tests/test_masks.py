@@ -100,3 +100,9 @@ def test_rectmask():
     assert np.allclose(m.rectangular(2, 2, -3, 3, 5, 5), rect3)
     assert np.allclose(m.rectangular(2, 2, 3, -3, 5, 5), rect2)
     assert np.allclose(m.rectangular(2, 2, -3, -3, 5, 5), rect1)
+
+
+def test_empty_rectmask():
+    assert not np.all(m.rectangular(2, 2, 0, 3, 5, 5))
+    assert not np.all(m.rectangular(2, 2, 3, 0, 5, 5))
+    assert not np.all(m.rectangular(2, 2, 0, 0, 5, 5))

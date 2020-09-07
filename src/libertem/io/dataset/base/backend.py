@@ -242,6 +242,8 @@ class LocalFSMMapBackend(IOBackend):
             return
         if roi is None:
             for f in fileset:
+                if f.fileno() is None:
+                    continue
                 os.posix_fadvise(
                     f.fileno(),
                     0,
@@ -250,6 +252,8 @@ class LocalFSMMapBackend(IOBackend):
                 )
         else:
             for f in fileset:
+                if f.fileno() is None:
+                    continue
                 os.posix_fadvise(
                     f.fileno(),
                     0,

@@ -1,17 +1,11 @@
 import os
 import logging
-import contextlib
 
-import numpy as np
 from ncempy.io.mrc import fileMRC
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from .base import (
-    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
-    _roi_to_indices, DataTile,
-    LocalFile,
-)
+from .base import DataSet, FileSet, BasePartition, DataSetMeta, LocalFile
 
 log = logging.getLogger(__name__)
 

@@ -240,10 +240,11 @@ class LocalFSMMapBackend(IOBackend):
     def _set_readahead_hints(self, roi, fileset):
         if not hasattr(os, 'posix_fadvise'):
             return
+        if any([f.fileno() is None
+                for f in fileset]):
+            return
         if roi is None:
             for f in fileset:
-                if f.fileno() is None:
-                    continue
                 os.posix_fadvise(
                     f.fileno(),
                     0,
@@ -252,8 +253,6 @@ class LocalFSMMapBackend(IOBackend):
                 )
         else:
             for f in fileset:
-                if f.fileno() is None:
-                    continue
                 os.posix_fadvise(
                     f.fileno(),
                     0,

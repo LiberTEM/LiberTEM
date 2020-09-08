@@ -40,8 +40,11 @@ def get_params_from_xml(path):
         if elem.getAttribute("mode") == "acquire"
     ]
 
-    scan_y = int(xml_get_text(scan_parameters[0].getElementsByTagName("scan_resolution_y")[0].childNodes))
-    scan_x = int(xml_get_text(scan_parameters[0].getElementsByTagName("scan_resolution_x")[0].childNodes))
+    node_scan_y = scan_parameters[0].getElementsByTagName("scan_resolution_y")[0]
+    node_scan_x = scan_parameters[0].getElementsByTagName("scan_resolution_x")[0]
+
+    scan_y = int(xml_get_text(node_scan_y.childNodes))
+    scan_x = int(xml_get_text(node_scan_x.childNodes))
     scan_size = (scan_y, scan_x)
     return path_raw, scan_size
     # TODO: read more metadata

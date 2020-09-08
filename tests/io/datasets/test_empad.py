@@ -19,6 +19,7 @@ from utils import dataset_correction_verification
 EMPAD_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
 EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
+EMPAD_XML_2 = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 HAVE_EMPAD_TESTDATA = os.path.exists(EMPAD_RAW) and os.path.exists(EMPAD_XML)
 
 pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD testdata")  # NOQA
@@ -32,6 +33,14 @@ def default_empad():
     )
     ds = ds.initialize(executor)
     yield ds
+
+
+def test_new_empad_xml():
+    executor = InlineJobExecutor()
+    ds = EMPADDataSet(
+        path=EMPAD_XML_2,
+    )
+    ds = ds.initialize(executor)
 
 
 @pytest.fixture(scope='session')

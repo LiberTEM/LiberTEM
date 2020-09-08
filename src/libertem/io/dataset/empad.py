@@ -125,8 +125,10 @@ class EMPADDataSet(DataSet):
                 self._init_from_xml, self._path
             )
         else:
-            assert lowpath.endswith(".raw")
-            assert self._scan_size is not None
+            if not lowpath.endswith(".raw"):
+                raise DataSetException("path should either be .xml or .raw")
+            if self._scan_size is None:
+                raise DataSetException("need to set or detect scan_size!")
             self._path_raw = self._path
 
         try:

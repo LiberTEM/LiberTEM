@@ -21,6 +21,32 @@ def xml_get_text(nodelist):
     return ''.join(rc)
 
 
+def get_params_from_xml(path):
+    dom = minidom.parse(path)
+    root = dom.getElementsByTagName("root")[0]
+    raw_filename = root.getElementsByTagName("raw_file")[0].getAttribute('filename')
+    # because these XML files contain the full path, they are not relocatable.
+    # we strip off the path and only use the basename, hoping the .raw file will
+    # be in the same directory as the XML file:
+    filename = os.path.basename(raw_filename)
+    path_raw = os.path.join(
+        os.path.dirname(path),
+        filename
+    )
+
+    scan_parameters = [
+        elem
+        for elem in root.getElementsByTagName("scan_parameters")
+        if elem.getAttribute("mode") == "acquire"
+    ]
+
+    scan_y = int(xml_get_text(scan_parameters[0].getElementsByTagName("scan_resolution_y")[0].childNodes))
+    scan_x = int(xml_get_text(scan_parameters[0].getElementsByTagName("scan_resolution_x")[0].childNodes))
+    scan_size = (scan_y, scan_x)
+    return path_raw, scan_size
+    # TODO: read more metadata
+
+
 class EMPADDatasetParams(MessageConverter):
     SCHEMA = {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -82,22 +108,7 @@ class EMPADDataSet(DataSet):
 
     def _init_from_xml(self, path):
         try:
-            dom = minidom.parse(path)
-            root = dom.getElementsByTagName("root")[0]
-            raw_filename = root.getElementsByTagName("raw_file")[0].getAttribute('filename')
-            # because these XML files contain the full path, they are not relocatable.
-            # we strip off the path and only use the basename, hoping the .raw file will
-            # be in the same directory as the XML file:
-            filename = os.path.basename(raw_filename)
-            path_raw = os.path.join(
-                os.path.dirname(path),
-                filename
-            )
-            scan_y = int(xml_get_text(root.getElementsByTagName("pix_y")[0].childNodes))
-            scan_x = int(xml_get_text(root.getElementsByTagName("pix_x")[0].childNodes))
-            scan_size = (scan_y, scan_x)
-            return path_raw, scan_size
-            # TODO: read more metadata
+            return get_params_from_xml(path)
         except Exception as e:
             raise DataSetException(
                 "could not initialize EMPAD file; error: %s" % (

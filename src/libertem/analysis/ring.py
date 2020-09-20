@@ -1,10 +1,40 @@
 import numpy as np
+import inspect
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
 
 
-class RingMaskAnalysis(SingleMaskAnalysis):
+class RingTemplate(GeneratorHelper):
+
+    short_name = "ring"
+    api = "create_ring_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_docs(self):
+        title = "Ring Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_ring_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        for k in ['cx', 'cy', 'ri', 'ro']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(ring_result['intensity'])",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
+
+
+class RingMaskAnalysis(SingleMaskAnalysis, id_="APPLY_RING_MASK"):
     TYPE = 'UDF'
 
     def get_description(self):
@@ -49,3 +79,7 @@ class RingMaskAnalysis(SingleMaskAnalysis):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return RingTemplate

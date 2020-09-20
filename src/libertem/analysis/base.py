@@ -172,6 +172,22 @@ class Analysis:
     # https://www.python.org/dev/peps/pep-0586/
     TYPE: typing.Union[str, None] = None
 
+    registry = {}
+
+    def __init_subclass__(cls, id_=None, **kwargs):
+
+        # override id_ with your own id
+        # Used to register the subclass
+        # https://www.python.org/dev/peps/pep-0487/#subclass-registration
+
+        super().__init_subclass__(**kwargs)
+        if id_ is not None:
+            cls.registry[id_] = cls
+
+    @classmethod
+    def get_analysis_by_type(cls, id_):
+        return cls.registry[id_]
+
     def get_results(self, job_results):
         """
         .. deprecated:: 0.4.0

@@ -1,10 +1,42 @@
 import numpy as np
 import sparse
+import inspect
 
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
 
 
-class PointMaskAnalysis(SingleMaskAnalysis):
+class PointTemplate(GeneratorHelper):
+
+    short_name = "point"
+    api = "create_point_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_docs(self):
+        title = "Point Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_point_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        x = self.params['cx']
+        y = self.params['cy']
+        params.append(f'x={x}')
+        params.append(f'y={y}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(point_result['intensity'])",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
+
+
+class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
     TYPE = 'UDF'
 
     def get_description(self):
@@ -44,3 +76,7 @@ class PointMaskAnalysis(SingleMaskAnalysis):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return PointTemplate

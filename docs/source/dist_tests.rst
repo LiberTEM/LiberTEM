@@ -38,7 +38,7 @@ After changing LiberTEM code, you need to rebuild and restart the containers. Ju
 :code:`docker-compose up` run using CTRL-C and start from the top.
 
 The rebuild should be faster than the initial build, which is accomplished by careful
-use of the layer caching feature of docker. This also menas that you may need to update
+use of the layer caching feature of docker. This also means that you may need to update
 the :code:`packaging/docker/requirements.txt` file by running the provided
 script :code:`update_reqs.sh` when the dependencies of LiberTEM change, or when new
 versions of dependencies are released. In CI, this is done automatically.

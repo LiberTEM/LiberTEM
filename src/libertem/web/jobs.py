@@ -3,12 +3,7 @@ import logging
 
 import tornado.web
 
-from libertem.analysis import (
-    DiskMaskAnalysis, RingMaskAnalysis, PointMaskAnalysis,
-    FEMAnalysis, COMAnalysis, SumAnalysis, PickFrameAnalysis,
-    PickFFTFrameAnalysis, SumfftAnalysis,
-    RadialFourierAnalysis, ApplyFFTMask, SDAnalysis, SumSigAnalysis, ClusterAnalysis
-)
+from libertem.analysis.base import Analysis
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
@@ -24,25 +19,6 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         self.state = state
         self.event_registry = event_registry
 
-    def get_analysis_by_type(self, type_):
-        analysis_by_type = {
-            "APPLY_DISK_MASK": DiskMaskAnalysis,
-            "APPLY_RING_MASK": RingMaskAnalysis,
-            "FFTSUM_FRAMES": SumfftAnalysis,
-            "APPLY_POINT_SELECTOR": PointMaskAnalysis,
-            "CENTER_OF_MASS": COMAnalysis,
-            "RADIAL_FOURIER": RadialFourierAnalysis,
-            "SUM_FRAMES": SumAnalysis,
-            "PICK_FRAME": PickFrameAnalysis,
-            "FEM": FEMAnalysis,
-            "PICK_FFT_FRAME": PickFFTFrameAnalysis,
-            "APPLY_FFT_MASK": ApplyFFTMask,
-            "SD_FRAMES": SDAnalysis,
-            "SUM_SIG": SumSigAnalysis,
-            "CLUST": ClusterAnalysis
-        }
-        return analysis_by_type[type_]
-
     async def put(self, job_id):
         request_data = tornado.escape.json_decode(self.request.body)
         analysis_id = request_data['job']['analysis']
@@ -53,7 +29,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         analysis_type = analysis_details["analysisType"]
         params = analysis_details["parameters"]
 
-        analysis = self.get_analysis_by_type(analysis_type)(
+        analysis = Analysis.get_analysis_by_type(analysis_type)(
             dataset=ds,
             parameters=params,
         )

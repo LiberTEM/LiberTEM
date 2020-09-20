@@ -1,5 +1,5 @@
-import { genericDelete, genericPut } from "../helpers/apiHelpers";
-import { AnalysisDetails, CompoundAnalysisDetails, CreateAnalysisResponse, CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest, CreateOrUpdateCompoundAnalysisRequest, RemoveAnalysisResponse, RemoveCompoundAnalysisResponse } from "../messages";
+import { genericDelete, genericPut, getApiBasePath } from "../helpers/apiHelpers";
+import { AnalysisDetails, CompoundAnalysisDetails, CopyNotebookResponse, CreateAnalysisResponse, CreateCompoundAnalysisResponse, CreateOrUpdateAnalysisRequest, CreateOrUpdateCompoundAnalysisRequest, RemoveAnalysisResponse, RemoveCompoundAnalysisResponse } from "../messages";
 
 export async function createOrUpdateAnalysis(
     compoundAnalysisId: string, analysisId: string,
@@ -26,4 +26,14 @@ export async function createOrUpdateCompoundAnalysis(compoundAnalysisId: string,
 
 export async function removeCompoundAnalysis(compoundAnalysisId: string): Promise<RemoveCompoundAnalysisResponse> {
     return await genericDelete(`compoundAnalyses/${compoundAnalysisId}/`)
+}
+
+export async function getNotebook(compoundAnalysisId: string): Promise<CopyNotebookResponse>{
+    const basePath = getApiBasePath();
+    const url = `${basePath}compoundAnalyses/${compoundAnalysisId}/copy/notebook/`;
+    const r = await fetch(url, {
+        method: 'GET',
+        credentials: "same-origin",
+    });
+    return await r.json();
 }

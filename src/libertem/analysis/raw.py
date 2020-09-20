@@ -1,9 +1,42 @@
 import numpy as np
+import inspect
 from libertem.viz import visualize_simple
 from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
 from libertem.udf.raw import PickUDF
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .helper import GeneratorHelper
+
+
+class PickTemplate(GeneratorHelper):
+
+    short_name = "pick"
+    api = "create_pick_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return ["from matplotlib import colors"]
+
+    def get_docs(self):
+        title = "Pick Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_pick_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        for k in ['x', 'y']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(pick_result['intensity'], norm=colors.LogNorm())",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
 
 
 class PickResultSet(AnalysisResultSet):
@@ -41,7 +74,7 @@ class PickResultSet(AnalysisResultSet):
     pass
 
 
-class PickFrameAnalysis(BaseAnalysis):
+class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
     TYPE = 'UDF'
     """
     Pick a single, complete frame from a dataset
@@ -133,3 +166,7 @@ class PickFrameAnalysis(BaseAnalysis):
                            key="intensity", title="intensity",
                            desc="the frame at %s" % (coords,)),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return PickTemplate

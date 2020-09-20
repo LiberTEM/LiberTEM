@@ -3,6 +3,9 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.feature_extraction.image import grid_to_graph
 import numpy as np
 import sparse
+import inspect
+import re
+from textwrap import dedent
 
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
@@ -11,11 +14,88 @@ from libertem.executor.base import JobCancelledError
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF, consolidate_result
-from libertem import masks
+from .getroi import get_roi
 from libertem.masks import _make_circular_mask
+from .helper import GeneratorHelper
 
 
-class ClusterAnalysis(BaseAnalysis):
+class ClusterTemplate(GeneratorHelper):
+
+    short_name = "cluster"
+
+    def __init__(self, params):
+        self.params = params
+
+    def format_code(self, code):
+        code = re.sub(r"self(\.|, |)|(, |)executor|, cancel_id|, job_is_cancelled", "", code)
+        # remove indentation
+        code = dedent(code)
+        return code
+
+    def get_dependency(self):
+        dep = [
+           "from libertem.analysis import ClusterAnalysis",
+           "from libertem.udf.stddev import StdDevUDF, consolidate_result",
+           "from libertem.masks import _make_circular_mask",
+           "from skimage.feature import peak_local_max",
+           "import sparse",
+           "from sklearn.feature_extraction.image import grid_to_graph",
+           "from libertem.udf.masks import ApplyMasksUDF",
+           "from libertem.analysis.getroi import get_roi",
+           "from sklearn.cluster import AgglomerativeClustering",
+           "from libertem.analysis.base import AnalysisResult, AnalysisResultSet",
+           "from libertem.viz import visualize_simple",
+        ]
+        return dep
+
+    def temp_cluster_controller(self):
+        temp_controller = [
+                        "dataset = ds",
+                        "roi, sd_udf_results = get_sd_results()",
+                        "cluster_udf = get_cluster_udf(sd_udf_results)",
+                        "udf_results = ctx.run_udf(dataset=ds, udf=cluster_udf, progress=True)",
+                        "cluster_result = get_udf_results(udf_results, roi)",
+        ]
+        return '\n'.join(temp_controller)
+
+    def get_docs(self):
+        docs = ["# Cluster Analysis"]
+        return '\n'.join(docs)
+
+    def get_run_sd_udf(self):
+        indent = " "*4
+        temp_run_sd = [
+            "def run_sd_udf(roi, stddev_udf):",
+            f"{indent}sd_udf_results = ctx.run_udf(dataset=ds, udf=stddev_udf, roi=roi,"
+            " progress=True)",
+            f"{indent}return roi, consolidate_result(sd_udf_results)"
+        ]
+        return "\n".join(temp_run_sd)
+
+    def get_analysis(self):
+        udf_results = self.format_code(inspect.getsource(ClusterAnalysis.get_udf_results))
+        cluster_udf = self.format_code(inspect.getsource(ClusterAnalysis.get_cluster_udf))
+        sd_results = self.format_code(inspect.getsource(ClusterAnalysis.get_sd_results))
+        run_sd_udf = self.get_run_sd_udf()
+        cluster_controller = self.temp_cluster_controller()
+
+        temp_analysis = [
+                    f"parameters={self.params}\ndataset=ds",
+                    f"{run_sd_udf}",
+                    f"{sd_results}",
+                    f"{cluster_udf}",
+                    f"{udf_results}",
+                    f"{cluster_controller}"
+                    ]
+        return '\n\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(cluster_result['intensity'].raw_data)"]
+        return ['\n'.join(plot)]
+
+
+class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
     TYPE = "UDF"
 
     def get_udf(self):
@@ -41,45 +121,29 @@ class ClusterAnalysis(BaseAnalysis):
         ).fit(feature_vector)
         labels = np.array(clustering.labels_+1)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results['intensity'].data,
+            AnalysisResult(raw_data=labels.reshape(self.dataset.shape.nav),
                            visualized=visualize_simple(
                                labels.reshape(self.dataset.shape.nav)),
                            key="intensity", title="intensity",
                            desc="result from integration over mask in Fourier space"),
         ])
 
-    def get_sd_roi(self):
-        if "roi" not in self.parameters:
-            return None
-        params = self.parameters["roi"]
-        ny, nx = tuple(self.dataset.shape.nav)
-        if params["shape"] == "rect":
-            roi = masks.rectangular(
-                params["x"],
-                params["y"],
-                params["width"],
-                params["height"],
-                nx, ny,
-            )
-        else:
-            raise NotImplementedError("unknown shape %s" % params["shape"])
-        return roi
-
-    async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
-        stddev_udf = StdDevUDF()
-
-        roi = self.get_sd_roi()
-
+    async def run_sd_udf(self, roi, stddev_udf, executor, cancel_id, job_is_cancelled):
         result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
             self.dataset, executor, roi=roi, cancel_id=cancel_id
         )
         async for (sd_udf_results,) in result_iter:
             pass
-
         if job_is_cancelled():
             raise JobCancelledError()
+        return roi, consolidate_result(sd_udf_results)
 
-        sd_udf_results = consolidate_result(sd_udf_results)
+    def get_sd_results(self, executor, cancel_id, job_is_cancelled):
+        stddev_udf = StdDevUDF()
+        roi = get_roi(params=self.parameters, shape=self.dataset.shape.nav)
+        return self.run_sd_udf(roi, stddev_udf, executor, cancel_id, job_is_cancelled)
+
+    def get_cluster_udf(self, sd_udf_results):
 
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
@@ -111,6 +175,12 @@ class ClusterAnalysis(BaseAnalysis):
             mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.uint8,
             use_sparse=True
         )
+        return udf
+
+    async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
+
+        roi, sd_udf_results = await self.get_sd_results(executor, cancel_id, job_is_cancelled)
+        udf = self.get_cluster_udf(sd_udf_results)
 
         result_iter = UDFRunner([udf]).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id
@@ -127,3 +197,7 @@ class ClusterAnalysis(BaseAnalysis):
             roi=roi,
         )
         await send_results(results, True)
+
+    @classmethod
+    def get_template_helper(cls):
+        return ClusterTemplate

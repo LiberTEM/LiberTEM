@@ -168,11 +168,13 @@ class DatasetState:
         self.analysis_state = analysis_state
         self.compound_analysis_state = compound_analysis_state
 
-    def register(self, uuid, dataset, params):
+    def register(self, uuid, dataset, params, converted):
         assert uuid not in self.datasets
         self.datasets[uuid] = {
             "dataset": dataset,
             "params": params,
+            "converted": converted,
+
         }
         self.dataset_to_id[dataset] = uuid
         return self

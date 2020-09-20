@@ -1,5 +1,5 @@
 import logging
-
+import inspect
 import numpy as np
 
 from libertem import masks
@@ -7,9 +7,72 @@ from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from libertem.corrections.coordinates import rotate_deg, flip_y, identity
-
+from .helper import GeneratorHelper
 
 log = logging.getLogger(__name__)
+
+
+class ComTemplate(GeneratorHelper):
+
+    short_name = "com"
+    api = "create_com_analysis"
+    temp = GeneratorHelper.temp_analysis
+    temp_analysis = temp + ["print(com_result)"]
+    channels = [
+        "field",
+        "magnitude",
+        "divergence",
+        "curl",
+        "x",
+        "y"
+    ]
+
+    def __init__(self, params):
+        self.params = params
+
+    # FIXME : remove the note
+    def get_dependency(self):
+        return [
+            "# note: visulization requires Python 3.7 and empyre",
+            "# install empyre: pip install empyre",
+            "from empyre.vis.colors import ColormapCubehelix"
+        ]
+
+    def get_docs(self):
+        title = "COM Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_com_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        for k in ['cx', 'cy']:
+            params.append(f'{k}={self.params[k]}')
+        params.append(f"mask_radius={self.params['r']}")
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = [
+            "fig, axes = plt.subplots()",
+            'axes.set_title("field")',
+            "y_centers, x_centers = com_result.field.raw_data",
+            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
+            "axes.imshow(ch.rgb_from_vector(np.broadcast_arrays(y_centers, x_centers, 0)))"
+        ]
+        for channel in self.channels[1:3]:
+            plot.append("fig, axes = plt.subplots()")
+            plot.append(f'axes.set_title("{channel}")')
+            plot.append(f'axes.imshow(com_result.{channel}.raw_data)')
+
+        return ['\n'.join(plot)]
+
+    def get_save(self):
+        save = []
+        for channel in self.channels:
+            save.append(f"np.save('com_result_{channel}.npy', com_result['{channel}'].raw_data)")
+
+        return '\n'.join(save)
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):
@@ -104,7 +167,7 @@ class COMResultSet(AnalysisResultSet):
     pass
 
 
-class COMAnalysis(BaseMasksAnalysis):
+class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     TYPE = 'UDF'
 
     # FIXME remove this after UDF version is final
@@ -209,3 +272,7 @@ class COMAnalysis(BaseMasksAnalysis):
             'mask_count': 3,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return ComTemplate

@@ -23,6 +23,7 @@ from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
 from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
+from .generator import DownloadScriptHandler, CopyScriptHandler
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +69,14 @@ def make_app(event_registry, shared_state):
         }),
         (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/download/([^/]+)/",
         DownloadDetailHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/compoundAnalyses/([^/]+)/copy/notebook/", CopyScriptHandler, {
+            "state": shared_state,
+            "event_registry": event_registry
+        }),
+        (r"/api/compoundAnalyses/([^/]+)/download/notebook/", DownloadScriptHandler, {
             "state": shared_state,
             "event_registry": event_registry
         }),

@@ -1,9 +1,37 @@
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.crystallinity as crystal
+from .helper import GeneratorHelper
 
 
-class ApplyFFTMask(BaseAnalysis):
+class FFTMaskTemplate(GeneratorHelper):
+
+    short_name = "fft"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return ["from libertem.analysis import ApplyFFTMask"]
+
+    # FIXME write and include documentation
+    def get_docs(self):
+        docs = ["# FFT Analysis"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [f"fft_analysis = ApplyFFTMask(dataset=ds, parameters={self.params})",
+                         "fft_result = ctx.run(fft_analysis, progress=True)"]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(fft_result.intensity)",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
+
+
+class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
     TYPE = "UDF"
 
     def get_udf(self):
@@ -22,3 +50,7 @@ class ApplyFFTMask(BaseAnalysis):
                            key="intensity", title="intensity",
                            desc="result from integration over mask in Fourier space"),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return FFTMaskTemplate

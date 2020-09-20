@@ -1,11 +1,53 @@
+import inspect
 from libertem.viz import visualize_simple
 
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-
+from .helper import GeneratorHelper
 import libertem.udf.FEM as FEM
 
 
-class FEMAnalysis(BaseAnalysis):
+class FEMTemplate(GeneratorHelper):
+
+    short_name = "fem"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return ["from libertem.udf.FEM import FEMUDF"]
+
+    def get_docs(self):
+        title = "FEM Analysis"
+        docs_rst = inspect.getdoc(FEM.FEMUDF)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        cx = self.params['cx']
+        cy = self.params['cy']
+        ri = self.params['ri']
+        ro = self.params['ro']
+        params = f"center=({cx},{cy}), rad_in={ri}, rad_out={ro}"
+        return params
+
+    def get_analysis(self):
+        params = self.convert_params()
+        temp_analysis = [
+                    f"fem_udf = FEMUDF({params})",
+                    "fem_result = ctx.run_udf(dataset=ds, udf=fem_udf)",
+        ]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = [
+            "plt.figure()",
+            "plt.imshow(fem_result['intensity'])",
+            "plt.colorbar()",
+        ]
+        return ['\n'.join(plot)]
+
+
+class FEMAnalysis(BaseAnalysis, id_="FEM"):
     TYPE = "UDF"
 
     def get_udf(self):
@@ -23,3 +65,7 @@ class FEMAnalysis(BaseAnalysis):
                            key="intensity", title="intensity",
                            desc="result from SD calculation over ring"),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return FEMTemplate

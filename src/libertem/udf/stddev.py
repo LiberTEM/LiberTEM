@@ -352,7 +352,6 @@ def run_stddev(ctx, dataset, roi=None, progress=False):
     progress : bool, optional
         Show progress bar. Default is :code:`False`.
 
-
     Returns
     -------
     pass_results
@@ -361,10 +360,10 @@ def run_stddev(ctx, dataset, roi=None, progress=False):
 
     To retrieve statistic, using the following commands:
     variance : :code:`pass_results['var']`
-    standard deviation : pass_results['std']
-    sum of pixels : pass_results['sum']
-    mean : pass_results['mean']
-    number of frames : pass_results['num_frames']
+    standard deviation : :code:`pass_results['std']`
+    sum of pixels : :code:`pass_results['sum']`
+    mean : :code:`pass_results['mean']`
+    number of frames : :code:`pass_results['num_frames']`
     """
     stddev_udf = StdDevUDF()
     pass_results = ctx.run_udf(

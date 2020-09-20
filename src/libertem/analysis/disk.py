@@ -1,10 +1,40 @@
 import numpy as np
+import inspect
 
 from libertem import masks
 from .masks import SingleMaskAnalysis
+from .helper import GeneratorHelper
 
 
-class DiskMaskAnalysis(SingleMaskAnalysis):
+class DiskTemplate(GeneratorHelper):
+
+    short_name = "disk"
+    api = "create_disk_analysis"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_docs(self):
+        title = "Disk Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_disk_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        for k in ['cx', 'cy', 'r']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(disk_result['intensity'])",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
+
+
+class DiskMaskAnalysis(SingleMaskAnalysis, id_="APPLY_DISK_MASK"):
     TYPE = 'UDF'
 
     def get_description(self):
@@ -48,3 +78,7 @@ class DiskMaskAnalysis(SingleMaskAnalysis):
             'mask_count': 1,
             'mask_dtype': np.float32,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return DiskTemplate

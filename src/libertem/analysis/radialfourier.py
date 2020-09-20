@@ -1,4 +1,5 @@
 import logging
+import inspect
 from functools import partial
 
 import numpy as np
@@ -9,9 +10,73 @@ from libertem import masks
 from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
-
+from .helper import GeneratorHelper
 
 log = logging.getLogger(__name__)
+
+
+class RadialTemplate(GeneratorHelper):
+
+    short_name = "radial"
+    api = "create_radial_fourier_analysis"
+    temp = GeneratorHelper.temp_analysis
+    temp_analysis = temp + ["print(radial_result)"]
+
+    def __init__(self, params):
+        self.params = params
+
+    # FIXME : remove the note
+    def get_dependency(self):
+        return [
+            "# note: visulization requires Python 3.7 and empyre",
+            "# install empyre: pip install empyre",
+            "import matplotlib.cm as cm",
+            "from empyre.vis.colors import ColormapCubehelix, ColormapPerception"
+        ]
+
+    def get_docs(self):
+        title = "Radial Fourier Analysis"
+        from libertem.api import Context
+        docs_rst = inspect.getdoc(Context.create_radial_fourier_analysis)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def convert_params(self):
+        params = ['dataset=ds']
+        for k in ['cx', 'cy', 'ri', 'ro', 'n_bins', 'max_order']:
+            params.append(f'{k}={self.params[k]}')
+        return ', '.join(params)
+
+    def get_plot(self):
+        cells = []
+        cells.append([
+            "fig, axes = plt.subplots()",
+            'axes.set_title("dominant_0")',
+            "plt.imshow(radial_result.dominant_0, cmap=cm.tab20, vmin=0, vmax=20)",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("absolute_0_0")',
+            "axes.imshow(radial_result.absolute_0_0)",
+        ])
+        cells.append([
+            "imag = radial_result.complex_0_1.raw_data.imag",
+            "real = radial_result.complex_0_1.raw_data.real",
+            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("complex_0_1")',
+            "plt.imshow(ch.rgb_from_vector(np.broadcast_arrays(imag, real, 0)))",
+            "fig, axes = plt.subplots()",
+            'axes.set_title("phase_0_1")',
+            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=ColormapPerception())'
+        ])
+        return ['\n'.join(cell) for cell in cells]
+
+    def get_save(self):
+        save = []
+        channels = ["dominant_0", "absolute_0_0", "absolute_0_1"]
+        for channel in channels:
+            result = f"radial_result['{channel}'].raw_data"
+            save.append(f"np.save('radial_result_{channel}.npy', {result})")
+        return '\n'.join(save)
 
 
 class RadialFourierResultSet(AnalysisResultSet):
@@ -42,7 +107,7 @@ class RadialFourierResultSet(AnalysisResultSet):
     pass
 
 
-class RadialFourierAnalysis(BaseMasksAnalysis):
+class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
     '''
     The Radial Fourier Analysis can be used to characterize
     atomic ordering in materials, in particular for low intensities where
@@ -259,3 +324,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis):
             'mask_count': mask_count,
             'mask_dtype': np.complex64,
         }
+
+    @classmethod
+    def get_template_helper(cls):
+        return RadialTemplate

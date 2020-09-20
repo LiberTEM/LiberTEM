@@ -1,9 +1,41 @@
 import numpy as np
 from libertem.masks import _make_circular_mask
 from .raw import PickFrameAnalysis
+from .helper import GeneratorHelper
 
 
-class PickFFTFrameAnalysis(PickFrameAnalysis):
+class PickfftTemplate(GeneratorHelper):
+
+    short_name = "pickfft"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return ["from libertem.analysis import PickFFTFrameAnalysis",
+                "from matplotlib import colors"]
+
+    # FIXME write and include documentation
+    def get_docs(self):
+        docs = ["# PICK FFT Analysis"]
+        return '\n'.join(docs)
+
+    def get_analysis(self):
+        temp_analysis = [
+                f"pickfft_analysis = PickFFTFrameAnalysis(dataset=ds, parameters={self.params})",
+                "pickfft_result = ctx.run(pickfft_analysis, progress=True)"
+                ]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = ["plt.figure()",
+                "plt.imshow(pickfft_result.intensity, norm=colors.LogNorm())",
+                "plt.colorbar()"]
+        return ['\n'.join(plot)]
+
+
+class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
+
     def get_results(self, job_results):
         # Make sure we don't use legacy code from superclasses
         raise NotImplementedError
@@ -27,3 +59,7 @@ class PickFFTFrameAnalysis(PickFrameAnalysis):
         else:
             fft_data = np.fft.fftshift(abs(np.fft.fft2(data)))
         return self.get_generic_results(fft_data)
+
+    @classmethod
+    def get_template_helper(cls):
+        return PickfftTemplate

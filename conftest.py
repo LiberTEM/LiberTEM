@@ -66,7 +66,7 @@ def hdf5_5d(tmpdir_factory):
 @pytest.fixture(scope='session')
 def random_hdf5(tmpdir_factory):
     yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-random.h5",
-                                  data=np.ones((5, 5, 16, 16)))
+                                  data=np.random.randn(5, 5, 16, 16))
 
 
 @pytest.fixture(scope='session')

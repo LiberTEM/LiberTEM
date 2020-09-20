@@ -347,7 +347,7 @@ def test_mask_correction_sparse():
         print("Exclude: ", exclude)
 
         masks = sparse.DOK(sparse.zeros((20, ) + sig_dims, dtype=np.float64))
-        indices = np.array([np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims], dtype=object)
+        indices = [np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims]
         for tup in zip(*indices):
             masks[tup] = 1
         masks = masks.to_coo()
@@ -445,7 +445,7 @@ def test_mask_patch_sparse():
         print("Exclude: ", exclude)
 
         masks = sparse.DOK(sparse.zeros((20, ) + sig_dims, dtype=np.float64))
-        indices = np.array([np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims])
+        indices = [np.random.randint(low=0, high=s, size=s//2) for s in (20, ) + sig_dims]
         for tup in zip(*indices):
             masks[tup] = 1
         masks = masks.to_coo()

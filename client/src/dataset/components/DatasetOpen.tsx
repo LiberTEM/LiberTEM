@@ -67,8 +67,8 @@ const getFormInitial = (didReset: boolean, openState: OpenDatasetState) => {
     if (didReset) {
         if (formDetectedParams) {
             return {
-                name: formCachedParams ? formCachedParams.name : "",
                 ...formDetectedParams,
+                name: formCachedParams ? formCachedParams.name : "",
             };
         }
         return undefined;

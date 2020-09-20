@@ -46,6 +46,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 uuid=uuid,
                 dataset=ds,
                 params=request_data['dataset'],
+                converted=dataset_params,
             )
             details = await self.dataset_state.serialize(dataset_id=uuid)
             msg = Message(self.state).create_dataset(dataset=uuid, details=details)

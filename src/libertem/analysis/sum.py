@@ -1,9 +1,48 @@
 import numpy as np
-
+import inspect
 from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.analysis.getroi import get_roi
 from libertem.udf.sum import SumUDF
+from .helper import GeneratorHelper
+
+
+class SumTemplate(GeneratorHelper):
+
+    short_name = "sum"
+
+    def __init__(self, params):
+        self.params = params
+
+    def get_dependency(self):
+        return [
+            "from matplotlib import colors",
+            "from libertem import masks",
+            "from libertem.udf.sum import SumUDF"
+        ]
+
+    def get_docs(self):
+        title = "SUM Analysis"
+        docs_rst = inspect.getdoc(SumUDF)
+        docs = self.format_docs(title, docs_rst)
+        return docs
+
+    def get_analysis(self):
+        roi = self.get_roi()
+        temp_analysis = [
+                f"{roi}",
+                "sum_udf = SumUDF()",
+                "sum_result = ctx.run_udf(dataset=ds, udf=sum_udf, roi=roi)"
+                ]
+        return '\n'.join(temp_analysis)
+
+    def get_plot(self):
+        plot = [
+            "plt.figure()",
+            "plt.imshow(sum_result['intensity'], norm=colors.LogNorm())",
+            "plt.colorbar()",
+         ]
+        return ['\n'.join(plot)]
 
 
 class SumResultSet(AnalysisResultSet):
@@ -43,7 +82,7 @@ class SumResultSet(AnalysisResultSet):
     pass
 
 
-class SumAnalysis(BaseAnalysis):
+class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
     TYPE = 'UDF'
 
     def get_udf(self):
@@ -73,3 +112,7 @@ class SumAnalysis(BaseAnalysis):
                            ),
                            key="intensity", title="intensity", desc="sum of frames"),
         ])
+
+    @classmethod
+    def get_template_helper(cls):
+        return SumTemplate

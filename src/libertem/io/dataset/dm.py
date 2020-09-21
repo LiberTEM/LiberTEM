@@ -221,10 +221,6 @@ class DMDataSet(DataSet):
         try:
             with fileDM(first_fn, on_memory=True):
                 pass
-            # FIXME: read_stacks
-            if (self._scan_size is not None
-                    and np.prod(self._scan_size) != len(self._get_files())):
-                raise DataSetException("incompatible scan_size")
             return True
         except (IOError, OSError) as e:
             raise DataSetException("invalid dataset: %s" % e)

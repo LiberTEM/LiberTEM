@@ -131,7 +131,7 @@ class MRCDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB per partition
-        res = max(self._cores, self._filesize // (64*1024*1024))
+        res = max(self._cores, self._filesize // (512*1024*1024))
         return res
 
     def _get_fileset(self):

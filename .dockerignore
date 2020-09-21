@@ -13,3 +13,4 @@ client
 .dockerignore
 Dockerfile
 docker-compose.yml
+tmp

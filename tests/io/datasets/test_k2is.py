@@ -14,10 +14,9 @@ from libertem.udf import UDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-K2IS_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
-                                  'data', 'Capture52', 'Capture52_.gtg')
+K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg')
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testdata")  # NOQA
@@ -322,7 +321,7 @@ def test_cache_key_json_serializable(default_k2is):
 
 @pytest.mark.dist
 def test_k2is_dist(dist_ctx):
-    ds = K2ISDataSet(path="/data/Capture52/Capture52_.gtg")
+    ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
     import glob
     print(dist_ctx.executor.run_function(lambda: os.listdir("/data/Capture52/")))
     print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob("/data/Capture52/*")))))

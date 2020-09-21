@@ -15,9 +15,9 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
 from libertem.io.dataset.base import TilingScheme
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-MIB_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.mib')
+MIB_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdata")  # NOQA
@@ -231,7 +231,7 @@ def test_cache_key_json_serializable(default_mib):
 @pytest.mark.dist
 def test_mib_dist(dist_ctx):
     scan_size = (32, 32)
-    ds = MIBDataSet(path="/data/default.mib", scan_size=scan_size)
+    ds = MIBDataSet(path=MIB_TESTDATA_PATH, scan_size=scan_size)
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)

@@ -89,7 +89,7 @@ def line_filter_function(image, sidebandpos, width, length):
     -------
         2d array containing line filter
     """
-    figure, ax = plt.subplots(1)
+    # figure, ax = plt.subplots(1)
     size = np.shape(image)
     angle = np.arctan2(size[0] / 2 + 1 - sidebandpos[0],  size[1] / 2 + 1 - sidebandpos[1])
     left_bottom_corner = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)

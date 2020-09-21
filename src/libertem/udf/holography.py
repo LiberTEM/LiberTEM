@@ -31,6 +31,8 @@ import matplotlib
 
 import matplotlib.pyplot as plt
 
+import numba
+
 
 def freq_array(shape, sampling=(1., 1.)):
     """
@@ -133,11 +135,13 @@ def phase_ramp_removal(img, order=1, ramp=None):
 
     if order==1:
         img_new = np.zeros_like(img)
+        @numba.jit
         for i in np.arange(0, img_size[0], 1):
             for j in np.arange(0, img_size[1], 1):
                 img_new[i, j] = img[i, j] + ramp_x * (mid_pos[0] / 2 - i) + ramp_y * (mid_pos[1] / 2 - j)
     else:
         # To be expanded.
+        pass
 
     return img_new
 

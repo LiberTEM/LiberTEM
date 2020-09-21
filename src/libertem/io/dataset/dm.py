@@ -13,22 +13,26 @@ from .base import (
 log = logging.getLogger(__name__)
 
 
-def _get_offset(path):
+def _get_metadata(path):
     fh = fileDM(path, on_memory=True)
     if fh.numObjects == 1:
         idx = 0
     else:
         idx = 1
-    offset = fh.dataOffset[idx]
-    return offset
+    return {
+        'offset': fh.dataOffset[idx],
+        'zsize': fh.zSize[idx],
+    }
 
 
 class StackedDMFile(LocalFile):
     def _mmap_to_array(self, raw_mmap, start, stop):
         res = np.frombuffer(raw_mmap, dtype="uint8")
+        itemsize = np.dtype(self._native_dtype).itemsize
+        sigsize = int(np.prod(self._sig_shape, dtype=np.int64))
         cutoff = 0
         cutoff += (
-            np.dtype(self._native_dtype).itemsize * int(np.prod(self._sig_shape, dtype=np.int64))
+            self.num_frames * itemsize * sigsize
         )
         res = res[:cutoff]
         return res.view(dtype=self._native_dtype).reshape(
@@ -88,11 +92,12 @@ class DMDataSet(DataSet):
         that is loaded.
 
     same_offset : bool
-        When reading a stack of dm3/dm4 files, it can be expensive to read in all
-        the metadata from all files, which we currently only use for getting the
-        offsets to the main data in each file. If you absolutely know that the offsets
-        are the same for all files, you can set this parameter and we will skip reading
-        all offsets but the one from the first file.
+        When reading a stack of dm3/dm4 files, it can be expensive to read in
+        all the metadata from all files, which we currently only use for
+        getting the offsets and sizes of the main data in each file. If you
+        absolutely know that the offsets and sizes are the same for all files,
+        you can set this parameter and we will skip reading all metadata but
+        the one from the first file.
     """
     def __init__(self, files=None, scan_size=None, same_offset=False):
         super().__init__()
@@ -104,6 +109,8 @@ class DMDataSet(DataSet):
         if len(files) == 0:
             raise DataSetException("need at least one file as input!")
         self._fileset = None
+        # per-file cached attributes:
+        self._z_sizes = {}
         self._offsets = {}
 
     def _get_fileset(self):
@@ -121,10 +128,11 @@ class DMDataSet(DataSet):
         start_idx = 0
         files = []
         for fn in self._get_files():
+            z_size = self._z_sizes[fn]
             f = StackedDMFile(
                 path=fn,
                 start_idx=start_idx,
-                end_idx=start_idx + 1,
+                end_idx=start_idx + z_size,
                 sig_shape=shape,
                 native_dtype=raw_dtype,
                 file_header=self._offsets[fn],
@@ -139,7 +147,7 @@ class DMDataSet(DataSet):
     def _get_scan_size(self):
         if self._scan_size:
             return self._scan_size
-        return (len(self._get_files()),)
+        return (sum(self._z_sizes.values()),)
 
     def _get_filesize(self):
         return sum(
@@ -151,18 +159,27 @@ class DMDataSet(DataSet):
         self._filesize = executor.run_function(self._get_filesize)
 
         if self._same_offset:
-            offset = executor.run_function(_get_offset, self._get_files()[0])
+            metadata = executor.run_function(_get_metadata, self._get_files()[0])
             self._offsets = {
-                fn: offset
+                fn: metadata['offset']
+                for fn in self._get_files()
+            }
+            self._z_sizes = {
+                fn: metadata['zsize']
                 for fn in self._get_files()
             }
         else:
+            metadata = dict(zip(
+                self._get_files(),
+                executor.map(_get_metadata, self._get_files()),
+            ))
             self._offsets = {
-                fn: offset
-                for offset, fn in zip(
-                    executor.map(_get_offset, self._get_files()),
-                    self._get_files()
-                )
+                fn: metadata[fn]['offset']
+                for fn in self._get_files()
+            }
+            self._z_sizes = {
+                fn: metadata[fn]['zsize']
+                for fn in self._get_files()
             }
         self._fileset = executor.run_function(self._get_fileset)
         first_file = next(self._fileset.files_from(0))
@@ -204,6 +221,7 @@ class DMDataSet(DataSet):
         try:
             with fileDM(first_fn, on_memory=True):
                 pass
+            # FIXME: read_stacks
             if (self._scan_size is not None
                     and np.prod(self._scan_size) != len(self._get_files())):
                 raise DataSetException("incompatible scan_size")

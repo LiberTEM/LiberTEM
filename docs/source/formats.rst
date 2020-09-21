@@ -84,6 +84,7 @@ LiberTEM supports the following file formats out of the box, see links for detai
 * :ref:`ser`
 * :ref:`hdf5`
 * :ref:`seq`
+* :ref:`mrc`
 
 Furthermore, a memory data set can be constructed from a NumPy array for testing
 purposes. See :ref:`memory` for details.

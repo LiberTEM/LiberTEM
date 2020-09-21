@@ -14,10 +14,9 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 from libertem.udf.raw import PickUDF
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-FRMS6_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
-                                 'data', 'frms6', 'C16_15_24_151203_019.hdr')
+FRMS6_TESTDATA_PATH = os.path.join(get_testdata_path(), 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 testdata")  # NOQA
@@ -27,14 +26,6 @@ pytestmark = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 test
 def default_frms6(lt_ctx):
     ds = FRMS6DataSet(path=FRMS6_TESTDATA_PATH)
     ds = ds.initialize(lt_ctx.executor)
-    return ds
-
-
-@pytest.fixture
-def dist_frms6(dist_ctx):
-    path = "/data/frms6/C16_15_24_151203_019.hdr"
-    ds = FRMS6DataSet(path=path)
-    ds = ds.initialize(dist_ctx.executor)
     return ds
 
 
@@ -111,22 +102,22 @@ def test_cache_key_json_serializable(default_frms6):
 
 
 @pytest.mark.dist
-def test_dist_process(dist_frms6, dist_ctx):
+def test_dist_process(default_frms6, dist_ctx):
     roi = {
         "shape": "disk",
         "cx": 5,
         "cy": 6,
         "r": 7,
     }
-    analysis = SumAnalysis(dataset=dist_frms6, parameters={"roi": roi})
+    analysis = SumAnalysis(dataset=default_frms6, parameters={"roi": roi})
     dist_ctx.run(analysis)
 
 
 @pytest.mark.dist
-def test_initialize(dist_frms6, dist_ctx):
-    assert dist_frms6._filenames is not None
-    assert dist_frms6._hdr_info is not None
-    assert dist_frms6._hdr_info is not None
+def test_initialize(default_frms6, dist_ctx):
+    assert default_frms6._filenames is not None
+    assert default_frms6._hdr_info is not None
+    assert default_frms6._hdr_info is not None
 
 # TODO: gain map tests
 # TODO: test load request message

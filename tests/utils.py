@@ -1,5 +1,6 @@
 import datetime
 import time
+import os
 
 import numpy as np
 import sparse
@@ -226,3 +227,12 @@ def dataset_correction_masks(ds, roi, lt_ctx, exclude=None):
             mask_res['intensity'].raw_data.reshape(shape),
             corrected
         )
+
+
+def get_testdata_path():
+    return os.environ.get(
+        'TESTDATA_BASE_PATH',
+        os.path.normpath(
+            os.path.join(os.path.dirname(__file__), '..', 'data')
+        )
+    )

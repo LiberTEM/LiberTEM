@@ -14,9 +14,9 @@ from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
 from utils import _mk_random
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-EMPAD_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'EMPAD')
+EMPAD_TESTDATA_PATH = os.path.join(get_testdata_path(), 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
 EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 EMPAD_XML_2 = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
@@ -224,7 +224,7 @@ def test_cache_key_json_serializable(default_empad):
 
 @pytest.mark.dist
 def test_empad_dist(dist_ctx):
-    ds = EMPADDataSet(path="/data/EMPAD/acquisition_12_pretty.xml")
+    ds = EMPADDataSet(path=EMPAD_XML)
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)

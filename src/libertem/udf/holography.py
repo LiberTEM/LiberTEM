@@ -27,6 +27,10 @@ import numpy as np
 
 from libertem.udf import UDF
 
+import matplotlib
+
+import matplotlib.pyplot as plt
+
 
 def freq_array(shape, sampling=(1., 1.)):
     """
@@ -67,6 +71,75 @@ def aperture_function(r, apradius, rsmooth):
     """
 
     return 0.5 * (1. - np.tanh((np.absolute(r) - apradius) / (0.5 * rsmooth)))
+
+
+def line_filter_function(image, sidebandpos, width, length):
+    """
+    A line filter function that is used to remove Fresnel fringes from biprism. 
+    ----------
+    image : 2d nd array
+        FFT of the hologram.
+    sidebandpos : 2d tuple, ()
+        Position of the sideband that is used for reconstruction of holograms.
+    width: float
+        Width of the line (rectangle).
+    length : float
+        Length of the line (rectangle).
+    Returns
+    -------
+        2d array containing line filter
+    """
+    figure, ax = plt.subplots(1)
+    size = np.shape(image)
+    angle = np.arctan2(size[0] / 2 + 1 - sidebandpos[0],  size[1] / 2 + 1 - sidebandpos[1])
+    left_bottom_corner = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)
+    rect = matplotlib.patches.Rectangle(left_bottom_corner, width, legnth, angle, edgecolor = 'r')
+    # ax.imshow(image)
+    # ax.add_patch(rect)
+    
+    # How to get the specified ared in the image?
+    image_new = np.zeros_like(image)
+    # image_new = image * ~rect
+
+    return image_new
+
+
+def phase_ramp_removal(img, order=1, ramp=None):
+    """
+    A phase ramp removal function that is used to remove the phase ramp across the field of view. 
+    ----------
+    img : 2d nd array
+        Complex image or phase image.
+    order : int
+        Phase ramp, 1 (default) is linear.
+    ramp : 2d tuple, ()
+        Phase ramp in x, y, if not None.
+    Returns
+    -------
+        2d nd array of the corrected image
+    """
+    img_size = np.shape(img)
+    if ramp is None:
+        min_phase = img.min()
+        min_pos = np.unravel_index(np.argmin(img, img_size)
+        max_phase = img.max()
+        max_pos = np.unravel_index(np.argmax(img, img_size)
+        ramp_x = (max_phase - min_phase) / (max_pos[0] - min_pos[0])
+        ramp_y = (max_phase - min_phase) / (max_pos[1] - min_pos[1])
+        mid_pos = min_pos + max_pos
+    else:
+        ramp_x, ramp_y = ramp
+        mid_pos = img_size / 2 
+
+    if order==1:
+        img_new = np.zeros_like(img)
+        for i in np.arange(0, img_size[0], 1):
+            for j in np.arange(0, img_size[1], 1):
+                img_new[i, j] = img[i, j] + ramp_x * (mid_pos[0] / 2 - i) + ramp_y * (mid_pos[1] / 2 - j)
+    else:
+        # To be expanded.
+
+    return img_new
 
 
 class HoloReconstructUDF(UDF):

@@ -81,20 +81,6 @@ async def test_copy_notebook(default_raw, base_url, tmpdir_factory, http_client,
             assert 'analysis' in code['analysis'][0]
             assert 'plot' in code['analysis'][0]
 
-            code = "\n".join([
-                        code['dependency'],
-                        code['initial_setup'],
-                        code['ctx'],
-                        code['dataset'],
-                        code['analysis'][0]['analysis'],
-                        code['analysis'][0]['plot'][0]
-                    ])
-            nb = nbf.v4.new_notebook()
-            cell = nbf.v4.new_code_cell(code)
-            nb['cells'].append(cell)
-            ep = ExecutePreprocessor(timeout=600)
-            out = ep.preprocess(nb, {"metadata": {"path": datadir}})
-
         # we are done with this analysis, clean up:
         # this will also remove the associated jobs
         async with http_client.delete(analysis_url) as resp:
@@ -106,3 +92,17 @@ async def test_copy_notebook(default_raw, base_url, tmpdir_factory, http_client,
             assert resp.status == 200
             resp_json = await resp.json()
             assert_msg(resp_json, 'DELETE_DATASET')
+
+        code = "\n".join([
+                    code['dependency'],
+                    code['initial_setup'],
+                    code['ctx'],
+                    code['dataset'],
+                    code['analysis'][0]['analysis'],
+                    code['analysis'][0]['plot'][0]
+                ])
+        nb = nbf.v4.new_notebook()
+        cell = nbf.v4.new_code_cell(code)
+        nb['cells'].append(cell)
+        ep = ExecutePreprocessor(timeout=600)
+        out = ep.preprocess(nb, {"metadata": {"path": datadir}})

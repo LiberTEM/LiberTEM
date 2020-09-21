@@ -51,7 +51,9 @@ class ClusterDetailHandler(tornado.web.RequestHandler):
                                  'service': 0,
                             }
             details[host_name][resource] += 1
-        details = list(details.values())
-        msg = Message(self.state).cluster_details(details=details)
+        details_sorted = []
+        for host in sorted(details.keys()):
+            details_sorted.append(details[host])
+        msg = Message(self.state).cluster_details(details=details_sorted)
         log_message(msg)
         self.write(msg)

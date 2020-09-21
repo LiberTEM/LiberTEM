@@ -115,6 +115,7 @@ information!
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
+- MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD
 - Please contact us if you are interested in support for an additional format!
 

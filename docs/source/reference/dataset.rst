@@ -85,6 +85,15 @@ Norpix SEQ
 
 .. autoclass:: libertem.io.dataset.seq.SEQDataSet
 
+
+.. _`mrc`:
+
+MRC
+~~~
+
+.. autoclass:: libertem.io.dataset.mrc.MRCDataSet
+
+
 .. _`memory`:
 
 Memory data set

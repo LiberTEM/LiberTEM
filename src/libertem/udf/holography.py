@@ -135,11 +135,12 @@ def phase_ramp_finding(img, order=1):
         max_pos = np.unravel_index(np.argmax(img, img_size)
         ramp_x = (max_phase - min_phase) / (max_pos[0] - min_pos[0])
         ramp_y = (max_phase - min_phase) / (max_pos[1] - min_pos[1])
-        mid_pos = min_pos + max_pos
+        ramp = (ramp_x, ramp_y)
+        
     else:
         pass
 
-    return (ramp_x, ramp_y, order)
+    return ramp, order
 
 def phase_ramp_removal(img, order=1, ramp=None):
     """
@@ -160,8 +161,9 @@ def phase_ramp_removal(img, order=1, ramp=None):
     if ramp is None:
         ramp = phase_ramp_finding(img, order=1)
     else:
-        ramp_x, ramp_y = ramp
-        mid_pos = size / 2 
+        (ramp_x, ramp_y) = ramp
+
+    mid_pos = size / 2    
 
     if order==1:
         img_new = np.zeros_like(img)

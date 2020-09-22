@@ -27,11 +27,9 @@ import numpy as np
 
 from libertem.udf import UDF
 
-import matplotlib
-
-import matplotlib.pyplot as plt
-
 import numba
+
+from skimage.draw import polygon
 
 
 def freq_array(shape, sampling=(1., 1.)):
@@ -91,17 +89,21 @@ def line_filter_function(image, sidebandpos, width, length):
     -------
         2d array containing line filter
     """
-    # figure, ax = plt.subplots(1)
     size = np.shape(image)
     angle = np.arctan2(size[0] / 2 + 1 - sidebandpos[0],  size[1] / 2 + 1 - sidebandpos[1])
-    left_bottom_corner = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)
-    rect = matplotlib.patches.Rectangle(left_bottom_corner, width, legnth, angle, edgecolor = 'r')
-    # ax.imshow(image)
-    # ax.add_patch(rect)
-    
-    # How to get the specified ared in the image?
+    left_bottom = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)
+
+    right_bottom = (left_bottom[0] + np.cos(angle) * length, left_bottom[1] + np.sin(angle) * length)
+    left_top = (left_bottom[0] - np.sin(angle) * width, left_bottom[1] + np.cos(angle) * width)
+    right_top = (right_bottom[0] + left_top[0] - left_bottom[0], right_bottom[1] + left_top[1] - left_bottom[1])
+
+    r = np.array([left_bottom[0],right_bottom[0],right_top[0],left_top[0]],dtype=int)
+    c = np.array([left_bottom[1],right_bottom[1],right_top[1],left_top[1]],dtype=int)
+    rr, cc = polygon(r, c)
+
+    image[rr,cc] = 0
     image_new = np.zeros_like(image)
-    # image_new = image * ~rect
+    image_new = image
 
     return image_new
 

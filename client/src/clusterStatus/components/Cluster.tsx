@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { Button, Modal, Popup } from "semantic-ui-react";
-import { RootReducer } from "../store";
+import { RootReducer } from "../../store";
 import LocalStatus from "./localStatus";
 import NotConnected from "./NotConnected";
 import TCPStatus from "./TCPStatus";
@@ -51,11 +51,10 @@ const ClusterStatus: React.SFC<MergedProps> = ({ clusterConnection, channelStatu
 
     const clusterDetails = () => {
         if (clusterConnection.status === "connected") {
-            const { details } = clusterConnection;
             if (type === "LOCAL") {
-                return <LocalStatus cudas={cudas} details={details} localCore={localcore} />;
+                return <LocalStatus cudas={cudas} localCore={localcore} />;
             } else {
-                return <TCPStatus address={address} details={details} />;
+                return <TCPStatus address={address} />;
             }
         } else {
             return <NotConnected />;

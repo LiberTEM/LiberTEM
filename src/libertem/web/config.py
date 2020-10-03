@@ -32,28 +32,7 @@ class ClusterDetailHandler(tornado.web.RequestHandler):
 
     async def get(self):
         executor = self.state.executor_state.get_executor()
-        workers = await executor.get_available_workers()
-        details = {}
-
-        for worker in workers:
-            if worker.name.startswith("tcp"):
-                host_name = worker.host
-                resource = 'cpu'
-            else:
-                host_name = '-'.join(worker.name.split('-')[:-2])
-                resource = worker.name.split('-')[-2]
-
-            if host_name not in details.keys():
-                details[host_name] = {
-                                 'host': host_name,
-                                 'cpu': 0,
-                                 'cuda': 0,
-                                 'service': 0,
-                            }
-            details[host_name][resource] += 1
-        details_sorted = []
-        for host in sorted(details.keys()):
-            details_sorted.append(details[host])
-        msg = Message(self.state).cluster_details(details=details_sorted)
+        details = await executor.get_resource_details()
+        msg = Message(self.state).cluster_details(details=details)
         log_message(msg)
         self.write(msg)

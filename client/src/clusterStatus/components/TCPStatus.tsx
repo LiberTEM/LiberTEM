@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
-import { HostDetails } from "../messages";
+import { HostDetails } from "../../messages";
+import { getClusterDetail } from "../api";
+
 
 const ClusterDetails = (details: HostDetails[]) => {
     const [clustOverview, setOverview] = useState({
@@ -40,7 +42,7 @@ const ClusterDetails = (details: HostDetails[]) => {
         return (
             <Segment key={node.host}>
                 <List.Item >
-                    <List.Content>Number of hosts : {node.host}</List.Content>
+                    <List.Content>Host : {node.host}</List.Content>
                     <List.Content>Number of CPU workers : {node.cpu}</List.Content>
                     <List.Content>Number of CUDA workers : {node.cuda}</List.Content>
                 </List.Item>
@@ -72,10 +74,9 @@ const ClusterDetails = (details: HostDetails[]) => {
 
 interface TCPStatusProps {
     address: string;
-    details: HostDetails[];
 }
 
-const TCPStatus: React.SFC<TCPStatusProps> = ({ address, details }) => {
+const TCPStatus: React.SFC<TCPStatusProps> = ({ address }) => {
     const template = [
         `import libertem.api as lt`,
         `import distributed as dd`,
@@ -91,13 +92,23 @@ const TCPStatus: React.SFC<TCPStatusProps> = ({ address, details }) => {
         navigator.clipboard.writeText(code);
     };
 
+    const [clustDetails, setDetails] = useState<HostDetails[]>([])
+
+    useEffect(() => {
+        const updateDetails = async () => {
+            await getClusterDetail().then(newDetails => {
+                setDetails(newDetails.details)
+            })}
+        updateDetails()
+        }, [])
+
     return (
         <Modal.Content>
             <List>
                 <Header as="h4" attached="top">
                     Connected to {address}
                 </Header>
-                <Segment.Group>{ClusterDetails(details)}</Segment.Group>
+                <Segment.Group>{ClusterDetails(clustDetails)}</Segment.Group>
                 <List.Item>
                     <List.Content>
                         <Segment.Group>

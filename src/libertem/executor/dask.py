@@ -195,16 +195,23 @@ class CommonDaskMixin(object):
                 host_name = worker.host
                 resource = 'cpu'
             else:
-                host_name, resource, _ = worker.name.split('-')
+                host_name = '-'.join(worker.name.split('-')[:-2])
+                resource = worker.name.split('-')[-2]
 
             if host_name not in details.keys():
                 details[host_name] = {
+                                 'host': host_name,
                                  'cpu': 0,
                                  'cuda': 0,
                                  'service': 0,
                             }
             details[host_name][resource] += 1
-        return details
+
+        details_sorted = []
+        for host in sorted(details.keys()):
+            details_sorted.append(details[host])
+
+        return details_sorted
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):

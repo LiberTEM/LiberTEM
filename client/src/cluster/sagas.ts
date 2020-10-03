@@ -1,9 +1,9 @@
 import { all, call, put, take, takeEvery } from "redux-saga/effects";
 import uuid from 'uuid/v4';
 import * as channelActions from '../channel/actions';
-import { ClusterDetailsResponse, ConnectResponse } from "../messages";
+import { ConnectResponse } from "../messages";
 import * as clusterActions from './actions';
-import { checkClusterConnection, connectToCluster, getClusterDetail } from "./api";
+import { checkClusterConnection, connectToCluster } from "./api";
 
 function* connectSaga(action: ReturnType<typeof clusterActions.Actions.connect>) {
     yield put(clusterActions.Actions.connecting())
@@ -13,8 +13,7 @@ function* connectSaga(action: ReturnType<typeof clusterActions.Actions.connect>)
 
 function* putClusterStatus(conn: ConnectResponse) {
     if (conn.status === "ok") {
-        const clusterDetails:ClusterDetailsResponse = yield call(getClusterDetail)
-        yield put(clusterActions.Actions.connected(conn.connection.connection, clusterDetails.details));
+        yield put(clusterActions.Actions.connected(conn.connection.connection));
     } else if (conn.status === "error") {
         yield put(clusterActions.Actions.notConnected());
         const timestamp = Date.now();

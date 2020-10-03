@@ -101,6 +101,15 @@ class JobExecutor(object):
         """
         raise NotImplementedError()
 
+    def get_resource_details(self):
+        """
+        Returns a list of dicts with cluster details
+
+        key of the dictionary:
+            host: ip address or hostname where the worker is running
+        """
+        raise NotImplementedError()
+
     def ensure_sync(self):
         """
         Returns a synchronous executor, incase of a `JobExecutor` we just
@@ -161,6 +170,9 @@ class AsyncJobExecutor(object):
         pass
 
     async def get_available_workers(self):
+        raise NotImplementedError()
+
+    async def get_resource_details(self):
         raise NotImplementedError()
 
     def ensure_sync(self):
@@ -289,3 +301,6 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def get_available_workers(self):
         return await sync_to_async(self._wrapped.get_available_workers)
+
+    async def get_resource_details(self):
+        return await sync_to_async(self._wrapped.get_resource_details)

@@ -27,8 +27,8 @@ def _build_sparse(m, dtype, sparse_backend, backend):
             lib = scipy.sparse
         elif backend == 'cupy':
             # Avoid import if possible
-            import cupy
-            lib = cupy.sparse
+            import cupyx.scipy.sparse
+            lib = cupyx.scipy.sparse
         else:
             raise ValueError(
                 f"Backend {backend} not supported for sparse_backend {sparse_backend}."

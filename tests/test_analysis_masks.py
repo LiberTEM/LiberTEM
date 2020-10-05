@@ -7,6 +7,8 @@ from utils import _naive_mask_apply, _mk_random
 
 import libertem.api as api
 from libertem.masks import to_dense, to_sparse, is_sparse
+from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.utils.devices import detect
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf import UDF
@@ -192,214 +194,321 @@ def test_signed(lt_ctx, TYPE):
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_masks(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    mask0 = _mk_random(size=(16, 16))
-    mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
-    mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
-    expected = _naive_mask_apply([mask0, mask1, mask2], data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_masks(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        mask0 = _mk_random(size=(16, 16))
+        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+        expected = _naive_mask_apply([mask0, mask1, mask2], data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2],
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
-    assert np.allclose(
-        results.mask_2.raw_data,
-        expected[2],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+        assert np.allclose(
+            results.mask_2.raw_data,
+            expected[2],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_dense(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_dense(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_count=2,
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, mask_count=2,
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_sparse(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_sparse(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, mask_count=2,
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, mask_count=2,
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_force_sparse(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_force_sparse(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_force_scipy_sparse(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_force_scipy_sparse(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse', mask_count=2
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse', mask_count=2
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse.csc', mask_count=2
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse='scipy.sparse.csc', mask_count=2
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_force_sparse_pydata(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = _mk_random(size=(2, 16, 16))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_force_sparse_pydata(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata', mask_count=2
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
-
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata', mask_count=2
+        )
+        analysis.TYPE = TYPE
+        if backend == 'cupy' and TYPE == 'UDF':
+            with pytest.raises(ValueError):
+                results = lt_ctx.run(analysis)
+        else:
+            results = lt_ctx.run(analysis)
+            assert np.allclose(
+                results.mask_0.raw_data,
+                expected[0],
+            )
+            assert np.allclose(
+                results.mask_1.raw_data,
+                expected[1],
+            )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'TYPE',
     ['JOB', 'UDF']
 )
-def test_multi_mask_stack_force_dense(lt_ctx, TYPE):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
-    expected = _naive_mask_apply(masks, data)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_multi_mask_stack_force_dense(lt_ctx, TYPE, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
+        expected = _naive_mask_apply(masks, data)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-    analysis = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2
-    )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2
+        )
+        analysis.TYPE = TYPE
+        results = lt_ctx.run(analysis)
 
-    assert np.allclose(
-        results.mask_0.raw_data,
-        expected[0],
-    )
-    assert np.allclose(
-        results.mask_1.raw_data,
-        expected[1],
-    )
+        assert np.allclose(
+            results.mask_0.raw_data,
+            expected[0],
+        )
+        assert np.allclose(
+            results.mask_1.raw_data,
+            expected[1],
+        )
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(

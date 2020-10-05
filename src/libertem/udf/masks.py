@@ -142,16 +142,21 @@ class ApplyMasksUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        masks = self.task_data.masks.get(self.meta.slice, transpose=True)
         flat_data = tile.reshape((tile.shape[0], -1))
         if self.task_data.use_torch:
+            masks = self.task_data.masks.get(self.meta.slice, transpose=True)
             # CuPy back-end disables torch in get_task_data
             # FIXME use GPU torch with CuPy array?
             result = torch.mm(
                 torch.from_numpy(flat_data),
                 torch.from_numpy(masks),
             ).numpy()
+        # Required due to https://github.com/cupy/cupy/issues/4072
+        elif self.backend == 'cupy' and self.task_data.masks.use_sparse:
+            masks = self.task_data.masks.get(self.meta.slice, transpose=False)
+            result = masks.dot(flat_data.T).T
         else:
+            masks = self.task_data.masks.get(self.meta.slice, transpose=True)
             result = flat_data @ masks
         # '+' is the correct merge for dot product
         self.results.intensity[:] += result

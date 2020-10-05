@@ -67,6 +67,7 @@ extensions = [
     'nbsphinx_link',
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx_issues',
+    'sphinxcontrib.platformpicker',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

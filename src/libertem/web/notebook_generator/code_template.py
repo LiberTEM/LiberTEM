@@ -44,6 +44,10 @@ class CodeTemplate(TemplateBase):
         corresponding analysis helper.
         """
         extra_dep = []
+
+        if (self.conn['type'] == "TCP"):
+            extra_dep.extend(self.temp_dep_conn)
+
         for helper in self.analysis_helper.values():
             analysis_dep = helper.get_dependency()
             if analysis_dep is not None:
@@ -56,11 +60,11 @@ class CodeTemplate(TemplateBase):
 
     def connection(self):
         docs = ["# Connection"]
-        if (self.conn['type'] == "cluster"):
+        if (self.conn['type'] == "TCP"):
             link = "https://libertem.github.io/LiberTEM/usage.html#starting-a-custom-cluster"
             more_info = f"[For more info]({link})"
             docs.append(f"Connecting to dask cluster, {more_info}")
-            data = {'conn_url': self.conn['url']}
+            data = {'conn_url': self.conn['address']}
             ctx = self.format_template(self.temp_conn, data)
             docs = '\n'.join(docs)
             return ctx, docs

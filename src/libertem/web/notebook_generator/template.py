@@ -17,8 +17,12 @@ class TemplateBase:
                 "import libertem.api as lt",
                 "import numpy as np"]
 
-    temp_conn = ['cluster = executor.dask.DaskJobExecutor.connect("$conn_url")',
-                 "ctx = lt.Context(executor=cluster)"]
+    temp_dep_conn = ["import distributed as dd",
+                     "from libertem.executor.dask import DaskJobExecutor"]
+
+    temp_conn = ['client = dd.Client("$conn_url")',
+                 "executor = DaskJobExecutor(client)",
+                 "ctx = lt.Context(executor=executor)"]
 
     temp_analysis = ["${short}_analysis = ctx.$analysis_api($params)",
                      "${short}_result = ctx.run(${short}_analysis, progress=True)"]

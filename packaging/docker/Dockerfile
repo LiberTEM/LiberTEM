@@ -10,7 +10,9 @@ COPY packaging/docker/requirements.txt /requirements.txt
 COPY test_requirements.txt /test_requirements.txt
 RUN /venv/bin/pip install -U pip
 RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt -r /test_requirements.txt
-RUN /venv/bin/pip install -e 'git+https://github.com/sk1p/ipyparallel.git@fix-become-dask#egg=ipyparallel'
+# Include https://github.com/ipython/ipyparallel/pull/415
+# FIXME switch to release version as soon as included
+RUN /venv/bin/pip install -e 'git+https://github.com/ipython/ipyparallel.git#egg=ipyparallel'
 
 COPY . /code/
 RUN venv/bin/pip install --no-cache /code/

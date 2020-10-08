@@ -45,7 +45,7 @@ class CodeTemplate(TemplateBase):
         """
         extra_dep = []
 
-        if (self.conn['type'] == "TCP"):
+        if self.conn['type'].lower() == "tcp":
             extra_dep.extend(self.temp_dep_conn)
 
         for helper in self.analysis_helper.values():
@@ -60,7 +60,7 @@ class CodeTemplate(TemplateBase):
 
     def connection(self):
         docs = ["# Connection"]
-        if (self.conn['type'] == "TCP"):
+        if self.conn['type'].lower() == "tcp":
             link = "https://libertem.github.io/LiberTEM/usage.html#starting-a-custom-cluster"
             more_info = f"[For more info]({link})"
             docs.append(f"Connecting to dask cluster, {more_info}")
@@ -68,11 +68,13 @@ class CodeTemplate(TemplateBase):
             ctx = self.format_template(self.temp_conn, data)
             docs = '\n'.join(docs)
             return ctx, docs
-        else:
+        elif self.conn['type'].lower() == "local":
             docs.append("This starts a local cluster that is accessible through ctx.")
             ctx = "ctx = lt.Context()"
             docs = '\n'.join(docs)
             return ctx, docs
+        else:
+            raise ValueError("unknown connection type")
 
     def analysis(self):
         form_analysis = []

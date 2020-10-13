@@ -262,7 +262,7 @@ def make_get_read_ranges(
         where the last dimension contains: file index, start_byte, stop_byte
     """
 
-    @numba.njit(boundscheck=True)
+    @numba.njit(boundscheck=True, cache=True)
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, roi, depth,
         slices_arr, fileset_arr, sig_shape,

@@ -27,10 +27,13 @@ def _make_mmap_reader_and_decoder(decode):
     """
     decode: from inp, in bytes, possibly interpreted as native_dtype, to out.dtype
     """
-    @numba.njit(boundscheck=False)
+    @numba.njit(boundscheck=False, cache=True)
     def _tilereader_w_copy(outer_idx, mmaps, sig_dims, tile_read_ranges,
                            out_decoded, native_dtype, do_zero,
                            origin, shape, ds_shape):
+        """
+        Read and decode a single tile
+        """
         if do_zero:
             out_decoded[:] = 0
         for rr_idx in range(tile_read_ranges.shape[0]):

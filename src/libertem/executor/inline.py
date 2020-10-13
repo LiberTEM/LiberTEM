@@ -42,6 +42,9 @@ class InlineJobExecutor(JobExecutor):
             cloudpickle.loads(cloudpickle.dumps((fn, args, kwargs)))
         return {"localhost": fn(*args, **kwargs)}
 
+    def run_each_worker(self, fn, *args, **kwargs):
+        return fn(*args, **kwargs)
+
     def get_available_workers(self):
         resources = {"compute": 1, "CPU": 1}
         if get_use_cuda() is not None:

@@ -359,6 +359,11 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         }
         return result_map
 
+    def run_each_worker(self, fn, *args, **kwargs):
+        fn = functools.partial(fn, *args, **kwargs)
+        # FIXME: translate return value?
+        self.client.run(fn)
+
     def close(self):
         if self.is_local:
             if self.client.cluster is not None:

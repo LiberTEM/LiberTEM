@@ -7,7 +7,7 @@ from libertem.udf import UDF
 from libertem.common.buffers import reshaped_view
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, cache=True)
 def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     '''
     Basic function to perform numerically stable merge.

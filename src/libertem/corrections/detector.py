@@ -8,7 +8,7 @@ from libertem.common.numba import (
 )
 
 
-@numba.njit
+@numba.njit(cache=True)
 def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_environments,
         repair_counts):
     '''

@@ -25,7 +25,7 @@ class JobExecutor(object):
 
     def run_function(self, fn, *args, **kwargs):
         """
-        run a callable `fn`
+        run a callable `fn` on any worker
         """
         raise NotImplementedError()
 
@@ -73,6 +73,26 @@ class JobExecutor(object):
         Parameters
         ----------
 
+        fn : callable
+            Function to call
+
+        *args
+            Arguments for fn
+
+        **kwargs
+            Keyword arguments for fn
+        """
+        raise NotImplementedError()
+
+    def run_each_worker(self, fn, *args, **kwargs):
+        """
+        Run `fn` on each worker process, and pass *args, **kwargs to it.
+
+        Useful, for example, if you need to prepare the environment of
+        each Python interpreter, warm up per-process caches etc.
+
+        Parameters
+        ----------
         fn : callable
             Function to call
 
@@ -135,7 +155,7 @@ class AsyncJobExecutor(object):
 
     async def run_function(self, fn, *args, **kwargs):
         """
-        Run a callable `fn`
+        Run a callable `fn` on any worker
         """
         raise NotImplementedError()
 
@@ -158,6 +178,26 @@ class AsyncJobExecutor(object):
         raise NotImplementedError()
 
     async def run_each_host(self, fn, *args, **kwargs):
+        raise NotImplementedError()
+
+    async def run_each_worker(self, fn, *args, **kwargs):
+        """
+        Run `fn` on each worker process, and pass *args, **kwargs to it.
+
+        Useful, for example, if you need to prepare the environment of
+        each Python interpreter, warm up per-process caches etc.
+
+        Parameters
+        ----------
+        fn : callable
+            Function to call
+
+        *args
+            Arguments for fn
+
+        **kwargs
+            Keyword arguments for fn
+        """
         raise NotImplementedError()
 
     async def close(self):
@@ -282,6 +322,10 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def run_each_host(self, fn, *args, **kwargs):
         fn_with_args = functools.partial(self._wrapped.run_each_host, fn, *args, **kwargs)
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def run_each_worker(self, fn, *args, **kwargs):
+        fn_with_args = functools.partial(self._wrapped.run_each_worker, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
 
     async def close(self):

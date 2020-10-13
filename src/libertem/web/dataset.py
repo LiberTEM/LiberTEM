@@ -3,6 +3,7 @@ import logging
 import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
+from libertem.io.dataset.base import Negotiator
 from .base import CORSMixin, log_message
 from libertem.utils.async_utils import run_blocking
 from .messages import Message
@@ -29,6 +30,48 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.event_registry.broadcast_event(msg)
         self.write(msg)
 
+    async def prime_numba_caches(self, ds):
+        executor = self.state.executor_state.get_executor()
+
+        def log_stuff(fn):
+            def _inner(dask_worker):
+                print(f"running on {dask_worker}")
+                return fn()
+            return _inner
+
+        def _prime_cache():
+            import numpy as np
+            dtypes = (np.float32, np.float64, None)
+            for dtype in dtypes:
+                roi = np.zeros(ds.shape, dtype=np.bool).reshape((-1,))
+                roi[0] = 1
+
+                from libertem.udf.sum import SumUDF
+                from libertem.corrections.corrset import CorrectionSet
+
+                udfs = [SumUDF()]  # need to have at least one UDF
+                p = next(ds.get_partitions())
+                neg = Negotiator()
+                for corr_dtype in (np.float32, np.float64):
+                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
+                    p.set_corrections(corrections)
+                    tiling_scheme = neg.get_scheme(
+                        udfs=udfs,
+                        partition=p,
+                        read_dtype=dtype,
+                        roi=roi,
+                        corrections=corrections,
+                    )
+                    next(p.get_tiles(tiling_scheme=tiling_scheme))
+
+        # first: make sure the jited functions used for I/O are compiled
+        # by running a single-core workload on each host:
+        await executor.run_each_host(_prime_cache)
+
+        # second: make sure each worker *process* has the jited functions
+        # loaded from the cache
+        await executor.run_each_worker(log_stuff(_prime_cache))
+
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
@@ -41,6 +84,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             executor = self.state.executor_state.get_executor()
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
+
+            await self.prime_numba_caches(ds)
 
             self.dataset_state.register(
                 uuid=uuid,

@@ -33,12 +33,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def prime_numba_caches(self, ds):
         executor = self.state.executor_state.get_executor()
 
-        def log_stuff(fn):
-            def _inner(dask_worker):
-                print(f"running on {dask_worker}")
-                return fn()
-            return _inner
-
         def _prime_cache():
             import numpy as np
             dtypes = (np.float32, np.float64, None)
@@ -70,7 +64,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         # second: make sure each worker *process* has the jited functions
         # loaded from the cache
-        await executor.run_each_worker(log_stuff(_prime_cache))
+        await executor.run_each_worker(_prime_cache)
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)

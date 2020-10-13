@@ -117,6 +117,8 @@ class HoloReconstructUDF(UDF):
             Defines precision of the reconstruction, True for complex128 for the resulting
             complex wave, otherwise results will be complex64
         """
+        if len(sb_position) != 2:
+            raise ValueError("invalid sb_position %r, must be tuple of length 2" % (sb_position,))
         super().__init__(out_shape=out_shape,
                          sb_position=sb_position,
                          sb_size=sb_size,

@@ -43,7 +43,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             import numpy as np
             dtypes = (np.float32, np.float64, None)
             for dtype in dtypes:
-                roi = np.zeros(ds.shape, dtype=np.bool).reshape((-1,))
+                roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
                 roi[0] = 1
 
                 from libertem.udf.sum import SumUDF

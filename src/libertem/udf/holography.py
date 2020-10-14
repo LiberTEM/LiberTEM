@@ -27,8 +27,6 @@ import numpy as np
 
 from libertem.udf import UDF
 
-import numba
-
 from skimage.draw import polygon
 
 
@@ -70,14 +68,17 @@ def aperture_function(r, apradius, rsmooth):
         2d array containing aperture
     """
 
-    # TODO： The aperture can be not only a circle and has to be extended into other geometry, like ellipse.
+    # TODO： The aperture can be not only a circle and has to be extended into other geometry,
+    # like ellipse.
 
     return 0.5 * (1. - np.tanh((np.absolute(r) - apradius) / (0.5 * rsmooth)))
 
 
 def line_filter(size, sidebandpos, width, length):
     """
-    A line filter function that is used to remove Fresnel fringes from biprism. 
+    A line filter function that is used to remove Fresnel fringes from biprism.
+
+    Parameters
     ----------
     size : 2d tuple, ()
         size of the FFT of the hologram.
@@ -93,25 +94,31 @@ def line_filter(size, sidebandpos, width, length):
     """
 
     angle = np.arctan2(size[0] / 2 + 1 - sidebandpos[0],  size[1] / 2 + 1 - sidebandpos[1])
-    left_bottom = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)
+    left_bottom = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2,
+                   (size[1] / 2 + 1 + sidebandpos[1]) / 2)
 
-    right_bottom = (left_bottom[0] + np.cos(angle) * length, left_bottom[1] + np.sin(angle) * length)
-    left_top = (left_bottom[0] - np.sin(angle) * width, left_bottom[1] + np.cos(angle) * width)
-    right_top = (right_bottom[0] + left_top[0] - left_bottom[0], right_bottom[1] + left_top[1] - left_bottom[1])
+    right_bottom = (left_bottom[0] + np.cos(angle) * length,
+                    left_bottom[1] + np.sin(angle) * length)
+    left_top = (left_bottom[0] - np.sin(angle) * width,
+                left_bottom[1] + np.cos(angle) * width)
+    right_top = (right_bottom[0] + left_top[0] - left_bottom[0],
+                right_bottom[1] + left_top[1] - left_bottom[1])
 
-    r = np.array([left_bottom[0],right_bottom[0],right_top[0],left_top[0]],dtype=int)
-    c = np.array([left_bottom[1],right_bottom[1],right_top[1],left_top[1]],dtype=int)
+    r = np.array([left_bottom[0], right_bottom[0], right_top[0], left_top[0]], dtype=int)
+    c = np.array([left_bottom[1], right_bottom[1], right_top[1], left_top[1]], dtype=int)
     rr, cc = polygon(r, c)
 
     mask = np.ones(size)
-    mask[rr,cc] = 0
+    mask[rr, cc] = 0
 
     return mask
 
 
 def phase_ramp_finding(img, order=1):
     """
-    A phase ramp finding function that is used to find the phase ramp across the field of view. 
+    A phase ramp finding function that is used to find the phase ramp across the field of view.
+
+    Parameters
     ----------
     img : 2d nd array
         Complex image or phase image.
@@ -126,7 +133,7 @@ def phase_ramp_finding(img, order=1):
 
     # The ramp is determined by the maximum and minimum values of the image.
     # TODO least-square-fitting, polynomial order
-    if order==1:
+    if order == 1:
         ramp_x = np.mean(np.gradient(img, axis=0))
         ramp_y = np.mean(np.gradient(img, axis=1))
         ramp = (ramp_y, ramp_x)
@@ -135,9 +142,12 @@ def phase_ramp_finding(img, order=1):
 
     return ramp
 
+
 def phase_ramp_removal(size, order=1, ramp=None):
     """
-    A phase ramp removal function that is remove to find the phase ramp across the field of view. 
+    A phase ramp removal function that is remove to find the phase ramp across the field of view.
+
+    Parameters
     ----------
     size : 2d tuple, ()
         Size of the Complex image or phase image
@@ -157,16 +167,17 @@ def phase_ramp_removal(size, order=1, ramp=None):
         (ramp_y, ramp_x) = ramp
 
     yy = np.arange(0, size[0], 1)
-    xx = np.arange(0, size[1], 1)      
+    xx = np.arange(0, size[1], 1)
     y, x = np.meshgrid(yy, xx)
 
-    if order==1:
-        img =  ramp_x * x + ramp_y * y
+    if order == 1:
+        img = ramp_x * x + ramp_y * y
     else:
         # To be expanded.
         pass
 
     return img
+
 
 class HoloReconstructUDF(UDF):
     """

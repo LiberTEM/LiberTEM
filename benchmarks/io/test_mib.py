@@ -1,4 +1,6 @@
 import os
+import json
+import socket
 
 import pytest
 import numpy as np
@@ -9,11 +11,18 @@ from libertem.udf.masks import ApplyMasksUDF
 from cache_utils import drop_cache, warmup_cache
 
 
-NET_PREFIX = "/storage/holo/clausen/testdata/ER-C-1/groups/data_science/data/reference/"
-SSD_PREFIX = "/cachedata/users/libertem/reference/"
-HDD_PREFIX = "/data/users/libertem/reference/"
-
 MIB_FILE = "MIB/20200518 165148/default.hdr"
+
+
+def getprefixes():
+    localdir = os.path.dirname(__file__)
+    with open(os.path.join(localdir, "localpaths.json"), mode="r") as f:
+        localpaths = json.load(f)
+    hostname = socket.gethostname()
+    return localpaths[hostname]
+
+
+PREFIXES = getprefixes()
 
 
 def filelist(mib_hdr):
@@ -25,10 +34,10 @@ def filelist(mib_hdr):
     "drop", ("cold_cache", "warm_cache")
 )
 @pytest.mark.parametrize(
-    "prefix", (SSD_PREFIX, HDD_PREFIX, NET_PREFIX)
+    "prefix", PREFIXES
 )
 def test_sequential(benchmark, prefix, drop):
-    mib_hdr = prefix + MIB_FILE
+    mib_hdr = os.path.join(prefix, MIB_FILE)
 
     flist = filelist(mib_hdr)
 
@@ -71,10 +80,10 @@ class TestUseSharedExecutor:
         "drop", ("cold_cache", "warm_cache")
     )
     @pytest.mark.parametrize(
-        "prefix", (SSD_PREFIX,  HDD_PREFIX, NET_PREFIX)
+        "prefix", PREFIXES
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx):
-        mib_hdr = prefix + MIB_FILE
+        mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
 
         ctx = shared_dist_ctx
@@ -107,10 +116,10 @@ class TestUseSharedExecutor:
     "first", ("warm_executor", "cold_executor", )
 )
 @pytest.mark.parametrize(
-    "prefix", (SSD_PREFIX, )
+    "prefix", PREFIXES[:1]
 )
 def test_mask_firstrun(benchmark, prefix, first):
-    mib_hdr = prefix + MIB_FILE
+    mib_hdr = os.path.join(prefix, MIB_FILE)
     flist = filelist(mib_hdr)
 
     with api.Context() as ctx:

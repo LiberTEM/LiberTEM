@@ -75,12 +75,12 @@ def aperture_function(r, apradius, rsmooth):
     return 0.5 * (1. - np.tanh((np.absolute(r) - apradius) / (0.5 * rsmooth)))
 
 
-def line_filter_function(image, sidebandpos, width, length):
+def line_filter(size, sidebandpos, width, length):
     """
     A line filter function that is used to remove Fresnel fringes from biprism. 
     ----------
-    image : 2d nd array
-        FFT of the hologram.
+    size : 2d tuple, ()
+        size of the FFT of the hologram.
     sidebandpos : 2d tuple, ()
         Position of the sideband that is used for reconstruction of holograms.
     width: float
@@ -91,7 +91,7 @@ def line_filter_function(image, sidebandpos, width, length):
     -------
         2d array containing line filter
     """
-    size = np.shape(image)
+
     angle = np.arctan2(size[0] / 2 + 1 - sidebandpos[0],  size[1] / 2 + 1 - sidebandpos[1])
     left_bottom = ((size[0] / 2 + 1 + sidebandpos[0] + width) / 2, (size[1] / 2 + 1 + sidebandpos[1]) / 2)
 
@@ -103,11 +103,10 @@ def line_filter_function(image, sidebandpos, width, length):
     c = np.array([left_bottom[1],right_bottom[1],right_top[1],left_top[1]],dtype=int)
     rr, cc = polygon(r, c)
 
-    image[rr,cc] = 0
-    image_new = np.zeros_like(image)
-    image_new = image
+    mask = np.ones(size)
+    mask[rr,cc] = 0
 
-    return image_new
+    return mask
 
 
 def phase_ramp_finding(img, order=1):
@@ -124,30 +123,24 @@ def phase_ramp_finding(img, order=1):
     -------
         ramp, order, tuple, float
     """
-    img_size = np.shape(img)
 
     # The ramp is determined by the maximum and minimum values of the image.
     # TODO least-square-fitting, polynomial order
     if order==1:
-        min_phase = img.min()
-        min_pos = np.unravel_index(np.argmin(img, img_size)
-        max_phase = img.max()
-        max_pos = np.unravel_index(np.argmax(img, img_size)
-        ramp_x = (max_phase - min_phase) / (max_pos[0] - min_pos[0])
-        ramp_y = (max_phase - min_phase) / (max_pos[1] - min_pos[1])
-        ramp = (ramp_x, ramp_y)
-        
+        ramp_x = np.mean(np.gradient(img, axis=0))
+        ramp_y = np.mean(np.gradient(img, axis=1))
+        ramp = (ramp_y, ramp_x)
     else:
         pass
 
-    return ramp, order
+    return ramp
 
-def phase_ramp_removal(img, order=1, ramp=None):
+def phase_ramp_removal(size, order=1, ramp=None):
     """
     A phase ramp removal function that is remove to find the phase ramp across the field of view. 
     ----------
-    img : 2d nd array
-        Complex image or phase image.
+    size : 2d tuple, ()
+        Size of the Complex image or phase image
     order : int
         Phase ramp, 1 (default) is linear.
     ramp : 2d tuple, ()
@@ -156,26 +149,24 @@ def phase_ramp_removal(img, order=1, ramp=None):
     -------
         2d nd array of the corrected image
     """
-    size = np.shape(img)
+    img = np.zeros(size)
 
     if ramp is None:
-        ramp = phase_ramp_finding(img, order=1)
+        ramp = phase_ramp_finding(size, order=1)
     else:
-        (ramp_x, ramp_y) = ramp
+        (ramp_y, ramp_x) = ramp
 
-    mid_pos = size / 2    
+    yy = np.arange(0, size[0], 1)
+    xx = np.arange(0, size[1], 1)      
+    y, x = np.meshgrid(yy, xx)
 
     if order==1:
-        img_new = np.zeros_like(img)
-        @numba.jit
-        for i in np.arange(0, size[0], 1):
-            for j in np.arange(0, size[1], 1):
-                img_new[i, j] = img[i, j] + ramp_x * (mid_pos[0] / 2 - i) + ramp_y * (mid_pos[1] / 2 - j)
+        img =  ramp_x * x + ramp_y * y
     else:
         # To be expanded.
         pass
 
-    return img_new
+    return img
 
 class HoloReconstructUDF(UDF):
     """

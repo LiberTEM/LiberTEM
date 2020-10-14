@@ -6,6 +6,8 @@ from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.generate import hologram_frame
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.udf.holography import phase_ramp_removal
+from libertem.udf.holography import phase_ramp_finding
 
 
 @pytest.mark.parametrize(
@@ -73,3 +75,9 @@ def test_holo_reconstruction(lt_ctx, backend):
     phase = np.angle(w)
 
     assert np.allclose(phase_ref[slice_crop], phase[slice_crop], rtol=0.12)
+
+
+def test_phase_ramp_removal():
+    a = phase_ramp_removal((128, 128), ramp=(0.2, 0.01))
+    b = phase_ramp_finding(a)
+    assert np.allclose(b, (0.2, 0.01))

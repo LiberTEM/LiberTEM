@@ -27,7 +27,7 @@ def filelist(mib_hdr):
 @pytest.mark.parametrize(
     "prefix", (SSD_PREFIX, HDD_PREFIX, NET_PREFIX)
 )
-def test_sequential(benchmark, prefix, drop, lt_ctx):
+def test_sequential(benchmark, prefix, drop):
     mib_hdr = prefix + MIB_FILE
 
     flist = filelist(mib_hdr)
@@ -46,29 +46,80 @@ def test_sequential(benchmark, prefix, drop, lt_ctx):
         iterations=1
     )
 
+# Starting fresh distributed executors takes a lot of time and therefore
+# they should be used repeatedly if possible.
+# However, some benchmarks require a fresh distributed executor
+# and running several Dask executors in parallel leads to lockups when closing.
+# That means any shared executor has to be shut down before a fresh one is started.
+# For that reason we use a fixture with scope "class" and group
+# tests in a class that should all use the same executor.
+# That way we make sure the shared executor is torn down before any other test
+# starts a new one.
+
+
+@pytest.fixture(scope="class")
+def shared_dist_ctx():
+    print("start shared Context()")
+    ctx = api.Context()
+    yield ctx
+    print("stop shared Context()")
+    ctx.close()
+
+
+class TestUseSharedExecutor:
+    @pytest.mark.parametrize(
+        "drop", ("cold_cache", "warm_cache")
+    )
+    @pytest.mark.parametrize(
+        "prefix", (SSD_PREFIX,  HDD_PREFIX, NET_PREFIX)
+    )
+    def test_mask(self, benchmark, prefix, drop, shared_dist_ctx):
+        mib_hdr = prefix + MIB_FILE
+        flist = filelist(mib_hdr)
+
+        ctx = shared_dist_ctx
+        ds = ctx.load(filetype="auto", path=mib_hdr)
+
+        def mask():
+            return np.ones(ds.shape.sig, dtype=bool)
+
+        udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
+
+        # warmup executor
+        ctx.run_udf(udf=udf, dataset=ds)
+
+        if drop == "cold_cache":
+            drop_cache(flist)
+        elif drop == "warm_cache":
+            warmup_cache(flist)
+        else:
+            raise ValueError("bad param")
+
+        benchmark.pedantic(
+            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
+            warmup_rounds=0,
+            rounds=1,
+            iterations=1
+        )
+
 
 @pytest.mark.parametrize(
-    "first", ("cold_executor", "warm_executor")
+    "first", ("warm_executor", "cold_executor", )
 )
 @pytest.mark.parametrize(
-    "drop", ("cold_cache", "warm_cache")
+    "prefix", (SSD_PREFIX, )
 )
-@pytest.mark.parametrize(
-    "prefix", (SSD_PREFIX,  HDD_PREFIX, NET_PREFIX)
-)
-def test_mask(benchmark, prefix, drop, first):
+def test_mask_firstrun(benchmark, prefix, first):
     mib_hdr = prefix + MIB_FILE
     flist = filelist(mib_hdr)
 
-    # we always start with a fresh context
-    # to also capture
     with api.Context() as ctx:
         ds = ctx.load(filetype="auto", path=mib_hdr)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
 
-        udf = ApplyMasksUDF(mask_factories=[mask])
+        udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
 
         if first == "warm_executor":
             ctx.run_udf(udf=udf, dataset=ds)
@@ -77,12 +128,7 @@ def test_mask(benchmark, prefix, drop, first):
         else:
             raise ValueError("bad param")
 
-        if drop == "cold_cache":
-            drop_cache(flist)
-        elif drop == "warm_cache":
-            warmup_cache(flist)
-        else:
-            raise ValueError("bad param")
+        warmup_cache(flist)
 
         benchmark.pedantic(
             ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),

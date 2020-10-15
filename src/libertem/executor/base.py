@@ -101,6 +101,11 @@ class JobExecutor(object):
 
         **kwargs
             Keyword arguments for fn
+
+        Returns
+        -------
+        dict
+            Return values keyed by worker name (executor-specific)
         """
         raise NotImplementedError()
 

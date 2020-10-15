@@ -361,8 +361,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     def run_each_worker(self, fn, *args, **kwargs):
         fn = functools.partial(fn, *args, **kwargs)
-        # FIXME: translate return value?
-        self.client.run(fn)
+        # FIXME: normalize worker names somehow?
+        return self.client.run(fn)
 
     def close(self):
         if self.is_local:

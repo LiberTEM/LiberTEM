@@ -135,3 +135,14 @@ def test_multiple_clients(local_cluster_url, default_raw):
 
     cx1 = Context(executor=ex1)
     cx1.run_udf(dataset=default_raw, udf=udf)
+
+
+def test_run_each_worker_1(dask_executor):
+    def fn1():
+        return "some result"
+    results = dask_executor.run_each_worker(fn1)
+    assert len(results.keys()) >= 1
+    assert len(results.keys()) == len(dask_executor.get_available_workers())
+    k = next(iter(results))
+    result0 = results[k]
+    assert result0 == "some result"

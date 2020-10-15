@@ -8,21 +8,13 @@ import numpy as np
 from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
 
-from cache_utils import drop_cache, warmup_cache
+from utils import drop_cache, warmup_cache, get_testdata_prefixes
+
 
 
 MIB_FILE = "MIB/20200518 165148/default.hdr"
 
-
-def getprefixes():
-    localdir = os.path.dirname(__file__)
-    with open(os.path.join(localdir, "localpaths.json"), mode="r") as f:
-        localpaths = json.load(f)
-    hostname = socket.gethostname()
-    return localpaths[hostname]
-
-
-PREFIXES = getprefixes()
+PREFIXES = get_testdata_prefixes()
 
 
 def filelist(mib_hdr):

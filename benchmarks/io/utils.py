@@ -29,3 +29,18 @@ else:
         for fname in flist:
             with open(fname, "rb") as f:
                 os.posix_fadvise(f.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+
+
+def get_testdata_prefixes():
+    pathstring = os.environ.get('LT_BENCH_PREFIXES')
+    if pathstring is None:
+        dirname = os.path.normpath(
+            os.path.join(os.path.dirname(__file__), 'data')
+        )
+        listing = [os.path.join(dirname, p) for p in os.listdir(dirname)]
+        prefixes = [p for p in listing if os.path.isdir(p)]
+    else:
+        prefixes = pathstring.split(';')
+        for p in prefixes:
+            assert os.path.isdir(p)
+    return prefixes

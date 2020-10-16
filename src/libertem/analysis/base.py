@@ -280,9 +280,7 @@ class BaseAnalysis(Analysis):
     def get_complex_results(self, job_result, key_prefix, title, desc):
         magn = np.abs(job_result)
         angle = np.angle(job_result)
-        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector(
-            np.broadcast_arrays(job_result.imag, job_result.real, 0)
-        )
+        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((job_result.imag, job_result.real, 0))
         return [
             # for compatability, the magnitude has key=key_prefix
             AnalysisResult(

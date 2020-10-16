@@ -1,6 +1,4 @@
 import os
-import json
-import socket
 
 import pytest
 import numpy as np
@@ -9,7 +7,6 @@ from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
 
 from utils import drop_cache, warmup_cache, get_testdata_prefixes
-
 
 
 MIB_FILE = "MIB/20200518 165148/default.hdr"

@@ -28,8 +28,6 @@ class RadialTemplate(GeneratorHelper):
     # FIXME : remove the note
     def get_dependency(self):
         return [
-            "# note: visulization requires Python 3.7 and empyre",
-            "# install empyre: pip install empyre",
             "import matplotlib.cm as cm",
             "from empyre.vis.colors import ColormapCubehelix, ColormapPerception"
         ]

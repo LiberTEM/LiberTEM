@@ -61,7 +61,7 @@ class RadialTemplate(GeneratorHelper):
             "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
             "fig, axes = plt.subplots()",
             'axes.set_title("complex_0_1")',
-            "plt.imshow(ch.rgb_from_vector((imag, real, 0)))",
+            "plt.imshow(ch.rgb_from_vector((real, imag, 0)))",
             "fig, axes = plt.subplots()",
             'axes.set_title("phase_0_1")',
             'plt.imshow(radial_result.phase_0_1.raw_data, cmap=ColormapPerception())'
@@ -209,7 +209,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 data = job_results[b, 0]
                 f = partial(
                     CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                    (data.imag, data.real, 0)
+                    (data.real, data.imag, 0)
                 )
                 sets.append(
                     AnalysisResult(
@@ -224,7 +224,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                     data = job_results[b, o] / normal[b]
                     f = partial(
                         CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                        (data.imag, data.real, 0), vmax=max_absolute
+                        (data.real, data.imag, 0), vmax=max_absolute
                     )
                     sets.append(
                         AnalysisResult(

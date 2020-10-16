@@ -55,7 +55,7 @@ class ComTemplate(GeneratorHelper):
             'axes.set_title("field")',
             "y_centers, x_centers = com_result.field.raw_data",
             "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
-            "axes.imshow(ch.rgb_from_vector((y_centers, x_centers, 0)))"
+            "axes.imshow(ch.rgb_from_vector((x_centers, y_centers, 0)))"
         ]
         for channel in self.channels[1:3]:
             plot.append("fig, axes = plt.subplots()")
@@ -217,7 +217,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                        key="y_imag", title="y [imag]", desc="y component of the center"),
             ])
         else:
-            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((y_centers, x_centers, 0))
+            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0))
             d = divergence(y_centers, x_centers)
             c = curl_2d(y_centers, x_centers)
             m = magnitude(y_centers, x_centers)

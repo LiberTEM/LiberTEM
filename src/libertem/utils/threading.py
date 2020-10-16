@@ -35,6 +35,11 @@ if torch:
     @contextmanager
     def set_torch_threads(n):
         torch_threads = torch.get_num_threads()
+        # See also https://pytorch.org/docs/stable/torch.html#parallelism
+        # At the time of writing the difference between threads and interop threads
+        # wasn't clear from the documentation. However, changing the
+        # interop_threads on runtime
+        # caused errors, so it is commented out here.
         # torch_interop_threads = torch.get_num_interop_threads()
         try:
             torch.set_num_threads(n)

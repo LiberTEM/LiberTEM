@@ -1,6 +1,6 @@
 import io
 import os
-import pytest
+
 import numpy as np
 import nbformat
 from temp_utils import _get_hdf5_params
@@ -8,7 +8,6 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-@pytest.mark.skip(reason="requires `empyre`")
 def test_com_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     datadir = tmpdir_factory.mktemp('template_tests')
 

@@ -228,6 +228,75 @@ def test_detector_patch():
 
 
 @pytest.mark.with_numba
+def test_detector_patch_large():
+    for i in range(10):
+        print(f"Loop number {i}")
+        num_nav_dims = np.random.choice([2, 3])
+        num_sig_dims = 2
+
+        nav_dims = tuple(np.random.randint(low=3, high=5, size=num_nav_dims))
+        sig_dims = tuple(np.random.randint(low=4*32, high=1024, size=num_sig_dims))
+
+        data = _make_data(nav_dims, sig_dims)
+
+        exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=999)
+
+        damaged_data = data.copy()
+        damaged_data[(Ellipsis, *exclude)] = 1e24
+
+        print("Nav dims: ", nav_dims)
+        print("Sig dims:", sig_dims)
+        print("Exclude: ", exclude)
+
+        corrected = detector.correct(
+            buffer=damaged_data,
+            excluded_pixels=exclude,
+            sig_shape=sig_dims,
+            inplace=False
+        )
+
+        _check_result(
+            data=data, corrected=corrected,
+            atol=1e-8, rtol=1e-5
+        )
+
+
+@pytest.mark.with_numba
+def test_detector_patch_too_large():
+    for i in range(10):
+        print(f"Loop number {i}")
+        num_nav_dims = np.random.choice([2, 3])
+        num_sig_dims = 2
+
+        nav_dims = tuple(np.random.randint(low=3, high=5, size=num_nav_dims))
+        sig_dims = tuple(np.random.randint(low=4*32, high=1024, size=num_sig_dims))
+
+        data = _make_data(nav_dims, sig_dims)
+
+        exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=1001)
+
+        damaged_data = data.copy()
+        damaged_data[(Ellipsis, *exclude)] = 1e24
+
+        print("Nav dims: ", nav_dims)
+        print("Sig dims:", sig_dims)
+        print("Exclude: ", exclude)
+
+        corrected = detector.correct(
+            buffer=damaged_data,
+            excluded_pixels=exclude,
+            sig_shape=sig_dims,
+            inplace=False
+        )
+
+        _check_result(
+            data=data, corrected=corrected,
+            atol=1e-8, rtol=1e-5
+        )
+
+
+
+@pytest.mark.with_numba
 def test_detector_patch_overlapping():
     for i in range(10):
         print(f"Loop number {i}")

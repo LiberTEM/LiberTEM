@@ -25,7 +25,6 @@ class RadialTemplate(GeneratorHelper):
     def __init__(self, params):
         self.params = params
 
-    # FIXME : remove the note
     def get_dependency(self):
         return [
             "import matplotlib.cm as cm",

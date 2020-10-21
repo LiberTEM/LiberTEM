@@ -1,6 +1,7 @@
 import numpy as np
 import numba
 import sparse
+from numba.typed import List
 
 from libertem.masks import is_sparse
 
@@ -121,10 +122,12 @@ def flatten_filter(excluded_pixels, repairs, sig_shape):
     "good" pixels.
     '''
     excluded_flat = np.ravel_multi_index(excluded_pixels, sig_shape)
-    repair_flat = tuple([
+    repair_flat = List()
+
+    for a in [np.ravel_multi_index(r, sig_shape) for r in repairs]:
+        repair_flat.append(
             np.extract(np.invert(np.isin(a, excluded_flat)), a)
-            for a in [np.ravel_multi_index(r, sig_shape) for r in repairs]
-    ])
+        )
 
     for i in range(len(excluded_flat)):
         if len(repair_flat[i]) == 0:

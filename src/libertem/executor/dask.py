@@ -191,12 +191,18 @@ class CommonDaskMixin(object):
         details = {}
 
         for worker in workers:
+            host_name = worker.host
             if worker.name.startswith("tcp"):
-                host_name = worker.host
+                # `dask-worker` only supports CPU
                 resource = 'cpu'
             else:
-                host_name = '-'.join(worker.name.split('-')[:-2])
-                resource = worker.name.split('-')[-2]
+                r = worker.resources
+                if "CPU" in r:
+                    resource = 'cpu'
+                elif "CUDA" in r:
+                    resource = 'cuda'
+                else:
+                    resource = 'service'
 
             if host_name not in details.keys():
                 details[host_name] = {

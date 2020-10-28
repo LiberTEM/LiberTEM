@@ -1,5 +1,7 @@
 import io
+
 import nbformat as nbf
+
 from .code_template import CodeTemplate
 
 

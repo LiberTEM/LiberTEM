@@ -1,15 +1,12 @@
 import tornado.web
+from libertem.io.fs import FSError, get_fs_listing
 
-from libertem.io.fs import get_fs_listing, FSError
+from .base import SessionsHandler
 from .messages import Message
 from .state import SharedState
 
 
-class LocalFSBrowseHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class LocalFSBrowseHandler(SessionsHandler, tornado.web.RequestHandler):
     async def get(self):
         executor = self.state.executor_state.get_executor()
         path = self.request.arguments['path']

@@ -1,4 +1,3 @@
-from .state import SharedState
 from .messageconverter import MessageConverter  # NOQA: F401
 
 
@@ -7,7 +6,7 @@ class Message(object):
     possible messages - the translation of our python datatypes to json types
     """
 
-    def __init__(self, state: SharedState):
+    def __init__(self, state):
         self.state = state
 
     def initial_state(self, jobs, datasets, analyses, compound_analyses):

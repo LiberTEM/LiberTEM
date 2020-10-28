@@ -1,5 +1,6 @@
-import tornado
 import logging
+
+import tornado
 
 from .state import SharedState
 

@@ -1,29 +1,24 @@
 import logging
 
 import tornado.web
-
-from libertem.io.dataset import load, detect, get_dataset_cls
-from .base import CORSMixin, log_message
+from libertem.io.dataset import detect, get_dataset_cls, load
 from libertem.utils.async_utils import run_blocking
+
+from .base import CORSMixin, SessionsHandler, log_message
 from .messages import Message
 from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
-class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.dataset_state = state.dataset_state
-        self.event_registry = event_registry
-
+class DataSetDetailHandler(CORSMixin, SessionsHandler, tornado.web.RequestHandler):
     async def delete(self, uuid):
         try:
-            self.dataset_state[uuid]
+            self.state.dataset_state[uuid]
         except KeyError:
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return
-        await self.dataset_state.remove(uuid)
+        await self.state.dataset_state.remove(uuid)
         msg = Message(self.state).delete_dataset(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
@@ -42,31 +37,27 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
 
-            self.dataset_state.register(
+            self.state.dataset_state.register(
                 uuid=uuid,
                 dataset=ds,
                 params=request_data['dataset'],
                 converted=dataset_params,
             )
-            details = await self.dataset_state.serialize(dataset_id=uuid)
+            details = await self.state.dataset_state.serialize(dataset_id=uuid)
             msg = Message(self.state).create_dataset(dataset=uuid, details=details)
             log_message(msg)
             self.write(msg)
             self.event_registry.broadcast_event(msg)
         except Exception as e:
-            if uuid in self.dataset_state:
-                await self.dataset_state.remove(uuid)
+            if uuid in self.state.dataset_state:
+                await self.state.dataset_state.remove(uuid)
             msg = Message(self.state).create_dataset_error(uuid, str(e))
             log_message(msg, exception=True)
             self.write(msg)
             return
 
 
-class DataSetOpenSchema(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class DataSetOpenSchema(SessionsHandler, tornado.web.RequestHandler):
     def get(self):
         try:
             ds_type = self.request.arguments['type'][0].decode("utf8")
@@ -84,11 +75,7 @@ class DataSetOpenSchema(tornado.web.RequestHandler):
             return
 
 
-class DataSetDetectHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class DataSetDetectHandler(SessionsHandler, tornado.web.RequestHandler):
     async def get(self):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = self.state.executor_state.get_executor()

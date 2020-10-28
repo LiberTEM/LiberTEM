@@ -2,22 +2,32 @@ import logging
 from functools import partial
 
 import tornado.web
-
 from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
-from .messages import Message
-from .base import log_message, ResultHandlerMixin
-from .state import SharedState
 from libertem.utils.devices import detect
+
+from .base import ResultHandlerMixin, SessionsHandler, log_message
+from .messages import Message
+from .state import SharedState
 
 log = logging.getLogger(__name__)
 
+def connect_to_local(state, connection, pool):
+    devices = detect()
+    options = {
+        "local_directory": state.get_local_directory()
+    }
+    if "numWorkers" in connection:
+        devices["cpus"] = range(connection["numWorkers"])
+    devices["cudas"] = connection.get("cudas", [])
 
-class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
+    sync_executor = DaskJobExecutor.make_local(
+        spec=cluster_spec(**devices, options=options)
+    )
+    return (sync_executor,pool)
 
+
+class ConnectHandler(ResultHandlerMixin, SessionsHandler, tornado.web.RequestHandler):
     async def get(self):
         log.info("ConnectHandler.get")
         try:
@@ -35,10 +45,7 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 "connection": {},
             })
 
-    async def put(self):
-        # TODO: extract json request data stuff into mixin?
-        request_data = tornado.escape.json_decode(self.request.body)
-        connection = request_data['connection']
+    async def handle_connection(self, connection):
         pool = AsyncAdapter.make_pool()
         if connection["type"].lower() == "tcp":
             try:
@@ -51,20 +58,19 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
                 self.write(msg)
                 return None
         elif connection["type"].lower() == "local":
-            devices = detect()
-            options = {
-                "local_directory": self.state.get_local_directory()
-            }
-            if "numWorkers" in connection:
-                devices["cpus"] = range(connection["numWorkers"])
-            devices["cudas"] = connection.get("cudas", [])
-
-            sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
-                spec=cluster_spec(**devices, options=options)
-            ), pool=pool)
+            sync_executor,pool = await sync_to_async(partial(connect_to_local, self.state, connection, pool), pool=pool)
         else:
             raise ValueError("unknown connection type")
-        executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
+        return AsyncAdapter(wrapped=sync_executor, pool=pool)
+
+        # YOU HAVE TO ALLOW LOADING JSON FROM EXTERNAL FILE TO SETUP DEFAULT CONNECTION IN RESTRICTED MODE. DEFAULT: Analogous to clicking connect on client
+
+    async def put(self):
+        # TODO: extract json request data stuff into mixin?
+        request_data = tornado.escape.json_decode(self.request.body)
+        connection = request_data['connection']
+
+        executor = await self.handle_connection(connection)
         await self.state.executor_state.set_executor(executor, request_data)
         await self.state.dataset_state.verify()
         datasets = await self.state.dataset_state.serialize_all()

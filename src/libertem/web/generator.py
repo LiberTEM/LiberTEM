@@ -1,18 +1,16 @@
-import tornado
 import logging
-from .notebook_generator.notebook_generator import notebook_generator
-from .notebook_generator.copy import copy_notebook
 
+import tornado
+
+from .base import SessionsHandler
+from .notebook_generator.copy import copy_notebook
+from .notebook_generator.notebook_generator import notebook_generator
 from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
-class DownloadScriptHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class DownloadScriptHandler(SessionsHandler, tornado.web.RequestHandler):
     async def get(self, compoundUuid: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]
         analysis_ids = compoundAnalysis['details']['analyses']
@@ -38,11 +36,7 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
         self.write(buf.getvalue())
 
 
-class CopyScriptHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class CopyScriptHandler(SessionsHandler, tornado.web.RequestHandler):
     async def get(self, compoundUuid: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]
         analysis_ids = compoundAnalysis['details']['analyses']

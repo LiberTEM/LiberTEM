@@ -1,14 +1,14 @@
 import io
 
 import tornado.web
-
-from .base import CORSMixin, log_message
-from .messages import Message
-from .state import SharedState
 from libertem.io.writers.results.base import ResultFormatRegistry
 
+from .base import CORSMixin, SessionsHandler, log_message
+from .messages import Message
+from .state import SharedState
 
-class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
+
+class AnalysisDetailHandler(CORSMixin, SessionsHandler, tornado.web.RequestHandler):
     """
     API Handler for CRUD of analyses.
 
@@ -16,9 +16,6 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
     zero or one Job.
 
     """
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
 
     async def put(self, compoundUuid, uuid):
         """
@@ -75,11 +72,7 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(msg)
 
 
-class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class DownloadDetailHandler(CORSMixin, SessionsHandler, tornado.web.RequestHandler):
     def _get_format(self):
         # FIXME: unused for now
         fmt = self.request.arguments['fmt']
@@ -102,11 +95,7 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(buf.getvalue())
 
 
-class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class CompoundAnalysisHandler(CORSMixin, SessionsHandler, tornado.web.RequestHandler):
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)
         dataset_id = request_data['dataset']

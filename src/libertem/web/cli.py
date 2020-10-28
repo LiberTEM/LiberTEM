@@ -1,5 +1,6 @@
-import click
 import logging
+
+import click
 
 log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'."
 
@@ -13,16 +14,19 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
               help='enable/disable opening the browser', default='True')
 @click.option('-l', '--log-level', help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
+@click.option('--instance_type', type=click.Choice(["liberated", "restricted"]), default="liberated")
+@click.option('--instance_config', type=str)
+
 # FIXME: the host parameter is currently disabled, as it poses a security risk
 # as long as there is no authentication
 # see also: https://github.com/LiberTEM/LiberTEM/issues/67
-# @click.option('--host', help='host on which the server should listen on',
-#               default="localhost", type=str)
-def main(port, local_directory, browser, log_level, host="localhost"):
+#@click.option('--host', help='host on which the server should listen on',
+#              default="localhost", type=str)
+def main(port, local_directory, browser, log_level, instance_type, instance_config, host="localhost"):
     from libertem.cli_tweaks import console_tweaks
     from .server import run
     console_tweaks()
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-    run(host, port, browser, local_directory, numeric_level)
+    run(host, port, browser, local_directory, numeric_level, instance_type, instance_config)

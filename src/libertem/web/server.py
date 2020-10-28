@@ -1,29 +1,33 @@
-import os
-import sys
-import logging
 import asyncio
-import signal
+import logging
+import os
+import secrets
 import select
+import signal
+import sys
 import threading
 import webbrowser
 from functools import partial
 
-import tornado.web
-import tornado.gen
-import tornado.websocket
-import tornado.ioloop
 import tornado.escape
+import tornado.gen
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
 
+from .analysis import (AnalysisDetailHandler, CompoundAnalysisHandler,
+                       DownloadDetailHandler)
+from .browse import LocalFSBrowseHandler
+from .config import ConfigHandler
+from .connect import ConnectHandler
+from .dataset import (DataSetDetailHandler, DataSetDetectHandler,
+                      DataSetOpenSchema)
+from .events import EventRegistry, ResultEventHandler
+from .generator import CopyScriptHandler, DownloadScriptHandler
+from .jobs import JobDetailHandler
+from .session import SessionDatasetHandler, SessionHandler
 from .shutdown import ShutdownHandler
 from .state import SharedState
-from .config import ConfigHandler
-from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
-from .browse import LocalFSBrowseHandler
-from .jobs import JobDetailHandler
-from .events import ResultEventHandler, EventRegistry
-from .connect import ConnectHandler
-from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
-from .generator import DownloadScriptHandler, CopyScriptHandler
 
 log = logging.getLogger(__name__)
 
@@ -37,11 +41,8 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("client/index.html")
 
 
-def make_app(event_registry, shared_state):
-    settings = {
-        "static_path": os.path.join(os.path.dirname(__file__), "client"),
-    }
-    return tornado.web.Application([
+def make_app(event_registry, shared_state, instance_type, instance_config):
+    routes = [
         (r"/", IndexHandler, {"state": shared_state, "event_registry": event_registry}),
         (r"/api/datasets/detect/", DataSetDetectHandler, {
             "state": shared_state,
@@ -100,7 +101,30 @@ def make_app(event_registry, shared_state):
             "state": shared_state,
             "event_registry": event_registry,
         }),
-    ], **settings)
+        (r"/api/session/", SessionHandler, {
+            "state": shared_state,
+            "event_registry": event_registry,
+        }),
+        (r"/api/session/([^/][0-9a-f-]+)/datasets/([^/][0-9a-f]+)/", SessionDatasetHandler, {
+            "state": shared_state,
+            "event_registry": event_registry,
+        }),
+    ]
+
+    shared_state.instance_type = instance_type
+    if instance_type == "restricted":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(shared_state.set_local_executor(instance_config))
+
+        routes_to_disable = ['/api/browse/localfs/']
+        for x in routes:
+            if x[0] in routes_to_disable:
+                routes.remove(x)
+    settings = {
+        "static_path": os.path.join(os.path.dirname(__file__), "client"),
+        "cookie_secret": secrets.token_hex(32),
+    }
+    return tornado.web.Application(routes, **settings)
 
 
 async def do_stop(shared_state):
@@ -135,13 +159,13 @@ def sig_exit(signum, frame, shared_state):
     )
 
 
-def main(host, port, numeric_level, event_registry, shared_state):
+def main(host, port, numeric_level, event_registry, shared_state, instance_type, instance_config):
     logging.basicConfig(
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info("listening on %s:%s" % (host, port))
-    app = make_app(event_registry, shared_state)
+    app = make_app(event_registry, shared_state, instance_type, instance_config)
     app.listen(address=host, port=port)
     return app
 
@@ -183,16 +207,16 @@ def handle_signal(shared_state):
         signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
 
 
-def run(host, port, browser, local_directory, numeric_level):
+def run(host, port, browser, local_directory, numeric_level, instance_type, instance_config):
+    loop = asyncio.get_event_loop()
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
-    main(host, port, numeric_level, event_registry, shared_state)
+    main(host, port, numeric_level, event_registry, shared_state, instance_type, instance_config)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
-    loop = asyncio.get_event_loop()
     handle_signal(shared_state)
     # Strictly necessary only on Windows, but doesn't do harm in any case.
     # FIXME check later if the unknown root cause was fixed upstream

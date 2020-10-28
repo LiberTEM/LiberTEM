@@ -1,24 +1,20 @@
-import time
 import logging
+import time
 
 import tornado.web
-
 from libertem.analysis.base import Analysis
-from .base import CORSMixin, log_message, ResultHandlerMixin
-from .state import SharedState
-from .messages import Message
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
 from libertem.utils.async_utils import run_blocking
 
+from .base import CORSMixin, ResultHandlerMixin, SessionsHandler, log_message
+from .messages import Message
+from .state import SharedState
+
 log = logging.getLogger(__name__)
 
 
-class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
+class JobDetailHandler(CORSMixin, SessionsHandler, ResultHandlerMixin, tornado.web.RequestHandler):
     async def put(self, job_id):
         request_data = tornado.escape.json_decode(self.request.body)
         analysis_id = request_data['job']['analysis']

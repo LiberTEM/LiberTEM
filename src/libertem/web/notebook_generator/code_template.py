@@ -1,4 +1,5 @@
 from libertem.analysis.base import Analysis
+
 from .template import TemplateBase
 
 

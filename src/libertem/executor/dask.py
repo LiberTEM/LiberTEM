@@ -193,9 +193,12 @@ class CommonDaskMixin(object):
         for worker in workers:
             host_name = worker.host
             if worker.name.startswith("tcp"):
-                # `dask-worker` only supports CPU
+                # for handling `dask-worker`
+                # `dask-worker` name starts with "tcp"
+                #  only supports CPU
                 resource = 'cpu'
             else:
+                # for handling `libertem-worker`
                 r = worker.resources
                 if "CPU" in r:
                     resource = 'cpu'

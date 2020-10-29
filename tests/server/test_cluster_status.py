@@ -1,4 +1,5 @@
 import pytest
+import random
 
 pytestmark = [pytest.mark.functional]
 
@@ -6,7 +7,11 @@ pytestmark = [pytest.mark.functional]
 @pytest.mark.dist
 @pytest.mark.asyncio
 async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
+
+    worker_set = dist_ctx.executor.get_available_workers()
+    host1, host2 = sorted(worker_set.hosts())
     url = "{}/api/config/connection/".format(base_url)
+
     conn_details = {
         'connection': {
             'type': 'TCP',
@@ -27,13 +32,13 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
                 {
                     'cpu': 2,
                     'cuda': 0,
-                    'host': 'worker-1',
+                    'host': host1,
                     'service': 1
                 },
                 {
                     'cpu': 2,
                     'cuda': 0,
-                    'host': 'worker-2',
+                    'host': host2,
                     'service': 1
                 }
             ]
@@ -41,17 +46,23 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_local_cluster_details(base_url, http_client):
+async def test_local_cluster_details(shared_state, base_url, http_client):
+
+    num_workers = random.randint(1, 8)
     url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {
             'type': 'local',
-            'numWorkers': 2,
+            'numWorkers': num_workers,
         }
     }
 
     async with http_client.put(url, json=conn_details) as response:
         assert response.status == 200
+
+    executor = shared_state.executor_state.get_executor()
+    worker_set = await executor.get_available_workers()
+    host = worker_set.hosts().pop()
 
     url = "{}/api/config/cluster/".format(base_url)
     async with http_client.get(url) as response:
@@ -61,8 +72,8 @@ async def test_local_cluster_details(base_url, http_client):
             "status": "ok",
             "messageType": "CLUSTER_DETAILS",
             "details": [{
-                "host": "default",
-                "cpu": 2,
+                "host": host,
+                "cpu": num_workers,
                 "cuda": 0,
                 "service": 1
             }]

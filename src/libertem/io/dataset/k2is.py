@@ -79,7 +79,7 @@ def decode_uint12_le(inp, out):
 
 
 @numba.njit(inline='always')
-def decode_k2is(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+def decode_k2is_old(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     Decode a single block, from a single read range, into a tile that may
     contain multiple blocks in the signal dimensions. This function is called
@@ -106,9 +106,127 @@ def decode_k2is(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     ] = blockbuf.reshape(BLOCK_SHAPE)
 
 
+@numba.njit(inline='always')  #, boundscheck=True)
+def decode_k2is_new_v1(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    Decode a single block, from a single read range, into a tile that may
+    contain multiple blocks in the signal dimensions. This function is called
+    multiple times for a single tile, for all read ranges that are part of this
+    tile.
+    """
+    # blocks per tile (in signal dimensions)
+    blocks_per_tile = out.shape[1] // (BLOCK_SHAPE[0] * BLOCK_SHAPE[1])
+
+    n_blocks_y, n_blocks_x, block_y_i, block_x_i = rr[3:]
+
+    tile_idx = idx // blocks_per_tile
+
+    # we take three bytes of the input to decode two numbers
+    # -> as the blocks are 16 numbers wide, the two numbers
+    # will always be part of the same row, so the y-stride is the same
+    
+    # the offset between two rows in the output (in indices, not bytes)
+    stride_y = shape[2]
+    
+    # starting offset of the current block:
+    # 930 * block_y_i:930 * (block_y_i + 1),
+    # 16 * block_x_i:16 * (block_x_i + 1),
+
+    block_offset = n_blocks_x * BLOCK_SHAPE[1] * block_y_i * BLOCK_SHAPE[0] + block_x_i * BLOCK_SHAPE[1]
+    
+    # decode_uint12_le(inp=inp, out=blockbuf) inlined here:
+    for i in range(len(inp) // 3):
+        fst_uint8 = np.uint16(inp[i * 3])
+        mid_uint8 = np.uint16(inp[i * 3 + 1])
+        lst_uint8 = np.uint16(inp[i * 3 + 2])
+
+        a = fst_uint8 | (mid_uint8 & 0x0F) << 8
+        b = (mid_uint8 & 0xF0) >> 4 | lst_uint8 << 4
+        
+        # the flattened position of `a` inside the current block:
+        block_pos = i * 2
+        
+        # the position in output coordinates:
+        out_x = block_pos % BLOCK_SHAPE[1]
+        out_y = block_pos // BLOCK_SHAPE[1]
+        out_pos = block_offset + out_x + stride_y * out_y
+
+        out[
+            tile_idx,
+            out_pos
+        ] = a
+        out[
+            tile_idx,
+            out_pos + 1
+        ] = b
+
+
+# @numba.njit(inline='always', boundscheck=True)
+@numba.njit(inline='always')
+def decode_k2is_new_v2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    Decode a single block, from a single read range, into a tile that may
+    contain multiple blocks in the signal dimensions. This function is called
+    multiple times for a single tile, for all read ranges that are part of this
+    tile.
+    """
+    # blocks per tile (only in signal dimensions)
+    blocks_per_tile = out.shape[1] // (BLOCK_SHAPE[0] * BLOCK_SHAPE[1])
+
+    n_blocks_y, n_blocks_x, block_y_i, block_x_i = rr[3:]
+
+    tile_idx = idx // blocks_per_tile
+
+    # we take three bytes of the input to decode two numbers
+    # -> as the blocks are 16 numbers wide, the two numbers
+    # will always be part of the same row, so the y-stride is the same
+    
+    # the offset between two rows in the output (in indices, not bytes)
+    stride_y = shape[2]
+
+    if stride_y == 16:
+        return decode_uint12_le(inp=inp, out=out[idx])
+    
+    # starting offset of the current block:
+    # 930 * block_y_i:930 * (block_y_i + 1),
+    # 16 * block_x_i:16 * (block_x_i + 1),
+    block_offset = (
+        block_y_i * BLOCK_SHAPE[0] * n_blocks_x * BLOCK_SHAPE[1] 
+        + block_x_i * BLOCK_SHAPE[1]
+    )
+    
+    out_z = out[tile_idx]
+    
+    # decode_uint12_le(inp=inp, out=blockbuf) inlined here:
+    # inp is uint8, so the outer loop needs to jump 24 bytes each time.
+    for i in range(len(inp) // 3 // 8):
+        # i is the output row index of a single block,
+        # so the beginning of the row in output coordinates:
+        out_pos = block_offset + i * stride_y
+        
+        in_row_offset = i * 3 * 8
+        
+        # loop for a single row:
+        # for each j, we process bytes of input into two output numbers
+        # -> we consume 8*3 = 24 bytes and generate 8*2=16 numbers
+        for j in range(8):
+            triplet_offset = in_row_offset + j * 3
+            fst_uint8 = np.uint16(inp[triplet_offset])
+            mid_uint8 = np.uint16(inp[triplet_offset + 1])
+            lst_uint8 = np.uint16(inp[triplet_offset + 2])
+
+            a = fst_uint8 | (mid_uint8 & 0x0F) << 8
+            b = (mid_uint8 & 0xF0) >> 4 | lst_uint8 << 4
+
+            out_z[out_pos] = a
+            out_z[out_pos + 1] = b
+
+            out_pos += 2
+
+
 class K2ISDecoder(Decoder):
     def get_decode(self, native_dtype, read_dtype):
-        return decode_k2is
+        return decode_k2is_new_v2
 
 
 @numba.njit(inline='always')

@@ -25,7 +25,6 @@ from .dataset import (DataSetDetailHandler, DataSetDetectHandler,
 from .events import EventRegistry, ResultEventHandler
 from .generator import CopyScriptHandler, DownloadScriptHandler
 from .jobs import JobDetailHandler
-from .session import SessionDatasetHandler, SessionHandler
 from .shutdown import ShutdownHandler
 from .state import SharedState
 
@@ -98,14 +97,6 @@ def make_app(event_registry, shared_state, instance_type, instance_config):
             "event_registry": event_registry
         }),
         (r"/api/config/connection/", ConnectHandler, {
-            "state": shared_state,
-            "event_registry": event_registry,
-        }),
-        (r"/api/session/", SessionHandler, {
-            "state": shared_state,
-            "event_registry": event_registry,
-        }),
-        (r"/api/session/([^/][0-9a-f-]+)/datasets/([^/][0-9a-f]+)/", SessionDatasetHandler, {
             "state": shared_state,
             "event_registry": event_registry,
         }),

@@ -63,8 +63,6 @@ class ConnectHandler(ResultHandlerMixin, SessionsHandler, tornado.web.RequestHan
             raise ValueError("unknown connection type")
         return AsyncAdapter(wrapped=sync_executor, pool=pool)
 
-        # YOU HAVE TO ALLOW LOADING JSON FROM EXTERNAL FILE TO SETUP DEFAULT CONNECTION IN RESTRICTED MODE. DEFAULT: Analogous to clicking connect on client
-
     async def put(self):
         # TODO: extract json request data stuff into mixin?
         request_data = tornado.escape.json_decode(self.request.body)

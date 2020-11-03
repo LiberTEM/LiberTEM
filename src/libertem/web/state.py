@@ -1,17 +1,26 @@
-import os
 import copy
-import typing
 import itertools
+import logging
+import os
+import typing
 from collections import defaultdict
 
-import psutil
-
 import libertem
+import psutil
+import tornado.escape
 from libertem.analysis.base import AnalysisResultSet
+from libertem.executor.base import AsyncAdapter, sync_to_async
+from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.io.dataset.base import DataSetException
-from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA
+from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.utils import devices
+from libertem.utils.devices import detect
+
+from .events import EventRegistry
+
+log = logging.getLogger(__name__)
+
 
 
 class ExecutorState:
@@ -287,10 +296,26 @@ class JobState:
             for job_id in self.jobs.keys()
         ]
 
+def connect_to_local(state, connection):
+    devices = detect()
+    options = {
+        "local_directory": state.get_local_directory()
+    }
+    if "numWorkers" in connection:
+        devices["cpus"] = range(connection["numWorkers"])
+    devices["cudas"] = connection.get("cudas", [])
 
-class SharedState:
-    def __init__(self):
-        self.executor_state = ExecutorState()
+    sync_executor = DaskJobExecutor.make_local(
+        spec=cluster_spec(**devices, options=options)
+    )
+    return sync_executor
+
+class SessionState:
+    def __init__(self, executor_state, deregister_session, get_local_directory, session_id):
+        self.session_id = session_id
+        self._deregister_session = deregister_session #Get a reference to the deregister function from the SharedState
+        self._get_local_directory = get_local_directory
+        self.executor_state = executor_state
         self.job_state = JobState(self.executor_state)
         self.analysis_state = AnalysisState(self.executor_state, job_state=self.job_state)
         self.compound_analysis_state = CompoundAnalysisState(self.analysis_state)
@@ -302,6 +327,46 @@ class SharedState:
 
         self.dataset_for_job = {}
         self.local_directory = "dask-worker-space"
+        self.event_registry = EventRegistry() #Do we need this?
+
+    def deregister(self):
+        self._deregister_session(self.session_id)
+
+    def get_local_directory(self):
+        return self._get_local_directory()
+
+
+class SharedState:
+    def __init__(self):
+        self.sessions = {}
+        self.executor_state = ExecutorState()
+        self._instance_type = "liberated" # options to choose from: liberated, restricted
+
+    def deregister_session(self, session_id):
+        del self.sessions[session_id]
+
+    def register_session(self, session_id):
+        assert session_id not in self.sessions
+        self.sessions[session_id] = {"SessionState":SessionState(self.executor_state, self.deregister_session, self.get_local_directory, session_id)} # I am passing some functions here. Maybe there is a better way to do this
+        return self.sessions[session_id]["SessionState"]
+
+    def get_sessions(self):
+        return self.sessions
+
+    @property
+    def instance_type(self):
+        return self._instance_type
+
+    @instance_type.setter
+    def instance_type(self, type):
+        assert type in ["liberated", "restricted"]
+        self._instance_type = type
+
+    def get_allowed_directories(self):
+        return self._allowed_directories
+
+    def add_allowed_directories(self, path:str):
+        self._allowed_directories.append(path)
 
     def get_local_cores(self, default=2):
         cores = psutil.cpu_count(logical=False)
@@ -325,6 +390,18 @@ class SharedState:
             "localCores": self.get_local_cores(),
             "devices": detected_devices,
             "cwd": os.getcwd(),
+            "instanceType":self._instance_type,
             # '/' works on Windows, too.
             "separator": '/'
         }
+
+    async def set_local_executor(self, config_path=None):
+        pool = AsyncAdapter.make_pool()
+        if config_path == None:
+            connection = {"type":"LOCAL","numWorkers":6,"cudas":[]}
+        else:
+            with open(config_path, 'r') as config_file:
+                config = tornado.escape.json_decode(config_file.read())
+                connection = config['connection']
+                log.info("from file")
+        await self.executor_state.set_executor(AsyncAdapter(wrapped=connect_to_local(self, connection), pool=pool), {"connection":connection})

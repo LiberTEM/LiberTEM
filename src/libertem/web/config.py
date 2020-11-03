@@ -1,10 +1,10 @@
 import logging
 
-import tornado.web
-import tornado.gen
-import tornado.websocket
-import tornado.ioloop
 import tornado.escape
+import tornado.gen
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
 
 from .base import log_message
 from .messages import Message

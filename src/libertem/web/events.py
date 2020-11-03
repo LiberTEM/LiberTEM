@@ -2,9 +2,8 @@ import asyncio
 
 import tornado.websocket
 
-from .base import log_message, ResultHandlerMixin
+from .base import ResultHandlerMixin, SessionsWebSocket, log_message
 from .messages import Message
-from .state import SharedState
 
 
 class EventRegistry(object):
@@ -16,6 +15,9 @@ class EventRegistry(object):
 
     def remove_handler(self, handler):
         self.handlers.remove(handler)
+
+    def get_number_of_handlers(self):
+        return len(self.handlers)
 
     def broadcast_event(self, message, *args, **kwargs):
         futures = []
@@ -38,11 +40,7 @@ class EventRegistry(object):
         return asyncio.gather(*futures)
 
 
-class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler):
-    def initialize(self, state: SharedState, event_registry: EventRegistry):
-        self.event_registry = event_registry
-        self.state = state
-
+class ResultEventHandler(ResultHandlerMixin, SessionsWebSocket, tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         # FIXME: implement this when we want to support CORS later
         return super().check_origin(origin)
@@ -64,3 +62,5 @@ class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler)
 
     def on_close(self):
         self.event_registry.remove_handler(self)
+        if self.event_registry.get_number_of_handlers() < 1: # Still isnt a perfect solution - refreshing a page also means close I guess
+            self.state.deregister()

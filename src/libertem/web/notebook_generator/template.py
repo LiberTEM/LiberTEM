@@ -1,5 +1,6 @@
-import autopep8
 from string import Template
+
+import autopep8
 
 
 class TemplateBase:

@@ -1,9 +1,11 @@
-import logging
 import asyncio
+import logging
+import secrets
 
-from libertem.utils.async_utils import run_blocking
-from libertem.executor.base import JobCancelledError
 from libertem.analysis.base import AnalysisResultSet
+from libertem.executor.base import JobCancelledError
+from libertem.utils.async_utils import run_blocking
+
 from .messages import Message
 
 log = logging.getLogger(__name__)
@@ -104,3 +106,21 @@ class ResultHandlerMixin:
             await self.send_results(
                 result_set, job_id, analysis_id, details, finished=True
             )
+
+def handle_session(reqHandler, state, event_registry):
+    if  reqHandler.get_secure_cookie("SESSID") is not None and reqHandler.get_secure_cookie("SESSID").decode("utf-8") in state.get_sessions():
+        reqHandler.state = state.get_sessions()[reqHandler.get_secure_cookie("SESSID").decode("utf-8")]["SessionState"]
+    else:
+        # Generate a random session id
+        id = secrets.token_hex(32)
+        reqHandler.state = state.register_session(id)
+        reqHandler.set_secure_cookie("SESSID", id, expires_days=None)
+    reqHandler.event_registry = reqHandler.state.event_registry
+
+class SessionsWebSocket:
+    def initialize(self, state, event_registry):
+        handle_session(self, state, event_registry)
+
+class SessionsHandler:
+    def initialize(self, state, event_registry):
+        handle_session(self, state, event_registry)

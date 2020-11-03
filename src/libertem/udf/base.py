@@ -1022,6 +1022,8 @@ class UDFRunner:
             corrections=corrections,
         )
 
+        print(tiling_scheme)
+
         # FIXME: don't fully re-create?
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,

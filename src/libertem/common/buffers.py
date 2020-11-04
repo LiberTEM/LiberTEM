@@ -184,6 +184,7 @@ class BufferWrapper(object):
         self._shape = None
         self._ds_shape = None
         self._roi = None
+        self._roi_is_zero = None
         self._contiguous_cache = dict()
 
     def set_roi(self, roi):
@@ -200,6 +201,7 @@ class BufferWrapper(object):
             assert roi_count <= partition.shape[0]
             assert roi_part.shape[0] == partition.shape[0]
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
+        self._update_roi_is_zero()
 
     def set_shape_ds(self, dataset, roi=None):
         self.set_roi(roi)
@@ -207,6 +209,7 @@ class BufferWrapper(object):
         if roi is not None:
             roi_count = np.count_nonzero(self._roi)
         self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav(), roi_count)
+        self._update_roi_is_zero()
         self._ds_shape = dataset.shape
 
     def _shape_for_kind(self, kind, orig_shape, roi_count=None):
@@ -304,7 +307,10 @@ class BufferWrapper(object):
 
     @property
     def roi_is_zero(self):
-        return np.prod(self._shape) == 0
+        return self._roi_is_zero
+
+    def _update_roi_is_zero(self):
+        self._roi_is_zero = np.prod(self._shape) == 0
 
     def _slice_for_partition(self, partition):
         """
@@ -313,6 +319,8 @@ class BufferWrapper(object):
         Because _data is "compressed" if a ROI is set, we can't directly index and must
         calculate a new slice from the ROI.
         """
+        if self._roi is None:
+            return partition.slice
         return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_dataset(self, dataset):
@@ -360,13 +368,13 @@ class BufferWrapper(object):
         elif self._kind == "single":
             return self._data
 
+    # @profile
     def get_view_for_tile(self, partition, tile):
         """
         get a view for a single tile in a partition-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
         """
-        assert partition.shape.dims == partition.shape.sig.dims + 1
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self.roi_is_zero:
@@ -390,6 +398,7 @@ class BufferWrapper(object):
         elif self._kind == "single":
             return self._data
 
+    # @profile
     def get_contiguous_view_for_tile(self, partition, tile):
         '''
         Make a cached contiguous copy of the view for a single tile

@@ -55,6 +55,19 @@ def _make_mmap_reader_and_decoder(decode):
     return _tilereader_w_copy
 
 
+@numba.njit
+def _get_prefetch_ranges(num_files, tile_ranges):
+    res = np.zeros((num_files, 3), dtype=np.int64)
+    for rr_idx in range(tile_ranges.shape[0]):
+        rr = tile_ranges[rr_idx]
+        if res[rr[0], 0] == 0:
+            res[rr[0], 0] = rr[1]  # if minimum is 0, pick first value
+        res[rr[0], 0] = min(res[rr[0], 0], rr[1])
+        res[rr[0], 1] = max(res[rr[0], 1], rr[2])
+        res[rr[0], 2] = rr[0]
+    return res
+
+
 class LocalFSMMapBackend(IOBackend):
     def __init__(self, decoder=None, corrections: CorrectionSet = None):
         self._decoder = decoder
@@ -205,17 +218,22 @@ class LocalFSMMapBackend(IOBackend):
         with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
             out_decoded = out_decoded.reshape((-1,))
             slices = read_ranges[0]
+            shape_prods = np.prod(slices[..., 1, :], axis=1)
             ranges = read_ranges[1]
             scheme_indices = read_ranges[2]
             for idx in range(slices.shape[0]):
-                origin, shape = slices[idx]
+                origin = slices[idx, 0]
+                shape = slices[idx, 1]
                 tile_slice = Slice(
                     origin=origin,
                     shape=Shape(shape, sig_dims=sig_dims)
                 )
                 tile_ranges = ranges[idx]
                 scheme_idx = scheme_indices[idx]
-                out_cut = out_decoded[:np.prod(shape)].reshape((shape[0], -1))
+                # if idx < slices.shape[0] - 1:
+                #     self._prefetch_for_tile(fileset, ranges[idx + 1])
+                #     pass
+                out_cut = out_decoded[:shape_prods[idx]].reshape((shape[0], -1))
                 data = r_n_d(
                     idx,
                     mmaps, sig_dims, tile_ranges,
@@ -240,7 +258,8 @@ class LocalFSMMapBackend(IOBackend):
         #           partitioning when opening the dataset, or by having one file per partition
 
         with fileset:
-            self._set_readahead_hints(roi, fileset)
+            # XXX self._set_readahead_hints(roi, fileset)
+            # self._set_readahead_hints(roi, fileset)
             if not self.need_copy(
                 tiling_scheme=tiling_scheme,
                 fileset=fileset,
@@ -263,28 +282,32 @@ class LocalFSMMapBackend(IOBackend):
                     sync_offset=sync_offset,
                 )
 
+    # @profile
+    def _prefetch_for_tile(self, fileset, tile_ranges):
+        prefr = _get_prefetch_ranges(len(fileset), tile_ranges)
+        prefr = prefr[~np.all(prefr == 0, axis=1)]
+        for mi, ma, fidx in prefr:
+            f = fileset[fidx]
+            os.posix_fadvise(
+                f.fileno(),
+                mi,
+                ma - mi,
+                os.POSIX_FADV_WILLNEED
+            )
+
     def _set_readahead_hints(self, roi, fileset):
         if not hasattr(os, 'posix_fadvise'):
             return
         if any([f.fileno() is None
                 for f in fileset]):
             return
-        if roi is None:
-            for f in fileset:
-                os.posix_fadvise(
-                    f.fileno(),
-                    0,
-                    0,
-                    os.POSIX_FADV_SEQUENTIAL | os.POSIX_FADV_WILLNEED
-                )
-        else:
-            for f in fileset:
-                os.posix_fadvise(
-                    f.fileno(),
-                    0,
-                    0,
-                    os.POSIX_FADV_RANDOM | os.POSIX_FADV_WILLNEED
-                )
+        for f in fileset:
+            os.posix_fadvise(
+                f.fileno(),
+                0,
+                0,
+                os.POSIX_FADV_WILLNEED
+            )
 
 
 class LocalFile(File):
@@ -299,7 +322,7 @@ class LocalFile(File):
             offset=0,
             access=mmap.ACCESS_READ,
         )
-        # TODO: self._raw_mmap.madvise(mmap.MADV_HUGEPAGE) - benchmark this!
+        # self._raw_mmap.madvise(mmap.MADV_HUGEPAGE) # TODO - benchmark this!
         itemsize = np.dtype(self._native_dtype).itemsize
         assert self._frame_header % itemsize == 0
         assert self._frame_footer % itemsize == 0

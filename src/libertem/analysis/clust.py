@@ -168,11 +168,12 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
 
         mask = sparse.COO(
             shape=(len(y), ) + tuple(self.dataset.shape.sig),
-            coords=(z, y, x), data=1
+            coords=(z, y, x), data=1.
         )
 
         udf = ApplyMasksUDF(
-            mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.uint8,
+            # float32 for cupy support
+            mask_factories=lambda: mask, mask_count=len(y), mask_dtype=np.float32,
             use_sparse=True
         )
         return udf

@@ -43,7 +43,7 @@ class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
         return "intensity of the integration over the selected point"
 
     def get_use_sparse(self):
-        return 'sparse.pydata'
+        return True
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

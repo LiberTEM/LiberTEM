@@ -1,13 +1,13 @@
 import numpy as np
 import numba
 import sparse
-from numba.typed import List
 
 from libertem.masks import is_sparse
 
 
 @numba.njit
-def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_environments):
+def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_environments,
+        repair_counts):
     '''
     Numerical work horse to perform detector corrections
 
@@ -30,9 +30,12 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
         int(k) array of indices in the flattened signal dimension to patch
 
     repair_environments:
-        Ragged array with environments for each pixel to use as a reference
-        List with k entries, where each entry is an array of indices in the flattened
-        signal dimension to use as a source
+        Array with environments for each pixel to use as a reference.
+        Array of shape (k, max_repair_counts)
+
+    repair_counts:
+        Array(int) of length k with number of valid entries in each entry in repair_environments.
+
 
     Returns
     -------
@@ -71,11 +74,11 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
 
         # Hole repair blocked in nav
         for i, p in enumerate(exclude_pixels):
-            buf = np.zeros((len(repair_environments[i])))
             for nav in range(nav_block * nav_blocksize, (nav_block + 1) * nav_blocksize):
-                for offset, index in enumerate(repair_environments[i]):
-                    buf[offset] = buffer[nav, index]
-                buffer[nav, p] = np.mean(buf)
+                acc = 0
+                for index in repair_environments[i, :repair_counts[i]]:
+                    acc += buffer[nav, index]
+                buffer[nav, p] = acc / repair_counts[i]
 
     # Processing unblocked nav remainder
     for nav in range(nav_blocks * nav_blocksize, nav_blocks * nav_blocksize + nav_remainder):
@@ -85,10 +88,10 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
 
         # Hole repair
         for i, p in enumerate(exclude_pixels):
-            buf = np.zeros((len(repair_environments[i])))
-            for offset, index in enumerate(repair_environments[i]):
-                buf[offset] = buffer[nav, index]
-            buffer[nav, p] = np.mean(buf)
+            acc = 0
+            for index in repair_environments[i, :repair_counts[i]]:
+                acc += buffer[nav, index]
+            buffer[nav, p] = acc / repair_counts[i]
 
     return buffer
 
@@ -96,24 +99,39 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
 def environments(excluded_pixels, sigshape):
     '''
     Calculate a hypercube surface around a pixel, excluding frame boundaries
+
+    Returns
+    -------
+    repairs, repair_counts
+        repairs : numpy.ndarray
+            Array with shape (exclude_pixels, sig_dims, indices)
+        repair_counts : numpy.ndarray
+            Array with length exclude_pixels, containing the number of pixels
+            in the repair environment
     '''
     sigshape = np.array(sigshape)
     excluded_pixels = np.array(excluded_pixels).T
-    for p in excluded_pixels:
+    max_repair_count = 3**len(sigshape) - 1
+    repairs = np.zeros((len(excluded_pixels), len(sigshape), max_repair_count), dtype=np.intp)
+    repair_counts = np.zeros(len(excluded_pixels), dtype=np.intp)
+    for i, p in enumerate(excluded_pixels):
         coords = np.mgrid[tuple(slice(pp-1, pp+2) for pp in p)]
         coords = coords.reshape((len(p), -1))
         select = np.any(coords != p[:, np.newaxis], axis=0)
         select *= np.all(coords >= 0, axis=0)
         select *= np.all(coords < sigshape[:, np.newaxis], axis=0)
-        result = coords[..., select]
-        yield result
+        repair_count = np.count_nonzero(select)
+        repair_counts[i] = repair_count
+        repairs[i, ..., :repair_count] = coords[..., select]
+
+    return repairs, repair_counts
 
 
 class RepairValueError(ValueError):
     pass
 
 
-def flatten_filter(excluded_pixels, repairs, sig_shape):
+def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
     '''
     Flatten excluded pixels and repair environments and filter for collisions
 
@@ -122,18 +140,20 @@ def flatten_filter(excluded_pixels, repairs, sig_shape):
     "good" pixels.
     '''
     excluded_flat = np.ravel_multi_index(excluded_pixels, sig_shape)
-    repair_flat = List()
 
-    for a in [np.ravel_multi_index(r, sig_shape) for r in repairs]:
-        repair_flat.append(
-            np.extract(np.invert(np.isin(a, excluded_flat)), a)
-        )
+    max_repair_count = 3**len(sig_shape) - 1
+    new_repair_counts = np.zeros_like(repair_counts)
+    repair_flat = np.zeros((len(excluded_flat), max_repair_count), dtype=np.intp)
 
     for i in range(len(excluded_flat)):
-        if len(repair_flat[i]) == 0:
+        a = np.ravel_multi_index(repairs[i, ..., :repair_counts[i]], sig_shape)
+        rep = np.extract(np.invert(np.isin(a, excluded_flat)), a)
+        if len(rep) == 0:
             raise RepairValueError("Repair environment for pixel %i is empty" % i)
+        new_repair_counts[i] = len(rep)
+        repair_flat[i, :len(rep)] = rep
 
-    return (excluded_flat, repair_flat)
+    return (excluded_flat, repair_flat, new_repair_counts)
 
 
 def correct(
@@ -192,13 +212,11 @@ def correct(
     if excluded_pixels is None:
         excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.int)
 
-    repairs = environments(excluded_pixels, sig_shape)
+    repairs, repair_counts = environments(excluded_pixels, sig_shape)
 
-    exclude_flat, repair_flat = flatten_filter(excluded_pixels, repairs, sig_shape)
-
-    # Patch to help Numba determine the type in case of an empty list
-    if len(repair_flat) == 0:
-        repair_flat = (np.array([], dtype=np.int), )
+    exclude_flat, repair_flat, repair_counts = flatten_filter(
+        excluded_pixels, repairs, repair_counts, sig_shape
+    )
 
     _correct_numba_inplace(
         buffer=out.reshape((np.prod(nav_shape), np.prod(sig_shape))),
@@ -206,6 +224,7 @@ def correct(
         gain_map=gain_map,
         exclude_pixels=exclude_flat,
         repair_environments=repair_flat,
+        repair_counts=repair_counts,
     )
     return out
 
@@ -220,13 +239,13 @@ def correct_dot_masks(masks, gain_map, excluded_pixels=None):
             result = sparse.DOK(masks)
         else:
             result = masks.copy()
-        repairs = environments(excluded_pixels, sig_shape)
-        for e, r in zip(*flatten_filter(excluded_pixels, repairs, sig_shape)):
+        repairs, repair_counts = environments(excluded_pixels, sig_shape)
+        for e, r, c in zip(*flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape)):
             result[:, e] = 0
-            rep = masks[:, e] / len(r)
+            rep = masks[:, e] / c
             # We have to loop because of sparse.pydata limitations
             for m in range(result.shape[0]):
-                for rr in r:
+                for rr in r[:c]:
                     result[m, rr] = result[m, rr] + rep[m]
         if is_sparse(result):
             result = sparse.COO(result)

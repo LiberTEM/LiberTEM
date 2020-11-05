@@ -56,8 +56,7 @@ def test_sync(default_k2is):
 def test_read(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
-    # NOTE: partition shape may change in the future
-    assert tuple(p.shape) == (36, 2 * 930, 8 * 256)
+    assert tuple(p.shape)[1:] == (2 * 930, 8 * 256)
 
     tileshape = Shape(
         (16, 930, 16),
@@ -77,8 +76,7 @@ def test_read(default_k2is):
 def test_read_full_frames(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
-    # NOTE: partition shape may change in the future
-    assert tuple(p.shape) == (36, 2 * 930, 8 * 256)
+    assert tuple(p.shape)[1:] == (2 * 930, 8 * 256)
 
     tileshape = Shape(
         (1, 1860, 2048),

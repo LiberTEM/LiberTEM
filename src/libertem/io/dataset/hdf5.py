@@ -162,7 +162,9 @@ class H5DataSet(DataSet):
             datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
             dataset_paths = [ds_path[0] for ds_path in datasets_list]
             name, size, shape, dtype = datasets_list[0]
-        except (IndexError, TimeoutError):
+        # FIXME: excepting `SystemError` temporarily
+        # more info: https://github.com/h5py/h5py/issues/1740
+        except (IndexError, TimeoutError, SystemError):
             return {
                 "parameters": {
                     "path": path
@@ -209,7 +211,9 @@ class H5DataSet(DataSet):
         with self.get_reader().get_h5ds() as ds:
             try:
                 datasets = _get_datasets(self.path)
-            except TimeoutError:
+            # FIXME: excepting `SystemError` temporarily
+            # more info: https://github.com/h5py/h5py/issues/1740
+            except (TimeoutError, SystemError):
                 datasets = []
             datasets = [
                 {"name": name, "value": [

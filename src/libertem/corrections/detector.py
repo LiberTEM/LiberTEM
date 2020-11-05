@@ -77,11 +77,12 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
 
         # Hole repair blocked in nav
         for i, p in enumerate(exclude_pixels):
-            for nav in range(nav_block * nav_blocksize, (nav_block + 1) * nav_blocksize):
-                acc = 0
-                for index in repair_environments[i, :repair_counts[i]]:
-                    acc += buffer[nav, index]
-                buffer[nav, p] = acc / repair_counts[i]
+            if repair_counts[i] > 0:  # Avoid div0
+                for nav in range(nav_block * nav_blocksize, (nav_block + 1) * nav_blocksize):
+                    acc = 0
+                    for index in repair_environments[i, :repair_counts[i]]:
+                        acc += buffer[nav, index]
+                    buffer[nav, p] = acc / repair_counts[i]
 
     # Processing unblocked nav remainder
     for nav in range(nav_blocks * nav_blocksize, nav_blocks * nav_blocksize + nav_remainder):
@@ -91,10 +92,11 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
 
         # Hole repair
         for i, p in enumerate(exclude_pixels):
-            acc = 0
-            for index in repair_environments[i, :repair_counts[i]]:
-                acc += buffer[nav, index]
-            buffer[nav, p] = acc / repair_counts[i]
+            if repair_counts[i] > 0:  # Avoid div0
+                acc = 0
+                for index in repair_environments[i, :repair_counts[i]]:
+                    acc += buffer[nav, index]
+                buffer[nav, p] = acc / repair_counts[i]
 
     return buffer
 
@@ -182,7 +184,7 @@ def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
 
 def correct(
         buffer, dark_image=None, gain_map=None, excluded_pixels=None, repair_descriptor=None,
-        inplace=False, sig_shape=None):
+        inplace=False, sig_shape=None, allow_empty=False):
     '''
     Function to perform detector corrections
 
@@ -238,8 +240,13 @@ def correct(
         out = buffer.astype(np.result_type(np.float32, buffer))
 
     if repair_descriptor is None:
-        repair_descriptor = RepairDescriptor(sig_shape=sig_shape, excluded_pixels=excluded_pixels)
+        repair_descriptor = RepairDescriptor(
+            sig_shape=sig_shape,
+            excluded_pixels=excluded_pixels,
+            allow_empty=allow_empty
+        )
     else:
+        repair_descriptor.check_empty_repairs(allow_empty=allow_empty)
         if excluded_pixels is not None:
             raise ValueError("Invalid arguments: Bot repair_descriptor and excluded_pixels set")
 
@@ -255,7 +262,7 @@ def correct(
 
 
 class RepairDescriptor:
-    def __init__(self, sig_shape, excluded_pixels=None):
+    def __init__(self, sig_shape, excluded_pixels=None, allow_empty=False):
         if excluded_pixels is None:
             excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.intp)
         else:
@@ -266,12 +273,21 @@ class RepairDescriptor:
         self.exclude_flat, self.repair_flat, self.repair_counts = flatten_filter(
             excluded_pixels, repairs, repair_counts, sig_shape
         )
+        self.check_empty_repairs(allow_empty=allow_empty)
 
-    def has_empty_repairs(self):
-        return np.any(self.repair_counts == 0)
+    def empty_repairs(self):
+        return np.argwhere(self.repair_counts == 0)
+
+    def check_empty_repairs(self, allow_empty):
+        empty = self.empty_repairs()
+        if not allow_empty and len(empty) > 0:
+            raise RepairValueError(
+                f"Empty repair environments for pixel(s) number {empty}."
+            )
 
 
-def correct_dot_masks(masks, gain_map, excluded_pixels=None):
+
+def correct_dot_masks(masks, gain_map, excluded_pixels=None, allow_empty=False):
     mask_shape = masks.shape
     sig_shape = gain_map.shape
     masks = masks.reshape((-1, np.prod(sig_shape)))
@@ -281,9 +297,8 @@ def correct_dot_masks(masks, gain_map, excluded_pixels=None):
             result = sparse.DOK(masks)
         else:
             result = masks.copy()
-        repairs, repair_counts = environments(np.array(excluded_pixels).T, np.array(sig_shape))
-        print("Debug:", excluded_pixels, repairs, repair_counts)
-        for e, r, c in zip(*flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape)):
+        desc = RepairDescriptor(sig_shape, excluded_pixels=excluded_pixels, allow_empty=allow_empty)
+        for e, r, c in zip(desc.exclude_flat, desc.repair_flat, desc.repair_counts):
             result[:, e] = 0
             rep = masks[:, e] / c
             # We have to loop because of sparse.pydata limitations

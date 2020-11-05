@@ -56,7 +56,7 @@ class CorrectionSet:
 
     .. versionadded:: 0.6.0
     """
-    def __init__(self, dark=None, gain=None, excluded_pixels=None):
+    def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
         """
         Parameters
         ----------
@@ -76,12 +76,24 @@ class CorrectionSet:
             "roi-like" numpy array. A :code:`sparse.COO` array can be
             directly constructed from a coordinate array, using
             :code:`sparse.COO(coords=coords, data=1, shape=ds.shape.sig)`
+        allow_empty : bool
+            Do not throw an exception if a repair environment is empty. The pixel
+            is left uncorrected in that case.
         """
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
             excluded_pixels = sparse.COO(excluded_pixels, prune=True)
         self._excluded_pixels = excluded_pixels
+        self._allow_empty = allow_empty
+        if not allow_empty and excluded_pixels is not None:
+            # Construct the environment for checking so that an exception is thrown
+            # when the CorrectionSet is instantiated and not when workers try to apply it.
+            _ = RepairDescriptor(
+                sig_shape=excluded_pixels.shape,
+                excluded_pixels=excluded_pixels.coords,
+                allow_empty=False
+            )
 
     def get_dark_frame(self):
         return self._dark
@@ -125,6 +137,7 @@ class CorrectionSet:
             repair_descriptor=self.repair_descriptor(tile_slice.discard_nav()),
             inplace=True,
             sig_shape=tuple(tile_slice.shape.sig),
+            allow_empty=self._allow_empty
         )
 
     @functools.lru_cache(maxsize=128)
@@ -135,7 +148,8 @@ class CorrectionSet:
             excluded_pixels = excluded_pixels.coords
         return RepairDescriptor(
             sig_shape=tuple(sig_slice.shape.sig),
-            excluded_pixels=excluded_pixels
+            excluded_pixels=excluded_pixels,
+            allow_empty=self._allow_empty
         )
 
     def adjust_tileshape(self, tile_shape, sig_shape, base_shape):

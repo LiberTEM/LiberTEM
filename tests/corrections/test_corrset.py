@@ -4,6 +4,7 @@ import sparse
 import primesieve.numpy
 
 from libertem.corrections import CorrectionSet
+from libertem.corrections.detector import RepairValueError
 from libertem.corrections.corrset import factorizations
 from libertem.udf.sum import SumUDF
 
@@ -94,6 +95,37 @@ def test_patch_corr_odd(lt_ctx):
         udf=udf,
         corrections=corr
     )
+    assert np.allclose(res['intensity'], 0)
+
+
+def test_patch_corr_empty(lt_ctx):
+    data = np.ones((13, 17, 19))
+    excluded_coords = np.array([
+            (1, 2, 3),
+    ]).astype(np.int64)
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=(19, ), data=True)
+
+    ds = lt_ctx.load("memory", data=data, sig_dims=1)
+
+    udf = SumUDF()
+    with pytest.raises(RepairValueError):
+        corr = CorrectionSet(
+            excluded_pixels=excluded_pixels,
+            gain=np.ones((19, )),
+            dark=np.ones((19, ))
+        )
+    corr = CorrectionSet(
+            excluded_pixels=excluded_pixels,
+            gain=np.ones((19, )),
+            dark=np.ones((19, )),
+            allow_empty=True
+        )
+    res = lt_ctx.run_udf(
+        dataset=ds,
+        udf=udf,
+        corrections=corr
+    )
+    # The value will be unpatched and remain 0 after gain and dark correction are applied
     assert np.allclose(res['intensity'], 0)
 
 

@@ -7,6 +7,7 @@ from numba.typed import List as NumbaList
 import numpy as np
 
 from libertem.common import Slice, Shape
+from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index
 from libertem.corrections import CorrectionSet
 from .roi import _roi_to_indices
 
@@ -138,19 +139,6 @@ def _default_px_to_bytes(
     stop = start + sig_size_bytes
 
     read_ranges.append((file_idx, start, stop))
-
-
-@numba.njit(boundscheck=True)
-def _ravel_multi_index(multi_index, dims):
-    # only supports the "single index" case
-    idxs = range(len(dims) - 1, -1, -1)
-    res = 0
-    for idx in idxs:
-        stride = 1
-        for dimidx in range(idx + 1, len(dims)):
-            stride *= dims[dimidx]
-        res += multi_index[idx] * stride
-    return res
 
 
 @numba.njit(boundscheck=True)

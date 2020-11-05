@@ -72,6 +72,9 @@ class Partition(object):
     def need_decode(self, read_dtype, roi):
         raise NotImplementedError()
 
+    def set_io_backend(self, backend):
+        raise NotImplementedError()
+
     def validate_tiling_scheme(self, tiling_scheme):
         pass
 
@@ -149,6 +152,7 @@ class BasePartition(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
+        self._io_backend = None
         if num_frames <= 0:
             raise ValueError("invalid number of frames: %d" % num_frames)
 
@@ -195,6 +199,7 @@ class BasePartition(Partition):
     def need_decode(self, read_dtype, roi):
         io_backend = self._get_io_backend()
         return io_backend.need_copy(
+            decoder=self._get_decoder(),
             roi=roi,
             native_dtype=self.meta.raw_dtype,
             read_dtype=read_dtype,
@@ -214,11 +219,15 @@ class BasePartition(Partition):
             roi=roi,
         )
 
+    def set_io_backend(self, backend):
+        self._io_backend = backend
+
     def _get_io_backend(self):
-        return LocalFSMMapBackend(
-            decoder=self._get_decoder(),
-            corrections=self._corrections,
-        )
+        if self._io_backend is None:
+            return LocalFSMMapBackend(
+                corrections=self._corrections,
+            )
+        return self._io_backend
 
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
@@ -260,6 +269,7 @@ class BasePartition(Partition):
                 read_ranges=read_ranges, roi=roi,
                 native_dtype=self.meta.raw_dtype, read_dtype=dest_dtype,
                 sync_offset=self.meta.sync_offset,
+                decoder=self._get_decoder(),
             )
 
     def __repr__(self):

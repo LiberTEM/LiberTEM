@@ -668,7 +668,8 @@ class Context:
                 roi: np.ndarray = None,
                 corrections: CorrectionSet = None,
                 progress: bool = False,
-                backends=None) -> Dict[str, BufferWrapper]:
+                backends=None,
+                io_backend=None) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -701,6 +702,9 @@ class Context:
             Restrict the back-end to a subset of the capabilities of the UDF.
             This can be useful for testing hybrid UDFs.
 
+        io_backend : IOBackend or None
+            Use a different I/O backend for running this UDF
+
         Returns
         -------
         dict
@@ -710,6 +714,39 @@ class Context:
             a :class:`numpy.ndarray` in many cases because it implements
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
+
+        Examples
+        --------
+        Run the `SumUDF` on a data set:
+
+        >>> from libertem.udf.sum import SumUDF
+        >>> result = ctx.run_udf(dataset=dataset, udf=SumUDF())
+        >>> np.array(result["intensity"]).shape
+        (16, 16)
+        >>> # intensity is the name of the result buffer, defined in the SumUDF
+
+        To configure an alternative I/O backend, in this case configuring
+        the mmap backend to enable readahead hints:
+
+        >>> from libertem.udf.sum import SumUDF
+        >>> from libertem.io.dataset.base.backend import LocalFSMMapBackend
+        >>> io_backend = LocalFSMMapBackend(enable_readahead_hints=True)
+        >>> result = ctx.run_udf(dataset=dataset, udf=SumUDF(), io_backend=io_backend)
+        >>> np.array(result["intensity"]).shape
+        (16, 16)
+
+        Running a UDF on a subset of data:
+
+        >>> from libertem.udf.sumsigudf import SumSigUDF
+        >>> roi = np.zeros(dataset.shape.nav, dtype=np.bool)
+        >>> roi[0, 0] = True
+        >>> result = ctx.run_udf(dataset=dataset, udf=SumSigUDF(), roi=roi)
+        >>> # to get the full navigation-shaped results, with NaNs where the `roi` was False:
+        >>> np.array(result["intensity"]).shape
+        (16, 16)
+        >>> # to only get the selected results as a flat array:
+        >>> result["intensity"].raw_data.shape
+        (1,)
         """
         if corrections is None:
             corrections = dataset.get_correction_data()
@@ -720,11 +757,12 @@ class Context:
             progress=progress,
             corrections=corrections,
             backends=backends,
+            io_backend=io_backend,
         )
         return results[0]
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,
-            progress: bool = False) -> BufferWrapper:
+            progress: bool = False, io_backend=None) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
 
@@ -743,6 +781,8 @@ class Context:
             region of interest as bool mask over the navigation axes of the dataset
         progress : bool
             Show progress bar
+        io_backend : IOBackend or None
+            Use a different I/O backend for running this function
 
         Returns
         -------
@@ -753,7 +793,13 @@ class Context:
             Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        results = self.run_udf(dataset=dataset, udf=udf, roi=roi, progress=progress)
+        results = self.run_udf(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            progress=progress,
+            io_backend=io_backend,
+        )
         return results['result']
 
     def _create_local_executor(self):

@@ -276,6 +276,9 @@ class H5Partition(Partition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
+    def set_io_backend(self, backend):
+        pass  # TODO: raise an error if backend is incompatible?
+
     def _get_tiles_normal(self, tiling_scheme, tileshape_nd, dest_dtype="float32"):
         data = np.zeros(tileshape_nd, dtype=dest_dtype)
         with self.reader.get_h5ds() as dataset:

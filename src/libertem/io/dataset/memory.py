@@ -63,7 +63,7 @@ class MemBackend(LocalFSMMapBackend):
             )
 
     def get_tiles(
-        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
+        self, decoder, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
         sync_offset,
     ):
         if roi is None:
@@ -301,7 +301,7 @@ class MemPartition(BasePartition):
         return None
 
     def _get_io_backend(self):
-        return MemBackend(decoder=self._get_decoder(), corrections=self._corrections)
+        return MemBackend(corrections=self._corrections)
 
     def get_macrotile(self, *args, **kwargs):
         self._force_tileshape = False

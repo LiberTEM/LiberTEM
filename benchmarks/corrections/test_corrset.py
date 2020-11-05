@@ -1,5 +1,3 @@
-import functools
-
 import numpy as np
 import sparse
 import pytest
@@ -7,6 +5,9 @@ import pytest
 from libertem.corrections import CorrectionSet, detector
 
 
+@pytest.mark.benchmark(
+    group="adjust tileshape",
+)
 @pytest.mark.parametrize(
     "base_shape", ((1, 1), (2, 2))
 )
@@ -86,58 +87,72 @@ def _generate_exclude_pixels(sig_dims, num_excluded):
     return np.array(exclude).T
 
 
-def test_detector_parch_large(benchmark):
+@pytest.mark.benchmark(
+    group="patch many",
+)
+@pytest.mark.parametrize(
+    "num_excluded", (0, 1, 10, 100, 1000, 10000)
+)
+def test_detector_patch_large(num_excluded, benchmark):
     nav_dims = (8, 8)
     sig_dims = (1336, 2004)
 
     data = _make_data(nav_dims, sig_dims)
 
-    exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=999)
-
-    assert exclude.shape[1] == 999
+    exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
 
     damaged_data = data.copy()
-    damaged_data[(Ellipsis, *exclude)] = 1e24
 
-    print("Nav dims: ", nav_dims)
-    print("Sig dims:", sig_dims)
-    print("Exclude: ", exclude)
-
-    benchmark(
-        detector.correct,
-        buffer=damaged_data,
-        excluded_pixels=exclude,
-        sig_shape=sig_dims,
-        inplace=False
-    )
-
-
-def test_detector_parch_large_numba_compilation(benchmark):
-    nav_dims = (8, 8)
-    sig_dims = (1336, 2004)
-
-    data = _make_data(nav_dims, sig_dims)
-
-    exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=999)
-
-    assert exclude.shape[1] == 999
-
-    damaged_data = data.copy()
-    damaged_data[(Ellipsis, *exclude)] = 1e24
+    if exclude is not None:
+        assert exclude.shape[1] == num_excluded
+        damaged_data[(Ellipsis, *exclude)] = 1e24
 
     print("Nav dims: ", nav_dims)
     print("Sig dims:", sig_dims)
     print("Exclude: ", exclude)
 
     benchmark.pedantic(
-        functools.partial(
-            detector.correct,
+        detector.correct,
+        kwargs=dict(
             buffer=damaged_data,
             excluded_pixels=exclude,
             sig_shape=sig_dims,
             inplace=False
         ),
         warmup_rounds=0,
-        rounds=2,
+        rounds=5,
+        iterations=1,
+    )
+
+
+@pytest.mark.benchmark(
+    group="correct large",
+)
+def test_detector_correction_large(benchmark):
+    nav_dims = (8, 8)
+    sig_dims = (1336, 2004)
+
+    data = _make_data(nav_dims, sig_dims)
+    gain_map = (np.random.random(sig_dims) + 1).astype(np.float64)
+    dark_image = np.random.random(sig_dims).astype(np.float64)
+
+    damaged_data = data.copy()
+    damaged_data /= gain_map
+    damaged_data += dark_image
+
+    print("Nav dims: ", nav_dims)
+    print("Sig dims:", sig_dims)
+
+    benchmark.pedantic(
+        detector.correct,
+        kwargs=dict(
+            buffer=damaged_data,
+            dark_image=dark_image,
+            gain_map=gain_map,
+            sig_shape=sig_dims,
+            inplace=False
+        ),
+        warmup_rounds=0,
+        rounds=5,
         iterations=1,
     )

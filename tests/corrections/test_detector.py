@@ -295,7 +295,6 @@ def test_detector_patch_too_large():
         )
 
 
-
 @pytest.mark.with_numba
 def test_detector_patch_overlapping():
     for i in range(10):

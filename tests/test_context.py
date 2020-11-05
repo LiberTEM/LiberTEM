@@ -1,6 +1,9 @@
 import pytest
+import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
+from libertem.io.dataset.base.backend import LocalFSMMapBackend
+from libertem.udf.sum import SumUDF
 from libertem.api import Context
 
 
@@ -18,3 +21,11 @@ def test_context_arguments():
     with pytest.raises(ValueError):
         # refs https://github.com/LiberTEM/LiberTEM/issues/918
         Context(executor=InlineJobExecutor)
+
+
+def test_run_udf_with_io_backend(lt_ctx, default_raw):
+    io_backend = LocalFSMMapBackend(
+        enable_readahead_hints=True,
+    )
+    res = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF(), io_backend=io_backend)
+    assert np.array(res['intensity']).shape == (128, 128)

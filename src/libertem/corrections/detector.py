@@ -286,7 +286,6 @@ class RepairDescriptor:
             )
 
 
-
 def correct_dot_masks(masks, gain_map, excluded_pixels=None, allow_empty=False):
     mask_shape = masks.shape
     sig_shape = gain_map.shape

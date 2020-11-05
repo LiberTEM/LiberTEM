@@ -53,20 +53,28 @@ def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     )
 
 
+@pytest.fixture('function')
+def random_hdf5_1():
+    tmp_dir = '/data/temp_data/tmp'
+    os.makedirs(tmp_dir)
+    ds_path = os.path.join(tmp_dir, 'tmp_random_hdf5.h5')
+    ds = create_random_hdf5(ds_path)
+    yield ds
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 @pytest.mark.dist
 @pytest.mark.asyncio
-def test_ring_tcp_cluster(lt_ctx):
+def test_ring_tcp_cluster(lt_ctx, random_hdf5_1):
 
     conn = {"connection": {
                     "type": "TCP",
                     "address": "tcp://scheduler:8786"
                     }
             }
-    base_path = '/data/temp_data'
-    tmp_dir = os.path.join(base_path, 'tmp')
-    os.makedirs(tmp_dir)
-    ds_path = os.path.join(tmp_dir, 'tmp_random_hdf5.h5')
-    ds = create_random_hdf5(ds_path)
+    ds = random_hdf5_1
+    ds_path = ds.path
+    tmp_dir = os.path.dirname(ds_path)
     dataset = _get_hdf5_params(ds_path)
 
     analysis = [{
@@ -101,5 +109,3 @@ def test_ring_tcp_cluster(lt_ctx):
         results,
         expected['intensity'].raw_data,
     )
-    # cleanup files after test
-    shutil.rmtree(tmp_dir, ignore_errors=True)

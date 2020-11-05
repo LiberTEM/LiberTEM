@@ -1,9 +1,11 @@
+import functools
+
 import numpy as np
 import sparse
 import primesieve.numpy
 
 from libertem.common import Slice
-from libertem.corrections.detector import correct
+from libertem.corrections.detector import correct, RepairDescriptor
 
 
 def factorizations(n, primes):
@@ -105,7 +107,6 @@ class CorrectionSet:
         """
         dark_frame = self.get_dark_frame()
         gain_map = self.get_gain_map()
-        excluded_pixels = self.get_excluded_pixels()
 
         if not self.have_corrections():
             return
@@ -116,17 +117,23 @@ class CorrectionSet:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:
             gain_map = gain_map[sig_slice]
-        if excluded_pixels is not None:
-            excluded_pixels = excluded_pixels[sig_slice]
-            excluded_pixels = excluded_pixels.coords
+
         correct(
             buffer=data,
             dark_image=dark_frame,
             gain_map=gain_map,
-            excluded_pixels=excluded_pixels,
+            repair_descriptor=self.repair_descriptor(tile_slice.discard_nav()),
             inplace=True,
             sig_shape=tuple(tile_slice.shape.sig),
         )
+
+    @functools.lru_cache(maxsize=128)
+    def repair_descriptor(self, sig_slice):
+        excluded_pixels = self.get_excluded_pixels()
+        if excluded_pixels is not None:
+            excluded_pixels = excluded_pixels[sig_slice.get(sig_only=True)]
+            excluded_pixels = excluded_pixels.coords
+        return RepairDescriptor(sig_shape=tuple(sig_slice.shape), excluded_pixels=excluded_pixels)
 
     def adjust_tileshape(self, tile_shape, sig_shape, base_shape):
         excluded_pixels = self.get_excluded_pixels()

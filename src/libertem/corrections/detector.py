@@ -3,7 +3,9 @@ import numba
 import sparse
 
 from libertem.masks import is_sparse
-from libertem.common.numba import numba_ravel_multi_index_multi, numba_isin_array, numba_unravel_index_multi
+from libertem.common.numba import (
+    numba_ravel_multi_index_multi, numba_isin_array, numba_unravel_index_multi
+)
 
 
 @numba.njit
@@ -173,13 +175,13 @@ def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
         if new_repair_counts[i] == 0:
             pass
             # TODO fix for Numba
-            # raise RepairValueError("Repair environment for pixel %i is empty" % i)  
+            # raise RepairValueError("Repair environment for pixel %i is empty" % i)
 
     return (excluded_flat, repair_flat, new_repair_counts)
 
 
 def correct(
-        buffer, dark_image=None, gain_map=None, excluded_pixels=None,
+        buffer, dark_image=None, gain_map=None, excluded_pixels=None, repair_descriptor=None,
         inplace=False, sig_shape=None):
     '''
     Function to perform detector corrections
@@ -202,6 +204,10 @@ def correct(
     exclude_pixels:
         int(sigs, k) array of indices in the signal dimension to patch.
         The first dimension is the number of signal dimensions, the second the number of pixels
+
+    repair_descriptor : RepairDescriptor
+        This allows to re-use the calculation and filtering of repair environments when
+        specified instead of exclude_pixels. This is particularly advantageous for tiled processing.
 
     inplace:
         If True, modify the input buffer in-place.
@@ -231,24 +237,36 @@ def correct(
         # astype() is always a copy even if it is the same dtype
         out = buffer.astype(np.result_type(np.float32, buffer))
 
-    if excluded_pixels is None:
-        excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.int)
-
-    repairs, repair_counts = environments(np.array(excluded_pixels).T, np.array(sig_shape))
-
-    exclude_flat, repair_flat, repair_counts = flatten_filter(
-        excluded_pixels, repairs, repair_counts, sig_shape
-    )
+    if repair_descriptor is None:
+        repair_descriptor = RepairDescriptor(sig_shape=sig_shape, excluded_pixels=excluded_pixels)
+    else:
+        if excluded_pixels is not None:
+            raise ValueError("Invalid arguments: Bot repair_descriptor and excluded_pixels set")
 
     _correct_numba_inplace(
         buffer=out.reshape((np.prod(nav_shape), np.prod(sig_shape))),
         dark_image=dark_image,
         gain_map=gain_map,
-        exclude_pixels=exclude_flat,
-        repair_environments=repair_flat,
-        repair_counts=repair_counts,
+        exclude_pixels=repair_descriptor.exclude_flat,
+        repair_environments=repair_descriptor.repair_flat,
+        repair_counts=repair_descriptor.repair_counts,
     )
     return out
+
+
+class RepairDescriptor:
+    def __init__(self, sig_shape, excluded_pixels=None):
+        if excluded_pixels is None:
+            excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.intp)
+
+        repairs, repair_counts = environments(np.array(excluded_pixels).T, np.array(sig_shape))
+
+        self.exclude_flat, self.repair_flat, self.repair_counts = flatten_filter(
+            excluded_pixels, repairs, repair_counts, sig_shape
+        )
+
+    def has_empty_repairs(self):
+        return np.any(self.repair_counts == 0)
 
 
 def correct_dot_masks(masks, gain_map, excluded_pixels=None):

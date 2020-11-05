@@ -19,6 +19,9 @@ def filelist(mib_hdr):
     return [os.path.join(mib_dir, fname) for fname in os.listdir(mib_dir)]
 
 
+@pytest.mark.benchmark(
+    group="io"
+)
 @pytest.mark.parametrize(
     "drop", ("cold_cache", "warm_cache")
 )
@@ -46,6 +49,9 @@ def test_sequential(benchmark, prefix, drop):
 
 
 class TestUseSharedExecutor:
+    @pytest.mark.benchmark(
+        group="io"
+    )
     @pytest.mark.parametrize(
         "drop", ("cold_cache", "warm_cache")
     )
@@ -82,6 +88,9 @@ class TestUseSharedExecutor:
         )
 
 
+@pytest.mark.benchmark(
+    group="io"
+)
 @pytest.mark.parametrize(
     "first", ("warm_executor", "cold_executor", )
 )

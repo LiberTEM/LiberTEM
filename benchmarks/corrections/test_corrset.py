@@ -3,6 +3,7 @@ import sparse
 import pytest
 
 from libertem.corrections import CorrectionSet, detector
+from libertem.utils.generate import gradient_data, exclude_pixels
 
 
 @pytest.mark.benchmark(
@@ -45,48 +46,6 @@ def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords):
     print("Adjusted", adjusted)
 
 
-def _make_data(nav_dims, sig_dims):
-    data = np.linspace(
-        start=5, stop=30, num=np.prod(nav_dims) * np.prod(sig_dims), dtype=np.float32
-    )
-    return data.reshape(nav_dims + sig_dims)
-
-
-def _generate_exclude_pixels(sig_dims, num_excluded):
-    '''
-    Generate a list of excluded pixels that
-    can be reconstructed faithfully from their neighbors
-    in a linear gradient dataset
-    '''
-    if num_excluded == 0:
-        return None
-    # Map of pixels that can be reconstructed faithfully from neighbors in a linear gradient
-    free_map = np.ones(sig_dims, dtype=np.bool)
-
-    # Exclude all border pixels
-    for dim in range(len(sig_dims)):
-        selector = tuple(slice(None) if i != dim else (0, -1) for i in range(len(sig_dims)))
-        free_map[selector] = False
-
-    exclude = []
-
-    while len(exclude) < num_excluded:
-        exclude_item = tuple([np.random.randint(low=1, high=s-1) for s in sig_dims])
-        print("Exclude item: ", exclude_item)
-        if free_map[exclude_item]:
-            exclude.append(exclude_item)
-            knock_out = tuple(slice(e - 1, e + 2) for e in exclude_item)
-            # Remove the neighbors of a bad pixel
-            # since that can't be reconstructed faithfully from a linear gradient
-            free_map[knock_out] = False
-
-    print("Remaining free pixel map: ", free_map)
-
-    # Transform from list of tuples with length of number of dimensions
-    # to array of indices per dimension
-    return np.array(exclude).T
-
-
 @pytest.mark.benchmark(
     group="patch many",
 )
@@ -97,9 +56,9 @@ def test_detector_patch_large(num_excluded, benchmark):
     nav_dims = (8, 8)
     sig_dims = (1336, 2004)
 
-    data = _make_data(nav_dims, sig_dims)
+    data = gradient_data(nav_dims, sig_dims)
 
-    exclude = _generate_exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
+    exclude = exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
 
     damaged_data = data.copy()
 
@@ -132,7 +91,7 @@ def test_detector_correction_large(benchmark):
     nav_dims = (8, 8)
     sig_dims = (1336, 2004)
 
-    data = _make_data(nav_dims, sig_dims)
+    data = gradient_data(nav_dims, sig_dims)
     gain_map = (np.random.random(sig_dims) + 1).astype(np.float64)
     dark_image = np.random.random(sig_dims).astype(np.float64)
 

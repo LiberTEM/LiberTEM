@@ -258,8 +258,10 @@ class RepairDescriptor:
     def __init__(self, sig_shape, excluded_pixels=None):
         if excluded_pixels is None:
             excluded_pixels = np.zeros((len(sig_shape), 0), dtype=np.intp)
+        else:
+            excluded_pixels = np.array(excluded_pixels)
 
-        repairs, repair_counts = environments(np.array(excluded_pixels).T, np.array(sig_shape))
+        repairs, repair_counts = environments(excluded_pixels.T, np.array(sig_shape))
 
         self.exclude_flat, self.repair_flat, self.repair_counts = flatten_filter(
             excluded_pixels, repairs, repair_counts, sig_shape

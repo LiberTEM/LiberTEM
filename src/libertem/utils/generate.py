@@ -114,3 +114,42 @@ def hologram_frame(amp, phi,
         holo = gaussian_filter(holo, gaussian_noise)
 
     return holo
+
+
+def gradient_data(nav_dims, sig_dims):
+    data = np.linspace(
+        start=5, stop=30, num=np.prod(nav_dims) * np.prod(sig_dims), dtype=np.float32
+    )
+    return data.reshape(nav_dims + sig_dims)
+
+
+def exclude_pixels(sig_dims, num_excluded):
+    '''
+    Generate a list of excluded pixels that
+    can be reconstructed faithfully from their neighbors
+    in a linear gradient dataset
+    '''
+    if num_excluded == 0:
+        return None
+    # Map of pixels that can be reconstructed faithfully from neighbors in a linear gradient
+    free_map = np.ones(sig_dims, dtype=np.bool)
+
+    # Exclude all border pixels
+    for dim in range(len(sig_dims)):
+        selector = tuple(slice(None) if i != dim else (0, -1) for i in range(len(sig_dims)))
+        free_map[selector] = False
+
+    exclude = []
+
+    while len(exclude) < num_excluded:
+        exclude_item = tuple([np.random.randint(low=1, high=s-1) for s in sig_dims])
+        if free_map[exclude_item]:
+            exclude.append(exclude_item)
+            knock_out = tuple(slice(e - 1, e + 2) for e in exclude_item)
+            # Remove the neighbors of a bad pixel
+            # since that can't be reconstructed faithfully from a linear gradient
+            free_map[knock_out] = False
+
+    # Transform from list of tuples with length of number of dimensions
+    # to array of indices per dimension
+    return np.array(exclude).T

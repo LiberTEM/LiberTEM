@@ -133,7 +133,10 @@ class CorrectionSet:
         if excluded_pixels is not None:
             excluded_pixels = excluded_pixels[sig_slice.get(sig_only=True)]
             excluded_pixels = excluded_pixels.coords
-        return RepairDescriptor(sig_shape=tuple(sig_slice.shape), excluded_pixels=excluded_pixels)
+        return RepairDescriptor(
+            sig_shape=tuple(sig_slice.shape.sig),
+            excluded_pixels=excluded_pixels
+        )
 
     def adjust_tileshape(self, tile_shape, sig_shape, base_shape):
         excluded_pixels = self.get_excluded_pixels()

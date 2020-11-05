@@ -45,7 +45,7 @@ def numba_unravel_index_single(index, shape):
 
 @numba.njit(boundscheck=True)
 def numba_unravel_index_multi(indices, shape):
-    sizes = np.zeros(len(shape), dtype=np.int64)
+    sizes = np.zeros(len(shape), dtype=np.intp)
     result = np.zeros((len(shape), len(indices)), dtype=np.intp)
     sizes[-1] = 1
     for i in range(len(shape) - 2, -1, -1):

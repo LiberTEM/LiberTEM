@@ -27,11 +27,13 @@ else:
     def set_fftw_threads(n):
         yield
 
+
 @contextmanager
 def set_torch_threads(n):
     try:
         import torch
     except ImportError:
+        yield
         return
     torch_threads = torch.get_num_threads()
     # See also https://pytorch.org/docs/stable/torch.html#parallelism

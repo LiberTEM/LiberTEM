@@ -4,6 +4,7 @@ import pytest
 
 from libertem.corrections import CorrectionSet, detector
 from libertem.utils.generate import gradient_data, exclude_pixels
+from libertem.udf.base import NoOpUDF
 
 
 @pytest.mark.benchmark(
@@ -115,3 +116,105 @@ def test_detector_correction_large(benchmark):
         rounds=5,
         iterations=1,
     )
+
+
+class TestRealCorrection:
+    @pytest.mark.benchmark(
+        group="correct large",
+    )
+    def test_real_correction_baseline(self, shared_dist_ctx, large_raw_file, benchmark):
+        filename, shape, dtype = large_raw_file
+        nav_dims = shape[:2]
+        sig_dims = shape[2:]
+
+        print("Nav dims: ", nav_dims)
+        print("Sig dims:", sig_dims)
+
+        udf = NoOpUDF()
+        ds = shared_dist_ctx.load(
+            'RAW',
+            path=str(filename),
+            scan_size=shape[:2],
+            dtype=dtype,
+            detector_size=shape[2:],
+        )
+
+        benchmark.pedantic(
+            shared_dist_ctx.run_udf,
+            kwargs=dict(
+                dataset=ds,
+                udf=udf,
+            ),
+            warmup_rounds=0,
+            rounds=5,
+            iterations=1,
+        )
+
+    @pytest.mark.benchmark(
+        group="correct large",
+    )
+    @pytest.mark.parametrize(
+        'gain', ('no gain', 'use gain')
+    )
+    @pytest.mark.parametrize(
+        'dark', ('no dark', 'use dark')
+    )
+    @pytest.mark.parametrize(
+        'num_excluded', (0, 1, 1000)
+    )
+    def test_real_correction(self, shared_dist_ctx, large_raw_file, benchmark,
+            gain, dark, num_excluded):
+        filename, shape, dtype = large_raw_file
+        nav_dims = shape[:2]
+        sig_dims = shape[2:]
+
+        if gain == 'use gain':
+            gain_map = (np.random.random(sig_dims) + 1).astype(np.float64)
+        elif gain == 'no gain':
+            gain_map = None
+        else:
+            raise ValueError
+
+        if dark == 'use dark':
+            dark_image = np.random.random(sig_dims).astype(np.float64)
+        elif dark == 'no dark':
+            dark_image = None
+        else:
+            raise ValueError
+
+        if num_excluded > 0:
+            excluded_coords = exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
+            assert excluded_coords.shape[1] == num_excluded
+            exclude = sparse.COO(coords=excluded_coords, shape=sig_dims, data=True)
+        else:
+            exclude = None
+
+        print("Nav dims: ", nav_dims)
+        print("Sig dims:", sig_dims)
+
+        corrset = CorrectionSet(
+            dark=dark_image,
+            gain=gain_map,
+            excluded_pixels=exclude,
+        )
+
+        udf = NoOpUDF()
+        ds = shared_dist_ctx.load(
+            'RAW',
+            path=str(filename),
+            scan_size=shape[:2],
+            dtype=dtype,
+            detector_size=shape[2:],
+        )
+
+        benchmark.pedantic(
+            shared_dist_ctx.run_udf,
+            kwargs=dict(
+                dataset=ds,
+                udf=udf,
+                corrections=corrset,
+            ),
+            warmup_rounds=0,
+            rounds=5,
+            iterations=1,
+        )

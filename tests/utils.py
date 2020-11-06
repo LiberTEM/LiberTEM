@@ -154,7 +154,10 @@ def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
         dark = np.random.random(ds.shape.sig) - 0.5
 
         if exclude is None:
-            exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+            exclude = [
+                (np.random.randint(0, s), np.random.randint(0, s))
+                for s in tuple(ds.shape.sig)
+            ]
 
         exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
         corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
@@ -193,7 +196,10 @@ def dataset_correction_masks(ds, roi, lt_ctx, exclude=None):
         dark = np.random.random(ds.shape.sig) - 0.5
 
         if exclude is None:
-            exclude = [(np.random.randint(0, s), np.random.randint(0, s)) for s in tuple(ds.shape.sig)]
+            exclude = [
+                (np.random.randint(0, s), np.random.randint(0, s))
+                for s in tuple(ds.shape.sig)
+            ]
 
         exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
         corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)

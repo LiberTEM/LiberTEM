@@ -181,7 +181,7 @@ def big_endian_raw(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def large_raw(tmpdir_factory):
+def large_raw_file(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-large-sparse'
     shape = (100, 100, 1216, 1216)
@@ -196,6 +196,12 @@ def large_raw(tmpdir_factory):
             f.truncate(size)
         stat = os.stat(filename)
         assert stat.st_blocks == 0
+    yield filename, shape, dtype
+
+
+@pytest.fixture(scope='session')
+def large_raw(large_raw_file):
+    filename, shape, dtype = large_raw_file
     ds = RawFileDataSet(
         path=str(filename),
         scan_size=shape[:2],
@@ -273,6 +279,26 @@ def ipy_ctx():
     executor = DaskJobExecutor(client=dask_client, is_local=False)
     with lt.Context(executor=executor) as ctx:
         yield ctx
+
+
+# Starting fresh distributed executors takes a lot of time and therefore
+# they should be used repeatedly if possible.
+# However, some benchmarks require a fresh distributed executor
+# and running several Dask executors in parallel leads to lockups when closing.
+# That means any shared executor has to be shut down before a fresh one is started.
+# For that reason we use a fixture with scope "class" and group
+# tests in a class that should all use the same executor.
+# That way we make sure the shared executor is torn down before any other test
+# starts a new one.
+
+
+@pytest.fixture(scope="class")
+def shared_dist_ctx():
+    print("start shared Context()")
+    ctx = lt.Context()
+    yield ctx
+    print("stop shared Context()")
+    ctx.close()
 
 
 @pytest.fixture(autouse=True)

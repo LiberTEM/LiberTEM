@@ -144,10 +144,7 @@ class ApplyMasksUDF(UDF):
         ''
         flat_data = tile.reshape((tile.shape[0], -1))
         if self.task_data.use_torch:
-            try:
-                import torch
-            except ImportError:
-                torch = None
+            import torch
             masks = self.task_data.masks.get(self.meta.slice, transpose=True)
             # CuPy back-end disables torch in get_task_data
             # FIXME use GPU torch with CuPy array?

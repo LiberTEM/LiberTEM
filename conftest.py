@@ -6,6 +6,7 @@ import asyncio
 import threading
 import pkg_resources
 from functools import partial
+import warnings
 
 import numpy as np
 import pytest
@@ -195,7 +196,8 @@ def large_raw_file(tmpdir_factory):
         with open(filename, 'wb') as f:
             f.truncate(size)
         stat = os.stat(filename)
-        assert stat.st_blocks == 0
+        if stat.st_blocks != 0:
+            warnings.warn(f"Created file {filename} is not reported as sparse: {stat}")
     yield filename, shape, dtype
 
 

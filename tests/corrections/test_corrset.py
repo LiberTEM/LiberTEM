@@ -6,7 +6,9 @@ import primesieve.numpy
 from libertem.corrections import CorrectionSet
 from libertem.corrections.detector import RepairValueError
 from libertem.corrections.corrset import factorizations
+from libertem.utils.generate import exclude_pixels
 from libertem.udf.sum import SumUDF
+from libertem.udf.base import NoOpUDF
 
 
 def _validate(excluded_coords, adjusted, sig_shape):
@@ -387,3 +389,26 @@ def test_tileshape_adjustment_fuzz():
         )
         print(adjusted)
         _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+class EarlyExit(Exception):
+    pass
+
+
+class EarlyExitUDF(NoOpUDF):
+    def process_tile(self, tile):
+        raise EarlyExit
+
+
+def test_tileshape_adjustment_many(large_raw, lt_ctx):
+    udf = EarlyExitUDF()
+    exclude = sparse.COO(
+        coords=exclude_pixels(sig_dims=tuple(large_raw.shape.sig), num_excluded=1000),
+        shape=tuple(large_raw.shape.sig),
+        data=True
+    )
+    corr = CorrectionSet(
+        excluded_pixels=exclude
+    )
+    with pytest.raises(EarlyExit):
+        lt_ctx.run_udf(dataset=large_raw, udf=udf, corrections=corr)

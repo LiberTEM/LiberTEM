@@ -1,6 +1,5 @@
 import numpy as np
 import inspect
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.analysis.getroi import get_roi
 from libertem.udf.sum import SumUDF
@@ -95,6 +94,7 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
         if udf_results['intensity'].data.dtype.kind == 'c':
             return AnalysisResultSet(
                 self.get_complex_results(

@@ -6,10 +6,6 @@ try:
     import pyfftw
 except ImportError:
     pyfftw = None
-try:
-    import torch
-except ImportError:
-    torch = None
 
 import numba
 
@@ -31,27 +27,26 @@ else:
     def set_fftw_threads(n):
         yield
 
-if torch:
-    @contextmanager
-    def set_torch_threads(n):
-        torch_threads = torch.get_num_threads()
-        # See also https://pytorch.org/docs/stable/torch.html#parallelism
-        # At the time of writing the difference between threads and interop threads
-        # wasn't clear from the documentation. However, changing the
-        # interop_threads on runtime
-        # caused errors, so it is commented out here.
-        # torch_interop_threads = torch.get_num_interop_threads()
-        try:
-            torch.set_num_threads(n)
-            # torch.set_num_interop_threads(n)
-            yield
-        finally:
-            torch.set_num_threads(torch_threads)
-            # torch.set_num_interop_threads(torch_interop_threads)
-else:
-    @contextmanager
-    def set_torch_threads(n):
+@contextmanager
+def set_torch_threads(n):
+    try:
+        import torch
+    except ImportError:
+        return
+    torch_threads = torch.get_num_threads()
+    # See also https://pytorch.org/docs/stable/torch.html#parallelism
+    # At the time of writing the difference between threads and interop threads
+    # wasn't clear from the documentation. However, changing the
+    # interop_threads on runtime
+    # caused errors, so it is commented out here.
+    # torch_interop_threads = torch.get_num_interop_threads()
+    try:
+        torch.set_num_threads(n)
+        # torch.set_num_interop_threads(n)
         yield
+    finally:
+        torch.set_num_threads(torch_threads)
+        # torch.set_num_interop_threads(torch_interop_threads)
 
 
 @contextmanager

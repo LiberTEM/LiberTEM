@@ -3,7 +3,6 @@ from typing import Dict
 import logging
 import uuid
 
-import tqdm
 import cloudpickle
 import numpy as np
 
@@ -1139,6 +1138,7 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         if progress:
+            import tqdm
             t = tqdm.tqdm(total=len(tasks))
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:

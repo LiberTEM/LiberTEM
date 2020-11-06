@@ -1,13 +1,9 @@
-from skimage.feature import peak_local_max
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.feature_extraction.image import grid_to_graph
 import numpy as np
 import sparse
 import inspect
 import re
 from textwrap import dedent
 
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import run_blocking
 from libertem.executor.base import JobCancelledError
@@ -105,6 +101,9 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         return None
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
+        from sklearn.cluster import AgglomerativeClustering
+        from sklearn.feature_extraction.image import grid_to_graph
         n_clust = self.parameters["n_clust"]
         y, x = tuple(self.dataset.shape.nav)
         connectivity = grid_to_graph(
@@ -144,7 +143,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         return self.run_sd_udf(roi, stddev_udf, executor, cancel_id, job_is_cancelled)
 
     def get_cluster_udf(self, sd_udf_results):
-
+        from skimage.feature import peak_local_max
         center = (self.parameters["cy"], self.parameters["cx"])
         rad_in = self.parameters["ri"]
         rad_out = self.parameters["ro"]

@@ -1,5 +1,4 @@
 import inspect
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.stddev as std
 from libertem.analysis.getroi import get_roi
@@ -59,6 +58,7 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
         udf_results = std.consolidate_result(udf_results)
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['var'].data,

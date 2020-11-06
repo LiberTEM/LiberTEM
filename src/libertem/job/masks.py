@@ -1,9 +1,5 @@
 import logging
 
-try:
-    import torch
-except ImportError:
-    torch = None
 import sparse
 import scipy.sparse
 import numpy as np
@@ -112,6 +108,10 @@ class ApplyMasksTask(Task):
         self.read_dtype = self._input_dtype(self.partition.dtype)
         self.mask_dtype = self._input_dtype(self.masks.dtype)
         self.tiling_scheme = tiling_scheme
+        try:
+            import torch
+        except ImportError:
+            torch = None
         if torch is None or self.dtype.kind != 'f' or self.read_dtype != self.mask_dtype:
             self.use_torch = False
 
@@ -191,6 +191,10 @@ class ApplyMasksTask(Task):
         )
 
         with set_num_threads(1):
+            try:
+                import torch
+            except ImportError:
+                torch = None
             for data_tile in tiles:
                 flat_data = data_tile.flat_data
                 masks = self.masks.get(data_tile, self.mask_dtype)

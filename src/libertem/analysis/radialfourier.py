@@ -4,10 +4,8 @@ from functools import partial
 
 import numpy as np
 import sparse
-import matplotlib.cm as cm
 
 from libertem import masks
-from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from .helper import GeneratorHelper
@@ -145,6 +143,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         job_results = job_results.reshape((n_bins, orders, *shape))
 
         def resultlist():
+            from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
+            import matplotlib.cm as cm
             sets = []
             absolute = np.absolute(job_results)
             normal = np.maximum(1, absolute[:, 0])

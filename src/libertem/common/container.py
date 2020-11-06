@@ -1,10 +1,6 @@
 import functools
 import logging
 
-try:
-    import torch
-except ImportError:
-    torch = None
 import sparse
 import scipy.sparse
 import numpy as np

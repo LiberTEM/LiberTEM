@@ -1,4 +1,3 @@
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.crystallinity as crystal
 from .helper import GeneratorHelper
@@ -43,6 +42,7 @@ class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
          real_rad=real_rad)
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
         data = udf_results['intensity'].data
         return AnalysisResultSet([
             AnalysisResult(raw_data=data,

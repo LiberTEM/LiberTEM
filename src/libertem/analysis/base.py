@@ -2,8 +2,6 @@ import typing
 
 import numpy as np
 
-from libertem.viz import encode_image, visualize_simple, CMAP_CIRCULAR_DEFAULT
-
 
 class AnalysisResult:
     """
@@ -45,6 +43,7 @@ class AnalysisResult:
         return np.array(self.raw_data)
 
     def get_image(self, save_kwargs=None):
+        from libertem.viz import encode_image
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
     @property
@@ -278,6 +277,7 @@ class BaseAnalysis(Analysis):
         return None
 
     def get_complex_results(self, job_result, key_prefix, title, desc):
+        from libertem.viz import visualize_simple, CMAP_CIRCULAR_DEFAULT
         magn = np.abs(job_result)
         angle = np.angle(job_result)
         wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((job_result.real, job_result.imag, 0))

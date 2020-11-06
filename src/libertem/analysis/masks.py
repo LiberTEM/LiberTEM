@@ -1,4 +1,3 @@
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
 from libertem.job.masks import ApplyMasksJob
 from libertem.udf.masks import ApplyMasksUDF
@@ -70,6 +69,7 @@ class SingleMaskAnalysis(BaseMasksAnalysis):
         raise NotImplementedError
 
     def get_generic_results(self, data):
+        from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             return SingleMaskResultSet(
                 self.get_complex_results(
@@ -155,6 +155,7 @@ class MasksAnalysis(BaseMasksAnalysis):
         return self.parameters['factories']
 
     def get_generic_results(self, data):
+        from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             results = []
             for idx in range(data.shape[-1]):

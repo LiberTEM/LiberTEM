@@ -8,7 +8,6 @@ from dask import distributed as dd
 from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
-from libertem.utils.devices import detect
 
 
 log = logging.getLogger(__name__)
@@ -389,6 +388,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             the connected JobExecutor
         """
         if spec is None:
+            from libertem.utils.devices import detect
             spec = cluster_spec(**detect())
         if client_kwargs is None:
             client_kwargs = {}

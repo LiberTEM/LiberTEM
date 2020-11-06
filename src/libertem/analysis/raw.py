@@ -1,6 +1,5 @@
 import numpy as np
 import inspect
-from libertem.viz import visualize_simple
 from libertem.common import Slice, Shape
 from libertem.job.raw import PickFrameJob
 from libertem.udf.raw import PickUDF
@@ -149,6 +148,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         return " ".join(coords)
 
     def get_generic_results(self, data):
+        from libertem.viz import visualize_simple
         coords = self.get_coords()
 
         if data.dtype.kind == 'c':

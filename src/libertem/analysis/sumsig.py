@@ -1,4 +1,3 @@
-from libertem.viz import visualize_simple
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 import libertem.udf.sumsigudf as sumsigudf
 from .helper import GeneratorHelper
@@ -37,6 +36,7 @@ class SumSigAnalysis(BaseAnalysis, id_="SUM_SIG"):
         return sumsigudf.SumSigUDF()
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'],
                            visualized=visualize_simple(

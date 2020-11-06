@@ -1,4 +1,3 @@
-from libertem.viz import visualize_simple
 from libertem.analysis.sum import SumAnalysis
 from libertem.masks import _make_circular_mask
 from .base import AnalysisResult, AnalysisResultSet
@@ -41,6 +40,7 @@ class SumfftAnalysis(SumAnalysis, id_="FFTSUM_FRAMES"):
     TYPE = 'UDF'
 
     def get_udf_results(self, udf_results, roi):
+        from libertem.viz import visualize_simple
         job_results = np.array(udf_results['intensity'])
         real_rad = self.parameters.get("real_rad")
         real_center = (self.parameters.get("real_centery"), self.parameters.get("real_centerx"))

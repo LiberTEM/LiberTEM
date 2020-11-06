@@ -515,18 +515,12 @@ class Negotiator:
             size=min_sig_size,
         )
 
-        print("min_factors", min_factors)
-
         min_base_shape = self._scale_base_shape(base_shape, min_factors)
-
-        print("min_base_shape", min_base_shape)
 
         # considering the min size, calculate the max depth:
         max_depth = max(1, size_px // np.prod(min_base_shape, dtype=np.int64))
         if depth > max_depth:
             depth = max_depth
-
-        print("max_depth", max_depth)
 
         full_base_shape = (1,) + tuple(base_shape)
         min_factors = (depth,) + tuple(min_factors)

@@ -1,6 +1,7 @@
 import math
 from typing import List, Tuple
 import logging
+import warnings
 
 import numba
 from numba.typed import List as NumbaList
@@ -408,17 +409,21 @@ class Negotiator:
     `DataSet`, possibly even optimal.
     """
 
-    def validate(self, shape, partition, size, itemsize, base_shape):
+    def validate(self, shape, partition, size, itemsize, base_shape, corrections):
         partition_shape = partition.shape
         size_px = size // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
             raise ValueError("generated tileshape does not fit the partition")
         if np.prod(shape, dtype=np.int64) > size_px:
-            raise ValueError(
-                "shape %r (%d) does not fit into size %d" % (
-                    shape, np.prod(shape, dtype=np.int64), size_px
-                )
+            message = "shape %r (%d) does not fit into size %d" % (
+                shape, np.prod(shape, dtype=np.int64), size_px
             )
+            # The shape might be exceeded if dead pixel correction didn't find a
+            # valid tiling scheme. In that case it falls back to by-frame processing.
+            if corrections.get_excluded_pixels() is not None and shape[0] == 1:
+                warnings.warn(message)
+            else:
+                raise ValueError(message)
         for dim in range(len(base_shape)):
             if shape[dim] % base_shape[dim] != 0:
                 raise ValueError(
@@ -510,12 +515,18 @@ class Negotiator:
             size=min_sig_size,
         )
 
+        print("min_factors", min_factors)
+
         min_base_shape = self._scale_base_shape(base_shape, min_factors)
 
+        print("min_base_shape", min_base_shape)
+
         # considering the min size, calculate the max depth:
-        max_depth = size_px // np.prod(min_base_shape, dtype=np.int64)
+        max_depth = max(1, size_px // np.prod(min_base_shape, dtype=np.int64))
         if depth > max_depth:
             depth = max_depth
+
+        print("max_depth", max_depth)
 
         full_base_shape = (1,) + tuple(base_shape)
         min_factors = (depth,) + tuple(min_factors)
@@ -531,7 +542,7 @@ class Negotiator:
         # the partition has a "veto" on the tileshape:
         tileshape = partition.adjust_tileshape(tileshape)
 
-        self.validate(tileshape, partition, size, itemsize, full_base_shape)
+        self.validate(tileshape, partition, size, itemsize, full_base_shape, corrections)
         return TilingScheme.make_for_shape(
             tileshape=Shape(tileshape, sig_dims=partition.shape.sig.dims),
             dataset_shape=partition.meta.shape,

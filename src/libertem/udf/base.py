@@ -768,6 +768,39 @@ class UDF(UDFBase):
         return buf
 
 
+class NoOpUDF(UDF):
+    '''
+    A UDF that does nothing and returns nothing.
+
+    This is useful for testing.
+
+    Parameters
+    ----------
+    preferred_input_dtype : numpy.dtype
+        Perform dtype conversion. By default, this is :attr:`UDF.USE_NATIVE_DTYPE`.
+    '''
+    def __init__(self, preferred_input_dtype=UDF.USE_NATIVE_DTYPE):
+        super().__init__(preferred_input_dtype=preferred_input_dtype)
+
+    def process_tile(self, tile):
+        '''
+        Do nothing.
+        '''
+        pass
+
+    def get_result_buffers(self):
+        '''
+        No result buffers.
+        '''
+        return {}
+
+    def get_preferred_input_dtype(self):
+        '''
+        Return the value passed in the constructor.
+        '''
+        return self.params.preferred_input_dtype
+
+
 def check_cast(fromvar, tovar):
     if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
         # FIXME exception or warning?

@@ -1171,7 +1171,9 @@ class UDFRunner:
                 )
             )
 
-    def _prepare_run_for_dataset(self, dataset: DataSet, executor, roi, corrections, backends, io_backend):
+    def _prepare_run_for_dataset(
+        self, dataset: DataSet, executor, roi, corrections, backends, io_backend
+    ):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_shape=None,
@@ -1196,7 +1198,9 @@ class UDFRunner:
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None,
                         io_backend=None):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections, backends, io_backend)
+        tasks = self._prepare_run_for_dataset(
+            dataset, executor, roi, corrections, backends, io_backend
+        )
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
@@ -1226,7 +1230,9 @@ class UDFRunner:
     async def run_for_dataset_async(
             self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
             io_backend=None):
-        tasks = self._prepare_run_for_dataset(dataset, executor, roi, corrections, backends, io_backend)
+        tasks = self._prepare_run_for_dataset(
+            dataset, executor, roi, corrections, backends, io_backend
+        )
 
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
             for results, udf in zip(part_results, self._udfs):

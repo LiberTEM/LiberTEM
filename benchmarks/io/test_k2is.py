@@ -1,4 +1,5 @@
 import os
+import glob
 
 import pytest
 import numpy as np
@@ -10,14 +11,14 @@ from libertem.io.dataset.base.backend import LocalFSMMapBackend
 from utils import drop_cache, warmup_cache, get_testdata_prefixes
 
 
-MIB_FILE = "MIB/20200518 165148/default.hdr"
+K2IS_FILE = "K2IS/Capture52/Capture52_.gtg"
 
 PREFIXES = get_testdata_prefixes()
 
 
-def filelist(mib_hdr):
-    mib_dir = os.path.dirname(mib_hdr)
-    return [os.path.join(mib_dir, fname) for fname in os.listdir(mib_dir)]
+def filelist(gtg_file):
+    root, ext = os.path.splitext(gtg_file)
+    return glob.glob(root + "*")
 
 
 @pytest.mark.benchmark(
@@ -30,9 +31,9 @@ def filelist(mib_hdr):
     "prefix", PREFIXES
 )
 def test_sequential(benchmark, prefix, drop):
-    mib_hdr = os.path.join(prefix, MIB_FILE)
+    hdr = os.path.join(prefix, K2IS_FILE)
 
-    flist = filelist(mib_hdr)
+    flist = filelist(hdr)
 
     if drop == "cold_cache":
         drop_cache(flist)
@@ -47,6 +48,25 @@ def test_sequential(benchmark, prefix, drop):
         rounds=1,
         iterations=1
     )
+
+# Starting fresh distributed executors takes a lot of time and therefore
+# they should be used repeatedly if possible.
+# However, some benchmarks require a fresh distributed executor
+# and running several Dask executors in parallel leads to lockups when closing.
+# That means any shared executor has to be shut down before a fresh one is started.
+# For that reason we use a fixture with scope "class" and group
+# tests in a class that should all use the same executor.
+# That way we make sure the shared executor is torn down before any other test
+# starts a new one.
+
+
+@pytest.fixture(scope="class")
+def shared_dist_ctx():
+    print("start shared Context()")
+    ctx = api.Context()
+    yield ctx
+    print("stop shared Context()")
+    ctx.close()
 
 
 class TestUseSharedExecutor:
@@ -63,11 +83,11 @@ class TestUseSharedExecutor:
         "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
-        mib_hdr = os.path.join(prefix, MIB_FILE)
-        flist = filelist(mib_hdr)
+        hdr = os.path.join(prefix, K2IS_FILE)
+        flist = filelist(hdr)
 
         ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=mib_hdr)
+        ds = ctx.load(filetype="auto", path=hdr)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
@@ -75,7 +95,7 @@ class TestUseSharedExecutor:
         udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
 
         # warmup executor
-        ctx.run_udf(udf=udf, dataset=ds)
+        ctx.run_udf(udf=udf, dataset=ds, io_backend=io_backend)
 
         if drop == "cold_cache":
             drop_cache(flist)
@@ -88,7 +108,7 @@ class TestUseSharedExecutor:
             ctx.run_udf, kwargs=dict(udf=udf, dataset=ds, io_backend=io_backend),
             warmup_rounds=0,
             rounds=1,
-            iterations=1
+            iterations=1,
         )
 
 
@@ -105,11 +125,11 @@ class TestUseSharedExecutor:
     "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
 )
 def test_mask_firstrun(benchmark, prefix, first, io_backend):
-    mib_hdr = os.path.join(prefix, MIB_FILE)
-    flist = filelist(mib_hdr)
+    hdr = os.path.join(prefix, K2IS_FILE)
+    flist = filelist(hdr)
 
     with api.Context() as ctx:
-        ds = ctx.load(filetype="auto", path=mib_hdr)
+        ds = ctx.load(filetype="auto", path=hdr)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)

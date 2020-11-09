@@ -42,15 +42,16 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     for channel in channels:
         data_path = os.path.join(datadir, f"radial_result_{channel}.npy")
         results[channel] = np.load(data_path)
-        analysis = lt_ctx.create_radial_fourier_analysis(
-                                            dataset=hdf5_ds_2,
-                                            cx=0,
-                                            cy=0,
-                                            ri=0,
-                                            ro=2,
-                                            n_bins=2,
-                                            max_order=23
-                                    )
+
+    analysis = lt_ctx.create_radial_fourier_analysis(
+                                        dataset=hdf5_ds_2,
+                                        cx=0,
+                                        cy=0,
+                                        ri=0,
+                                        ro=2,
+                                        n_bins=2,
+                                        max_order=23
+                                )
     expected = lt_ctx.run(analysis)
 
     assert np.allclose(results["dominant_0"], expected["dominant_0"].raw_data)

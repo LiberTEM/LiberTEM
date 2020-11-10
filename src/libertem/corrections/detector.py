@@ -4,7 +4,7 @@ import sparse
 
 from libertem.masks import is_sparse
 from libertem.common.numba import (
-    numba_ravel_multi_index_multi, numba_isin_array, numba_unravel_index_multi
+    numba_ravel_multi_index_multi, numba_unravel_index_multi
 )
 
 
@@ -117,27 +117,28 @@ def environments(excluded_pixels, sigshape):
     '''
 
     max_repair_count = 3**len(sigshape) - 1
-    repairs = np.zeros((len(excluded_pixels), len(sigshape), max_repair_count), dtype=np.intp)
-    repair_counts = np.zeros(len(excluded_pixels), dtype=np.intp)
+    num_pixels = len(excluded_pixels[0])
+    repairs = np.zeros((num_pixels, len(sigshape), max_repair_count), dtype=np.intp)
+    repair_counts = np.zeros(num_pixels, dtype=np.intp)
     all_indices = np.arange(3**len(sigshape), dtype=np.intp)
     coord_shape = np.full(len(sigshape), 3, dtype=np.intp)
     coord_offsets = numba_unravel_index_multi(all_indices, coord_shape) - 1
-    for i, p in enumerate(excluded_pixels):
+    for i in range(num_pixels):
         repair_count = 0
         for position in range(coord_offsets.shape[1]):
             select = False
             for dim in range(coord_offsets.shape[0]):
-                coord = coord_offsets[dim, position] + p[dim]
+                coord = coord_offsets[dim, position] + excluded_pixels[dim, i]
                 # Any of the coordinates is different
-                select += (coord != p[dim])
+                select += (coord != excluded_pixels[dim, i])
             for dim in range(coord_offsets.shape[0]):
-                coord = coord_offsets[dim, position] + p[dim]
+                coord = coord_offsets[dim, position] + excluded_pixels[dim, i]
                 # All of the coordinates are within bounds
                 select *= (coord >= 0)
                 select *= (coord < sigshape[dim])
             if select:
                 for dim in range(coord_offsets.shape[0]):
-                    coord = coord_offsets[dim, position] + p[dim]
+                    coord = coord_offsets[dim, position] + excluded_pixels[dim, i]
                     repairs[i, dim, repair_count] = coord
                 repair_count += 1
         repair_counts[i] = repair_count
@@ -164,13 +165,15 @@ def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
     new_repair_counts = np.zeros_like(repair_counts)
     repair_flat = np.zeros((len(excluded_flat), max_repair_count), dtype=np.intp)
 
+    excluded_dict = {}
+    for i in excluded_flat:
+        excluded_dict[i] = True
+
     for i in range(len(excluded_flat)):
         a = numba_ravel_multi_index_multi(repairs[i, ..., :repair_counts[i]], sig_shape)
-        select = numba_isin_array(a, excluded_flat, invert=True)
         nonzero_index = 0
-        # workaround for compiler issue, manual version of np.extract()
-        for j, selector in enumerate(select):
-            if selector:
+        for j in range(repair_counts[i]):
+            if a[j] not in excluded_dict:
                 repair_flat[i, nonzero_index] = a[j]
                 nonzero_index += 1
         new_repair_counts[i] = nonzero_index
@@ -268,7 +271,7 @@ class RepairDescriptor:
         else:
             excluded_pixels = np.array(excluded_pixels)
 
-        repairs, repair_counts = environments(excluded_pixels.T, np.array(sig_shape))
+        repairs, repair_counts = environments(excluded_pixels, np.array(sig_shape))
 
         self.exclude_flat, self.repair_flat, self.repair_counts = flatten_filter(
             excluded_pixels, repairs, repair_counts, sig_shape
@@ -279,11 +282,12 @@ class RepairDescriptor:
         return np.argwhere(self.repair_counts == 0)
 
     def check_empty_repairs(self, allow_empty):
-        empty = self.empty_repairs()
-        if not allow_empty and len(empty) > 0:
-            raise RepairValueError(
-                f"Empty repair environments for pixel(s) number {empty}."
-            )
+        if not allow_empty:
+            empty = self.empty_repairs()
+            if len(empty) > 0:
+                raise RepairValueError(
+                    f"Empty repair environments for pixel(s) number {empty}."
+                )
 
 
 def correct_dot_masks(masks, gain_map, excluded_pixels=None, allow_empty=False):

@@ -140,7 +140,7 @@ class CorrectionSet:
             allow_empty=self._allow_empty
         )
 
-    @functools.lru_cache(maxsize=128)
+    @functools.lru_cache(maxsize=512)
     def repair_descriptor(self, sig_slice):
         excluded_pixels = self.get_excluded_pixels()
         if excluded_pixels is not None:

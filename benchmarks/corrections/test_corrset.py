@@ -118,6 +118,26 @@ def test_detector_correction_large(benchmark):
     )
 
 
+@pytest.mark.benchmark(
+    group="corrset creation",
+)
+@pytest.mark.parametrize(
+    'num_excluded', (0, 1, 10, 100, 1000, 10000, 100000)
+)
+def test_descriptor_creation(num_excluded, benchmark):
+    shape = (2000, 2000)
+    excluded_coords = (
+        np.random.randint(0, 2000, num_excluded),
+        np.random.randint(0, 2000, num_excluded),
+    )
+    benchmark(
+        detector.RepairDescriptor,
+        sig_shape=shape,
+        excluded_pixels=excluded_coords,
+        allow_empty=True
+    )
+
+
 class TestRealCorrection:
     @pytest.mark.benchmark(
         group="correct large",
@@ -160,7 +180,7 @@ class TestRealCorrection:
         'dark', ('no dark', 'use dark')
     )
     @pytest.mark.parametrize(
-        'num_excluded', (0, 1, 1000)
+        'num_excluded', (0, 1, 1000, 10000)
     )
     def test_real_correction(self, shared_dist_ctx, large_raw_file, benchmark,
             gain, dark, num_excluded):

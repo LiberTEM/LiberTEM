@@ -55,20 +55,3 @@ def numba_unravel_index_multi(indices, shape):
         result[i] = remainder // sizes[i]
         remainder %= sizes[i]
     return result
-
-
-@numba.njit(boundscheck=True)
-def numba_isin_array(element, test_elements, assume_unique=False, invert=False):
-    '''
-    Only works if both element and test_elements are arrays
-    '''
-    element_flat = element.reshape(-1)
-    result_flat = np.full_like(element_flat, invert, dtype=np.bool_)
-    test_elements_flat = test_elements.reshape(-1)
-    for i in range(len(element)):
-        for j in range(len(test_elements_flat)):
-            if invert:
-                result_flat[i] *= (element_flat[i] != test_elements_flat[j])
-            else:
-                result_flat[i] += (element_flat[i] == test_elements_flat[j])
-    return result_flat.reshape(element.shape)

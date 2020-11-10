@@ -197,7 +197,7 @@ def large_raw_file(tmpdir_factory):
             f.truncate(size)
         stat = os.stat(filename)
         if stat.st_blocks != 0:
-            warnings.warn(f"Created file {filename} is not reported as sparse: {stat}")
+            warnings.warn(f"Created file {filename} is not reported as sparse: {stat}, blocks {stat.st_blocks}")
     yield filename, shape, dtype
 
 

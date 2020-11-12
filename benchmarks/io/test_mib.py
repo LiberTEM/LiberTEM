@@ -5,7 +5,7 @@ import numpy as np
 
 from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.io.dataset.base.backend import LocalFSMMapBackend
+from libertem.io.dataset.base.backend import MMapBackend
 
 from utils import drop_cache, warmup_cache, get_testdata_prefixes
 
@@ -60,14 +60,14 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
+        "io_backend", (MMapBackend(enable_readahead_hints=True), None),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
         mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
 
         ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=mib_hdr)
+        ds = ctx.load(filetype="auto", path=mib_hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
@@ -85,7 +85,7 @@ class TestUseSharedExecutor:
             raise ValueError("bad param")
 
         benchmark.pedantic(
-            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds, io_backend=io_backend),
+            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
             warmup_rounds=0,
             rounds=1,
             iterations=1
@@ -102,7 +102,7 @@ class TestUseSharedExecutor:
     "prefix", PREFIXES[:1]
 )
 @pytest.mark.parametrize(
-    "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
+    "io_backend", (MMapBackend(enable_readahead_hints=True), None),
 )
 def test_mask_firstrun(benchmark, prefix, first, io_backend):
     mib_hdr = os.path.join(prefix, MIB_FILE)

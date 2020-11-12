@@ -72,8 +72,9 @@ class TilingScheme:
         return len(self._slices)
 
     def __repr__(self):
-        return "<TilingScheme (depth=%d) %r>" % (
-            self.depth, list(self._slices),
+        unique_shapes = list({tuple(slice_.shape) for slice_ in self._slices})
+        return "<TilingScheme (depth=%d) shapes=%r>" % (
+            self.depth, unique_shapes,
         )
 
     @property
@@ -479,7 +480,7 @@ class Negotiator:
         min_sig_size = 4 * 4096 // itemsize
 
         # This already takes corrections into account through a different pathway
-        need_decode = partition.need_decode(roi=roi, read_dtype=read_dtype)
+        need_decode = partition.need_decode(roi=roi, read_dtype=read_dtype, corrections=corrections)
 
         if need_decode:
             io_max_size = 1*2**20

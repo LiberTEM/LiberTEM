@@ -97,8 +97,10 @@ class H5DataSet(DataSet):
         doesn't need to be specified.
     """
     def __init__(self, path, ds_path, tileshape=None,
-                 target_size=512*1024*1024, min_num_partitions=None, sig_dims=2):
-        super().__init__()
+                 target_size=512*1024*1024, min_num_partitions=None, sig_dims=2, io_backend=None):
+        super().__init__(io_backend=io_backend)
+        if io_backend is not None:
+            raise ValueError("H5DataSet currently doesn't support alternative I/O backends")
         self.path = path
         self.ds_path = ds_path
         self.target_size = target_size
@@ -251,6 +253,7 @@ class H5DataSet(DataSet):
                 reader=self.get_reader(),
                 partition_slice=pslice.flatten_nav(self.shape),
                 slice_nd=pslice,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):
@@ -275,9 +278,6 @@ class H5Partition(Partition):
         if self._corrections is None:
             return
         self._corrections.apply(tile_data, tile_slice)
-
-    def set_io_backend(self, backend):
-        pass  # TODO: raise an error if backend is incompatible?
 
     def _get_tiles_normal(self, tiling_scheme, tileshape_nd, dest_dtype="float32"):
         data = np.zeros(tileshape_nd, dtype=dest_dtype)
@@ -340,7 +340,7 @@ class H5Partition(Partition):
     def adjust_tileshape(self, tileshape):
         return tileshape
 
-    def need_decode(self, roi, read_dtype):
+    def need_decode(self, roi, read_dtype, corrections):
         return True
 
     def set_corrections(self, corrections: CorrectionSet):

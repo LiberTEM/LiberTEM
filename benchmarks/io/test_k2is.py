@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.io.dataset.base.backend import LocalFSMMapBackend
+from libertem.io.dataset.base.backend import MMapBackend
 
 from utils import drop_cache, warmup_cache, get_testdata_prefixes
 
@@ -80,14 +80,14 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
+        "io_backend", (MMapBackend(enable_readahead_hints=True), None),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
         hdr = os.path.join(prefix, K2IS_FILE)
         flist = filelist(hdr)
 
         ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=hdr)
+        ds = ctx.load(filetype="auto", path=hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
@@ -95,7 +95,7 @@ class TestUseSharedExecutor:
         udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
 
         # warmup executor
-        ctx.run_udf(udf=udf, dataset=ds, io_backend=io_backend)
+        ctx.run_udf(udf=udf, dataset=ds)
 
         if drop == "cold_cache":
             drop_cache(flist)
@@ -105,7 +105,7 @@ class TestUseSharedExecutor:
             raise ValueError("bad param")
 
         benchmark.pedantic(
-            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds, io_backend=io_backend),
+            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
             warmup_rounds=0,
             rounds=1,
             iterations=1,
@@ -122,14 +122,14 @@ class TestUseSharedExecutor:
     "prefix", PREFIXES[:1]
 )
 @pytest.mark.parametrize(
-    "io_backend", (LocalFSMMapBackend(enable_readahead_hints=True), None),
+    "io_backend", (MMapBackend(enable_readahead_hints=True), None),
 )
 def test_mask_firstrun(benchmark, prefix, first, io_backend):
     hdr = os.path.join(prefix, K2IS_FILE)
     flist = filelist(hdr)
 
     with api.Context() as ctx:
-        ds = ctx.load(filetype="auto", path=hdr)
+        ds = ctx.load(filetype="auto", path=hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
@@ -146,7 +146,7 @@ def test_mask_firstrun(benchmark, prefix, first, io_backend):
         warmup_cache(flist)
 
         benchmark.pedantic(
-            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds, io_backend=io_backend),
+            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
             warmup_rounds=0,
             rounds=1,
             iterations=1

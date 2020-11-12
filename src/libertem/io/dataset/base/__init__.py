@@ -11,7 +11,7 @@ from .tiling import (
     Negotiator,
 )
 from .backend import (
-    LocalFSMMapBackend, LocalFile,
+    MMapBackend, LocalFile,
 )
 from .decode import (
     Decoder, DtypeConversionDecoder, decode_swap_2, decode_swap_4,
@@ -23,7 +23,7 @@ __all__ = [
     '_roi_to_nd_indices', '_roi_to_indices',
     'DataSet', 'WritableDataSet', 'Partition', 'WritablePartition', 'BasePartition',
     'DataTile', 'FileSet', 'LocalFile', 'File',
-    'FileTree', 'TilingScheme', 'LocalFSMMapBackend',
+    'FileTree', 'TilingScheme', 'MMapBackend',
     'default_get_read_ranges', 'make_get_read_ranges',
     'Decoder', 'DtypeConversionDecoder', 'Negotiator',
     'decode_swap_2', 'decode_swap_4', 'get_coordinates',

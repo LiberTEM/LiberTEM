@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.base.backend import LocalFSMMapBackend
+from libertem.io.dataset.base.backend import MMapBackend
 from libertem.udf.sum import SumUDF
 from libertem.api import Context
 
@@ -24,8 +24,14 @@ def test_context_arguments():
 
 
 def test_run_udf_with_io_backend(lt_ctx, default_raw):
-    io_backend = LocalFSMMapBackend(
-        enable_readahead_hints=True,
+    io_backend = MMapBackend(enable_readahead_hints=True)
+    lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        io_backend=io_backend,
+        scan_size=(16, 16),
+        dtype="float32",
+        detector_size=(128, 128),
     )
-    res = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF(), io_backend=io_backend)
+    res = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF())
     assert np.array(res['intensity']).shape == (128, 128)

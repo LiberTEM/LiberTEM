@@ -10,12 +10,13 @@ from .partition import BasePartition
 
 
 class DataSet(object):
-    def __init__(self):
+    def __init__(self, io_backend=None):
         self._cores = 1
         self._sync_offset = 0
         self._sync_offset_info = None
         self._image_count = 0
         self._nav_shape_product = 0
+        self._io_backend = io_backend
 
     def initialize(self, executor):
         """
@@ -195,6 +196,9 @@ class DataSet(object):
 
     def get_cache_key(self):
         raise NotImplementedError()
+
+    def get_io_backend(self):
+        return self._io_backend
 
     def get_correction_data(self):
         """

@@ -108,8 +108,10 @@ class SERDataSet(DataSet):
         If negative, number of blank frames to insert at start
     """
     def __init__(self, path, emipath=None, nav_shape=None,
-                 sig_shape=None, sync_offset=0):
-        super().__init__()
+                 sig_shape=None, sync_offset=0, io_backend=None):
+        super().__init__(io_backend=io_backend)
+        if io_backend is not None:
+            raise ValueError("SERDataSet currently doesn't support alternative I/O backends")
         self._path = path
         self._meta = None
         self._filesize = None
@@ -241,6 +243,7 @@ class SERDataSet(DataSet):
                 fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):

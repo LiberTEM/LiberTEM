@@ -49,6 +49,10 @@ def load(filetype, executor, enable_async=False, *args, **kwargs):
 
     executor : JobExecutor
 
+    enable_async : bool
+        If True, return a coroutine instead of blocking until the loading has
+        finished.
+
     additional parameters are passed to the concrete DataSet implementation
     """
     if filetype == "auto":

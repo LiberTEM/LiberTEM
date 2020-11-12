@@ -425,8 +425,8 @@ class FRMS6DataSet(DataSet):
     """
 
     def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None,
-                 nav_shape=None, sig_shape=None, sync_offset=0):
-        super().__init__()
+                 nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
+        super().__init__(io_backend=io_backend)
         self._path = path
         self._gain_map_path = gain_map_path
         self._dark_frame = None
@@ -570,6 +570,7 @@ class FRMS6DataSet(DataSet):
             num_frames=num_frames,
             header=self._headers[0],
             global_header=self._get_hdr_info(),
+            io_backend=self.get_io_backend(),
         )
         tileshape = Shape(
             (128, 8) + (self.shape[-1],),
@@ -689,6 +690,7 @@ class FRMS6DataSet(DataSet):
                 num_frames=stop - start,
                 header=self._headers[0],
                 global_header=self._get_hdr_info(),
+                io_backend=self.get_io_backend(),
             )
 
 

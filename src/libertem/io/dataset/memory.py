@@ -7,8 +7,9 @@ import numpy as np
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
-    LocalFile, LocalFSMMapBackend,
+    LocalFile, MMapBackend,
 )
+from libertem.io.dataset.base.backend import MMapBackendImpl
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
 
@@ -16,7 +17,12 @@ from libertem.io.dataset.base import DataTile
 log = logging.getLogger(__name__)
 
 
-class MemBackend(LocalFSMMapBackend):
+class MemBackend(MMapBackend):
+    def get_impl(self):
+        return MemBackendImpl()
+
+
+class MemBackendImpl(MMapBackendImpl):
     def _set_readahead_hints(self, roi, fileset):
         pass
 
@@ -64,7 +70,7 @@ class MemBackend(LocalFSMMapBackend):
 
     def get_tiles(
         self, decoder, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
-        sync_offset,
+        sync_offset, corrections,
     ):
         if roi is None:
             # support arbitrary tiling in case of no roi
@@ -74,21 +80,32 @@ class MemBackend(LocalFSMMapBackend):
                         tiling_scheme, fileset, read_ranges, sync_offset
                     ):
                         data = tile.astype(read_dtype)
-                        self.preprocess(data, tile.tile_slice)
+                        self.preprocess(data, tile.tile_slice, corrections)
                         yield data
                 else:
                     for tile in self._get_tiles_w_copy(
-                        tiling_scheme, fileset, read_ranges, read_dtype, native_dtype,
-                        roi, sync_offset,
+                        tiling_scheme=tiling_scheme,
+                        fileset=fileset,
+                        read_ranges=read_ranges,
+                        read_dtype=read_dtype,
+                        native_dtype=native_dtype,
+                        roi=roi,
+                        decoder=decoder,
+                        sync_offset=sync_offset,
+                        corrections=corrections,
                     ):
                         yield tile
         else:
             with fileset:
                 for tile in self._get_tiles_roi(
-                    tiling_scheme, fileset, read_ranges, roi, sync_offset
+                    tiling_scheme=tiling_scheme,
+                    fileset=fileset,
+                    read_ranges=read_ranges,
+                    roi=roi,
+                    sync_offset=sync_offset,
                 ):
                     data = tile.astype(read_dtype)
-                    self.preprocess(data, tile.tile_slice)
+                    self.preprocess(data, tile.tile_slice, corrections)
                     yield data
 
 
@@ -184,7 +201,11 @@ class MemoryDataSet(DataSet):
     '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,
-                 force_need_decode=False, nav_shape=None, sig_shape=None, sync_offset=0):
+                 force_need_decode=False, io_backend=None,
+                 nav_shape=None, sig_shape=None, sync_offset=0):
+        super().__init__(io_backend=io_backend)
+        if io_backend is not None:
+            raise ValueError("MemoryDataSet currently doesn't support alternative I/O backends")
         # For HTTP API testing purposes: Allow to create empty dataset with given shape
         if data is None:
             assert datashape is not None
@@ -284,6 +305,7 @@ class MemoryDataSet(DataSet):
                 tileshape=self.tileshape,
                 base_shape=self._base_shape,
                 force_need_decode=self._force_need_decode,
+                io_backend=self.get_io_backend(),
             )
 
 
@@ -301,7 +323,7 @@ class MemPartition(BasePartition):
         return None
 
     def _get_io_backend(self):
-        return MemBackend(corrections=self._corrections)
+        return MemBackend()
 
     def get_macrotile(self, *args, **kwargs):
         self._force_tileshape = False
@@ -314,10 +336,10 @@ class MemPartition(BasePartition):
             return self._base_shape
         return super().get_base_shape()
 
-    def need_decode(self, read_dtype, roi):
+    def need_decode(self, read_dtype, roi, corrections):
         if self._force_need_decode:
             return True
-        return super().need_decode(read_dtype, roi)
+        return super().need_decode(read_dtype, roi, corrections)
 
     def get_tiles(self, *args, **kwargs):
         # force our own tiling_scheme, if a tileshape is given:

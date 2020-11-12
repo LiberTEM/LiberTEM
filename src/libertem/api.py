@@ -64,19 +64,25 @@ class Context:
             )
         self.executor = executor
 
-    def load(self, filetype: str, *args, **kwargs) -> DataSet:
+    def load(self, filetype: str, io_backend=None, *args, **kwargs) -> DataSet:
         """
-        Load a `DataSet`. As it doesn't load the whole data into RAM at once,
-        you can load and process datasets that are bigger than your available RAM.
-        Using fast storage (i.e. SSD) is advisable.
+        Load a :class:`~libertem.io.dataset.base.DataSet`. As it doesn't load
+        the whole data into RAM at once, you can load and process datasets
+        that are bigger than your available RAM. Using fast storage (i.e.
+        SSD) is advisable.
 
         .. versionchanged:: 0.5.0
             Added support for filetype="auto"
+
+        .. versionchanged:: 0.6.0
+            Added support for specifying the I/O backend
 
         Parameters
         ----------
         filetype : str
             one of: %(types)s; or use "auto" to automatically determine filetype and parameters
+        io_backend : IOBackend or None
+            Use a different I/O backend for this data set
         args
             passed on to the DataSet implementation
         kwargs
@@ -96,9 +102,23 @@ class Context:
         Note
         ----
         See :ref:`dataset api` for format-specific documentation.
+
+        Examples
+        --------
+
+        Load a data set from a given path, automatically determinig the type:
+
+        >>> ds = ctx.load("auto", path="...")  # doctest: +SKIP
+
+        To configure an alternative I/O backend, in this case configuring
+        the mmap backend to enable readahead hints:
+
+        >>> from libertem.io.dataset.base.backend import MMapBackend
+        >>> io_backend = MMapBackend(enable_readahead_hints=True)
+        >>> ds = ctx.load("auto", path="...", io_backend=io_backend)  # doctest: +SKIP
         """
         # delegate to libertem.io.dataset.load:
-        return load(filetype, executor=self.executor, *args, **kwargs)
+        return load(filetype, io_backend=io_backend, executor=self.executor, *args, **kwargs)
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
@@ -668,8 +688,7 @@ class Context:
                 roi: np.ndarray = None,
                 corrections: CorrectionSet = None,
                 progress: bool = False,
-                backends=None,
-                io_backend=None) -> Dict[str, BufferWrapper]:
+                backends=None) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -702,9 +721,6 @@ class Context:
             Restrict the back-end to a subset of the capabilities of the UDF.
             This can be useful for testing hybrid UDFs.
 
-        io_backend : IOBackend or None
-            Use a different I/O backend for running this UDF
-
         Returns
         -------
         dict
@@ -724,16 +740,6 @@ class Context:
         >>> np.array(result["intensity"]).shape
         (16, 16)
         >>> # intensity is the name of the result buffer, defined in the SumUDF
-
-        To configure an alternative I/O backend, in this case configuring
-        the mmap backend to enable readahead hints:
-
-        >>> from libertem.udf.sum import SumUDF
-        >>> from libertem.io.dataset.base.backend import LocalFSMMapBackend
-        >>> io_backend = LocalFSMMapBackend(enable_readahead_hints=True)
-        >>> result = ctx.run_udf(dataset=dataset, udf=SumUDF(), io_backend=io_backend)
-        >>> np.array(result["intensity"]).shape
-        (16, 16)
 
         Running a UDF on a subset of data:
 
@@ -757,12 +763,11 @@ class Context:
             progress=progress,
             corrections=corrections,
             backends=backends,
-            io_backend=io_backend,
         )
         return results[0]
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,
-            progress: bool = False, io_backend=None) -> BufferWrapper:
+            progress: bool = False) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
 
@@ -798,7 +803,6 @@ class Context:
             udf=udf,
             roi=roi,
             progress=progress,
-            io_backend=io_backend,
         )
         return results['result']
 

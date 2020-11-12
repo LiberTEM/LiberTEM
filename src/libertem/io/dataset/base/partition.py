@@ -7,7 +7,7 @@ from libertem.corrections import CorrectionSet
 from .tiling import DataTile, TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet
-from .backend import LocalFSMMapBackend
+from .backend import MMapBackend, IOBackend
 from .decode import Decoder
 
 
@@ -21,7 +21,7 @@ class WritablePartition:
 
 class Partition(object):
     def __init__(
-        self, meta: DataSetMeta, partition_slice: Slice,
+        self, meta: DataSetMeta, partition_slice: Slice, io_backend: IOBackend,
     ):
         """
         Parameters
@@ -36,14 +36,12 @@ class Partition(object):
             The files that are part of this partition (the FileSet may also contain files
             from the dataset which are not part of this partition, but that may harm performance)
 
-        start_frame
-            The index of the first frame of this partition (global coords)
-
-        num_frames
-            How many frames this partition should contain
+        io_backend
+            The I/O backend to use for accessing this partition
         """
         self.meta = meta
         self.slice = partition_slice
+        self._io_backend = io_backend
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
@@ -69,7 +67,7 @@ class Partition(object):
             )
             yield part_slice, start + sync_offset, stop + sync_offset
 
-    def need_decode(self, read_dtype, roi):
+    def need_decode(self, read_dtype, roi, corrections):
         raise NotImplementedError()
 
     def set_io_backend(self, backend):
@@ -124,6 +122,7 @@ class BasePartition(Partition):
     def __init__(
         self, meta: DataSetMeta, partition_slice: Slice,
         fileset: FileSet, start_frame: int, num_frames: int,
+        io_backend: IOBackend,
     ):
         """
         Parameters
@@ -143,8 +142,11 @@ class BasePartition(Partition):
 
         num_frames
             How many frames this partition should contain
+
+        io_backend
+            The I/O backend to use for accessing this partition
         """
-        super().__init__(meta=meta, partition_slice=partition_slice)
+        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
         if start_frame < self.meta.image_count:
             self._fileset = fileset.get_for_range(
                 max(0, start_frame), max(0, start_frame + num_frames - 1)
@@ -152,7 +154,6 @@ class BasePartition(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
-        self._io_backend = None
         if num_frames <= 0:
             raise ValueError("invalid number of frames: %d" % num_frames)
 
@@ -196,14 +197,15 @@ class BasePartition(Partition):
                 scheme_idx=0,
             )
 
-    def need_decode(self, read_dtype, roi):
-        io_backend = self._get_io_backend()
+    def need_decode(self, read_dtype, roi, corrections):
+        io_backend = self._get_io_backend().get_impl()
         return io_backend.need_copy(
             decoder=self._get_decoder(),
             roi=roi,
             native_dtype=self.meta.raw_dtype,
             read_dtype=read_dtype,
             sync_offset=self.meta.sync_offset,
+            corrections=corrections,
         )
 
     def _get_decoder(self) -> Decoder:
@@ -219,14 +221,9 @@ class BasePartition(Partition):
             roi=roi,
         )
 
-    def set_io_backend(self, backend):
-        self._io_backend = backend
-
     def _get_io_backend(self):
         if self._io_backend is None:
-            return LocalFSMMapBackend(
-                corrections=self._corrections,
-            )
+            return MMapBackend()
         return self._io_backend
 
     def set_corrections(self, corrections: CorrectionSet):
@@ -262,14 +259,16 @@ class BasePartition(Partition):
             dest_dtype = np.dtype(dest_dtype)
             self.validate_tiling_scheme(tiling_scheme)
             read_ranges = self._get_read_ranges(tiling_scheme, roi)
-            io_backend = self._get_io_backend()
+            io_backend = self._get_io_backend().get_impl()
 
             yield from io_backend.get_tiles(
                 tiling_scheme=tiling_scheme, fileset=self._fileset,
                 read_ranges=read_ranges, roi=roi,
-                native_dtype=self.meta.raw_dtype, read_dtype=dest_dtype,
+                native_dtype=self.meta.raw_dtype,
+                read_dtype=dest_dtype,
                 sync_offset=self.meta.sync_offset,
                 decoder=self._get_decoder(),
+                corrections=self._corrections,
             )
 
     def __repr__(self):

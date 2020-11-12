@@ -194,7 +194,8 @@ class SEQDataSet(DataSet):
         If negative, number of blank frames to insert at start
     """
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
-                 sig_shape: Tuple[int] = None, sync_offset: int = 0):
+                 sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
+        super().__init__(io_backend=io_backend)
         self._path = path
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
@@ -381,6 +382,7 @@ class SEQDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):

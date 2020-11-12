@@ -124,8 +124,8 @@ class RawFileDataSet(DataSet):
     """
     def __init__(self, path, dtype, scan_size=None, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None,
-                 nav_shape=None, sig_shape=None, sync_offset=0):
-        super().__init__()
+                 nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
+        super().__init__(io_backend=io_backend)
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn(
@@ -264,6 +264,7 @@ class RawFileDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):

@@ -41,7 +41,8 @@ class ClusterDataSet(WritableDataSet, DataSet):
     structure : PartitionStructure
         Partitioning structure instance. Must be specified when creating a new dataset.
     """
-    def __init__(self, path, structure=None):
+    def __init__(self, path, structure=None, io_backend=None):
+        super().__init__(io_backend=io_backend)
         self._path = path
         self._dtype = structure.dtype
         self._structure = structure
@@ -160,6 +161,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
                 start_frame=start_idx,
                 num_frames=end_idx - start_idx,
                 workers=idx_to_workers[idx] or None,
+                io_backend=self.get_io_backend(),
             )
 
     def _get_all_workers(self):

@@ -8,7 +8,6 @@ from numba.typed import List
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
 from libertem.common.numba import cached_njit
-from libertem.corrections import CorrectionSet
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
 from .file import File
@@ -24,7 +23,7 @@ def _make_mmap_reader_and_decoder(decode):
     decode: from inp, in bytes, possibly interpreted as native_dtype, to out.dtype
     """
     @cached_njit(boundscheck=False, cache=True)
-    def _tilereader_w_copy(outer_idx, mmaps, sig_dims, tile_read_ranges,
+    def _mmap_tilereader_w_copy(outer_idx, mmaps, sig_dims, tile_read_ranges,
                            out_decoded, native_dtype, do_zero,
                            origin, shape, ds_shape):
         """
@@ -48,10 +47,40 @@ def _make_mmap_reader_and_decoder(decode):
                 ds_shape=ds_shape,
             )
         return out_decoded
+    return _mmap_tilereader_w_copy
+
+
+def _make_reader_and_decoder(decode):
+    """
+    decode: from inp, in bytes, possibly interpreted as native_dtype, to out.dtype
+    """
+    @cached_njit(boundscheck=False)
+    def _tilereader_w_copy(outer_idx, buffers, sig_dims, tile_read_ranges,
+                           out_decoded, native_dtype, do_zero,
+                           origin, shape, ds_shape, offsets):
+        if do_zero:
+            out_decoded[:] = 0
+        for rr_idx in range(tile_read_ranges.shape[0]):
+            rr = tile_read_ranges[rr_idx]
+            if rr[1] == rr[2] == 0:
+                break
+            buffer = buffers[rr[0]]
+            offset = offsets[rr[0]]  # per-file offset of start of read buffer
+            decode(
+                inp=buffer[rr[1] - offset:rr[2] - offset],
+                out=out_decoded,
+                idx=rr_idx,
+                native_dtype=native_dtype,
+                rr=rr,
+                origin=origin,
+                shape=shape,
+                ds_shape=ds_shape,
+            )
+        return out_decoded
     return _tilereader_w_copy
 
 
-@numba.njit
+@cached_njit
 def _get_prefetch_ranges(num_files, tile_ranges):
     res = np.zeros((num_files, 3), dtype=np.int64)
     for rr_idx in range(tile_ranges.shape[0]):
@@ -72,18 +101,24 @@ class IOBackend:
         if id_ is not None:
             cls.registry[id_] = cls
 
-    def __init__(self, corrections: CorrectionSet = None):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def from_json(cls, msg):
         """
-        Parameters
-        ----------
-        corrections
-            A set of corrections to apply in a preprocesing step
+        Construct an instance from the already-decoded `msg`.
         """
-        self._corrections = corrections
+        raise NotImplementedError()
+
+
+class IOBackendImpl:
+    def __init__(self):
+        pass
 
     def need_copy(
         self, decoder, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None,
-        sync_offset=0,
+        sync_offset=0, corrections=None,
     ):
         # checking conditions in which "straight mmap" is not possible
         # straight mmap means our dataset can just return views into the underlying mmap object
@@ -109,7 +144,7 @@ class IOBackend:
                 return True
 
         # 4) if we apply corrections, we need to copy
-        if self._corrections is not None and self._corrections.have_corrections():
+        if corrections is not None and corrections.have_corrections():
             log.debug("have corrections, need copy")
             return True
 
@@ -130,8 +165,14 @@ class IOBackend:
             return True
         return False
 
+    def preprocess(self, data, tile_slice, corrections):
+        if corrections is None:
+            return
+        corrections.apply(data, tile_slice)
+
     def get_tiles(
-        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder
+        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
+        corrections,
     ):
         """
         Read tiles from `fileset`, as specified by the parameters.
@@ -160,38 +201,64 @@ class IOBackend:
 
         read_dtype : np.dtype
             The data dtype into which the data is converted when reading
+
+        corrections
+            A set of corrections to apply in a preprocesing step
         """
         raise NotImplementedError()
 
 
-class LocalFSMMapBackend(IOBackend, id_="mmap"):
-    def __init__(self, corrections: CorrectionSet = None, enable_readahead_hints=False):
+class MMapBackend(IOBackend, id_="mmap"):
+    def __init__(self, enable_readahead_hints=False):
+        self._enable_readahead = enable_readahead_hints
+
+    def get_impl(self):
+        return MMapBackendImpl(self._enable_readahead)
+
+    @classmethod
+    def from_json(cls, msg):
+        """
+        Construct an instance from the already-decoded `msg`.
+        """
+        raise NotImplementedError("TODO! implement me!")
+
+
+class MMapBackendImpl(IOBackendImpl):
+    def __init__(self, enable_readahead_hints=False):
         """
         I/O backend using memory mapped files.
 
         Parameters
         ----------
         """
-        super().__init__(corrections=corrections)
+        super().__init__()
         self._enable_readahead = enable_readahead_hints
         self._buffer_pool = BufferPool()
 
     def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges, sync_offset=0):
         """
+        Read straight from the file system cache, via memory mapping, without
+        any decoding step.
+
+        This method makes a few assumptions:
+         - no corrections are needed
+         - tiles don't span multiple files
+         - the `LocalFile` has already cut away headers and footers
+           (both per-file and per-frame) from the mmap
+
         Parameters
         ----------
 
         fileset : FileSet
-            To ensure best performance, should be limited to the files
-            that are part of the current partition (otherwise we will
-            spend more time finding the right file for a given frame
-            index)
+            The fileset must correspond to the indices used in the `read_ranges`.
+            Usually, that means it is limited to the files that are part of the
+            current partition.
 
-        read_ranges : Tuple[np.ndarray, np.ndarray]
+        read_ranges : Tuple[np.ndarray, np.ndarray, np.ndarray]
             As returned by `get_read_ranges`
         """
 
-        ds_sig_shape = tiling_scheme.dataset_shape.sig
+        ds_sig_shape = tuple(tiling_scheme.dataset_shape.sig)
         sig_dims = tiling_scheme.shape.sig.dims
         slices, ranges, scheme_indices = read_ranges
         for idx in range(slices.shape[0]):
@@ -199,11 +266,12 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
             tile_ranges = ranges[idx]
             scheme_idx = scheme_indices[idx]
 
-            # FIXME: for straight mmap, read_ranges must not contain tiles
-            # that span multiple files!
+            # NOTE: for straight mmap, read_ranges must not contain tiles
+            # that span multiple files. This is ensured in IOBackend.need_copy
+            # (that is, we force copying if files are smaller than tiles)
             file_idx = tile_ranges[0][0]
             fh = fileset[file_idx]
-            memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
+            memmap = fh.mmap().reshape((fh.num_frames,) + ds_sig_shape)
             tile_slice = Slice(
                 origin=origin,
                 shape=Shape(shape, sig_dims=sig_dims)
@@ -227,21 +295,16 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
             )
 
     def get_read_and_decode(self, decode):
-        key = (decode,)
+        key = (decode, "mmap")
         if key in _r_n_d_cache:
             return _r_n_d_cache[key]
         r_n_d = _make_mmap_reader_and_decoder(decode=decode)
         _r_n_d_cache[key] = r_n_d
         return r_n_d
 
-    def preprocess(self, data, tile_slice):
-        if self._corrections is None:
-            return
-        self._corrections.apply(data, tile_slice)
-
     def _get_tiles_w_copy(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, roi, decoder=None,
-        sync_offset=0,
+        sync_offset=0, corrections=None,
     ):
         if decoder is None:
             decoder = DtypeConversionDecoder()
@@ -293,7 +356,7 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
                     origin=origin, shape=shape, ds_shape=ds_shape,
                 )
                 data = data.reshape(shape)
-                self.preprocess(data, tile_slice)
+                self.preprocess(data, tile_slice, corrections)
                 yield DataTile(
                     data,
                     tile_slice=tile_slice,
@@ -302,7 +365,7 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
 
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset,
+        sync_offset, corrections,
     ):
         # TODO: how would compression work?
         # TODO: sparse input data? COO format? fill rate? → own pipeline! → later!
@@ -320,6 +383,7 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
                 native_dtype=native_dtype,
                 read_dtype=read_dtype,
                 sync_offset=sync_offset,
+                corrections=corrections,
             ):
                 yield from self._get_tiles_straight(
                     tiling_scheme, fileset, read_ranges, sync_offset,
@@ -334,6 +398,7 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
                     roi=roi,
                     sync_offset=sync_offset,
                     decoder=decoder,
+                    corrections=corrections,
                 )
 
     # @profile
@@ -364,8 +429,167 @@ class LocalFSMMapBackend(IOBackend, id_="mmap"):
             )
 
 
+class BufferedBackend(IOBackend, id_="buffered"):
+    def __init__(self):
+        pass  # TODO: paramters: max. buffer size to limit memory usage?
+
+    @classmethod
+    def from_json(cls, msg):
+        """
+        Construct an instance from the already-decoded `msg`.
+        """
+        raise NotImplementedError("TODO! implement me!")
+
+    def get_impl(self):
+        return BufferedBackendImpl()
+
+
+class BufferedBackendImpl(IOBackendImpl):
+    def __init__(self):
+        """
+        I/O backend using a buffered reading strategy.
+
+        Parameters
+        ----------
+        """
+        super().__init__()
+        self._buffer_pool = BufferPool()
+
+    def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges, read_dtype):
+        """
+        """
+
+        ds_sig_shape = tiling_scheme.dataset_shape.sig
+        ds_sig_size = np.prod(ds_sig_shape)
+        sig_dims = tiling_scheme.shape.sig.dims
+        slices, ranges, scheme_indices = read_ranges
+        buf_shape = (tiling_scheme.depth,) + ds_sig_size
+        pos = -1
+        file_idx = -1
+
+        with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
+            for idx in range(slices.shape[0]):
+                origin = slices[idx, 0]
+                shape = slices[idx, 1]
+                tile_ranges = ranges[idx]
+                scheme_idx = scheme_indices[idx]
+
+                if tile_ranges[0, 1] > pos or file_idx != tile_ranges[0, 0]:
+                    # NOTE: for straight reading, read_ranges must not contain tiles
+                    # that span multiple files. This is ensured in IOBackend.need_copy
+                    # (that is, we force copying if files are smaller than tiles)
+                    file_idx = tile_ranges[0, 0]  # file index from the first rr for this tile
+                    fh = fileset[file_idx]
+                    pos = tile_ranges[0, 1]
+                    assert tile_ranges[0, 1] == np.min(tile_ranges[:, 1])
+                    fh.seek(pos)  # minimum of starting offset for this tile
+                    fh.readinto(out_decoded)
+                else:
+                    assert tile_ranges[0, 2] <= pos + out_decoded.nbytes
+
+                # memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
+                tile_slice = Slice(
+                    origin=origin,
+                    shape=Shape(shape, sig_dims=sig_dims)
+                )
+                data_slice = tile_slice.get()
+                data = memmap[data_slice]
+                yield DataTile(
+                    data,
+                    tile_slice=tile_slice,
+                    scheme_idx=scheme_idx,
+                )
+
+    def get_read_and_decode(self, decode):
+        key = (decode, "read")
+        if key in _r_n_d_cache:
+            return _r_n_d_cache[key]
+        r_n_d = _make_reader_and_decoder(decode=decode)
+        _r_n_d_cache[key] = r_n_d
+        return r_n_d
+
+    # @profile
+    def _get_tiles_w_copy(
+        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,
+        corrections=None,
+    ):
+        if decoder is None:
+            decoder = DtypeConversionDecoder()
+        decode = decoder.get_decode(
+            native_dtype=np.dtype(native_dtype),
+            read_dtype=np.dtype(read_dtype),
+        )
+        r_n_d = self._r_n_d = self.get_read_and_decode(decode)
+
+        native_dtype = decoder.get_native_dtype(native_dtype, read_dtype)
+
+        sig_dims = tiling_scheme.shape.sig.dims
+        ds_shape = np.array(tiling_scheme.dataset_shape)
+
+        largest_slice = sorted([
+            (np.prod(s_.shape), s_)
+            for _, s_ in tiling_scheme.slices
+        ], key=lambda x: x[0], reverse=True)[0][1]
+
+        buf_shape = (tiling_scheme.depth,) + tuple(largest_slice.shape)
+
+        need_clear = decoder.do_clear()
+
+        with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
+            out_decoded = out_decoded.reshape((-1,))
+
+            slices = read_ranges[0]
+            shape_prods = np.prod(slices[..., 1, :], axis=1)
+            ranges = read_ranges[1]
+            scheme_indices = read_ranges[2]
+            for idx in range(slices.shape[0]):
+                origin = slices[idx, 0]
+                shape = slices[idx, 1]
+                tile_ranges = ranges[idx]
+                scheme_idx = scheme_indices[idx]
+                # if idx < slices.shape[0] - 1:
+                #     self._prefetch_for_tile(fileset, ranges[idx + 1])
+                #     pass
+                out_cut = out_decoded[:shape_prods[idx]].reshape((shape[0], -1))
+                data = r_n_d(
+                    idx,
+                    buffers, sig_dims, tile_ranges,
+                    out_cut, native_dtype, do_zero=need_clear,
+                    origin=origin, shape=shape, ds_shape=ds_shape, offset=offset,
+                )
+                tile_slice = Slice(
+                    origin=origin,
+                    shape=Shape(shape, sig_dims=sig_dims)
+                )
+                data = data.reshape(shape)
+                self.preprocess(data, tile_slice, corrections)
+                yield DataTile(
+                    data,
+                    tile_slice=tile_slice,
+                    scheme_idx=scheme_idx,
+                )
+
+    # @profile
+    def get_tiles(
+        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
+        corrections,
+    ):
+        with fileset:
+            yield from self._get_tiles_w_copy(
+                tiling_scheme=tiling_scheme,
+                fileset=fileset,
+                read_ranges=read_ranges,
+                read_dtype=read_dtype,
+                native_dtype=native_dtype,
+                decoder=decoder,
+                corrections=corrections,
+            )
+
+
 class LocalFile(File):
     def open(self):
+        # NOTE: for `readinto` to work, we must not switch off buffering here!
+        # otherwise, `readinto` may return partial results, which can be hard to handle
         f = open(self._path, "rb")
         self._file = f
         self._raw_mmap = mmap.mmap(
@@ -388,6 +612,22 @@ class LocalFile(File):
         self._mmap = self._mmap_to_array(self._raw_mmap, start, stop)
 
     def _mmap_to_array(self, raw_mmap, start, stop):
+        """
+        Create an array from the raw memory map, stipping away
+        frame headers and footers
+
+        Parameters
+        ----------
+
+        raw_mmap : np.memmap or memoryview
+            The raw memory map, with the file header already stripped away
+
+        start : int
+            Number of items cut away at the start of each frame (frame_header // itemsize)
+
+        stop : int
+            Number of items per frame (something like start + np.prod(sig_shape))
+        """
         return np.frombuffer(raw_mmap, dtype=self._native_dtype).reshape(
             (self.num_frames, -1)
         )[:, start:stop]
@@ -399,10 +639,32 @@ class LocalFile(File):
         self._file = None
 
     def mmap(self):
+        """
+        Memory map for this file, with file header, frame header and frame footer cut off
+
+        Used for reading tiles straight from the filesystem cache
+        """
         return self._mmap
 
     def raw_mmap(self):
+        """
+        Memory map for this file, with only the file header cut off
+
+        Used for reading tiles with a decoding step, using the read ranges
+        """
         return self._raw_mmap
+
+    def readinto(self, out):
+        """
+        Fill `out` by reading from the current file position
+        """
+        return self._file.readinto(out)
+
+    def seek(self, pos):
+        self._file.seek(pos)
+
+    def tell(self):
+        return self._file.tell()
 
     def fileno(self):
         return self._file.fileno()

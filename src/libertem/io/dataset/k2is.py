@@ -562,8 +562,8 @@ class K2ISDataSet(DataSet):
         Path to one of the files of the data set (either one of the .bin files or the .gtg file)
     """
 
-    def __init__(self, path):
-        super().__init__()
+    def __init__(self, path, io_backend=None):
+        super().__init__(io_backend=io_backend)
         self._path = path
         self._start_offsets = None
         # NOTE: the sync flag appears to be set one frame too late, so
@@ -747,6 +747,7 @@ class K2ISDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):

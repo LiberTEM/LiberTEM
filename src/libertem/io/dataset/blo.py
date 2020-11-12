@@ -118,8 +118,8 @@ class BloDataSet(DataSet):
         If negative, number of blank frames to insert at start
     """
     def __init__(self, path, tileshape=None, endianess='<', nav_shape=None,
-                 sig_shape=None, sync_offset=0):
-        super().__init__()
+                 sig_shape=None, sync_offset=0, io_backend=None):
+        super().__init__(io_backend=io_backend)
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn(
@@ -266,6 +266,7 @@ class BloDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
+                io_backend=self.get_io_backend(),
             )
 
     def __repr__(self):

@@ -373,7 +373,8 @@ class CachedDataSet(DataSet):
     strategy : CacheStrategy
         A class implementing a cache eviction strategy, for example LRUCacheStrategy
     """
-    def __init__(self, source_ds, cache_path, strategy):
+    def __init__(self, source_ds, cache_path, strategy, io_backend=None):
+        super().__init__(io_backend=io_backend)
         self._source_ds = source_ds
         self._cache_path = cache_path
         self._cache_key = self._make_cache_key(source_ds.get_cache_key())
@@ -440,6 +441,7 @@ class CachedDataSet(DataSet):
                 cache_strategy=self._cache_strategy,
                 db_path=self._get_db_path(),
                 idx=idx,
+                io_backend=self.get_io_backend(),
             )
 
     def evict(self, executor):
@@ -455,8 +457,8 @@ class CachedDataSet(DataSet):
 
 class CachedPartition(Partition):
     def __init__(self, source_part, cluster_part, meta, partition_slice,
-                 cache_key, cache_strategy, db_path, idx):
-        super().__init__(meta=meta, partition_slice=partition_slice)
+                 cache_key, cache_strategy, db_path, idx, io_backend):
+        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
         self._source_part = source_part
         self._cluster_part = cluster_part
         self._cache_key = cache_key

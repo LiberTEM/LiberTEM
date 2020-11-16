@@ -34,7 +34,6 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     ep = ExecutePreprocessor(timeout=600)
     out = ep.preprocess(nb, {"metadata": {"path": datadir}})
     channels = [
-        "dominant_0",
         "absolute_0_0",
         "absolute_0_1"
     ]
@@ -54,6 +53,5 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
                                 )
     expected = lt_ctx.run(analysis)
 
-    assert np.allclose(results["dominant_0"], expected["dominant_0"].raw_data)
     assert np.allclose(results["absolute_0_0"], expected["absolute_0_0"].raw_data)
     assert np.allclose(results["absolute_0_1"], expected["absolute_0_1"].raw_data)

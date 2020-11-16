@@ -67,7 +67,7 @@ class RadialTemplate(GeneratorHelper):
 
     def get_save(self):
         save = []
-        channels = ["dominant_0", "absolute_0_0", "absolute_0_1"]
+        channels = ["absolute_0_0", "absolute_0_1"]
         for channel in channels:
             result = f"radial_result['{channel}'].raw_data"
             save.append(f"np.save('radial_result_{channel}.npy', {result})")

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from libertem.udf import UDF
 from libertem.io.dataset.memory import MemoryDataSet
@@ -8,6 +9,7 @@ from utils import _mk_random
 
 class EchoUDF(UDF):
     def get_result_buffers(self):
+        print("get_result_buffers", self.params.aux.shape)
         return {
             'echo': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
@@ -24,28 +26,33 @@ class EchoUDF(UDF):
         }
 
     def preprocess(self):
+        print("preprocess", self.params.aux.shape)
         self.results.echo_preprocess[:] = self.params.aux
 
     def process_frame(self, frame):
+        print("process_frame", self.params.aux.shape)
         self.results.echo[:] = self.params.aux
         self.results.weighted[:] = np.sum(frame) * self.params.aux[0]
 
     def postprocess(self):
+        print("postprocess", self.params.aux.shape)
         self.results.echo_postprocess[:] = self.params.aux
 
 
 class EchoTiledUDF(UDF):
     def get_result_buffers(self):
+        print("get_result_buffers", self.params.aux.shape)
         return {
             'echo': self.buffer(
                 kind="nav", dtype="float32", extra_shape=(2,)
             ),
             'weighted': self.buffer(
                 kind="nav", dtype="float32",
-            )
+            ),
         }
 
     def process_tile(self, tile):
+        print("process_tile", self.params.aux.shape)
         self.results.echo[:] = self.params.aux
         w = np.sum(tile, axis=(-1, -2)) * self.params.aux[..., 0]
         self.results.weighted[:] = w
@@ -140,6 +147,28 @@ def test_aux_2(lt_ctx):
     )
     dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
                             num_partitions=2, sig_dims=2)
+
+    echo_udf = EchoUDF(aux=aux_data)
+    res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)
+    assert 'weighted' in res
+    print(data.shape, res['weighted'].data.shape)
+    assert np.allclose(
+        res['weighted'].raw_data,
+        np.sum(data, axis=(2, 3)).reshape(-1) * aux_data.raw_data[..., 0]
+    )
+
+
+@pytest.mark.parametrize(
+    "num_partitions", (2, 4)
+)
+def test_aux_small(num_partitions, lt_ctx):
+    data = _mk_random(size=(2, 2, 16, 16), dtype="float32")
+    aux_data = EchoUDF.aux_data(
+        kind="nav", dtype="float32", extra_shape=(2, ),
+        data=_mk_random(size=(2, 2, 2), dtype="float32"),
+    )
+    dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
+                            num_partitions=num_partitions, sig_dims=2)
 
     echo_udf = EchoUDF(aux=aux_data)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)

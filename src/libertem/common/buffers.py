@@ -501,10 +501,10 @@ class AuxBufferWrapper(BufferWrapper):
         assert self._data is None
         assert buf.dtype == self._dtype
         extra = self._extra_shape
-        if not extra:
-            extra = (1,)
-        shape = (-1,) + extra
-        self._data = buf.reshape(shape).squeeze()
+        shape = (-1,)
+        if extra and extra != (1,):
+            shape = shape + extra
+        self._data = buf.reshape(shape)
         self._data_coords_global = is_global
 
     def __repr__(self):

@@ -131,7 +131,12 @@ class LocalFSMMapBackend(IOBackend):
                 origin=origin,
                 shape=Shape(shape, sig_dims=sig_dims)
             )
-            data_slice = tile_slice.get()
+            data_slice = (
+                slice(origin[0] - fh.start_idx, origin[0] - fh.start_idx + shape[0]),
+            ) + tuple([
+                slice(o, (o + s))
+                for (o, s) in zip(origin[1:], shape[1:])
+            ])
             data = memmap[data_slice]
             yield DataTile(
                 data,

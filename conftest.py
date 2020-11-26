@@ -304,6 +304,11 @@ def shared_dist_ctx():
 
 
 @pytest.fixture(autouse=True)
+def fix_event_loop():
+    adjust_event_loop_policy()
+
+
+@pytest.fixture(autouse=True)
 def auto_ctx(doctest_namespace):
     ctx = lt.Context(executor=InlineJobExecutor())
     doctest_namespace["ctx"] = ctx

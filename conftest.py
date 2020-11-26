@@ -302,6 +302,18 @@ def shared_dist_ctx():
     print("stop shared Context()")
     ctx.close()
 
+@pytest.fixture(autouse=True)
+def fixup_event_loop():
+    adjust_event_loop_policy()
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_fixture_post_finalizer(fixturedef, request):
+    """Called after fixture teardown"""
+    if fixturedef.argname == "event_loop":
+        # Set empty loop policy, so that subsequent get_event_loop() provides a new loop
+        adjust_event_loop_policy()
+
 
 @pytest.fixture(autouse=True)
 def auto_ctx(doctest_namespace):

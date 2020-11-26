@@ -138,7 +138,7 @@ class DMDataSet(DataSet):
                 file_header=self._offsets[fn],
             )
             files.append(f)
-            start_idx += 1  # FIXME: .nav.size?
+            start_idx += z_size
         return DMFileSet(files)
 
     def _get_files(self):

@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from libertem.io.dataset.dm import DMDataSet
+from libertem.udf.sum import SumUDF
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -19,6 +20,13 @@ pytestmark = pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="need .dm4 testdata
 @pytest.fixture
 def default_dm(lt_ctx):
     files = list(sorted(glob.glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    ds = lt_ctx.load("dm", files=files)
+    return ds
+
+
+@pytest.fixture
+def dm_stack_of_3d(lt_ctx):
+    files = list(sorted(glob.glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))))
     ds = lt_ctx.load("dm", files=files)
     return ds
 
@@ -95,3 +103,18 @@ def test_dm_dist(dist_ctx):
     roi = np.random.choice([True, False], size=len(files))
     results = dist_ctx.run(analysis, roi=roi)
     assert results[0].raw_data.shape == (3838, 3710)
+
+
+def test_dm_stack_fileset_offsets(dm_stack_of_3d, lt_ctx):
+    fs = dm_stack_of_3d._get_fileset()
+    f0, f1 = fs
+
+    # check that the offsets in the fileset are correct:
+    assert f0.num_frames == 20
+    assert f1.num_frames == 20
+    assert f0.start_idx == 0
+    assert f0.end_idx == 20
+    assert f1.start_idx == 20
+    assert f1.end_idx == 40
+
+    lt_ctx.run_udf(dataset=dm_stack_of_3d, udf=SumUDF())

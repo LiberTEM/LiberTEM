@@ -1,5 +1,5 @@
 [Bugfix] Addition between Shape and tuple
-===========================================================
+=========================================
 
 * Tuples can be added directly to Shape objects. Right
   addition adds to the signal dimensions of the Shape

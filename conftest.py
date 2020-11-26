@@ -311,7 +311,11 @@ def fixup_event_loop():
 def pytest_fixture_post_finalizer(fixturedef, request):
     """Called after fixture teardown"""
     if fixturedef.argname == "event_loop":
-        # Set empty loop policy, so that subsequent get_event_loop() provides a new loop
+        # Work around: pytest-asyncio sets an empty event loop policy here,
+        # which breaks on windows, where we have to supply a specific
+        # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
+        # the event policy here.
+        # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
         adjust_event_loop_policy()
 
 

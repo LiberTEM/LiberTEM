@@ -7,6 +7,8 @@
 * [ ] I have included the [rebuilt production build of the client](https://libertem.github.io/LiberTEM/contributing.html?#building-the-client) (only if
 changes were made to the GUI)
 
+<!--
+
 ## Please remove this section
 
 Starting by submitting an incomplete pull request (PR) or draft PR is OK. You
@@ -20,3 +22,5 @@ clarification and help, for example in your PR description, with comments or in
 our [Gitter channel](https://gitter.im/LiberTEM/Lobby).
 
 Thank you for your contribution!
+
+-->

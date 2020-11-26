@@ -25,6 +25,10 @@ from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.utils.async_utils import adjust_event_loop_policy
 
+# event loop policy needs to be set as early as possible,
+# let's see if this is early enough:
+adjust_event_loop_policy()
+
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests
 # and this file is outside the package
@@ -301,11 +305,6 @@ def shared_dist_ctx():
     yield ctx
     print("stop shared Context()")
     ctx.close()
-
-
-@pytest.fixture(autouse=True)
-def fix_event_loop():
-    adjust_event_loop_policy()
 
 
 @pytest.fixture(autouse=True)

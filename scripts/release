@@ -339,8 +339,8 @@ def upload_to_github(verbose, files, token, release):
             print("release, tag:", tag['full'])
     else:
         raise ValueError("unknown release kind: %s" % release)
-
-    print("release data: %r" % release_data)
+    if verbose:
+        print("release data: %r" % release_data)
     rel = repo.create_git_release(**release_data)
 
     for path in files:

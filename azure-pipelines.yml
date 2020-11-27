@@ -366,5 +366,5 @@ stages:
           versionSpec: '3.8'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
-      - bash: python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
+      - bash: python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run --verbose
         displayName: 'Upload packages / release'

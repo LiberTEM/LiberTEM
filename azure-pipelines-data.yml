@@ -8,7 +8,7 @@ stages:
       pool: DataAccess
       variables:
         TOXENV: 'py38'
-        LT_TEST_DATA_PATH: '/data/'
+        TESTDATA_BASE_PATH: '/data/'
       steps:
       - bash: find /data/
         displayName: 'list available data'
@@ -19,7 +19,10 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: ./venv/bin/tox
+      - bash: .tox/py38/bin/python3 -m pip --version
+        displayName: 'show pip version'
+
+      - bash: ./venv/bin/tox -- tests/io/
         displayName: 'Run tox tests'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml

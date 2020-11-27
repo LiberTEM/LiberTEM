@@ -340,6 +340,7 @@ def upload_to_github(verbose, files, token, release):
     else:
         raise ValueError("unknown release kind: %s" % release)
 
+    print("release data: %r" % release_data)
     rel = repo.create_git_release(**release_data)
 
     for path in files:

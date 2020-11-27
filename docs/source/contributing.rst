@@ -91,7 +91,17 @@ update upon introducing or changing a feature:
 
 When you have submitted your pull request, someone from the LiberTEM
 organization will review your pull request, and may add comments or ask
-questions. If everything is good to go, your changes will be merged and you can
+questions. 
+
+In case your PR touches I/O code, an organization member may run
+the I/O tests with access to test data sets on a separate Azure Agent,
+using the following comment on the PR:
+
+.. code-block:: text
+
+    /azp run libertem.libertem-data
+
+If everything is good to go, your changes will be merged and you can
 delete the branch you created for the pull request.
 
 .. seealso:: `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_

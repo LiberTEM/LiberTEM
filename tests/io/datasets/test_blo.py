@@ -12,9 +12,9 @@ from libertem.io.dataset.blo import BloDataSet
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-BLO_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.blo')
+BLO_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_BLO_TESTDATA, reason="need .blo testdata")  # NOQA

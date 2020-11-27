@@ -1,0 +1,78 @@
+trigger:
+- master
+
+stages:
+  - stage: test
+    jobs:
+    - job: data_tests
+      pool: DataAccess
+      strategy:
+        matrix:
+          Python36:
+            python.version: '3.6'
+            TOXENV: 'py36'
+          Python37:
+            python.version: '3.7'
+            TOXENV: 'py37'
+          Python38:
+            python.version: '3.8'
+            TOXENV: 'py38'
+      variables:
+        TOXENV: '$(TOXENV)'
+        LT_TEST_DATA_PATH: '/data/'
+      steps:
+      - task: UsePythonVersion@0
+        displayName: 'Use Python $(python.version)'
+        inputs:
+          versionSpec: '$(python.version)'
+
+      - bash: pip install -U tox
+        displayName: 'install requirements'
+
+      - bash: tox
+        displayName: 'Run tox tests'
+
+#   - bash: python3 -m venv venv
+#     displayName: 'create venv'
+# 
+#   - bash: ./venv/bin/pip install tox
+#     displayName: 'install tox'
+# 
+#   - bash: ./venv/bin/tox
+#     displayName: 'Run tox tests'
+
+
+      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+        displayName: 'Submit coverage to codecov.io'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: 'junit.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+
+# Initial Azure pipeline for evaluation regarding running a on-premise agent
+# which has access to non-published data sets
+# - job: dataset_tests
+#   pool: DataAccess
+#   variables:
+#     TOXENV: 'py36'
+#     LT_TEST_DATA_PATH: '/data/'
+#   steps:
+#   - bash: python3 -m venv venv
+#     displayName: 'create venv'
+# 
+#   - bash: ./venv/bin/pip install tox
+#     displayName: 'install tox'
+# 
+#   - bash: ./venv/bin/tox
+#     displayName: 'Run tox tests'
+# 
+#   - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml -f client/coverage/coverage-final.json
+#     displayName: 'Submit coverage to codecov.io'

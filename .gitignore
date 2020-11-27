@@ -27,3 +27,4 @@ data
 *.idea
 .mypy_cache/
 .benchmarks
+junit.xml

@@ -75,6 +75,15 @@ stages:
         inputs:
           versionSpec: '3.8'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
       - bash: pip install -U tox
         displayName: 'install requirements'
 

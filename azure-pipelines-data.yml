@@ -19,9 +19,6 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: .tox/py38/bin/python3 -m pip --version
-        displayName: 'show pip version'
-
       - bash: ./venv/bin/tox -- tests/io/
         displayName: 'Run tox tests'
 

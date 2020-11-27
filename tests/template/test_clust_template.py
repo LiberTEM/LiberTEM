@@ -18,7 +18,7 @@ class ResultContainer:
 
 @pytest.mark.asyncio
 async def test_clust_default(
-    hdf5_ds_2, tmpdir_factory, inline_executor, local_cluster_url
+    hdf5_ds_2, tmpdir_factory, inline_executor, local_cluster_url,
 ):
     datadir = tmpdir_factory.mktemp('template_tests')
 
@@ -44,7 +44,7 @@ async def test_clust_default(
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'cluster_result.npy')
     results = np.load(data_path)
 

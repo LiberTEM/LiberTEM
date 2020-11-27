@@ -30,7 +30,7 @@ def test_sum_fft_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sumfft_result.npy')
     results = np.load(data_path)
 
@@ -69,7 +69,7 @@ def test_fft_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'fft_result.npy')
     results = np.load(data_path)
 
@@ -94,9 +94,9 @@ def test_pick_fft_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url)
     params = {
         'x': 4,
         'y': 4,
-        'real_rad':4,
-        'real_centerx':8,
-        'real_centery':8,
+        'real_rad': 4,
+        'real_centerx': 8,
+        'real_centery': 8,
     }
 
     analysis = [{
@@ -108,7 +108,7 @@ def test_pick_fft_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url)
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'pickfft_result.npy')
     results = np.load(data_path)
 

@@ -32,11 +32,11 @@ def test_fem_analysis(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'fem_result.npy')
     results = np.load(data_path)
 
-    analysis = FEMUDF(center=(1,1), rad_in=0, rad_out=1)
+    analysis = FEMUDF(center=(1, 1), rad_in=0, rad_out=1)
     expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=analysis)
     assert np.allclose(
         results,

@@ -29,7 +29,7 @@ def test_com_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     channels = [
             "field",
             "magnitude",

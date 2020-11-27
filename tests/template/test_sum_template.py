@@ -26,7 +26,7 @@ def test_sum_default(hdf5_ds_2, tmpdir_factory, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sum_result.npy')
     result = np.load(data_path)
     with hdf5_ds_2.get_reader().get_h5ds() as h5ds:
@@ -58,7 +58,7 @@ def test_sum_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sum_result.npy')
     results = np.load(data_path)
     nx, ny = hdf5_ds_2.shape.nav

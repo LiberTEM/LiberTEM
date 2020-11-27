@@ -34,7 +34,7 @@ def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'ring_result.npy')
     results = np.load(data_path)
 
@@ -92,7 +92,7 @@ def test_ring_tcp_cluster(lt_ctx, random_hdf5_1):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": tmp_dir}})
+    ep.preprocess(nb, {"metadata": {"path": tmp_dir}})
     data_path = os.path.join(tmp_dir, 'ring_result.npy')
     results = np.load(data_path)
 

@@ -8,14 +8,14 @@ services:
     ports:
       - "8786:8786"
       - "8787:8787"
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/dask-scheduler"]
   worker-1:
     build:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-1
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
@@ -28,7 +28,7 @@ services:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: worker-2
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
@@ -41,7 +41,7 @@ services:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: ipy-controller
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/ipcontroller", "--ip='*'"]
     volumes:
       - ipyconfig:/root/.ipython/
@@ -50,7 +50,7 @@ services:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: ipy-worker-1
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
     volumes:
       - ipyconfig:/root/.ipython/
@@ -64,7 +64,7 @@ services:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: ipy-worker-2
-    image: libertem/libertem
+    image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
     volumes:
       - ipyconfig:/root/.ipython/
@@ -78,7 +78,7 @@ services:
       context: ../../
       dockerfile: packaging/docker/Dockerfile
     hostname: tests
-    image: libertem/libertem
+    image: libertem/libertem-dev
     working_dir: /code/
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786

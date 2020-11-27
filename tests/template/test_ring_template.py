@@ -53,7 +53,7 @@ def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     )
 
 
-@pytest.fixture('function')
+@pytest.fixture(scope='function')
 def random_hdf5_1():
     tmp_dir = '/data/temp_data/tmp'
     os.makedirs(tmp_dir)

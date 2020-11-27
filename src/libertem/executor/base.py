@@ -2,6 +2,8 @@ import concurrent
 import functools
 import asyncio
 
+from libertem.utils.async_utils import adjust_event_loop_policy
+
 
 class ExecutorError(Exception):
     pass
@@ -222,6 +224,7 @@ class AsyncAdapter(AsyncJobExecutor):
     @classmethod
     def make_pool(cls):
         pool = concurrent.futures.ThreadPoolExecutor(1)
+        pool.submit(adjust_event_loop_policy).result()
         pool.submit(lambda: asyncio.set_event_loop(asyncio.new_event_loop())).result()
         return pool
 

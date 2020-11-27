@@ -1,5 +1,7 @@
 variables:
   - group: Packaging
+  - name: PIP_CACHE_DIR
+    value: $(Pipeline.Workspace)/.pip
 
 stages:
   - stage: test
@@ -25,6 +27,15 @@ stages:
         displayName: 'Use Python $(python.version)'
         inputs:
           versionSpec: '$(python.version)'
+
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
 
       - bash: pip install -U tox
         displayName: 'install requirements'
@@ -145,6 +156,15 @@ stages:
         inputs:
           versionSpec: '$(python.version)'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
       - bash: pip install -U tox
         displayName: 'install requirements'
 
@@ -187,6 +207,15 @@ stages:
         displayName: 'Use Python $(python.version)'
         inputs:
           versionSpec: '$(python.version)'
+
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
 
       - bash: pip install -U tox
         displayName: 'install requirements'

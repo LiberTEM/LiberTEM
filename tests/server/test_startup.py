@@ -185,8 +185,10 @@ async def test_initial_state_w_existing_ds(default_raw, base_url, http_client, s
 
 
 @pytest.mark.asyncio
-async def test_initial_state_analyses(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_initial_state_analyses(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     # first connect has empty list of datasets:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)

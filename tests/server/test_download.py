@@ -21,8 +21,8 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_download_hdf5(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_download_hdf5(default_raw, base_url, http_client, server_port, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 
@@ -90,12 +90,14 @@ async def test_download_hdf5(default_raw, base_url, http_client, server_port):
     'filetype',
     list(ResultFormatRegistry.get_available_formats().keys())
 )
-async def test_download_other_formats(default_raw, base_url, http_client, server_port, filetype):
+async def test_download_other_formats(
+    default_raw, base_url, http_client, server_port, filetype, local_cluster_url
+):
     """
     This test just triggers download with different formats,
     it does not yet check the result files!
     """
-    await create_connection(base_url, http_client)
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 
@@ -151,8 +153,10 @@ async def test_download_other_formats(default_raw, base_url, http_client, server
 
 
 @pytest.mark.asyncio
-async def test_download_com(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_download_com(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 
@@ -211,8 +215,10 @@ async def test_download_com(default_raw, base_url, http_client, server_port):
 
 
 @pytest.mark.asyncio
-async def test_download_notebook(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_download_notebook(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 

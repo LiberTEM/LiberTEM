@@ -14,8 +14,8 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_run_job_1_sum(default_raw, base_url, http_client, server_port, local_cluster_url):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     print("checkpoint 1")
 
@@ -57,12 +57,14 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port):
 
 
 @pytest.mark.asyncio
-async def test_run_job_delete_ds(default_raw, base_url, http_client, server_port):
+async def test_run_job_delete_ds(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
     """
     main difference to test above: we just close the dataset without
     removing the job first. this tests another code path in `remove_dataset`
     """
-    await create_connection(base_url, http_client)
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
     print("checkpoint 1")
 
     # connect to ws endpoint:
@@ -98,8 +100,10 @@ async def test_run_job_delete_ds(default_raw, base_url, http_client, server_port
 
 
 @pytest.mark.asyncio
-async def test_cancel_unknown_job(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_cancel_unknown_job(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:
@@ -116,8 +120,10 @@ async def test_cancel_unknown_job(default_raw, base_url, http_client, server_por
 
 
 @pytest.mark.asyncio
-async def test_run_with_all_zeros_roi(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_run_with_all_zeros_roi(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
     print("checkpoint 1")
 
     # connect to ws endpoint:
@@ -170,8 +176,10 @@ async def test_run_with_all_zeros_roi(default_raw, base_url, http_client, server
 
 
 @pytest.mark.asyncio
-async def test_run_job_update_analysis_parameters(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_run_job_update_analysis_parameters(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
     print("checkpoint 1")
 
     # connect to ws endpoint:
@@ -251,8 +259,10 @@ async def test_run_job_update_analysis_parameters(default_raw, base_url, http_cl
 
 
 @pytest.mark.asyncio
-async def test_analysis_removal(default_raw, base_url, http_client, server_port, shared_state):
-    await create_connection(base_url, http_client)
+async def test_analysis_removal(
+    default_raw, base_url, http_client, server_port, shared_state, local_cluster_url
+):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
@@ -317,8 +327,10 @@ async def test_analysis_removal(default_raw, base_url, http_client, server_port,
 
 
 @pytest.mark.asyncio
-async def test_create_compound_analysis(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_create_compound_analysis(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)

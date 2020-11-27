@@ -10,8 +10,10 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_detect_failed(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_detect_failed(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    await create_connection(base_url, http_client, local_cluster_url)
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:
@@ -30,8 +32,8 @@ async def test_detect_failed(default_raw, base_url, http_client, server_port):
 
 
 @pytest.mark.asyncio
-async def test_detect_hdf5(hdf5, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_detect_hdf5(hdf5, base_url, http_client, server_port, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     # connect to ws endpoint:
     ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
     async with websockets.connect(ws_url) as ws:

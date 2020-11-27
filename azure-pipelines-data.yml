@@ -1,6 +1,10 @@
 trigger:
 - master
 
+variables:
+  - name: PIP_CACHE_DIR
+    value: $(Pipeline.Workspace)/.pip
+
 stages:
   - stage: test
     jobs:
@@ -13,14 +17,20 @@ stages:
       - bash: find /data/
         displayName: 'list available data'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
       - bash: python3.8 -m venv venv
         displayName: 'create venv'
     
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
-
-      - bash: .tox/py38/bin/python3 -m pip --version
-        displayName: 'show pip version'
 
       - bash: ./venv/bin/tox -- tests/io/
         displayName: 'Run tox tests'

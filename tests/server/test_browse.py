@@ -7,8 +7,8 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_browse_localfs(default_raw, base_url, http_client):
-    await create_connection(base_url, http_client)
+async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     browse_path = os.path.dirname(default_raw._path)
     raw_ds_filename = os.path.basename(default_raw._path)
     url = "{}/api/browse/localfs/".format(base_url)
@@ -33,8 +33,8 @@ async def test_browse_localfs(default_raw, base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_browse_localfs_fail(default_raw, base_url, http_client):
-    await create_connection(base_url, http_client)
+async def test_browse_localfs_fail(default_raw, base_url, http_client, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     browse_path = os.path.join(
         os.path.dirname(default_raw._path),
         "does", "not", "exist"

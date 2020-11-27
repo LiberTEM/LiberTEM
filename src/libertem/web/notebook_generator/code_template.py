@@ -56,8 +56,6 @@ class CodeTemplate(TemplateBase):
         dep = self.temp_dep + extra_dep
         if self.type == 'script':
             dep.append("import logging")
-        if (self.conn['type'] == "TCP"):
-            dep.append("from libertem.executor.dask import DaskJobExecutor")
         return self.code_formatter('\n'.join(dep))
 
     def initial_setup(self):
@@ -73,13 +71,13 @@ class CodeTemplate(TemplateBase):
             more_info = f"[For more info]({link})"
             docs.append(f"Connecting to dask cluster, {more_info}")
             data = {'conn_url': self.conn['address']}
-            ctx = self.format_template(self.temp_conn, data)
+            ctx = self.format_template(self.temp_conn_tcp(), data)
             docs = '\n'.join(docs)
             return ctx, docs
         elif self.conn['type'].lower() == "local":
             docs.append("This starts a local cluster that is accessible through ctx.")
-            ctx = "ctx = lt.Context()"
             docs = '\n'.join(docs)
+            ctx = '\n'.join(self.temp_conn_local())
             return ctx, docs
         else:
             raise ValueError("unknown connection type")
@@ -88,12 +86,13 @@ class CodeTemplate(TemplateBase):
         form_analysis = []
 
         for helper in self.analysis_helper.values():
-
-            plot_ = list(map(self.code_formatter, helper.get_plot()))
-            analy_ = self.code_formatter(helper.get_analysis())
-            docs_ = self.code_formatter(helper.get_docs())
-            save_ = self.code_formatter(helper.get_save())
-
-            form_analysis.append((docs_, analy_, plot_, save_))
-
+            form_analysis.append(
+                {
+                    "plots": list(map(self.code_formatter, helper.get_plot())),
+                    "code": self.code_formatter(helper.get_analysis()),
+                    "docs": self.code_formatter(helper.get_docs()),
+                    "save": self.code_formatter(helper.get_save()),
+                    "log": helper.get_log()
+                }
+            )
         return form_analysis

@@ -4,10 +4,10 @@ from .code_template import CodeTemplate
 def copy_notebook(conn, dataset, comp):
     instance = CodeTemplate(conn, dataset, comp)
     analy = []
-    for _, analysis, plot, _ in instance.analysis():
+    for analysis in instance.analysis():
         analy.append({
-            'analysis': analysis,
-            'plot': plot
+            'analysis': analysis['code'],
+            'plot': analysis['plots']
         })
 
     return {

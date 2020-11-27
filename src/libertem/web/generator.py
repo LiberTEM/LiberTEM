@@ -30,7 +30,7 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
         for id in analysis_ids:
             analysis_details.append(self.state.analysis_state[id]['details'])
         conn = self.state.executor_state.get_cluster_params()
-        if (file_format_id == "ipynb"):
+        if file_format_id == "ipynb":
             buf = notebook_generator(conn, dataset, analysis_details)
             self.set_header('Content-Type', 'application/vnd.jupyter.cells')
             self.set_header(
@@ -38,7 +38,7 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
                 f'attachment; filename="{main_type}_{ds_name}.ipynb"',
             )
             self.write(buf.getvalue())
-        elif (file_format_id == "py"):
+        elif file_format_id == "py":
             buf = script_generator(conn, dataset, analysis_details)
             self.set_header('Content-Type', 'text/x-python')
             self.set_header(
@@ -46,6 +46,8 @@ class DownloadScriptHandler(tornado.web.RequestHandler):
                 f'attachment; filename="{main_type}_{ds_name}.py"',
             )
             self.write(buf)
+        else:
+            NotImplementedError()
 
 
 class CopyScriptHandler(tornado.web.RequestHandler):

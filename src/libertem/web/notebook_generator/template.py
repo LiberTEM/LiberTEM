@@ -24,6 +24,26 @@ class TemplateBase:
                  "executor = DaskJobExecutor(client)",
                  "ctx = lt.Context(executor=executor)"]
 
+    def temp_conn_tcp(self):
+        if self.type == 'notebook':
+            return ['client = dd.Client("$conn_url")',
+                    "executor = DaskJobExecutor(client)",
+                    "ctx = lt.Context(executor=executor)"]
+        else:
+            indent = " "*4
+            return ['if __name__ == "__main__":',
+                    f'{indent}client = dd.Client("$conn_url")',
+                    f'{indent}executor = DaskJobExecutor(client)',
+                    f'{indent}with lt.Context(executor=executor) as ctx:']
+
+    def temp_conn_local(self):
+        if self.type == 'notebook':
+            return ["ctx = lt.Context()"]
+        else:
+            indent = " "*4
+            return ['if __name__ == "__main__":',
+                    f"{indent}with lt.Context() as ctx:"]
+
     temp_analysis = ["${short}_analysis = ctx.$analysis_api($params)",
                      "${short}_result = ctx.run(${short}_analysis, progress=True)"]
 

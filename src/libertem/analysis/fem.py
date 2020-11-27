@@ -33,7 +33,7 @@ class FEMTemplate(GeneratorHelper):
         params = self.convert_params()
         temp_analysis = [
                     f"fem_udf = FEMUDF({params})",
-                    "fem_result = ctx.run_udf(dataset=ds, udf=fem_udf)",
+                    "fem_result = ctx.run_udf(dataset=ds, udf=fem_udf, progress=True)",
         ]
         return '\n'.join(temp_analysis)
 

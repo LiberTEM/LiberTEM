@@ -1,3 +1,9 @@
+trigger:
+  branches:
+    include:
+      - master
+      - 'v*'
+
 variables:
   - group: Packaging
   - name: PIP_CACHE_DIR

@@ -25,8 +25,8 @@ def _get_raw_params(path):
 
 
 @pytest.mark.asyncio
-async def test_load_raw_success(default_raw, base_url, http_client):
-    await create_connection(base_url, http_client)
+async def test_load_raw_success(default_raw, base_url, http_client, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
@@ -43,8 +43,8 @@ async def test_load_raw_success(default_raw, base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_load_raw_fail(default_raw, base_url, http_client):
-    await create_connection(base_url, http_client)
+async def test_load_raw_fail(default_raw, base_url, http_client, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
     ds_url = "{}/api/datasets/{}/".format(
@@ -63,8 +63,8 @@ async def test_load_raw_fail(default_raw, base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_dataset_delete(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_dataset_delete(default_raw, base_url, http_client, server_port, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
@@ -91,8 +91,8 @@ async def test_dataset_delete(default_raw, base_url, http_client, server_port):
 
 
 @pytest.mark.asyncio
-async def test_initial_state_after_reconnect(default_raw, base_url, http_client, server_port):
-    await create_connection(base_url, http_client)
+async def test_initial_state_after_reconnect(default_raw, base_url, http_client, server_port, local_cluster_url):
+    await create_connection(base_url, http_client, local_cluster_url)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"

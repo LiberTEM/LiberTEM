@@ -17,10 +17,12 @@ class ResultContainer:
 
 
 @pytest.mark.asyncio
-async def test_clust_default(hdf5_ds_2, tmpdir_factory, inline_executor):
+async def test_clust_default(
+    hdf5_ds_2, tmpdir_factory, inline_executor, local_cluster_url
+):
     datadir = tmpdir_factory.mktemp('template_tests')
 
-    conn = {'connection': {'type': 'local'}}
+    conn = {'connection': {'type': 'tcp', 'address': local_cluster_url}}
     path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 

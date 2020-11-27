@@ -378,11 +378,10 @@ def lt_ctx(inline_executor):
 
 
 @pytest.fixture
-async def async_executor():
-    spec = cluster_spec(cpus=[0, 1], cudas=[], has_cupy=False)
+async def async_executor(local_cluster_url):
 
     pool = AsyncAdapter.make_pool()
-    sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local, spec=spec), pool=pool)
+    sync_executor = await sync_to_async(partial(DaskJobExecutor.connect, scheduler_uri=local_cluster_url), pool=pool)
     executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
     yield executor
     await executor.close()

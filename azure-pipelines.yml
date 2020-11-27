@@ -8,6 +8,8 @@ variables:
   - group: Packaging
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
+  - name: npm_config_cache
+    value: $(Pipeline.Workspace)/.npm
 
 stages:
   - stage: test
@@ -260,6 +262,15 @@ stages:
       - task: NodeTool@0
         inputs:
           versionSpec: '12'
+
+      - task: Cache@2
+        inputs:
+          key: 'npm | "$(Agent.OS)" | client/package-lock.json'
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+          path: $(npm_config_cache)
+        displayName: Cache npm
+
       - bash: (cd client && npm install)
         displayName: 'install npm dependencies'
 

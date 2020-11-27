@@ -7,18 +7,18 @@ stages:
     - job: data_tests
       pool: DataAccess
       variables:
-        TOXENV: 'py36'
+        TOXENV: 'py38'
         LT_TEST_DATA_PATH: '/data/'
       steps:
+      - bash: find /data/
+        displayName: 'list available data'
+
       - bash: python3 -m venv venv
         displayName: 'create venv'
     
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: find /data/
-        displayName: 'list available data'
-    
       - bash: ./venv/bin/tox
         displayName: 'Run tox tests'
 

@@ -313,6 +313,8 @@ def shared_dist_ctx():
 
 @pytest.fixture(autouse=True)
 def fixup_event_loop():
+    import nest_asyncio
+    nest_asyncio.apply()
     adjust_event_loop_policy()
 
 
@@ -325,6 +327,7 @@ def pytest_fixture_post_finalizer(fixturedef, request):
         # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
         # the event policy here.
         # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
+        asyncio.set_event_loop_policy(None)
         adjust_event_loop_policy()
 
 

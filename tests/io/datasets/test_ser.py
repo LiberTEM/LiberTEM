@@ -7,9 +7,9 @@ from libertem.udf.sum import SumUDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, get_testdata_path
 
-SER_TESTDATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'default.ser')
+SER_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.ser')
 HAVE_SER_TESTDATA = os.path.exists(SER_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_SER_TESTDATA, reason="need SER testdata")

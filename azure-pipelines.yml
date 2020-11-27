@@ -326,6 +326,15 @@ stages:
       - bash: sudo apt install -y pandoc
         displayName: 'install required debian packages'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
 

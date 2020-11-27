@@ -7,11 +7,16 @@ import threading
 import pkg_resources
 from functools import partial
 import warnings
+import contextlib
+import socket
+import logging
 
 import numpy as np
 import pytest
 import h5py
 import aiohttp
+from dask import distributed as dd
+from distributed.scheduler import Scheduler
 
 import libertem.api as lt
 from libertem.executor.inline import InlineJobExecutor
@@ -197,7 +202,10 @@ def large_raw_file(tmpdir_factory):
             f.truncate(size)
         stat = os.stat(filename)
         if stat.st_blocks != 0:
-            warnings.warn(f"Created file {filename} is not reported as sparse: {stat}, blocks {stat.st_blocks}")
+            warnings.warn(
+                f"Created file {filename} is not reported as "
+                f"sparse: {stat}, blocks {stat.st_blocks}"
+            )
     yield filename, shape, dtype
 
 
@@ -301,6 +309,7 @@ def shared_dist_ctx():
     yield ctx
     print("stop shared Context()")
     ctx.close()
+
 
 @pytest.fixture(autouse=True)
 def fixup_event_loop():
@@ -470,6 +479,41 @@ def server_port(unused_tcp_port_factory, shared_state):
 @pytest.fixture(scope="function")
 async def base_url(server_port):
     return "http://127.0.0.1:%d" % server_port
+
+
+def find_unused_port():
+    with contextlib.closing(socket.socket()) as sock:
+        sock.bind(('127.0.0.1', 0))
+        return sock.getsockname()[1]
+
+
+@pytest.fixture(scope='session')
+def local_cluster_url():
+    """
+    Shared dask cluster, can be used repeatedly by different executors.
+
+    This allows numba caching across tests, without sharing the executor,
+    for example
+    """
+    cluster_port = find_unused_port()
+    spec = cluster_spec(cpus=[0, 1], cudas=[], has_cupy=False)
+
+    cluster_kwargs = {
+        'silence_logs': logging.WARN,
+        'scheduler': {
+            'cls': Scheduler,
+            'options': {'port': cluster_port},
+        },
+    }
+
+    cluster = dd.SpecCluster(
+        workers=spec,
+        **(cluster_kwargs or {})
+    )
+
+    yield 'tcp://localhost:%d' % cluster_port
+
+    cluster.close()
 
 
 @pytest.fixture

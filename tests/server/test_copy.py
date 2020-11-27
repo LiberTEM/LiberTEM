@@ -17,10 +17,12 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_copy_notebook(default_raw, base_url, tmpdir_factory, http_client, server_port):
+async def test_copy_notebook(
+    default_raw, base_url, tmpdir_factory, http_client, server_port, local_cluster_url
+):
     datadir = tmpdir_factory.mktemp('test_copy')
 
-    await create_connection(base_url, http_client)
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 

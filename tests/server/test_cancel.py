@@ -29,8 +29,10 @@ def _get_ds_params():
 
 
 @pytest.mark.asyncio
-async def test_cancel_udf_job(base_url, default_raw, http_client, server_port, shared_state):
-    await create_connection(base_url, http_client)
+async def test_cancel_udf_job(
+    base_url, default_raw, http_client, server_port, shared_state, local_cluster_url
+):
+    await create_connection(base_url, http_client, local_cluster_url)
 
     print("checkpoint 1")
 

@@ -9,10 +9,10 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
+def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
-    conn = {'connection': {'type': 'local'}}
+    conn = {'connection': {'type': 'tcp', 'address': local_cluster_url}}
     path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
     params = {"roi": {}}
@@ -36,10 +36,10 @@ def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx):
     )
 
 
-def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx):
+def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
-    conn = {'connection': {'type': 'local'}}
+    conn = {'connection': {'type': 'tcp', 'address': local_cluster_url}}
     path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
 

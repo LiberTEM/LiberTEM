@@ -9,10 +9,10 @@ from libertem import masks
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
-def test_sum_default(hdf5_ds_2, tmpdir_factory):
+def test_sum_default(hdf5_ds_2, tmpdir_factory, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
-    conn = {'connection': {'type': 'local'}}
+    conn = {'connection': {'type': 'tcp', 'address': local_cluster_url}}
     path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
     analysis = [{
@@ -35,10 +35,10 @@ def test_sum_default(hdf5_ds_2, tmpdir_factory):
     assert np.allclose(expected, result)
 
 
-def test_sum_roi(hdf5_ds_2, tmpdir_factory, lt_ctx):
+def test_sum_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
-    conn = {'connection': {'type': 'local'}}
+    conn = {'connection': {'type': 'tcp', 'address': local_cluster_url}}
     path = hdf5_ds_2.path
     dataset = _get_hdf5_params(path)
     roi_params = {

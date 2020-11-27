@@ -24,15 +24,23 @@ def _get_uuid_str():
     return str(uuid.uuid4())
 
 
-async def create_connection(base_url, http_client):
+async def create_connection(base_url, http_client, scheduler_url=None):
     conn_url = "{}/api/config/connection/".format(base_url)
-    conn_details = {
-        'connection': {
-            'type': 'local',
-            'numWorkers': 2,
-            'cudas': [],
+    if scheduler_url is None:
+        conn_details = {
+            'connection': {
+                'type': 'local',
+                'numWorkers': 2,
+                'cudas': [],
+            }
         }
-    }
+    else:
+        conn_details = {
+            'connection': {
+                'type': 'tcp',
+                'address': scheduler_url,
+            }
+        }
     print("checkpoint 0")
     async with http_client.put(conn_url, json=conn_details) as response:
         assert response.status == 200

@@ -369,8 +369,6 @@ stages:
     - job: make_upload_packages
       pool:
         vmImage: 'ubuntu-latest'
-      env:
-        
       steps:
       - task: UsePythonVersion@0
         displayName: 'Use Python 3.8'

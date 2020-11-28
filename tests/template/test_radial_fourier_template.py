@@ -32,7 +32,7 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     channels = [
         "absolute_0_0",
         "absolute_0_1"

@@ -313,6 +313,8 @@ def shared_dist_ctx():
 
 @pytest.fixture(autouse=True)
 def fixup_event_loop():
+    import nest_asyncio
+    nest_asyncio.apply()
     adjust_event_loop_policy()
 
 
@@ -325,6 +327,7 @@ def pytest_fixture_post_finalizer(fixturedef, request):
         # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
         # the event policy here.
         # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
+        asyncio.set_event_loop_policy(None)
         adjust_event_loop_policy()
 
 
@@ -378,11 +381,10 @@ def lt_ctx(inline_executor):
 
 
 @pytest.fixture
-async def async_executor():
-    spec = cluster_spec(cpus=[0, 1], cudas=[], has_cupy=False)
+async def async_executor(local_cluster_url):
 
     pool = AsyncAdapter.make_pool()
-    sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local, spec=spec), pool=pool)
+    sync_executor = await sync_to_async(partial(DaskJobExecutor.connect, scheduler_uri=local_cluster_url), pool=pool)
     executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
     yield executor
     await executor.close()

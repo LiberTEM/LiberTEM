@@ -110,12 +110,14 @@ async def test_cluster_connect_error(base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_initial_state_empty(default_raw, base_url, http_client, server_port):
+async def test_initial_state_empty(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
     conn_url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {
-            'type': 'local',
-            'numWorkers': 2,
+            'type': 'tcp',
+            'address': local_cluster_url,
         }
     }
     async with http_client.put(conn_url, json=conn_details) as response:
@@ -133,12 +135,14 @@ async def test_initial_state_empty(default_raw, base_url, http_client, server_po
 
 
 @pytest.mark.asyncio
-async def test_initial_state_w_existing_ds(default_raw, base_url, http_client, server_port):
+async def test_initial_state_w_existing_ds(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
     conn_url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {
-            'type': 'local',
-            'numWorkers': 2,
+            'type': 'tcp',
+            'address': local_cluster_url,
         }
     }
     async with http_client.put(conn_url, json=conn_details) as response:

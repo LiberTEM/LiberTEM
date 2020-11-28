@@ -8,6 +8,8 @@ variables:
   - group: Packaging
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
+  - name: npm_config_cache
+    value: $(Pipeline.Workspace)/.npm
 
 stages:
   - stage: test
@@ -120,9 +122,17 @@ stages:
         TOXENV: '$(TOXENV)'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python $(python.version)'
+        displayName: 'Use Python 3.8'
         inputs:
           versionSpec: '3.8'
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
       - bash: sudo apt install -y pandoc
         displayName: install required debian packages
       - bash: pip install -U tox
@@ -260,6 +270,15 @@ stages:
       - task: NodeTool@0
         inputs:
           versionSpec: '12'
+
+      - task: Cache@2
+        inputs:
+          key: 'npm | "$(Agent.OS)" | client/package-lock.json'
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+          path: $(npm_config_cache)
+        displayName: Cache npm
+
       - bash: (cd client && npm install)
         displayName: 'install npm dependencies'
 
@@ -315,6 +334,15 @@ stages:
       - bash: sudo apt install -y pandoc
         displayName: 'install required debian packages'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
 
@@ -346,5 +374,5 @@ stages:
           versionSpec: '3.8'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
-      - bash: python scripts/release upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
+      - bash: python scripts/release --verbose upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
         displayName: 'Upload packages / release'

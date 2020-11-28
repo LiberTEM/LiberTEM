@@ -25,7 +25,7 @@ def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sd_result.npy')
     results = np.load(data_path)
     udf = StdDevUDF()
@@ -62,7 +62,7 @@ def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+    ep.preprocess(nb, {"metadata": {"path": datadir}})
     data_path = os.path.join(datadir, 'sd_result.npy')
     results = np.load(data_path)
     nx, ny = hdf5_ds_2.shape.nav

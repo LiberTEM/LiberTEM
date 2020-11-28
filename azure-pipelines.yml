@@ -317,6 +317,8 @@ stages:
           # make this succeed even if the access token is not available:
           (docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && docker push libertem/libertem-dev) || true
         displayName: 'Build docker container(s)'
+        env:
+          DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)
 
       - bash: (cd packaging/docker/ && docker-compose run tests)
         displayName: 'run tests'
@@ -367,12 +369,26 @@ stages:
     - job: make_upload_packages
       pool:
         vmImage: 'ubuntu-latest'
+      env:
+        
       steps:
       - task: UsePythonVersion@0
         displayName: 'Use Python 3.8'
         inputs:
           versionSpec: '3.8'
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
       - bash: python scripts/release --verbose upload --pypi-test-user=libertem_bot --pypi-user=libertem_bot --no-dry-run
         displayName: 'Upload packages / release'
+        env:
+          LT_RELEASE_UPLOAD_PYPI_PASSWORD: $(LT_RELEASE_UPLOAD_PYPI_PASSWORD)
+          LT_RELEASE_UPLOAD_PYPI_TEST_PASSWORD: $(LT_RELEASE_UPLOAD_PYPI_TEST_PASSWORD)
+          LT_RELEASE_UPLOAD_TOKEN: $(LT_RELEASE_UPLOAD_TOKEN)

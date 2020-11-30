@@ -107,6 +107,14 @@ def test_detector_uint8():
 
         gain_map = np.ones(sig_dims)
         dark_image = (np.random.random(sig_dims) * 3).astype(np.uint8)
+        # Make sure the dark image is not all zero so that
+        # the damaged data is different from the original
+        # https://github.com/LiberTEM/LiberTEM/issues/910
+        # This is only necessary for an integer dark image
+        # since for float it would be extremely unlikely
+        # that all values are exactly 0
+        atleastone = np.random.randint(0, np.prod(sig_dims))
+        dark_image[np.unravel_index(atleastone, sig_dims)] = 1
 
         damaged_data = data.copy()
         # We don't do that since it is set to 1 above

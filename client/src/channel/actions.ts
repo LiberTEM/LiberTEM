@@ -14,6 +14,7 @@ export enum ActionTypes {
     CLOSE = "CHANNEL_CLOSE",
     ERROR = "CHANNEL_ERROR",
     CANCELLED = "CANCELLED",
+    CANCEL_JOB_FAILED = "CANCEL_JOB_FAILED",
     SHUTDOWN = "CHANNEL_SHUTDOWN",
     CLOSE_LOOP = "CHANNEL_LOOP_CLOSE",
     ANALYSIS_CREATED = "ANALYSIS_CREATED",
@@ -39,6 +40,7 @@ export const Actions = {
     shutdown: (timestamp: number) => createAction(ActionTypes.SHUTDOWN, { timestamp }),
     closeloop: (timestamp: number) => createAction(ActionTypes.CLOSE_LOOP, { timestamp }),
     cancelled: (job: string) => createAction(ActionTypes.CANCELLED, { job }),
+    cancelFailed: (job: string) => createAction(ActionTypes.CANCEL_JOB_FAILED, { job }),
     analysisCreated: (analysis: string, dataset: string, details: AnalysisDetails) =>
         createAction(ActionTypes.ANALYSIS_CREATED, { dataset, analysis, details }),
     analysisUpdated: (analysis: string, dataset: string, details: AnalysisDetails) =>

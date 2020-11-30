@@ -56,6 +56,18 @@ export function constructById<R>(items: R[], key: (k: R) => string): IdMap<R> {
     return byId;
 }
 
+export type MapFn<R> = (item: R) => R;
+
+export function updateWithMap<R>(state: ById<R>, fn: MapFn<R>): ById<R> {
+    const byId: IdMap<R> = state.ids.reduce((acc, id) => Object.assign(acc, {
+        [id]: fn(state.byId[id]),
+    }), {});
+    return {
+        byId,
+        ids: state.ids,
+    };
+}
+
 export type Predicate<R> = (item: R) => boolean;
 
 export function filterWithPred<R>(state: ById<R>, pred: Predicate<R>): ById<R> {

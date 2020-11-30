@@ -1,6 +1,6 @@
 import { AllActions } from "../actions";
 import * as channelActions from '../channel/actions';
-import { ById, constructById, filterWithPred, insertById, updateById } from "../helpers/reducerHelpers";
+import { ById, constructById, filterWithPred, insertById, updateById, updateWithMap } from "../helpers/reducerHelpers";
 import * as jobActions from '../job/actions';
 import * as analysisActions from "./actions";
 import { AnalysisState } from "./types";
@@ -28,11 +28,20 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         }
         case jobActions.ActionTypes.CREATE: {
             const analysis = state.byId[action.payload.analysis];
-            // FIXME: remove old jobs
             const oldJobs = analysis.jobs ? analysis.jobs : [];
             return updateById(state, action.payload.analysis, {
                 jobs: [action.payload.id, ...oldJobs],
             })
+        }
+        case channelActions.ActionTypes.CANCEL_JOB_FAILED:
+        case channelActions.ActionTypes.CANCELLED: {
+            // remove job from the matching analysis
+            return updateWithMap(state, (analysis) => {
+                return {
+                    ...analysis,
+                    jobs: analysis.jobs.filter((job) => job !== action.payload.job),
+                }
+            });
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
             const analysisState: AnalysisState[] = action.payload.analyses.map(item => {

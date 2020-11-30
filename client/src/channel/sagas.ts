@@ -133,6 +133,9 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.cancelled(msg.job));
                     break;
                 }
+                case channelMessages.MessageTypes.CANCEL_JOB_FAILED: {
+                    yield put(channelActions.Actions.cancelFailed(msg.job));
+                }
                 /*
                 // FIXME: server needs to know about compount analyses
                 case channelMessages.MessageTypes.ANALYSIS_CREATED: {

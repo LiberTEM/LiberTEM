@@ -66,6 +66,7 @@ extensions = [
     'nbsphinx',
     'nbsphinx_link',
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinxcontrib.platformpicker',
     'sphinx_issues',
 ]
 

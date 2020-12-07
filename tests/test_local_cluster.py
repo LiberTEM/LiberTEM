@@ -11,7 +11,7 @@ from utils import DebugDeviceUDF
 
 
 @pytest.mark.functional
-def test_start_local_default(hdf5_ds_1):
+def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
     d = detect()
     cudas = d['cudas']
@@ -19,36 +19,37 @@ def test_start_local_default(hdf5_ds_1):
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    with api.Context() as ctx:
-        analysis = ctx.create_mask_analysis(
-            dataset=hdf5_ds_1, factories=[lambda: mask]
+    ctx = local_cluster_ctx
+    analysis = ctx.create_mask_analysis(
+        dataset=hdf5_ds_1, factories=[lambda: mask]
+    )
+
+    # Based on ApplyMasksUDF, which is CuPy-enabled
+    hybrid = ctx.run(analysis)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'cuda', 'numpy')), dataset=hdf5_ds_1)
+    if cudas:
+        cuda_only = ctx.run_udf(
+            udf=DebugDeviceUDF(backends=('cuda', 'numpy')),
+            dataset=hdf5_ds_1,
+            backends=('cuda',)
         )
-        # Based on ApplyMasksUDF, which is CuPy-enabled
-        hybrid = ctx.run(analysis)
-        _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
-        _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'numpy')), dataset=hdf5_ds_1)
-        _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', 'numpy')), dataset=hdf5_ds_1)
-        _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'cuda', 'numpy')), dataset=hdf5_ds_1)
-        if cudas:
-            cuda_only = ctx.run_udf(
-                udf=DebugDeviceUDF(backends=('cuda', 'numpy')),
+        if d['has_cupy']:
+            cupy_only = ctx.run_udf(
+                udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
                 dataset=hdf5_ds_1,
-                backends=('cuda',)
+                backends=('cupy',)
             )
-            if d['has_cupy']:
+        else:
+            with pytest.raises(RuntimeError):
                 cupy_only = ctx.run_udf(
                     udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
                     dataset=hdf5_ds_1,
                     backends=('cupy',)
                 )
-            else:
-                with pytest.raises(RuntimeError):
-                    cupy_only = ctx.run_udf(
-                        udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
-                        dataset=hdf5_ds_1,
-                        backends=('cupy',)
-                    )
-                cupy_only = None
+            cupy_only = None
 
         numpy_only = ctx.run_udf(
             udf=DebugDeviceUDF(backends=('numpy',)),

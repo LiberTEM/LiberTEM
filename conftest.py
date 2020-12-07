@@ -25,6 +25,8 @@ from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 
+from libertem.utils.devices import detect
+
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
@@ -301,6 +303,11 @@ def ipy_ctx():
 # That way we make sure the shared executor is torn down before any other test
 # starts a new one.
 
+# This is incompatible with using the local_cluster_url() fixture and any dependents
+# since that starts a session-scoped executor. Using that executor is not an option
+# either since it runs with a limited number of workers and thus doesn't test under
+# realistic load conditions.
+
 
 @pytest.fixture(scope="class")
 def shared_dist_ctx():
@@ -391,10 +398,12 @@ async def async_executor(local_cluster_url):
 
 
 @pytest.fixture
-def dask_executor():
-    sync_executor = DaskJobExecutor.make_local()
-    yield sync_executor
-    sync_executor.close()
+def dask_executor(local_cluster_url):
+    executor = DaskJobExecutor.connect(local_cluster_url)
+
+    yield executor
+
+    executor.close()
 
 
 @pytest.fixture
@@ -498,7 +507,13 @@ def local_cluster_url():
     for example
     """
     cluster_port = find_unused_port()
-    spec = cluster_spec(cpus=[0, 1], cudas=[], has_cupy=False)
+    devices = detect()
+    spec = cluster_spec(
+        # Only use at most 2 CPUs and 1 GPU
+        cpus=devices['cpus'][:2],
+        cudas=devices['cudas'][:1],
+        has_cupy=devices['has_cupy']
+    )
 
     cluster_kwargs = {
         'silence_logs': logging.WARN,
@@ -516,6 +531,11 @@ def local_cluster_url():
     yield 'tcp://localhost:%d' % cluster_port
 
     cluster.close()
+
+
+@pytest.fixture(scope='function')
+def local_cluster_ctx(dask_executor):
+    return lt.Context(executor=dask_executor)
 
 
 @pytest.fixture

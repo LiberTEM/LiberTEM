@@ -57,6 +57,11 @@ class Context:
         """
         if executor is None:
             executor = self._create_local_executor()
+        if not isinstance(executor, JobExecutor):
+            raise ValueError(
+                f'Argument `executor` is not an instance of {JobExecutor}, '
+                f'got type "{type(executor)}" instead.'
+            )
         self.executor = executor
 
     def load(self, filetype: str, *args, **kwargs) -> DataSet:

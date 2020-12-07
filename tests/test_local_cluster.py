@@ -51,10 +51,10 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
                 )
             cupy_only = None
 
-        numpy_only = ctx.run_udf(
-            udf=DebugDeviceUDF(backends=('numpy',)),
-            dataset=hdf5_ds_1
-        )
+    numpy_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('numpy',)),
+        dataset=hdf5_ds_1
+    )
 
     assert np.allclose(
         hybrid.mask_0.raw_data,

@@ -371,7 +371,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         DaskJobExecutor
             the connected JobExecutor
         """
-        client = dd.Client(address=scheduler_uri)
+        client = dd.Client(address=scheduler_uri, set_as_default=False)
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod

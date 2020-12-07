@@ -683,17 +683,16 @@ def test_avoid_calculating_masks_on_client(hdf5_ds_1):
 
 
 @pytest.mark.functional
-def test_avoid_calculating_masks_on_client_udf(hdf5_ds_1):
+def test_avoid_calculating_masks_on_client_udf(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
-    # We have to start a local cluster so that the masks are
+    # We have to use a real cluster instead of InlineJobExecutor so that the masks are
     # computed in a different process
-    with api.Context() as ctx:
-        analysis = ctx.create_mask_analysis(
-            dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
-        )
-        udf = analysis.get_udf()
-        ctx.run_udf(udf=udf, dataset=hdf5_ds_1)
-        assert udf._mask_container is None
+    analysis = local_cluster_ctx.create_mask_analysis(
+        dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
+    )
+    udf = analysis.get_udf()
+    local_cluster_ctx.run_udf(udf=udf, dataset=hdf5_ds_1)
+    assert udf._mask_container is None
 
 
 @pytest.mark.parametrize(

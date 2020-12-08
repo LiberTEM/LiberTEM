@@ -359,6 +359,7 @@ def test_multi_mask_stack_force_sparse(lt_ctx, TYPE, backend):
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
+@pytest.mark.with_numba  # coverage for rmatmul implementation
 def test_multi_mask_stack_force_scipy_sparse(lt_ctx, TYPE, backend):
     if backend == 'cupy':
         d = detect()
@@ -398,6 +399,7 @@ def test_multi_mask_stack_force_scipy_sparse(lt_ctx, TYPE, backend):
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
+@pytest.mark.with_numba  # coverage for rmatmul implementation
 def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, TYPE, backend):
     if backend == 'cupy':
         d = detect()

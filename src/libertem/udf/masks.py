@@ -2,6 +2,7 @@ import numpy as np
 
 from libertem.udf import UDF
 from libertem.common.container import MaskContainer
+from libertem.common.numba import rmatmul
 
 
 class ApplyMasksUDF(UDF):
@@ -156,6 +157,12 @@ class ApplyMasksUDF(UDF):
         elif self.backend == 'cupy' and self.task_data.masks.use_sparse:
             masks = self.task_data.masks.get(self.meta.slice, transpose=False)
             result = masks.dot(flat_data.T).T
+        # Required due to https://github.com/scipy/scipy/issues/13211
+        elif (self.backend == 'numpy'
+              and self.task_data.masks.use_sparse
+              and 'scipy.sparse' in self.task_data.masks.use_sparse):
+            masks = self.task_data.masks.get(self.meta.slice, transpose=True)
+            result = rmatmul(flat_data, masks)
         else:
             masks = self.task_data.masks.get(self.meta.slice, transpose=True)
             result = flat_data @ masks

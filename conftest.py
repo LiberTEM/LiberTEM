@@ -296,17 +296,18 @@ def ipy_ctx():
 # Starting fresh distributed executors takes a lot of time and therefore
 # they should be used repeatedly if possible.
 # However, some benchmarks require a fresh distributed executor
-# and running several Dask executors in parallel leads to lockups when closing.
-# That means any shared executor has to be shut down before a fresh one is started.
+# and running several Dask executors in parallel has led to lockups when closing
+# in some instances.
+# That means any shared executor should be shut down before a fresh one is started.
 # For that reason we use a fixture with scope "class" and group
 # tests in a class that should all use the same executor.
 # That way we make sure the shared executor is torn down before any other test
 # starts a new one.
 
-# This is incompatible with using the local_cluster_url() fixture and any dependents
-# since that starts a session-scoped executor. Using that executor is not an option
-# either since it runs with a limited number of workers and thus doesn't test under
-# realistic load conditions.
+# Different from the local_cluster_ctx fixture that only uses two CPUs and at most
+# one GPU, this fixture starts a cluster for benchmarking under production condition that
+# uses all available CPUs and GPUs. Furthermore, the LiberTEM Context and not only the
+# Dask cluster is shared between functions.
 
 
 @pytest.fixture(scope="class")
@@ -400,9 +401,7 @@ async def async_executor(local_cluster_url):
 @pytest.fixture
 def dask_executor(local_cluster_url):
     executor = DaskJobExecutor.connect(local_cluster_url)
-
     yield executor
-
     executor.close()
 
 

@@ -383,7 +383,7 @@ def test_tileshape_adjustment_fuzz():
         ])
         print("excluded_coords", excluded_coords.shape, excluded_coords)
         excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
-        corr = CorrectionSet(excluded_pixels=excluded_pixels)
+        corr = CorrectionSet(excluded_pixels=excluded_pixels, allow_empty=True)
         adjusted = corr.adjust_tileshape(
             tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
         )

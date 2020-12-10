@@ -254,7 +254,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self._futures[cancel_id] = futures
 
         try:
-            for future, result_wrap in dd.as_completed(futures, with_results=True, loop=self.client.loop):
+            as_completed = dd.as_completed(futures, with_results=True, loop=self.client.loop)
+            for future, result_wrap in as_completed:
                 if future.cancelled():
                     del self._futures[cancel_id]
                     raise JobCancelledError()

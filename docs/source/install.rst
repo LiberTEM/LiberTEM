@@ -4,9 +4,8 @@ Installation
 ============
 
 .. note::
-    LiberTEM is currently working with Python 3.6 and Python 3.7. Support for
-    Python 3.8 depends on a more current release of Dask.distributed we are not
-    compatible with yet. See also :issue:`452`, :pr:`482`.
+    LiberTEM can currently be used on Python 3.6, 3.7 and 3.8. Support for Python 3.9
+    is not finished yet, as some of our dependencies are not ready yet.
 
 .. note::
     Distinguish between installing a released version and installing the latest
@@ -51,7 +50,7 @@ Using virtualenv
 
 You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv
 <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system-wide
-Python 3.6 or 3.7 installation. For Mac OS X, using conda is recommended.
+Python 3.6, 3.7 or 3.8 installation. For Mac OS X, using conda is recommended.
 
 To create a new virtualenv for LiberTEM, you can use the following command:
 

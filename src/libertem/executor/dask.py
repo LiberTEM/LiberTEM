@@ -99,6 +99,9 @@ class TaskProxy:
             "task_id": self.task_id,
         }
 
+    def __repr__(self):
+        return "<TaskProxy: %r (id=%s)>" % (self.task, self.task_id)
+
 
 class CommonDaskMixin(object):
     def _task_idx_to_workers(self, workers, idx):
@@ -251,7 +254,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self._futures[cancel_id] = futures
 
         try:
-            for future, result_wrap in dd.as_completed(futures, with_results=True):
+            for future, result_wrap in dd.as_completed(futures, with_results=True, loop=self.client.loop):
                 if future.cancelled():
                     del self._futures[cancel_id]
                     raise JobCancelledError()
@@ -302,7 +305,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
                      for p in partitions)
         futures = self._futures_for_locations(items)
         # TODO: do we need cancellation and all that good stuff?
-        for future, result in dd.as_completed(futures, with_results=True):
+        for future, result in dd.as_completed(futures, with_results=True, loop=self.client.loop):
             if future.cancelled():
                 raise JobCancelledError()
             yield result
@@ -461,8 +464,11 @@ def cli_worker(scheduler, local_directory, cpus, cudas, has_cupy, name, log_leve
         workers = []
         for name, spec in spec.items():
             cls = spec['cls']
-            worker = await cls(scheduler, name=name, **spec['options'])
-            workers.append(worker)
+            workers.append(
+                cls(scheduler, name=name, **spec['options'])
+            )
+        import asyncio
+        await asyncio.gather(*workers)
         for w in workers:
             await w.finished()
 

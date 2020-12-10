@@ -8,8 +8,11 @@ from libertem.executor.dask import (
 )
 from libertem.common import Shape, Slice
 from libertem.executor.scheduler import Worker, WorkerSet
+from libertem.executor.dask import DaskJobExecutor
 from libertem.job.raw import PickFrameJob
+from libertem.udf.sum import SumUDF
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.api import Context
 
 from utils import _mk_random
 
@@ -115,3 +118,20 @@ def test_map_1(dask_executor):
     iterable = [1, 2, 3]
     res = dask_executor.map(lambda x: x**2, iterable)
     assert res == [1, 4, 9]
+
+
+def test_multiple_clients(local_cluster_url, default_raw):
+    ex1 = DaskJobExecutor.connect(local_cluster_url)
+
+    # this creates a second Client, and even though we are setting `set_as_default=False`,
+    # this Client is then used by functions like `dd.as_completed`. That is because
+    # `set_as_default` only sets the dask scheduler config to "dask.distributed", it does
+    # not affect setting the _client_ as the global default `Client`!
+    # so any time `as_completed` is called, the `loop` needs to be set correctly, otherwise
+    # this may result in strange hangs and crashes
+    DaskJobExecutor.connect(local_cluster_url)
+
+    udf = SumUDF()
+
+    cx1 = Context(executor=ex1)
+    cx1.run_udf(dataset=default_raw, udf=udf)

@@ -940,6 +940,9 @@ class UDFTask(Task):
             result['ndarray'] = 1
         return result
 
+    def __repr__(self):
+        return "<UDFTask %r>" % (self._udfs,)
+
 
 class UDFRunner:
     def __init__(self, udfs, debug=False):

@@ -23,12 +23,16 @@ def default_cached_ds(tmpdir_factory, default_raw, lt_ctx):
     yield ds
 
 
-# A running Dask client can introduce a timing issue
-# between automatic closing of a numpy.memmap object and renaming
-# the underlying file
-def test_start_client():
+@pytest.fixture(scope='module', autouse=True)
+def client_in_background():
+    # A running Dask client can introduce a timing issue
+    # between automatic closing of a numpy.memmap object and renaming
+    # the underlying file
     with dd.LocalCluster() as cluster:
         client = dd.Client(cluster, set_as_default=False)
+        yield
+        # to fix "distributed.client - ERROR - Failed to reconnect to scheduler after 10.00 seconds, closing client"  # NOQA
+        client.close()
 
 
 def test_simple(default_cached_ds):

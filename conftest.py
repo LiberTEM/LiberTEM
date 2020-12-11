@@ -410,8 +410,10 @@ async def http_client():
     # FIXME: maybe re-scope to module, but would also need
     # adjusted event_loop scope. if we have many API tests
     # maybe reconsider.
+    # The timeout needs to be this high to acommodate overloaded
+    # CI environments, or otherwise oversubscribed systems
     async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=30)
+        timeout=aiohttp.ClientTimeout(total=120)
     ) as session:
         yield session
 

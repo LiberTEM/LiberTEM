@@ -231,16 +231,20 @@ def test_use_plain_dask(hdf5_ds_1):
         expected = _naive_mask_apply([mask], data)
     with dd.LocalCluster(n_workers=2, threads_per_worker=1) as cluster:
         client = dd.Client(cluster, set_as_default=False)
-        executor = DaskJobExecutor(client=client)
-        ctx = api.Context(executor=executor)
-        analysis = ctx.create_mask_analysis(
-            dataset=hdf5_ds_1, factories=[lambda: mask]
-        )
-        results = ctx.run(analysis)
-        udf_res = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
-        # Requesting CuPy, which is not available
-        with pytest.raises(RuntimeError):
-            _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy',)), dataset=hdf5_ds_1)
+        try:
+            executor = DaskJobExecutor(client=client)
+            ctx = api.Context(executor=executor)
+            analysis = ctx.create_mask_analysis(
+                dataset=hdf5_ds_1, factories=[lambda: mask]
+            )
+            results = ctx.run(analysis)
+            udf_res = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+            # Requesting CuPy, which is not available
+            with pytest.raises(RuntimeError):
+                _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy',)), dataset=hdf5_ds_1)
+        finally:
+            # to fix "distributed.client - ERROR - Failed to reconnect to scheduler after 10.00 seconds, closing client"  # NOQA
+            client.close()
 
     assert np.allclose(
         results.mask_0.raw_data,

@@ -197,3 +197,25 @@ extra info as well to aid later data evaluation. Note that the compilation tests
 will have poor statistics since it only runs once. If you have an idea on how to
 collect better statistics, please `let us know
 <https://github.com/LiberTEM/LiberTEM/issues/new>`_!
+
+
+Simulating slow systems with control groups
+-------------------------------------------
+
+Under Linux, it is possible to simulate a slow system using control groups:
+
+.. code-block:: shell
+
+    sudo cgcreate -g cpu:/slow
+    sudo cgset -r cpu.cfs_period_us=1000000 slow
+    sudo cgset -r cpu.cfs_quota_us=200000 slow
+    sudo chown root:<yourgroup> /sys/fs/cgroup/cpu,cpuacct/slow
+    sudo chmod 664 /sys/fs/cgroup/cpu,cpuacct/slow
+
+Then, as a user, you can use :code:`cgexec` to run a command in that control group:
+
+.. code-block:: shell
+
+    cgexec -g cpu:slow pytest tests/
+
+This is useful, for example, to debug test failures that only seem to happen in CI.

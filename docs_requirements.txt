@@ -1,0 +1,7 @@
+sphinx>1.4
+sphinx-autobuild
+sphinxcontrib-bibtex>=2
+sphinx-issues
+nbsphinx
+nbsphinx_link
+ipython

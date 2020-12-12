@@ -69,6 +69,8 @@ extensions = [
     'sphinx_issues',
 ]
 
+bibtex_bibfiles = ['references-libertem.bib']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

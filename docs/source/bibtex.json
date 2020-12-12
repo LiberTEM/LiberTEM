@@ -1,0 +1,37 @@
+{
+    "cited": {
+        "app/amorphous": [
+            "Gibson1997",
+            "6980942",
+            "Panova2019"
+        ],
+        "app/holography": [
+            "Lichte2008"
+        ],
+        "index": [
+            "doi:10.1002/9783527808465.EMC2016.6284",
+            "Ophus_2019",
+            "Krajnak2016",
+            "Tate2016",
+            "Simson2015"
+        ],
+        "reference/app/amorphous": [
+            "Gibson1997"
+        ],
+        "reference/app/holography": [
+            "Lichte2008"
+        ],
+        "reference/udf": [
+            "Schubert2018"
+        ],
+        "sample_datasets": [
+            "ophus_colin_2019_3592520",
+            "Zeltmann2019",
+            "giulio_guzzinati_2019_2566137",
+            "Guzzinati2019"
+        ],
+        "usage": [
+            "Zeltmann2019"
+        ]
+    }
+}

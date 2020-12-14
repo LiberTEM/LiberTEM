@@ -14,6 +14,7 @@ import FRMS6ParamsForm from "./FRMS6ParamsForm";
 import HDF5ParamsForm from "./HDF5ParamsForm";
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
+import MRCParamsForm from "./MRCParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
 import SEQParamsForm from "./SEQParamsForm";
 import SERParamsForm from "./SERParamsForm";
@@ -205,6 +206,11 @@ const DatasetOpen = () => {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
             return renderForm(<SEQParamsForm {...commonParams} initial={initial} info={info} />);
+        }
+        case DatasetTypes.MRC: {
+            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<MRCParamsForm {...commonParams} initial={initial} info={info} />);
         }
     }
     return assertNotReached("unknown dataset type");

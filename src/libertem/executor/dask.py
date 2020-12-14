@@ -360,9 +360,23 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return result_map
 
     def run_each_worker(self, fn, *args, **kwargs):
-        fn = functools.partial(fn, *args, **kwargs)
-        # FIXME: normalize worker names somehow?
-        return self.client.run(fn)
+        available_workers = self.get_available_workers()
+
+        future_map = {}
+        for worker in available_workers:
+            future_map[worker.name] = self.client.submit(
+                functools.partial(fn, *args, **kwargs),
+                priority=1,
+                workers=[worker.name],
+                # NOTE: need pure=False, otherwise the functions will all map to the same
+                # scheduler key and will only run once
+                pure=False,
+            )
+        result_map = {
+            name: future.result()
+            for name, future in future_map.items()
+        }
+        return result_map
 
     def close(self):
         if self.is_local:

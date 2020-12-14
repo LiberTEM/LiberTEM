@@ -14,15 +14,20 @@ import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
 
-const PointSelectionAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset, }) => {
+const PointSelectionAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset, }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
 
     const [cx, setCx] = useState(imageWidth / 2);
     const [cy, setCy] = useState(imageHeight / 2);
     const handleCenterChange = defaultDebounce((newCx: number, newCy: number) => {
-        setCx(newCx);
-        setCy(newCy);
+        const newX = Math.round(newCx);
+        const newY = Math.round(newCy);
+        if (cx === newX && cy === newY) {
+            return;
+        }
+        setCx(newX);
+        setCy(newY);
     });
 
     const frameViewHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>

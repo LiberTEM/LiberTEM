@@ -32,7 +32,7 @@ const FocusGroup = styled.g`
     &:focus { outline: none; }
 `;
 
-const Handle: React.SFC<HandleProps> = ({ scale, x, y, withCross, focusRef, ...args }) => {
+const Handle: React.FC<HandleProps> = ({ scale, x, y, withCross, focusRef, ...args }) => {
     const r = 3;
     // scaleMatrix is needed to set the origin of the scale
     const scaleMatrix = `matrix(${scale}, 0, 0, ${scale}, ${x - scale * x}, ${y - scale * y})`;

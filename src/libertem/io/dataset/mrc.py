@@ -13,28 +13,28 @@ log = logging.getLogger(__name__)
 
 class MRCDatasetParams(MessageConverter):
     SCHEMA = {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://libertem.org/MRCDatasetParams.schema.json",
-      "title": "MRCDatasetParams",
-      "type": "object",
-      "properties": {
-          "type": {"const": "MRC"},
-          "path": {"type": "string"},
-          "nav_shape": {
-              "type": "array",
-              "items": {"type": "number", "minimum": 1},
-              "minItems": 2,
-              "maxItems": 2
-          },
-          "sig_shape": {
-              "type": "array",
-              "items": {"type": "number", "minimum": 1},
-              "minItems": 2,
-              "maxItems": 2
-          },
-          "sync_offset": {"type": "number"},
-      },
-      "required": ["type", "path"]
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/MRCDatasetParams.schema.json",
+        "title": "MRCDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "MRC"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+        },
+        "required": ["type", "path"]
     }
 
     def convert_to_python(self, raw_data):
@@ -114,7 +114,7 @@ class MRCDataSet(DataSet):
             self._nav_shape = tuple((int(native_shape[0]),))
 
         native_sig_shape = tuple(
-            i
+            int(i)
             for i in f.gridSize
             if i != 1
         )
@@ -156,7 +156,7 @@ class MRCDataSet(DataSet):
             data = f.getMemmap()
             shape = data.shape
             sig_shape = tuple(
-                i
+                int(i)
                 for i in f.gridSize
                 if i != 1
             )

@@ -108,6 +108,7 @@ export enum DatasetTypes {
     FRMS6 = "FRMS6",
     EMPAD = "EMPAD",
     SEQ = "SEQ",
+    MRC = "MRC",
 }
 
 export interface DatasetParamsCommon {
@@ -209,9 +210,18 @@ export type DatasetInfoSEQ = {
     type: DatasetTypes.SEQ,
 } & DatasetInfoCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ
+export type DatasetParamsMRC = {
+    type: DatasetTypes.MRC,
+    path: string,
+} & DatasetParamsCommon
 
-export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ
+export type DatasetInfoMRC = {
+    type: DatasetTypes.MRC,
+} & DatasetInfoCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ | DatasetParamsMRC
+
+export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ | DatasetInfoMRC
 
 export interface DatasetCreateParams {
     id: string,

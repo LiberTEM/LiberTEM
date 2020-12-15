@@ -81,8 +81,11 @@ class SingleMaskAnalysis(BaseMasksAnalysis):
             )
         return SingleMaskResultSet([
             AnalysisResult(raw_data=data, visualized=visualize_simple(data),
-                           key="intensity", title="intensity",
-                           desc=self.get_description()),
+                           key="intensity", title="intensity [lin]",
+                           desc=f'{self.get_description()} lin-scaled'),
+            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=True),
+                           key="intensity_log", title="intensity [log]",
+                           desc=f'{self.get_description()} log-scaled'),
         ])
 
 
@@ -132,6 +135,10 @@ class SingleMaskResultSet(AnalysisResultSet):
         Sum of the selected region for each detector frame, with shape of
         the navigation dimension. Absolute of the result if the dataset or mask contains
         complex numbers.
+    intensity_log : libertem.analysis.base.AnalysisResult
+        Log-scaled sum of the selected region for each detector frame, with shape of
+        the navigation dimension. Absolute of the result if the dataset or mask contains
+        complex numbers. Added in 0.6.0.dev0
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of the selected region. This is only available if the dataset
         or mask contains complex numbers.

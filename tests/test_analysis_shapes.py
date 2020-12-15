@@ -33,6 +33,10 @@ def test_disk_1(lt_ctx, ds_random, TYPE):
         results.intensity.raw_data,
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        expected,
+    )
 
 
 @pytest.mark.parametrize(
@@ -50,6 +54,10 @@ def test_disk_defaults(lt_ctx, ds_random, TYPE):
         results.intensity.raw_data,
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        expected,
+    )
 
 
 @pytest.mark.parametrize(
@@ -64,6 +72,10 @@ def test_ring_1(lt_ctx, ds_random, TYPE):
     assert results.intensity.raw_data.shape == (16, 16)
     assert np.allclose(
         results.intensity.raw_data,
+        expected,
+    )
+    assert np.allclose(
+        results.intensity_log.raw_data,
         expected,
     )
 
@@ -89,6 +101,10 @@ def test_ring_3d_ds(lt_ctx, TYPE):
         results.intensity.raw_data.reshape((16, 16)),
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data.reshape((16, 16)),
+        expected,
+    )
 
 
 @pytest.mark.parametrize(
@@ -102,6 +118,10 @@ def test_ring_defaults(lt_ctx, ds_random, TYPE):
     expected = _naive_mask_apply([mask], ds_random.data)
     assert np.allclose(
         results.intensity.raw_data,
+        expected,
+    )
+    assert np.allclose(
+        results.intensity_log.raw_data,
         expected,
     )
 
@@ -118,6 +138,10 @@ def test_point_1(lt_ctx, ds_random, TYPE):
     expected = _naive_mask_apply([mask], ds_random.data)
     assert np.allclose(
         results.intensity.raw_data,
+        expected,
+    )
+    assert np.allclose(
+        results.intensity_log.raw_data,
         expected,
     )
 
@@ -144,6 +168,10 @@ def test_point_3d_ds(lt_ctx, TYPE):
         results.intensity.raw_data.reshape((16, 16)),
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data.reshape((16, 16)),
+        expected,
+    )
 
 
 @pytest.mark.parametrize(
@@ -161,6 +189,10 @@ def test_point_defaults(lt_ctx, ds_random, TYPE):
         results.intensity.raw_data,
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        expected,
+    )
 
 
 @pytest.mark.parametrize(
@@ -175,6 +207,14 @@ def test_disk_complex(lt_ctx, ds_complex, TYPE):
     assert np.allclose(
         results.intensity_complex.raw_data,
         expected,
+    )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        np.abs(results.intensity_complex),
+    )
+    assert np.allclose(
+        results.intensity.raw_data,
+        np.abs(results.intensity_complex),
     )
 
 
@@ -191,6 +231,14 @@ def test_ring_complex(lt_ctx, ds_complex, TYPE):
         results.intensity_complex.raw_data,
         expected,
     )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        np.abs(results.intensity_complex),
+    )
+    assert np.allclose(
+        results.intensity.raw_data,
+        np.abs(results.intensity_complex),
+    )
 
 
 @pytest.mark.parametrize(
@@ -205,4 +253,12 @@ def test_point_complex(lt_ctx, ds_complex, TYPE):
     assert np.allclose(
         results.intensity_complex.raw_data,
         expected,
+    )
+    assert np.allclose(
+        results.intensity_log.raw_data,
+        np.abs(results.intensity_complex),
+    )
+    assert np.allclose(
+        results.intensity.raw_data,
+        np.abs(results.intensity_complex),
     )

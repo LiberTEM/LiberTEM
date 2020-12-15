@@ -61,11 +61,23 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
         from libertem.viz import visualize_simple
         udf_results = std.consolidate_result(udf_results)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=udf_results['var'].data,
-                           visualized=visualize_simple(
-                               udf_results['var'].data, logarithmic=True),
-                           key="intensity", title="intensity",
-                           desc="SD of frames"),
+            AnalysisResult(
+                raw_data=udf_results['std'],
+                visualized=visualize_simple(
+                    udf_results['std'], logarithmic=True
+                ),
+                key="intensity", title="intensity [log]",
+                desc="Standard deviation of frames log-scaled"
+            ),
+            AnalysisResult(
+                raw_data=udf_results['std'],
+                visualized=visualize_simple(
+                    udf_results['std'], logarithmic=False,
+                ),
+                key="intensity_lin",
+                title="intensity [lin]",
+                desc="Standard deviation of frames lin-scaled"
+            ),
         ])
 
     @classmethod

@@ -6,6 +6,9 @@ import websockets
 from utils import assert_msg
 from aio_utils import create_connection
 
+from libertem.executor.inline import InlineJobExecutor
+from libertem.executor.base import AsyncAdapter, sync_to_async
+
 pytestmark = [pytest.mark.functional]
 
 
@@ -94,6 +97,62 @@ async def test_dataset_delete(default_raw, base_url, http_client, server_port, l
 @pytest.mark.asyncio
 async def test_initial_state_after_reconnect(default_raw, base_url, http_client, server_port, local_cluster_url):
     await create_connection(base_url, http_client, local_cluster_url)
+    raw_path = default_raw._path
+
+    uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
+    ds_url = "{}/api/datasets/{}/".format(
+        base_url, uuid
+    )
+    ds_data = _get_raw_params(raw_path)
+
+    # connect to ws endpoint:
+    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+
+        async with http_client.put(ds_url, json=ds_data) as resp:
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert_msg(resp_json, 'CREATE_DATASET')
+
+    async with websockets.connect(ws_url) as ws:
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+        assert initial_msg["jobs"] == []
+        assert len(initial_msg["datasets"]) == 1
+        assert initial_msg["datasets"][0]["id"] == uuid
+        assert initial_msg["datasets"][0]["params"] == {
+            'sig_shape': [128, 128],
+            "enable_direct": False,
+            'dtype': 'float32',
+            'path': raw_path,
+            'nav_shape': [16, 16],
+            'shape': [16, 16, 128, 128],
+            'type': 'RAW',
+            'sync_offset': 0
+        }
+        assert len(initial_msg["datasets"][0]["diagnostics"]) == 6
+
+
+@pytest.mark.asyncio
+async def test_prime_cache(shared_state, default_raw, base_url, http_client, server_port, local_cluster_url):
+    # first, connect to get the state 
+    await create_connection(base_url, http_client, local_cluster_url)
+
+    executor = InlineJobExecutor()
+
+    pool = AsyncAdapter.make_pool()
+    executor = AsyncAdapter(wrapped=executor, pool=pool)
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 1,
+            'cudas': [],
+        }
+    }
+    await shared_state.executor_state.set_executor(executor, conn_details)
+
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"

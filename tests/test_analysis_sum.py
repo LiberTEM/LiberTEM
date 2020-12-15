@@ -19,6 +19,7 @@ def test_sum_dataset_tilesize_1(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_dataset_tilesize_2(lt_ctx):
@@ -32,6 +33,7 @@ def test_sum_dataset_tilesize_2(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_endian(lt_ctx):
@@ -45,6 +47,7 @@ def test_sum_endian(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_signed(lt_ctx):
@@ -59,6 +62,7 @@ def test_sum_signed(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_timeseries(lt_ctx):
@@ -81,6 +85,7 @@ def test_sum_timeseries(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_spectrum_2d_frames(lt_ctx):
@@ -104,6 +109,7 @@ def test_sum_spectrum_2d_frames(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16 * 16,)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_spectrum_linescan(lt_ctx):
@@ -127,6 +133,7 @@ def test_sum_spectrum_linescan(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16 * 16,)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_hyperspectral(lt_ctx):
@@ -144,6 +151,7 @@ def test_sum_hyperspectral(lt_ctx):
 
     assert results['intensity'].raw_data.shape == (16, 16, 16)
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_complex(lt_ctx, ds_complex):
@@ -156,6 +164,8 @@ def test_sum_complex(lt_ctx, ds_complex):
 
     assert results['intensity'].raw_data.shape == (16, 16)
     assert np.allclose(results['intensity_complex'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, np.abs(expected))
+    assert np.allclose(results['intensity'].raw_data, np.abs(expected))
 
 
 def test_sum_with_roi(lt_ctx):
@@ -191,6 +201,7 @@ def test_sum_with_roi(lt_ctx):
     assert not np.allclose(results['intensity'].raw_data, data.sum(axis=(0, 1)))
     # ... but rather like `expected`:
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_zero_roi(lt_ctx):
@@ -225,6 +236,7 @@ def test_sum_zero_roi(lt_ctx):
     assert not np.allclose(results['intensity'].raw_data, data.sum(axis=(0, 1)))
     # ... but rather like `expected`:
     assert np.allclose(results['intensity'].raw_data, expected)
+    assert np.allclose(results['intensity_lin'].raw_data, expected)
 
 
 def test_sum_with_crop_frames(lt_ctx):

@@ -98,6 +98,7 @@ def test_pick_analysis(lt_ctx, TYPE):
 
     assert result.intensity.raw_data.shape == (16, 16)
     assert np.allclose(result.intensity.raw_data, data[5, 5])
+    assert np.allclose(result.intensity_lin.raw_data, data[5, 5])
 
 
 @pytest.mark.parametrize(
@@ -118,6 +119,7 @@ def test_pick_from_3d_ds(lt_ctx, TYPE):
 
     assert result.intensity.raw_data.shape == (16, 16)
     assert np.allclose(result.intensity.raw_data, data[5])
+    assert np.allclose(result.intensity_lin.raw_data, data[5])
 
 
 def test_pick_from_3d_ds_job(lt_ctx):
@@ -186,6 +188,7 @@ def test_pick_analysis_via_api_1(lt_ctx, TYPE):
 
     assert result.intensity.raw_data.shape == (16, 16)
     assert np.allclose(result.intensity.raw_data, data[7, 8])
+    assert np.allclose(result.intensity_lin.raw_data, data[7, 8])
 
 
 @pytest.mark.parametrize(
@@ -206,6 +209,7 @@ def test_pick_analysis_via_api_2_3d_ds(lt_ctx, TYPE):
 
     assert result.intensity.raw_data.shape == (16, 16)
     assert np.allclose(result.intensity.raw_data, data[8])
+    assert np.allclose(result.intensity_lin.raw_data, data[8])
 
 
 @pytest.mark.parametrize(

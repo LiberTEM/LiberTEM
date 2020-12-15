@@ -60,7 +60,11 @@ class SumResultSet(AnalysisResultSet):
     intensity : libertem.analysis.base.AnalysisResult
         Sum of all detector frames along the navigation dimension,
         preserving the signal dimension. Absolute value of the sum if the dataset
-        contains complex numbers.
+        contains complex numbers. Log-scaled visualization.
+    intensity_lin : libertem.analysis.base.AnalysisResult
+        Sum of all detector frames along the navigation dimension,
+        preserving the signal dimension. Absolute value of the sum if the dataset
+        contains complex numbers. Lin-scaled visualization. Added in 0.6.0.dev0
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of all detector frames along the navigation dimension,
         preserving the signal dimension. This is only available if the dataset
@@ -102,15 +106,24 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
                     key_prefix="intensity",
                     title="intensity",
                     desc="sum of all frames",
+                    default_lin=False,
                 )
             )
 
         return SumResultSet([
+            AnalysisResult(
+                raw_data=udf_results['intensity'].data,
+                visualized=visualize_simple(
+                    udf_results['intensity'].data, logarithmic=True
+                ),
+                key="intensity", title="intensity [log]", desc="sum of frames log-scaled"
+            ),
             AnalysisResult(raw_data=udf_results['intensity'].data,
-                           visualized=visualize_simple(
-                               udf_results['intensity'].data, logarithmic=True
-                           ),
-                           key="intensity", title="intensity", desc="sum of frames"),
+                visualized=visualize_simple(
+                    udf_results['intensity'].data, logarithmic=False
+                ),
+                key="intensity_lin", title="intensity [lin]", desc="sum of frames lin-scaled"
+            ),
         ])
 
     @classmethod

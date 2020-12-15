@@ -56,7 +56,10 @@ class PickResultSet(AnalysisResultSet):
     ----------
     intensity : libertem.analysis.base.AnalysisResult
         The specified detector frame. Absolute value if the dataset
-        contains complex numbers.
+        contains complex numbers. Log-scaled visualization.
+    intensity_lin : libertem.analysis.base.AnalysisResult
+        The specified detector frame. Absolute value if the dataset
+        contains complex numbers. Linear visualization. Added in 0.6.0.dev0
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the specified detector frame. This is only available if the dataset
         contains complex numbers.
@@ -158,13 +161,16 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                     key_prefix="intensity",
                     title="intensity",
                     desc="the frame at %s" % (coords,),
+                    default_lin=False,
                 )
             )
-        visualized = visualize_simple(data, logarithmic=True)
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualized,
-                           key="intensity", title="intensity",
-                           desc="the frame at %s" % (coords,)),
+            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=True),
+                           key="intensity", title="intensity [log]",
+                           desc="the frame at %s log-scaled" % (coords,)),
+            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=False),
+                           key="intensity_lin", title="intensity [lin]",
+                           desc="the frame at %s lin-scaled" % (coords,)),
         ])
 
     @classmethod

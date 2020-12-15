@@ -701,7 +701,7 @@ class K2ISDataSet(DataSet):
         ]
         return K2FileSet(files=files)
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -714,13 +714,7 @@ class K2ISDataSet(DataSet):
     def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
 
-        slices = BasePartition.make_slices(
-            shape=self.shape,
-            num_partitions=self.num_partitions,
-            ranges=ranges,
-        )
-
-        for part_slice, start, stop in slices:
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield K2ISPartition(
                 meta=self._meta,
                 fileset=fileset.get_for_range(start, stop),

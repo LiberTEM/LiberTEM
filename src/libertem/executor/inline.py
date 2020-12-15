@@ -43,7 +43,7 @@ class InlineJobExecutor(JobExecutor):
         return {"localhost": fn(*args, **kwargs)}
 
     def run_each_worker(self, fn, *args, **kwargs):
-        return fn(*args, **kwargs)
+        return {"inline": fn(*args, **kwargs)}
 
     def get_available_workers(self):
         resources = {"compute": 1, "CPU": 1}

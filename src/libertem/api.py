@@ -276,7 +276,10 @@ class Context:
         flip_y : bool
             Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,
             may have pixel (0, 0) at the lower left corner. This has to be corrected
-            to get the sign of the y shift as well as curl and divergence right. Added in 0.6.0.dev0
+            to get the sign of the y shift as well as curl and divergence right.
+
+            .. versionadded:: 0.6.0.dev0
+
         scan_rotation : float
             Scan rotation in degrees.
             The optics of an electron microscope can rotate the image. Furthermore, scan
@@ -288,7 +291,8 @@ class Context:
             to match the scan coordinate system. A positive value rotates the displacement
             vector clock-wise. That means if the detector seems rotated to the right relative
             to the scan, this value should be negative to counteract this rotation.
-            Added in 0.6.0.dev0
+
+            .. versionadded:: 0.6.0.dev0
 
         Returns
         -------

@@ -169,7 +169,9 @@ class BufferWrapper(object):
 
         where : string or None
             :code:`None` means NumPy array, :code:`device` to use a back-end specified
-            in :meth:`allocate`. New in 0.6.0.dev0
+            in :meth:`allocate`.
+
+            .. versionadded:: 0.6.0.dev0
         """
 
         self._extra_shape = tuple(extra_shape)

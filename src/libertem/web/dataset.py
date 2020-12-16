@@ -35,7 +35,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         def _prime_cache():
             import numpy as np
-            dtypes = (np.float32, np.float64, None)
+            dtypes = (np.float32, None)
             for dtype in dtypes:
                 roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
                 roi[0] = 1
@@ -46,9 +46,10 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 udfs = [SumUDF()]  # need to have at least one UDF
                 p = next(ds.get_partitions())
                 neg = Negotiator()
-                for corr_dtype in (np.float32, np.float64):
-                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-                    p.set_corrections(corrections)
+                for corr_dtype in (np.float32, None):
+                    if corr_dtype is not None:
+                        corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
+                        p.set_corrections(corrections)
                     tiling_scheme = neg.get_scheme(
                         udfs=udfs,
                         partition=p,

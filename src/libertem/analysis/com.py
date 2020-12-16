@@ -146,7 +146,10 @@ class COMResultSet(AnalysisResultSet):
     divergence : libertem.analysis.base.AnalysisResult
         Divergence of the center of mass vector field at a given point
     curl : libertem.analysis.base.AnalysisResult
-        Curl of the center of mass 2D vector field at a given point. Added in 0.6.0.dev0
+        Curl of the center of mass 2D vector field at a given point.
+
+        .. versionadded:: 0.6.0.dev0
+
     x : libertem.analysis.base.AnalysisResult
         X component of the center of mass shift
     y : libertem.analysis.base.AnalysisResult

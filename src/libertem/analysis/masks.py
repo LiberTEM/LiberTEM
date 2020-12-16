@@ -138,7 +138,10 @@ class SingleMaskResultSet(AnalysisResultSet):
     intensity_log : libertem.analysis.base.AnalysisResult
         Log-scaled sum of the selected region for each detector frame, with shape of
         the navigation dimension. Absolute of the result if the dataset or mask contains
-        complex numbers. Added in 0.6.0.dev0
+        complex numbers.
+
+        .. versionadded:: 0.6.0.dev0
+
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of the selected region. This is only available if the dataset
         or mask contains complex numbers.

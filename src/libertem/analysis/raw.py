@@ -59,7 +59,10 @@ class PickResultSet(AnalysisResultSet):
         contains complex numbers. Log-scaled visualization.
     intensity_lin : libertem.analysis.base.AnalysisResult
         The specified detector frame. Absolute value if the dataset
-        contains complex numbers. Linear visualization. Added in 0.6.0.dev0
+        contains complex numbers. Linear visualization.
+
+        .. versionadded:: 0.6.0.dev0
+
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the specified detector frame. This is only available if the dataset
         contains complex numbers.

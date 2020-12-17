@@ -1,9 +1,12 @@
+import time
 import logging
+import functools
 
 import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
 from libertem.io.dataset.base import Negotiator
+from libertem.common.numba import prime_numba_cache
 from .base import CORSMixin, log_message
 from libertem.utils.async_utils import run_blocking
 from .messages import Message
@@ -33,39 +36,24 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def prime_numba_caches(self, ds):
         executor = self.state.executor_state.get_executor()
 
-        def _prime_cache():
-            import numpy as np
-            dtypes = (np.float32, None)
-            for dtype in dtypes:
-                roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
-                roi[0] = 1
+        log.info("starting warmup")
 
-                from libertem.udf.sum import SumUDF
-                from libertem.corrections.corrset import CorrectionSet
-
-                udfs = [SumUDF()]  # need to have at least one UDF
-                p = next(ds.get_partitions())
-                neg = Negotiator()
-                for corr_dtype in (np.float32, None):
-                    if corr_dtype is not None:
-                        corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-                        p.set_corrections(corrections)
-                    tiling_scheme = neg.get_scheme(
-                        udfs=udfs,
-                        partition=p,
-                        read_dtype=dtype,
-                        roi=roi,
-                        corrections=corrections,
-                    )
-                    next(p.get_tiles(tiling_scheme=tiling_scheme))
-
+        t0 = time.time()
         # first: make sure the jited functions used for I/O are compiled
         # by running a single-core workload on each host:
-        await executor.run_each_host(_prime_cache)
+        await executor.run_each_host(functools.partial(prime_numba_cache, ds=ds))
+
+        t1 = time.time()
 
         # second: make sure each worker *process* has the jited functions
         # loaded from the cache
-        await executor.run_each_worker(_prime_cache)
+        # XXX await executor.run_each_worker(functools.partial(prime_numba_cache, ds=ds))
+
+        t2 = time.time()
+
+        log.info("warmup done, took %.3fs + %.3fs = %.3fs", (t1 - t0), (t2 - t1), (t2 - t0))
+
+        # import pdb; pdb.set_trace()
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)

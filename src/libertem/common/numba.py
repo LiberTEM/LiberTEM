@@ -1,6 +1,16 @@
+import time
+import hashlib
+import logging
+
 import numba
+from numba.core.registry import dispatcher_registry, CPUDispatcher
+from numba.core.caching import FunctionCache
+from numba.core.serialize import dumps
 import numpy as np
 import scipy.sparse
+
+
+logger = logging.getLogger(__name__)
 
 
 @numba.njit(boundscheck=True)
@@ -155,15 +165,27 @@ def _rmatmul_csr(left_dense, right_data, right_indices, right_indptr, res_inout_
                     res_inout_t[right_column, left_row] += tmp
 
 
+_cached_njit_reg = []
+
+
 def cached_njit(*args, **kwargs):
-    kwargs.update({'target': 'custom_cpu', 'cache': True})
-    return numba.njit(*args, **kwargs)
+    """
+    Replacement for numba.njit with custom caching. Only supports usage
+    with parameters, i.e.
+
+    @cached_njit()
+    def fn():
+        ...
+    """
+    def wrapper(fn):
+        kwargs.update({'_target': 'custom_cpu', 'cache': True})
+        _cached_njit_reg.append(fn)
+        return numba.njit(fn, *args, **kwargs)
+    return wrapper
 
 
-import hashlib
-from numba.core.registry import dispatcher_registry, CPUDispatcher
-from numba.core.caching import NullCache, FunctionCache
-from numba.core.serialize import dumps
+def hasher(x):
+    return hashlib.sha256(x).hexdigest()
 
 
 class MyFunctionCache(FunctionCache):
@@ -200,24 +222,51 @@ class MyFunctionCache(FunctionCache):
         else:
             cvarbytes = b''
 
-        hasher = lambda x: hashlib.sha256(x).hexdigest()
         return (sig, "libertem-dirty-hack", codegen.magic_tuple(), (hasher(codebytes),
                                              hasher(cvarbytes),))
 
     def load_overload(self, *args, **kwargs):
+        t0 = time.time()
         data = super().load_overload(*args, **kwargs)
+        t1 = time.time()
         if data is None:
-            print("CACHE MISS CUSTOM!! %s %s" % (self._name, self._py_func))
-        # else:
-        #    print("cache hit for %r %r" % (args, kwargs))
+            logger.info("CACHE MISS CUSTOM!! %s %s" % (self._name, self._py_func))
+        else:
+            logger.info("cache hit for %s, load took %.3fs" % (self._name, (t1 - t0)))
         return data
 
 
 class MyCPUDispatcher(CPUDispatcher):
     def enable_caching(self):
-        print("enabling cache")
         self._cache = MyFunctionCache(self.py_func)
 
 
 dispatcher_registry['custom_cpu'] = MyCPUDispatcher
 # dispatcher_registry['custom_cpu'] = CPUDispatcher
+
+
+def prime_numba_cache(ds):
+    dtypes = (np.float32, None)
+    for dtype in dtypes:
+        roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
+        roi[0] = 1
+
+        from libertem.udf.sum import SumUDF
+        from libertem.corrections.corrset import CorrectionSet
+        from libertem.io.dataset.base import Negotiator
+
+        udfs = [SumUDF()]  # need to have at least one UDF
+        p = next(ds.get_partitions())
+        neg = Negotiator()
+        for corr_dtype in (np.float32, None):
+            if corr_dtype is not None:
+                corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
+                p.set_corrections(corrections)
+            tiling_scheme = neg.get_scheme(
+                udfs=udfs,
+                partition=p,
+                read_dtype=dtype,
+                roi=roi,
+                corrections=corrections,
+            )
+            next(p.get_tiles(tiling_scheme=tiling_scheme))

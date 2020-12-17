@@ -123,7 +123,7 @@ def get_image_count_and_sig_shape(path):
         raise DataSetException("no files found")
 
 
-@numba.njit(inline='always')
+@numba.njit(inline='always', cache=True)
 def _mib_r_px_to_bytes(
     bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
     frame_footer_bytes, frame_header_bytes,
@@ -153,7 +153,7 @@ def _mib_r_px_to_bytes(
     read_ranges.append((file_idx, start, stop))
 
 
-@numba.njit(inline='always')
+@numba.njit(inline='always', cache=True)
 def _mib_r24_px_to_bytes(
     bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
     frame_footer_bytes, frame_header_bytes,
@@ -190,7 +190,7 @@ mib_r_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r_px_to_bytes)
 mib_r24_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r24_px_to_bytes)
 
 
-@numba.jit(inline='always')
+@numba.jit(inline='always', cache=True)
 def decode_r1_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     RAW 1bit format: each bit is actually saved as a single bit. 64 bits
@@ -203,7 +203,7 @@ def decode_r1_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
                 out[idx, 64 * stripe + 8 * byte + bitpos] = (inp_byte >> bitpos) & 1
 
 
-@numba.njit(inline='always')
+@numba.njit(inline='always', cache=True)
 def decode_r6_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     RAW 6bit format: the pixels need to be re-ordered in groups of 8. `inp`
@@ -216,7 +216,7 @@ def decode_r6_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
         out[idx, out_pos] = inp[i]
 
 
-@numba.njit(inline='always')
+@numba.njit(inline='always', cache=True)
 def decode_r12_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     RAW 12bit format: the pixels need to be re-ordered in groups of 4. `inp`
@@ -229,7 +229,7 @@ def decode_r12_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
         out[idx, out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
 
 
-@numba.njit(inline='always')
+@numba.njit(inline='always', cache=True)
 def decode_r24_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     RAW 24bit format: a single 24bit consists of two frames that are encoded

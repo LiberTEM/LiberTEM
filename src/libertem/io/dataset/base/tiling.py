@@ -8,7 +8,7 @@ from numba.typed import List as NumbaList
 import numpy as np
 
 from libertem.common import Slice, Shape
-from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index
+from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
 from libertem.corrections import CorrectionSet
 from .roi import _roi_to_indices
 
@@ -262,7 +262,7 @@ def make_get_read_ranges(
         where the last dimension contains: file index, start_byte, stop_byte
     """
 
-    @numba.njit(boundscheck=True, cache=True)
+    @cached_njit(boundscheck=True, cache=True)
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, roi, depth,
         slices_arr, fileset_arr, sig_shape,

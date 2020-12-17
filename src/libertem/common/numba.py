@@ -207,7 +207,7 @@ class MyFunctionCache(FunctionCache):
     def load_overload(self, *args, **kwargs):
         data = super().load_overload(*args, **kwargs)
         if data is None:
-            print("CACHE MISS CUSTOM!! %r %s %s" % (sig, self._name, self._py_func))
+            print("CACHE MISS CUSTOM!! %s %s" % (self._name, self._py_func))
         # else:
         #    print("cache hit for %r %r" % (args, kwargs))
         return data

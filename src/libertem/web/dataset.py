@@ -5,7 +5,6 @@ import functools
 import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
-from libertem.io.dataset.base import Negotiator
 from libertem.common.numba import prime_numba_cache
 from .base import CORSMixin, log_message
 from libertem.utils.async_utils import run_blocking

@@ -121,7 +121,7 @@ def rmatmul(left_dense, right_sparse):
     return result_t.T.copy()
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, cache=True)
 def _rmatmul_csc(left_dense, right_data, right_indices, right_indptr, res_inout_t):
     left_rows = left_dense.shape[0]
     for right_column in range(len(right_indptr) - 1):
@@ -137,7 +137,7 @@ def _rmatmul_csc(left_dense, right_data, right_indices, right_indptr, res_inout_
                     res_inout_t[right_column, left_row] += tmp
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, cache=True)
 def _rmatmul_csr(left_dense, right_data, right_indices, right_indptr, res_inout_t):
     left_rows = left_dense.shape[0]
     rowbuf = np.empty(shape=(left_rows,), dtype=left_dense.dtype)
@@ -153,3 +153,71 @@ def _rmatmul_csr(left_dense, right_data, right_indices, right_indptr, res_inout_
                 for left_row in range(left_rows):
                     tmp = rowbuf[left_row] * right_value
                     res_inout_t[right_column, left_row] += tmp
+
+
+def cached_njit(*args, **kwargs):
+    kwargs.update({'target': 'custom_cpu', 'cache': True})
+    return numba.njit(*args, **kwargs)
+
+
+import hashlib
+from numba.core.registry import dispatcher_registry, CPUDispatcher
+from numba.core.caching import NullCache, FunctionCache
+from numba.core.serialize import dumps
+
+
+class MyFunctionCache(FunctionCache):
+    def _get_dependencies(self, cvar):
+        deps = [cvar]
+        if hasattr(cvar, 'py_func'):
+            # TODO: does the cache key need to depend on any other
+            # attributes of the Dispatcher?
+            closure = cvar.py_func.__closure__
+            deps = [cvar.py_func.__code__.co_code]
+        elif hasattr(cvar, '__closure__'):
+            closure = cvar.__closure__
+            # if cvar is a function and closes over a Dispatcher, the
+            # cache will be busted because of the uuid that is regenerated
+            deps = [cvar.__code__.co_code]
+        else:
+            closure = None
+        if closure is not None:
+            for x in closure:
+                deps.extend(self._get_dependencies(x.cell_contents))
+        return deps
+
+    def _index_key(self, sig, codegen):
+        """
+        Compute index key for the given signature and codegen.
+        It includes a description of the OS, target architecture and hashes of
+        the bytecode for the function and, if the function has a __closure__,
+        a hash of the cell_contents.
+        """
+        codebytes = self._py_func.__code__.co_code
+        cvars = self._get_dependencies(self._py_func)
+        if len(cvars) > 0:
+            cvarbytes = dumps(cvars)
+        else:
+            cvarbytes = b''
+
+        hasher = lambda x: hashlib.sha256(x).hexdigest()
+        return (sig, "libertem-dirty-hack", codegen.magic_tuple(), (hasher(codebytes),
+                                             hasher(cvarbytes),))
+
+    def load_overload(self, *args, **kwargs):
+        data = super().load_overload(*args, **kwargs)
+        if data is None:
+            print("CACHE MISS CUSTOM!! %r %s %s" % (sig, self._name, self._py_func))
+        # else:
+        #    print("cache hit for %r %r" % (args, kwargs))
+        return data
+
+
+class MyCPUDispatcher(CPUDispatcher):
+    def enable_caching(self):
+        print("enabling cache")
+        self._cache = MyFunctionCache(self.py_func)
+
+
+dispatcher_registry['custom_cpu'] = MyCPUDispatcher
+# dispatcher_registry['custom_cpu'] = CPUDispatcher

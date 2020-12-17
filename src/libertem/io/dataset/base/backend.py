@@ -2,12 +2,12 @@ import os
 import mmap
 import logging
 
-import numba
 import numpy as np
 from numba.typed import List
 
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
+from libertem.common.numba import cached_njit
 from libertem.corrections import CorrectionSet
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
@@ -27,7 +27,7 @@ def _make_mmap_reader_and_decoder(decode):
     """
     decode: from inp, in bytes, possibly interpreted as native_dtype, to out.dtype
     """
-    @numba.njit(boundscheck=False, cache=True)
+    @cached_njit(boundscheck=False, cache=True)
     def _tilereader_w_copy(outer_idx, mmaps, sig_dims, tile_read_ranges,
                            out_decoded, native_dtype, do_zero,
                            origin, shape, ds_shape):

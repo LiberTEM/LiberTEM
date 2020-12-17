@@ -222,7 +222,7 @@ class MyFunctionCache(FunctionCache):
         else:
             cvarbytes = b''
 
-        return (sig, "libertem-dirty-hack", codegen.magic_tuple(), (hasher(codebytes),
+        return (sig, "libertem-numba-cache", codegen.magic_tuple(), (hasher(codebytes),
                                              hasher(cvarbytes),))
 
     def load_overload(self, *args, **kwargs):

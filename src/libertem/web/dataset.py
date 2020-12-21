@@ -46,13 +46,12 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
         # second: make sure each worker *process* has the jited functions
         # loaded from the cache
-        # XXX await executor.run_each_worker(functools.partial(prime_numba_cache, ds=ds))
+        # XXX doesn't seem to be needed actually!
+        # await executor.run_each_worker(functools.partial(prime_numba_cache, ds=ds))
 
-        t2 = time.time()
+        # t2 = time.time()
 
-        log.info("warmup done, took %.3fs + %.3fs = %.3fs", (t1 - t0), (t2 - t1), (t2 - t0))
-
-        # import pdb; pdb.set_trace()
+        log.info("warmup done, took %.3fs", (t1 - t0))
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)

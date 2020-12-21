@@ -1,3 +1,9 @@
+import os
+import glob
+import pickle
+import shutil
+import importlib
+
 import scipy.sparse
 import pytest
 import numpy as np
@@ -49,3 +55,29 @@ def test_rmatmul_4():
     # Not a csc or csr matrix
     with pytest.raises(ValueError):
         rmatmul(le, ri)
+
+
+def test_numba_cache(tmpdir_factory):
+    src_dir = tmpdir_factory.mktemp('numba_cache')
+    src_py_file = os.path.join(os.path.dirname(__file__), 'numba_cache.py')
+    shutil.copy(src_py_file, src_dir)
+
+    dst_py_file = os.path.join(src_dir, 'numba_cache.py')
+    spec = importlib.util.spec_from_file_location('<dynamic>', dst_py_file)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    pycache_dir = os.path.join(src_dir, '__pycache__')
+
+    nbis = glob.glob(pycache_dir + '/*.nbi')
+    nbcs = glob.glob(pycache_dir + '/*.nbc')
+
+    assert len(nbis) == 1
+    assert len(nbcs) == 2
+
+    with open(nbis[0], 'rb') as f:
+        pickle.load(f)  # load and discard version
+        data = f.read()
+        cache_contents = pickle.loads(data)
+
+    assert len(cache_contents[1].keys()) == 2

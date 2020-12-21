@@ -230,7 +230,7 @@ class MyFunctionCache(FunctionCache):
         data = super().load_overload(*args, **kwargs)
         t1 = time.time()
         if data is None:
-            logger.info("CACHE MISS CUSTOM!! %s %s" % (self._name, self._py_func))
+            logger.info("numba cache miss %s %s" % (self._name, self._py_func))
         else:
             logger.info("cache hit for %s, load took %.3fs" % (self._name, (t1 - t0)))
         return data

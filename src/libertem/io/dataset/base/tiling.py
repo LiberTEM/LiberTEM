@@ -73,8 +73,8 @@ class TilingScheme:
 
     def __repr__(self):
         unique_shapes = list({tuple(slice_.shape) for slice_ in self._slices})
-        return "<TilingScheme (depth=%d) shapes=%r>" % (
-            self.depth, unique_shapes,
+        return "<TilingScheme (depth=%d) shapes=%r len=%d>" % (
+            self.depth, unique_shapes, len(self._slices),
         )
 
     @property

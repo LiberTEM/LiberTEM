@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 from numba.typed import List
+import numba
 
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
@@ -64,10 +65,10 @@ def _make_reader_and_decoder(decode):
             rr = tile_read_ranges[rr_idx]
             if rr[1] == rr[2] == 0:
                 break
-            buffer = buffers[rr[0]]
+            buf = buffers[rr[0]]
             offset = offsets[rr[0]]  # per-file offset of start of read buffer
             decode(
-                inp=buffer[rr[1] - offset:rr[2] - offset],
+                inp=buf[rr[1] - offset:rr[2] - offset],
                 out=out_decoded,
                 idx=rr_idx,
                 native_dtype=native_dtype,
@@ -80,7 +81,54 @@ def _make_reader_and_decoder(decode):
     return _tilereader_w_copy
 
 
-@cached_njit
+@numba.njit(inline='always')
+def block_get_min_fill_factor(rrs):
+    """
+    Try to find out how sparse the given read ranges are, per file.
+
+    Returns the smallest fill factor and maximum required buffer size.
+    """
+    # FIXME: replace with fixed arrays? If this fn stands out on a profile...
+    min_per_file = {}
+    max_per_file = {}
+    payload_bytes = {}
+    for tile_idx in range(rrs.shape[0]):
+        for part_idx in range(rrs.shape[1]):
+            part_rr = rrs[tile_idx, part_idx]
+            fileno = part_rr[0]
+
+            if part_rr[2] == part_rr[1] == 0:
+                continue
+
+            if fileno not in min_per_file:
+                min_per_file[fileno] = part_rr[1]
+            else:
+                min_per_file[fileno] = min(part_rr[1], min_per_file[fileno])
+
+            if fileno not in max_per_file:
+                max_per_file[fileno] = part_rr[2]
+            else:
+                max_per_file[fileno] = max(part_rr[2], max_per_file[fileno])
+
+            if fileno not in payload_bytes:
+                payload_bytes[fileno] = 0
+            payload_bytes[fileno] += part_rr[2] - part_rr[1]
+
+    min_fill_factor = -1
+    max_buffer_size = 0
+
+    for k in min_per_file:
+        read_size = max_per_file[k] - min_per_file[k]
+        fill_factor = payload_bytes[k] / (read_size)
+        # print(k, fill_factor, max_per_file[k], min_per_file[k], payload_bytes[k])
+        if fill_factor < min_fill_factor or min_fill_factor == -1:
+            min_fill_factor = fill_factor
+        if read_size > max_buffer_size:
+            max_buffer_size = read_size
+    return min_fill_factor, max_buffer_size, min_per_file, max_per_file
+
+
+@numba.njit
 def _get_prefetch_ranges(num_files, tile_ranges):
     res = np.zeros((num_files, 3), dtype=np.int64)
     for rr_idx in range(tile_ranges.shape[0]):
@@ -455,51 +503,6 @@ class BufferedBackendImpl(IOBackendImpl):
         super().__init__()
         self._buffer_pool = BufferPool()
 
-    def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges, read_dtype):
-        """
-        """
-
-        ds_sig_shape = tiling_scheme.dataset_shape.sig
-        ds_sig_size = np.prod(ds_sig_shape)
-        sig_dims = tiling_scheme.shape.sig.dims
-        slices, ranges, scheme_indices = read_ranges
-        buf_shape = (tiling_scheme.depth,) + ds_sig_size
-        pos = -1
-        file_idx = -1
-
-        with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
-            for idx in range(slices.shape[0]):
-                origin = slices[idx, 0]
-                shape = slices[idx, 1]
-                tile_ranges = ranges[idx]
-                scheme_idx = scheme_indices[idx]
-
-                if tile_ranges[0, 1] > pos or file_idx != tile_ranges[0, 0]:
-                    # NOTE: for straight reading, read_ranges must not contain tiles
-                    # that span multiple files. This is ensured in IOBackend.need_copy
-                    # (that is, we force copying if files are smaller than tiles)
-                    file_idx = tile_ranges[0, 0]  # file index from the first rr for this tile
-                    fh = fileset[file_idx]
-                    pos = tile_ranges[0, 1]
-                    assert tile_ranges[0, 1] == np.min(tile_ranges[:, 1])
-                    fh.seek(pos)  # minimum of starting offset for this tile
-                    fh.readinto(out_decoded)
-                else:
-                    assert tile_ranges[0, 2] <= pos + out_decoded.nbytes
-
-                # memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
-                tile_slice = Slice(
-                    origin=origin,
-                    shape=Shape(shape, sig_dims=sig_dims)
-                )
-                data_slice = tile_slice.get()
-                data = memmap[data_slice]
-                yield DataTile(
-                    data,
-                    tile_slice=tile_slice,
-                    scheme_idx=scheme_idx,
-                )
-
     def get_read_and_decode(self, decode):
         key = (decode, "read")
         if key in _r_n_d_cache:
@@ -509,7 +512,7 @@ class BufferedBackendImpl(IOBackendImpl):
         return r_n_d
 
     # @profile
-    def _get_tiles_w_copy(
+    def _get_tiles_by_block(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,
         corrections=None,
     ):
@@ -535,39 +538,59 @@ class BufferedBackendImpl(IOBackendImpl):
 
         need_clear = decoder.do_clear()
 
-        with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
-            out_decoded = out_decoded.reshape((-1,))
+        slices = read_ranges[0]
+        shape_prods = np.prod(slices[..., 1, :], axis=1)
+        ranges = read_ranges[1]
+        scheme_indices = read_ranges[2]
+        tile_block_size = len(tiling_scheme)
 
-            slices = read_ranges[0]
-            shape_prods = np.prod(slices[..., 1, :], axis=1)
-            ranges = read_ranges[1]
-            scheme_indices = read_ranges[2]
-            for idx in range(slices.shape[0]):
-                origin = slices[idx, 0]
-                shape = slices[idx, 1]
-                tile_ranges = ranges[idx]
-                scheme_idx = scheme_indices[idx]
-                # if idx < slices.shape[0] - 1:
-                #     self._prefetch_for_tile(fileset, ranges[idx + 1])
-                #     pass
-                out_cut = out_decoded[:shape_prods[idx]].reshape((shape[0], -1))
-                data = r_n_d(
-                    idx,
-                    buffers, sig_dims, tile_ranges,
-                    out_cut, native_dtype, do_zero=need_clear,
-                    origin=origin, shape=shape, ds_shape=ds_shape, offset=offset,
+        max_buf_size = 16*1024*1024
+        sparse_threshold = 0.9
+
+        with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
+            for block_idx in range(0, slices.shape[0], tile_block_size):
+                block_ranges = ranges[block_idx, block_idx + tile_block_size]
+
+                fill_factor, req_buf_size, min_per_file, max_per_file = block_get_min_fill_factor(
+                    block_ranges
                 )
-                tile_slice = Slice(
-                    origin=origin,
-                    shape=Shape(shape, sig_dims=sig_dims)
-                )
-                data = data.reshape(shape)
-                self.preprocess(data, tile_slice, corrections)
-                yield DataTile(
-                    data,
-                    tile_slice=tile_slice,
-                    scheme_idx=scheme_idx,
-                )
+                if req_buf_size > max_buf_size or fill_factor < sparse_threshold:
+                    raise NotImplementedError("sparse reading not supported yet")
+                else:
+                    # phase 1: read
+                    buffers = {}
+                    for fileno in min_per_file.keys():
+                        fh = fileset[fileno]
+                        read_size = max_per_file[fileno] - min_per_file[fileno]
+                        # FIXME: re-use buffer
+                        buffers[fileno] = np.zeros(read_size, dtype=np.uint8)
+                        fh.readinto(buffers[fileno])
+
+                    # phase 2: decode tiles from the data that was read
+                    for idx in range(block_idx, block_idx + tile_block_size):
+                        origin = slices[idx, 0]
+                        shape = slices[idx, 1]
+                        tile_ranges = ranges[idx]
+                        scheme_idx = scheme_indices[idx]
+                        out_cut = out_decoded[:shape_prods[idx]].reshape((shape[0], -1))
+
+                        data = r_n_d(
+                            idx,
+                            buffers, sig_dims, tile_ranges,
+                            out_cut, native_dtype, do_zero=need_clear,
+                            origin=origin, shape=shape, ds_shape=ds_shape,
+                        )
+                        tile_slice = Slice(
+                            origin=origin,
+                            shape=Shape(shape, sig_dims=sig_dims)
+                        )
+                        data = data.reshape(shape)
+                        self.preprocess(data, tile_slice, corrections)
+                        yield DataTile(
+                            data,
+                            tile_slice=tile_slice,
+                            scheme_idx=scheme_idx,
+                        )
 
     # @profile
     def get_tiles(
@@ -575,7 +598,7 @@ class BufferedBackendImpl(IOBackendImpl):
         corrections,
     ):
         with fileset:
-            yield from self._get_tiles_w_copy(
+            yield from self._get_tiles_by_block(
                 tiling_scheme=tiling_scheme,
                 fileset=fileset,
                 read_ranges=read_ranges,

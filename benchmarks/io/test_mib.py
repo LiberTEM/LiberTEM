@@ -15,6 +15,13 @@ MIB_FILE = "MIB/20200518 165148/default.hdr"
 PREFIXES = get_testdata_prefixes()
 
 
+backends_by_name = {
+    "mmap": None,
+    "mmap_readahead": MMapBackend(enable_readahead_hints=True),
+    "buffered": BufferedBackend(),
+}
+
+
 def filelist(mib_hdr):
     mib_dir = os.path.dirname(mib_hdr)
     return [os.path.join(mib_dir, fname) for fname in os.listdir(mib_dir)]
@@ -60,13 +67,10 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", (
-            MMapBackend(enable_readahead_hints=True),
-            BufferedBackend(),
-            None
-        ),
+        "io_backend", ("mmap", "mmap_readahead", "buffered"),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
+        io_backend = backends_by_name[io_backend]
         mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
 
@@ -105,13 +109,13 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", (
-            MMapBackend(enable_readahead_hints=True),
-            BufferedBackend(),
-            None
-        ),
+        "sparsity", (10, 16, 64, 128)
     )
-    def test_sparse_roi(self, benchmark, prefix, drop, io_backend, shared_dist_ctx):
+    @pytest.mark.parametrize(
+        "io_backend", ("mmap", "mmap_readahead", "buffered"),
+    )
+    def test_sparse_roi(self, benchmark, prefix, drop, io_backend, shared_dist_ctx, sparsity):
+        io_backend = backends_by_name[io_backend]
         mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
 
@@ -119,7 +123,7 @@ class TestUseSharedExecutor:
         ds = ctx.load(filetype="auto", path=mib_hdr, io_backend=io_backend)
 
         sparse_roi = np.zeros(ds.shape.nav.size, dtype=np.bool)
-        sparse_roi[::10] = True
+        sparse_roi[::sparsity] = True
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)

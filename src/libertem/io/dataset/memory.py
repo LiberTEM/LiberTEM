@@ -9,7 +9,7 @@ from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
     LocalFile, MMapBackend,
 )
-from libertem.io.dataset.base.backend import MMapBackendImpl
+from libertem.io.dataset.base.backend_mmap import MMapBackendImpl
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
 

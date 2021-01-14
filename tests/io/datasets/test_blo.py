@@ -9,9 +9,10 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.raw import PickUDF
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -28,6 +29,17 @@ def default_blo():
     )
     ds.initialize(InlineJobExecutor())
     return ds
+
+
+@pytest.fixture
+def buffered_blo(lt_ctx):
+    buffered = BufferedBackend()
+    ds_buffered = lt_ctx.load(
+        "blo",
+        path=str(BLO_TESTDATA_PATH),
+        io_backend=buffered,
+    )
+    return ds_buffered
 
 
 def test_simple_open(default_blo):
@@ -256,3 +268,29 @@ def test_incorrect_sig_shape(lt_ctx):
     assert e.match(
         r"sig_shape must be of size: 20736"
     )
+
+
+def test_compare_backends(lt_ctx, default_blo, buffered_blo):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_blo,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_blo,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_blo, buffered_blo):
+    roi = np.zeros(default_blo.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[16] = True
+    roi[32] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_blo, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_blo, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

@@ -9,10 +9,11 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.io.dataset.base import DataSetException, TilingScheme
+from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.raw import PickUDF
 from utils import _mk_random
 
 from utils import dataset_correction_verification, get_testdata_path
@@ -34,6 +35,16 @@ def default_empad():
     )
     ds = ds.initialize(executor)
     yield ds
+
+
+@pytest.fixture
+def buffered_empad(lt_ctx):
+    buffered = BufferedBackend()
+    return lt_ctx.load(
+        "empad",
+        path=EMPAD_XML,
+        io_backend=buffered,
+    )
 
 
 def test_new_empad_xml():
@@ -382,3 +393,28 @@ def test_scan_size_deprecation(lt_ctx):
             scan_size=scan_size,
         )
     assert tuple(ds.shape) == (2, 2, 128, 128)
+
+
+def test_compare_backends(lt_ctx, default_empad, buffered_empad):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_empad,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_empad,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_empad, buffered_empad):
+    roi = np.zeros(default_empad.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[8] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_empad, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_empad, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

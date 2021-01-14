@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.base.backend import MMapBackend
+from libertem.io.dataset.base import MMapBackend
 from libertem.udf.sum import SumUDF
 from libertem.api import Context
 

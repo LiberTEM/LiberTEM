@@ -11,7 +11,8 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
-from libertem.io.dataset.base import TilingScheme
+from libertem.udf.raw import PickUDF
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 from libertem.common import Shape
 
 from utils import dataset_correction_verification, get_testdata_path
@@ -27,6 +28,16 @@ def default_k2is():
     ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
     ds.initialize(InlineJobExecutor())
     return ds
+
+
+@pytest.fixture
+def buffered_k2is(lt_ctx):
+    buffered = BufferedBackend()
+    return lt_ctx.load(
+        "k2is",
+        path=str(K2IS_TESTDATA_PATH),
+        io_backend=buffered,
+    )
 
 
 def test_detect():
@@ -330,3 +341,29 @@ def test_k2is_dist(dist_ctx):
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis, roi=roi)
     assert results[0].raw_data.shape == (1860, 2048)
+
+
+def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_k2is,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_k2is,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
+    roi = np.zeros(default_k2is.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[16] = True
+    roi[32] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_k2is, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_k2is, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

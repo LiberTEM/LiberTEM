@@ -133,7 +133,13 @@ def test_dm_stack_fileset_offsets(dm_stack_of_3d, lt_ctx):
     lt_ctx.run_udf(dataset=dm_stack_of_3d, udf=SumUDF())
 
 
-def test_positive_sync_offset(lt_ctx):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_positive_sync_offset(lt_ctx, io_backend):
     udf = SumSigUDF()
     sync_offset = 2
 
@@ -141,6 +147,7 @@ def test_positive_sync_offset(lt_ctx):
         "dm",
         files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
         nav_shape=(4, 2),
+        io_backend=io_backend,
     )
 
     result = lt_ctx.run_udf(dataset=ds, udf=udf)
@@ -150,7 +157,8 @@ def test_positive_sync_offset(lt_ctx):
         "dm",
         files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
         nav_shape=(4, 2),
-        sync_offset=sync_offset
+        sync_offset=sync_offset,
+        io_backend=io_backend,
     )
 
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
@@ -161,7 +169,13 @@ def test_positive_sync_offset(lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
-def test_negative_sync_offset(lt_ctx):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_negative_sync_offset(lt_ctx, io_backend):
     udf = SumSigUDF()
     sync_offset = -2
 
@@ -169,6 +183,7 @@ def test_negative_sync_offset(lt_ctx):
         "dm",
         files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
         nav_shape=(4, 2),
+        io_backend=io_backend,
     )
 
     result = lt_ctx.run_udf(dataset=ds, udf=udf)
@@ -178,7 +193,8 @@ def test_negative_sync_offset(lt_ctx):
         "dm",
         files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
         nav_shape=(4, 2),
-        sync_offset=sync_offset
+        sync_offset=sync_offset,
+        io_backend=io_backend,
     )
 
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
@@ -187,16 +203,27 @@ def test_negative_sync_offset(lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
-def test_missing_frames(lt_ctx):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_missing_frames(lt_ctx, io_backend):
     """
     there can be some frames missing at the end
     """
     # one full row of additional frames in the data set than the number of files
     nav_shape = (3, 5)
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
-    ds = DMDataSet(files=files, nav_shape=nav_shape)
+
+    ds = lt_ctx.load(
+        "dm",
+        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        nav_shape=nav_shape,
+        io_backend=io_backend,
+    )
+
     ds.set_num_cores(4)
-    ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(
         (1,) + tuple(ds.shape.sig),

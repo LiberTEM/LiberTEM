@@ -143,7 +143,7 @@ class BufferedBackendImpl(IOBackendImpl):
     # @profile
     def _get_tiles_by_block(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,
-        corrections=None,
+        corrections=None, sync_offset=0,
     ):
         if decoder is None:
             decoder = DtypeConversionDecoder()
@@ -181,63 +181,13 @@ class BufferedBackendImpl(IOBackendImpl):
                 fill_factor, req_buf_size, min_per_file, max_per_file = block_get_min_fill_factor(
                     block_ranges
                 )
-                if False and (req_buf_size > self._max_buffer_size or fill_factor < self._sparse_threshold):
-                    yield from self._read_block_sparse(
-                        block_idx, tile_block_size, min_per_file, max_per_file, fileset,
-                        slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
-                        sig_dims, ds_shape, need_clear, native_dtype, corrections,
-                    )
-                else:
-                    yield from self._read_block_dense(
-                        block_idx, tile_block_size, min_per_file, max_per_file, fileset,
-                        slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
-                        sig_dims, ds_shape, need_clear, native_dtype, corrections,
-                    )
-
-    def _read_block_sparse(
-        self, block_idx, tile_block_size, min_per_file, max_per_file, fileset,
-        slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
-        sig_dims, ds_shape, need_clear, native_dtype, corrections,
-    ):
-        """
-        block-sparse reading strategy
-        """
-        # phase 1: read
-        buffers = Dict()
-        for fileno in min_per_file.keys():
-            fh = fileset[fileno]
-            read_size = max_per_file[fileno] - min_per_file[fileno]
-            # FIXME: re-use buffer
-            buffers[fileno] = np.zeros(read_size, dtype=np.uint8)
-            fh.seek(min_per_file[fileno] + fh._file_header)
-            fh.readinto(buffers[fileno])
-
-        # phase 2: decode tiles from the data that was read
-        for idx in range(block_idx, block_idx + tile_block_size):
-            origin = slices[idx, 0]
-            shape = slices[idx, 1]
-            tile_ranges = ranges[idx]
-            scheme_idx = scheme_indices[idx]
-            out_cut = out_decoded[:shape_prods[idx]].reshape((shape[0], -1))
-
-            data = r_n_d(
-                idx,
-                buffers, sig_dims, tile_ranges,
-                out_cut, native_dtype, do_zero=need_clear,
-                origin=origin, shape=shape, ds_shape=ds_shape,
-                offsets=min_per_file,
-            )
-            tile_slice = Slice(
-                origin=origin,
-                shape=Shape(shape, sig_dims=sig_dims)
-            )
-            data = data.reshape(shape)
-            self.preprocess(data, tile_slice, corrections)
-            yield DataTile(
-                data,
-                tile_slice=tile_slice,
-                scheme_idx=scheme_idx,
-            )
+                # TODO: if it makes sense, implement sparse variant
+                # if False and (req_buf_size > self._max_buffer_size or fill_factor < self._sparse_threshold):
+                yield from self._read_block_dense(
+                    block_idx, tile_block_size, min_per_file, max_per_file, fileset,
+                    slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
+                    sig_dims, ds_shape, need_clear, native_dtype, corrections,
+                )
 
     def _read_block_dense(
         self, block_idx, tile_block_size, min_per_file, max_per_file, fileset,
@@ -301,6 +251,5 @@ class BufferedBackendImpl(IOBackendImpl):
                 native_dtype=native_dtype,
                 decoder=decoder,
                 corrections=corrections,
-                # TODO:
-                # sync_offset=sync_offset,
+                sync_offset=sync_offset,
             )

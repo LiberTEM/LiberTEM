@@ -132,6 +132,12 @@ class BufferedBackendImpl(IOBackendImpl):
         self._sparse_threshold = sparse_threshold
         self._buffer_pool = BufferPool()
 
+    def need_copy(
+        self, decoder, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None,
+        sync_offset=0, corrections=None,
+    ):
+        return True  # we always copy in this backend
+
     def get_read_and_decode(self, decode):
         key = (decode, "read")
         if key in _r_n_d_cache:

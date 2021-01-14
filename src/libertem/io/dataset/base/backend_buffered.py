@@ -182,7 +182,7 @@ class BufferedBackendImpl(IOBackendImpl):
                     block_ranges
                 )
                 # TODO: if it makes sense, implement sparse variant
-                # if False and (req_buf_size > self._max_buffer_size or fill_factor < self._sparse_threshold):
+                # if req_buf_size > self._max_buffer_size or fill_factor < self._sparse_threshold:
                 yield from self._read_block_dense(
                     block_idx, tile_block_size, min_per_file, max_per_file, fileset,
                     slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,

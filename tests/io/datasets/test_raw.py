@@ -14,7 +14,7 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 
@@ -382,7 +382,13 @@ def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
-def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):
     udf = SumSigUDF()
     sync_offset = 2
 
@@ -393,6 +399,7 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dtype="float32",
         enable_direct=False,
         sync_offset=sync_offset,
+        io_backend=io_backend,
     )
     ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
@@ -432,7 +439,13 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     assert np.allclose(result, result_with_offset)
 
 
-def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):
     udf = SumSigUDF()
     sync_offset = -2
 
@@ -443,6 +456,7 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dtype="float32",
         enable_direct=False,
         sync_offset=sync_offset,
+        io_backend=io_backend,
     )
     ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
@@ -480,13 +494,20 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     assert np.allclose(result, result_with_offset)
 
 
-def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
     ds = RawFileDataSet(
         path=raw_data_8x8x8x8_path,
         nav_shape=(10, 8),
         sig_shape=(8, 8),
         dtype="float32",
         enable_direct=False,
+        io_backend=io_backend,
     )
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
@@ -512,13 +533,20 @@ def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path):
     assert t.tile_slice.shape[0] == 4
 
 
-def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
     ds = RawFileDataSet(
         path=raw_data_8x8x8x8_path,
         nav_shape=(6, 8),
         sig_shape=(8, 8),
         dtype="float32",
         enable_direct=False,
+        io_backend=io_backend,
     )
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
@@ -573,7 +601,13 @@ def test_offset_greater_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
     )
 
 
-def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        None
+    ),
+)
+def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):
     udf = SumSigUDF()
 
     ds_with_1d_nav = lt_ctx.load(
@@ -583,6 +617,7 @@ def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path):
         sig_shape=(8, 8),
         dtype="float32",
         enable_direct=False,
+        io_backend=io_backend,
     )
     result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
     result_with_1d_nav = result_with_1d_nav['intensity'].raw_data

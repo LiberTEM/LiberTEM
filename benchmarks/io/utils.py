@@ -1,6 +1,8 @@
 import os
 import platform
 
+from libertem.io.dataset.base import MMapBackend, BufferedBackend
+
 
 def warmup_cache(flist):
     for fname in flist:
@@ -53,3 +55,10 @@ def get_testdata_prefixes():
         for p in prefixes:
             assert os.path.isdir(p)
     return prefixes
+
+
+backends_by_name = {
+    "mmap": None,
+    "mmap_readahead": MMapBackend(enable_readahead_hints=True),
+    "buffered": BufferedBackend(),
+}

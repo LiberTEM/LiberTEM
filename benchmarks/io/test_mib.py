@@ -5,21 +5,13 @@ import numpy as np
 
 from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.io.dataset.base import MMapBackend, BufferedBackend
 
-from utils import drop_cache, warmup_cache, get_testdata_prefixes
+from utils import drop_cache, warmup_cache, get_testdata_prefixes, backends_by_name
 
 
 MIB_FILE = "MIB/20200518 165148/default.hdr"
 
 PREFIXES = get_testdata_prefixes()
-
-
-backends_by_name = {
-    "mmap": None,
-    "mmap_readahead": MMapBackend(enable_readahead_hints=True),
-    "buffered": BufferedBackend(),
-}
 
 
 def filelist(mib_hdr):
@@ -158,13 +150,10 @@ class TestUseSharedExecutor:
     "prefix", PREFIXES[:1]
 )
 @pytest.mark.parametrize(
-    "io_backend", (
-        MMapBackend(enable_readahead_hints=True),
-        BufferedBackend(),
-        None
-    ),
+    "io_backend", ("mmap", "mmap_readahead", "buffered"),
 )
 def test_mask_firstrun(benchmark, prefix, first, io_backend):
+    io_backend = backends_by_name[io_backend]
     mib_hdr = os.path.join(prefix, MIB_FILE)
     flist = filelist(mib_hdr)
 

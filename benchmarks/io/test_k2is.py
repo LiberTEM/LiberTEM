@@ -6,9 +6,8 @@ import numpy as np
 
 from libertem import api
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.io.dataset.base.backend import MMapBackend
 
-from utils import drop_cache, warmup_cache, get_testdata_prefixes
+from utils import drop_cache, warmup_cache, get_testdata_prefixes, backends_by_name
 
 
 K2IS_FILE = "K2IS/Capture52/Capture52_.gtg"
@@ -80,9 +79,10 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", (MMapBackend(enable_readahead_hints=True), None),
+        "io_backend", ("mmap", "mmap_readahead", "buffered"),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
+        io_backend = backends_by_name[io_backend]
         hdr = os.path.join(prefix, K2IS_FILE)
         flist = filelist(hdr)
 
@@ -122,9 +122,10 @@ class TestUseSharedExecutor:
     "prefix", PREFIXES[:1]
 )
 @pytest.mark.parametrize(
-    "io_backend", (MMapBackend(enable_readahead_hints=True), None),
+    "io_backend", ("mmap", "mmap_readahead", "buffered"),
 )
 def test_mask_firstrun(benchmark, prefix, first, io_backend):
+    io_backend = backends_by_name[io_backend]
     hdr = os.path.join(prefix, K2IS_FILE)
     flist = filelist(hdr)
 

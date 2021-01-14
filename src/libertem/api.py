@@ -113,7 +113,7 @@ class Context:
         To configure an alternative I/O backend, in this case configuring
         the mmap backend to enable readahead hints:
 
-        >>> from libertem.io.dataset.base.backend import MMapBackend
+        >>> from libertem.io.dataset.base import MMapBackend
         >>> io_backend = MMapBackend(enable_readahead_hints=True)
         >>> ds = ctx.load("auto", path="...", io_backend=io_backend)  # doctest: +SKIP
         """

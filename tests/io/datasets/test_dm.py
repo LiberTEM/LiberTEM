@@ -9,8 +9,9 @@ from libertem.io.dataset.dm import DMDataSet
 from libertem.udf.sum import SumUDF
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.raw import PickUDF
 from utils import dataset_correction_verification, get_testdata_path
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 
 DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
@@ -23,6 +24,17 @@ def default_dm(lt_ctx):
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
     ds = lt_ctx.load("dm", files=files)
     return ds
+
+
+@pytest.fixture
+def buffered_dm(lt_ctx):
+    buffered = BufferedBackend()
+    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    return lt_ctx.load(
+        "dm",
+        files=files,
+        io_backend=buffered,
+    )
 
 
 @pytest.fixture
@@ -278,3 +290,27 @@ def test_scan_size_deprecation(lt_ctx):
             scan_size=scan_size,
         )
     assert tuple(ds.shape) == (2, 2, 3838, 3710)
+
+
+def test_compare_backends(lt_ctx, default_dm, buffered_dm):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_dm,
+        x=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_dm,
+        x=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_dm, buffered_dm):
+    roi = np.zeros(default_dm.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_dm, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_dm, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

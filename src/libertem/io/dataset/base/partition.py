@@ -7,7 +7,7 @@ from libertem.corrections import CorrectionSet
 from .tiling import DataTile, TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet
-from .backend import MMapBackend, IOBackend
+from . import MMapBackend, IOBackend
 from .decode import Decoder
 
 

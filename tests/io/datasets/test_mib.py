@@ -14,7 +14,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -30,6 +30,18 @@ def default_mib(lt_ctx):
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
+    return ds
+
+
+@pytest.fixture
+def buffered_mib(lt_ctx):
+    buffered = BufferedBackend()
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=(32, 32),
+        io_backend=buffered,
+    )
     return ds
 
 
@@ -380,3 +392,29 @@ def test_scan_size_deprecation(lt_ctx):
             scan_size=scan_size,
         )
     assert tuple(ds.shape) == (2, 2, 256, 256)
+
+
+def test_compare_backends(lt_ctx, default_mib, buffered_mib):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_mib,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_mib,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_mib, buffered_mib):
+    roi = np.zeros(default_mib.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[16] = True
+    roi[32] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_mib, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_mib, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

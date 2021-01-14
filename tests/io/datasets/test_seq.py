@@ -7,7 +7,8 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme
+from libertem.udf.raw import PickUDF
+from libertem.io.dataset.base import TilingScheme, BufferedBackend
 
 from utils import get_testdata_path
 
@@ -25,6 +26,21 @@ def default_seq(lt_ctx):
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
     assert tuple(ds.shape) == (8, 8, 128, 128)
+    return ds
+
+
+@pytest.fixture
+def buffered_seq(lt_ctx):
+    nav_shape = (8, 8)
+
+    ds = lt_ctx.load(
+        "seq",
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=BufferedBackend(),
+    )
+
+    ds.set_num_cores(4)
     return ds
 
 
@@ -364,3 +380,29 @@ def test_detect_unicode_error(raw_with_zeros, lt_ctx):
 
 # from utils import dataset_correction_verification
 # FIXME test with actual test file
+
+
+def test_compare_backends(lt_ctx, default_seq, buffered_seq):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_seq,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_seq,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
+    roi = np.zeros(default_seq.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[16] = True
+    roi[32] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_seq, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_seq, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)

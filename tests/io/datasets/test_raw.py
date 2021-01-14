@@ -8,6 +8,7 @@ import pytest
 import warnings
 
 from libertem.udf.sum import SumUDF
+from libertem.udf.raw import PickUDF
 
 from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
@@ -676,6 +677,30 @@ def test_detector_size_deprecation(lt_ctx, raw_data_8x8x8x8_path):
             dtype="float32",
         )
     assert tuple(ds.shape) == (8, 8, 8, 8)
+
+
+def test_compare_backends(lt_ctx, default_raw, buffered_raw):
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_raw,
+        x=0, y=0,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=buffered_raw,
+        x=0, y=0,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw):
+    roi = np.zeros(default_raw.shape.nav, dtype=np.bool).reshape((-1,))
+    roi[0] = True
+    roi[1] = True
+    roi[-1] = True
+    mm_f0 = lt_ctx.run_udf(dataset=default_raw, udf=PickUDF(), roi=roi)['intensity']
+    buffered_f0 = lt_ctx.run_udf(dataset=buffered_raw, udf=PickUDF(), roi=roi)['intensity']
+
+    assert np.allclose(mm_f0, buffered_f0)
 
 
 # TODO: test for dataset with more than 2 sig dims

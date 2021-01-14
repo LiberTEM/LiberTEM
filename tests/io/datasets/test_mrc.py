@@ -6,6 +6,7 @@ import pytest
 
 from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.io.dataset.base import BufferedBackend
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -23,6 +24,13 @@ pytestmark = pytest.mark.skipif(not HAVE_MRC_TESTDATA, reason="need .mrc testdat
 @pytest.fixture
 def default_mrc(lt_ctx):
     ds = lt_ctx.load("mrc", path=MRC_TESTDATA_PATH)
+    return ds
+
+
+@pytest.fixture
+def buffered_mrc(lt_ctx):
+    # FIXME: not yet supported
+    ds = lt_ctx.load("mrc", path=MRC_TESTDATA_PATH, io_backend=BufferedBackend())
     return ds
 
 

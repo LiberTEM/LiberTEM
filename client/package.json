@@ -11,7 +11,7 @@
     "@types/uuid": "^3.4.9",
     "ajv": "^6.12.3",
     "formik": "^1.5.8",
-    "immer": "^4.0.2",
+    "immer": "^8.0.1",
     "lodash": "^4.17.19",
     "react": "^16.13.1",
     "react-app-polyfill": "^1.0.6",

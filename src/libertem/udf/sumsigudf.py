@@ -23,9 +23,9 @@ class SumSigUDF(UDF):
             ),
         }
 
-    def process_frame(self, frame):
+    def process_tile(self, tile):
         ""
-        self.results.intensity[:] = np.sum(frame)
+        self.results.intensity[:] += np.sum(tile, axis=tuple(range(1, len(tile.shape))))
 
 
 def run_sumsig(ctx, dataset):

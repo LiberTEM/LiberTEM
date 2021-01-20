@@ -21,4 +21,6 @@ def make_dask_array(dataset, dtype='float32', roi=None):
             )
         )
     arr = dask.array.concatenate(chunks, axis=0)
-    return (arr.reshape(dataset.shape), workers)
+    if roi is None:
+        arr = arr.reshape(dataset.shape)
+    return (arr, workers)

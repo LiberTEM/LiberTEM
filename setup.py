@@ -146,7 +146,7 @@ setup(
         "psutil",
         # https://github.com/LiberTEM/LiberTEM/issues/763
         # https://github.com/LiberTEM/LiberTEM/issues/783
-        "numba>=0.49.1",
+        "numba>=0.51",
         "ncempy>=1.4",
         'pywin32!=226;platform_system=="Windows"',
         # FIXME pull request #259

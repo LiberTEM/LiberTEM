@@ -61,13 +61,22 @@ class TestUseSharedExecutor:
     @pytest.mark.parametrize(
         "io_backend", ("mmap", "mmap_readahead", "buffered"),
     )
-    def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
+    @pytest.mark.parametrize(
+        "context", ("dist", "inline")
+    )
+    def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, lt_ctx, io_backend, context):
         io_backend = backends_by_name[io_backend]
         mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
 
-        ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=mib_hdr, io_backend=io_backend)
+        if context == 'dist':
+            ctx = shared_dist_ctx
+        elif context == 'inline':
+            ctx = lt_ctx
+        else:
+            raise ValueError
+
+        ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)

@@ -368,7 +368,6 @@ class BufferWrapper(object):
         elif self._kind == "single":
             return self._data
 
-    # @profile
     def get_view_for_tile(self, partition, tile):
         """
         get a view for a single tile in a partition-sized buffer
@@ -398,7 +397,6 @@ class BufferWrapper(object):
         elif self._kind == "single":
             return self._data
 
-    # @profile
     def get_contiguous_view_for_tile(self, partition, tile):
         '''
         Make a cached contiguous copy of the view for a single tile

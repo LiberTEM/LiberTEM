@@ -156,7 +156,7 @@ class LocalFile(File):
 
     def _mmap_to_array(self, raw_mmap, start, stop):
         """
-        Create an array from the raw memory map, stipping away
+        Create an array from the raw memory map, stripping away
         frame headers and footers
 
         Parameters

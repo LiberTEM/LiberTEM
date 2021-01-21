@@ -255,7 +255,6 @@ class MMapBackendImpl(IOBackendImpl):
                     corrections=corrections,
                 )
 
-    # @profile
     def _prefetch_for_tile(self, fileset, tile_ranges):
         prefr = _get_prefetch_ranges(len(fileset), tile_ranges)
         prefr = prefr[~np.all(prefr == 0, axis=1)]

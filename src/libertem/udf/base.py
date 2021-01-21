@@ -981,7 +981,6 @@ class UDFRunner:
             )
         return tmp_dtype
 
-    # @profile
     def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class):
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
@@ -1040,7 +1039,6 @@ class UDFRunner:
             udf.set_meta(meta)
         return (meta, tiling_scheme, dtype)
 
-    # @profile
     def _run_tile(self, udfs, partition, tile, device_tile):
         for udf in udfs:
             method = udf.get_method()
@@ -1064,7 +1062,6 @@ class UDFRunner:
                 udf.set_slice(partition.slice)
                 udf.process_partition(device_tile)
 
-    # @profile
     def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):
         # FIXME pass information on target location (numpy or cupy)
         # to dataset so that is can already move it there.
@@ -1129,7 +1126,6 @@ class UDFRunner:
                 "supported are 'cpu' and 'cuda'")
         return (numpy_udfs, cupy_udfs)
 
-    # @profile
     def run_for_partition(self, partition: Partition, roi, corrections):
         with set_num_threads(1):
             try:

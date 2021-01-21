@@ -58,7 +58,7 @@ def get_testdata_prefixes():
 
 
 backends_by_name = {
-    "mmap": None,
+    "mmap": MMapBackend(),
     "mmap_readahead": MMapBackend(enable_readahead_hints=True),
     "buffered": BufferedBackend(),
 }

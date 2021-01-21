@@ -221,9 +221,16 @@ class BasePartition(Partition):
             roi=roi,
         )
 
+    def _get_default_backend(self):
+        import platform
+        if platform.system() == "Windows":
+            from libertem.io.dataset.base import BufferedBackend
+            return BufferedBackend()
+        return MMapBackend()
+
     def _get_io_backend(self):
         if self._io_backend is None:
-            return MMapBackend()
+            return self._get_default_backend()
         return self._io_backend
 
     def set_corrections(self, corrections: CorrectionSet):

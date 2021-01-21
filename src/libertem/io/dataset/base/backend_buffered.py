@@ -149,7 +149,6 @@ class BufferedBackendImpl(IOBackendImpl):
     def get_max_io_size(self):
         return 16*2**20
 
-    # @profile
     def _get_tiles_by_block(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,
         corrections=None, sync_offset=0,
@@ -246,7 +245,6 @@ class BufferedBackendImpl(IOBackendImpl):
                 scheme_idx=scheme_idx,
             )
 
-    # @profile
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
         sync_offset, corrections,

@@ -48,25 +48,6 @@ def test_sequential(benchmark, prefix, drop):
         iterations=1
     )
 
-# Starting fresh distributed executors takes a lot of time and therefore
-# they should be used repeatedly if possible.
-# However, some benchmarks require a fresh distributed executor
-# and running several Dask executors in parallel leads to lockups when closing.
-# That means any shared executor has to be shut down before a fresh one is started.
-# For that reason we use a fixture with scope "class" and group
-# tests in a class that should all use the same executor.
-# That way we make sure the shared executor is torn down before any other test
-# starts a new one.
-
-
-@pytest.fixture(scope="class")
-def shared_dist_ctx():
-    print("start shared Context()")
-    ctx = api.Context()
-    yield ctx
-    print("stop shared Context()")
-    ctx.close()
-
 
 class TestUseSharedExecutor:
     @pytest.mark.benchmark(

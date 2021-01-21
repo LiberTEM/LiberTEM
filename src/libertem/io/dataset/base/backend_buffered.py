@@ -146,6 +146,9 @@ class BufferedBackendImpl(IOBackendImpl):
         _r_n_d_cache[key] = r_n_d
         return r_n_d
 
+    def get_max_io_size(self):
+        return 16*2**20
+
     # @profile
     def _get_tiles_by_block(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,

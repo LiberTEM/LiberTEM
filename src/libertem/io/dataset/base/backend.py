@@ -73,6 +73,9 @@ class IOBackendImpl:
 
         return False
 
+    def get_max_io_size(self):
+        return 2**20  # default: 1MiB blocks
+
     def _need_decode(self, decoder, native_dtype, read_dtype):
         # FIXME: even with dtype "mismatch", we can possibly do dtype
         # conversion, if the tile size is small enough! maybe benchmark this

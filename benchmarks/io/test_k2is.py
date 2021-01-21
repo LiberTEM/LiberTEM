@@ -87,7 +87,7 @@ class TestUseSharedExecutor:
         flist = filelist(hdr)
 
         ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=hdr, io_backend=io_backend)
+        ds = ctx.load(filetype="k2is", path=hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)
@@ -130,7 +130,7 @@ def test_mask_firstrun(benchmark, prefix, first, io_backend):
     flist = filelist(hdr)
 
     with api.Context() as ctx:
-        ds = ctx.load(filetype="auto", path=hdr, io_backend=io_backend)
+        ds = ctx.load(filetype="k2is", path=hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)

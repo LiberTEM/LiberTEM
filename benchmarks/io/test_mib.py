@@ -121,7 +121,7 @@ class TestUseSharedExecutor:
         flist = filelist(mib_hdr)
 
         ctx = shared_dist_ctx
-        ds = ctx.load(filetype="auto", path=mib_hdr, io_backend=io_backend)
+        ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
         sparse_roi = np.zeros(ds.shape.nav.size, dtype=np.bool)
         sparse_roi[::sparsity] = True
@@ -167,7 +167,7 @@ def test_mask_firstrun(benchmark, prefix, first, io_backend):
     flist = filelist(mib_hdr)
 
     with api.Context() as ctx:
-        ds = ctx.load(filetype="auto", path=mib_hdr, io_backend=io_backend)
+        ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
         def mask():
             return np.ones(ds.shape.sig, dtype=bool)

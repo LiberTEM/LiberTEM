@@ -11,7 +11,7 @@ stages:
     - job: data_tests
       pool: DataAccess
       variables:
-        TOXENV: 'py38'
+        TOXENV: 'data'
         TESTDATA_BASE_PATH: '/data/'
       steps:
       - bash: find /data/
@@ -32,7 +32,7 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: ./venv/bin/tox -- tests/io/
+      - bash: ./venv/bin/tox -r
         displayName: 'Run tox tests'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml

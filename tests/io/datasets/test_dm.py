@@ -10,8 +10,9 @@ from libertem.udf.sum import SumUDF
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
-from utils import dataset_correction_verification, get_testdata_path
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+
 
 DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
@@ -64,13 +65,19 @@ def test_check_valid(default_dm):
     default_dm.check_valid()
 
 
-def test_read_roi(default_dm, default_dm_raw, lt_ctx):
-    roi = np.zeros((10,), dtype=bool)
-    roi[5] = 1
-    sumj = lt_ctx.create_sum_analysis(dataset=default_dm)
-    sumres = lt_ctx.run(sumj, roi=roi)
-    ref = np.sum(default_dm_raw[roi], axis=0)
-    assert np.allclose(sumres['intensity'].raw_data, ref)
+def test_comparison(default_dm, default_dm_raw, lt_ctx_fast):
+    udf = ValidationUDF(reference=default_dm_raw)
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_dm)
+
+
+def test_comparison_roi(default_dm, default_dm_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_dm.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_dm_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_dm, roi=roi)
 
 
 @pytest.mark.parametrize(

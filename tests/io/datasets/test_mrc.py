@@ -7,7 +7,7 @@ from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import BufferedBackend
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 
 MRC_TESTDATA_PATH = os.path.join(
@@ -104,48 +104,58 @@ def test_mrc_dist(dist_ctx):
     assert results[0].raw_data.shape == (1024, 1024)
 
 
-def test_positive_sync_offset(lt_ctx):
-    udf = SumSigUDF()
+def test_positive_sync_offset(lt_ctx, default_mrc_raw):
     sync_offset = 2
 
     ds = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
     )
 
-    result = lt_ctx.run_udf(dataset=ds, udf=udf)
-    result = result['intensity'].raw_data[sync_offset:]
+    result = lt_ctx.run_udf(dataset=ds, udf=ValidationUDF(reference=default_mrc_raw))
+    assert result['nav_shape'].data.shape == (2, 2)
 
     ds_with_offset = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
     )
 
-    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
-    result_with_offset = result_with_offset['intensity'].raw_data[
-        :ds_with_offset._meta.shape.nav.size - sync_offset
-    ]
+    padded_reference = np.concatenate(
+        (
+            default_mrc_raw[2:],
+            np.zeros((2, *default_mrc_raw.shape[1:]), dtype=default_mrc_raw.dtype)
+        )
+    )
 
-    assert np.allclose(result, result_with_offset)
+    result_with_offset = lt_ctx.run_udf(
+        dataset=ds_with_offset, udf=ValidationUDF(reference=padded_reference)
+    )
+    assert result_with_offset['nav_shape'].data.shape == (2, 2)
 
 
-def test_negative_sync_offset(default_mrc, lt_ctx):
-    udf = SumSigUDF()
+def test_negative_sync_offset(default_mrc_raw, lt_ctx):
     sync_offset = -2
 
     ds = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
     )
 
-    result = lt_ctx.run_udf(dataset=ds, udf=udf)
-    result = result['intensity'].raw_data[:ds._meta.shape.nav.size - abs(sync_offset)]
+    result = lt_ctx.run_udf(dataset=ds, udf=ValidationUDF(reference=default_mrc_raw))
+    assert result['nav_shape'].data.shape == (2, 2)
 
     ds_with_offset = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
     )
 
-    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
-    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+    padded_reference = np.concatenate(
+        (
+            np.zeros((2, *default_mrc_raw.shape[1:]), dtype=default_mrc_raw.dtype),
+            default_mrc_raw[:2]
+        )
+    )
 
-    assert np.allclose(result, result_with_offset)
+    result_with_offset = lt_ctx.run_udf(
+        dataset=ds_with_offset, udf=ValidationUDF(reference=padded_reference)
+    )
+    assert result_with_offset['nav_shape'].data.shape == (2, 2)
 
 
 def test_offset_smaller_than_image_count(lt_ctx):

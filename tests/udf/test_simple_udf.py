@@ -10,7 +10,36 @@ from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
 
-from utils import _mk_random
+from utils import _mk_random, ValidationUDF
+
+
+def test_validation(lt_ctx):
+    """
+    Test that the ValidationUDF works as designed
+    """
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    udf = ValidationUDF(reference=data.reshape((-1, 16, 16)))
+    res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+    assert res['nav_shape'].data.shape == (16, 16)
+
+    with pytest.raises(AssertionError):
+        data2 = data.copy()
+        data2[7, 9, 13, 11] += 0.1
+        udf = ValidationUDF(reference=data2.reshape((-1, 16, 16)))
+        res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+
+    with pytest.raises(AssertionError):
+        def badcompare(a, b):
+            return False
+
+        udf = ValidationUDF(
+            reference=data.reshape((-1, 16, 16)),
+            validation_function=badcompare
+        )
+        res = lt_ctx.run_udf(dataset=dataset, udf=udf)
 
 
 class PixelsumUDF(UDF):

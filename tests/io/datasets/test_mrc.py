@@ -1,8 +1,8 @@
 import os
-import hashlib
 
 import numpy as np
 import pytest
+import mrcfile
 
 from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
@@ -34,6 +34,12 @@ def buffered_mrc(lt_ctx):
     return ds
 
 
+@pytest.fixture(scope='module')
+def default_mrc_raw():
+    mrc = mrcfile.open(MRC_TESTDATA_PATH)
+    return mrc.data
+
+
 def test_simple_open(default_mrc):
     assert tuple(default_mrc.shape) == (4, 1024, 1024)
 
@@ -42,14 +48,15 @@ def test_check_valid(default_mrc):
     default_mrc.check_valid()
 
 
-def test_read_roi(default_mrc, lt_ctx):
+def test_read_roi(default_mrc, default_mrc_raw, lt_ctx):
     roi = np.zeros((4,), dtype=bool)
     roi[2] = 1
     sumj = lt_ctx.create_sum_analysis(dataset=default_mrc)
     sumres = lt_ctx.run(sumj, roi=roi)
-    sha1 = hashlib.sha1()
-    sha1.update(sumres.intensity.raw_data)
-    assert sha1.hexdigest() == "c189a28e6a875a1c928b79557a46a2f100441c30"
+
+    ref = default_mrc_raw[roi].sum(axis=0)
+
+    assert np.allclose(sumres.intensity.raw_data, ref)
 
 
 @pytest.mark.parametrize(

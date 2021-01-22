@@ -7,3 +7,6 @@ aiohttp
 websockets
 pytest-benchmark
 ipykernel
+hyperspy
+stemtool
+mrcfile

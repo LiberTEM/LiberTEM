@@ -4,7 +4,6 @@ import random
 
 import numpy as np
 import pytest
-import hyperspy.api as hs
 
 from libertem.io.dataset.dm import DMDataSet
 from libertem.udf.sum import SumUDF
@@ -33,6 +32,8 @@ def default_dm(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_dm_raw():
+    import hyperspy.api as hs  # avoid importing top level
+
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
     return np.stack([hs.load(file).data for file in files])
 

@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pytest
-import mrcfile
 
 from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
@@ -36,6 +35,8 @@ def buffered_mrc(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_mrc_raw():
+    import mrcfile  # avoid importing top level
+
     mrc = mrcfile.open(MRC_TESTDATA_PATH)
     return mrc.data
 

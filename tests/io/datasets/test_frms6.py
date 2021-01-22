@@ -6,7 +6,6 @@ import glob
 
 import pytest
 import numpy as np
-import stemtool
 
 from libertem.io.dataset.frms6 import (
     FRMS6DataSet, _map_y, FRMS6Decoder,
@@ -50,6 +49,8 @@ def buffered_frms6(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_frms6_raw(tmpdir_factory):
+    import stemtool  # avoid importing on top level
+
     fn = tmpdir_factory.mktemp("data").join("frms6.raw")
     # we use a memory mapped file to make this work
     # on machines that can't hold the full dataset in memory

@@ -18,8 +18,9 @@ from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.raw import PickUDF
 
-from utils import (dataset_correction_verification, get_testdata_path,
+from utils import (dataset_correction_verification, get_testdata_path, ValidationUDF,
     FakeBackend)
+
 
 FRMS6_TESTDATA_PATH = os.path.join(get_testdata_path(), 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
@@ -45,6 +46,12 @@ def buffered_frms6(lt_ctx):
         path=str(FRMS6_TESTDATA_PATH),
         io_backend=buffered,
     )
+
+
+def default_frms6_uncorr(lt_ctx):
+    ds = FRMS6DataSet(path=FRMS6_TESTDATA_PATH, enable_offset_correction=False)
+    ds = ds.initialize(lt_ctx.executor)
+    return ds
 
 
 @pytest.fixture(scope='module')
@@ -200,6 +207,23 @@ def test_correction(default_frms6, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
+def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_frms6_raw, (-1, *tuple(default_frms6_uncorr.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr)
+
+
+def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_frms6_uncorr.shape.nav),
+        p=[0.001, 0.999]
+    )
+    udf = ValidationUDF(reference=default_frms6_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr, roi=roi)
+
+
 def test_pickle_is_small(default_frms6):
     pickled = pickle.dumps(default_frms6)
     pickle.loads(pickled)
@@ -284,9 +308,9 @@ def test_decode(binning):
 def test_with_roi(default_frms6, lt_ctx):
     udf = PickUDF()
     roi = np.zeros(default_frms6.shape.nav, dtype=bool)
-    roi[0] = 1
+    roi[0, 0] = 1
     res = lt_ctx.run_udf(udf=udf, dataset=default_frms6, roi=roi)
-    np.array(res['intensity']).shape == (1, 256, 256)
+    assert np.array(res['intensity']).shape == (1, 264, 264)
 
 
 def test_read_invalid_tileshape(default_frms6):

@@ -142,6 +142,41 @@ class DebugDeviceUDF(UDF):
         return self.params.backends
 
 
+class ValidationUDF(UDF):
+    '''
+    UDF to compare a dataset against an array-like
+    object using a validation function, by default np.allclose().
+
+    Note that the reference should have a flattened nav and the ROI already
+    applied since it is compared directly with meta.slice.get()!
+
+    Only works efficiently on large datasets with an inline executor!
+    '''
+    def __init__(self,
+            reference,
+            preferred_dtype=UDF.USE_NATIVE_DTYPE,
+            validation_function=np.allclose):
+        super().__init__(
+            reference=reference,
+            preferred_dtype=preferred_dtype,
+            validation_function=validation_function
+        )
+
+    def get_preferred_input_dtype(self):
+        return self.params.preferred_dtype
+
+    def get_result_buffers(self):
+        return {
+            # Just a buffer to "feel" the av shape
+            'nav_shape': self.buffer(kind="nav", dtype="float32"),
+        }
+
+    def process_tile(self, tile):
+        assert self.params.validation_function(
+            self.meta.slice.get(self.params.reference), tile
+        )
+
+
 def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
     """
     compare correct function w/ corrected pick

@@ -466,6 +466,16 @@ def lt_ctx(inline_executor):
 
 
 @pytest.fixture
+def inline_executor_fast():
+    return InlineJobExecutor(debug=False)
+
+
+@pytest.fixture
+def lt_ctx_fast(inline_executor_fast):
+    return lt.Context(executor=inline_executor_fast)
+
+
+@pytest.fixture
 async def async_executor(local_cluster_url):
 
     pool = AsyncAdapter.make_pool()

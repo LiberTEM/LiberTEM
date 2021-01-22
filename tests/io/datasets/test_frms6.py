@@ -1,11 +1,12 @@
 import os
 import pickle
 import json
-import hashlib
 import random
+import glob
 
 import pytest
 import numpy as np
+import stemtool
 
 from libertem.io.dataset.frms6 import (
     FRMS6DataSet, _map_y, FRMS6Decoder,
@@ -15,6 +16,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.raw import PickUDF
 
 from utils import (dataset_correction_verification, get_testdata_path,
@@ -44,6 +46,46 @@ def buffered_frms6(lt_ctx):
         path=str(FRMS6_TESTDATA_PATH),
         io_backend=buffered,
     )
+
+
+@pytest.fixture(scope='module')
+def default_frms6_raw(tmpdir_factory):
+    fn = tmpdir_factory.mktemp("data").join("frms6.raw")
+    # we use a memory mapped file to make this work
+    # on machines that can't hold the full dataset in memory
+    data = np.memmap(str(fn), mode='w+', shape=(256, 256, 264, 264), dtype='uint16')
+    view = reshaped_view(data, (256*256, 264, 264))
+    root, ext = os.path.splitext(FRMS6_TESTDATA_PATH)
+    files = list(sorted(glob.glob(root + '*.frms6')))
+    blocksize = 15
+    offset = 0
+    # we skip the first file, it contains a zero reference
+    for f in files[1:]:
+        raw_shape = stemtool.util.pnccd.Frms6Reader.getDataShape(f)
+        frame_count = raw_shape[-1]
+        # We go blockwise to reduce memory consumption
+        for start in range(0, frame_count, blocksize):
+            stop = min(start+blocksize, frame_count)
+            block = stemtool.util.pnccd.Frms6Reader.readData(
+                f,
+                image_range=(start, stop),
+                pixels_x=raw_shape[0],
+                pixels_y=raw_shape[1]
+            )
+
+            view[offset + start:offset + stop] = np.moveaxis(  # undo the transpose
+                np.repeat(  # unbinning 4x in x direction
+                    # invert lower half and attach right of upper half
+                    # The detector consists of two chips that are arranged head-to-head
+                    # The outputs of the two chips are just concatenated in the file, while LiberTEM
+                    # re-assembles the data taking the spatial relation into account
+                    np.concatenate((block[:264], np.flip(block[264:], axis=(0, 1,))), axis=1),
+                    4, axis=1  # repeat options
+                ),
+                (0, 1, 2), (2, 1, 0)  # moveaxis options
+            )
+        offset += frame_count
+    return data
 
 
 def test_simple_open(default_frms6):
@@ -263,50 +305,48 @@ def test_read_invalid_tileshape(default_frms6):
         next(p.get_tiles(tiling_scheme=tiling_scheme))
 
 
-def test_positive_sync_offset(lt_ctx):
+def test_positive_sync_offset(default_frms6_raw, lt_ctx):
     udf = SumSigUDF()
     sync_offset = 2
 
     ds = lt_ctx.load(
-        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset,
+        enable_offset_correction=False
     )
 
     result = lt_ctx.run_udf(dataset=ds, udf=udf)
     result = result['intensity'].raw_data[:ds._meta.shape.nav.size - sync_offset]
-    result_sha1 = hashlib.sha1()
-    result_sha1.update(result)
 
-    # how to generate the hash below
-    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
-    # udf = SumSigUDF()
-    # result = ctx.run_udf(dataset=ds, udf=udf)
-    # sha1 = hashlib.sha1()
-    # sha1.update(result['intensity'].raw_data[sync_offset:])
-    # sha1.hexdigest()
-    assert result_sha1.hexdigest() == "460278543d8dbbed5080c56450c8669136750b78"
+    full_shape = default_frms6_raw.shape
+    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
+    cutout = flat_nav[2:8]
+    ref = np.sum(cutout, axis=(-1, -2))
+
+    print(ref.shape, result.shape)
+
+    assert np.allclose(ref, result)
 
 
-def test_negative_sync_offset(default_frms6, lt_ctx):
+def test_negative_sync_offset(default_frms6_raw, lt_ctx):
     udf = SumSigUDF()
     sync_offset = -2
 
     ds = lt_ctx.load(
-        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset
+        "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset,
+        enable_offset_correction=False
     )
 
     result = lt_ctx.run_udf(dataset=ds, udf=udf)
     result = result['intensity'].raw_data[abs(sync_offset):]
-    result_sha1 = hashlib.sha1()
-    result_sha1.update(result)
 
-    # how to generate the hash below
-    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
-    # udf = SumSigUDF()
-    # result = ctx.run_udf(dataset=ds, udf=udf)
-    # sha1 = hashlib.sha1()
-    # sha1.update(result['intensity'].raw_data[:ds._meta.shape.nav.size + sync_offset])
-    # sha1.hexdigest()
-    assert result_sha1.hexdigest() == "3bc6f0abf253f08bd05f6de5fec6403f09d94b49"
+    full_shape = default_frms6_raw.shape
+    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
+    cutout = flat_nav[:6]
+    ref = np.sum(cutout, axis=(-1, -2))
+
+    print(ref.shape, result.shape)
+
+    assert np.allclose(ref, result)
 
 
 def test_offset_smaller_than_image_count(lt_ctx):
@@ -337,30 +377,31 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
-def test_reshape_nav(lt_ctx):
+def test_reshape_nav(default_frms6_raw, lt_ctx):
     udf = SumSigUDF()
 
-    # how to generate the hash below
-    # ds = ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2))
-    # udf = SumSigUDF()
-    # result = ctx.run_udf(dataset=ds, udf=udf)
-    # sha1 = hashlib.sha1()
-    # sha1.update(result['intensity'].raw_data)
-    # sha1.hexdigest()
+    full_shape = default_frms6_raw.shape
+    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
 
-    ds_1 = lt_ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(8,))
+    ds_1 = lt_ctx.load(
+        "frms6",
+        path=FRMS6_TESTDATA_PATH,
+        nav_shape=(8,),
+        enable_offset_correction=False
+    )
     result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
+    ref_1 = flat_nav[:8].sum(axis=(-1, -2))
+    assert np.allclose(result_1['intensity'].data, ref_1)
 
-    result_1_sha1 = hashlib.sha1()
-    result_1_sha1.update(result_1['intensity'].raw_data)
-    assert result_1_sha1.hexdigest() == "ae917373ac2fc15e13903f8d2a07b0545dd59a87"
-
-    ds_2 = lt_ctx.load("frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(2, 2, 2))
+    ds_2 = lt_ctx.load(
+        "frms6",
+        path=FRMS6_TESTDATA_PATH,
+        nav_shape=(2, 2, 2),
+        enable_offset_correction=False
+    )
     result_2 = lt_ctx.run_udf(dataset=ds_2, udf=udf)
-
-    result_2_sha1 = hashlib.sha1()
-    result_2_sha1.update(result_2['intensity'].raw_data)
-    assert result_2_sha1.hexdigest() == "ae917373ac2fc15e13903f8d2a07b0545dd59a87"
+    ref_2 = flat_nav[:8].sum(axis=(-1, -2)).reshape((2, 2, 2))
+    assert np.allclose(result_2['intensity'].data, ref_2)
 
 
 def test_incorrect_sig_shape(lt_ctx):

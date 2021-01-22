@@ -1,10 +1,10 @@
 import os
 from glob import glob
-import hashlib
 import random
 
 import numpy as np
 import pytest
+import hyperspy.api as hs
 
 from libertem.io.dataset.dm import DMDataSet
 from libertem.udf.sum import SumUDF
@@ -29,6 +29,12 @@ def default_dm(lt_ctx):
         io_backend=MMapBackend(),
     )
     return ds
+
+
+@pytest.fixture(scope='module')
+def default_dm_raw():
+    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    return np.stack([hs.load(file).data for file in files])
 
 
 @pytest.fixture
@@ -57,14 +63,13 @@ def test_check_valid(default_dm):
     default_dm.check_valid()
 
 
-def test_read_roi(default_dm, lt_ctx):
+def test_read_roi(default_dm, default_dm_raw, lt_ctx):
     roi = np.zeros((10,), dtype=bool)
     roi[5] = 1
     sumj = lt_ctx.create_sum_analysis(dataset=default_dm)
     sumres = lt_ctx.run(sumj, roi=roi)
-    sha1 = hashlib.sha1()
-    sha1.update(sumres.intensity.raw_data)
-    assert sha1.hexdigest() == "e94ed671e20ccce33d288fbcadd0f54691a29b9c"
+    ref = np.sum(default_dm_raw[roi], axis=0)
+    assert np.allclose(sumres['intensity'].raw_data, ref)
 
 
 @pytest.mark.parametrize(

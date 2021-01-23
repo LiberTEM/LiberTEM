@@ -8,8 +8,9 @@ from libertem.io.dataset.ser import SERDataSet
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 SER_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.ser')
 HAVE_SER_TESTDATA = os.path.exists(SER_TESTDATA_PATH)
@@ -26,6 +27,14 @@ def default_ser(lt_ctx):
     return ds
 
 
+@pytest.fixture(scope='module')
+def default_ser_raw():
+    import hyperspy.api as hs  # avoid importing top level
+
+    res = hs.load(str(SER_TESTDATA_PATH))
+    return res.data
+
+
 def test_smoke(lt_ctx):
     ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
     p = next(ds.get_partitions())
@@ -39,6 +48,23 @@ def test_smoke(lt_ctx):
     )
 
     next(p.get_tiles(tiling_scheme))
+
+
+def test_comparison(default_ser, default_ser_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_ser_raw, (-1, *tuple(default_ser.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_ser)
+
+
+def test_comparison_roi(default_ser, default_ser_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_ser.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_ser_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_ser, roi=roi)
 
 
 def test_roi(lt_ctx):

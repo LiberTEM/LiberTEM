@@ -13,11 +13,12 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend, MMapBackend
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from utils import _mk_random
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 EMPAD_TESTDATA_PATH = os.path.join(get_testdata_path(), 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
@@ -46,6 +47,17 @@ def buffered_empad(lt_ctx):
         path=EMPAD_XML,
         io_backend=buffered,
     )
+
+
+@pytest.fixture(scope='module')
+def default_empad_raw():
+    raw_data = np.memmap(
+        EMPAD_RAW,
+        shape=(4, 4, 130, 128),
+        dtype=np.float32,
+        mode='r'
+    )
+    return raw_data[:, :, :128, :]
 
 
 def test_new_empad_xml():
@@ -82,6 +94,23 @@ def test_check_valid(default_empad):
 
 def test_check_valid_random(random_empad):
     assert random_empad.check_valid()
+
+
+def test_comparison(default_empad, default_empad_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_empad_raw, (-1, *tuple(default_empad.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_empad)
+
+
+def test_comparison_roi(default_empad, default_empad_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_empad.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_empad_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_empad, roi=roi)
 
 
 def test_read_random(random_empad):

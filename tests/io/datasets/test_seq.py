@@ -7,11 +7,12 @@ import pytest
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
-from utils import get_testdata_path
+from utils import get_testdata_path, ValidationUDF
 
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
@@ -48,6 +49,30 @@ def buffered_seq(lt_ctx):
 
     ds.set_num_cores(4)
     return ds
+
+
+@pytest.fixture(scope='module')
+def default_seq_raw():
+    import pims  # avoid importing top level
+
+    return np.array(pims.open(str(SEQ_TESTDATA_PATH))).reshape((8, 8, 128, 128))
+
+
+def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_seq_raw, (-1, *tuple(default_seq.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq)
+
+
+def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_seq.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_seq_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi)
 
 
 def test_positive_sync_offset(default_seq, lt_ctx):

@@ -54,6 +54,30 @@ def default_frms6_uncorr(lt_ctx):
     return ds
 
 
+def _read_block(fname, raw_shape, start, stop):
+    import stemtool  # avoid importing on top level
+    return stemtool.util.pnccd.Frms6Reader.readData(
+        fname,
+        image_range=(start, stop),
+        pixels_x=raw_shape[0],
+        pixels_y=raw_shape[1]
+    )
+
+
+def _unfold_block(block, unbinning_factor=4):
+    return np.moveaxis(  # undo the transpose
+        np.repeat(  # unbinning in x direction
+            # invert lower half and attach right of upper half
+            # The detector consists of two chips that are arranged head-to-head
+            # The outputs of the two chips are just concatenated in the file, while LiberTEM
+            # re-assembles the data taking the spatial relation into account
+            np.concatenate((block[:264], np.flip(block[264:], axis=(0, 1,))), axis=1),
+            unbinning_factor, axis=1  # repeat options unbinning x
+        ),
+        (0, 1, 2), (2, 1, 0)  # moveaxis options undo transpose
+    )
+
+
 @pytest.fixture(scope='module')
 def default_frms6_raw(tmpdir_factory):
     import stemtool  # avoid importing on top level
@@ -74,26 +98,28 @@ def default_frms6_raw(tmpdir_factory):
         # We go blockwise to reduce memory consumption
         for start in range(0, frame_count, blocksize):
             stop = min(start+blocksize, frame_count)
-            block = stemtool.util.pnccd.Frms6Reader.readData(
-                f,
-                image_range=(start, stop),
-                pixels_x=raw_shape[0],
-                pixels_y=raw_shape[1]
-            )
-
-            view[offset + start:offset + stop] = np.moveaxis(  # undo the transpose
-                np.repeat(  # unbinning 4x in x direction
-                    # invert lower half and attach right of upper half
-                    # The detector consists of two chips that are arranged head-to-head
-                    # The outputs of the two chips are just concatenated in the file, while LiberTEM
-                    # re-assembles the data taking the spatial relation into account
-                    np.concatenate((block[:264], np.flip(block[264:], axis=(0, 1,))), axis=1),
-                    4, axis=1  # repeat options
-                ),
-                (0, 1, 2), (2, 1, 0)  # moveaxis options
-            )
+            block = _read_block(f, raw_shape, start, stop)
+            view[offset + start:offset + stop] = _unfold_block(block)
         offset += frame_count
     return data
+
+
+@pytest.fixture(scope='module')
+def default_frms6_darkref():
+    import stemtool  # avoid importing on top level
+    root, ext = os.path.splitext(FRMS6_TESTDATA_PATH)
+    # we grab the first file
+    f = list(sorted(glob.glob(root + '*.frms6')))[0]
+    blocksize = 15
+    raw_shape = stemtool.util.pnccd.Frms6Reader.getDataShape(f)
+    frame_count = raw_shape[-1]
+    # We go blockwise to reduce memory consumption
+    result = np.zeros((264, 264), dtype=np.float32)
+    for start in range(0, frame_count, blocksize):
+        stop = min(start+blocksize, frame_count)
+        block = _read_block(f, raw_shape, start, stop)
+        result += _unfold_block(block).sum(axis=0)
+    return result / frame_count
 
 
 def test_simple_open(default_frms6):
@@ -222,6 +248,12 @@ def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     )
     udf = ValidationUDF(reference=default_frms6_raw[roi])
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr, roi=roi)
+
+
+def test_comparison_darkref(default_frms6, default_frms6_darkref):
+    corr_ds = default_frms6.get_correction_data().get_dark_frame()
+    print(np.max(corr_ds - default_frms6_darkref))
+    assert np.allclose(corr_ds, default_frms6_darkref)
 
 
 def test_pickle_is_small(default_frms6):

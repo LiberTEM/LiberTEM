@@ -32,7 +32,7 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: ./venv/bin/tox
+      - bash: ./venv/bin/tox -r
         displayName: 'Run tox tests'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml

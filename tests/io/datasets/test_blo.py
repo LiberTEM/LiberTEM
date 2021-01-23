@@ -12,10 +12,11 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 BLO_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
@@ -42,6 +43,14 @@ def buffered_blo(lt_ctx):
         io_backend=buffered,
     )
     return ds_buffered
+
+
+@pytest.fixture(scope='module')
+def default_blo_raw():
+    import hyperspy.api as hs  # avoid importing top level
+
+    res = hs.load(str(BLO_TESTDATA_PATH))
+    return res.data
 
 
 def test_simple_open(default_blo):
@@ -76,6 +85,23 @@ def test_read(default_blo):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (8, 144, 144)
+
+
+def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_blo_raw, (-1, *tuple(default_blo.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_blo)
+
+
+def test_comparison_roi(default_blo, default_blo_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_blo.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_blo_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_blo, roi=roi)
 
 
 def test_pickle_meta_is_small(default_blo):

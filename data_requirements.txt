@@ -2,3 +2,5 @@
 hyperspy
 stemtool
 mrcfile
+pyxem
+pims

@@ -57,6 +57,14 @@ def dm_stack_of_3d(lt_ctx):
     return ds
 
 
+@pytest.fixture(scope='module')
+def default_dm_3d_raw():
+    import hyperspy.api as hs  # avoid importing top level
+
+    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))))
+    return np.concatenate([hs.load(file).data for file in files], axis=0)
+
+
 def test_simple_open(default_dm):
     assert tuple(default_dm.shape) == (10, 3838, 3710)
 
@@ -78,6 +86,21 @@ def test_comparison_roi(default_dm, default_dm_raw, lt_ctx_fast):
     )
     udf = ValidationUDF(reference=default_dm_raw[roi])
     lt_ctx_fast.run_udf(udf=udf, dataset=default_dm, roi=roi)
+
+
+def test_comparison_3d(dm_stack_of_3d, default_dm_3d_raw, lt_ctx_fast):
+    udf = ValidationUDF(reference=default_dm_3d_raw)
+    lt_ctx_fast.run_udf(udf=udf, dataset=dm_stack_of_3d)
+
+
+def test_comparison_3d_roi(dm_stack_of_3d, default_dm_3d_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(dm_stack_of_3d.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_dm_3d_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=dm_stack_of_3d, roi=roi)
 
 
 @pytest.mark.parametrize(

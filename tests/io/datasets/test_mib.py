@@ -14,10 +14,11 @@ from libertem.udf.raw import PickUDF
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 MIB_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
@@ -48,6 +49,15 @@ def buffered_mib(lt_ctx):
         io_backend=buffered,
     )
     return ds
+
+
+@pytest.fixture(scope='module')
+def default_mib_raw():
+    import pyxem
+    data = pyxem.utils.io_utils.load_mib(MIB_TESTDATA_PATH)
+    shape = (32, 32, 256, 256)
+    # pyxem always opens lazy, therefore compute()
+    return data.data.reshape(shape).compute()
 
 
 def test_detect(lt_ctx):
@@ -203,6 +213,23 @@ def test_read(default_mib):
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
+
+
+def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_mib_raw, (-1, *tuple(default_mib.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_mib)
+
+
+def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_mib.shape.nav),
+        p=[0.1, 0.9]
+    )
+    udf = ValidationUDF(reference=default_mib_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_mib, roi=roi)
 
 
 def test_pickle_is_small(default_mib):

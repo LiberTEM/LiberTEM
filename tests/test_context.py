@@ -29,9 +29,9 @@ def test_run_udf_with_io_backend(lt_ctx, default_raw):
         "raw",
         path=default_raw._path,
         io_backend=io_backend,
-        scan_size=(16, 16),
         dtype="float32",
-        detector_size=(128, 128),
+        nav_shape=(16, 16),
+        sig_shape=(128, 128),
     )
     res = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF())
     assert np.array(res['intensity']).shape == (128, 128)

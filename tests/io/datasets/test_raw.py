@@ -387,7 +387,7 @@ def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):
@@ -444,7 +444,7 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):
@@ -499,7 +499,7 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
@@ -538,7 +538,7 @@ def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
@@ -606,7 +606,7 @@ def test_offset_greater_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_backend):

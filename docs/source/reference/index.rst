@@ -1,7 +1,7 @@
 .. _reference:
 
-Reference
-=========
+Python API reference
+====================
 
 .. toctree::
    :maxdepth: 2

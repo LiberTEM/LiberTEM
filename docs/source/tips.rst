@@ -1,6 +1,8 @@
 Tips and tricks
 ===============
 
+This is a collection of various helpful tips that don't fit in elsewhere.
+
 .. _`ssh forwarding`:
 
 Using SSH forwarding
@@ -219,3 +221,60 @@ Then, as a user, you can use :code:`cgexec` to run a command in that control gro
     cgexec -g cpu:slow pytest tests/
 
 This is useful, for example, to debug test failures that only seem to happen in CI.
+
+
+.. _`jupyter install`:
+
+Jupyter
+-------
+
+To use the Python API from within a Jupyter notebook, you can install Jupyter
+into your LiberTEM virtual environment.
+
+.. code-block:: shell
+
+    (libertem) $ pip install jupyter
+
+You can then run a local notebook from within the LiberTEM environment, which
+should open a browser window with Jupyter that uses your LiberTEM environment.
+
+.. code-block:: shell
+
+    (libertem) $ jupyter notebook
+
+.. _`jupyterhub install`:
+
+JupyterHub
+----------
+
+If you'd like to use the Python API from a LiberTEM virtual environment on a
+system that manages logins with JupyterHub, you can easily `install a custom
+kernel definition
+<https://ipython.readthedocs.io/en/stable/install/kernel_install.html>`_ for
+your LiberTEM environment.
+
+First, you can launch a terminal on JupyterHub from the "New" drop-down menu in
+the file browser. Alternatively you can execute shell commands by prefixing them
+with "!" in a Python notebook.
+
+In the terminal you can create and activate virtual environments and perform the
+LiberTEM installation as described above. Within the activated LiberTEM
+environment you additionally install ipykernel:
+
+.. code-block:: shell
+
+    (libertem) $ pip install ipykernel
+
+Now you can create a custom ipython kernel definition for your environment:
+
+.. code-block:: shell
+
+    (libertem) $ python -m ipykernel install --user --name libertem --display-name "Python (libertem)"
+
+After reloading the file browser window, a new Notebook option "Python
+(libertem)" should be available in the "New" drop-down menu. You can test it by
+creating a new notebook and running
+
+.. code-block:: python
+
+    In [1]: import libertem

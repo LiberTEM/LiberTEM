@@ -16,31 +16,41 @@ Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
    
-
    install
    usage
-   concepts
-   api
-   formats
-   udf
-   packages
-   sample_datasets
    applications
-   architecture
-   performance
-   debugging
-   reference/index
+   formats
+   sample_datasets
+   api
+   udf
    changelog
-   tips
-   why_python
-   gsoc
-   contributing
-   authorship
    citing
    acknowledgments
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   reference/index
+   tips
+   packages
+   concepts
+   performance
+   why_python
+
+.. toctree::
+   :maxdepth: 2
+   :caption: For developers
+
+   contributing
+   dev/setup.rst
    dev/how-io-works
+   architecture
+   debugging
+   gsoc
+   authorship
 
 Indices and tables
 ------------------

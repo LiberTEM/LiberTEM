@@ -433,6 +433,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
         client = dd.Client(cluster, **(client_kwargs or {}))
 
+        client.wait_for_workers(len(spec))
+
         return cls(client=client, is_local=True, lt_resources=True)
 
     def __enter__(self):

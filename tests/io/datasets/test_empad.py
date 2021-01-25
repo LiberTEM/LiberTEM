@@ -1,6 +1,7 @@
 import os
-import pickle
 import json
+import pickle
+import random
 
 import pytest
 import numpy as np
@@ -9,7 +10,7 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.job.raw import PickFrameJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend
+from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend, MMapBackend
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Slice, Shape
 from libertem.udf.sumsigudf import SumSigUDF
@@ -28,12 +29,12 @@ pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD test
 
 
 @pytest.fixture
-def default_empad():
-    executor = InlineJobExecutor()
-    ds = EMPADDataSet(
+def default_empad(lt_ctx):
+    ds = lt_ctx.load(
+        "empad",
         path=EMPAD_XML,
+        io_backend=MMapBackend(),
     )
-    ds = ds.initialize(executor)
     yield ds
 
 
@@ -396,13 +397,15 @@ def test_scan_size_deprecation(lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_empad, buffered_empad):
+    y = random.choice(range(default_empad.shape.nav[0]))
+    x = random.choice(range(default_empad.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_empad,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_empad,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

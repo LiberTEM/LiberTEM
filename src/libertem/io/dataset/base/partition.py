@@ -114,7 +114,7 @@ class Partition(object):
     def get_locations(self):
         raise NotImplementedError()
 
-    def _get_io_backend(self):
+    def get_io_backend(self):
         return None
 
 
@@ -201,7 +201,7 @@ class BasePartition(Partition):
             )
 
     def need_decode(self, read_dtype, roi, corrections):
-        io_backend = self._get_io_backend().get_impl()
+        io_backend = self.get_io_backend().get_impl()
         return io_backend.need_copy(
             decoder=self._get_decoder(),
             roi=roi,
@@ -231,7 +231,7 @@ class BasePartition(Partition):
             return BufferedBackend()
         return MMapBackend()
 
-    def _get_io_backend(self):
+    def get_io_backend(self):
         if self._io_backend is None:
             return self._get_default_io_backend()
         return self._io_backend
@@ -269,7 +269,7 @@ class BasePartition(Partition):
             dest_dtype = np.dtype(dest_dtype)
             self.validate_tiling_scheme(tiling_scheme)
             read_ranges = self._get_read_ranges(tiling_scheme, roi)
-            io_backend = self._get_io_backend().get_impl()
+            io_backend = self.get_io_backend().get_impl()
 
             yield from io_backend.get_tiles(
                 tiling_scheme=tiling_scheme, fileset=self._fileset,

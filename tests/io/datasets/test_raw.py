@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import pickle
+import random
+import platform
 
 import numpy as np
 import pytest
@@ -715,16 +717,35 @@ def test_detector_size_deprecation(lt_ctx, raw_data_8x8x8x8_path):
 
 
 def test_compare_backends(lt_ctx, default_raw, buffered_raw):
+    y = random.choice(range(default_raw.shape.nav[0]))
+    x = random.choice(range(default_raw.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_raw,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_raw,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_backend_selection(lt_ctx, default_raw):
+    ds = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        dtype="float32",
+        nav_shape=(16, 16),
+        sig_shape=(128, 128),
+    )
+    p = next(ds.get_partitions())
+
+    expected_backend = 'MMapBackend'
+    if platform.system() == 'Windows':
+        expected_backend = 'BufferedBackend'
+
+    assert p.get_io_backend().__class__.__name__ == expected_backend
 
 
 def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw):

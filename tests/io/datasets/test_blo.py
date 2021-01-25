@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import random
 
 import numpy as np
 import pytest
@@ -9,7 +10,7 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
@@ -23,11 +24,12 @@ pytestmark = pytest.mark.skipif(not HAVE_BLO_TESTDATA, reason="need .blo testdat
 
 
 @pytest.fixture()
-def default_blo():
-    ds = BloDataSet(
+def default_blo(lt_ctx):
+    ds = lt_ctx.load(
+        "blo",
         path=str(BLO_TESTDATA_PATH),
+        io_backend=MMapBackend(),
     )
-    ds.initialize(InlineJobExecutor())
     return ds
 
 
@@ -271,13 +273,15 @@ def test_incorrect_sig_shape(lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_blo, buffered_blo):
+    y = random.choice(range(default_blo.shape.nav[0]))
+    x = random.choice(range(default_blo.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_blo,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_blo,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

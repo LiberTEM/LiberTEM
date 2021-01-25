@@ -322,7 +322,7 @@ class MemPartition(BasePartition):
     def _get_decoder(self):
         return None
 
-    def _get_io_backend(self):
+    def get_io_backend(self):
         return MemBackend()
 
     def get_macrotile(self, *args, **kwargs):

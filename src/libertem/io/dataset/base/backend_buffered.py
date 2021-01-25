@@ -42,7 +42,7 @@ def _make_buffered_reader_and_decoder(decode):
     return _buffered_tilereader
 
 
-@numba.njit(inline='always')
+@numba.njit(cache=True)
 def block_get_min_fill_factor(rrs):
     """
     Try to find out how sparse the given read ranges are, per file.

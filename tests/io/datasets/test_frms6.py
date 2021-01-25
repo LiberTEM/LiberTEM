@@ -2,6 +2,7 @@ import os
 import pickle
 import json
 import hashlib
+import random
 
 import pytest
 import numpy as np
@@ -12,7 +13,7 @@ from libertem.io.dataset.frms6 import (
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.udf.raw import PickUDF
 
@@ -26,8 +27,11 @@ pytestmark = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 test
 
 @pytest.fixture
 def default_frms6(lt_ctx):
-    ds = FRMS6DataSet(path=FRMS6_TESTDATA_PATH)
-    ds = ds.initialize(lt_ctx.executor)
+    ds = lt_ctx.load(
+        "frms6",
+        path=FRMS6_TESTDATA_PATH,
+        io_backend=MMapBackend(),
+    )
     return ds
 
 
@@ -322,13 +326,15 @@ def test_incorrect_sig_shape(lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_frms6, buffered_frms6):
+    y = random.choice(range(default_frms6.shape.nav[0]))
+    x = random.choice(range(default_frms6.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_frms6,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_frms6,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

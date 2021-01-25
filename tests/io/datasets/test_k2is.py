@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+import random
 
 import numpy as np
 import pytest
@@ -12,7 +13,7 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
 from libertem.udf.raw import PickUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 
 from utils import dataset_correction_verification, get_testdata_path
@@ -24,9 +25,12 @@ pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testda
 
 
 @pytest.fixture
-def default_k2is():
-    ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
-    ds.initialize(InlineJobExecutor())
+def default_k2is(lt_ctx):
+    ds = lt_ctx.load(
+        "k2is",
+        path=K2IS_TESTDATA_PATH,
+        io_backend=MMapBackend(),
+    )
     return ds
 
 
@@ -344,13 +348,15 @@ def test_k2is_dist(dist_ctx):
 
 
 def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
+    y = random.choice(range(default_k2is.shape.nav[0]))
+    x = random.choice(range(default_k2is.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_k2is,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_k2is,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

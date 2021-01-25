@@ -1,6 +1,7 @@
 import os
 from glob import glob
 import hashlib
+import random
 
 import numpy as np
 import pytest
@@ -11,7 +12,7 @@ from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from utils import dataset_correction_verification, get_testdata_path
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
@@ -22,7 +23,11 @@ pytestmark = pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="need .dm4 testdata
 @pytest.fixture
 def default_dm(lt_ctx):
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
-    ds = lt_ctx.load("dm", files=files)
+    ds = lt_ctx.load(
+        "dm",
+        files=files,
+        io_backend=MMapBackend(),
+    )
     return ds
 
 
@@ -320,13 +325,14 @@ def test_scan_size_deprecation(lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_dm, buffered_dm):
+    x = random.choice(range(default_dm.shape.nav[0]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_dm,
-        x=0,
+        x=x,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_dm,
-        x=0,
+        x=x,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

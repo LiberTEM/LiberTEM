@@ -64,7 +64,7 @@ class Context:
             )
         self.executor = executor
 
-    def load(self, filetype: str, io_backend=None, *args, **kwargs) -> DataSet:
+    def load(self, filetype: str, *args, io_backend=None, **kwargs) -> DataSet:
         """
         Load a :class:`~libertem.io.dataset.base.DataSet`. As it doesn't load
         the whole data into RAM at once, you can load and process datasets

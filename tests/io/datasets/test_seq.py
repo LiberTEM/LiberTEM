@@ -1,4 +1,5 @@
 import os
+import random
 
 import numpy as np
 import pytest
@@ -8,7 +9,7 @@ from libertem.io.dataset.seq import SEQDataSet
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 from utils import get_testdata_path
 
@@ -22,9 +23,14 @@ pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdat
 def default_seq(lt_ctx):
     nav_shape = (8, 8)
 
-    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=nav_shape)
+    ds = lt_ctx.load(
+        "seq",
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=MMapBackend(),
+    )
+
     ds.set_num_cores(4)
-    ds = ds.initialize(lt_ctx.executor)
     assert tuple(ds.shape) == (8, 8, 128, 128)
     return ds
 
@@ -383,13 +389,15 @@ def test_detect_unicode_error(raw_with_zeros, lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_seq, buffered_seq):
+    y = random.choice(range(default_seq.shape.nav[0]))
+    x = random.choice(range(default_seq.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_seq,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_seq,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

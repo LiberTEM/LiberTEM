@@ -23,7 +23,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.io.dataset.base import BufferedBackend
+from libertem.io.dataset.base import BufferedBackend, MMapBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 
 from libertem.utils.devices import detect
@@ -201,37 +201,36 @@ def default_raw_data():
 
 @pytest.fixture(scope='session')
 def default_raw(tmpdir_factory, default_raw_data):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-default'
     default_raw_data.tofile(str(filename))
     del default_raw_data
-    ds = RawFileDataSet(
+    ds = lt_ctx.load(
+        "raw",
         path=str(filename),
-        nav_shape=(16, 16),
         dtype="float32",
+        nav_shape=(16, 16),
         sig_shape=(128, 128),
+        io_backend=MMapBackend(),
     )
     ds.set_num_cores(2)
-    ds = ds.initialize(InlineJobExecutor())
     yield ds
 
 
 @pytest.fixture(scope='session')
 def buffered_raw(tmpdir_factory, default_raw_data):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-buffered'
     default_raw_data.tofile(str(filename))
     del default_raw_data
 
-    lt_ctx = lt.Context(
-        executor=InlineJobExecutor(),
-    )
-
     ds = lt_ctx.load(
         "raw",
         path=str(filename),
-        nav_shape=(16, 16),
         dtype="float32",
+        nav_shape=(16, 16),
         sig_shape=(128, 128),
         io_backend=BufferedBackend(),
     )

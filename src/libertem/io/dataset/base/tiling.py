@@ -483,7 +483,7 @@ class Negotiator:
         need_decode = partition.need_decode(roi=roi, read_dtype=read_dtype, corrections=corrections)
 
         if need_decode:
-            io_backend = partition._get_io_backend()
+            io_backend = partition.get_io_backend()
             if io_backend is None:
                 io_max_size = 2**20
             else:

@@ -2,6 +2,7 @@ import os
 import pickle
 import json
 from unittest import mock
+import random
 
 import numpy as np
 import pytest
@@ -14,7 +15,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Slice, Shape
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 from utils import dataset_correction_verification, get_testdata_path
 
@@ -27,9 +28,13 @@ pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdat
 @pytest.fixture
 def default_mib(lt_ctx):
     nav_shape = (32, 32)
-    ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=MMapBackend(),
+    )
     ds.set_num_cores(4)
-    ds = ds.initialize(lt_ctx.executor)
     return ds
 
 
@@ -395,13 +400,15 @@ def test_scan_size_deprecation(lt_ctx):
 
 
 def test_compare_backends(lt_ctx, default_mib, buffered_mib):
+    y = random.choice(range(default_mib.shape.nav[0]))
+    x = random.choice(range(default_mib.shape.nav[1]))
     mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=default_mib,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_mib,
-        x=0, y=0,
+        x=x, y=y,
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)

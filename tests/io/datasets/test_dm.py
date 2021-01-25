@@ -141,7 +141,7 @@ def test_dm_stack_fileset_offsets(dm_stack_of_3d, lt_ctx):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_positive_sync_offset(lt_ctx, io_backend):
@@ -177,7 +177,7 @@ def test_positive_sync_offset(lt_ctx, io_backend):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_negative_sync_offset(lt_ctx, io_backend):
@@ -211,7 +211,7 @@ def test_negative_sync_offset(lt_ctx, io_backend):
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),
-        None
+        MMapBackend(),
     ),
 )
 def test_missing_frames(lt_ctx, io_backend):

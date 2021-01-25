@@ -116,11 +116,6 @@ class RawFileDataSet(DataSet):
     dtype: numpy dtype
         The dtype of the data as it is on disk. Can contain endian indicator, for
         example >u2 for big-endian 16bit data.
-
-    enable_direct: bool
-        Enable direct I/O. This bypasses the filesystem cache and is useful for
-        systems with very fast I/O and for data sets that are much larger than the
-        main memory.
     """
     def __init__(self, path, dtype, scan_size=None, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None,
@@ -172,6 +167,11 @@ class RawFileDataSet(DataSet):
         self._path = path
         self._sig_dims = len(self._sig_shape)
         self._dtype = dtype
+        if enable_direct:
+            warnings.warn(
+                "enable_direct is ignored for now, this may be re-added as a separate backend",
+                FutureWarning
+            )
         self._enable_direct = enable_direct
         self._filesize = None
 

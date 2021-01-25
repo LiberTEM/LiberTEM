@@ -15,10 +15,13 @@ from libertem.udf import UDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg')
+#K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw')
+K2IS_TESTDATA_RAW = '/cachedata/users/weber/libertem-test-data-raw/Capture52/Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw'
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testdata")  # NOQA
@@ -41,6 +44,16 @@ def buffered_k2is(lt_ctx):
         "k2is",
         path=str(K2IS_TESTDATA_PATH),
         io_backend=buffered,
+    )
+
+
+@pytest.fixture(scope='module')
+def default_k2is_raw():
+    return np.memmap(
+        K2IS_TESTDATA_RAW,
+        shape=(34, 35, 1860, 2048),
+        dtype=np.uint16,
+        mode='r'
     )
 
 
@@ -86,6 +99,23 @@ def test_read(default_k2is):
     t = next(tiles)
     # we get 3D tiles here, because K2IS partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
+
+
+def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_k2is_raw, (-1, *tuple(default_k2is.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is)
+
+
+def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_k2is.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_k2is_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is, roi=roi)
 
 
 def test_read_full_frames(default_k2is):

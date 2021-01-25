@@ -16,7 +16,7 @@ from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
-from libertem.io.dataset.base import TilingScheme, BufferedBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 
@@ -729,23 +729,6 @@ def test_compare_backends(lt_ctx, default_raw, buffered_raw):
     )).intensity
 
     assert np.allclose(mm_f0, buffered_f0)
-
-
-def test_backend_selection(lt_ctx, default_raw):
-    ds = lt_ctx.load(
-        "raw",
-        path=default_raw._path,
-        dtype="float32",
-        nav_shape=(16, 16),
-        sig_shape=(128, 128),
-    )
-    p = next(ds.get_partitions())
-
-    expected_backend = 'MMapBackend'
-    if platform.system() == 'Windows':
-        expected_backend = 'BufferedBackend'
-
-    assert p.get_io_backend().__class__.__name__ == expected_backend
 
 
 def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw):

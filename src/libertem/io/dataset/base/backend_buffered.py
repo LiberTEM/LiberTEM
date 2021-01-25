@@ -90,7 +90,7 @@ def block_get_min_fill_factor(rrs):
 
 
 class BufferedBackend(IOBackend, id_="buffered"):
-    def __init__(self, max_buffer_size=16*1024*1024, sparse_threshold=0.9):
+    def __init__(self, max_buffer_size=16*1024*1024):
         """
         I/O backend using a buffered reading strategy. Useful for slower
         media like HDDs, where seeks cause performance drops.
@@ -102,14 +102,10 @@ class BufferedBackend(IOBackend, id_="buffered"):
         Parameters
         ----------
         max_buffer_size : int
-            Maximum buffer size, in bytes
-
-        sparse_threshold : float
-            When to switch to a sparse reading strategy, as a fraction
-            bytes_used / bytes_read.
+            Maximum buffer size, in bytes. This is passed to the tileshape
+            negotiation to select the right depth.
         """
         self._max_buffer_size = max_buffer_size
-        self._sparse_threshold = sparse_threshold
 
     @classmethod
     def from_json(cls, msg):
@@ -121,15 +117,13 @@ class BufferedBackend(IOBackend, id_="buffered"):
     def get_impl(self):
         return BufferedBackendImpl(
             max_buffer_size=self._max_buffer_size,
-            sparse_threshold=self._sparse_threshold,
         )
 
 
 class BufferedBackendImpl(IOBackendImpl):
-    def __init__(self, max_buffer_size, sparse_threshold):
+    def __init__(self, max_buffer_size):
         super().__init__()
         self._max_buffer_size = max_buffer_size
-        self._sparse_threshold = sparse_threshold
         self._buffer_pool = BufferPool()
 
     def need_copy(
@@ -147,7 +141,7 @@ class BufferedBackendImpl(IOBackendImpl):
         return r_n_d
 
     def get_max_io_size(self):
-        return 16*2**20
+        return self._max_buffer_size
 
     def _get_tiles_by_block(
         self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,

@@ -165,7 +165,7 @@ class H5DataSet(DataSet):
     def detect_params(cls, path, executor):
         try:
             executor.run_function(cls._do_detect, path)
-        except (IOError, OSError, KeyError, ValueError, DataSetException):
+        except (IOError, OSError, KeyError, ValueError, TypeError, DataSetException):
             # not a h5py file or can't open for some reason:
             return False
 

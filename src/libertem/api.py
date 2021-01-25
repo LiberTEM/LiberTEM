@@ -118,7 +118,7 @@ class Context:
         >>> ds = ctx.load("auto", path="...", io_backend=io_backend)  # doctest: +SKIP
         """
         # delegate to libertem.io.dataset.load:
-        return load(filetype, io_backend=io_backend, executor=self.executor, *args, **kwargs)
+        return load(filetype, *args, io_backend=io_backend, executor=self.executor, **kwargs)
 
     load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 

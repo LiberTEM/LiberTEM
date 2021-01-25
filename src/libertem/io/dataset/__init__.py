@@ -21,23 +21,21 @@ filetypes = {
 }
 
 
-def _auto_load(path, executor):
+def _auto_load(path, *args, executor, **kwargs):
     if path is None:
         raise DataSetException(
-            "please specify the `path` kwarg to allow auto detection"
+            "please specify the `path` argument to allow auto detection"
         )
-
     detected_params = detect(path, executor=executor)
     filetype_detected = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
         )
-    params = detected_params["parameters"]
-    return load(filetype_detected, executor=executor, **params)
+    return load(filetype_detected, path, *args, executor=executor, **kwargs)
 
 
-def load(filetype, executor, enable_async=False, *args, **kwargs):
+def load(filetype, *args, enable_async=False, executor, **kwargs):
     """
     Low-level method to load a dataset. Usually you will want
     to use Context.load instead!
@@ -56,7 +54,7 @@ def load(filetype, executor, enable_async=False, *args, **kwargs):
     additional parameters are passed to the concrete DataSet implementation
     """
     if filetype == "auto":
-        return _auto_load(kwargs.get('path'), executor)
+        return _auto_load(*args, executor=executor, enable_async=enable_async, **kwargs)
 
     cls = get_dataset_cls(filetype)
 

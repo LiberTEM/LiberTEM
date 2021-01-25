@@ -17,7 +17,8 @@ from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.udf.raw import PickUDF
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import (dataset_correction_verification, get_testdata_path,
+    FakeBackend)
 
 FRMS6_TESTDATA_PATH = os.path.join(get_testdata_path(), 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
@@ -55,31 +56,49 @@ def test_auto_open_corrections_kwargs(lt_ctx):
     )
     assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
     assert tuple(ds_corr.shape.nav) == (2, 3)
+    assert isinstance(ds_corr, FRMS6DataSet)
 
     ds = lt_ctx.load(
         'auto', path=FRMS6_TESTDATA_PATH, enable_offset_correction=False, nav_shape=(2, 3)
     )
     assert not ds.get_correction_data().have_corrections()
     assert tuple(ds.shape.nav) == (2, 3)
+    assert isinstance(ds, FRMS6DataSet)
 
 
 def test_auto_open_corrections_posargs(lt_ctx):
     ds_corr = lt_ctx.load('auto', FRMS6_TESTDATA_PATH, True, None, None, (2, 3))
     assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
     assert tuple(ds_corr.shape.nav) == (2, 3)
+    assert isinstance(ds_corr, FRMS6DataSet)
 
     ds = lt_ctx.load('auto', FRMS6_TESTDATA_PATH, False, None, None, (2, 3))
     assert not ds.get_correction_data().have_corrections()
     assert tuple(ds.shape.nav) == (2, 3)
+    assert isinstance(ds, FRMS6DataSet)
 
     ds_corr = lt_ctx.load('frms6', FRMS6_TESTDATA_PATH, True, None, None, (2, 3))
     assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
     assert tuple(ds_corr.shape.nav) == (2, 3)
+    assert isinstance(ds_corr, FRMS6DataSet)
 
     ds = lt_ctx.load('frms6', FRMS6_TESTDATA_PATH, False, None, None, (2, 3))
     assert not ds.get_correction_data().have_corrections()
     assert tuple(ds.shape.nav) == (2, 3)
+    assert isinstance(ds, FRMS6DataSet)
 
+
+def test_auto_uses_correct_backend(lt_ctx):
+    with pytest.raises(RuntimeError):
+        ds = lt_ctx.load(
+            "auto",
+            path=FRMS6_TESTDATA_PATH,
+            io_backend=FakeBackend(),
+        )
+        lt_ctx.run_udf(
+            dataset=ds,
+            udf=SumSigUDF(),
+        )
 
 
 def test_detetct(lt_ctx):

@@ -3,7 +3,8 @@ import platform
 import pytest
 
 from libertem.udf.sum import SumUDF
-from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
+
+from utils import FakeBackend
 
 
 def test_backend_selection(lt_ctx, default_raw):
@@ -23,21 +24,6 @@ def test_backend_selection(lt_ctx, default_raw):
     assert p.get_io_backend().__class__.__name__ == expected_backend
 
 
-class FakeBackend(IOBackend, id_="fake"):
-    def get_impl(self):
-        return FakeBackendImpl()
-
-
-class FakeBackendImpl(IOBackendImpl):
-    def get_tiles(
-        self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset, corrections,
-    ):
-        raise RuntimeError("nothing to see here")
-        # to make this a generator, there needs to be a yield statement in
-        # the body of the function, even if it is never executed:
-        yield  
-    
 def test_load_uses_correct_backend(lt_ctx, default_raw):
     with pytest.raises(RuntimeError):
         ds = lt_ctx.load(
@@ -54,9 +40,9 @@ def test_load_uses_correct_backend(lt_ctx, default_raw):
         )
 
 
-@pytest.mark.xfail
-def test_auto_uses_correct_backend(lt_ctx, hdf5):
-    with pytest.raises(RuntimeError):
+def test_auto_uses_correct_backend_hdf5(lt_ctx, hdf5):
+    # H5DataSet currently doesn't support alternative I/O backends
+    with pytest.raises(ValueError):
         ds = lt_ctx.load(
             "auto",
             path=hdf5.filename,

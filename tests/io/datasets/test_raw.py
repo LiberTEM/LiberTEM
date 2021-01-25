@@ -18,9 +18,10 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
+from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, ValidationUDF
 
 
 @pytest.fixture
@@ -80,6 +81,23 @@ def test_read(default_raw):
 
     # ~1MB
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
+
+
+def test_comparison(default_raw, default_raw_data, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_raw_data, (-1, *tuple(default_raw.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_raw)
+
+
+def test_comparison_roi(default_raw, default_raw_data, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_raw.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_raw_data[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_raw, roi=roi)
 
 
 def test_pickle_is_small(default_raw):

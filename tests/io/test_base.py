@@ -83,9 +83,8 @@ def test_filetype_auto(hdf5, lt_ctx):
 
 
 def test_filetype_auto_fail_no_path(lt_ctx):
-    with pytest.raises(DataSetException) as e:
+    with pytest.raises(TypeError) as e:
         lt_ctx.load("auto")
-    assert e.match("please specify the `path` kwarg to allow auto detection")
 
 
 def test_filetype_auto_fail_file_does_not_exist(lt_ctx):

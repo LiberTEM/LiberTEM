@@ -96,7 +96,7 @@ class H5DataSet(DataSet):
         Minimum number of partitions, set to number of cores if not specified. Usually
         doesn't need to be specified.
     """
-    def __init__(self, path, ds_path, tileshape=None,
+    def __init__(self, path, ds_path=None, tileshape=None,
                  target_size=512*1024*1024, min_num_partitions=None, sig_dims=2, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
@@ -123,6 +123,11 @@ class H5DataSet(DataSet):
         )
 
     def _do_initialize(self):
+        if self.ds_path is None:
+            datasets = _get_datasets(self.path)
+            datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
+            name, size, shape, dtype = datasets_list[0]
+            self.ds_path = name
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)

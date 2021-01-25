@@ -49,6 +49,39 @@ def test_simple_open(default_frms6):
     assert tuple(default_frms6.shape) == (256, 256, 264, 264)
 
 
+def test_auto_open_corrections_kwargs(lt_ctx):
+    ds_corr = lt_ctx.load(
+        'auto', path=FRMS6_TESTDATA_PATH, enable_offset_correction=True, nav_shape=(2, 3)
+    )
+    assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
+    assert tuple(ds_corr.shape.nav) == (2, 3)
+
+    ds = lt_ctx.load(
+        'auto', path=FRMS6_TESTDATA_PATH, enable_offset_correction=False, nav_shape=(2, 3)
+    )
+    assert not ds.get_correction_data().have_corrections()
+    assert tuple(ds.shape.nav) == (2, 3)
+
+
+def test_auto_open_corrections_posargs(lt_ctx):
+    ds_corr = lt_ctx.load('auto', FRMS6_TESTDATA_PATH, True, None, None, (2, 3))
+    assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
+    assert tuple(ds_corr.shape.nav) == (2, 3)
+
+    ds = lt_ctx.load('auto', FRMS6_TESTDATA_PATH, False, None, None, (2, 3))
+    assert not ds.get_correction_data().have_corrections()
+    assert tuple(ds.shape.nav) == (2, 3)
+
+    ds_corr = lt_ctx.load('frms6', FRMS6_TESTDATA_PATH, True, None, None, (2, 3))
+    assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
+    assert tuple(ds_corr.shape.nav) == (2, 3)
+
+    ds = lt_ctx.load('frms6', FRMS6_TESTDATA_PATH, False, None, None, (2, 3))
+    assert not ds.get_correction_data().have_corrections()
+    assert tuple(ds.shape.nav) == (2, 3)
+
+
+
 def test_detetct(lt_ctx):
     assert FRMS6DataSet.detect_params(
         FRMS6_TESTDATA_PATH, lt_ctx.executor

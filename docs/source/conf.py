@@ -67,6 +67,7 @@ extensions = [
     'nbsphinx_link',
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx_issues',
+    'sphinx_rtd_theme',
 ]
 
 bibtex_bibfiles = ['references-libertem.bib']
@@ -104,7 +105,9 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+
+html_logo = '_static/logo.png'
 
 html_favicon = '../../corporatedesign/logo/favicon.ico'
 
@@ -113,7 +116,6 @@ html_favicon = '../../corporatedesign/logo/favicon.ico'
 # documentation.
 #
 html_theme_options = {
-    'logo': 'logo.png'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -7,24 +7,23 @@ Installation
     LiberTEM can currently be used on Python 3.6, 3.7 and 3.8. Support for Python 3.9
     is not finished yet, as some of our dependencies are not ready yet.
 
-.. note::
-    Distinguish between installing a released version and installing the latest
-    development version. Both `installing from PyPi`_ and `installing from a git
-    clone`_ use pip, but they do fundamentally different things. :code:`pip
-    install libertem` downloads the latest release from PyPi.
-
-    Changing directory to a git clone and running :code:`pip install -e .`
-    installs from the local directory in editable mode. "Editable mode" means
-    that the source directory is linked into the current Python environment
-    rather than copied. That means changes in the source directory are
-    immediately active in the Python environment.
-
-    Installing from a git clone in editable mode is the correct setup for
-    development work and using :ref:`the latest features in the development
-    branch <continuous>`. Installing from PyPI is easier and preferred for
-    production use and for new users.
+    If you would like to install the latest development version, please also
+    see :ref:`installing from a git clone`.
 
 .. include:: _single_node.rst
+
+The short version:
+
+.. code-block:: shell
+
+    $ virtualenv -p python3 ~/libertem-venv/
+    $ source ~/libertem-venv/bin/activate
+    (libertem) $ pip install "libertem[torch]"
+
+    # optional for GPU support
+    (libertem) $ pip install cupy
+
+For details, please read on!
 
 Linux and Mac OS X
 ------------------
@@ -84,8 +83,8 @@ working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 Using conda
 ###########
 
-If you are already using conda, or if you don't have a system-wide Python 3.6 or
-3.7 installation, you can create a conda environment for LiberTEM.
+If you are already using conda, or if you don't have a system-wide Python 3.6, 3.7 or
+3.8 installation, you can create a conda environment for LiberTEM.
 
 This section assumes that you have `installed conda
 <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
@@ -96,7 +95,7 @@ command:
 
 .. code-block:: shell
 
-    $ conda create -n libertem python=3.7
+    $ conda create -n libertem python=3.8
 
 To install or later run LiberTEM, activate the environment with the following
 command (see also :ref:`install on windows` if applicable):
@@ -118,6 +117,8 @@ For more information about conda, see their `documentation about creating and
 managing environments
 <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
 
+.. _`installing from PyPi`:
+
 Installing from PyPi
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -130,59 +131,6 @@ environment (conda or virtualenv) and install using:
 
 This should install LiberTEM and its dependencies in the environment. Please
 continue by reading the :ref:`usage documentation`.
-
-.. _`installing from a git clone`:
-
-Installing from a git clone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you want to follow the latest development, you should install LiberTEM from
-a git clone:
-
-.. code-block:: shell
-
-    $ git clone https://github.com/LiberTEM/LiberTEM
-
-Or, if you wish to contribute to LiberTEM, create a fork of the LiberTEM repository
-by following these steps:
-
-#. Log into your `GitHub <https://github.com/>`_ account.
-
-#. Go to the `LiberTEM GitHub <https://github.com/liberteM/LiberTEM/>`_ home page.
-
-#. Click on the *fork* button:
-
-    ..  figure:: ./images/forking_button.png
-
-#. Clone your fork of LiberTEM from GitHub to your computer
-
-.. code-block:: shell
-
-    $ git clone https://github.com/your-user-name/LiberTEM
-
-For more information about `forking a repository
-<https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
-For a beginner-friendly introduction to git and GitHub, consider going through
-the following resources:
-
-* This `free course <https://www.udacity.com/course/version-control-with-git--ud123>`_
-  covers the essentials of using Git.
-* Practice `pull request <https://github.com/firstcontributions/first-contributions>`_
-  in a safe sandbox environment.
-* Sample `workflow <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_
-  for contributing code.
-
-Activate the Python environment (conda or virtualenv) and change to the newly
-created directory with the clone of the LiberTEM repository. Now you can start
-the LiberTEM installation. Please note the dot at the end, which indicates the
-current directory!
-
-.. code-block:: shell
-
-    (libertem) $ pip install -e .
-
-This should download the dependencies and install LiberTEM in the environment.
-Please continue by reading the :ref:`usage documentation`.
 
 PyTorch
 ~~~~~~~
@@ -200,12 +148,6 @@ example from PyPi:
 
     (libertem) $ pip install "libertem[torch]"
 
-Or from git checkout:
-
-.. code-block:: shell
-
-    (libertem) $ pip install -e .[torch]
-
 CuPy
 ~~~~
 
@@ -214,12 +156,6 @@ GPU support is based on `CuPy <https://cupy.chainer.org/>`_.
 .. code-block:: shell
 
     (libertem) $ pip install "libertem[cupy]"
-
-Or from git checkout:
-
-.. code-block:: shell
-
-    (libertem) $ pip install -e .[cupy]
 
 .. versionadded:: 0.6.0
 
@@ -237,19 +173,14 @@ dependency because of installation issues on some platforms.
 Updating
 ~~~~~~~~
 
-If you have installed from a git clone, you can easily update it to the current
-status. Open a command line in the base directory of the LiberTEM clone and
-update the source code with this command:
+When installed from PyPi via pip, you can update like this:
 
 .. code-block:: shell
 
-    $ git pull
+    (libertem) $ pip install -U libertem
 
-The installation with ``pip install -e`` has installed LiberTEM in `"editable"
-mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
-That means the changes pulled from git are active immediately. Only if the
-requirements for installed third-party packages have changed, you should re-run
-``pip install -e .`` in order to install any missing packages.
+This should install a new version of LiberTEM and update all requirements that
+have changed.
 
 After updating the installation, you can run the updated version by restarting
 the libertem-server and afterwards reloading all browser windows that are
@@ -264,13 +195,7 @@ The recommended method to install LiberTEM on Windows is based on `Miniconda 64
 bit with Python version 3.6 or 3.7 <https://www.anaconda.com/distribution/>`_.
 This installs a Python distribution.
 
-For `installing from a git clone`_ you require a suitable git client, for
-example `GitHub Desktop <https://desktop.github.com/>`_, `TortoiseGit
-<https://tortoisegit.org/>`_, or `git for windows
-<https://gitforwindows.org/>`_. Clone the repository
-https://github.com/LiberTEM/LiberTEM in a folder of your choice.
-
-From here on the installation and running of LiberTEM on Windows with the
+The installation and running of LiberTEM on Windows with the
 Anaconda Prompt is very similar to `Using conda`_ on Linux or Mac OS X.
 
 Differences:
@@ -290,57 +215,8 @@ Differences:
 
     (libertem) > conda install pip
 
-Jupyter
--------
-
-To use the Python API from within a Jupyter notebook, you can install Jupyter
-into your LiberTEM virtual environment.
-
-.. code-block:: shell
-
-    (libertem) $ pip install jupyter
-
-You can then run a local notebook from within the LiberTEM environment, which
-should open a browser window with Jupyter that uses your LiberTEM environment.
-
-.. code-block:: shell
-
-    (libertem) $ jupyter notebook
-
-JupyterHub
-----------
-
-If you'd like to use the Python API from a LiberTEM virtual environment on a
-system that manages logins with JupyterHub, you can easily `install a custom
-kernel definition
-<https://ipython.readthedocs.io/en/stable/install/kernel_install.html>`_ for
-your LiberTEM environment.
-
-First, you can launch a terminal on JupyterHub from the "New" drop-down menu in
-the file browser. Alternatively you can execute shell commands by prefixing them
-with "!" in a Python notebook.
-
-In the terminal you can create and activate virtual environments and perform the
-LiberTEM installation as described above. Within the activated LiberTEM
-environment you additionally install ipykernel:
-
-.. code-block:: shell
-
-    (libertem) $ pip install ipykernel
-
-Now you can create a custom ipython kernel definition for your environment:
-
-.. code-block:: shell
-
-    (libertem) $ python -m ipykernel install --user --name libertem --display-name "Python (libertem)"
-
-After reloading the file browser window, a new Notebook option "Python
-(libertem)" should be available in the "New" drop-down menu. You can test it by
-creating a new notebook and running
-
-.. code-block:: python
-
-    In [1]: import libertem
+This should install LiberTEM and its dependencies in the environment. Please
+continue by reading the :ref:`usage documentation`.
 
 Troubleshooting
 ---------------

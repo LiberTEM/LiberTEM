@@ -22,6 +22,9 @@ class IOBackend:
     def __init__(self):
         pass
 
+    def get_impl(self) -> 'IOBackendImpl':
+        raise NotImplementedError()
+
     @classmethod
     def from_json(cls, msg):
         """

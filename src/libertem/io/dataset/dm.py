@@ -57,7 +57,7 @@ class DMDataSet(DataSet):
     Note
     ----
     Single-file 4D DM files are not yet supported. The use-case would be
-    to read DM4 files from the conversion of K2 data, but those data sets
+    to read DM4 files from the conversion of K2 STEMx data, but those data sets
     are actually transposed (nav/sig are swapped).
 
     That means the data would have to be transposed back into the usual shape,

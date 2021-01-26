@@ -41,7 +41,9 @@ There are a few command line options available::
       --help          Show this message and exit.
 
 .. versionadded:: 0.4.0
-    :code:`--browser` / :code:`--no-browser` option is added, open browser by default.
+    :code:`--browser` / :code:`--no-browser` option was added, open browser by default.
+.. versionadded:: 0.6.0
+    :code:`-l, --log-level` was added.
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
 
@@ -144,16 +146,23 @@ Running analyses
 ----------------
 
 Once a dataset is loaded, you can add analyses to it. As an example we choose a
-"Ring" analysis.
+"Ring" analysis, which implements a ring-shaped virtual detector.
 
 ..  figure:: ./images/use/add_analysis.png
 
-The GUI shows two windows: On the left it shows the current mask. Directly after
+..  figure:: ./images/use/adjust.png
+
+
+This analysis shows two views on your data: the two detector dimensions on
+the left, the scanning dimensions on the right, assuming a 4D-STEM dataset.
+For the general case, we also call the detector dimensions the *signal
+dimensions*, and the scanning dimensions the *navigation dimensions*.
+
+Directly after
 adding the analysis, LiberTEM starts calculating an average of all the detector
-frames. As soon as this is finished, the average is overlaid with the mask to
-help the user with positioning the virtual detector. The window on the right
+frames. The average is overlaid with the mask representing the virtual detector. The view on the right
 will later show the result of applying the mask to the data. In the beginning it
-is empty. The first processing might take a while depending on file size and IO
+is empty. The first processing might take a while depending on file size and I/O
 performance. Fast SSDs and enough RAM to keep the working files in the file
 system cache are highly recommended for a good user experience.
 
@@ -161,10 +170,8 @@ You can adjust the virtual detector by dragging the handles in the GUI. Below it
 shows the parameters in numerical form. This is useful to extract positions, for
 example for scripting.
 
-..  figure:: ./images/use/adjust.png
-
 After clicking "Apply", LiberTEM performs the calculation and shows the result
-in scan coordinates on the right.
+in scan coordinates on the right side.
 
 ..  figure:: ./images/use/apply.png
 
@@ -194,7 +201,7 @@ rectangle. You can adjust the rectangle by dragging the handles in the GUI.
 ..  figure:: ./images/use/rect.png
 
 Some analyses, such as the Center of Mass (COM) analysis, can render the result
-in different ways. You can select the channel in the "Image" drop-down menu
+in different ways. You can select different result channels in the "Channel" drop-down menu
 below the right window.
 
 ..  figure:: ./images/use/image.png
@@ -219,7 +226,7 @@ continue working with the same parameters using scripting.
 
 .. figure:: ./images/use/download-jupyter.png
 
-Or copy individual cells of Jupyter notebook directly from GUI, also option
+It's also possible to copy individual cells of Jupyter notebook directly from GUI, with an option
 to copy the complete source code.
 
 .. figure:: ./images/use/copy-jupyter.png

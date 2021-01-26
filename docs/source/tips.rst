@@ -220,8 +220,9 @@ Then, as a user, you can use :code:`cgexec` to run a command in that control gro
 
     cgexec -g cpu:slow pytest tests/
 
-This is useful, for example, to debug test failures that only seem to happen in CI.
-
+This is useful, for example, to debug test failures that only seem to happen in CI
+or under heavy load. Note that tools like :code:`cgcreate` only work with cgroups v1,
+with newer distributions using cgroups v2 you may have to adapt these instructions.
 
 .. _`jupyter install`:
 

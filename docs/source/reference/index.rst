@@ -9,6 +9,7 @@ Python API reference
    api
    udf
    dataset
+   io_backends
    application
    masks
    internals

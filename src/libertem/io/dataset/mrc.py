@@ -74,6 +74,11 @@ class MRCDataSet(DataSet):
     """
     Read MRC files.
 
+    Examples
+    --------
+
+    >>> ds = ctx.load("mrc", path="/path/to/file.mrc")  # doctest: +SKIP
+
     Parameters
     ----------
     path: str

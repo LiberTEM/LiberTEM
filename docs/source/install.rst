@@ -43,14 +43,16 @@ Creating an isolated Python environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To provide an isolated environment for LiberTEM and its dependencies, you can
-use virtualenvs or conda environments.
+use virtualenvs or conda environments. This is important if you want to use
+different Python applications that may have conflicting dependencies, and it
+allows to quickly re-create an environment in case things go sideways.
 
 Using virtualenv
 ################
 
 You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv
 <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system-wide
-Python 3.6, 3.7 or 3.8 installation. For Mac OS X, using conda is recommended.
+Python 3.6, 3.7 or 3.8 installation. For Mac OS X, using `conda`_ is recommended.
 
 To create a new virtualenv for LiberTEM, you can use the following command:
 
@@ -81,13 +83,17 @@ without :code:`source`, please `refer to the virtualenv documentation
 working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ is recommended.
 
+Continue by `installing from PyPI`_.
+
+.. _`conda`:
+
 Using conda
 ###########
 
 If you are already using conda, or if you don't have a system-wide Python 3.6, 3.7 or
 3.8 installation, you can create a conda environment for LiberTEM.
 
-This section assumes that you have `installed conda
+This section assumes that you have `installed anaconda or miniconda
 <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
 and that your installation is working.
 

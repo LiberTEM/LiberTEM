@@ -61,15 +61,16 @@ def _get_prefetch_ranges(num_files, tile_ranges):
 
 
 class MMapBackend(IOBackend, id_="mmap"):
-    def __init__(self, enable_readahead_hints=False):
-        """
-        I/O backend using memory mapped files.
+    """
+    I/O backend using memory mapped files. Used by default on non-Windows
+    systems.
 
-        Parameters
-        ----------
-        enable_readahead_hints : bool
-            Linux only. Try to influence readahead behavior (experimental).
-        """
+    Parameters
+    ----------
+    enable_readahead_hints : bool
+        Linux only. Try to influence readahead behavior (experimental).
+    """
+    def __init__(self, enable_readahead_hints=False):
         self._enable_readahead = enable_readahead_hints
 
     def get_impl(self):

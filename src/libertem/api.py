@@ -715,7 +715,7 @@ class Context:
         corrections
             Corrections to apply while running the UDF. If none are given,
             the corrections that are part of the :code:`DataSet` are used,
-            if there are any.
+            if there are any. See also :ref:`corrections`.
 
         backends : None or iterable containing 'numpy', 'cupy' and/or 'cuda'
             Restrict the back-end to a subset of the capabilities of the UDF.
@@ -767,12 +767,17 @@ class Context:
         return results[0]
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,
-            progress: bool = False) -> BufferWrapper:
+            progress: bool = False,
+            corrections: CorrectionSet = None,
+            backends=None) -> BufferWrapper:
         '''
         Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`
 
         .. versionchanged:: 0.5.0
             Added the :code:`progress` parameter
+
+        .. versionchanged:: 0.6.0
+            Added the :code:`corrections` and :code:`backends` parameter
 
         Parameters
         ----------
@@ -786,8 +791,13 @@ class Context:
             region of interest as bool mask over the navigation axes of the dataset
         progress : bool
             Show progress bar
-        io_backend : IOBackend or None
-            Use a different I/O backend for running this function
+        corrections
+            Corrections to apply while running the function. If none are given,
+            the corrections that are part of the :code:`DataSet` are used,
+            if there are any. See also :ref:`corrections`.
+        backends : None or iterable containing 'numpy', 'cupy' and/or 'cuda'
+            Restrict the back-end to a subset of the capabilities of the UDF.
+            This can be useful for testing hybrid UDFs.
 
         Returns
         -------
@@ -803,6 +813,8 @@ class Context:
             udf=udf,
             roi=roi,
             progress=progress,
+            corrections=corrections,
+            backends=backends,
         )
         return results['result']
 

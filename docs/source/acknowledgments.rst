@@ -125,17 +125,30 @@ notebook project, which has the following license:
 Funding
 ~~~~~~~
 
-.. |clearfloat|  raw:: html
+.. raw:: html
 
-    <div class="clearer"></div>
+    <style>
+        .libertem-ack-item { display: flex; }
+        .libertem-ack-item img { display: block; }
+        .libertem-ack-item > a { flex-shrink: 0; display: block; padding-right: 20px; }
+    </style>
+
+.. |itemstart|  raw:: html
+
+    <div class="libertem-ack-item">
+
+.. |itemend|  raw:: html
+
+    </div>
 
 LiberTEM kindly acknowledges funding and support from the following sources:
 
 ERC Proof-of-Concept grant VIDEO
 ................................
 
+|itemstart|
+
 .. image:: ./images/EU.jpg
-    :align: left
     :width: 100px
     :alt: European Union flag
     :target: https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics
@@ -144,56 +157,56 @@ This project has received funding from the European Research Council (ERC) under
 the European Union’s Horizon 2020 research and innovation programme (`grant
 agreement No 780487
 <https://erc.europa.eu/projects-figures/erc-funded-projects/results?search_api_views_fulltext=%09Versatile+and+Innovative+Detector+for+Electron+Optics>`_).
-
-|clearfloat|
+|itemend|
 
 CritCat
 .......
 
+|itemstart|
+
 .. image:: ./images/EU.jpg
-    :align: left
     :width: 100px
     :alt: European Union flag
 
 This project has received funding from the European Union's Horizon 2020
 research and innovation programme under `grant agreement No 686053
 <http://www.critcat.eu/>`_.
-
-|clearfloat|
+|itemend|
 
 ESTEEM3
 .......
 
+|itemstart|
+
 .. image:: ./images/EU.jpg
-    :align: left
     :width: 100px
     :alt: European Union flag
 
 This project has received funding from the European Union's Horizon 2020
 research and innovation programme under grant agreement No 823717 – `ESTEEM3
 <https://cordis.europa.eu/project/rcn/220936/factsheet/en>`_.
-
-|clearfloat|
+|itemend|
 
 ERC Synergy grant 3D MAGiC
 ..........................
 
+|itemstart|
+
 .. image:: ./images/EU.jpg
-    :align: left
     :width: 100px
     :alt: European Union flag
 
 This project has received funding from the European Research Council (ERC) under
 the European Union’s Horizon 2020 research and innovation programme (grant
 agreement No 856538).
-
-|clearfloat|
+|itemend|
 
 moreSTEM
 ........
 
+|itemstart|
+
 .. image:: ./images/Helmholtz.png
-    :align: left
     :width: 100px
     :alt: Helmholtz Gemeinschaft Deutscher Forschungszentren
 
@@ -203,14 +216,14 @@ the Helmholtz Association
 within the `Helmholtz Young Investigator Group moreSTEM
 <https://morestem.fz-juelich.de/>`_ under Contract No. VH-NG-1317 at
 Forschungszentrum Jülich in Germany.
-
-|clearfloat|
+|itemend|
 
 Ptychography 4.0
 ................
 
+|itemstart|
+
 .. image:: ./images/Helmholtz-lower.png
-    :align: left
     :width: 100px
     :alt: Helmholtz Gemeinschaft Deutscher Forschungszentren
 
@@ -218,45 +231,45 @@ We gratefully acknowledge funding from the `Information & Data Science Pilot
 Project
 <https://www.helmholtz.de/en/research/information-data-science/information-data-science-pilot-projects/pilot-projects-2/>`_
 "Ptychography 4.0" of the Helmholtz Association.
-
-|clearfloat|
-
+|itemend|
 
 Google Summer of Code
 .....................
 
+|itemstart|
+
 .. image:: images/GSoC-icon-192.png
-    :align: left
     :width: 100px
     :alt: Google Summer of Code logo
 
 We kindly acknowledge funding from `Google Summer of Code 2019
 <https://summerofcode.withgoogle.com/>`_ under the `umbrella of the Python
 software foundation <https://python-gsoc.org/>`_.
-
-|clearfloat|
+|itemend|
 
 Gatan Inc.
 ..........
 
+|itemstart|
+
 .. image:: images/Gatan-logo-vertical.png
-    :align: left
     :width: 100px
     :alt: Gatan Inc.
 
 STEMx equipment and software for 4D STEM data acquisition with K2 IS camera
 courtesy of `Gatan Inc <https://www.gatan.com/>`_.
-
-|clearfloat|
+|itemend|
 
 Forschungszentrum Jülich, Ernst-Ruska Centrum
 .............................................
 
+|itemstart|
+
 .. image:: ./images/FZJ.jpg
-    :align: left
     :width: 100px
     :alt: Forschungszentrum Jülich GmbH
     :target: https://www.fz-juelich.de/er-c/EN/Home/home_node.html
 
 Forschungszentrum Jülich is supporting LiberTEM with funding for personnel,
 access to its infrastructure and administrative support.
+|itemend|

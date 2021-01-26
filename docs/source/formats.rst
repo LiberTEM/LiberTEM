@@ -49,8 +49,8 @@ have to be entered as separated values into the fields. You can hit a comma to j
 the next field. We follow the NumPy convention here and specify the "fast-access" dimension
 last, so a value of :code:`42`, :code:`21` would mean the same as specifying
 :code:`(42, 21)` in the Python API, setting :code:`y=42` and :code:`x=21`. Note that the GUI
-is currently limited to 2D visualizations, while the scripting API should handle more
-general visualizations.
+is currently limited to 2D visualizations, while the scripting API can handle more
+general cases.
 
 See also :ref:`the concepts section <concepts>`.
 
@@ -71,8 +71,12 @@ There are some common parameters across data set types:
   when using the Python API, it can be of any dimensionality.
 `sync_offset`
   You can specify a `sync_offset` to handle synchronization or acquisition problems.
-  If it's positive, `sync_offset` number of frames would be skipped from start.
-  If it's negative, `abs(sync_offset)` number of blank frames would be inserted at start.
+  If it's positive, `sync_offset` number of frames will be skipped from start.
+  If it's negative, `abs(sync_offset)` number of blank frames will be inserted at start.
+`io_backend`
+  Different methods for I/O are available in LiberTEM, which can influence performance. 
+  See :ref:`io backends` for details.
+  
 
 .. _`supported formats`:
 

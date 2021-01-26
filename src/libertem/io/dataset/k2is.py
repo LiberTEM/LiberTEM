@@ -555,6 +555,8 @@ class K2ISFile(LocalFile):
 class K2ISDataSet(DataSet):
     """
     Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
+    Currently, data acquired using the STEMx unit is supported, metadata
+    about the scan size is read from the .gtg file.
 
     Parameters
     ----------

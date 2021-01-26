@@ -473,9 +473,9 @@ class MIBDataSet(DataSet):
     are assumed to follow a naming pattern of some non-numerical prefix,
     and a sequential numerical suffix.
 
-    Note that, as of the current version, no gain correction or hot/cold pixel
-    removal is done yet: processing is done on the RAW data, though you can do
-    pre-processing in your own UDF.
+    Note that if you are using a per-pixel trigger setup, LiberTEM won't
+    be able to deduce the x scanning dimension - in that case, you will
+    need to specify the `nav_shape` yourself.
 
     Examples
     --------

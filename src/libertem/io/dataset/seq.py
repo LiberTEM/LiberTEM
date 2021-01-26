@@ -176,6 +176,11 @@ class SEQDataSet(DataSet):
     """
     Read data from Norpix SEQ files.
 
+    Examples
+    --------
+
+    >>> ds = ctx.load("seq", path="/path/to/file.seq", nav_shape=(1024, 1024))  # doctest: +SKIP
+
     Parameters
     ----------
     path

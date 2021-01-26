@@ -33,7 +33,7 @@ import libertem
 # -- Project information -----------------------------------------------------
 
 project = 'LiberTEM'
-copyright = '2018, LiberTEM Authors'
+copyright = '2021, LiberTEM Authors'
 author = 'LiberTEM Authors'
 
 _version_bits = libertem.__version__.split('.')

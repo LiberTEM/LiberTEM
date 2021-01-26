@@ -90,6 +90,11 @@ class SERDataSet(DataSet):
     """
     Read TIA SER files.
 
+    Examples
+    --------
+
+    >>> ds = ctx.load("ser", path="/path/to/file.ser")  # doctest: +SKIP
+
     Parameters
     ----------
     path: str

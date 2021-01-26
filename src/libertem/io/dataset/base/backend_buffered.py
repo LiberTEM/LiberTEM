@@ -90,22 +90,22 @@ def block_get_min_fill_factor(rrs):
 
 
 class BufferedBackend(IOBackend, id_="buffered"):
+    """
+    I/O backend using a buffered reading strategy. Useful for slower media
+    like HDDs, where seeks cause performance drops. Used by default
+    on Windows.
+
+    This does not perform optimally on SSDs under all circumstances, for
+    better best-case performance, try using
+    :class:`~libertem.io.dataset.base.MMapBackend` instead.
+
+    Parameters
+    ----------
+    max_buffer_size : int
+        Maximum buffer size, in bytes. This is passed to the tileshape
+        negotiation to select the right depth.
+    """
     def __init__(self, max_buffer_size=16*1024*1024):
-        """
-        I/O backend using a buffered reading strategy. Useful for slower media
-        like HDDs, where seeks cause performance drops. Used by default
-        on Windows.
-
-        This does not perform optimally on SSDs under all circumstances, for
-        better best-case performance, try using
-        :class:`~libertem.io.dataset.base.MMapBackend` instead.
-
-        Parameters
-        ----------
-        max_buffer_size : int
-            Maximum buffer size, in bytes. This is passed to the tileshape
-            negotiation to select the right depth.
-        """
         self._max_buffer_size = max_buffer_size
 
     @classmethod

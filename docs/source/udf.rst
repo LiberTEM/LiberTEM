@@ -45,6 +45,19 @@ I/O, the details of buffer management and so on. This corresponds to
 a simplified `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_,
 where the intermediate re-keying and shuffling step is omitted.
 
+LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement
+general functionality:
+
+* :ref:`Sum <sum udf>`
+* :ref:`Logsum <logsum udf>`
+* :ref:`StdDev <stddev udf>`
+* :ref:`SumSig <sumsig udf>`
+* :ref:`Masks <masks udf>`
+* :ref:`Pick <pick udf>`
+
+Also, LiberTEM includes :ref:`ready-to-use application-specific UDFs
+<applications>`.
+
 It can be helpful to review :ref:`some general concepts <concepts>` before
 reading the following sections.
 
@@ -52,9 +65,8 @@ Getting started
 ---------------
 
 The easiest way of running a function over your data is using the 
-:meth:`~libertem.api.Context.map` method of the LiberTEM API.
-
-For example, to calculate the sum over the last signal axis:
+:meth:`~libertem.api.Context.map` method of the LiberTEM API. For example,
+to calculate the sum over the last signal axis:
 
 .. testcode:: autoudf
 
@@ -71,8 +83,7 @@ For example, to calculate the sum over the last signal axis:
    result.data
 
 The function specified via the :code:`f` parameter is called for each frame / diffraction pattern.
-
-See :ref:`auto UDF` for details. This is most suited for simple functions; once you have
+See :ref:`auto UDF` for more details. This is most suited for simple functions; once you have
 parameters or want to re-use some data across function calls, you should create a
 :class:`~libertem.udf.UDF` subclass instead.
 
@@ -85,11 +96,11 @@ How UDFs works
 
 To allow for parallel processing, data is first divided into partitions along the navigation axes,
 which are worked on by different worker processes. Then, for each frame of a partition, a
-user-defined function :meth:`~libertem.udf.UDFFrameMixin.process_frame` is called,
+user-defined function :meth:`~libertem.udf.base.UDFFrameMixin.process_frame` is called,
 which is free to do any imaginable processing.
 
 As a result of splitting the data set into partitions, the results then need to be merged
-back together. This is accomplished by calling the :meth:`~libertem.udf.UDF.merge` method
+back together. This is accomplished by calling the :meth:`~libertem.udf.base.UDF.merge` method
 after all frames of a partition are processed.
 
 In pseudocode, data is processed in the following way:
@@ -109,19 +120,19 @@ potentially :ref:`on multiple computers <architecture>`. The loop over individua
 run in the worker processes, and the merge function is run in the main process, accumulating the
 results, every time the results for a partition are available. 
 
-In addition to :meth:`~libertem.udf.UDFFrameMixin.process_frame`, there are two more methods
+In addition to :meth:`~libertem.udf.base.UDFFrameMixin.process_frame`, there are two more methods
 available for overriding, to work on larger/different units of data at the same time:
-:meth:`~libertem.udf.UDFTileMixin.process_tile`
-and :meth:`~libertem.udf.UDFPartitionMixin.process_partition`. They can be used for optimizing
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile`
+and :meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. They can be used for optimizing
 some operations, and are documented in the :ref:`advanced topics <advanced udf>` section.
 
 Implementing a UDF
 ------------------
 
 The workflow for implementing a UDF starts with subclassing
-:class:`~libertem.udf.UDF`. In the simplest case, you need to implement the
-:meth:`~libertem.udf.UDF.get_result_buffers` method and 
-:meth:`~libertem.udf.UDFFrameMixin.process_frame`.
+:class:`~libertem.udf.base.UDF`. In the simplest case, you need to implement the
+:meth:`~libertem.udf.base.UDF.get_result_buffers` method and 
+:meth:`~libertem.udf.base.UDFFrameMixin.process_frame`.
 
 There are two very common patterns for reductions, reducing over the navigation axes
 into a common accumulator for all frames, keeping the shape of a single frame,
@@ -129,7 +140,7 @@ or reducing over the signal axes and keeping the navigation axes.
 
 A UDF can implement one of these reductions or combinations. To handle indexing for you,
 LiberTEM needs to know about the structure of your reduction. You can build this structure in the
-:meth:`~libertem.udf.UDF.get_result_buffers` method, by declaring one or more buffers.
+:meth:`~libertem.udf.base.UDF.get_result_buffers` method, by declaring one or more buffers.
 
 Declaring buffers
 ~~~~~~~~~~~~~~~~~
@@ -144,9 +155,9 @@ don't correspond directly to the data set's shape.
 It is also possible to append additional axes to the buffer's shape using the
 :code:`extra_shape` parameter.
 
-:meth:`~libertem.udf.UDF.get_result_buffers` should return a :code:`dict` which maps
+:meth:`~libertem.udf.base.UDF.get_result_buffers` should return a :code:`dict` which maps
 buffer names to buffer declarations. You can create a buffer declaration by calling
-the :meth:`~libertem.udf.UDF.buffer` method.
+the :meth:`~libertem.udf.base.UDF.buffer` method.
 
 The buffer name is later used to access the buffer via :code:`self.results.<buffername>`,
 which returns a view into a NumPy array. For this to work, the name has to be a valid Python
@@ -294,12 +305,15 @@ in the signal dimensions:
 
 On a 4D data set, this operation is roughly equivalent to :code:`np.sum(arr, axis=(2, 3))`.
 
+Merging partial results
+~~~~~~~~~~~~~~~~~~~~~~~
+
 As :ref:`described above <how UDFs work>`, data from multiple partitions is
 processed in parallel. That also means that we need a way of merging partial
 results into the final result. In the example above, we didn't need to do anything:
 we only have a :code:`kind="nav"` buffer, where merging just means assigning the
 result of one partition to the right slice in the final result. This is done by
-the default implementation of :meth:`~libertem.udf.UDF.merge`. 
+the default implementation of :meth:`~libertem.udf.base.UDF.merge`. 
 
 In case of :code:`kind="sig"` buffers and the corresponding reduction, assignment would
 just overwrite the result from the previous partition with the one from the current partition,
@@ -387,8 +401,7 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
 
 
 For more complete examples, you can also have a look at the functions
-implemented in the sub-modules of :code:`libertem.udf` and at
-`LiberTEM-blobfinder <http://localhost:8009/index.html>`_.
+implemented in the sub-modules of :code:`libertem.udf` and at our :ref:`packages`.
 
 Passing parameters
 ~~~~~~~~~~~~~~~~~~
@@ -422,6 +435,14 @@ available as properties of :code:`self.params`:
 
    ctx.run_udf(dataset=dataset, udf=udf)
 
+Initializing result buffers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To allow a UDF to initialize a result buffer to the correct values,
+the method :meth:`~libertem.udf.base.UDFPreprocessMixin.preprocess`
+can be implemented. It is run once per partition and assigning to
+:code:`kind="nav"` result buffers will assign to the results of the
+whole partition. See :code:`MaxUDF` above for an example.
 
 .. _`progress bar`:
 
@@ -467,7 +488,7 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
 .. _`udf roi`:
 
 Regions of interest
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
 run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
@@ -505,19 +526,6 @@ Now would be a good time to :ref:`read about advanced UDF functionality <advance
 or the :ref:`general section on debugging <debugging udfs>`. Once you have your UDF working,
 you can proceed to :ref:`UDF profiling <udf profiling>` to gain insights into the efficiency
 of your UDF.
-
-LiberTEM ships with some :ref:`utility UDFs <utilify udfs>` that implement
-general functionality:
-
-* :ref:`Sum <sum udf>`
-* :ref:`Logsum <logsum udf>`
-* :ref:`StdDev <stddev udf>`
-* :ref:`SumSig <sumsig udf>`
-* :ref:`Masks <masks udf>`
-* :ref:`Pick <pick udf>`
-
-Also, LiberTEM includes :ref:`ready-to-use application-specific UDFs
-<applications>`.
 
 .. toctree::
    :hidden:

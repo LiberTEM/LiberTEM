@@ -48,7 +48,7 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
 @pytest.mark.asyncio
 async def test_local_cluster_details(shared_state, base_url, http_client):
 
-    num_workers = random.randint(1, 8)
+    num_workers = random.randint(1, 4)
     url = "{}/api/config/connection/".format(base_url)
     conn_details = {
         'connection': {

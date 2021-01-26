@@ -6,16 +6,21 @@ import pytest
 from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import BufferedBackend
+from libertem.common.buffers import reshaped_view
+from libertem.udf.raw import PickUDF
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+
+try:
+    import mrcfile
+except ModuleNotFoundError:
+    mrcfile = None
 
 
 MRC_TESTDATA_PATH = os.path.join(
     get_testdata_path(), 'mrc', '20200821_92978_movie.mrc',
 )
 HAVE_MRC_TESTDATA = os.path.exists(MRC_TESTDATA_PATH)
-
-print(MRC_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_MRC_TESTDATA, reason="need .mrc testdata")  # NOQA
 
@@ -35,8 +40,6 @@ def buffered_mrc(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_mrc_raw():
-    import mrcfile  # avoid importing top level
-
     mrc = mrcfile.open(MRC_TESTDATA_PATH)
     return mrc.data
 
@@ -49,15 +52,23 @@ def test_check_valid(default_mrc):
     default_mrc.check_valid()
 
 
-def test_read_roi(default_mrc, default_mrc_raw, lt_ctx):
-    roi = np.zeros((4,), dtype=bool)
-    roi[2] = 1
-    sumj = lt_ctx.create_sum_analysis(dataset=default_mrc)
-    sumres = lt_ctx.run(sumj, roi=roi)
+@pytest.mark.skipif(mrcfile is None, reason="No mrcfile found")
+def test_comparison(default_mrc, default_mrc_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_mrc_raw, (-1, *tuple(default_mrc.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_mrc)
 
-    ref = default_mrc_raw[roi].sum(axis=0)
 
-    assert np.allclose(sumres.intensity.raw_data, ref)
+@pytest.mark.skipif(mrcfile is None, reason="No mrcfile found")
+def test_comparison_roi(default_mrc, default_mrc_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_mrc.shape.nav),
+        p=[0.5, 0.5]
+    )
+    udf = ValidationUDF(reference=default_mrc_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_mrc, roi=roi)
 
 
 @pytest.mark.parametrize(
@@ -104,58 +115,56 @@ def test_mrc_dist(dist_ctx):
     assert results[0].raw_data.shape == (1024, 1024)
 
 
-def test_positive_sync_offset(lt_ctx, default_mrc_raw):
+def test_positive_sync_offset(lt_ctx, default_mrc):
+    # nav shape 4, we go over the trailing edge
+    udf = PickUDF()
     sync_offset = 2
 
-    ds = lt_ctx.load(
-        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
-    )
+    roi = np.zeros(default_mrc.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[2:4] = True
 
-    result = lt_ctx.run_udf(dataset=ds, udf=ValidationUDF(reference=default_mrc_raw))
-    assert result['nav_shape'].data.shape == (2, 2)
+    ref = lt_ctx.run_udf(dataset=default_mrc, udf=udf, roi=roi)
 
     ds_with_offset = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
     )
 
-    padded_reference = np.concatenate(
-        (
-            default_mrc_raw[2:],
-            np.zeros((2, *default_mrc_raw.shape[1:]), dtype=default_mrc_raw.dtype)
-        )
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    shape = lt_ctx.run_udf(dataset=ds_with_offset, udf=SumSigUDF())
+
+    print(result_with_offset['intensity'].raw_data.shape)
+    assert shape['intensity'].data.shape == (2, 2)
+    assert np.allclose(
+        result_with_offset['intensity'].raw_data[:2],
+        ref['intensity'].raw_data
     )
 
-    result_with_offset = lt_ctx.run_udf(
-        dataset=ds_with_offset, udf=ValidationUDF(reference=padded_reference)
-    )
-    assert result_with_offset['nav_shape'].data.shape == (2, 2)
 
-
-def test_negative_sync_offset(default_mrc_raw, lt_ctx):
+def test_negative_sync_offset(default_mrc, lt_ctx):
+    # nav shape 4
+    udf = PickUDF()
     sync_offset = -2
 
-    ds = lt_ctx.load(
-        "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2),
-    )
+    roi = np.zeros(default_mrc.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[:2] = True
 
-    result = lt_ctx.run_udf(dataset=ds, udf=ValidationUDF(reference=default_mrc_raw))
-    assert result['nav_shape'].data.shape == (2, 2)
+    ref = lt_ctx.run_udf(dataset=default_mrc, udf=udf, roi=roi)
 
     ds_with_offset = lt_ctx.load(
         "mrc", path=MRC_TESTDATA_PATH, nav_shape=(2, 2), sync_offset=sync_offset
     )
 
-    padded_reference = np.concatenate(
-        (
-            np.zeros((2, *default_mrc_raw.shape[1:]), dtype=default_mrc_raw.dtype),
-            default_mrc_raw[:2]
-        )
-    )
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    shape = lt_ctx.run_udf(dataset=ds_with_offset, udf=SumSigUDF())
 
-    result_with_offset = lt_ctx.run_udf(
-        dataset=ds_with_offset, udf=ValidationUDF(reference=padded_reference)
+    print(result_with_offset['intensity'].raw_data.shape)
+    assert shape['intensity'].data.shape == (2, 2)
+    assert np.allclose(
+        result_with_offset['intensity'].raw_data[2:],
+        ref['intensity'].raw_data
     )
-    assert result_with_offset['nav_shape'].data.shape == (2, 2)
 
 
 def test_offset_smaller_than_image_count(lt_ctx):

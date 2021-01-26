@@ -20,6 +20,12 @@ from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
+try:
+    import pyxem
+except ModuleNotFoundError:
+    pyxem = None
+
+
 MIB_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
 
@@ -53,7 +59,6 @@ def buffered_mib(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_mib_raw():
-    import pyxem
     data = pyxem.utils.io_utils.load_mib(MIB_TESTDATA_PATH)
     shape = (32, 32, 256, 256)
     # pyxem always opens lazy, therefore compute()
@@ -215,6 +220,7 @@ def test_read(default_mib):
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
 
 
+@pytest.mark.skipif(pyxem is None, reason="No PyXem found")
 def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_mib_raw, (-1, *tuple(default_mib.shape.sig)))
@@ -222,6 +228,7 @@ def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_mib)
 
 
+@pytest.mark.skipif(pyxem is None, reason="No PyXem found")
 def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

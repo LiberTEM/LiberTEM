@@ -13,7 +13,7 @@ See :ref:`user-defined functions` for an introduction and in-depth explanation.
 .. automodule:: libertem.udf.base
    :members:
    :special-members: __init__
-   :exclude-members: UDFTask,UDFRunner
+   :exclude-members: Task,UDFTask,UDFRunner,UDFData
 
 .. _`run udf ref`:
 

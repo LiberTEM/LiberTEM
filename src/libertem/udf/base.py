@@ -484,7 +484,7 @@ class UDFBase:
         '''
         Compute back-end library to use.
 
-        Generally, use :code:`self.xp` instead of :code`np` to use NumPy or CuPy transparently
+        Generally, use :code:`self.xp` instead of :code:`np` to use NumPy or CuPy transparently
 
         .. versionadded:: 0.6.0
         '''
@@ -800,6 +800,7 @@ class NoOpUDF(UDF):
         Perform dtype conversion. By default, this is :attr:`UDF.USE_NATIVE_DTYPE`.
     '''
     def __init__(self, preferred_input_dtype=UDF.USE_NATIVE_DTYPE):
+        ""
         super().__init__(preferred_input_dtype=preferred_input_dtype)
 
     def process_tile(self, tile):

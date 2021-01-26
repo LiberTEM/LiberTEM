@@ -12,3 +12,7 @@ This list provides an overview of the current sub-packages and is constantly upd
 :libertem-blobfinder:
     Since 0.4.0: Correlation-based peak finding and strain mapping.
     https://libertem.github.io/LiberTEM-blobfinder/
+
+:libertem-holo:
+    Since 0.6.0: Off-axis electron holography (work in progress)
+    https://github.com/LiberTEM/LiberTEM-holo/

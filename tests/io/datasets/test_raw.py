@@ -3,7 +3,6 @@ import sys
 import json
 import pickle
 import random
-import platform
 
 import numpy as np
 import pytest

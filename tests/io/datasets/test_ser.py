@@ -12,6 +12,12 @@ from libertem.common.buffers import reshaped_view
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
+try:
+    import hyperspy.api as hs
+except ModuleNotFoundError:
+    hs = None
+
+
 SER_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.ser')
 HAVE_SER_TESTDATA = os.path.exists(SER_TESTDATA_PATH)
 
@@ -29,8 +35,6 @@ def default_ser(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_ser_raw():
-    import hyperspy.api as hs  # avoid importing top level
-
     res = hs.load(str(SER_TESTDATA_PATH))
     return res.data
 
@@ -50,6 +54,7 @@ def test_smoke(lt_ctx):
     next(p.get_tiles(tiling_scheme))
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison(default_ser, default_ser_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_ser_raw, (-1, *tuple(default_ser.shape.sig)))
@@ -57,6 +62,7 @@ def test_comparison(default_ser, default_ser_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_ser)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison_roi(default_ser, default_ser_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

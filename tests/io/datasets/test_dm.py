@@ -11,8 +11,13 @@ from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
+try:
+    import hyperspy.api as hs
+except ModuleNotFoundError:
+    hs = None
 
 DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
@@ -33,8 +38,6 @@ def default_dm(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_dm_raw():
-    import hyperspy.api as hs  # avoid importing top level
-
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
     return np.stack([hs.load(file).data for file in files])
 
@@ -59,8 +62,6 @@ def dm_stack_of_3d(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_dm_3d_raw():
-    import hyperspy.api as hs  # avoid importing top level
-
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))))
     return np.concatenate([hs.load(file).data for file in files], axis=0)
 
@@ -73,11 +74,13 @@ def test_check_valid(default_dm):
     default_dm.check_valid()
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison(default_dm, default_dm_raw, lt_ctx_fast):
     udf = ValidationUDF(reference=default_dm_raw)
     lt_ctx_fast.run_udf(udf=udf, dataset=default_dm)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison_roi(default_dm, default_dm_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],
@@ -88,11 +91,13 @@ def test_comparison_roi(default_dm, default_dm_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_dm, roi=roi)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison_3d(dm_stack_of_3d, default_dm_3d_raw, lt_ctx_fast):
     udf = ValidationUDF(reference=default_dm_3d_raw)
     lt_ctx_fast.run_udf(udf=udf, dataset=dm_stack_of_3d)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison_3d_roi(dm_stack_of_3d, default_dm_3d_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

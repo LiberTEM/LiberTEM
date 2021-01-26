@@ -20,9 +20,13 @@ from libertem.common.buffers import reshaped_view
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg')
-#K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw')
-K2IS_TESTDATA_RAW = '/cachedata/users/weber/libertem-test-data-raw/Capture52/Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw'
+K2IS_TESTDATA_RAW = os.path.join(
+    get_testdata_path(),
+    'Capture52',
+    'Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw'
+)
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
+HAVE_K2IS_RAWDATA = os.path.exists(K2IS_TESTDATA_RAW)
 
 pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testdata")  # NOQA
 
@@ -101,6 +105,7 @@ def test_read(default_k2is):
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
 
 
+@pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_k2is_raw, (-1, *tuple(default_k2is.shape.sig)))
@@ -108,6 +113,7 @@ def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is)
 
 
+@pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

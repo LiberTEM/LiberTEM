@@ -18,6 +18,12 @@ from libertem.udf.raw import PickUDF
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
+try:
+    import hyperspy.api as hs
+except ModuleNotFoundError:
+    hs = None
+
+
 BLO_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
 
@@ -47,8 +53,6 @@ def buffered_blo(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_blo_raw():
-    import hyperspy.api as hs  # avoid importing top level
-
     res = hs.load(str(BLO_TESTDATA_PATH))
     return res.data
 
@@ -87,6 +91,7 @@ def test_read(default_blo):
     assert tuple(t.tile_slice.shape) == (8, 144, 144)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_blo_raw, (-1, *tuple(default_blo.shape.sig)))
@@ -94,6 +99,7 @@ def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_blo)
 
 
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison_roi(default_blo, default_blo_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

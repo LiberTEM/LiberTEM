@@ -14,6 +14,12 @@ from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 from utils import get_testdata_path, ValidationUDF
 
+try:
+    import pims
+except ModuleNotFoundError:
+    pims = None
+
+
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
 
@@ -53,11 +59,10 @@ def buffered_seq(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_seq_raw():
-    import pims  # avoid importing top level
-
     return np.array(pims.open(str(SEQ_TESTDATA_PATH))).reshape((8, 8, 128, 128))
 
 
+@pytest.mark.skipif(pims is None, reason="No PIMS found")
 def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_seq_raw, (-1, *tuple(default_seq.shape.sig)))
@@ -65,6 +70,7 @@ def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_seq)
 
 
+@pytest.mark.skipif(pims is None, reason="No PIMS found")
 def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

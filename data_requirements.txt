@@ -1,6 +1,0 @@
-# additional required packages to run the data pipeline
-hyperspy
-stemtool
-mrcfile
-pyxem
-pims

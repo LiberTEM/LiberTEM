@@ -21,6 +21,11 @@ from libertem.udf.raw import PickUDF
 from utils import (dataset_correction_verification, get_testdata_path, ValidationUDF,
     FakeBackend)
 
+try:
+    import stemtool
+except ModuleNotFoundError:
+    stemtool = None
+
 
 FRMS6_TESTDATA_PATH = os.path.join(get_testdata_path(), 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
@@ -48,6 +53,7 @@ def buffered_frms6(lt_ctx):
     )
 
 
+@pytest.fixture
 def default_frms6_uncorr(lt_ctx):
     ds = FRMS6DataSet(path=FRMS6_TESTDATA_PATH, enable_offset_correction=False)
     ds = ds.initialize(lt_ctx.executor)
@@ -80,8 +86,6 @@ def _unfold_block(block, unbinning_factor=4):
 
 @pytest.fixture(scope='module')
 def default_frms6_raw(tmpdir_factory):
-    import stemtool  # avoid importing on top level
-
     fn = tmpdir_factory.mktemp("data").join("frms6.raw")
     # we use a memory mapped file to make this work
     # on machines that can't hold the full dataset in memory
@@ -233,6 +237,7 @@ def test_correction(default_frms6, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
+@pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_frms6_raw, (-1, *tuple(default_frms6_uncorr.shape.sig)))
@@ -240,6 +245,7 @@ def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr)
 
 
+@pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],
@@ -250,6 +256,7 @@ def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr, roi=roi)
 
 
+@pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison_darkref(default_frms6, default_frms6_darkref):
     corr_ds = default_frms6.get_correction_data().get_dark_frame()
     print(np.max(corr_ds - default_frms6_darkref))
@@ -362,48 +369,48 @@ def test_read_invalid_tileshape(default_frms6):
         next(p.get_tiles(tiling_scheme=tiling_scheme))
 
 
-def test_positive_sync_offset(default_frms6_raw, lt_ctx):
-    udf = SumSigUDF()
+def test_positive_sync_offset(default_frms6, lt_ctx):
+    udf = PickUDF()
     sync_offset = 2
 
+    roi = np.zeros(default_frms6.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[2:10] = True
+
+    ref = lt_ctx.run_udf(dataset=default_frms6, udf=udf, roi=roi)
+
     ds = lt_ctx.load(
         "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset,
-        enable_offset_correction=False
+        enable_offset_correction=True
+    )
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+
+    assert np.allclose(
+        result['intensity'].raw_data,
+        ref['intensity'].raw_data
     )
 
-    result = lt_ctx.run_udf(dataset=ds, udf=udf)
-    result = result['intensity'].raw_data[:ds._meta.shape.nav.size - sync_offset]
 
-    full_shape = default_frms6_raw.shape
-    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
-    cutout = flat_nav[2:8]
-    ref = np.sum(cutout, axis=(-1, -2))
-
-    print(ref.shape, result.shape)
-
-    assert np.allclose(ref, result)
-
-
-def test_negative_sync_offset(default_frms6_raw, lt_ctx):
-    udf = SumSigUDF()
+def test_negative_sync_offset(default_frms6, lt_ctx):
+    udf = PickUDF()
     sync_offset = -2
 
+    roi = np.zeros(default_frms6.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[:6] = True
+
+    ref = lt_ctx.run_udf(dataset=default_frms6, udf=udf, roi=roi)
+
     ds = lt_ctx.load(
         "frms6", path=FRMS6_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset,
-        enable_offset_correction=False
+        enable_offset_correction=True
     )
-
     result = lt_ctx.run_udf(dataset=ds, udf=udf)
-    result = result['intensity'].raw_data[abs(sync_offset):]
 
-    full_shape = default_frms6_raw.shape
-    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
-    cutout = flat_nav[:6]
-    ref = np.sum(cutout, axis=(-1, -2))
-
-    print(ref.shape, result.shape)
-
-    assert np.allclose(ref, result)
+    assert np.allclose(
+        result['intensity'].raw_data[abs(sync_offset):],
+        ref['intensity'].raw_data
+    )
 
 
 def test_offset_smaller_than_image_count(lt_ctx):
@@ -434,31 +441,37 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
-def test_reshape_nav(default_frms6_raw, lt_ctx):
-    udf = SumSigUDF()
+def test_reshape_nav(default_frms6, lt_ctx):
+    udf = PickUDF()
 
-    full_shape = default_frms6_raw.shape
-    flat_nav = reshaped_view(default_frms6_raw, (-1, ) + full_shape[2:])
+    roi = np.zeros(default_frms6.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[:8] = True
+
+    ref = lt_ctx.run_udf(dataset=default_frms6, udf=udf, roi=roi)
 
     ds_1 = lt_ctx.load(
         "frms6",
         path=FRMS6_TESTDATA_PATH,
         nav_shape=(8,),
-        enable_offset_correction=False
+        enable_offset_correction=True
     )
     result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
-    ref_1 = flat_nav[:8].sum(axis=(-1, -2))
-    assert np.allclose(result_1['intensity'].data, ref_1)
+    shape_1 = lt_ctx.run_udf(dataset=ds_1, udf=SumSigUDF())
+
+    assert shape_1['intensity'].data.shape == (8, )
+    assert np.allclose(result_1['intensity'].raw_data, ref['intensity'].raw_data)
 
     ds_2 = lt_ctx.load(
         "frms6",
         path=FRMS6_TESTDATA_PATH,
         nav_shape=(2, 2, 2),
-        enable_offset_correction=False
+        enable_offset_correction=True
     )
     result_2 = lt_ctx.run_udf(dataset=ds_2, udf=udf)
-    ref_2 = flat_nav[:8].sum(axis=(-1, -2)).reshape((2, 2, 2))
-    assert np.allclose(result_2['intensity'].data, ref_2)
+    shape_2 = lt_ctx.run_udf(dataset=ds_2, udf=SumSigUDF())
+    assert shape_2['intensity'].data.shape == (2, 2, 2)
+    assert np.allclose(result_2['intensity'].raw_data, ref['intensity'].raw_data)
 
 
 def test_incorrect_sig_shape(lt_ctx):

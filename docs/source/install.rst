@@ -12,7 +12,8 @@ Installation
 
 .. include:: _single_node.rst
 
-The short version:
+The short version
+-----------------
 
 .. code-block:: shell
 

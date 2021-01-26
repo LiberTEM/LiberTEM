@@ -99,8 +99,6 @@ Before (using a release candidate package)
     * Still usable, decent response times?
 * Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
   in appropriate branch.
-* Add the current LiberTEM version to
-  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_ (add both the singularity and the .desktop file!)
 
 After releasing on GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,3 +113,5 @@ After releasing on GitHub
 * Send announcement message on mailing list
 * Edit :code:`setup.cfg` to include flaky tests again
 * Bump version in master branch to next .dev0
+* Add the current LiberTEM version to
+  `CVL <https://github.com/Characterisation-Virtual-Laboratory/CharacterisationVL-Software>`_ (add both the singularity and the .desktop file!)

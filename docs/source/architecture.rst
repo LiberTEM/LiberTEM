@@ -76,8 +76,8 @@ all parts can run on a single node. We can also skip the caching step, if the da
 is already available locally.
 
 When taking care to avoid needless copying and buffering, we can achieve native
-throughput on each node. With NVMe SSDs, this means we can `process multiple
-gigabytes per second per node <performance>`_.
+throughput on each node. With NVMe SSDs, this means we can :ref:`process multiple
+gigabytes per second per node <performance>`.
 
 
 Mathematical expression for applying masks

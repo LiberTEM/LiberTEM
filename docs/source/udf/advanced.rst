@@ -59,11 +59,11 @@ Real-world example
 ~~~~~~~~~~~~~~~~~~
 
 The :class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` uses
-:meth:`~libertem.udf.UDFTileMixin.process_tile` to implement a custom version of
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile` to implement a custom version of
 a :class:`~libertem.udf.masks.ApplyMasksUDF` that works on log-scaled data. The
 mask stack is stored in a :class:`libertem.common.container.MaskContainer` as part of
 the task data. Note how the :code:`self.meta.slice` property of type
-:class:`~libertem.common.Slice` is used to extract the region from the mask
+:class:`~libertem.common.slice.Slice` is used to extract the region from the mask
 stack that matches the tile using the facilities of a
 :class:`~libertem.common.container.MaskContainer`. After reshaping, transposing and log
 scaling the tile data into the right memory layout, the mask stack is applied to
@@ -96,9 +96,9 @@ Post-processing
 
 Post-processing allows to perform additional processing steps once the data of a
 partition is completely processed with
-:meth:`~libertem.udf.UDFFrameMixin.process_frame`,
-:meth:`~libertem.udf.UDFTileMixin.process_tile` or
-:meth:`~libertem.udf.UDFPartitionMixin.process_partition`. Post-processing is
+:meth:`~libertem.udf.base.UDFFrameMixin.process_frame`,
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile` or
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. Post-processing is
 particularly relevant for tiled processing since that allows to combine the
 performance benefits of tiled processing for a first reduction step with
 subsequent steps that require reduced data from complete frames or even a
@@ -139,7 +139,7 @@ Pre-processing
 Pre-processing allows to initialize result buffers before processing or merging.
 This is particularly useful to set up :code:`dtype=object` buffers, for example
 ragged arrays, or to initialize buffers for operations where the neutral element
-is not 0. :meth:`libertem.udf.UDFPreprocessMixin.preprocess` is executed after
+is not 0. :meth:`libertem.udf.base.UDFPreprocessMixin.preprocess` is executed after
 all buffers are allocated, but before the data is processed. On the worker nodes
 it is executed with views set for the whole partition masked by the current ROI.
 On the central node it is executed with views set for the whole dataset masked
@@ -148,7 +148,7 @@ by the ROI.
 .. versionadded:: 0.3.0
 
 .. versionchanged:: 0.5.0
-    :meth:`libertem.udf.UDFPreprocessMixin.preprocess` is executed on the master
+    :meth:`libertem.udf.base.UDFPreprocessMixin.preprocess` is executed on the master
     node, too. Views for aux data are set correctly on the master node. Previously,
     it was only executed on the worker nodes.
 
@@ -160,26 +160,26 @@ they require several passes over the data. In most cases, :ref:`tiled
 processing<tiled>` will be faster because it uses the L3 cache more efficiently.
 For that reason, per-partition processing should only be used if there are clear
 indications for it. Implementing
-:meth:`~libertem.udf.UDFPartitionMixin.process_partition` activates
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition` activates
 per-partition processing for an UDF.
 
 Precedence
 ----------
 
 The UDF interface looks for methods in the order
-:meth:`~libertem.udf.UDFTileMixin.process_tile`,
-:meth:`~libertem.udf.UDFFrameMixin.process_frame`,
-:meth:`~libertem.udf.UDFPartitionMixin.process_partition`. For now, the first in
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile`,
+:meth:`~libertem.udf.base.UDFFrameMixin.process_frame`,
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. For now, the first in
 that order is executed. In the future, composition of UDFs may allow to use
 different methods depending on the circumstances.
-:meth:`~libertem.udf.UDFTileMixin.process_tile` is the most general method and
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile` is the most general method and
 allows by-frame and by-partition processing as well.
 
 AUX data
 --------
 
 If a parameter is an instance of :class:`~libertem.common.buffers.BufferWrapper`
-that was created using the :meth:`~libertem.udf.UDF.aux_data` class method, the
+that was created using the :meth:`~libertem.udf.base.UDF.aux_data` class method, the
 UDF interface will interpret it as auxiliary data. It will set the views for
 each tile/frame/partition accordingly so that accessing the parameter returns a
 view of the auxiliary data matching the data portion that is currently being
@@ -187,10 +187,10 @@ processed. That way, it is possible to pass parameters individually for each
 frame or to mask the signal dimension.
 
 Note that the :class:`~libertem.common.buffers.BufferWrapper` instance for AUX
-data should always be created using the :meth:`~libertem.udf.UDF.aux_data` class
+data should always be created using the :meth:`~libertem.udf.base.UDF.aux_data` class
 method and not directly by instantiating a
 :class:`~libertem.common.buffers.BufferWrapper` since
-:meth:`~libertem.udf.UDF.aux_data` ensures that it is set up correctly.
+:meth:`~libertem.udf.base.UDF.aux_data` ensures that it is set up correctly.
 
 For masks in the signal dimension that are used for dot products in combination
 with per-tile processing, a :class:`~libertem.common.container.MaskContainer` allows
@@ -201,8 +201,8 @@ Task data
 ---------
 
 A UDF can generate task-specific intermediate data on the worker nodes by
-defining a :meth:`~libertem.udf.UDF.get_task_data` method. The result is
-available as an instance of :class:`~libertem.udf.UDFData` in
+defining a :meth:`~libertem.udf.base.UDF.get_task_data` method. The result is
+available as an instance of :class:`~libertem.udf.base.UDFData` in
 :code:`self.task_data`. Depending on the circumstances, this can be more
 efficient than making the data available as a parameter since it avoids
 pickling, network transport and unpickling.
@@ -280,23 +280,23 @@ Meta information
 
 Advanced processing routines may require context information about the processed
 data set, ROI and current data portion being processed. This information is
-available as properties of the :attr:`libertem.udf.UDF.meta` attribute of type
-:class:`~libertem.udf.UDFMeta`.
+available as properties of the :attr:`libertem.udf.base.UDF.meta` attribute of type
+:class:`~libertem.udf.base.UDFMeta`.
 
 Common applications include allocating buffers with a :code:`dtype` or shape
 that matches the dataset or partition via
-:attr:`libertem.udf.UDFMeta.dataset_dtype`,
-:attr:`libertem.udf.UDFMeta.input_dtype`,
-:attr:`libertem.udf.UDFMeta.dataset_shape` and
-:attr:`libertem.udf.UDFMeta.partition_shape`.
+:attr:`~libertem.udf.base.UDFMeta.dataset_dtype`,
+:attr:`~libertem.udf.base.UDFMeta.input_dtype`,
+:attr:`~libertem.udf.base.UDFMeta.dataset_shape` and
+:attr:`~libertem.udf.base.UDFMeta.partition_shape`.
 
 The currently used compute device class can be accessed through
-:attr:`libertem.udf.UDFMeta.device_class`. It defaults to 'cpu' and can be 'cuda'
+:attr:`libertem.udf.base.UDFMeta.device_class`. It defaults to 'cpu' and can be 'cuda'
 for UDFs that make use of :ref:`udf cuda` support.
 
 For more advanced applications, the ROI and currently processed data portion are
-available as :attr:`libertem.udf.UDFMeta.roi` and
-:attr:`libertem.udf.UDFMeta.slice`. This allows to replace the built-in masking
+available as :attr:`libertem.udf.base.UDFMeta.roi` and
+:attr:`libertem.udf.base.UDFMeta.slice`. This allows to replace the built-in masking
 behavior of :class:`~libertem.common.buffers.BufferWrapper` for result buffers
 and aux data with a custom implementation. The :ref:`mask container for tiled
 processing example<slice example>` makes use of these attributes to employ a
@@ -348,7 +348,7 @@ dimension as it appears in processing:
 dtype support
 -------------
 
-UDFs can override :meth:`~libertem.udf.UDF.get_preferred_input_dtype` to
+UDFs can override :meth:`~libertem.udf.base.UDF.get_preferred_input_dtype` to
 indicate a "lowest common denominator" compatible dtype. The actual input dtype
 is determined by combining the indicated preferred dtype with the input
 dataset's native dtype using :func:`numpy.result_type`. The default preferred

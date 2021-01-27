@@ -106,7 +106,7 @@ After releasing on GitHub
 * Confirm that all release packages are built and release notes are up-to-date
 * Install release package
 * Confirm correct version info
-* confirm package upload to PyPi
+* confirm package upload to PyPI
 * Publish new version on zenodo.org
 * Update documentation with new links, if necessary
     * Add zenodo badge for the new release to Changelog page

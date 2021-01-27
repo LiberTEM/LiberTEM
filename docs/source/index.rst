@@ -44,11 +44,11 @@ Documentation
    :maxdepth: 2
    :caption: For developers
 
-   contributing
    dev/setup.rst
-   dev/how-io-works
-   architecture
+   contributing
    debugging
+   architecture
+   dev/how-io-works
    gsoc
    authorship
 

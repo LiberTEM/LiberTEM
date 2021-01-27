@@ -1,7 +1,7 @@
 How does I/O work in LiberTEM?
 ==============================
 
-Many algorithms benefit from :ref:`tiled` where the same subset in the signal
+Many algorithms benefit from :ref:`tiled` where the same slice of the signal
 dimension is processed for several frames in a row. In many cases, algorithms
 have specific minimum and maximum sizes in signal dimension, navigation
 dimension or total size where they operate efficiently. Smaller sizes might
@@ -21,6 +21,8 @@ that fulfills requirements from both UDF and dataset side as far as possible.
 However, it is not always guaranteed that the supplied data will fall within
 the requested limits.
 
+.. versionadded:: 0.6.0
+  This guide is written for version 0.6.0
 
 High-level overview
 ~~~~~~~~~~~~~~~~~~~
@@ -40,43 +42,48 @@ High-level overview
   of :code:`FileSet` to the :code:`Partition` and overriding :code:`FileSet.get_read_ranges`,
   implementing a :code:`Decoder`, or even completely overriding
   the :code:`Partition.get_tiles` functionality.
-- :code:`IOBackend.get_tiles` has two modes of operation: either it reads the
+- There are currently two I/O backends implemented: :code:`MMapBackend` and :code:`BufferedBackend`,
+  which are useful for different storage media.
+- :code:`MMapBackend.get_tiles` has two modes of operation: either it returns a reference to the
   tiles "straight" from the file, without copying or decoding, or it
   uses the read ranges and copies/decodes the tiles in smaller units.
 - When reading the tiles "straight", the read ranges are not used, instead
   only the slice information for each tile is used. That also means that this
   mode only works for very simple formats, when reading without a :code:`roi`
   and when not doing any :code:`dtype` conversion or decoding.
+- For most formats, a :code:`sync_offset` can be specified, which can be used to
+  correct for synchronization errors by inserting blank frames,
+  or ignoring one or more frames, at the beginning or at the end of the data set.
 
 Read ranges
 -----------
 
-In :code:`FileSet.get_read_ranges`, the reading parameters (TilingScheme, roi etc.)
+In :code:`FileSet.get_read_ranges`, the reading parameters (:code:`TilingScheme`, :code:`roi` etc.)
 are translated into one or more byte ranges (offset, length) for each tile.
 You can imagine it as translating pixel/element positions into byte offsets.
 
-Each range corresponds to a read operation on a single file, which means read
-ranges for a single tile can correspond to reads from multiple files. This
-is important when reading from a data set with many small files - we can
-still generate tiles for efficient processing.
+Each range corresponds to a read operation on a single file, and with multiple
+read ranges per tile, ranges for a single tile can correspond to reads from multiple files.
+This is important when reading from a data set with many small files - we can
+still generate deep tiles for efficient processing.
 
-There are some built-in common parameters in `FileSet`, like
-`frame_header_bytes`, `frame_footer_bytes`, which can be used to easily
+There are some built-in common parameters in :code:`FileSet`, like
+:code:`frame_header_bytes`, :code:`frame_footer_bytes`, which can be used to easily
 implement formats where the reading just needs to skip a few bytes for each
 frame header/footer.
 
 If you need more influence over how data is read, you can override
-`FileSet.get_read_ranges` and return your own read ranges. You can use
-the `make_get_read_ranges` function to re-use much of the tiling logic,
-or implement this yourself. Using `make_get_read_ranges` you can either
-override just the `px_to_bytes` part, or `read_ranges_tile_block` for whole
-tile blocks. This is done by passing in njit-ed functions to `make_get_read_ranges`.
-`make_get_read_ranges` should only be called on module-level to enable
+:code:`FileSet.get_read_ranges` and return your own read ranges. You can use
+the :code:`make_get_read_ranges` function to re-use much of the tiling logic,
+or implement this yourself. Using :code:`make_get_read_ranges` you can either
+override just the :code:`px_to_bytes` part, or :code:`read_ranges_tile_block` for whole
+tile blocks. This is done by passing in njit-ed functions to :code:`make_get_read_ranges`.
+:code:`make_get_read_ranges` should only be called on module-level to enable
 caching of the numba compilation.
 
 Read ranges are generated as an array with the following shape::
 
-    (number_of_tiles, rr_per_tile, rr_num_entries)
+    :code:`(number_of_tiles, rr_per_tile, rr_num_entries)`
 
 :code:`rr_per_tile` here is the maximum number of read ranges per tile - there
 can be tiles that are smaller than this, for example at the end of a partition.

@@ -49,7 +49,7 @@ Before creating a pull request, please make sure all tests still pass. See
 and add test cases for your contribution. See the section `Code coverage`_ below
 on how to check if your new code is covered by tests.
 
-To make sure our code base stays readable, we follow a `Code Style`_.
+To make sure our code base stays readable and consistent, we follow a `Code Style`_.
 
 Please update ``packaging/creators.json`` with your author information when you
 contribute to LiberTEM for the first time. This helps us to keep track of all
@@ -147,6 +147,13 @@ Now you can run pytest on a subset of tests, for example:
 
    (libertem) $ pytest tests/test_analysis_masks.py
 
+Or you can run tests in parallel, which may make sense if you have a beefy
+machine with many cores and a lot of RAM:
+
+.. code-block:: shell
+
+   (libertem) $ pytest -n auto tests/
+
 See the `pytest documentation
 <https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
 for details on how to select which tests to run. Before submitting a pull
@@ -178,7 +185,7 @@ In these examples, ``--`` separates the the arguments of tox (left of ``--``)
 from the arguments for pytest on the right. List of marks used in our test
 suite:
 
-- `slow`: tests that take much more than 1 second to run
+- `slow`: tests that take much longer than 1 second to run
 - `functional`: tests that spin up a local dask cluster
 
 CUDA
@@ -265,45 +272,6 @@ default:
    $ cd client/
    $ npm test
 
-On Windows
-~~~~~~~~~~
-
-On Windows with Anaconda, you have to create named aliases for the Python
-interpreter before you can run :literal:`tox` so that tox finds the python
-interpreter where it is expected. Assuming that you run LiberTEM with Python
-3.6, place the following file as :literal:`python3.6.bat` in your LiberTEM conda
-environment base folder, typically
-:literal:`%LOCALAPPDATA%\\conda\\conda\\envs\\libertem\\`, where the
-:literal:`python.exe` of that environment is located.
-
-.. code-block:: bat
-
-    @echo off
-    REM @echo off is vital so that the file doesn't clutter the output
-    REM execute python.exe with the same command line
-    @python.exe %*
-
-To execute tests with Python 3.7, you create a new environment with Python 3.7:
-
-.. code-block:: shell
-
-    > conda create -n libertem-3.7 python=3.7
-
-Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment
-alongside :literal:`python3.6.bat` and make it execute the Python interpreter of
-your new libertem-3.7 environment:
-
-.. code-block:: bat
-
-    @echo off
-    REM @echo off is vital so that the file doesn't clutter the output
-    REM execute python.exe in a different environment
-    REM with the same command line
-    @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
-
-See also:
-https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
-
 Code style
 ----------
 
@@ -313,7 +281,7 @@ the flake8 section in :code:`setup.cfg` for the current PEP8 settings. As a
 general rule, try to keep your changes in a similar style as the surrounding
 code.
 
-You can check the code style by running:
+Before submitting a pull request, please check the code style by running:
 
 .. code-block:: bat
 
@@ -344,7 +312,11 @@ the live building process:
 
     $ tox -e docs
 
-You can then view a live-built version at http://localhost:8008
+You can then view the documentation at http://localhost:8008, which will
+be rebuilt every time a change to the documentation source code is detected.
+Note that changes to the Python source code don't trigger a rebuild, so if
+you are working on docstrings, you may have to manually trigger a rebuild,
+for example by saving one of the :code:`.rst` files.
 
 You can include code samples with the `doctest sphinx extension
 <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ and test
@@ -356,10 +328,10 @@ them with
 
 .. _`building the client`:
 
-Building the client
--------------------
+Building the GUI (client)
+-------------------------
 
-The LiberTEM client is written in TypeScript, using a combination of
+The LiberTEM GUI (also called the client) is written in TypeScript, using a combination of
 React/Redux/Redux-Saga. The client communicates with the Python API server using
 both HTTP and websockets. Because browsers can't directly execute TypeScript,
 there is a build step involved, which translates the TypeScript code into
@@ -367,13 +339,13 @@ JavaScript that is then understood by the browser. This build step is needed
 both for development and then again for building the production version.
 
 If you would like to contribute to the client, you first need to set up the
-development environment. For this, first install NodeJS. On Linux, we recommend
+development environment. For this, first install Node.js. On Linux, we recommend
 to `install via package manager
 <https://nodejs.org/en/download/package-manager/>`_, on Windows `the installer
 <https://nodejs.org/en/download/>`_ should be fine. Choose the current LTS
 version.
 
-One you have NodeJS installed, you should have the :code:`npm` command available
+One you have Node.js installed, you should have the :code:`npm` command available
 in your path. You can then install the needed build tools and dependencies by
 changing to the client directory and running the install command:
 

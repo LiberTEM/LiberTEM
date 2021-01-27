@@ -1,15 +1,37 @@
 Setting up a development environment
 ====================================
 
+When you want to develop LiberTEM itself, or run the latest git version, the installation works a
+bit differently as opposed to installing from PyPI.
+As a first step, please follow the instructions for creating a Python virtual environment from
+the :ref:`installation` section. Then, instead of installing from PyPI, follow the instructions below.
+
+Prerequisites
+~~~~~~~~~~~~~
+
+In addition to a Python installation, there are a few system dependencies needed when contributing:
+
+* `pandoc <https://pandoc.org/installing.html>`_ is needed to build the documentation
+* Node.js is needed for rebuilding the LiberTEM GUI. On Linux, we recommend
+  to `install via package manager
+  <https://nodejs.org/en/download/package-manager/>`_, on Windows `the installer
+  <https://nodejs.org/en/download/>`_ should be fine. Choose the current LTS
+  version.
+
+.. _`installing from a git clone`:
+
+Installing from a git clone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. note::
     Distinguish between installing a released version and installing the latest
-    development version. Both :ref:`installing from PyPi` and :ref:`installing from a git
+    development version. Both :ref:`installing from PyPI` and :ref:`installing from a git
     clone` use pip, but they do fundamentally different things. :code:`pip
-    install libertem` downloads the latest release from PyPi.
+    install libertem` downloads the latest release from PyPI.
 
     Changing directory to a git clone and running :code:`pip install -e .`
     installs from the local directory in editable mode. "Editable mode" means
-    that the source directory is linked into the current Python environment
+    that the source directory is "linked" into the current Python environment
     rather than copied. That means changes in the source directory are
     immediately active in the Python environment.
 
@@ -17,17 +39,6 @@ Setting up a development environment
     development work and using :ref:`the latest features in the development
     branch <continuous>`. Installing from PyPI is easier and preferred for
     production use and for new users.
-
-
-When you want to develop LiberTEM itself, or run the latest git version, the installation works a
-bit differently as opposed to installing from PyPi.
-As a first step, please follow the instructions for creating a Python virtual environment from
-the :ref:`installation` section. Then, instead of installing from PyPi, follow the instructions below.
-
-.. _`installing from a git clone`:
-
-Installing from a git clone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to follow the latest development, you should install LiberTEM from
 a git clone. As a prerequisite, you need to have git installed on your system. On Linux,
@@ -81,7 +92,7 @@ current directory!
 This should download the dependencies and install LiberTEM in the environment.
 Please continue by reading the :ref:`usage documentation`.
 
-Installing extra dependencies works just like with PyPi:
+Installing extra dependencies works just like when installing LiberTEM from PyPI:
 
 .. code-block:: shell
 
@@ -103,3 +114,43 @@ mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
 That means the changes pulled from git are active immediately. Only if the
 requirements for installed third-party packages have changed, you should re-run
 ``pip install -e .`` in order to install any missing packages.
+
+Setting up tox on Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We are using tox to run our tests.
+On Windows with Anaconda, you have to create named aliases for the Python
+interpreter before you can run :literal:`tox` so that tox finds the python
+interpreter where it is expected. Assuming that you run LiberTEM with Python
+3.6, place the following file as :literal:`python3.6.bat` in your LiberTEM conda
+environment base folder, typically
+:literal:`%LOCALAPPDATA%\\conda\\conda\\envs\\libertem\\`, where the
+:literal:`python.exe` of that environment is located.
+
+.. code-block:: bat
+
+    @echo off
+    REM @echo off is vital so that the file doesn't clutter the output
+    REM execute python.exe with the same command line
+    @python.exe %*
+
+To execute tests with Python 3.7, you create a new environment with Python 3.7:
+
+.. code-block:: shell
+
+    > conda create -n libertem-3.7 python=3.7
+
+Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment
+alongside :literal:`python3.6.bat` and make it execute the Python interpreter of
+your new libertem-3.7 environment:
+
+.. code-block:: bat
+
+    @echo off
+    REM @echo off is vital so that the file doesn't clutter the output
+    REM execute python.exe in a different environment
+    REM with the same command line
+    @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
+
+See also:
+https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows

@@ -124,9 +124,9 @@ For more information about conda, see their `documentation about creating and
 managing environments
 <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
 
-.. _`installing from PyPi`:
+.. _`installing from PyPI`:
 
-Installing from PyPi
+Installing from PyPI
 ~~~~~~~~~~~~~~~~~~~~
 
 To install the latest release version, you can use pip. Activate the Python
@@ -149,7 +149,7 @@ we recommend `installing PyTorch <https://pytorch.org/>`_. We currently use
 PyTorch only on the CPU. Contributions to use GPUs as well are very welcome!
 
 You can let pip install PyTorch automatically by using the torch variant, for
-example from PyPi:
+example from PyPI:
 
 .. code-block:: shell
 
@@ -180,7 +180,7 @@ dependency because of installation issues on some platforms.
 Updating
 ~~~~~~~~
 
-When installed from PyPi via pip, you can update like this:
+When installed from PyPI via pip, you can update like this:
 
 .. code-block:: shell
 
@@ -191,7 +191,9 @@ have changed.
 
 After updating the installation, you can run the updated version by restarting
 the libertem-server and afterwards reloading all browser windows that are
-running the LiberTEM GUI.
+running the LiberTEM GUI. In other environments, like jupyter notebooks, you
+need to restart the Python interpreter to make sure the new version is used,
+for example by restarting the ipython kernel.
 
 .. _`install on windows`:
 

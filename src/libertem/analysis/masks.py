@@ -140,7 +140,7 @@ class SingleMaskResultSet(AnalysisResultSet):
         the navigation dimension. Absolute of the result if the dataset or mask contains
         complex numbers.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
 
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of the selected region. This is only available if the dataset

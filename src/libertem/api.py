@@ -298,7 +298,7 @@ class Context:
             may have pixel (0, 0) at the lower left corner. This has to be corrected
             to get the sign of the y shift as well as curl and divergence right.
 
-            .. versionadded:: 0.6.0.dev0
+            .. versionadded:: 0.6.0
 
         scan_rotation : float
             Scan rotation in degrees.
@@ -312,7 +312,7 @@ class Context:
             vector clock-wise. That means if the detector seems rotated to the right relative
             to the scan, this value should be negative to counteract this rotation.
 
-            .. versionadded:: 0.6.0.dev0
+            .. versionadded:: 0.6.0
 
         Returns
         -------

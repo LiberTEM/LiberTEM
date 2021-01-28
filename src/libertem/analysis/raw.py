@@ -61,7 +61,7 @@ class PickResultSet(AnalysisResultSet):
         The specified detector frame. Absolute value if the dataset
         contains complex numbers. Linear visualization.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
 
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the specified detector frame. This is only available if the dataset

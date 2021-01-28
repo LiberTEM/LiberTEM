@@ -27,7 +27,7 @@ class UDFMeta:
     .. versionchanged:: 0.4.0
         Added distinction of dataset_dtype and input_dtype
 
-    .. versionchanged:: 0.6.0.dev0
+    .. versionchanged:: 0.6.0
         Information on compute backend added
     """
 
@@ -267,7 +267,7 @@ class UDFData:
             buf.flush(debug=debug)
 
     def export(self):
-        # .. versionadded:: 0.6.0.dev0
+        # .. versionadded:: 0.6.0
         for k, buf in self._get_buffers():
             buf.export()
 

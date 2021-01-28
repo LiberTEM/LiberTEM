@@ -69,7 +69,7 @@ def rotate_precalc(y, x, cos_angle, sin_angle):
     y, x : float or numpy.ndarray
         Y and X components of rotated vector(s)
 
-    .. versionadded:: 0.6.0.dev0
+    .. versionadded:: 0.6.0
     '''
     r_x = cos_angle * x - sin_angle * y
     r_y = sin_angle * x + cos_angle * y
@@ -99,7 +99,7 @@ def rotate_deg(y, x, degrees):
     y, x : float or numpy.ndarray
         Y and X components of rotated vector(s)
 
-    .. versionadded:: 0.6.0.dev0
+    .. versionadded:: 0.6.0
     '''
     return rotate_rad(y, x, np.pi/180*degrees)
 
@@ -127,7 +127,7 @@ def rotate_rad(y, x, radians):
     y, x : float or numpy.ndarray
         Y and X components of rotated vector(s)
 
-    .. versionadded:: 0.6.0.dev0
+    .. versionadded:: 0.6.0
     '''
     return rotate_precalc(y, x, cos_angle=np.cos(radians), sin_angle=np.sin(radians))
 

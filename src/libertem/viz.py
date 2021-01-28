@@ -29,6 +29,25 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
 
 
 def encode_image(result, save_kwargs=None):
+    """
+    Save the RGBA data in ``result`` to an image with parameters ``save_kwargs``
+    passed to ``PIL.Image.save``.
+
+    Parameters
+    ----------
+    result : numpy.ndarray
+        2d array of intensity values
+
+    save_kwargs : dict or None
+        dict of kwargs passed to Pillow when saving the image, can be used to set
+        the file format, quality, ...
+
+    Returns
+    -------
+
+    BytesIO
+        a buffer containing the result image (as PNG/JPG/... depending on save_kwargs)
+    """
     if save_kwargs is None:
         save_kwargs = {'format': 'png'}
     # see also: https://stackoverflow.com/a/10967471/540644
@@ -42,8 +61,8 @@ def encode_image(result, save_kwargs=None):
 
 def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=None):
     """
-    Normalize and visualize ``result`` with ``colormap`` and save it to an image
-    with parameters ``save_kwargs``.
+    Normalize and visualize ``result`` with ``colormap`` and return the
+    resulting RGBA data as an array.
 
     Parameters
     ----------
@@ -53,15 +72,12 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
     colormap : matplotlib colormap or None
         colormap used for visualizing intensity values, defaults to ColormapCubehelix()
 
-    save_kwargs : dict or None
-        dict of kwargs passed to Pillow when saving the image, can be used to set
-        the file format, quality, ...
-
     Returns
     -------
 
-    BytesIO
-        a buffer containing the result image (as PNG/JPG/... depending on save_kwargs)
+    np.array
+        A numpy array of shape (Y, X, 4) containing RGBA data, suitable for
+        passing to `Image.fromarray` in PIL.
     """
     if logarithmic:
         cnorm = colors.LogNorm

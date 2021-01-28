@@ -13,9 +13,12 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
 from libertem.udf.raw import PickUDF
+from libertem.udf.masks import ApplyMasksUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
+from libertem.io.dataset.base.tiling import TilingScheme
+from libertem import masks
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
@@ -122,6 +125,24 @@ def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
     )
     udf = ValidationUDF(reference=default_k2is_raw[roi])
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is, roi=roi)
+
+
+@pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
+def test_comparison_mask(default_k2is, default_k2is_raw, local_cluster_ctx, lt_ctx):
+    default_k2is_raw_ds = local_cluster_ctx.load(
+        "raw", K2IS_TESTDATA_RAW, dtype="u2", nav_shape=(34, 35), sig_shape=(1860, 2048),
+    )
+
+    udf = ApplyMasksUDF(
+        mask_factories=[lambda: masks.circular(centerX=1024, centerY=930, radius=465,
+                                               imageSizeX=2048, imageSizeY=1860)]
+    )
+    r1 = local_cluster_ctx.run_udf(udf=udf, dataset=default_k2is)
+    r2 = local_cluster_ctx.run_udf(udf=udf, dataset=default_k2is_raw_ds)
+    assert np.allclose(
+        r1['intensity'],
+        r2['intensity'],
+    )
 
 
 def test_read_full_frames(default_k2is):
@@ -409,3 +430,16 @@ def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_k2is, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.with_numba
+def test_regression_simple_stride(lt_ctx, default_k2is):
+    # bug that only seems happens if tileshape[-1] == 16 and tileshape[1] != 930:
+    # <TilingScheme (depth=6) shapes=[(1860, 16)] len=128>
+    ts = TilingScheme.make_for_shape(
+        tileshape=Shape((6, 1860, 16), sig_dims=2),
+        dataset_shape=default_k2is.shape.flatten_nav()
+    )
+    print(ts)
+    p = list(default_k2is.get_partitions())[-1]
+    t0 = next(p.get_tiles(tiling_scheme=ts))

@@ -132,7 +132,8 @@ def decode_k2is_new_v2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape)
     # shortcut, in case we don't need to handle multiple
     # blocks in x direction:
     if stride_y == 16:
-        return decode_uint12_le(inp=inp, out=out[idx, 930 * block_y_i:930 * (block_y_i + 1), ...])
+        block_out = out[tile_idx, 16 * 930 * block_y_i:16 * 930 * (block_y_i + 1)]
+        return decode_uint12_le(inp=inp, out=block_out)
 
     # starting offset of the current block:
     # 930 * block_y_i:930 * (block_y_i + 1),

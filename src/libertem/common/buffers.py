@@ -51,7 +51,7 @@ def zeros_aligned(size, dtype):
 
 
 def to_numpy(a):
-    # .. versionadded:: 0.6.0.dev0
+    # .. versionadded:: 0.6.0
     cuda_device = get_use_cuda()
     if isinstance(a, np.ndarray):
         return a

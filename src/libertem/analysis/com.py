@@ -130,7 +130,7 @@ class COMResultSet(AnalysisResultSet):
     By default, the shift is given in pixel coordinates, i.e. positive x shift goes to the right
     and positive y shift goes to the bottom. See also :ref:`concepts`.
 
-    .. versionchanged:: 0.6.0.dev0
+    .. versionchanged:: 0.6.0
         The COM analysis now supports flipping the y axis and rotating the vectors.
 
     .. versionadded:: 0.3.0
@@ -148,7 +148,7 @@ class COMResultSet(AnalysisResultSet):
     curl : libertem.analysis.base.AnalysisResult
         Curl of the center of mass 2D vector field at a given point.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
 
     x : libertem.analysis.base.AnalysisResult
         X component of the center of mass shift

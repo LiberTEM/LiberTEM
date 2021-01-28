@@ -66,7 +66,7 @@ class SumResultSet(AnalysisResultSet):
         preserving the signal dimension. Absolute value of the sum if the dataset
         contains complex numbers. Lin-scaled visualization.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
 
     intensity_real : libertem.analysis.base.AnalysisResult
         Real part of the sum of all detector frames along the navigation dimension,

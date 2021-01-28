@@ -9,18 +9,160 @@ Changelog
     ctx = api.Context(executor=InlineJobExecutor())
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
 
-.. _continuous:
-.. _`v0-6-0`:
+.. .. _continuous:
 
-0.6.0.dev0 (continuous)
-#######################
-
-.. toctree::
-   :glob:
-
-   changelog/*/*
+.. .. toctree::
+..    :glob:
+.. 
+..    changelog/*/*
 
 .. _latest:
+.. _`v0-6-0`:
+
+0.6.0
+#####
+
+We are pleased to announce the latest LiberTEM release, with many
+improvements since 0.5. We would like to highlight the contributions of our
+GSoc 2020 students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ and
+`@twentyse7en <https://github.com/twentyse7en>`_, who implemented significant
+improvements in the areas of I/O and the user interface. Another highlight of
+this release is the support of NVidia GPUs, both via CuPy and via native
+libraries. A lot of work was done to implement tiled reading, resulting in a
+new I/O system. This improves performance in many circumstances, especially
+when dealing with large detector frames. In addition, a correction module was
+integrated into the new I/O system, which can correct gain, subtract a dark
+reference, and patch pixel defects on the fly. See below for the full
+changelog!
+
+New features
+------------
+
+* I/O overhaul
+ * Implement tiled reading for most file formats
+   (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
+ * Allow UDFs that implement :code:`process_tile` to influence the tile
+   shape and make information about the tiling scheme available to the UDF
+   (:issue:`554`, :issue:`247`, :issue:`635`).
+ * Update :code:`MemoryDataSet` to allow testing with different
+   tile shapes (:issue:`634`).
+ * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
+   backend for their circumstance when loading via the new :code:`io_backend`
+   parameter of :code:`Context.load`. This fixes a K2IS performance regression
+   (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
+   a performance regression (:issue:`838`) on slower media (like HDDs), by
+   adding a buffered reading backend that tries its best to linearize I/O per-worker.
+ * For now, direct I/O is no longer supported, please let us know if this is an
+   important use-case for you (:issue:`716`)!
+* Support for specifying logging level from CLI (:pr:`758`).
+* Support for Norpix SEQ files (:issue:`153`, :pr:`767`).
+* Support for MRC files, as supported by ncempy (:issue:`152`, :pr:`873`).
+* Support for loading stacks of 3D DM files (:pr:`877`).
+* GUI: Filebrowser improvements: users can star directories in the file browser for easy navigation (:pr:`772`).
+* Support for running multiple UDFs "at the same time", not yet exposed in public APIs (:pr:`788`).
+* GUI: Users can add or remove scan size dimensions according to the dataset's shape (:pr:`779`).
+* GUI: Shutdown button to stop server, useful for example for jupyterhub integration (:pr:`786`).
+* Infrastructure for consistent coordinate transforms are added in
+  :mod:`libertem.corrections.coordinates` and :mod:`libertem.utils`. See also a
+  description of coordinate systems in :ref:`concepts`.
+* :meth:`~libertem.api.Context.create_com_analysis` now allows to specify a :code:`flipped y axis`
+  and a scan rotation angle to deal with MIB files and scan rotation correctly. (:issue:`325`, :pr:`786`).
+* Corrections can now be specified by the user when running a UDF (:pr:`778,831,939`).
+* Support for loading dark frame and gaim map that are sometimes shipped with SEQ data sets.
+* GPU support: process data on CPUs, CUDA devices or both (:pr:`760`, :ref:`udf cuda`).
+* Implement CuPy support in :class:`~libertem.udf.holography.HoloReconstructUDF`, currently deactivated due to :issue:`815` (:pr:`760`).
+* GUI: Allows the user to select the GPUs to use when creating a new local cluster (:pr:`812`).
+* GUI: Support to download Jupyter notebook corresponding to an analysis
+  made by a user in GUI (:pr:`801`).
+* GUI: Copy the Jupyter notebook cells corresponding to the
+  analysis directly from GUI, including cluster connection details (:pr:`862`, :pr:`863`)
+* Allow reshaping datasets into a custom shape. The :code:`DataSet` implementations (except HDF5 and K2IS)
+  and GUI now allow specifying :code:`nav_shape` and :code:`sig_shape`
+  parameters to set a different shape than the layout in the
+  dataset (:issue:`441`, :pr:`793`).
+* All :code:`DataSet` implementations handle missing data
+  gracefully (:issue:`256`, :pr:`793`).
+* The :code:`DataSet` implementations (except HDF5 and K2IS)
+  and GUI now allow specifying a :code:`sync_offset` to
+  handle synchronization/acquisition problems (:pr:`793`).
+* Users can access the coordinates of a tile/partition slice
+  through :attr:`~libertem.udf.base.UDFMeta.coordinates` (:issue:`553`, :pr:`793`).
+* Cache warmup when opening a data set: Precompiles jit-ed functions on a single process per node, in a controlled manner,
+  preventing CPU oversubscription. This should further improve once numba can cache functions which capture other functions
+  in their closure (:pr:`886`, :issue:`798`).
+* Allow selecting lin and log scaled visualization for sum, stddev, pick and single mask analyses 
+  to handle data with large dynamic range. This adds key :code:`intensity_lin` to
+  :class:`~libertem.analysis.sum.SumResultSet`, :class:`~libertem.analysis.sum.PickResultSet`
+  and the result of :class:`~libertem.analysis.sd.SDAnalysis`.
+  It adds key :code:`intensity_log` to :class:`~libertem.analysis.sum.SingleMaskResultSet`.
+  The new keys are chosen to not affect existing keys
+  (:issue:`925`, :pr:`929`).
+* Tuples can be added directly to :code:`Shape` objects. Right
+  addition adds to the signal dimensions of the :code:`Shape`
+  object while left addition adds to the navigation
+  dimensions (:pr:`749`)
+
+Bugfixes
+--------
+
+* Missing-directory error isn't thrown if it's due to last-recent-directory not being available (:pr:`748`).
+* GUI: when cluster connection fails, reopen form with parameters user submitted (:pr:`735`).
+* GUI: Fixed the glitch in file opening dialogue by disallowing parallel browsing before loading is concluded (:pr:`752`).
+* Handle empty ROI and extra_shape with zero. Empty result buffers of the appropriate shape are returned if the ROI
+  is empty or :code:`extra_shape` has a zero (:pr:`765`)
+* Improve internals of :mod:`libertem.corrections.detector` and
+  :mod:`libertem.corrections.corrset` to better support correction
+  of many dead pixels. (:pr:`890`, :issue:`889`)
+* Handle single-frame partitions in combination with aux data.
+  Instead of squeezing the aux buffer, reshape to the correct shape (:issue:`791`, :pr:`902`).
+* Libertem-server can now be started from Bash on Windows (:pr:`731`)
+* Fix reading without a copy from multi-file datasets. The start offset of the file was
+  not taken account when indexing into the memory maps (:issue:`903`).
+* Improve performance and reduce memory consumption of point analysis.
+  Custom right hand side matrix product to reduce memory consumption and
+  improve performance of sparse masks, such as point analysis. See also
+  `scipy/13211 <https://github.com/scipy/scipy/issues/13211>`_ (:issue:`917`, :pr:`920`). 
+* Fix stability issue with multiple dask clients. :code:`dd.as_completed` needs
+  to specify the :code:`loop` to work with multiple :code:`dask.distributed` clients (:pr:`921`).
+* GUI: Snap to pixels in point selection analysis. Consistency between point
+  selection and picking (:issue:`926`, :pr:`927`).
+* Open datasets with autodetection, positional and keyword arguments.
+  Handle keyword and positional arguments to :code:`Context.load('auto', ...)`
+  correctly (:issue:`936`, :pr:`938`).
+
+Documentation
+-------------
+
+* Switched to the readthedocs sphinx theme, improving the overall
+  documentation structure. The developer documentation is now in
+  a separate section from the user documentation.
+
+Misc
+----
+
+* Command line options can also be accessed with shorter alternatives (:pr:`757`).
+* Depend on Numba >= 0.49.1 to support setting Numba thread count (:pr:`783`), bumped to 0.51
+  to support caching improvements (:pr:`886`).
+* libertem-server: Ask for confirmation if the user press ctrl+c. Can immediately stop using
+  another ctrl+c (:pr:`781`).
+* Included `pytest-benchmark <https://pytest-benchmark.readthedocs.io/en/latest/usage.html>`_
+  to integrate benchmarks in the test infrastructure. See :ref:`benchmarking` for details (:pr:`819`).
+* The X and Y components for the color wheel visualization in Center of
+  Mass and Radial Fourier Analysis are swapped to match the axis convention in
+  empyre. This just changes the color encoding in the visualization and not the
+  result (:pr:`851`).
+
+Deprecations
+------------
+
+* The :code:`tileshape` parameter of :code:`DataSet` implementations is deprecated in
+  favor of tileshape negotiation and will be ignored, if given (:issue:`754`, :pr:`777`).
+* Remove color wheel code from :code:`libertem.viz` and replace with imports from empyre.
+  Note that these functions expect three vector components instead of two (:pr:`851`).
+* The new and consistent :code:`nav_shape` and :code:`sig_shape` parameters should be used
+  when loading data. The old :code:`scan_size` and :code:`detector_size` parameters,
+  where they existed, are still recognized (:pr:`793`).
+
 .. _`v0-5-1`:
 
 0.5.1 / 2020-08-12

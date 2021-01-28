@@ -6,7 +6,7 @@ import distutils
 import shutil
 from setuptools.command.sdist import sdist
 from setuptools.command.build_py import build_py
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 class BuildClientCommand(distutils.cmd.Command):
@@ -172,16 +172,7 @@ setup(
         'cupy': 'cupy',
     },
     package_dir={"": "src"},
-    packages=[
-        "libertem",
-        "libertem.common",
-        "libertem.io",
-        "libertem.io.dataset",
-        "libertem.executor",
-        "libertem.job",
-        "libertem.web",
-        "libertem.analysis",
-    ],
+    packages=find_packages(where='src'),
     entry_points={
         'console_scripts': [
             'libertem-server=libertem.web.cli:main',

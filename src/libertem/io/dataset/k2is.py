@@ -78,37 +78,9 @@ def decode_uint12_le(inp, out):
         out[i * 2 + 1] = b
 
 
-@numba.njit(inline='always')
-def decode_k2is_old(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
-    """
-    Decode a single block, from a single read range, into a tile that may
-    contain multiple blocks in the signal dimensions. This function is called
-    multiple times for a single tile, for all read ranges that are part of this
-    tile.
-    """
-    # blocks per tile (in signal dimensions)
-    blocks_per_tile = out.shape[1] // (930 * 16)
-    if blocks_per_tile == 1:
-        # shortcut: blockbuf not needed
-        return decode_uint12_le(inp=inp, out=out[idx])
-    # FIXME: get rid of this allocation, if possible at all
-    blockbuf = np.empty(BLOCK_SHAPE[0] * BLOCK_SHAPE[1], dtype=out.dtype)
-    n_blocks_y, n_blocks_x, block_y_i, block_x_i = rr[3:]
-    out_3d = out.reshape((out.shape[0], n_blocks_y * 930, n_blocks_x * 16))
-
-    tile_idx = idx // blocks_per_tile
-
-    decode_uint12_le(inp=inp, out=blockbuf)
-    out_3d[
-        tile_idx,
-        930 * block_y_i:930 * (block_y_i + 1),
-        16 * block_x_i:16 * (block_x_i + 1),
-    ] = blockbuf.reshape(BLOCK_SHAPE)
-
-
 # @numba.njit(inline='always', boundscheck=True)
 @numba.njit(inline='always')
-def decode_k2is_new_v2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+def decode_k2is(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     Decode a single block, from a single read range, into a tile that may
     contain multiple blocks in the signal dimensions. This function is called
@@ -172,7 +144,7 @@ def decode_k2is_new_v2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape)
 
 class K2ISDecoder(Decoder):
     def get_decode(self, native_dtype, read_dtype):
-        return decode_k2is_new_v2
+        return decode_k2is
 
 
 @numba.njit(inline='always')

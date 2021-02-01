@@ -26,9 +26,13 @@ We are pleased to announce the latest LiberTEM release, with many
 improvements since 0.5. We would like to highlight the contributions of our
 GSoc 2020 students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ and
 `@twentyse7en <https://github.com/twentyse7en>`_, who implemented significant
-improvements in the areas of I/O and the user interface. Another highlight of
-this release is the support of NVidia GPUs, both via CuPy and via native
-libraries. A lot of work was done to implement tiled reading, resulting in a
+improvements in the areas of I/O and the user interface.
+
+Another highlight of this release is experimental support of NVidia GPUs, both
+via CuPy and via native libraries. The API is ready to be used, including support
+in the GUI. Performance optimization is still to be done (:issue:`946`).
+
+A lot of work was done to implement tiled reading, resulting in a
 new I/O system. This improves performance in many circumstances, especially
 when dealing with large detector frames. In addition, a correction module was
 integrated into the new I/O system, which can correct gain, subtract a dark

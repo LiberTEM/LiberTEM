@@ -21,7 +21,7 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
     }
     const hasCupy = config.devices.has_cupy;
     const haveCudaDevices = config.devices.cudas.length > 0;
-    const disabled = hasCupy || !haveCudaDevices;
+    const disabled = !hasCupy || !haveCudaDevices;
     const showWarning = !hasCupy && haveCudaDevices;
     return (
         <>

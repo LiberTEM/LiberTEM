@@ -31,6 +31,11 @@ improvements in the areas of I/O and the user interface.
 Another highlight of this release is experimental support of NVidia GPUs, both
 via CuPy and via native libraries. The API is ready to be used, including support
 in the GUI. Performance optimization is still to be done (:issue:`946`).
+GPU support is activated for all mask-based analyses (virtual detector and
+Radial Fourier) for testing purposes, but will not bring a noticeable
+improvement of performance yet. GPU-based processing did show significant
+benefits for computationally heavy applications like the SSB implementation in
+https://github.com/Ptychography-4-0/ptychography.
 
 A lot of work was done to implement tiled reading, resulting in a
 new I/O system. This improves performance in many circumstances, especially

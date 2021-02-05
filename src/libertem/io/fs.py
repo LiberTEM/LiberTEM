@@ -40,7 +40,7 @@ def _get_alt_path(path):
 
 def get_fs_listing(path):
     try:
-        cur_path = Path(path).resolve()
+        Path(path).resolve()
     # Triggered by empty DVD drive on Windows
     except PermissionError as e:
         raise FSError(

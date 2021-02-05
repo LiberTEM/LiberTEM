@@ -19,7 +19,12 @@ def _access_ok(path):
 
 
 def _get_alt_path(path):
-    cur_path = Path(path).resolve()
+    try:
+        cur_path = Path(path).resolve()
+    # Triggered by empty DVD drive on Windows
+    except PermissionError:
+        # we can only suggest the home directory:
+        return str(Path.home())
     while not _access_ok(cur_path):
         cur_path = cur_path / '..'
         cur_path = cur_path.resolve()
@@ -34,6 +39,16 @@ def _get_alt_path(path):
 
 
 def get_fs_listing(path):
+    try:
+        cur_path = Path(path).resolve()
+    # Triggered by empty DVD drive on Windows
+    except PermissionError as e:
+        raise FSError(
+            code="PERMISSION_ERROR",
+            msg=str(e),
+            # we can only suggest the home directory:
+            alternative=str(Path.home()),
+        )
     if not os.path.isdir(path):
         raise FSError(
             code="NOT_FOUND",

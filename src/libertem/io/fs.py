@@ -57,7 +57,6 @@ def get_fs_listing(path):
         raise FSError(
             code="PERMISSION_ERROR",
             msg=str(e),
-            # we can only suggest the home directory:
             alternative=str(_get_alt_path(path)),
         )
     if not os.path.isdir(path):

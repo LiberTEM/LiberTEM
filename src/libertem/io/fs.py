@@ -15,26 +15,37 @@ class FSError(Exception):
 
 
 def _access_ok(path):
-    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+    try:
+        # May trigger PermissionError on Windows
+        allowed = os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+        if allowed:
+            Path(path).resolve()
+            # Windows sometimes raises an exception even if "allowed"
+            os.listdir(path)
+        return allowed
+    except PermissionError:
+        return False
 
 
 def _get_alt_path(path):
+    cur_path = Path(path)
     try:
-        cur_path = Path(path).resolve()
-    # Triggered by empty DVD drive on Windows
-    except PermissionError:
-        # we can only suggest the home directory:
-        return str(Path.home())
-    while not _access_ok(cur_path):
-        cur_path = cur_path / '..'
         cur_path = cur_path.resolve()
-        # we have reached the root (either / or a drive letter on windows)
-        if Path(cur_path.anchor) == cur_path:
-            if _access_ok(cur_path):
-                return cur_path
-            else:
-                # we can only suggest the home directory:
-                return str(Path.home())
+    # Triggered by empty DVD drive or permission denied on Windows
+    except PermissionError:
+        # we just skip resolving at this point and
+        # move one up
+        pass
+    while not _access_ok(cur_path):
+        try:
+            cur_path = cur_path.parents[0]
+            cur_path = cur_path.resolve()
+        except IndexError:  # from cur_path.parents[0]
+            # There is no parent
+            return Path.home()
+        except PermissionError:  # from cur_path.resolve()
+            # No access yet, we move one up again
+            pass
     return cur_path
 
 
@@ -47,7 +58,7 @@ def get_fs_listing(path):
             code="PERMISSION_ERROR",
             msg=str(e),
             # we can only suggest the home directory:
-            alternative=str(Path.home()),
+            alternative=str(_get_alt_path(path)),
         )
     if not os.path.isdir(path):
         raise FSError(

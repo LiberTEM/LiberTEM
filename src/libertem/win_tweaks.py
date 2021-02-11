@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_owner_name_dummy(full_path, stat):
-    return "Unknown"
+    return "<Unknown>"
 
 
 try:

@@ -18,8 +18,10 @@ BufferedBackend
 ~~~~~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.base.BufferedBackend
+    :noindex:
 
 MmapBackend
 ~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.base.MMapBackend
+    :noindex:

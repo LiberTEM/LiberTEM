@@ -48,21 +48,21 @@ New features
 ------------
 
 * I/O overhaul
- * Implement tiled reading for most file formats
-   (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
- * Allow UDFs that implement :code:`process_tile` to influence the tile
-   shape and make information about the tiling scheme available to the UDF
-   (:issue:`554`, :issue:`247`, :issue:`635`).
- * Update :code:`MemoryDataSet` to allow testing with different
-   tile shapes (:issue:`634`).
- * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
-   backend for their circumstance when loading via the new :code:`io_backend`
-   parameter of :code:`Context.load`. This fixes a K2IS performance regression
-   (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
-   a performance regression (:issue:`838`) on slower media (like HDDs), by
-   adding a buffered reading backend that tries its best to linearize I/O per-worker.
- * For now, direct I/O is no longer supported, please let us know if this is an
-   important use-case for you (:issue:`716`)!
+   * Implement tiled reading for most file formats
+     (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
+   * Allow UDFs that implement :code:`process_tile` to influence the tile
+     shape and make information about the tiling scheme available to the UDF
+     (:issue:`554`, :issue:`247`, :issue:`635`).
+   * Update :code:`MemoryDataSet` to allow testing with different
+     tile shapes (:issue:`634`).
+   * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
+     backend for their circumstance when loading via the new :code:`io_backend`
+     parameter of :code:`Context.load`. This fixes a K2IS performance regression
+     (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
+     a performance regression (:issue:`838`) on slower media (like HDDs), by
+     adding a buffered reading backend that tries its best to linearize I/O per-worker.
+   * For now, direct I/O is no longer supported, please let us know if this is an
+     important use-case for you (:issue:`716`)!
 * Support for specifying logging level from CLI (:pr:`758`).
 * Support for Norpix SEQ files (:issue:`153`, :pr:`767`).
 * Support for MRC files, as supported by ncempy (:issue:`152`, :pr:`873`).
@@ -77,7 +77,7 @@ New features
 * :meth:`~libertem.api.Context.create_com_analysis` now allows to specify a :code:`flipped y axis`
   and a scan rotation angle to deal with MIB files and scan rotation correctly. (:issue:`325`, :pr:`786`).
 * Corrections can now be specified by the user when running a UDF (:pr:`778,831,939`).
-* Support for loading dark frame and gaim map that are sometimes shipped with SEQ data sets.
+* Support for loading dark frame and gain map that are sometimes shipped with SEQ data sets.
 * GPU support: process data on CPUs, CUDA devices or both (:pr:`760`, :ref:`udf cuda`).
 * Implement CuPy support in :class:`~libertem.udf.holography.HoloReconstructUDF`, currently deactivated due to :issue:`815` (:pr:`760`).
 * GUI: Allows the user to select the GPUs to use when creating a new local cluster (:pr:`812`).

@@ -24,8 +24,9 @@ Changelog
 
 We are pleased to announce the latest LiberTEM release, with many
 improvements since 0.5. We would like to highlight the contributions of our
-GSoc 2020 students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ and
-`@twentyse7en <https://github.com/twentyse7en>`_, who implemented significant
+
+GSoc 2020 students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ (reshaping and sync offset correction) and
+`@twentyse7en <https://github.com/twentyse7en>`_, (Code generation to replicate GUI analyses in Jupyter notebooks) who implemented significant
 improvements in the areas of I/O and the user interface.
 
 Another highlight of this release is experimental support of NVidia GPUs, both

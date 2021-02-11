@@ -12,38 +12,26 @@ if platform.system() != 'Windows':
 real_import = builtins.__import__
 
 
-def monkey_import_notfound(name, globals=None, locals=None, fromlist=(), level=0):
+def monkey_notfound(name, *args, **kwargs):
     if name in ('win32security', 'pywintypes'):
         raise ModuleNotFoundError(f"Mocked module not found {name}")
-    return real_import(name, globals=globals, locals=locals, fromlist=fromlist, level=level)
+    return real_import(name, *args, **kwargs)
 
 
-def monkey_import_importerror(name, globals=None, locals=None, fromlist=(), level=0):
+def monkey_importerror(name, *args, **kwargs):
     if name in ('win32security', ):
         raise ImportError(f"Mocked import error {name}")
-    return real_import(name, globals=globals, locals=locals, fromlist=fromlist, level=level)
-
-
-def test_import_selftest(monkeypatch):
-    monkeypatch.delitem(sys.modules, 'win32security', raising=False)
-    monkeypatch.setattr(builtins, '__import__', monkey_import_importerror)
-
-    with pytest.raises(ImportError):
-        import win32security
-
-
-def test_import_selftest2(monkeypatch):
-    monkeypatch.delitem(sys.modules, 'win32security', raising=False)
-    monkeypatch.setattr(builtins, '__import__', monkey_import_notfound)
-
-    with pytest.raises(ModuleNotFoundError):
-        import win32security
+    return real_import(name, *args, **kwargs)
 
 
 def test_import_broken(monkeypatch):
     monkeypatch.delitem(sys.modules, 'win32security', raising=False)
     monkeypatch.delitem(sys.modules, 'libertem.win_tweaks', raising=False)
-    monkeypatch.setattr(builtins, '__import__', monkey_import_importerror)
+    monkeypatch.setattr(builtins, '__import__', monkey_importerror)
+
+    # Self test
+    with pytest.raises(ImportError):
+        import win32security
 
     from libertem.win_tweaks import get_owner_name
 
@@ -55,7 +43,11 @@ def test_import_broken(monkeypatch):
 def test_import_missing(monkeypatch):
     monkeypatch.delitem(sys.modules, 'win32security', raising=False)
     monkeypatch.delitem(sys.modules, 'libertem.win_tweaks', raising=False)
-    monkeypatch.setattr(builtins, '__import__', monkey_import_notfound)
+    monkeypatch.setattr(builtins, '__import__', monkey_notfound)
+
+    # Self test
+    with pytest.raises(ModuleNotFoundError):
+        import win32security
 
     from libertem.win_tweaks import get_owner_name
 

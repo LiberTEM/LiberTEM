@@ -11,9 +11,10 @@ logger = logging.getLogger(__name__)
 
 try:
     import cupy
+    cupy.cuda
 except ModuleNotFoundError:
     cupy = None
-except ImportError as e:
+except (ImportError, AttributeError) as e:
     # Cupy can be a bit fragile; allow running LiberTEM with
     # messed-up installation
     warnings.warn(repr(e), RuntimeWarning)

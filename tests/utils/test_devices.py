@@ -106,16 +106,3 @@ def test_detect_broken(monkeypatch):
         result = detect()
 
     assert not result['has_cupy']
-
-
-def test_consistency():
-    try:
-        import cupy
-    except Exception:
-        pytest.skip("Importable CuPy required for this test.")
-
-    from libertem.utils.devices import detect
-
-    result = detect()
-    if result['cudas']:
-        assert result['has_cupy']

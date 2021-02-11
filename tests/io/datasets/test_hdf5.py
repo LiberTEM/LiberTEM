@@ -11,7 +11,7 @@ import pytest
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, DataSetException
 from libertem.common import Shape
 
 from utils import _naive_mask_apply, _mk_random, PixelsumUDF
@@ -417,3 +417,17 @@ def test_scheme_idx(lt_ctx, hdf5):
     for tile, expected_idx in zip(tiles, itertools.cycle([0, 1])):
         print(tile.scheme_idx, tile.tile_slice)
         assert tile.scheme_idx == expected_idx
+
+
+def test_hdf5_with_2d_shape(lt_ctx, hdf5_2d):
+    # regression test for error message:
+    # sync_offset should be in (0, 0), which is (-image_count, image_count)
+    with pytest.raises(DataSetException) as e:
+        hdf5_ds_2d = lt_ctx.load("hdf5", path=hdf5_2d.filename, ds_path="data")
+
+        # these lines are currently not reached yet, but will be if we decide to support 2D HDF5
+        assert hdf5_ds_2d.shape.to_tuple() == (1, 16, 16)  # navigation shape is extended
+        udf = PixelsumUDF()
+        lt_ctx.run_udf(udf=udf, dataset=hdf5_ds_2d)
+
+    assert e.match("2D HDF5 files are currently not supported")

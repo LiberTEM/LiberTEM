@@ -130,7 +130,12 @@ class H5DataSet(DataSet):
             self.ds_path = name
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
-            self._shape = Shape(h5ds.shape, sig_dims=self.sig_dims)
+            shape = h5ds.shape
+            if len(shape) == self.sig_dims:
+                # shape = (1,) + shape -> this leads to indexing errors down the line
+                # so we currently don't support opening 2D HDF5 files
+                raise DataSetException("2D HDF5 files are currently not supported")
+            self._shape = Shape(shape, sig_dims=self.sig_dims)
             self._image_count = self._shape.nav.size
             self._meta = DataSetMeta(
                 shape=self.shape,

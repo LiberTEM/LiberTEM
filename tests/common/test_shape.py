@@ -16,6 +16,16 @@ def test_shape_get_size():
     assert s.size == 16 * 16 * 128 * 128
 
 
+def test_size_zero():
+    s = Shape((), sig_dims=0)
+    assert s.size == 0
+
+
+def test_size_nav_zero():
+    s = Shape((128, 128), sig_dims=2)
+    assert s.nav.size == 0
+
+
 def test_shape_flatten_nav():
     s = Shape((16, 16, 128, 128), sig_dims=2)
     assert tuple(s.flatten_nav()) == (16 * 16, 128, 128)

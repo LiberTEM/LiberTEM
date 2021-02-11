@@ -78,7 +78,10 @@ class Shape(object):
         >>> s.size
         256
         """
-        return functools.reduce(operator.mul, self)
+        shape_tuple = tuple(self)
+        if len(shape_tuple) == 0:
+            return 0
+        return functools.reduce(operator.mul, shape_tuple)
 
     def flatten_nav(self):
         """

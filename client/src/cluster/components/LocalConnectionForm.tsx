@@ -30,6 +30,11 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
     setFieldValue,
     handleReset,
 }) => {
+    // default value:
+    React.useEffect(() => {
+        setFieldValue("cudas", config.devices.cudas);
+    }, []);
+
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Field>
@@ -66,7 +71,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
                         </Modal.Content>
                     </Modal>
                 </label>
-                <GPUSelector name="cudas" config={config} setFieldValue={setFieldValue} />
+                <GPUSelector name="cudas" value={values.cudas} config={config} setFieldValue={setFieldValue} />
             </Form.Field>
             <Button primary={true} type="submit" disabled={isSubmitting}>Connect</Button>
         </Form>

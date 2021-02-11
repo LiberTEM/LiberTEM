@@ -36,7 +36,7 @@
         "authorname": "Baburajan, Anand",
         "affiliation": "Government Engineering College Sreekrishnapuram",
         "github": "anandbaburajan",
-        "contribution": "Various GUI fixes",
+        "contribution": "Reshaping and offset for datasets, various GUI fixes",
         "orcid": "0000-0002-2870-366X"
     },
     {
@@ -44,7 +44,7 @@
         "authorname": "Bahuleyan, Abijith",
         "affiliation": "Government Engineering College Sreekrishnapuram",
         "github": "twentyse7en",
-        "contribution": "Bug fixes, documentation",
+        "contribution": "Notebook download for analyses, bug fixes, documentation",
         "orcid": "0000-0001-5045-5650"
     },
     {
@@ -77,6 +77,14 @@
         "github": "sayandip18",
         "contribution": "Modifying the documentation to make it more user-friendly",
         "orcid": "0000-0003-0224-3746"
+    },
+    {
+        "displayname": "Daniel S. Katz",
+        "authorname": "Katz, Daniel S.",
+        "affiliation": "University of Illinois at Urbana-Champaign",
+        "github": "danielskatz",
+        "contribution": "Fixes in BibTeX for JOSS paper",
+        "orcid": "0000-0001-5934-7525"
     },
     {
         "displayname": "Barnaby D.A. Levin",

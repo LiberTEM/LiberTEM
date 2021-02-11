@@ -36,6 +36,22 @@
         "contribution": "Discussions, funding applications"
     },
     {
+        "displayname": "Andrey Fedorov",
+        "authorname": "Fedorov, Andrey",
+        "affiliation": "Brigham and Women's Hospital",
+        "github": "fedorov",
+        "contribution": "Review JOSS paper, help with installation instructions on zsh",
+        "orcid": "0000-0003-4806-9413"
+    },
+    {
+        "displayname": "Mark Jensen",
+        "authorname": "Jensen, Mark",
+        "affiliation": "Frederick National Laboratory for Cancer Research",
+        "github": "majensen",
+        "contribution": "Finishing touches review JOSS paper",
+        "orcid": "0000-0001-5215-101X"
+    },
+    {
         "displayname": "Matus Krajnak",
         "authorname": "Krajnak, Matus",
         "affiliation": "Quantum Detectors",

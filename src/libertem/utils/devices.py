@@ -11,10 +11,9 @@ logger = logging.getLogger(__name__)
 
 try:
     import cupy
-    cupy.cuda
 except ModuleNotFoundError:
     cupy = None
-except (ImportError, AttributeError) as e:
+except ImportError as e:
     # Cupy can be a bit fragile; allow running LiberTEM with
     # messed-up installation
     warnings.warn(repr(e), RuntimeWarning)
@@ -63,4 +62,12 @@ def has_cupy():
     CuPy is an optional dependency with special integration for UDFs. See
     :ref:`udf cuda` for details.
     '''
-    return cupy is not None
+    if cupy is None:
+        return False
+    try:
+        cupy.cuda
+        cupy.array(cupy.zeros((1,)))
+        return True
+    except Exception as e:  # possibly: AttributeError or CompileException
+        warnings.warn(repr(e), RuntimeWarning)
+        return False

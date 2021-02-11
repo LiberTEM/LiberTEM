@@ -6,7 +6,7 @@ import pytest
 
 
 if platform.system() != 'Windows':
-    pytest.skip("Skipping Windows-specific tests")
+    pytest.skip("Skipping Windows-specific tests", allow_module_level=True)
 
 
 real_import = builtins.__import__

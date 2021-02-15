@@ -1,4 +1,6 @@
-sphinx>1.4
+# FIXME remove Sphinx version constraint as
+# soon as https://github.com/sphinx-doc/sphinx/issues/8880 is released
+sphinx>1.4,<3.5
 sphinx-autobuild
 sphinxcontrib-bibtex>=2
 sphinx-issues

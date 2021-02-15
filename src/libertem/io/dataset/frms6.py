@@ -675,8 +675,8 @@ class FRMS6DataSet(DataSet):
 
     def get_correction_data(self):
         return CorrectionSet(
-            dark=self._get_dark_frame(),
-            gain=self._get_gain_map(),
+            dark=self._dark_frame,
+            gain=self._gain_map,
         )
 
     def get_partitions(self):

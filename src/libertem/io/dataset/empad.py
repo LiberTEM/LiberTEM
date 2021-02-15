@@ -170,7 +170,7 @@ class EMPADDataSet(DataSet):
         except OSError as e:
             raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
         self._image_count = int(
-            os.stat(self._path_raw).st_size / (
+            self._filesize / (
                 int(np.dtype("float32").itemsize) * int(
                     np.prod(EMPAD_DETECTOR_SIZE_RAW, dtype=np.int64)
                 )

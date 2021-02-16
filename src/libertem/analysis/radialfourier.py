@@ -123,34 +123,26 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
     TYPE = 'UDF'
 
     def get_udf_results(self, udf_results, roi):
-        # Here, we reconstruct the shape of the Job result
-        # so that we don't have to change the involved
-        # data processing in get_results
-        # FIXME port this to the native layout as soon as
-        # the Job interface is retired #550
-        data = udf_results['intensity'].data
-        job_results = data.reshape((np.prod(self.dataset.shape.nav), -1)).T
-        return self.get_results(job_results)
-
-    def get_results(self, job_results):
         '''
         The AnalysisResults are calculated lazily in this function to reduce
         overhead.
         '''
+        # FIXME: remove reshape and transpose here, use native UDF results
         shape = tuple(self.dataset.shape.nav)
+        udf_results = udf_results['intensity'].data.reshape((np.prod(shape), -1)).T
         orders = self.parameters['max_order'] + 1
         n_bins = self.parameters['n_bins']
-        job_results = job_results.reshape((n_bins, orders, *shape))
+        udf_results = udf_results.reshape((n_bins, orders, *shape))
 
         def resultlist():
             from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
             import matplotlib.cm as cm
             sets = []
-            absolute = np.absolute(job_results)
+            absolute = np.absolute(udf_results)
             normal = np.maximum(1, absolute[:, 0])
             min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
             max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
-            angle = np.angle(job_results)
+            angle = np.angle(udf_results)
             threshold_map = absolute[:, 1:, ...].reshape((n_bins, -1)).max(axis=1) * 0.2
             below_threshold = np.all(
                 absolute[:, 1:, ...] < threshold_map[:, np.newaxis, np.newaxis, np.newaxis],
@@ -205,7 +197,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         )
                     )
             for b in range(n_bins):
-                data = job_results[b, 0]
+                data = udf_results[b, 0]
                 f = partial(
                     CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
                     (data.real, data.imag, 0)
@@ -220,7 +212,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                     )
                 )
                 for o in range(1, orders):
-                    data = job_results[b, o] / normal[b]
+                    data = udf_results[b, o] / normal[b]
                     f = partial(
                         CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
                         (data.real, data.imag, 0), vmax=max_absolute
@@ -235,7 +227,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         )
                     )
             return sets
-        return RadialFourierResultSet(resultlist, raw_results=job_results)
+        return RadialFourierResultSet(resultlist, raw_results=udf_results)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

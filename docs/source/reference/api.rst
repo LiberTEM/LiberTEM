@@ -10,16 +10,6 @@ Context
    :members:
    :special-members: __init__
 
-Job API
-~~~~~~~
-
-.. deprecated:: 0.4.0
-    Use :ref:`user-defined functions` instead. See also :ref:`job deprecation`.
-
-.. automodule:: libertem.job.base
-   :members: Job
-   :special-members: __init__
-
 Analysis API
 ~~~~~~~~~~~~
 

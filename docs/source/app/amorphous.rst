@@ -140,7 +140,7 @@ The scripting interface
 :meth:`~libertem.api.Context.create_radial_fourier_analysis` and
 :class:`~libertem.analysis.radialfourier.RadialFourierAnalysis` allows to
 calculate more than one bin at a time and influence the number of orders that
-are calculated. It relies on the sparse matrix back-end for MaskJob and allows
+are calculated. It relies on the sparse matrix back-end for :code:`ApplyMasksUDF` and allows
 to calculate many orders for many bins at once with acceptable efficiency.
 
 Having a fine-grained analysis with many orders calculated as a function of

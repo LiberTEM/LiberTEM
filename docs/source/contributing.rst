@@ -139,7 +139,7 @@ virtualenv:
 
 .. code-block:: shell
 
-   (libertem) $ pip install -r test_requirements.txt
+   (libertem) $ python -m pip install -r test_requirements.txt
 
 Now you can run pytest on a subset of tests, for example:
 

@@ -59,7 +59,7 @@ Before (using a release candidate package)
   `Zenodo.org sandbox <https://sandbox.zenodo.org/record/367108>`_ that is ready for submission.
 * Install release candidate packages in a clean environment
   (for example:
-  :code:`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
+  :code:`python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
 * For the GUI-related items, open in an incognito window to start from a clean slate
 * Correct version info displayed in info dialogue?
 * Link check in version info dialogue

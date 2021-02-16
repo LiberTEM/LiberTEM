@@ -234,7 +234,7 @@ into your LiberTEM virtual environment.
 
 .. code-block:: shell
 
-    (libertem) $ pip install jupyter
+    (libertem) $ python -m pip install jupyter
 
 You can then run a local notebook from within the LiberTEM environment, which
 should open a browser window with Jupyter that uses your LiberTEM environment.
@@ -264,7 +264,7 @@ environment you additionally install ipykernel:
 
 .. code-block:: shell
 
-    (libertem) $ pip install ipykernel
+    (libertem) $ python -m pip install ipykernel
 
 Now you can create a custom ipython kernel definition for your environment:
 

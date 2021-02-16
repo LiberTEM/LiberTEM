@@ -142,13 +142,9 @@ to a sub-organization before submitting a project idea. Please contact us if
 you'd like some help with that! `Improving our examples
 <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_ in code,
 description and presentation would be both relatively easy and quite useful for
-us. Examples that are using the recently-deprecated "Job API" are due to be
-converted to the new "UDF API". You could perform the update with our help, hunt
+us. You could perform the update with our help, hunt
 down discrepancies and suggest improvements. Please contact us for the
 corresponding data to run the examples!
-
-Furthermore, you could help us hunt down all references to the Job API in our
-code, introduce depreciation warnings and update documentation where necessary.
 
 Other small and relatively straightforward issues include :issue:`81,267,506`
 

@@ -169,16 +169,6 @@ class COMResultSet(AnalysisResultSet):
 class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     TYPE = 'UDF'
 
-    # FIXME remove this after UDF version is final
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav)
-        img_sum, img_y, img_x = (
-            job_results[0].reshape(shape),
-            job_results[1].reshape(shape),
-            job_results[2].reshape(shape)
-        )
-        return self.get_generic_results(img_sum, img_y, img_x)
-
     def get_udf_results(self, udf_results, roi):
         data = udf_results['intensity'].data
         img_sum, img_y, img_x = (

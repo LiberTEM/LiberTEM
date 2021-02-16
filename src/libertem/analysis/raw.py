@@ -1,7 +1,5 @@
 import numpy as np
 import inspect
-from libertem.common import Slice, Shape
-from libertem.job.raw import PickFrameJob
 from libertem.udf.raw import PickUDF
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from .helper import GeneratorHelper
@@ -109,24 +107,6 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
 
         return keep
 
-    # FIXME remove after Job deprecation period
-    def get_job(self):
-        origin = self.get_origin()
-        origin = (np.ravel_multi_index(origin, self.dataset.shape.nav),)
-        shape = self.dataset.shape
-
-        origin = origin + tuple([0] * self.dataset.shape.sig.dims)
-
-        return PickFrameJob(
-            dataset=self.dataset,
-            slice_=Slice(
-                origin=origin,
-                shape=Shape((1,) + tuple(shape.sig),
-                            sig_dims=shape.sig.dims),
-            ),
-            squeeze=True,
-        )
-
     def get_udf(self):
         return PickUDF()
 
@@ -134,12 +114,6 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         roi = np.zeros(self.dataset.shape.nav, dtype=bool)
         roi[self.get_origin()] = True
         return roi
-
-    # FIXME remove after Job deprecation period
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.sig)
-        data = job_results.reshape(shape)
-        return self.get_generic_results(data)
 
     def get_udf_results(self, udf_results, roi):
         return self.get_generic_results(udf_results['intensity'].data[0])

@@ -19,80 +19,53 @@ def ds_random():
     return dataset
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_smoke(ds_random, lt_ctx, TYPE):
+def test_smoke(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, cx=0, cy=0, ri=0, ro=10, n_bins=2, max_order=23
     )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_smoke_small(ds_random, lt_ctx, TYPE):
+def test_smoke_small(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, cx=0, cy=0, ri=0, ro=1, n_bins=1, max_order=23
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     # access result to actually create result list:
     results['absolute_0_0']
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_smoke_large(ds_random, lt_ctx, TYPE):
+def test_smoke_large(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, cx=0, cy=0, n_bins=1, max_order=23
     )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_smoke_two(ds_random, lt_ctx, TYPE):
+def test_smoke_two(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, cx=0, cy=0, ri=0, ro=2, n_bins=2, max_order=2
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     # access result to actually create result list:
     results.complex_1_2
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_smoke_defaults(ds_random, lt_ctx, TYPE):
+def test_smoke_defaults(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random
     )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_sparse(ds_random, lt_ctx, TYPE):
+def test_sparse(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, use_sparse=True,
     )
-    analysis.TYPE = TYPE
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_symmetries(lt_ctx, TYPE):
+def test_symmetries(lt_ctx):
     (d1, i1, p1) = cbed_frame(all_equal=True, radius=3, indices=np.array([(1, 0)]))
     (d2, i2, p2) = cbed_frame(all_equal=True, radius=3, indices=np.array([(-1, 0)]))
     (d3, i3, p3) = cbed_frame(all_equal=True, radius=3, indices=np.array([(1, 0), (-1, 0)]))
@@ -114,7 +87,6 @@ def test_symmetries(lt_ctx, TYPE):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds, cy=cy, cx=cx, ri=0, ro=r+4, n_bins=2, max_order=8
     )
-    analysis.TYPE = TYPE
 
     results = lt_ctx.run(analysis)
 

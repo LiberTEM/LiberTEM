@@ -8,8 +8,6 @@ import numpy as np
 import pytest
 
 from libertem.io.dataset.mib import MIBDataSet
-from libertem.job.masks import ApplyMasksJob
-from libertem.job.raw import PickFrameJob
 from libertem.udf.raw import PickUDF
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
@@ -247,29 +245,9 @@ def test_pickle_is_small(default_mib):
     assert len(pickled) < 2 * 1024
 
 
-def test_apply_mask_on_mib_job(default_mib, lt_ctx):
-    mask = np.ones((256, 256))
-
-    job = ApplyMasksJob(dataset=default_mib, mask_factories=[lambda: mask])
-    out = job.get_result_buffer()
-
-    executor = InlineJobExecutor()
-
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(out)
-
-    results = lt_ctx.run(job)
-    assert results[0].shape == (1024,)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_apply_mask_analysis(default_mib, lt_ctx, TYPE):
+def test_apply_mask_analysis(default_mib, lt_ctx):
     mask = np.ones((256, 256))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_mib)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (32, 32)
 
@@ -280,18 +258,8 @@ def test_sum_analysis(default_mib, lt_ctx):
     assert results[0].raw_data.shape == (256, 256)
 
 
-def test_pick_job(default_mib, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_mib, origin=(16, 16))
-    results = lt_ctx.run(analysis)
-    assert results.shape == (256, 256)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick_analysis(default_mib, lt_ctx, TYPE):
+def test_pick_analysis(default_mib, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_mib, parameters={"x": 16, "y": 16})
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
 
@@ -318,14 +286,6 @@ def test_with_roi(default_mib, lt_ctx):
     roi[0] = 1
     res = lt_ctx.run_udf(udf=udf, dataset=default_mib, roi=roi)
     np.array(res['intensity']).shape == (1, 256, 256)
-
-
-def test_crop_to(default_mib, lt_ctx):
-    slice_ = Slice(shape=Shape((1024, 64, 64), sig_dims=2), origin=(0, 64, 64))
-    job = PickFrameJob(dataset=default_mib, slice_=slice_)
-    res = lt_ctx.run(job)
-    assert res.shape == (1024, 64, 64)
-    # TODO: check contents
 
 
 def test_read_at_boundaries(default_mib, lt_ctx):

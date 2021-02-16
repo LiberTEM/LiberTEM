@@ -11,8 +11,6 @@ import warnings
 from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
 
-from libertem.job.masks import ApplyMasksJob
-from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
@@ -43,14 +41,10 @@ def test_simple_open(default_raw):
 
 
 @pytest.mark.skipif(sys.platform.startswith("darwin"), reason="No general sparse support on OS X")
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_large_pick(large_raw, lt_ctx, TYPE):
+def test_large_pick(large_raw, lt_ctx):
     y, x = large_raw.shape.nav
     dy, dx = large_raw.shape.sig
     analysis = lt_ctx.create_pick_analysis(large_raw, y=y-1, x=x-1)
-    analysis.TYPE = TYPE
     result = lt_ctx.run(analysis)
     assert result.intensity.raw_data.shape == tuple(large_raw.shape.sig)
 
@@ -107,29 +101,9 @@ def test_pickle_is_small(default_raw):
     assert len(pickled) < 2 * 1024
 
 
-def test_apply_mask_on_raw_job(default_raw, lt_ctx):
-    mask = np.ones((128, 128))
-
-    job = ApplyMasksJob(dataset=default_raw, mask_factories=[lambda: mask])
-    out = job.get_result_buffer()
-
-    executor = InlineJobExecutor()
-
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(out)
-
-    results = lt_ctx.run(job)
-    assert results[0].shape == (16 * 16,)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_apply_mask_analysis(default_raw, lt_ctx, TYPE):
+def test_apply_mask_analysis(default_raw, lt_ctx):
     mask = np.ones((128, 128))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_raw)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (16, 16)
 
@@ -140,18 +114,8 @@ def test_sum_analysis(default_raw, lt_ctx):
     assert results[0].raw_data.shape == (128, 128)
 
 
-def test_pick_job(default_raw, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_raw, origin=(16,))
-    results = lt_ctx.run(analysis)
-    assert results.shape == (128, 128)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick_analysis(default_raw, lt_ctx, TYPE):
+def test_pick_analysis(default_raw, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_raw, parameters={"x": 15, "y": 15})
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (128, 128)
     assert np.count_nonzero(results[0].raw_data) > 0

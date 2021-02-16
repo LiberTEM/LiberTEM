@@ -6,11 +6,11 @@ import pytest
 from libertem.executor.dask import (
     CommonDaskMixin
 )
-from libertem.common import Shape, Slice
 from libertem.executor.scheduler import Worker, WorkerSet
 from libertem.executor.dask import DaskJobExecutor
-from libertem.job.raw import PickFrameJob
+from libertem.udf.base import UDFRunner
 from libertem.udf.sum import SumUDF
+from libertem.udf.raw import PickUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.api import Context
 
@@ -40,24 +40,6 @@ def test_task_affinity_1():
     assert cdm._task_idx_to_workers(workers, 3) == ws2
 
 
-@pytest.mark.asyncio
-async def test_run_job(async_executor):
-    data = _mk_random(size=(16, 16, 16, 16), dtype='<u2')
-    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
-    expected = data[0, 0]
-
-    slice_ = Slice(origin=(0, 0, 0), shape=Shape((1, 16, 16), sig_dims=2))
-    job = PickFrameJob(dataset=dataset, slice_=slice_)
-    out = job.get_result_buffer()
-
-    async for tiles in async_executor.run_job(job, cancel_id="42"):
-        for tile in tiles:
-            tile.reduce_into_result(out)
-
-    assert out.shape == (1, 16, 16)
-    assert np.allclose(out, expected)
-
-
 @pytest.mark.skipif(os.name == 'nt',
                     reason="Doesn't run on windows")
 @pytest.mark.asyncio
@@ -76,13 +58,19 @@ async def test_fd_limit(async_executor):
         data = _mk_random(size=(1, 16, 16), dtype='<u2')
         dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=1)
 
-        slice_ = Slice(origin=(0, 0, 0), shape=Shape((1, 16, 16), sig_dims=2))
-        job = PickFrameJob(dataset=dataset, slice_=slice_)
+        roi = np.ones((1,), dtype=bool)
+        udf = PickUDF()
 
         for i in range(32):
             print(i)
             print(proc.num_fds())
-            async for tiles in async_executor.run_job(job, cancel_id="42"):
+
+            async for part in UDFRunner([udf]).run_for_dataset_async(
+                dataset=dataset,
+                executor=async_executor,
+                cancel_id="42",
+                roi=roi,
+            ):
                 pass
     finally:
         resource.setrlimit(resource.RLIMIT_NOFILE, oldlimit)

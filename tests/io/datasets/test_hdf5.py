@@ -18,10 +18,7 @@ from utils import _naive_mask_apply, _mk_random, PixelsumUDF
 from utils import dataset_correction_verification
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1, TYPE):
+def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
     mask = _mk_random(size=(16, 16))
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
@@ -29,7 +26,6 @@ def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1, TYPE):
     analysis = lt_ctx.create_mask_analysis(
         dataset=hdf5_ds_1, factories=[lambda: mask]
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     assert np.allclose(
@@ -270,10 +266,7 @@ def test_roi_5(hdf5, lt_ctx):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick(hdf5, lt_ctx, TYPE):
+def test_pick(hdf5, lt_ctx):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data",
     )
@@ -281,7 +274,6 @@ def test_pick(hdf5, lt_ctx, TYPE):
     assert len(ds.shape) == 4
     print(ds.shape)
     pick = lt_ctx.create_pick_analysis(dataset=ds, x=2, y=3)
-    pick.TYPE = TYPE
     lt_ctx.run(pick)
 
 

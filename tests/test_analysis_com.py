@@ -31,14 +31,10 @@ def ds_random():
     return dataset
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx, TYPE):
+def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_w_zero_frame, cx=0, cy=0, mask_radius=0
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     # no inf/nan in center_x and center_y
@@ -54,14 +50,10 @@ def test_com_with_zero_frames(ds_w_zero_frame, lt_ctx, TYPE):
     assert not np.any(np.isnan(results[2].raw_data))
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx, TYPE):
+def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_random, cx=0, cy=0, mask_radius=None
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
@@ -73,14 +65,10 @@ def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx, TYPE):
         assert np.allclose(scy, field_y[idx])
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_comparison_scipy_2_masked(ds_random, lt_ctx, TYPE):
+def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
     analysis = lt_ctx.create_com_analysis(
         dataset=ds_random, cx=0, cy=0, mask_radius=8
     )
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
@@ -126,10 +114,7 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_complex_numbers(lt_ctx, TYPE):
+def test_com_complex_numbers(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
     ds_complex = MemoryDataSet(
         data=data,
@@ -137,7 +122,6 @@ def test_com_complex_numbers(lt_ctx, TYPE):
         num_partitions=2,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     reshaped_data = ds_complex.data.reshape((16 * 16, 16, 16))
@@ -160,10 +144,7 @@ def test_com_complex_numbers(lt_ctx, TYPE):
             assert np.allclose(scy, field_y[idx])
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_complex_numbers_handcrafted_1(lt_ctx, TYPE):
+def test_com_complex_numbers_handcrafted_1(lt_ctx):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         [0,    0,    0, 0],
@@ -177,7 +158,6 @@ def test_com_complex_numbers_handcrafted_1(lt_ctx, TYPE):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     field_x = results.x_real.raw_data + 1j * results.x_imag.raw_data
@@ -187,10 +167,7 @@ def test_com_complex_numbers_handcrafted_1(lt_ctx, TYPE):
     assert field_y[0, 0] == 1.5
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_complex_numbers_handcrafted_2(lt_ctx, TYPE):
+def test_com_complex_numbers_handcrafted_2(lt_ctx):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         [0,    0,    0, 0],
@@ -204,7 +181,6 @@ def test_com_complex_numbers_handcrafted_2(lt_ctx, TYPE):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     field_x = results.x_real.raw_data + 1j * results.x_imag.raw_data
@@ -214,10 +190,7 @@ def test_com_complex_numbers_handcrafted_2(lt_ctx, TYPE):
     assert field_y[0, 0] == 1.5
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_complex_numbers_handcrafted_3(lt_ctx, TYPE):
+def test_com_complex_numbers_handcrafted_3(lt_ctx):
     data = np.ones((3, 3, 4, 4), dtype="complex64")
     data[0, 0] = np.array([
         0,    0,    0, 0,
@@ -231,7 +204,6 @@ def test_com_complex_numbers_handcrafted_3(lt_ctx, TYPE):
         num_partitions=9,
     )
     analysis = lt_ctx.create_com_analysis(dataset=ds_complex, cx=0, cy=0, mask_radius=None)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
 
     print(data[0, 0])
@@ -243,10 +215,7 @@ def test_com_complex_numbers_handcrafted_3(lt_ctx, TYPE):
     assert field_y[0, 0] == 1
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_default_params(lt_ctx, TYPE):
+def test_com_default_params(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
@@ -257,14 +226,10 @@ def test_com_default_params(lt_ctx, TYPE):
     analysis = lt_ctx.create_com_analysis(
         dataset=dataset,
     )
-    analysis.TYPE = TYPE
     lt_ctx.run(analysis)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_divergence(lt_ctx, TYPE):
+def test_com_divergence(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for i in range(3):
         for j in range(3):
@@ -279,7 +244,6 @@ def test_com_divergence(lt_ctx, TYPE):
         cx=1,
 
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print(data)
@@ -294,10 +258,7 @@ def test_com_divergence(lt_ctx, TYPE):
     assert np.all(res["curl"].raw_data == 0)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_divergence_2(lt_ctx, TYPE):
+def test_com_divergence_2(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for i in range(3):
         for j in range(3):
@@ -311,7 +272,6 @@ def test_com_divergence_2(lt_ctx, TYPE):
         cy=1,
         cx=1,
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print(data)
@@ -326,10 +286,7 @@ def test_com_divergence_2(lt_ctx, TYPE):
     assert np.all(res["curl"].raw_data == 0)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_curl(lt_ctx, TYPE):
+def test_com_curl(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for y in range(3):
         for x in range(3):
@@ -343,7 +300,6 @@ def test_com_curl(lt_ctx, TYPE):
         cy=1,
         cx=1
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print(data)
@@ -364,10 +320,7 @@ def test_com_curl(lt_ctx, TYPE):
     assert np.all(res["curl"].raw_data == 2)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_curl_2(lt_ctx, TYPE):
+def test_com_curl_2(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for y in range(3):
         for x in range(3):
@@ -381,7 +334,6 @@ def test_com_curl_2(lt_ctx, TYPE):
         cy=1,
         cx=1
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print(data)
@@ -397,10 +349,7 @@ def test_com_curl_2(lt_ctx, TYPE):
     assert np.all(res["curl"].raw_data == -2)
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_curl_flip(lt_ctx, TYPE):
+def test_com_curl_flip(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for y in range(3):
         for x in range(3):
@@ -416,7 +365,6 @@ def test_com_curl_flip(lt_ctx, TYPE):
         cx=1,
         flip_y=True
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print("data", data)
@@ -432,10 +380,8 @@ def test_com_curl_flip(lt_ctx, TYPE):
     assert np.all(res["divergence"].raw_data == 0)
     assert np.all(res["curl"].raw_data == -2)
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_com_curl_rotate(lt_ctx, TYPE):
+
+def test_com_curl_rotate(lt_ctx):
     data = np.zeros((3, 3, 3, 3), dtype=np.float32)
     for y in range(3):
         for x in range(3):
@@ -455,7 +401,6 @@ def test_com_curl_rotate(lt_ctx, TYPE):
         cx=1,
         scan_rotation=-90.
     )
-    analysis.TYPE = TYPE
     res = lt_ctx.run(analysis)
 
     print("data", data)

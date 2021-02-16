@@ -6,7 +6,6 @@ import random
 import numpy as np
 import pytest
 
-from libertem.job.masks import ApplyMasksJob
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
@@ -122,29 +121,9 @@ def test_pickle_fileset_is_small(default_blo):
     assert len(pickled) < 1024
 
 
-def test_apply_mask_on_raw_job(default_blo, lt_ctx):
-    mask = np.ones((144, 144))
-
-    job = ApplyMasksJob(dataset=default_blo, mask_factories=[lambda: mask])
-    out = job.get_result_buffer()
-
-    executor = InlineJobExecutor()
-
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(out)
-
-    results = lt_ctx.run(job)
-    assert results[0].shape == (90 * 121,)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_apply_mask_analysis(default_blo, lt_ctx, TYPE):
+def test_apply_mask_analysis(default_blo, lt_ctx):
     mask = np.ones((144, 144))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_blo)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (90, 121)
 
@@ -155,18 +134,8 @@ def test_sum_analysis(default_blo, lt_ctx):
     assert results[0].raw_data.shape == (144, 144)
 
 
-def test_pick_job(default_blo, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_blo, origin=(16,))
-    results = lt_ctx.run(analysis)
-    assert results.shape == (144, 144)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick_analysis(default_blo, lt_ctx, TYPE):
+def test_pick_analysis(default_blo, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_blo, parameters={"x": 16, "y": 16})
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (144, 144)
 

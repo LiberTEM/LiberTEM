@@ -28,7 +28,7 @@ class UDFMeta:
         Added distinction of dataset_dtype and input_dtype
 
     .. versionchanged:: 0.6.0
-        Information on compute backend added
+        Information on compute backend, corrections, coordinates and tiling scheme added
     """
 
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
@@ -84,6 +84,8 @@ class UDFMeta:
     def tiling_scheme(self) -> Shape:
         """
         TilingScheme : the tiling scheme that was negotiated
+
+        .. versionadded:: 0.6.0
         """
         return self._tiling_scheme
 
@@ -143,7 +145,9 @@ class UDFMeta:
     def coordinates(self) -> np.ndarray:
         """
         np.ndarray : Array of coordinates that correspond to the frames in the actual
-                     navigation space which are part of the current tile or partition.
+        navigation space which are part of the current tile or partition.
+
+        .. versionadded:: 0.6.0
         """
         # Check if key is present in the cached_coordinates, generate the coords otherwise
         roi_key = "None" if self._roi is None else tuple(map(tuple, self._roi))
@@ -704,11 +708,13 @@ class UDF(UDFBase):
 
     def get_tiling_preferences(self):
         """
-        Configure tiling preferences. Return a dictinary with the
+        Configure tiling preferences. Return a dictionary with the
         following keys:
 
         - "depth": number of frames/frame parts to stack on top of each other
         - "total_size": total size of a tile in bytes
+
+        .. versionadded:: 0.6.0
         """
         return {
             "depth": UDF.TILE_DEPTH_DEFAULT,

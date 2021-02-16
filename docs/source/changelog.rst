@@ -9,25 +9,31 @@ Changelog
     ctx = api.Context(executor=InlineJobExecutor())
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
 
-.. .. _continuous:
+.. _continuous:
 
-.. .. toctree::
-..    :glob:
-.. 
-..    changelog/*/*
+0.7.0.dev0
+##########
+
+.. toctree::
+   :glob:
+
+   changelog/*/*
 
 .. _latest:
 .. _`v0-6-0`:
 
-0.6.0
-#####
+0.6.0 / 2021-02-16
+##################
 
-We are pleased to announce the latest LiberTEM release, with many
-improvements since 0.5. We would like to highlight the contributions of our
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4543704.svg
+   :target: https://doi.org/10.5281/zenodo.4543704
 
-GSoc 2020 students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ (reshaping and sync offset correction) and
-`@twentyse7en <https://github.com/twentyse7en>`_, (Code generation to replicate GUI analyses in Jupyter notebooks) who implemented significant
-improvements in the areas of I/O and the user interface.
+We are pleased to announce the latest LiberTEM release, with many improvements
+since 0.5. We would like to highlight the contributions of our GSoc 2020
+students `@AnandBaburajan <https://github.com/AnandBaburajan>`_ (reshaping and
+sync offset correction) and `@twentyse7en <https://github.com/twentyse7en>`_,
+(Code generation to replicate GUI analyses in Jupyter notebooks) who implemented
+significant improvements in the areas of I/O and the user interface.
 
 Another highlight of this release is experimental support of NVidia GPUs, both
 via CuPy and via native libraries. The API is ready to be used, including support
@@ -52,8 +58,10 @@ New features
    * Implement tiled reading for most file formats
      (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
    * Allow UDFs that implement :code:`process_tile` to influence the tile
-     shape and make information about the tiling scheme available to the UDF
-     (:issue:`554`, :issue:`247`, :issue:`635`).
+     shape by overriding :meth:`libertem.udf.base.UDF.get_tiling_preferences`
+     and make information about the tiling scheme available to the UDF through
+     :attr:`libertem.udf.base.UDFMeta.tiling_scheme`. (:issue:`554`,
+     :issue:`247`, :issue:`635`).
    * Update :code:`MemoryDataSet` to allow testing with different
      tile shapes (:issue:`634`).
    * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
@@ -62,12 +70,13 @@ New features
      (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
      a performance regression (:issue:`838`) on slower media (like HDDs), by
      adding a buffered reading backend that tries its best to linearize I/O per-worker.
+     GUI integration of backend selection is to be done.
    * For now, direct I/O is no longer supported, please let us know if this is an
      important use-case for you (:issue:`716`)!
 * Support for specifying logging level from CLI (:pr:`758`).
 * Support for Norpix SEQ files (:issue:`153`, :pr:`767`).
 * Support for MRC files, as supported by ncempy (:issue:`152`, :pr:`873`).
-* Support for loading stacks of 3D DM files (:pr:`877`).
+* Support for loading stacks of 3D DM files (:pr:`877`). GUI integration still to be done.
 * GUI: Filebrowser improvements: users can star directories in the file browser for easy navigation (:pr:`772`).
 * Support for running multiple UDFs "at the same time", not yet exposed in public APIs (:pr:`788`).
 * GUI: Users can add or remove scan size dimensions according to the dataset's shape (:pr:`779`).
@@ -80,13 +89,14 @@ New features
 * Corrections can now be specified by the user when running a UDF (:pr:`778,831,939`).
 * Support for loading dark frame and gain map that are sometimes shipped with SEQ data sets.
 * GPU support: process data on CPUs, CUDA devices or both (:pr:`760`, :ref:`udf cuda`).
+* Spinning out holography to a separate package is in progress: https://github.com/LiberTEM/LiberTEM-holo/
 * Implement CuPy support in :class:`~libertem.udf.holography.HoloReconstructUDF`, currently deactivated due to :issue:`815` (:pr:`760`).
 * GUI: Allows the user to select the GPUs to use when creating a new local cluster (:pr:`812`).
 * GUI: Support to download Jupyter notebook corresponding to an analysis
   made by a user in GUI (:pr:`801`).
 * GUI: Copy the Jupyter notebook cells corresponding to the
   analysis directly from GUI, including cluster connection details (:pr:`862`, :pr:`863`)
-* Allow reshaping datasets into a custom shape. The :code:`DataSet` implementations (except HDF5 and K2IS)
+* Allow reshaping datasets into a custom shape. The :code:`DataSet` implementations (currently except HDF5 and K2IS)
   and GUI now allow specifying :code:`nav_shape` and :code:`sig_shape`
   parameters to set a different shape than the layout in the
   dataset (:issue:`441`, :pr:`793`).
@@ -98,7 +108,7 @@ New features
 * Users can access the coordinates of a tile/partition slice
   through :attr:`~libertem.udf.base.UDFMeta.coordinates` (:issue:`553`, :pr:`793`).
 * Cache warmup when opening a data set: Precompiles jit-ed functions on a single process per node, in a controlled manner,
-  preventing CPU oversubscription. This should further improve once numba can cache functions which capture other functions
+  preventing CPU oversubscription. This improves further through implementing caching for functions which capture other functions
   in their closure (:pr:`886`, :issue:`798`).
 * Allow selecting lin and log scaled visualization for sum, stddev, pick and single mask analyses 
   to handle data with large dynamic range. This adds key :code:`intensity_lin` to
@@ -115,6 +125,7 @@ New features
 Bugfixes
 --------
 
+* Fix an off-by-one error in sync offset for K2IS data (drive-by change in :pr:`706`).
 * Missing-directory error isn't thrown if it's due to last-recent-directory not being available (:pr:`748`).
 * GUI: when cluster connection fails, reopen form with parameters user submitted (:pr:`735`).
 * GUI: Fixed the glitch in file opening dialogue by disallowing parallel browsing before loading is concluded (:pr:`752`).

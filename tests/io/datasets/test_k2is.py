@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 from libertem.io.dataset.k2is import K2ISDataSet
-from libertem.job.masks import ApplyMasksJob
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
@@ -17,7 +16,6 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
-from libertem.io.dataset.base.tiling import TilingScheme
 from libertem import masks
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
@@ -186,45 +184,9 @@ def test_read_invalid_tileshape(default_k2is):
 
 
 @pytest.mark.slow
-def test_apply_mask_job(default_k2is, lt_ctx):
-    mask = np.ones((1860, 2048))
-
-    tileshape = Shape(
-        (16, 930, 16),
-        sig_dims=2,
-    )
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=tileshape,
-        dataset_shape=default_k2is.shape,
-    )
-
-    job = ApplyMasksJob(
-        dataset=default_k2is, mask_factories=[lambda: mask],
-        tiling_scheme=tiling_scheme,
-    )
-    out = job.get_result_buffer()
-
-    executor = InlineJobExecutor()
-
-    for tiles in executor.run_job(job):
-        for tile in tiles:
-            tile.reduce_into_result(out)
-
-    results = lt_ctx.run(job)
-    assert results[0].shape == (34 * 35,)
-    # there should be _something_ in each result pixel
-    for px in results[0].reshape((-1,)):
-        assert not np.isclose(px, 0)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-@pytest.mark.slow
-def test_apply_mask_analysis(default_k2is, lt_ctx, TYPE):
+def test_apply_mask_analysis(default_k2is, lt_ctx):
     mask = np.ones((1860, 2048))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_k2is)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (34, 35)
 
@@ -236,18 +198,8 @@ def test_sum_analysis(default_k2is, lt_ctx):
     assert results[0].raw_data.shape == (1860, 2048)
 
 
-def test_pick_job(default_k2is, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_k2is, origin=(16, 16))
-    results = lt_ctx.run(analysis)
-    assert results.shape == (1860, 2048)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick_analysis(default_k2is, lt_ctx, TYPE):
+def test_pick_analysis(default_k2is, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_k2is, parameters={"x": 16, "y": 16})
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
 
@@ -442,4 +394,4 @@ def test_regression_simple_stride(lt_ctx, default_k2is):
     )
     print(ts)
     p = list(default_k2is.get_partitions())[-1]
-    t0 = next(p.get_tiles(tiling_scheme=ts))
+    next(p.get_tiles(tiling_scheme=ts))

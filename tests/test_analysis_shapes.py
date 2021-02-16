@@ -18,12 +18,8 @@ def ds_random():
     return dataset
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_disk_1(lt_ctx, ds_random, TYPE):
+def test_disk_1(lt_ctx, ds_random):
     analysis = lt_ctx.create_disk_analysis(dataset=ds_random, cx=8, cy=8, r=5)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_random.data)
@@ -39,12 +35,8 @@ def test_disk_1(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_disk_defaults(lt_ctx, ds_random, TYPE):
+def test_disk_defaults(lt_ctx, ds_random):
     analysis = lt_ctx.create_disk_analysis(dataset=ds_random)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_random.data)
@@ -60,12 +52,8 @@ def test_disk_defaults(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_ring_1(lt_ctx, ds_random, TYPE):
+def test_ring_1(lt_ctx, ds_random):
     analysis = lt_ctx.create_ring_analysis(dataset=ds_random, cx=8, cy=8, ri=5, ro=8)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_random.data)
@@ -80,10 +68,7 @@ def test_ring_1(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_ring_3d_ds(lt_ctx, TYPE):
+def test_ring_3d_ds(lt_ctx):
     data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
@@ -92,7 +77,6 @@ def test_ring_3d_ds(lt_ctx, TYPE):
         sig_dims=2,
     )
     analysis = lt_ctx.create_ring_analysis(dataset=dataset, cx=8, cy=8, ri=5, ro=8)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], dataset.data.reshape((16, 16, 16, 16)))
@@ -107,12 +91,8 @@ def test_ring_3d_ds(lt_ctx, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_ring_defaults(lt_ctx, ds_random, TYPE):
+def test_ring_defaults(lt_ctx, ds_random):
     analysis = lt_ctx.create_ring_analysis(dataset=ds_random)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_random.data)
@@ -126,12 +106,8 @@ def test_ring_defaults(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_point_1(lt_ctx, ds_random, TYPE):
+def test_point_1(lt_ctx, ds_random):
     analysis = lt_ctx.create_point_analysis(dataset=ds_random, x=8, y=8)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = np.zeros((16, 16))
     mask[8, 8] = 1
@@ -146,10 +122,7 @@ def test_point_1(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_point_3d_ds(lt_ctx, TYPE):
+def test_point_3d_ds(lt_ctx):
     data = _mk_random(size=(16 * 16, 16, 16))
     dataset = MemoryDataSet(
         data=data.astype("<u2"),
@@ -158,7 +131,6 @@ def test_point_3d_ds(lt_ctx, TYPE):
         sig_dims=2,
     )
     analysis = lt_ctx.create_point_analysis(dataset=dataset, x=8, y=8)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = np.zeros((16, 16))
     mask[8, 8] = 1
@@ -174,12 +146,8 @@ def test_point_3d_ds(lt_ctx, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_point_defaults(lt_ctx, ds_random, TYPE):
+def test_point_defaults(lt_ctx, ds_random):
     analysis = lt_ctx.create_point_analysis(dataset=ds_random)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = np.zeros((16, 16))
     mask[8, 8] = 1
@@ -195,12 +163,8 @@ def test_point_defaults(lt_ctx, ds_random, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_disk_complex(lt_ctx, ds_complex, TYPE):
+def test_disk_complex(lt_ctx, ds_complex):
     analysis = lt_ctx.create_disk_analysis(dataset=ds_complex)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_complex.data)
@@ -218,12 +182,8 @@ def test_disk_complex(lt_ctx, ds_complex, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_ring_complex(lt_ctx, ds_complex, TYPE):
+def test_ring_complex(lt_ctx, ds_complex):
     analysis = lt_ctx.create_ring_analysis(dataset=ds_complex)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_complex.data)
@@ -241,12 +201,8 @@ def test_ring_complex(lt_ctx, ds_complex, TYPE):
     )
 
 
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_point_complex(lt_ctx, ds_complex, TYPE):
+def test_point_complex(lt_ctx, ds_complex):
     analysis = lt_ctx.create_point_analysis(dataset=ds_complex)
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     mask = analysis.get_mask_factories()[0]()
     expected = _naive_mask_apply([mask], ds_complex.data)

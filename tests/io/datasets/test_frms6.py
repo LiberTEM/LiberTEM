@@ -205,18 +205,8 @@ def test_sum_analysis(default_frms6, lt_ctx):
     lt_ctx.run(analysis)
 
 
-def test_pick_job(default_frms6, lt_ctx):
-    analysis = lt_ctx.create_pick_job(dataset=default_frms6, origin=(16, 16))
-    results = lt_ctx.run(analysis)
-    assert results.shape == (264, 264)
-
-
-@pytest.mark.parametrize(
-    'TYPE', ['JOB', 'UDF']
-)
-def test_pick_analysis(default_frms6, lt_ctx, TYPE):
+def test_pick_analysis(default_frms6, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_frms6, parameters={"x": 16, "y": 16})
-    analysis.TYPE = TYPE
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (264, 264)
 

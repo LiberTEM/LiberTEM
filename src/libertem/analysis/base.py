@@ -166,6 +166,9 @@ class Analysis:
     the :code:`Analysis` sub-class.
 
     .. versionadded:: 0.3.0
+
+    .. versionchanged:: 0.7.0
+        Removed deprecated methods :code:`get_results` and :code:`get_job`
     """
     # TODO: once we require Py3.8, we can use Literal here:
     # https://www.python.org/dev/peps/pep-0586/
@@ -186,35 +189,6 @@ class Analysis:
     @classmethod
     def get_analysis_by_type(cls, id_):
         return cls.registry[id_]
-
-    def get_results(self, job_results):
-        """
-        .. deprecated:: 0.4.0
-            Use TYPE = 'UDF' and get_udf_results(). See :ref:`job deprecation`.
-
-        Parameters
-        ----------
-        job_results : list of :class:`~numpy.ndarray`
-            raw results from the job
-
-        Returns
-        -------
-        list of AnalysisResult
-            one or more annotated results
-        """
-        raise NotImplementedError()
-
-    def get_job(self):
-        """
-        .. deprecated:: 0.4.0
-            Use TYPE = 'UDF' and get_udf(). See :ref:`job deprecation`.
-
-        Returns
-        -------
-        Job
-            a Job instance
-        """
-        raise NotImplementedError()
 
     def get_udf_results(self, udf_results, roi):
         """
@@ -266,12 +240,15 @@ class Analysis:
 
 
 class BaseAnalysis(Analysis):
-    TYPE = 'JOB'
+    TYPE = 'UDF'
 
     def __init__(self, dataset, parameters):
         self.dataset = dataset
         self.parameters = self.get_parameters(parameters)
         self.parameters.update(parameters)
+
+        if self.TYPE == 'JOB':
+            raise RuntimeError("Job support was removed in 0.7")
 
     def get_roi(self):
         return None

@@ -35,15 +35,6 @@ class PickfftTemplate(GeneratorHelper):
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
-
-    def get_results(self, job_results):
-        # Make sure we don't use legacy code from superclasses
-        raise NotImplementedError
-
-    def get_job(self):
-        # Make sure we don't use legacy code from superclasses
-        raise NotImplementedError
-
     def get_udf_results(self, udf_results, roi):
         data = udf_results['intensity'].data[0]
         real_rad = self.parameters.get("real_rad")

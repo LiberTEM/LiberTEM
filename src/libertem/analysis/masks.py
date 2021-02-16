@@ -1,5 +1,4 @@
 from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
-from libertem.job.masks import ApplyMasksJob
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.analysis.getroi import get_roi
 
@@ -12,23 +11,10 @@ class BaseMasksAnalysis(BaseAnalysis):
 
     .. versionchanged:: 0.4.0
         Add support to use this Analysis with both ApplyMasksJob and ApplyMasksUDF :issue:`549`
-    """
-    # FIXME remove job infrastructure after deprecation period
-    def get_job(self):
-        mask_factories = self.get_mask_factories()
-        use_sparse = self.get_use_sparse()
-        mask_count = self.get_preset_mask_count()
-        mask_dtype = self.get_preset_mask_dtype()
-        dtype = self.get_preset_dtype()
-        job = ApplyMasksJob(
-            dataset=self.dataset,
-            mask_factories=mask_factories,
-            use_sparse=use_sparse,
-            mask_count=mask_count,
-            mask_dtype=mask_dtype,
-            dtype=dtype)
-        return job
 
+    .. versionchanged:: 0.7.0
+        ApplyMasksJob support removed
+    """
     def get_udf(self):
         return ApplyMasksUDF(
             mask_factories=self.get_mask_factories(),
@@ -55,12 +41,6 @@ class BaseMasksAnalysis(BaseAnalysis):
 
 
 class SingleMaskAnalysis(BaseMasksAnalysis):
-    # FIXME remove job aspects after deprecation period
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav)
-        data = job_results[0].reshape(shape)
-        return self.get_generic_results(data)
-
     def get_udf_results(self, udf_results, roi):
         data = udf_results['intensity'].data
         return self.get_generic_results(data[..., 0])
@@ -187,12 +167,6 @@ class MasksAnalysis(BaseMasksAnalysis):
                 desc="integrated intensity for mask %d" % idx)
             for idx in range(data.shape[-1])
         ])
-
-    # FIXME remove after job deprecation period
-    def get_results(self, job_results):
-        shape = tuple(self.dataset.shape.nav) + (-1, )
-        data = job_results.T.reshape(shape)
-        return self.get_generic_results(data)
 
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)

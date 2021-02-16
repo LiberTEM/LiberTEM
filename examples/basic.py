@@ -34,7 +34,6 @@ if __name__ == '__main__':
                 'hdf5',
                 path=path,
                 ds_path='experimental/science_data/data',
-                tileshape=(1, 8, 128, 128)
             )
 
         (scan_y, scan_x, detector_y, detector_x) = ds.shape

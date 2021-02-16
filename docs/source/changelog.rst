@@ -411,7 +411,7 @@ Main differences:
 
 Previously with :class:`~libertem.job.masks.ApplyMasksJob`:
 
-.. testcode:: jobdeprecation
+.. code-block:: python
 
     # Deprecated!
     mask_job = ctx.create_mask_job(

@@ -344,7 +344,9 @@ class H5Partition(Partition):
                 frames_read += 1
 
     def get_base_shape(self):
-        # FIXME: use chunking?
+        with self.reader.get_h5ds() as h5ds:
+            if h5ds.chunks is not None:
+                return h5ds.chunks
         return (1, 1,) + (self.shape[-1],)
 
     def adjust_tileshape(self, tileshape):

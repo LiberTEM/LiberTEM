@@ -26,10 +26,10 @@ Installing from a git clone
 .. note::
     Distinguish between installing a released version and installing the latest
     development version. Both :ref:`installing from PyPI` and :ref:`installing from a git
-    clone` use pip, but they do fundamentally different things. :code:`pip
+    clone` use pip, but they do fundamentally different things. :code:`python -m pip
     install libertem` downloads the latest release from PyPI.
 
-    Changing directory to a git clone and running :code:`pip install -e .`
+    Changing directory to a git clone and running :code:`python -m pip install -e .`
     installs from the local directory in editable mode. "Editable mode" means
     that the source directory is "linked" into the current Python environment
     rather than copied. That means changes in the source directory are
@@ -87,7 +87,7 @@ current directory!
 
 .. code-block:: shell
 
-    (libertem) $ pip install -e .
+    (libertem) $ python -m pip install -e .
 
 This should download the dependencies and install LiberTEM in the environment.
 Please continue by reading the :ref:`usage documentation`.
@@ -96,7 +96,7 @@ Installing extra dependencies works just like when installing LiberTEM from PyPI
 
 .. code-block:: shell
 
-    (libertem) $ pip install -e .[torch,hdbscan,cupy]
+    (libertem) $ python -m pip install -e .[torch,hdbscan,cupy]
 
 Updating
 ~~~~~~~~
@@ -109,11 +109,11 @@ update the source code with this command:
 
     $ git pull
 
-The installation with ``pip install -e`` has installed LiberTEM in `"editable"
+The installation with :code:`python -m pip install -e` has installed LiberTEM in `"editable"
 mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
 That means the changes pulled from git are active immediately. Only if the
 requirements for installed third-party packages have changed, you should re-run
-``pip install -e .`` in order to install any missing packages.
+:code:`python -m pip install -e .` in order to install any missing packages.
 
 Setting up tox on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~

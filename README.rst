@@ -49,10 +49,10 @@ The short version:
 
     $ virtualenv -p python3 ~/libertem-venv/
     $ source ~/libertem-venv/bin/activate
-    (libertem) $ pip install "libertem[torch]"
+    (libertem) $ python -m pip install "libertem[torch]"
 
     # optional for GPU support
-    (libertem) $ pip install cupy
+    (libertem) $ python -m pip install cupy
 
 Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!
 

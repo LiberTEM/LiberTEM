@@ -69,7 +69,7 @@ conda environment or virtualenv activated:
 
 .. code-block:: shell
 
-   (libertem) $ pip install line_profiler
+   (libertem) $ python -m pip install line_profiler
 
 Then the easiest way to get started is to use the ipython/jupyter integration of
 `line_profiler`. Put :code:`%load_ext line_profiler` somewhere in your notebook,

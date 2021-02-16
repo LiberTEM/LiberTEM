@@ -19,10 +19,10 @@ The short version
 
     $ virtualenv -p python3 ~/libertem-venv/
     $ source ~/libertem-venv/bin/activate
-    (libertem) $ pip install "libertem[torch]"
+    (libertem) $ python -m pip install "libertem[torch]"
 
     # optional for GPU support
-    (libertem) $ pip install cupy
+    (libertem) $ python -m pip install cupy
 
 For details, please read on!
 
@@ -134,7 +134,7 @@ environment (conda or virtualenv) and install using:
 
 .. code-block:: shell
 
-    (libertem) $ pip install libertem
+    (libertem) $ python -m pip install libertem
 
 This should install LiberTEM and its dependencies in the environment. Please
 continue by reading the :ref:`usage documentation`.
@@ -153,7 +153,7 @@ example from PyPI:
 
 .. code-block:: shell
 
-    (libertem) $ pip install "libertem[torch]"
+    (libertem) $ python -m pip install "libertem[torch]"
 
 CuPy
 ~~~~
@@ -162,7 +162,7 @@ GPU support is based on `CuPy <https://cupy.chainer.org/>`_.
 
 .. code-block:: shell
 
-    (libertem) $ pip install "libertem[cupy]"
+    (libertem) $ python -m pip install "libertem[cupy]"
 
 .. versionadded:: 0.6.0
 
@@ -184,7 +184,7 @@ When installed from PyPI via pip, you can update like this:
 
 .. code-block:: shell
 
-    (libertem) $ pip install -U libertem
+    (libertem) $ python -m pip install -U libertem
 
 This should install a new version of LiberTEM and update all requirements that
 have changed.

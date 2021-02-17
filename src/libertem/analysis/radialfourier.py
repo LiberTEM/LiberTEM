@@ -127,8 +127,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         The AnalysisResults are calculated lazily in this function to reduce
         overhead.
         '''
-        # FIXME: remove reshape and transpose here, use native UDF results
         shape = tuple(self.dataset.shape.nav)
+        # NOTE: transposed for historical reasons
         udf_results = udf_results['intensity'].data.reshape((np.prod(shape), -1)).T
         orders = self.parameters['max_order'] + 1
         n_bins = self.parameters['n_bins']

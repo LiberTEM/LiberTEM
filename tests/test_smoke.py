@@ -14,7 +14,6 @@ import libertem.web.cli
 import libertem.api
 import libertem.preload
 import libertem.udf
-import libertem.udf.blobfinder
 import libertem.analysis.gridmatching
 
 

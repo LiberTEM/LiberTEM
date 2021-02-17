@@ -12,7 +12,7 @@ class SumUDF(UDF):
     >>> udf = SumUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
     >>> np.array(result["intensity"]).shape
-    (16, 16)
+    (32, 32)
     """
     def __init__(self, dtype='float32'):
         '''

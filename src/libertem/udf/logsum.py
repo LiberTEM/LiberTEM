@@ -15,7 +15,7 @@ class LogsumUDF(UDF):
     >>> udf = LogsumUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
     >>> np.array(result["logsum"]).shape
-    (16, 16)
+    (32, 32)
     """
     def __init__(self):
         ''

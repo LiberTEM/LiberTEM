@@ -452,13 +452,11 @@ def auto_libertem(doctest_namespace):
     import libertem
     import libertem.utils
     import libertem.utils.generate
-    import libertem.udf.blobfinder
     import libertem.masks
     import libertem.api
     doctest_namespace["libertem"] = libertem
     doctest_namespace["libertem.utils"] = libertem.utils
     doctest_namespace["libertem.utils.generate"] = libertem.utils.generate
-    doctest_namespace["libertem.udf.blobfinder"] = libertem.udf.blobfinder
     doctest_namespace["libertem.masks"] = libertem.masks
     doctest_namespace["libertem.api"] = libertem.api
 

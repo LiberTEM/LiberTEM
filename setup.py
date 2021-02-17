@@ -156,9 +156,6 @@ setup(
         'jsonschema',
         'scikit-learn',
         'tqdm',
-        # FIXME remove in 0.7.0 after blobfinder deprecation
-        # Ensure compatibility with numba>=0.50
-        'libertem-blobfinder>=0.4.1',
         'threadpoolctl',
         'primesieve',
         'nbformat',

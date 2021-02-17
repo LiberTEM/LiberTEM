@@ -550,7 +550,7 @@ class Context:
         >>> from libertem.udf.sum import SumUDF
         >>> result = ctx.run_udf(dataset=dataset, udf=SumUDF())
         >>> np.array(result["intensity"]).shape
-        (16, 16)
+        (32, 32)
         >>> # intensity is the name of the result buffer, defined in the SumUDF
 
         Running a UDF on a subset of data:

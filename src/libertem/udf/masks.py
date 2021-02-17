@@ -12,10 +12,10 @@ class ApplyMasksUDF(UDF):
     The result will be returned in a single sig-shaped buffer called intensity.
     Its shape will be :code:`(*nav_shape, len(masks))`. For example:
 
-    >>> dataset.shape.nav
-    (16, 16)
+    >>> dataset.shape
+    (16, 16, 32, 32)
     >>> def my_masks():
-    ...     return [np.ones((16, 16)), np.zeros((16, 16))]
+    ...     return [np.ones((32, 32)), np.zeros((32, 32))]
     >>> udf = ApplyMasksUDF(mask_factories=my_masks)
     >>> res = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
     >>> res.data.shape
@@ -26,7 +26,7 @@ class ApplyMasksUDF(UDF):
     Mask factories can also return all masks as a single array, stacked on the first axis:
 
     >>> def my_masks_2():
-    ...     masks = np.zeros((2, 16, 16))
+    ...     masks = np.zeros((2, 32, 32))
     ...     masks[1, ...] = 1
     ...     return masks
     >>> udf = ApplyMasksUDF(mask_factories=my_masks_2)

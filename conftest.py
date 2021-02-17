@@ -438,7 +438,7 @@ def auto_ctx(doctest_namespace):
 
 @pytest.fixture(autouse=True)
 def auto_ds(doctest_namespace):
-    dataset = MemoryDataSet(datashape=[16, 16, 16, 16])
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32])
     doctest_namespace["dataset"] = dataset
 
 

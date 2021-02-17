@@ -10,9 +10,10 @@ from libertem.io.dataset.base import (
 
 
 class RoiDataSet(DataSet):
-    def __init__(self, wrapped: DataSet, rois: List[np.ndarray]):
+    def __init__(self, wrapped: DataSet, rois: List[np.ndarray], io_backend=None):
         self._wrapped = wrapped
         self._rois = rois
+        self._io_backend = io_backend
 
     def initialze(self, executor: JobExecutor):
         # Most likely nothing to do? self._wrapped should already be initialzed
@@ -48,6 +49,7 @@ class RoiDataSet(DataSet):
                 meta=self._wrapped.meta,
                 wrapped_partitions=wrapped_partitions,
                 roi=roi,
+                io_backend=self.get_io_backend(),
             )
 
     @property
@@ -77,8 +79,10 @@ class RoiDataSet(DataSet):
 class RoiPartition(Partition):
     """
     """
-    def __init__(self, meta: DataSetMeta, wrapped_partitions: List[Partition], roi: np.ndarray):
-        super().__init__(meta=meta)
+    def __init__(
+        self, meta: DataSetMeta, wrapped_partitions: List[Partition], roi: np.ndarray, io_backend
+    ):
+        super().__init__(meta=meta, io_backend=io_backend)
         self._wrapped = wrapped_partitions
         self._roi = roi
 

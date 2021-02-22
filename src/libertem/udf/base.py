@@ -991,7 +991,7 @@ class UDFRunner:
     def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class):
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
-            partition_shape=partition.slice.adjust_for_roi(roi).shape,
+            partition_shape=partition.shape_for_roi(roi),
             dataset_shape=partition.meta.shape,
             roi=roi,
             dataset_dtype=partition.dtype,

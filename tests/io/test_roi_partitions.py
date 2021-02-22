@@ -48,7 +48,7 @@ def test_get_macrotile(default_raw, lt_ctx):
         p.get_macrotile()
 
 
-def test_get_macrotile_from_overlapping_parts(lt_ctx):
+def test_get_single_macrotile(lt_ctx):
     data = np.random.randn(16, 16, 32, 32).astype("float32")
     wrapped_ds = MemoryDataSet(
         data=data,
@@ -63,7 +63,10 @@ def test_get_macrotile_from_overlapping_parts(lt_ctx):
     assert len(parts) == 1
     p = parts[0]
     macrotile = p.get_macrotile()
-    assert np.allclose(macrotile, data)
+    assert np.allclose(
+        macrotile,
+        data.reshape(wrapped_ds.shape.flatten_nav())
+    )
 
 
 def test_get_tiles_from_overlapping_parts(lt_ctx):

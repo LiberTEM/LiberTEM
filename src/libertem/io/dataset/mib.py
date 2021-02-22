@@ -652,6 +652,10 @@ class MIBDataSet(DataSet):
         return self._meta.raw_dtype
 
     @property
+    def meta(self):
+        return self._meta
+
+    @property
     def shape(self):
         """
         the shape specified or imprinted by nav_shape from the HDR file

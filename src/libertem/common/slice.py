@@ -104,6 +104,20 @@ class Slice(object):
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 
+    def translate(self, origin_offset):
+        """
+        Return a new `Slice` with `origin_offset` added to our origin
+        """
+        if len(self.origin) != len(origin_offset):
+            raise ValueError(
+                "cannot translate origin with different dimensionality (%s vs %s)" % (
+                    self.origin, origin_offset
+                )
+            )
+        return Slice(origin=tuple(our_coord + their_coord
+                                  for (our_coord, their_coord) in zip(self.origin, origin_offset)),
+                     shape=self.shape)
+
     def get(self, arr=None, sig_only=False, nav_only=False):
         """
         Get a standard python tuple-of-slice-object which can be used

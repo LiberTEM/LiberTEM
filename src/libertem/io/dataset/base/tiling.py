@@ -540,9 +540,15 @@ class Negotiator:
         full_base_shape = (1,) + tuple(base_shape)
         min_factors = (depth,) + tuple(min_factors)
 
+        if roi is None:
+            containing_shape = partition.shape
+        else:
+            roi_slice = partition.slice.get(roi.reshape(-1), nav_only=True)
+            containing_shape = (np.count_nonzero(roi_slice), ) + tuple(partition.shape.sig)
+
         factors = self._get_scale_factors(
             full_base_shape,
-            containing_shape=partition.shape,
+            containing_shape=containing_shape,
             size=size_px,
             min_factors=min_factors,
         )
@@ -611,7 +617,7 @@ class Negotiator:
     def _get_udf_size_pref(self, udf):
         from libertem.udf import UDF
         udf_prefs = udf.get_tiling_preferences()
-        size = udf_prefs.get("total_size", np.float("inf"))
+        size = udf_prefs.get("total_size", np.inf)
         if size is UDF.TILE_SIZE_BEST_FIT:
             size = self._get_default_size()
         return size

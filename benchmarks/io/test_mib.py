@@ -123,7 +123,7 @@ class TestUseSharedExecutor:
         ctx = shared_dist_ctx
         ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
-        sparse_roi = np.zeros(ds.shape.nav.size, dtype=np.bool)
+        sparse_roi = np.zeros(ds.shape.nav.size, dtype=bool)
         sparse_roi[::sparsity] = True
 
         def mask():

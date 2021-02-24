@@ -25,7 +25,7 @@ class FullMatcher(grm.Matcher):
     '''
     def __init__(
             self, tolerance=3, min_weight=0.1, min_match=3, min_angle=np.pi/10,
-            min_points=10, min_delta=0, max_delta=np.float('inf'), min_candidates=3,
+            min_points=10, min_delta=0, max_delta=np.inf, min_candidates=3,
             max_candidates=7, clusterer=None, min_cluster_size_fraction=4,
             min_samples_fraction=20):
         '''
@@ -166,7 +166,7 @@ class FullMatcher(grm.Matcher):
             np.allclose(corr.centers[i], zero)
             + np.allclose(corr.refineds[i], zero)
             for i in range(len(corr))
-        ], dtype=np.bool)
+        ], dtype=bool)
 
         def listed(working_set, polar_cand):
             return polar_cand

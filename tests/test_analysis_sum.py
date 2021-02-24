@@ -188,7 +188,7 @@ def test_sum_with_roi(lt_ctx):
     assert mask.shape == (16, 16)
     assert mask[0, 0] == 0
     assert mask[6, 5] == 1
-    assert mask.dtype == np.bool
+    assert mask.dtype == bool
 
     # applying the mask flattens the first two dimensions, so we
     # only sum over axis 0 here:
@@ -223,7 +223,7 @@ def test_sum_zero_roi(lt_ctx):
     mask = masks.circular(roi["cx"], roi["cy"], 16, 16, roi["r"])
     assert mask.shape == (16, 16)
     assert np.count_nonzero(mask) == 0
-    assert mask.dtype == np.bool
+    assert mask.dtype == bool
 
     # applying the mask flattens the first two dimensions, so we
     # only sum over axis 0 here:

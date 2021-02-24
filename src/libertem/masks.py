@@ -92,8 +92,8 @@ def sparse_circular_multi_stack(mask_index, centerX, centerY, imageSizeX, imageS
         radius=radius)
     return sparse_template_multi_stack(
         mask_index=mask_index,
-        offsetX=np.array(centerX, dtype=np.int) - bbox_center,
-        offsetY=np.array(centerY, dtype=np.int) - bbox_center,
+        offsetX=np.array(centerX, dtype=int) - bbox_center,
+        offsetY=np.array(centerY, dtype=int) - bbox_center,
         template=template,
         imageSizeX=imageSizeX,
         imageSizeY=imageSizeY,

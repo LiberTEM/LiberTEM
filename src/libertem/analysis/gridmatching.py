@@ -37,7 +37,7 @@ class PointSelection:
     def __init__(self, correlation_result: CorrelationResult, selector=None):
         self.correlation_result = correlation_result
         if selector is None:
-            self.selector = np.ones(len(correlation_result.centers), dtype=np.bool)
+            self.selector = np.ones(len(correlation_result.centers), dtype=bool)
         else:
             assert len(correlation_result.centers) == len(selector)
             self.selector = selector
@@ -223,7 +223,7 @@ class Matcher:
         scaled_diffs = diffs / (np.maximum(1, np.abs(indices))**0.5)
         errors = np.linalg.norm(scaled_diffs, axis=1)
         matched_selector = errors < self.tolerance
-        matched_indices = rounded[matched_selector].astype(np.int)
+        matched_indices = rounded[matched_selector].astype(int)
         # remove the ones that weren't matched
         new_selector = point_selection.new_selector(matched_selector)
         result = Match.from_point_selection(
@@ -286,10 +286,10 @@ class Match(PointSelection):
         Match
             A :class:`Match` instance with empty selector and all-'nan' attributes
         '''
-        nanvec = np.array([np.float('nan'), np.float('nan')])
+        nanvec = np.array([np.nan, np.nan])
         return cls(
             correlation_result=correlation_result,
-            selector=np.zeros(len(correlation_result), dtype=np.bool),
+            selector=np.zeros(len(correlation_result), dtype=bool),
             zero=nanvec,
             a=nanvec,
             b=nanvec,
@@ -348,7 +348,7 @@ class Match(PointSelection):
             raise ValueError(
                 "Shape of indices is %s, expected (n, 2) or (2, n, m)" % str(indices.shape))
 
-        selector = np.ones(len(indices), dtype=np.bool)
+        selector = np.ones(len(indices), dtype=bool)
         if drop_zero:
             nz = np.any(indices != 0, axis=1)
             selector *= nz
@@ -368,7 +368,7 @@ class Match(PointSelection):
             diff = np.linalg.norm(self.refineds - self.calculated_refineds, axis=1)
             return (diff * self.peak_elevations).mean() / self.peak_elevations.mean()
         else:
-            return np.float('inf')
+            return np.inf
 
     def derive(self, selector=None, zero=None, a=None, b=None, indices=None):
         if zero is None:

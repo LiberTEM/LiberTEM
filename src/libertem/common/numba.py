@@ -248,7 +248,7 @@ dispatcher_registry['custom_cpu'] = MyCPUDispatcher
 def prime_numba_cache(ds):
     dtypes = (np.float32, None)
     for dtype in dtypes:
-        roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
+        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
         roi[0] = 1
 
         from libertem.udf.sum import SumUDF

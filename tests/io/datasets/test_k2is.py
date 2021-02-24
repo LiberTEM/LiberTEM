@@ -372,7 +372,7 @@ def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
 
 
 def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
-    roi = np.zeros(default_k2is.shape.nav, dtype=np.bool).reshape((-1,))
+    roi = np.zeros(default_k2is.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[16] = True

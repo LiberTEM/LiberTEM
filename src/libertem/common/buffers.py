@@ -42,7 +42,7 @@ def empty_aligned(size, dtype):
 
 
 def zeros_aligned(size, dtype):
-    if dtype == np.object or np.prod(size, dtype=np.int64) == 0:
+    if dtype == object or np.prod(size, dtype=np.int64) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)
@@ -105,7 +105,7 @@ class BufferPool:
 
     @contextmanager
     def zeros(self, size, dtype):
-        if dtype == np.object or np.prod(size, dtype=np.int64) == 0:
+        if dtype == object or np.prod(size, dtype=np.int64) == 0:
             yield np.zeros(size, dtype=dtype)
         else:
             with self.empty(size, dtype) as res:

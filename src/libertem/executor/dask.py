@@ -235,11 +235,6 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self.lt_resources = lt_resources
         self._futures = {}
 
-    def run_job(self, job, cancel_id=None):
-        tasks = job.get_tasks()
-        for result, task in self.run_tasks(tasks, cancel_id=cancel_id):
-            yield result
-
     def run_tasks(self, tasks, cancel_id):
         tasks = list(tasks)
         tasks_wrapped = []

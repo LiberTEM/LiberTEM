@@ -11,11 +11,6 @@ class InlineJobExecutor(JobExecutor):
     def __init__(self, debug=False, *args, **kwargs):
         self._debug = debug
 
-    def run_job(self, job, cancel_id=None):
-        tasks = job.get_tasks()
-        for result, task in self.run_tasks(tasks, cancel_id=job):
-            yield result
-
     def run_tasks(self, tasks, cancel_id):
         for task in tasks:
             if self._debug:

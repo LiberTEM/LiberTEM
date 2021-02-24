@@ -523,11 +523,11 @@ class UDF(UDFBase):
     The main user-defined functions interface. You can implement your functionality
     by overriding methods on this class.
     """
-    USE_NATIVE_DTYPE = np.bool
+    USE_NATIVE_DTYPE = bool
     TILE_SIZE_BEST_FIT = object()
-    TILE_SIZE_MAX = np.float("inf")
+    TILE_SIZE_MAX = np.inf
     TILE_DEPTH_DEFAULT = object()
-    TILE_DEPTH_MAX = np.float("inf")
+    TILE_DEPTH_MAX = np.inf
 
     def __init__(self, **kwargs):
         """

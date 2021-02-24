@@ -556,7 +556,7 @@ class Context:
         Running a UDF on a subset of data:
 
         >>> from libertem.udf.sumsigudf import SumSigUDF
-        >>> roi = np.zeros(dataset.shape.nav, dtype=np.bool)
+        >>> roi = np.zeros(dataset.shape.nav, dtype=bool)
         >>> roi[0, 0] = True
         >>> result = ctx.run_udf(dataset=dataset, udf=SumSigUDF(), roi=roi)
         >>> # to get the full navigation-shaped results, with NaNs where the `roi` was False:

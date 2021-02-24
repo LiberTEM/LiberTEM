@@ -75,7 +75,7 @@ def test_comparison_roi(default_ser, default_ser_raw, lt_ctx_fast):
 
 def test_roi(lt_ctx):
     ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
-    roi = np.zeros(ds.shape.nav, dtype=np.bool)
+    roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 1] = True
 
     parts = ds.get_partitions()

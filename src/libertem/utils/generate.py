@@ -132,7 +132,7 @@ def exclude_pixels(sig_dims, num_excluded):
     if num_excluded == 0:
         return None
     # Map of pixels that can be reconstructed faithfully from neighbors in a linear gradient
-    free_map = np.ones(sig_dims, dtype=np.bool)
+    free_map = np.ones(sig_dims, dtype=bool)
 
     # Exclude all border pixels
     for dim in range(len(sig_dims)):

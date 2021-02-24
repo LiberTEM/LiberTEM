@@ -343,7 +343,7 @@ def test_roi_extra_dimension_shape(lt_ctx):
             dest['test3'][:] += src['test3'][:]
 
     extra = ExtraShapeUDF()
-    roi = _mk_random(size=dataset.shape.nav, dtype=np.bool)
+    roi = _mk_random(size=dataset.shape.nav, dtype=bool)
     res = lt_ctx.run_udf(dataset=dataset, udf=extra, roi=roi)
 
     navcount = np.count_nonzero(roi)
@@ -491,7 +491,7 @@ def test_with_progress_bar(lt_ctx):
 class ReshapedViewUDF(UDF):
     def get_result_buffers(self):
         return {
-            "sigbuf": self.buffer(kind="sig", dtype=np.int, where="device")
+            "sigbuf": self.buffer(kind="sig", dtype=int, where="device")
         }
 
     def process_tile(self, tile):

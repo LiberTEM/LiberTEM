@@ -354,7 +354,7 @@ def test_roi_2(random_hdf5, lt_ctx, mnp):
     print(mask)
 
     assert mask.shape == (5, 5)
-    assert mask.dtype == np.bool
+    assert mask.dtype == bool
 
     reader = ds.get_reader()
     with reader.get_h5ds() as h5ds:

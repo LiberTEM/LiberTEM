@@ -543,8 +543,7 @@ class Negotiator:
         if roi is None:
             containing_shape = partition.shape
         else:
-            roi_slice = partition.slice.get(roi.reshape(-1), nav_only=True)
-            containing_shape = (np.count_nonzero(roi_slice), ) + tuple(partition.shape.sig)
+            containing_shape = partition.slice.adjust_for_roi(roi.reshape(-1)).shape
 
         factors = self._get_scale_factors(
             full_base_shape,

@@ -126,6 +126,32 @@ def test_get_scheme_upper_size_1():
     assert tuple(scheme.shape) == (65, 28, 144)
 
 
+def test_get_scheme_upper_size_roi():
+    """
+    Confirm that a small ROI will not be split
+    up unnecessarily.
+    """
+    data = _mk_random(size=(1024, 144, 144))
+    dataset = MemoryDataSet(
+        data=data,
+        num_partitions=1,
+        sig_dims=2
+    )
+
+    roi = np.zeros(dataset.shape.nav, dtype=bool)
+    # All in a single partition here
+    roi[0] = True
+    roi[512] = True
+    roi[-1] = True
+
+    neg = Negotiator()
+    p = next(dataset.get_partitions())
+    udf = TilingUDFBestFit()
+    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=roi)
+    assert scheme.shape.sig.dims == 2
+    assert tuple(scheme.shape) == (3, 144, 144)
+
+
 def test_get_scheme_upper_size_2():
     """
     Test that will hit the 2**20 default size

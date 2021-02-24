@@ -11,18 +11,12 @@ class ExecutorError(Exception):
 
 class JobCancelledError(Exception):
     """
-    raised by async executors in run_job if the job was cancelled
+    raised by async executors in run_tasks() or run_each_partition() if the task was cancelled
     """
     pass
 
 
 class JobExecutor(object):
-    def run_job(self, job, cancel_id=None):
-        """
-        run a Job
-        """
-        raise NotImplementedError()
-
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn` on any worker
@@ -146,12 +140,6 @@ class JobExecutor(object):
 
 
 class AsyncJobExecutor(object):
-    async def run_job(self, job, cancel_id):
-        """
-        Run a Job
-        """
-        raise NotImplementedError()
-
     async def run_tasks(self, tasks, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples
@@ -275,15 +263,6 @@ class AsyncAdapter(AsyncJobExecutor):
 
     def ensure_sync(self):
         return self._wrapped
-
-    async def run_job(self, job, cancel_id):
-        """
-        run a Job
-        """
-        gen = self._wrapped.run_job(job, cancel_id)
-        agen = async_generator(gen, self._pool)
-        async for i in agen:
-            yield i
 
     async def run_tasks(self, tasks, cancel_id):
         """

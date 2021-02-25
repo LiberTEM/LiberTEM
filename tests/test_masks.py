@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import libertem.masks as m
 
@@ -6,6 +7,49 @@ import libertem.masks as m
 def test_background_subtraction():
     mask = m.background_subtraction(10, 10, 20, 20, 5, 3)
     assert(np.allclose(np.sum(mask), 0))
+
+
+@pytest.mark.parametrize(
+    'antialiased', (True, False)
+)
+def test_radial_gradient(antialiased):
+    template = m.radial_gradient(
+        centerX=32, centerY=32,
+        imageSizeX=128,
+        imageSizeY=128,
+        radius=17,
+        antialiased=antialiased
+    )
+
+    for i in range(17):
+        assert np.allclose(template[32, 32+i], i/17)
+        assert np.allclose(template[32, 32-i], i/17)
+        assert np.allclose(template[32+i, 32], i/17)
+        assert np.allclose(template[32-i, 32], i/17)
+
+
+def test_sparse_template_multi_stack():
+    template = np.ones((2, 3))
+    stack = m.sparse_template_multi_stack(
+        mask_index=(0, 1, 2),
+        offsetY=(13, 14, 15),
+        offsetX=(15, 14, 13),
+        template=template,
+        imageSizeY=32,
+        imageSizeX=32
+    )
+    t1 = np.zeros((32, 32))
+    t1[13:15, 15:18] = 1
+
+    t2 = np.zeros((32, 32))
+    t2[14:16, 14:17] = 1
+
+    t3 = np.zeros((32, 32))
+    t3[15:17, 13:16] = 1
+
+    assert np.allclose(stack[0].todense(), t1)
+    assert np.allclose(stack[1].todense(), t2)
+    assert np.allclose(stack[2].todense(), t3)
 
 
 def test_radial_bins():

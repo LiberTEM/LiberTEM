@@ -14,18 +14,26 @@ def test_background_subtraction():
 )
 def test_radial_gradient(antialiased):
     template = m.radial_gradient(
-        centerX=32, centerY=32,
-        imageSizeX=128,
-        imageSizeY=128,
+        centerX=30, centerY=33,
+        imageSizeX=65,
+        imageSizeY=66,
         radius=17,
         antialiased=antialiased
     )
 
+    assert template.shape == (66, 65)
+
     for i in range(17):
-        assert np.allclose(template[32, 32+i], i/17)
-        assert np.allclose(template[32, 32-i], i/17)
-        assert np.allclose(template[32+i, 32], i/17)
-        assert np.allclose(template[32-i, 32], i/17)
+        assert np.allclose(template[33, 30+i], i/17)
+        assert np.allclose(template[33, 30-i], i/17)
+        assert np.allclose(template[33+i, 30], i/17)
+        assert np.allclose(template[33-i, 30], i/17)
+
+    for i in range(18, 30):
+        assert np.allclose(template[33, 30+i], 0)
+        assert np.allclose(template[33, 30-i], 0)
+        assert np.allclose(template[33+i, 30], 0)
+        assert np.allclose(template[33-i, 30], 0)
 
 
 def test_sparse_template_multi_stack():

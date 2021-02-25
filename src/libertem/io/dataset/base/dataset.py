@@ -1,12 +1,16 @@
-import typing
+from typing import List, Tuple, Type, Set, Union, Generator
 
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException
+from libertem.executor.base import JobExecutor
 from libertem.web.messageconverter import MessageConverter
 from libertem.corrections.corrset import CorrectionSet
 from .partition import BasePartition
+
+PartitionRanges = List[Tuple[int, int]]
+PartitionGen = Generator["Partition", None, None]
 
 
 class DataSet(object):
@@ -18,7 +22,7 @@ class DataSet(object):
         self._nav_shape_product = 0
         self._io_backend = io_backend
 
-    def initialize(self, executor):
+    def initialize(self, executor: JobExecutor):
         """
         Perform possibly expensive initialization, like pre-loading metadata.
 
@@ -35,7 +39,7 @@ class DataSet(object):
         """
         raise NotImplementedError()
 
-    def set_num_cores(self, cores):
+    def set_num_cores(self, cores: int):
         self._cores = cores
 
     def get_sync_offset_info(self):
@@ -64,7 +68,7 @@ class DataSet(object):
         """
         raise NotImplementedError()
 
-    def get_slices(self):
+    def get_slices(self, ranges=None):
         """
         Return the partition slices for the dataset
         """
@@ -72,12 +76,20 @@ class DataSet(object):
             shape=self.shape,
             num_partitions=self.get_num_partitions(),
             sync_offset=self._sync_offset,
+            ranges=ranges,
         )
 
-    def get_partitions(self):
+    def get_partitions(self, ranges: Union[None, PartitionRanges] = None) -> PartitionGen:
         """
-        Return a generator over all Partitions in this DataSet. Should only
+        Return a generator over Partitions in this DataSet. Should only
         be called on the master node.
+
+        Parameters
+        ----------
+        ranges
+            Pre-defined (start, stop) tuples for the partitions
+            that should be generated. May raise :code:`ValueError`
+            if this is not supported by this DataSet
         """
         raise NotImplementedError()
 
@@ -96,6 +108,10 @@ class DataSet(object):
         raise NotImplementedError()
 
     @property
+    def meta(self):
+        raise NotImplementedError()
+
+    @property
     def shape(self):
         """
         The shape of the DataSet, as it makes sense for the application domain
@@ -111,7 +127,7 @@ class DataSet(object):
         raise NotImplementedError()
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path: str, executor: JobExecutor):
         """
         Guess if path can be opened using this DataSet implementation and
         detect parameters.
@@ -124,7 +140,7 @@ class DataSet(object):
         raise NotImplementedError()
 
     @classmethod
-    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
+    def get_msg_converter(cls) -> Type[MessageConverter]:
         raise NotImplementedError()
 
     @property
@@ -186,7 +202,7 @@ class DataSet(object):
         )
 
     @classmethod
-    def get_supported_extensions(cls) -> typing.Set[str]:
+    def get_supported_extensions(cls) -> Set[str]:
         """
         Return supported extensions as a set of strings.
 

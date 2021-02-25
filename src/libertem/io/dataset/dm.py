@@ -260,8 +260,8 @@ class DMDataSet(DataSet):
         res = max(self._cores, self._filesize // (512*1024*1024))
         return res
 
-    def get_partitions(self):
-        for part_slice, start, stop in self.get_slices():
+    def get_partitions(self, ranges=None):
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield BasePartition(
                 meta=self._meta,
                 partition_slice=part_slice,

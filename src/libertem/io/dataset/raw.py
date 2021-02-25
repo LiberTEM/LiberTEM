@@ -210,6 +210,10 @@ class RawFileDataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
+    @property
+    def meta(self):
+        return self._meta
+
     @classmethod
     def get_msg_converter(cls):
         return RAWDatasetParams
@@ -255,9 +259,9 @@ class RawFileDataSet(DataSet):
         res = max(self._cores, total_size_px // partition_size_px)
         return res
 
-    def get_partitions(self):
+    def get_partitions(self, ranges=None):
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
+        for part_slice, start, stop in self.get_slices(ranges=ranges):
             yield RawPartition(
                 meta=self._meta,
                 fileset=fileset,

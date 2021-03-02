@@ -1,3 +1,4 @@
+from copy import deepcopy
 from types import MappingProxyType
 from typing import Dict
 import logging
@@ -5,6 +6,7 @@ import uuid
 
 import cloudpickle
 import numpy as np
+from dask import delayed
 
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
@@ -1198,6 +1200,14 @@ class UDFRunner:
         tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
         return tasks
 
+    def _apply_part_results(self, udfs, part_results, task):
+        for results, udf in zip(part_results, udfs):
+            udf.set_views_for_partition(task.partition)
+            udf.merge(
+                dest=udf.results.get_proxy(),
+                src=results.get_proxy()
+            )
+
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None):
         tasks = self._prepare_run_for_dataset(
@@ -1212,12 +1222,11 @@ class UDFRunner:
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            for results, udf in zip(part_results, self._udfs):
-                udf.set_views_for_partition(task.partition)
-                udf.merge(
-                    dest=udf.results.get_proxy(),
-                    src=results.get_proxy()
-                )
+            self._apply_part_results(
+                udfs=self._udfs,
+                part_results=part_results,
+                task=task,
+            )
 
         if progress:
             t.close()
@@ -1228,6 +1237,40 @@ class UDFRunner:
             udf.results.as_dict()
             for udf in self._udfs
         ]
+
+    def delayed_for_dataset(self, dataset: DataSet, executor,
+                        roi=None, corrections=None, backends=None):
+        tasks = self._prepare_run_for_dataset(
+            dataset, executor, roi, corrections, backends,
+        )
+
+        self._debug_task_pickling(tasks)
+
+        def merge_wrapper(udfs, part_results, task):
+            # Avoid modifying the arguments of a delayed function
+            new_udfs = deepcopy(udfs)
+            self._apply_part_results(
+                udfs=new_udfs,
+                part_results=part_results,
+                task=task,
+            )
+            return new_udfs
+
+        udfs = self._udfs
+
+        for part_results, task in executor.delayed(tasks):
+            udfs = delayed(merge_wrapper)(udfs, part_results, task)
+
+        for udf in self._udfs:
+            udf.clear_views()
+
+        def final_result(udfs):
+            return [
+                udf.results.as_dict()
+                for udf in udfs
+            ]
+
+        return delayed(final_result)(udfs)
 
     async def run_for_dataset_async(
             self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None):

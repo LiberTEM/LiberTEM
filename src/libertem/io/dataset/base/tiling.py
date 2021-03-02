@@ -419,9 +419,13 @@ class Negotiator:
     `DataSet`, possibly even optimal.
     """
 
-    def validate(self, shape, partition, size, itemsize, base_shape, corrections):
+    def validate(self, shape, partition, size, io_max_size, itemsize, base_shape, corrections):
         partition_shape = partition.shape
-        size_px = size // itemsize
+
+        # we need some wiggle room with the size, because there may be a harder
+        # lower size value for some cases (for example HDF5, which overrides
+        # some of the sizing negotiation we are doing here)
+        size_px = max(size, io_max_size) // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
             raise ValueError("generated tileshape does not fit the partition")
         if np.prod(shape, dtype=np.int64) > size_px:
@@ -437,7 +441,7 @@ class Negotiator:
         for dim in range(len(base_shape)):
             if shape[dim] % base_shape[dim] != 0:
                 raise ValueError(
-                    f"The shape {shape} is incompatible with base "
+                    f"The tileshape {shape} is incompatible with base "
                     f"shape {base_shape} in dimension {dim}."
                 )
 
@@ -473,31 +477,22 @@ class Negotiator:
         """
         itemsize = np.dtype(read_dtype).itemsize
 
-        # FIXME: itemsize != native_dtype.itemsize! use partition.meta.raw_dtype.itemsize?
-        # try not to waste page faults:
         # FIXME: let the UDF define upper bound for signal size (lower bound, too?)
         # (signal buffers should fit into the L2 cache)
-        min_sig_size = 4 * 4096 // itemsize
+        # try not to waste page faults:
+        min_sig_size = partition.get_min_sig_size()
 
         # This already takes corrections into account through a different pathway
         need_decode = partition.need_decode(roi=roi, read_dtype=read_dtype, corrections=corrections)
 
-        if need_decode:
-            io_backend = partition.get_io_backend()
-            if io_backend is None:
-                io_max_size = 2**20
-            else:
-                io_backend = io_backend.get_impl()
-                io_max_size = io_backend.get_max_io_size()
-        else:
-            io_max_size = itemsize * np.prod(partition.shape, dtype=np.int64)
+        io_max_size = self._get_io_max_size(partition, itemsize, need_decode)
 
         depths = [
             self._get_min_depth(udf, partition)
             for udf in udfs
         ]
         depth = max(depths)  # take the largest min-depth
-        base_shape = self._get_base_shape(udfs, partition)
+        base_shape = self._get_base_shape(udfs, partition, roi)
 
         sizes = [
             self._get_size(
@@ -554,9 +549,16 @@ class Negotiator:
         tileshape = self._scale_base_shape(full_base_shape, factors)
 
         # the partition has a "veto" on the tileshape:
-        tileshape = partition.adjust_tileshape(tileshape)
+        # FIXME: this veto may break if the base shape was adjusted
+        # above, and we need to be careful not to break corrections with this,
+        # and also fulfill requests of per-frame reading
+        log.debug("tileshape before adjustment: %r", (tileshape,))
+        tileshape = partition.adjust_tileshape(tileshape, roi=roi)
+        log.debug("tileshape after adjustment: %r", (tileshape,))
 
-        self.validate(tileshape, partition, size, itemsize, full_base_shape, corrections)
+        self.validate(
+            tileshape, partition, size, io_max_size, itemsize, full_base_shape, corrections,
+        )
         return TilingScheme.make_for_shape(
             tileshape=Shape(tileshape, sig_dims=partition.shape.sig.dims),
             dataset_shape=partition.meta.shape,
@@ -572,11 +574,24 @@ class Negotiator:
             }
         )
 
+    def _get_io_max_size(self, partition, itemsize, need_decode):
+        if need_decode:
+            io_max_size = partition.get_max_io_size()
+            if io_max_size is None:
+                io_max_size = 2**20
+        else:
+            io_max_size = itemsize * np.prod(partition.shape, dtype=np.int64)
+        return io_max_size
+
     def _get_scale_factors(self, shape, containing_shape, size, min_factors=None):
         """
         Generate scaling factors to scale `shape` up to `size` elements,
         while being constrained to `containing_shape`.
         """
+        log.debug(
+            "_get_scale_factors in: %r, %r, %r, %r",
+            shape, containing_shape, size, min_factors
+        )
         assert len(shape) == len(containing_shape)
         if min_factors is None:
             factors = [1] * len(shape)
@@ -600,6 +615,10 @@ class Negotiator:
             factors[idx] = factor
             prelim_shape = self._scale_base_shape(shape, factors)
             rest = max(1, math.floor(size / np.prod(prelim_shape, dtype=np.int64)))
+        log.debug(
+            "_get_scale_factors out: %r",
+            factors,
+        )
         return factors
 
     def _scale_base_shape(self, base_shape, factors):
@@ -645,7 +664,7 @@ class Negotiator:
             size = max(base_size, size)
         return size
 
-    def _get_base_shape(self, udfs, partition):
+    def _get_base_shape(self, udfs, partition, roi):
         methods = [
             udf.get_method()
             for udf in udfs
@@ -655,7 +674,7 @@ class Negotiator:
         else:
             # only by tile:
             base_shape = Shape(
-                partition.get_base_shape(),
+                partition.get_base_shape(roi=roi),
                 sig_dims=partition.shape.sig.dims
             ).sig
         return base_shape

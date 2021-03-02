@@ -82,7 +82,7 @@ class Partition(object):
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         raise NotImplementedError()
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         raise NotImplementedError()
 
     def __repr__(self):
@@ -104,12 +104,24 @@ class Partition(object):
     def get_macrotile(self, dest_dtype="float32", roi=None):
         raise NotImplementedError()
 
-    def adjust_tileshape(self, tileshape):
+    def adjust_tileshape(self, tileshape, roi):
         """
         Final veto of the Partition in the tileshape negotiation process,
         make sure that corrections are taken into account!
         """
         raise NotImplementedError()
+
+    def get_max_io_size(self):
+        """
+        Override this method to implement a custom maximum I/O size
+        """
+        return None
+
+    def get_min_sig_size(self):
+        """
+        minimum signal size, in number of elements
+        """
+        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def get_locations(self):
         raise NotImplementedError()
@@ -164,11 +176,19 @@ class BasePartition(Partition):
         # Allow using any worker by default
         return None
 
-    def adjust_tileshape(self, tileshape):
+    def adjust_tileshape(self, tileshape, roi):
         return tileshape
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
+
+    def get_max_io_size(self):
+        # delegate to I/O backend by default:
+        io_backend = self.get_io_backend()
+        if io_backend is None:
+            return None  # default value is set in Negotiator
+        io_backend = io_backend.get_impl()
+        return io_backend.get_max_io_size()
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
         '''

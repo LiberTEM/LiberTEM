@@ -1,3 +1,4 @@
+import os
 import json
 import pickle
 import threading
@@ -6,13 +7,18 @@ from unittest import mock
 
 import cloudpickle
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
+import h5py
 
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.auto import AutoUDF
 from libertem.io.dataset.base import TilingScheme, DataSetException
 from libertem.common import Shape
+from libertem.io.dataset.base import Negotiator
+from libertem.udf import UDF
 
 from utils import _naive_mask_apply, _mk_random, PixelsumUDF
 from utils import dataset_correction_verification
@@ -423,3 +429,161 @@ def test_hdf5_with_2d_shape(lt_ctx, hdf5_2d):
         lt_ctx.run_udf(udf=udf, dataset=hdf5_ds_2d)
 
     assert e.match("2D HDF5 files are currently not supported")
+
+
+@pytest.mark.parametrize('chunks', [
+    (1, 3, 16, 16),
+    (1, 6, 16, 16),
+    (1, 4, 16, 16),
+    (1, 16, 16, 16),
+])
+def test_chunked(lt_ctx, tmpdir_factory, chunks):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, 'hdf5-test-chunked.h5')
+    data = _mk_random((16, 16, 16, 16), dtype=np.float32)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data, chunks=chunks)
+
+    ds = lt_ctx.load("hdf5", path=filename)
+    udf = PixelsumUDF()
+    res = lt_ctx.run_udf(udf=udf, dataset=ds)['pixelsum']
+    assert np.allclose(
+        res,
+        np.sum(data, axis=(2, 3))
+    )
+
+
+@pytest.fixture(scope='module')
+def shared_random_data():
+    return _mk_random(size=(16, 16, 256, 256), dtype='float32')
+
+
+@pytest.mark.parametrize('udf', [
+    SumSigUDF(),
+    AutoUDF(f=lambda frame: frame.sum()),
+])
+@pytest.mark.parametrize('chunks', [
+    (3, 3, 32, 32),
+    (3, 6, 32, 32),
+    (3, 4, 32, 32),
+    (1, 4, 32, 32),
+    (1, 16, 32, 32),
+
+    (3, 3, 256, 256),
+    (3, 6, 256, 256),
+    (3, 4, 256, 256),
+    (1, 4, 256, 256),
+    (1, 16, 256, 256),
+
+    (3, 3, 128, 256),
+    (3, 6, 128, 256),
+    (3, 4, 128, 256),
+    (1, 4, 128, 256),
+    (1, 16, 128, 256),
+
+    (3, 3, 32, 128),
+    (3, 6, 32, 128),
+    (3, 4, 32, 128),
+    (1, 4, 32, 128),
+    (1, 16, 32, 128),
+])
+def test_chunked_weird(lt_ctx, tmpdir_factory, chunks, udf, shared_random_data):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, 'weirdly-chunked-256-256.h5')
+    data = shared_random_data
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data, chunks=chunks)
+
+    ds = lt_ctx.load("hdf5", path=filename)
+
+    p = next(ds.get_partitions())
+    base_shape = p.get_base_shape(roi=None)
+    print(base_shape)
+
+    res = lt_ctx.run_udf(dataset=ds, udf=udf)
+    assert len(res) == 1
+    res = next(iter(res.values()))
+    assert_allclose(
+        res,
+        np.sum(data, axis=(2, 3))
+    )
+
+
+@pytest.mark.parametrize('in_dtype', [
+    np.float32,
+    np.float64,
+    np.uint16,
+])
+@pytest.mark.parametrize('read_dtype', [
+    np.float32,
+    np.float64,
+    np.uint16,
+])
+@pytest.mark.parametrize('use_roi', [
+    True, False
+])
+def test_hdf5_result_dtype(lt_ctx, tmpdir_factory, in_dtype, read_dtype, use_roi):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, 'result-dtype-checks.h5')
+    data = _mk_random((2, 2, 4, 4), dtype=in_dtype)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data)
+
+    ds = lt_ctx.load("hdf5", path=filename)
+
+    if use_roi:
+        roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
+        roi[0] = 1
+    else:
+        roi = None
+    udfs = [SumSigUDF()]  # need to have at least one UDF
+    p = next(ds.get_partitions())
+    neg = Negotiator()
+    tiling_scheme = neg.get_scheme(
+        udfs=udfs,
+        partition=p,
+        read_dtype=read_dtype,
+        roi=roi,
+        corrections=None,
+    )
+    tile = next(p.get_tiles(tiling_scheme=tiling_scheme, roi=roi, dest_dtype=read_dtype))
+    assert tile.dtype == np.dtype(read_dtype)
+
+
+class UDFWithLargeDepth(UDF):
+    def process_tile(self, tile):
+        pass
+
+    def get_tiling_preferences(self):
+        return {
+            "depth": 128,
+            "total_size": UDF.TILE_SIZE_BEST_FIT,
+        }
+
+
+def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
+    # try to hit the third case in _get_subslices:
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, 'tileshape-neg-test.h5')
+    data = _mk_random((4, 100, 256, 256), dtype=np.uint16)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data, chunks=(2, 32, 32, 32))
+
+    ds = lt_ctx.load("hdf5", path=filename)
+
+    udfs = [UDFWithLargeDepth()]
+    p = next(ds.get_partitions())
+    neg = Negotiator()
+    tiling_scheme = neg.get_scheme(
+        udfs=udfs,
+        partition=p,
+        read_dtype=np.float32,
+        roi=None,
+        corrections=None,
+    )
+    assert len(tiling_scheme) > 1
+    next(p.get_tiles(tiling_scheme=tiling_scheme, roi=None, dest_dtype=np.float32))

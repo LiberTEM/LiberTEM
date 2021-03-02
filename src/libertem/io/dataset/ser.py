@@ -267,11 +267,11 @@ class SERPartition(BasePartition):
                 "invalid tiling scheme: only supports %r, not %r" % (supported, tiling_scheme.shape)
             )
 
-    def adjust_tileshape(self, tileshape):
+    def adjust_tileshape(self, tileshape, roi):
         # force single-frame tiles
         return (1,) + tileshape[1:]
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         return (1,) + tuple(self.shape.sig)
 
     def _preprocess(self, tile_data, tile_slice):

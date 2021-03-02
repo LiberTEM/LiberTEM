@@ -719,5 +719,5 @@ class FRMS6Partition(BasePartition):
                 "Invalid tiling scheme: needs to be divisible by binning (%d)" % binning
             )
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         return (1, self._get_binning(), self.shape.sig[-1])

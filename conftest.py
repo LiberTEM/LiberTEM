@@ -84,13 +84,6 @@ def random_hdf5(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def chunked_hdf5(tmpdir_factory):
-    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-chunked.h5",
-                                  data=np.ones((5, 5, 16, 16)),
-                                  chunks=(1, 2, 16, 16))
-
-
-@pytest.fixture(scope='session')
 def empty_hdf5(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/hdf5-empty.h5'

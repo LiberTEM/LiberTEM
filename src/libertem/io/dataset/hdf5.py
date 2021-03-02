@@ -319,6 +319,45 @@ class H5Partition(Partition):
         # everything else is problematic and needs special case:
         return False
 
+    def _get_subslices_chunked_full_frame(self, scheme_lookup, nav_dims, tileshape_nd):
+        """
+        chunked full-frame reading. outer loop goes over the
+        navigation coords of each chunk, inner loop is pushed into
+        hdf5 by reading full frames need to order slices in a way that
+        efficiently uses the chunk cache.
+        """
+        chunks_nav = self._chunks[:nav_dims]
+        chunk_full_frame = chunks_nav + self.slice_nd.shape.sig
+        chunk_slices = self.slice_nd.subslices(shape=chunk_full_frame)
+        for chunk_slice in chunk_slices:
+            subslices = chunk_slice.subslices(shape=tileshape_nd)
+            for subslice in subslices:
+                idx = scheme_lookup[(subslice.origin[nav_dims:], subslice.shape[nav_dims:])]
+                yield idx, subslice
+
+    def _get_subslices_chunked_tiled(self, scheme_lookup, nav_dims, tileshape_nd):
+        """
+        general tiled reading w/ chunking outer loop is a chunk in
+        signal dimensions, inner loop is over "rows in nav"
+        """
+        slice_nd_sig = self.slice_nd.sig
+        slice_nd_nav = self.slice_nd.nav
+        chunks_sig = self._chunks[nav_dims:]
+        chunks_nav = self._chunks[:nav_dims]
+        sig_slices = slice_nd_sig.subslices(chunks_sig)
+        for sig_slice in sig_slices:
+            chunk_slices = slice_nd_nav.subslices(shape=chunks_nav)
+            for chunk_slice_nav in chunk_slices:
+                chunk_slice = Slice(
+                    origin=chunk_slice_nav.origin + sig_slice.origin,
+                    shape=chunk_slice_nav.shape + tuple(sig_slice.shape),
+                )
+                subslices = chunk_slice.subslices(shape=tileshape_nd)
+                for subslice in subslices:
+                    scheme_key = (subslice.origin[nav_dims:], subslice.shape[nav_dims:])
+                    idx = scheme_lookup[scheme_key]
+                    yield idx, subslice
+
     def _get_subslices(self, tiling_scheme):
         """
         Generate partition subslices for the given tiling scheme for the different cases.
@@ -342,39 +381,14 @@ class H5Partition(Partition):
                 (s.discard_nav().origin, tuple(s.discard_nav().shape)): idx
                 for idx, s in tiling_scheme.slices
             }
-            chunks_nav = self._chunks[:nav_dims]
-            chunks_sig = self._chunks[nav_dims:]
-
             if len(tiling_scheme) == 1:
-                # 2) chunked full-frame reading. outer loop goes over the
-                #    navigation coords of each chunk, inner loop is pushed into
-                #    hdf5 by reading full frames need to order slices in a way that
-                #    efficiently uses the chunk cache.
-                chunk_full_frame = chunks_nav + self.slice_nd.shape.sig
-                chunk_slices = self.slice_nd.subslices(shape=chunk_full_frame)
-                for chunk_slice in chunk_slices:
-                    subslices = chunk_slice.subslices(shape=tileshape_nd)
-                    for subslice in subslices:
-                        idx = scheme_lookup[(subslice.origin[nav_dims:], subslice.shape[nav_dims:])]
-                        yield idx, subslice
+                yield from self._get_subslices_chunked_full_frame(
+                    scheme_lookup, nav_dims, tileshape_nd
+                )
             else:
-                # 3) general tiled reading w/ chunking outer loop is a chunk in
-                #    signal dimensions, inner loop is over "rows in nav"
-                slice_nd_sig = self.slice_nd.sig
-                slice_nd_nav = self.slice_nd.nav
-                sig_slices = slice_nd_sig.subslices(chunks_sig)
-                for sig_slice in sig_slices:
-                    chunk_slices = slice_nd_nav.subslices(shape=chunks_nav)
-                    for chunk_slice_nav in chunk_slices:
-                        chunk_slice = Slice(
-                            origin=chunk_slice_nav.origin + sig_slice.origin,
-                            shape=chunk_slice_nav.shape + tuple(sig_slice.shape),
-                        )
-                        subslices = chunk_slice.subslices(shape=tileshape_nd)
-                        for subslice in subslices:
-                            scheme_key = (subslice.origin[nav_dims:], subslice.shape[nav_dims:])
-                            idx = scheme_lookup[scheme_key]
-                            yield idx, subslice
+                yield from self._get_subslices_chunked_tiled(
+                    scheme_lookup, nav_dims, tileshape_nd
+                )
 
     def _preprocess(self, tile_data, tile_slice):
         if self._corrections is None:
@@ -386,8 +400,6 @@ class H5Partition(Partition):
         if chunks is None:
             return 1*1024*1024
         elif len(chunks) == 4 and chunks[0] > 1:
-            # FIXME: calculate chunk cache size here. possibly just use a heuristic?
-            # the range of good max cache sizes is not too large... maybe leave like it is?
             return 256*1024*1024
 
     def _get_h5ds(self):
@@ -438,7 +450,6 @@ class H5Partition(Partition):
                     origin=(frames_read + frame_offset,) + sig_origin,
                     shape=result_shape,
                 )
-                # tile_data = h5ds[idx].reshape(result_shape)
                 h5ds.read_direct(tile_data, source_sel=idx)
                 self._preprocess(tile_data, tile_slice)
                 yield DataTile(

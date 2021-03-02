@@ -744,5 +744,5 @@ class K2ISPartition(BasePartition):
                 "Invalid tiling scheme: needs to be aligned to blocksize (930, 16)"
             )
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         return (1, 930, 16)

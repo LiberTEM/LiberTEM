@@ -331,10 +331,10 @@ class MemPartition(BasePartition):
         self._force_tileshape = True
         return mt
 
-    def get_base_shape(self):
+    def get_base_shape(self, roi):
         if self._base_shape is not None:
             return self._base_shape
-        return super().get_base_shape()
+        return super().get_base_shape(roi)
 
     def need_decode(self, read_dtype, roi, corrections):
         if self._force_need_decode:

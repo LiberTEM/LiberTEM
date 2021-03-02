@@ -286,3 +286,34 @@ def test_flatten_nav_2():
         shape=Shape((32, 16, 16), sig_dims=2)
     )
     assert s.flatten_nav((16, 16, 16, 16)) == sflat
+
+
+def test_slice_to_sig():
+    s = Slice(
+        origin=(0, 0, 8, 8),
+        shape=Shape((2, 16, 16, 16), sig_dims=2)
+    )
+    assert s.sig.origin == (8, 8)
+    assert s.sig.shape.to_tuple() == (16, 16)
+    assert s.sig.shape.sig.dims == 2
+
+
+def test_slice_to_nav():
+    s = Slice(
+        origin=(3, 3, 8, 8),
+        shape=Shape((2, 16, 16, 16), sig_dims=2)
+    )
+    assert s.nav.origin == (3, 3)
+    assert s.nav.shape.to_tuple() == (2, 16)
+    assert s.nav.shape.sig.dims == 0
+
+
+def test_from_shape():
+    s = Slice.from_shape(
+        (1, 16, 16),
+        sig_dims=2
+    )
+    assert s == Slice(
+        origin=(0, 0, 0),
+        shape=Shape((1, 16, 16), sig_dims=2),
+    )

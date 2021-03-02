@@ -40,6 +40,16 @@ class Slice(object):
     def __eq__(self, other):
         return self.shape == other.shape and self.origin == other.origin
 
+    @classmethod
+    def from_shape(self, shape: tuple, sig_dims: int) -> "Slice":
+        """
+        Construct a `Slice` at zero-origin from `shape` and `sig_dims`.
+        """
+        return Slice(
+            origin=(0,) * len(shape),
+            shape=Shape(shape, sig_dims=sig_dims),
+        )
+
     def intersection_with(self, other):
         """
         Calculate the intersection between this slice and `other`. May result in
@@ -229,6 +239,26 @@ class Slice(object):
             ]), new_shape=Shape(tuple(shape), sig_dims=self.shape.sig.dims))
 
             for indexes in np.ndindex(ni)
+        )
+
+    @property
+    def nav(self):
+        """
+        Returns a new Slice, with sig_dims=0, limited to the nav part
+        """
+        return Slice(
+            origin=self.origin[:self.shape.nav.dims],
+            shape=self.shape.nav,
+        )
+
+    @property
+    def sig(self):
+        """
+        Returns a new Slice, limited to the sig part
+        """
+        return Slice(
+            origin=self.origin[self.shape.nav.dims:],
+            shape=self.shape.sig,
         )
 
     def flatten_nav(self, containing_shape):

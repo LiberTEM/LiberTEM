@@ -261,7 +261,9 @@ def prime_numba_cache(ds):
         for corr_dtype in (np.float32, None):
             if corr_dtype is not None:
                 corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-                p.set_corrections(corrections)
+            else:
+                corrections = None
+            p.set_corrections(corrections)
             tiling_scheme = neg.get_scheme(
                 udfs=udfs,
                 partition=p,
@@ -269,4 +271,4 @@ def prime_numba_cache(ds):
                 roi=roi,
                 corrections=corrections,
             )
-            next(p.get_tiles(tiling_scheme=tiling_scheme))
+            next(p.get_tiles(tiling_scheme=tiling_scheme, roi=roi))

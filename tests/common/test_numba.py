@@ -8,7 +8,7 @@ import scipy.sparse
 import pytest
 import numpy as np
 
-from libertem.common.numba import rmatmul
+from libertem.common.numba import rmatmul, prime_numba_cache
 
 
 @pytest.mark.with_numba
@@ -81,3 +81,7 @@ def test_numba_cache(tmpdir_factory):
         cache_contents = pickle.loads(data)
 
     assert len(cache_contents[1].keys()) == 2
+
+
+def test_numba_prime(lt_ctx, default_raw):
+    prime_numba_cache(default_raw)

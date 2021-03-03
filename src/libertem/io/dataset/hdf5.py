@@ -470,7 +470,10 @@ class H5Partition(Partition):
         return (1, 1,) + (self.shape[-1],)
 
     def get_min_sig_size(self):
-        return 512  # allow for tiled processing w/ small-ish chunks
+        if self._chunks is not None:
+            return 512  # allow for tiled processing w/ small-ish chunks
+        # HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
+        return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def adjust_tileshape(self, tileshape, roi):
         chunks = self._chunks

@@ -47,11 +47,10 @@ class TilingScheme:
         dataset_shape
             Shape of the whole data set. Only the signal part is used.
         """
-        # FIXME: validate tileshape to be contiguous
+        # FIXME: validate navigation part of the tileshape to be contiguous
         # (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))
         # where X1 is <= the dataset shape at that index, and X2, ..., XN are
         # equal to the dataset shape at that index
-        # NOTE: not applicable to all file formats! see k2is
 
         sig_slice = Slice(
             origin=tuple([0] * dataset_shape.sig.dims),

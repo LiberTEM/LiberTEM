@@ -58,6 +58,90 @@ def _get_datasets(path):
     return datasets
 
 
+def _have_contig_chunks(chunks, ds_shape):
+    """
+    Returns `True` if the `chunks` are contiguous in the navigation axes.
+
+    Examples
+    --------
+
+    >>> ds_shape = Shape((64, 64, 128, 128), sig_dims=2)
+    >>> _have_contig_chunks((1, 4, 32, 32), ds_shape)
+    True
+    >>> _have_contig_chunks((2, 4, 32, 32), ds_shape)
+    False
+    >>> _have_contig_chunks((2, 64, 32, 32), ds_shape)
+    True
+    >>> _have_contig_chunks((64, 1, 32, 32), ds_shape)
+    False
+    >>> ds_shape_5d = Shape((16, 64, 64, 128, 128), sig_dims=2)
+    >>> _have_contig_chunks((1, 1, 2, 32, 32), ds_shape_5d)
+    True
+    >>> _have_contig_chunks((1, 2, 1, 32, 32), ds_shape_5d)
+    False
+    >>> _have_contig_chunks((2, 1, 1, 32, 32), ds_shape_5d)
+    False
+    """
+    # In other terms:
+    # There exists an index `i` such that `np.prod(chunks[:i]) == 1` and
+    # chunks[i+1:] == ds_shape[i+1:], limited to the nav part of chunks and ds_shape
+    #
+    nav_shape = tuple(ds_shape.nav)
+    nav_dims = len(nav_shape)
+    chunks_nav = chunks[:nav_dims]
+
+    for i in range(nav_dims):
+        left = chunks_nav[:i]
+        left_prod = np.prod(left, dtype=np.uint64)
+        if left_prod == 1 and chunks_nav[i + 1:] == nav_shape[i + 1:]:
+            return True
+    return False
+
+
+def _partition_shape_for_chunking(chunks, ds_shape):
+    """
+    Get the minimum partition shape for that allows us to prevent read amplification
+    with chunked HDF5 files.
+
+    Examples
+    --------
+
+    >>> ds_shape = Shape((64, 64, 128, 128), sig_dims=2)
+    >>> _partition_shape_for_chunking((1, 4, 32, 32), ds_shape)
+    (1, 4, 128, 128)
+    >>> _partition_shape_for_chunking((2, 4, 32, 32), ds_shape)
+    (2, 64, 128, 128)
+    >>> _partition_shape_for_chunking((2, 64, 32, 32), ds_shape)
+    (2, 64, 128, 128)
+    >>> _partition_shape_for_chunking((64, 1, 32, 32), ds_shape)
+    (64, 64, 128, 128)
+    >>> ds_shape_5d = Shape((16, 64, 64, 128, 128), sig_dims=2)
+    >>> _partition_shape_for_chunking((1, 1, 2, 32, 32), ds_shape_5d)
+    (1, 1, 2, 128, 128)
+    >>> _partition_shape_for_chunking((1, 2, 1, 32, 32), ds_shape_5d)
+    (1, 2, 64, 128, 128)
+    >>> _partition_shape_for_chunking((2, 1, 1, 32, 32), ds_shape_5d)
+    (2, 64, 64, 128, 128)
+    """
+    first_non_one = [x == 1 for x in chunks].index(False)
+    shape_left = chunks[:first_non_one + 1]
+    return shape_left + ds_shape[first_non_one + 1:]
+
+
+def _tileshape_for_chunking(chunks, ds_shape):
+    """
+    Calculate a tileshape for tiled reading from chunked
+    data sets.
+
+    Examples
+    --------
+    >>> ds_shape = Shape((64, 64, 128, 128), sig_dims=2)
+    >>> _tileshape_for_chunking((1, 4, 32, 32), ds_shape)
+    (4, 32, 32)
+    """
+    return chunks[-ds_shape.sig.dims - 1:]
+
+
 class H5Reader(object):
     def __init__(self, path, ds_path):
         self._path = path
@@ -278,9 +362,8 @@ class H5DataSet(DataSet):
         # if the data is chunked in the navigation axes, choose a compatible
         # partition size (even important for non-compressed data!)
         chunks = self._chunks
-        weird_chunks = chunks is not None and len(chunks) == 4 and chunks[0] > 1
-        if weird_chunks:
-            partition_shape = (chunks[0], self.shape[1]) + tuple(self.shape.sig)
+        if chunks is not None and not _have_contig_chunks(chunks, ds_shape):
+            partition_shape = _partition_shape_for_chunking(chunks, ds_shape)
 
         for pslice in ds_slice.subslices(partition_shape):
             yield H5Partition(
@@ -313,9 +396,6 @@ class H5Partition(Partition):
         chunks_nav = self._chunks[:nav_dims]
         if all(c == 1 for c in chunks_nav):
             return True
-        # special case which works well for us:
-        if len(chunks) == 4 and (chunks[1] == self.slice_nd.shape[1] or chunks[0] == 1):
-            return True
         # everything else is problematic and needs special case:
         return False
 
@@ -335,16 +415,15 @@ class H5Partition(Partition):
                 idx = scheme_lookup[(subslice.origin[nav_dims:], subslice.shape[nav_dims:])]
                 yield idx, subslice
 
-    def _get_subslices_chunked_tiled(self, scheme_lookup, nav_dims, tileshape_nd):
+    def _get_subslices_chunked_tiled(self, tiling_scheme, scheme_lookup, nav_dims, tileshape_nd):
         """
         general tiled reading w/ chunking outer loop is a chunk in
         signal dimensions, inner loop is over "rows in nav"
         """
         slice_nd_sig = self.slice_nd.sig
         slice_nd_nav = self.slice_nd.nav
-        chunks_sig = self._chunks[nav_dims:]
         chunks_nav = self._chunks[:nav_dims]
-        sig_slices = slice_nd_sig.subslices(chunks_sig)
+        sig_slices = slice_nd_sig.subslices(tiling_scheme.shape.sig)
         for sig_slice in sig_slices:
             chunk_slices = slice_nd_nav.subslices(shape=chunks_nav)
             for chunk_slice_nav in chunk_slices:
@@ -387,7 +466,7 @@ class H5Partition(Partition):
                 )
             else:
                 yield from self._get_subslices_chunked_tiled(
-                    scheme_lookup, nav_dims, tileshape_nd
+                    tiling_scheme, scheme_lookup, nav_dims, tileshape_nd
                 )
 
     def _preprocess(self, tile_data, tile_slice):
@@ -399,8 +478,15 @@ class H5Partition(Partition):
         chunks = self._chunks
         if chunks is None:
             return 1*1024*1024
-        elif len(chunks) == 4 and chunks[0] > 1:
-            return 256*1024*1024
+        else:
+            # heuristic on maximum chunk cache size based on number of cores
+            # of the node this worker is running on, available memory, ...
+            import psutil
+            mem = psutil.virtual_memory()
+            num_cores = psutil.cpu_count(logical=False)
+            if num_cores is None:
+                num_cores = 2
+            return max(256*1024*1024, mem.available * 0.8 / num_cores)
 
     def _get_h5ds(self):
         cache_size = self._get_read_cache_size()
@@ -472,14 +558,14 @@ class H5Partition(Partition):
     def get_min_sig_size(self):
         if self._chunks is not None:
             return 512  # allow for tiled processing w/ small-ish chunks
-        # HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
+        # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
         return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def adjust_tileshape(self, tileshape, roi):
         chunks = self._chunks
         if roi is not None:
             return (1,) + self.shape.sig
-        if chunks is not None and len(chunks) == 4 and chunks[0] > 1:
+        if chunks is not None and not _have_contig_chunks(chunks, self.shape):
             sig_chunks = chunks[-self.shape.sig.dims:]
             sig_ts = tileshape[-self.shape.sig.dims:]
             # if larger signal chunking is requested in the negotiation,
@@ -490,8 +576,8 @@ class H5Partition(Partition):
                 depth = max(1, tileshape_size // self.shape.sig.size)
                 return (depth,) + self.shape.sig
             else:
-                # depth needs to be limited to prod(chunks.nav) or even chunks[1]
-                return chunks[1:]
+                # depth needs to be limited to prod(chunks.nav)
+                return _tileshape_for_chunking(chunks, self.meta.shape)
         return tileshape
 
     def need_decode(self, roi, read_dtype, corrections):

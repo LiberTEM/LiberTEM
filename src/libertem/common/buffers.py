@@ -5,6 +5,8 @@ from contextlib import contextmanager
 import collections
 
 import numpy as np
+import dask.array as da
+from dask import delayed
 
 from libertem.common.slice import Slice
 from .backend import get_use_cuda
@@ -240,10 +242,27 @@ class BufferWrapper(object):
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
+
         shape = self._shape_for_kind(self._kind, self._ds_shape)
-        wrapper = np.full(shape, np.nan, dtype=self._dtype)
-        wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
-        return wrapper
+
+        # FIXME It would be more elegant to do the wrapping partition-wise
+        # to return a chunked Dask array that supports large return values
+        # just like kind="nav" without ROI.
+        def wrap(shape, ds_nav, dtype, roi, data):
+            wrapper = np.full(shape, np.nan, dtype=dtype)
+            wrapper[roi.reshape(ds_nav)] = data
+            return wrapper
+
+        wrap_args = (shape, self._ds_shape.nav, self._dtype, self._roi, self._data)
+
+        if isinstance(self._data, da.Array):
+            return da.from_delayed(
+                delayed(wrap)(*wrap_args),
+                shape=shape,
+                dtype=self._dtype
+            )
+        else:
+            return wrap(*wrap_args)
 
     @property
     def raw_data(self):

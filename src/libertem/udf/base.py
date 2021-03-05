@@ -7,6 +7,7 @@ import uuid
 import cloudpickle
 import numpy as np
 from dask import delayed
+import dask.array as da
 
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
@@ -973,6 +974,15 @@ class UDFTask(Task):
         return "<UDFTask %r>" % (self._udfs,)
 
 
+# Not a method of UDFRunner to avoid potentially including self in dask.delayed
+def _apply_part_result(udf, part_result, task):
+    udf.set_views_for_partition(task.partition)
+    udf.merge(
+        dest=udf.results.get_proxy(),
+        src=part_result.get_proxy()
+    )
+
+
 class UDFRunner:
     def __init__(self, udfs, debug=False):
         self._udfs = udfs
@@ -1200,14 +1210,6 @@ class UDFRunner:
         tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
         return tasks
 
-    def _apply_part_results(self, udfs, part_results, task):
-        for results, udf in zip(part_results, udfs):
-            udf.set_views_for_partition(task.partition)
-            udf.merge(
-                dest=udf.results.get_proxy(),
-                src=results.get_proxy()
-            )
-
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None):
         tasks = self._prepare_run_for_dataset(
@@ -1222,11 +1224,12 @@ class UDFRunner:
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            self._apply_part_results(
-                udfs=self._udfs,
-                part_results=part_results,
-                task=task,
-            )
+            for part_result, udf in zip(part_results, self._udfs):
+                _apply_part_result(
+                    udf=udf,
+                    part_result=part_result,
+                    task=task,
+                )
 
         if progress:
             t.close()
@@ -1246,31 +1249,64 @@ class UDFRunner:
 
         self._debug_task_pickling(tasks)
 
-        def merge_wrapper(udfs, part_results, task):
-            # Avoid modifying the arguments of a delayed function
-            new_udfs = deepcopy(udfs)
-            self._apply_part_results(
-                udfs=new_udfs,
-                part_results=part_results,
+        delayed_tasks = executor.delayed(tasks)
+
+        def get_data(bufferwrapper):
+            return bufferwrapper._data
+
+        def dask_array_from_buffer(bufferwrapper, shape, dtype):
+            return da.from_delayed(delayed(get_data)(bufferwrapper), shape=shape, dtype=dtype)
+
+        def merge_wrapper(udf, part_result, task):
+            udf_res = deepcopy(udf)
+            _apply_part_result(
+                udf=udf_res,
+                part_result=part_result,
                 task=task,
             )
-            return new_udfs
+            return udf_res
 
-        udfs = self._udfs
-
-        for part_results, task in executor.delayed(tasks):
-            udfs = delayed(merge_wrapper)(udfs, part_results, task)
+        for udf_index, udf in enumerate(self._udfs):
+            buffers = udf.get_result_buffers()
+            # This is the "happy path" where the result is constructed as a chunked
+            # Dask array with the partitions as chunks.
+            # This allows to calculate results that are as large as the input data
+            # as Dask arrays on the cluster.
+            if type(udf).merge is UDF.merge and not udf.requires_custom_merge:
+                for key, buffer in buffers.items():
+                    parts = []
+                    for task_index, task in enumerate(tasks):
+                        buffer.set_shape_partition(task.partition, roi=None)
+                        parts.append(
+                            dask_array_from_buffer(
+                                bufferwrapper=delayed_tasks[task_index][0][udf_index][key],
+                                shape=buffer._shape,
+                                dtype=buffer._dtype
+                            )
+                        )
+                    tot = da.concatenate(parts)
+                    udf.results[key]._data = tot
+            else:
+                udf_calc = deepcopy(udf)
+                for task_index, task in enumerate(tasks):
+                    udf_calc = delayed(merge_wrapper)(
+                        udf_calc, delayed_tasks[task_index][0][udf_index], task
+                    )
+                for key, buffer in buffers.items():
+                    buffer.set_shape_ds(dataset=dataset)
+                    udf.results[key]._data = dask_array_from_buffer(
+                        bufferwrapper=udf_calc.results[key],
+                        shape=buffer._shape,
+                        dtype=buffer._dtype
+                    )
 
         for udf in self._udfs:
             udf.clear_views()
 
-        def final_result(udfs):
-            return [
-                udf.results.as_dict()
-                for udf in udfs
-            ]
-
-        return delayed(final_result)(udfs)
+        return [
+            udf.results.as_dict()
+            for udf in self._udfs
+        ]
 
     async def run_for_dataset_async(
             self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None):

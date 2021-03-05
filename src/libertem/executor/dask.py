@@ -4,6 +4,7 @@ import logging
 import signal
 
 from dask import distributed as dd
+from dask import delayed
 
 from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
 from .scheduler import Worker, WorkerSet
@@ -178,6 +179,23 @@ class CommonDaskMixin(object):
             for task in tasks
         ])
 
+    def delayed(self, tasks, use_deepcopy=True):
+        '''
+        Wrap tasks as dask.delayed objects
+        '''
+        tasks = list(tasks)
+        for task in tasks:
+            self._validate_resources(task.get_resources())
+        # The `deepcopy()` currently takes care of some
+        # thread unsafety in resource handling.
+        # Making the datasets the UDF runner thread safe would be more elegant
+        if use_deepcopy:
+            f = deepcopy
+        else:
+            def f(arg):
+                return arg
+        return [(delayed(f(task), traverse=False, pure=True)(), task) for task in tasks]
+
     def get_available_workers(self):
         info = self.client.scheduler_info()
         return WorkerSet([
@@ -224,6 +242,49 @@ class CommonDaskMixin(object):
             details_sorted.append(details[host])
 
         return details_sorted
+
+
+class DelayedJobExecutor(CommonDaskMixin, JobExecutor):
+    """
+    JobExecutor that uses dask.delayed to run tasks in parallel.
+
+    This mostly exists to use dask.delayed based computations without
+    starting a dask.distributed cluster.
+
+    See also https://github.com/LiberTEM/LiberTEM/issues/922
+    """
+    def _validate_resources(self, resources):
+        if 'CUDA' in resources:
+            raise RuntimeError(
+                "Requesting CUDA resource on a cluster without resource management."
+            )
+
+    def run_tasks(self, tasks, cancel_id):
+        tasks = list(tasks)
+        delayeds = self.delayed(tasks)
+        results = delayed()(delayeds).compute()
+        for result, task in results:
+            yield result, task
+
+    def run_function(self, fn, *args, **kwargs):
+        return delayed(fn)(*args, **kwargs).compute()
+
+    def map(self, fn, iterable):
+        delayeds = [delayed(fn)(item) for item in iterable]
+        return delayed()(delayeds).compute()
+
+    def run_each_host(self, fn, *args, **kwargs):
+        return {"localhost": delayed(fn)(*args, **kwargs).compute()}
+
+    def run_each_worker(self, fn, *args, **kwargs):
+        raise NotImplementedError()
+
+    def get_available_workers(self):
+        resources = {"compute": 1, "CPU": 1}
+
+        return WorkerSet([
+            Worker(name='delayeddask', host='localhost', resources=resources)
+        ])
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):

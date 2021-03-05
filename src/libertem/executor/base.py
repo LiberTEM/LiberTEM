@@ -17,6 +17,12 @@ class JobCancelledError(Exception):
 
 
 class JobExecutor(object):
+    def run_tasks(self, tasks, cancel_id):
+        """
+        Run a number of Tasks, yielding (result, task) tuples
+        """
+        raise NotImplementedError()
+
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn` on any worker

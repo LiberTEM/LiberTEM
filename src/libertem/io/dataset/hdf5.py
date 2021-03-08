@@ -1,12 +1,14 @@
 from typing import Tuple
 import contextlib
 import warnings
+import logging
 import time
 
 import numpy as np
 import h5py
 
 from libertem.common import Slice, Shape
+from libertem.common.buffers import zeros_aligned
 from libertem.corrections import CorrectionSet
 from libertem.web.messages import MessageConverter
 from .base import (
@@ -17,6 +19,8 @@ from .base import (
 
 # alias for mocking:
 current_time = time.time
+
+logger = logging.getLogger(__name__)
 
 
 class HDF5DatasetParams(MessageConverter):
@@ -149,6 +153,7 @@ class H5Reader(object):
 
     @contextlib.contextmanager
     def get_h5ds(self, cache_size=1024*1024):
+        logger.debug("H5Reader.get_h5ds: cache_size=%dMiB", cache_size / 1024 / 1024)
         with h5py.File(self._path, 'r', rdcc_nbytes=cache_size, rdcc_nslots=19997) as f:
             yield f[self._ds_path]
 
@@ -409,6 +414,10 @@ class H5Partition(Partition):
         chunks_nav = self._chunks[:nav_dims]
         chunk_full_frame = chunks_nav + self.slice_nd.shape.sig
         chunk_slices = self.slice_nd.subslices(shape=chunk_full_frame)
+        logger.debug(
+            "_get_subslices_chunked_full_frame: chunking first by %r, then %r",
+            chunk_full_frame, tileshape_nd,
+        )
         for chunk_slice in chunk_slices:
             subslices = chunk_slice.subslices(shape=tileshape_nd)
             for subslice in subslices:
@@ -424,6 +433,10 @@ class H5Partition(Partition):
         slice_nd_nav = self.slice_nd.nav
         chunks_nav = self._chunks[:nav_dims]
         sig_slices = slice_nd_sig.subslices(tiling_scheme.shape.sig)
+        logger.debug(
+            "_get_subslices_chunked_tiled: chunking first by sig %r, then nav %r, finally %r",
+            tiling_scheme.shape.sig, chunks_nav, tileshape_nd
+        )
         for sig_slice in sig_slices:
             chunk_slices = slice_nd_nav.subslices(shape=chunks_nav)
             for chunk_slice_nav in chunk_slices:
@@ -450,6 +463,7 @@ class H5Partition(Partition):
         if self._have_compatible_chunking():
             # 1) no chunking, or compatible chunking. we are free to use
             #    whatever access pattern we deem efficient:
+            logger.debug("using simple tileshape_nd slicing")
             subslices = self.slice_nd.subslices(shape=tileshape_nd)
             scheme_len = len(tiling_scheme)
             for idx, subslice in enumerate(subslices):
@@ -461,10 +475,12 @@ class H5Partition(Partition):
                 for idx, s in tiling_scheme.slices
             }
             if len(tiling_scheme) == 1:
+                logger.debug("using full-frame subslicing")
                 yield from self._get_subslices_chunked_full_frame(
                     scheme_lookup, nav_dims, tileshape_nd
                 )
             else:
+                logger.debug("using chunk-adaptive subslicing")
                 yield from self._get_subslices_chunked_tiled(
                     tiling_scheme, scheme_lookup, nav_dims, tileshape_nd
                 )
@@ -493,18 +509,26 @@ class H5Partition(Partition):
         return self.reader.get_h5ds(cache_size=cache_size)
 
     def _get_tiles_normal(self, tiling_scheme, dest_dtype):
-        data_flat = np.zeros(tiling_scheme.shape, dtype=dest_dtype).reshape((-1,))
-
         with self._get_h5ds() as dataset:
+            # because the dtype conversion done by HDF5 itself can be quite slow,
+            # we need to use a buffer for reading in hdf5 native dtype:
+            data_flat = zeros_aligned(tiling_scheme.shape, dtype=dataset.dtype).reshape((-1,))
+
+            # ... and additionally a result buffer, for re-using the array used in the DataTile:
+            data_flat_res = zeros_aligned(tiling_scheme.shape, dtype=dest_dtype).reshape((-1,))
+
             subslices = self._get_subslices(
                 tiling_scheme=tiling_scheme,
             )
             for scheme_idx, tile_slice in subslices:
                 tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
                 # cut buffer into the right size
-                buf = data_flat[:tile_slice.shape.size].reshape(tile_slice.shape)
+                buf_size = tile_slice.shape.size
+                buf = data_flat[:buf_size].reshape(tile_slice.shape)
+                buf_res = data_flat_res[:buf_size].reshape(tile_slice.shape)
                 dataset.read_direct(buf, source_sel=tile_slice.get())
-                tile_data = buf.reshape(tile_slice_flat.shape)
+                buf_res[:] = buf  # extra copy for faster dtype/endianess conversion
+                tile_data = buf_res.reshape(tile_slice_flat.shape)
                 self._preprocess(tile_data, tile_slice_flat)
                 yield DataTile(
                     tile_data,
@@ -531,12 +555,14 @@ class H5Partition(Partition):
         tile_data = np.zeros(result_shape, dtype=dest_dtype)
 
         with self._get_h5ds() as h5ds:
+            tile_data_raw = np.zeros(result_shape, dtype=h5ds.dtype)
             for idx in indices:
                 tile_slice = Slice(
                     origin=(frames_read + frame_offset,) + sig_origin,
                     shape=result_shape,
                 )
-                h5ds.read_direct(tile_data, source_sel=idx)
+                h5ds.read_direct(tile_data_raw, source_sel=idx)
+                tile_data[:] = tile_data_raw  # extra copy for dtype/endianess conversion
                 self._preprocess(tile_data, tile_slice)
                 yield DataTile(
                     tile_data,
@@ -557,7 +583,7 @@ class H5Partition(Partition):
 
     def get_min_sig_size(self):
         if self._chunks is not None:
-            return 512  # allow for tiled processing w/ small-ish chunks
+            return 1024  # allow for tiled processing w/ small-ish chunks
         # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
         return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
@@ -588,7 +614,12 @@ class H5Partition(Partition):
 
     def get_max_io_size(self):
         if self._chunks is not None:
-            return 256*1024*1024  # don't blow the chunk cache
+            # this may result in larger tile depth than necessary, but
+            # it needs to be so big to pass the validation of the Negotiator. The tiles
+            # won't ever be as large as the scheme dictates, anyway.
+            # We limit it here to 256e6 elements, to also keep the chunk cache
+            # usage reasonable:
+            return 256e6
         return None  # use default value from Negotiator
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):

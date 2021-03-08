@@ -588,7 +588,7 @@ class Negotiator:
         while being constrained to `containing_shape`.
         """
         log.debug(
-            "_get_scale_factors in: %r, %r, %r, %r",
+            "_get_scale_factors in: shape=%r, containing_shape=%r, size=%r, min_factors=%r",
             shape, containing_shape, size, min_factors
         )
         assert len(shape) == len(containing_shape)

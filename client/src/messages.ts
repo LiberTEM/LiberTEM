@@ -131,9 +131,16 @@ export type DatasetParamsHDF5 = {
     ds_path: string,
 } & DatasetParamsCommon
 
+export type DatasetInfoHDF5Item = {
+    path: string,
+    shape: number[],
+    compression: null | string,
+    chunks: null | number[],
+};
+
 export type DatasetInfoHDF5 = {
     type: DatasetTypes.HDF5,
-    dataset_paths: string[],
+    datasets?: DatasetInfoHDF5Item[],
 } & DatasetInfoCommon
 
 export type DatasetParamsRaw = {

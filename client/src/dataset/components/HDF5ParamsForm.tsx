@@ -17,7 +17,7 @@ type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5,
 
 type MergedProps = FormikProps<DatasetParamsHDF5ForForm> & OpenFormProps<DatasetParamsHDF5, DatasetInfoHDF5>;
 
-const HDF5ParamsForm: React.SFC<MergedProps> = ({
+const HDF5ParamsForm: React.FC<MergedProps> = ({
     values,
     info,
     touched,
@@ -31,14 +31,14 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     onCancel,
     setFieldValue,
 }) => {
-    let dsItemsByPath: {
+    const dsItemsByPath: {
         [k: string]: DatasetInfoHDF5Item
     } = {};
     info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
 
     const dsPathOptions = info?.datasets?.map(dsItem => {
         const shape = dsItem.shape.join(",")
-        let opts: string[] = [];
+        const opts: string[] = [];
 
         if(dsItem.chunks !== null) {
             opts.push('chunked');
@@ -50,8 +50,8 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
 
         const text = `${dsItem.path} (shape: (${shape}), ${opts.join(", ")})`;
         return {
+            text,
             key: dsItem.path,
-            text: text,
             value: dsItem.path,
         };
     });

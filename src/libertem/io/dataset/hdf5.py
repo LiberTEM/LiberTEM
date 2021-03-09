@@ -657,24 +657,30 @@ class H5Partition(Partition):
         a whopping ~10x read amplification.
         '''
 
+        tileshape = self.shape
+        if self._chunks is not None:
+            tileshape = self._chunks
+
         tiling_scheme = TilingScheme.make_for_shape(
-            tileshape=self.shape,
+            tileshape=Shape(tileshape, sig_dims=self.slice.shape.sig.dims).flatten_nav(),
             dataset_shape=self.meta.shape,
         )
 
-        try:
-            return next(self.get_tiles(
-                tiling_scheme=tiling_scheme,
-                dest_dtype=dest_dtype,
-                roi=roi,
-            ))
-        except StopIteration:
-            tile_slice = Slice(
-                origin=(self.slice.origin[0], 0, 0),
-                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
-            )
-            return DataTile(
-                np.zeros(tile_slice.shape, dtype=dest_dtype),
-                tile_slice=tile_slice,
-                scheme_idx=0,
-            )
+        data = zeros_aligned(self.slice.adjust_for_roi(roi).shape, dtype=dest_dtype)
+
+        for tile in self.get_tiles(
+            tiling_scheme=tiling_scheme,
+            dest_dtype=dest_dtype,
+            roi=roi,
+        ):
+            rel_slice = tile.tile_slice.shift(self.slice)
+            data[rel_slice.get()] = tile
+        tile_slice = Slice(
+            origin=(self.slice.origin[0], 0, 0),
+            shape=Shape(data.shape, sig_dims=2),
+        )
+        return DataTile(
+            data,
+            tile_slice=tile_slice,
+            scheme_idx=0,
+        )

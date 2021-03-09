@@ -128,8 +128,11 @@ class CommonDaskMixin(object):
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
-            submit_kwargs['resources'] = self._validate_resources(workers, resources)
-            submit_kwargs['workers'] = locations
+            submit_kwargs.update({
+                'resources': self._validate_resources(workers, resources),
+                'workers': locations,
+                'pure': False,
+            })
             futures.append(
                 self.client.submit(task, **submit_kwargs)
             )
@@ -311,7 +314,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         run a callable `fn` on any worker
         """
         fn_with_args = functools.partial(fn, *args, **kwargs)
-        future = self.client.submit(fn_with_args, priority=1)
+        future = self.client.submit(fn_with_args, priority=1, pure=False)
         return future.result()
 
     def map(self, fn, iterable):
@@ -328,7 +331,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             Which elements to call the function on.
         """
         return [future.result()
-                for future in self.client.map(fn, iterable)]
+                for future in self.client.map(fn, iterable, pure=False)]
 
     def run_each_host(self, fn, *args, **kwargs):
         """

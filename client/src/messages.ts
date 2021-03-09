@@ -131,7 +131,7 @@ export type DatasetParamsHDF5 = {
     ds_path: string,
 } & DatasetParamsCommon
 
-export type DatasetInfoHDF5Item = {
+export interface DatasetInfoHDF5Item {
     path: string,
     shape: number[],
     compression: null | string,

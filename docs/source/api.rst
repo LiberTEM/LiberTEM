@@ -73,7 +73,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     # For doctest testing, don't use multiprocessing since it
     # may trip during the test build.
     # Using such a Dask client may not work for real datasets in production!
-    client = dd.Client(processes=False)
+    # processes=True because of https://github.com/dask/distributed/issues/4570
+    client = dd.Client(processes=True)
     ctx = api.Context(executor=DaskJobExecutor(client=client))
     dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
 
@@ -92,3 +93,7 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     result = ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
+
+.. testcleanup:: daskarray
+
+    client.close()

@@ -587,3 +587,52 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
     )
     assert len(tiling_scheme) > 1
     next(p.get_tiles(tiling_scheme=tiling_scheme, roi=None, dest_dtype=np.float32))
+
+
+def test_hdf5_macrotile(lt_ctx, tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, 'macrotile-1.h5')
+    data = _mk_random((128, 128, 4, 4), dtype=np.float32)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data)
+
+    ds = lt_ctx.load("hdf5", path=filename)
+    ds.set_num_cores(4)
+
+    partitions = ds.get_partitions()
+    p0 = next(partitions)
+    m0 = p0.get_macrotile()
+    assert m0.tile_slice.origin == (0, 0, 0)
+    assert m0.tile_slice.shape == p0.shape
+
+    p1 = next(partitions)
+    m1 = p1.get_macrotile()
+    assert m1.tile_slice.origin == (p0.shape[0], 0, 0)
+    assert m1.tile_slice.shape == p1.shape
+
+
+def test_hdf5_macrotile_roi(lt_ctx, hdf5_ds_1):
+    roi = np.random.choice(size=hdf5_ds_1.shape.flatten_nav().nav, a=[True, False])
+    with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = data.reshape(hdf5_ds_1.shape.flatten_nav())[roi]
+    partitions = hdf5_ds_1.get_partitions()
+    p0 = next(partitions)
+    m0 = p0.get_macrotile(roi=roi)
+    assert_allclose(
+        m0,
+        expected
+    )
+
+
+def test_hdf5_macrotile_empty_roi(lt_ctx, hdf5_ds_1):
+    roi = np.zeros(hdf5_ds_1.shape.flatten_nav().nav, dtype=bool)
+    partitions = hdf5_ds_1.get_partitions()
+    p0 = next(partitions)
+    m0 = p0.get_macrotile(roi=roi)
+    assert m0.shape == (0, 16, 16)
+    assert_allclose(
+        m0,
+        0,
+    )

@@ -55,7 +55,9 @@ def _get_datasets(path):
         if current_time() - t0 > timeout:
             raise TimeoutError
         if hasattr(obj, 'size') and hasattr(obj, 'shape'):
-            datasets.append((name, obj.size, obj.shape, obj.dtype))
+            datasets.append(
+                (name, obj.size, obj.shape, obj.dtype, obj.compression, obj.chunks)
+            )
 
     with h5py.File(path, 'r') as f:
         f.visititems(_make_list)
@@ -218,7 +220,7 @@ class H5DataSet(DataSet):
         if self.ds_path is None:
             datasets = _get_datasets(self.path)
             datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
-            name, size, shape, dtype = datasets_list[0]
+            name, size, shape, dtype, compression, chunks = datasets_list[0]
             self.ds_path = name
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
@@ -239,8 +241,7 @@ class H5DataSet(DataSet):
             self._compression = h5ds.compression
             if self._compression is not None:
                 warnings.warn(
-                    "Using chunked HDF5 files, especially with compression, can lead to "
-                    "very slow data access and/or high memory usage and is discouraged",
+                    "Loading compressed HDF5, performance can be worse than with other formats",
                     RuntimeWarning
                 )
             self._nav_shape_product = self._shape.nav.size
@@ -277,9 +278,8 @@ class H5DataSet(DataSet):
         # try to guess the hdf5 dataset path:
         try:
             datasets = executor.run_function(_get_datasets, path)
-            datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
-            dataset_paths = [ds_path[0] for ds_path in datasets_list]
-            name, size, shape, dtype = datasets_list[0]
+            datasets_list = list(sorted(datasets, key=lambda i: i[1], reverse=True))
+            name, size, shape, dtype, compression, chunks = datasets_list[0]
         # FIXME: excepting `SystemError` temporarily
         # more info: https://github.com/h5py/h5py/issues/1740
         except (IndexError, TimeoutError, SystemError):
@@ -295,7 +295,15 @@ class H5DataSet(DataSet):
                 "ds_path": name,
             },
             "info": {
-                "dataset_paths": dataset_paths,
+                "datasets": [
+                    {
+                        "path": ds_item[0],
+                        "shape": ds_item[2],
+                        "compression": ds_item[4],
+                        "chunks": ds_item[5],
+                    }
+                    for ds_item in datasets_list
+                ]
             }
         }
 
@@ -339,7 +347,7 @@ class H5DataSet(DataSet):
                     {"name": "Shape", "value": str(shape)},
                     {"name": "Datatype", "value": str(dtype)},
                 ]}
-                for name, size, shape, dtype in sorted(
+                for name, size, shape, dtype, compression, chunks in sorted(
                     datasets, key=lambda i: i[1], reverse=True
                 )
             ]

@@ -2,7 +2,7 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Dropdown, DropdownProps, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetInfoHDF5, DatasetParamsHDF5, DatasetTypes } from "../../messages";
+import { DatasetInfoHDF5, DatasetInfoHDF5Item, DatasetParamsHDF5, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 
@@ -31,8 +31,30 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     onCancel,
     setFieldValue,
 }) => {
+    let dsItemsByPath: {
+        [k: string]: DatasetInfoHDF5Item
+    } = {};
+    info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
 
-    const dsPathOptions = info?.dataset_paths.map(dsPath => ({ key: dsPath, text: dsPath, value: dsPath }));
+    const dsPathOptions = info?.datasets?.map(dsItem => {
+        const shape = dsItem.shape.join(",")
+        let opts: string[] = [];
+
+        if(dsItem.chunks !== null) {
+            opts.push('chunked');
+        }
+
+        if(dsItem.compression !== null) {
+            opts.push(`compression: ${dsItem.compression}`);
+        }
+
+        const text = `${dsItem.path} (shape: (${shape}), ${opts.join(", ")})`;
+        return {
+            key: dsItem.path,
+            text: text,
+            value: dsItem.path,
+        };
+    });
 
     // semantic-ui requires value to be set manually on option selection
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
@@ -43,12 +65,21 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
     };
 
     let dsPathInput;
-    const isTimeOut = (info?.dataset_paths.length === 0 ) ? true : false;
+    const pathsLength = info?.datasets?.length
+    const isTimeOut = pathsLength === 0 || pathsLength === undefined;
 
     if (isTimeOut) {
       dsPathInput = <Field name="ds_path" id="id_ds_path" />;
     } else {
       dsPathInput = <Dropdown name="ds_path" id="id_ds_path" placeholder="Select dataset" fluid={true} search={true} selection={true} defaultValue={values.ds_path} onChange={onDSPathChange} options={dsPathOptions} />;
+    }
+
+    let warning = null;
+    const selectedItem = dsItemsByPath[values.ds_path];
+    if (selectedItem && selectedItem.compression) {
+        warning = (
+            <p><strong style={{ color: "red" }}>Loading compressed HDF5, performance can be worse than with other formats</strong></p>
+        );
     }
 
     return (
@@ -63,6 +94,7 @@ const HDF5ParamsForm: React.SFC<MergedProps> = ({
                 <ErrorMessage name="ds_path" />
                 {dsPathInput}
             </Form.Field>
+            {warning}
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button onClick={onCancel} >Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>

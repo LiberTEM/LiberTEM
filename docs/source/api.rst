@@ -96,4 +96,5 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 
 .. testcleanup:: daskarray
 
+    client.cluster.close()
     client.close()

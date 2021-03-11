@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import Dict
+from typing import Dict, Optional
 import logging
 import uuid
 
@@ -8,7 +8,6 @@ import numpy as np
 
 from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
 from libertem.common import Shape, Slice
-from libertem.utils.threading import set_num_threads
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
@@ -33,7 +32,8 @@ class UDFMeta:
 
     def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
-                 tiling_index: int = 0, corrections=None, device_class: str = None):
+                 tiling_index: int = 0, corrections=None, device_class: str = None,
+                 threads_per_worker: Optional[int] = None):
         self._partition_shape = partition_shape
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
@@ -52,6 +52,7 @@ class UDFMeta:
         if corrections is None:
             corrections = CorrectionSet()
         self._corrections = corrections
+        self._threads_per_worker = threads_per_worker
 
     @property
     def slice(self) -> Slice:
@@ -158,6 +159,22 @@ class UDFMeta:
             self._cached_coordinates.update({key: coords})
             self._coordinates = coords
         return coords
+
+    @property
+    def threads_per_worker(self) -> Optional[int]:
+        """
+        int or None : number of threads that a UDF is allowed to use in the `process_*` method.
+                      For numba, pyfftw, OMP, MKL, OpenBLAS, this limit is set automatically;
+                      this property can be used for other cases, like manually creating
+                      thread pools.
+                      None means no limit is set, and the UDF can use any number of threads
+                      it deems necessary (should be limited to system limits, of course).
+
+        See also: :func:`libertem.utils.threading.set_num_threads`
+
+        .. versionadded:: 0.7.0
+        """
+        return self._threads_per_worker
 
 
 class UDFData:
@@ -920,9 +937,9 @@ class UDFTask(Task):
         self._backends = backends
         self._corrections = corrections
 
-    def __call__(self):
+    def __call__(self, env=None):
         return UDFRunner(self._udfs).run_for_partition(
-            self.partition, self._roi, self._corrections,
+            self.partition, self._roi, self._corrections, env,
         )
 
     def get_resources(self):
@@ -988,7 +1005,7 @@ class UDFRunner:
             )
         return tmp_dtype
 
-    def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class):
+    def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env):
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
@@ -999,6 +1016,7 @@ class UDFRunner:
             tiling_scheme=None,
             corrections=corrections,
             device_class=device_class,
+            threads_per_worker=env.threads_per_worker,
         )
         for udf in numpy_udfs:
             if device_class == 'cuda':
@@ -1015,6 +1033,7 @@ class UDFRunner:
             udf.init_result_buffers()
             udf.allocate_for_part(partition, roi)
             udf.init_task_data()
+            # TODO: preprocess doesn't have access to the tiling scheme - is this ok?
             if hasattr(udf, 'preprocess'):
                 udf.clear_views()
                 udf.preprocess()
@@ -1041,6 +1060,7 @@ class UDFRunner:
             tiling_scheme=tiling_scheme,
             corrections=corrections,
             device_class=device_class,
+            threads_per_worker=env.threads_per_worker,
         )
         for udf in udfs:
             udf.set_meta(meta)
@@ -1133,8 +1153,8 @@ class UDFRunner:
                 "supported are 'cpu' and 'cuda'")
         return (numpy_udfs, cupy_udfs)
 
-    def run_for_partition(self, partition: Partition, roi, corrections):
-        with set_num_threads(1):
+    def run_for_partition(self, partition: Partition, roi, corrections, env):
+        with env.enter():
             try:
                 previous_id = None
                 device_class = get_device_class()
@@ -1150,7 +1170,7 @@ class UDFRunner:
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
                 (meta, tiling_scheme, dtype) = self._init_udfs(
-                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class
+                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
                 )
                 # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)

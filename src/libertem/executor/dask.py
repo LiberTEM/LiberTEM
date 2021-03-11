@@ -5,7 +5,10 @@ import signal
 
 from dask import distributed as dd
 
-from .base import JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter
+from .base import (
+    JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter, TaskProxy,
+    Environment,
+)
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.utils.async_utils import adjust_event_loop_policy
@@ -83,19 +86,16 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
     return workers_spec
 
 
-class TaskProxy:
+class DaskTaskProxy(TaskProxy):
     def __init__(self, task, task_id):
-        self.task = task
+        super().__init__(task)
         self.task_id = task_id
 
-    def __getattr__(self, k):
-        if k in ["task"]:
-            return super().__getattr__(k)
-        return getattr(self.task, k)
-
     def __call__(self, *args, **kwargs):
+        env = Environment(threads_per_worker=1)
+        task_result = self.task(env=env)
         return {
-            "task_result": self.task(),
+            "task_result": task_result,
             "task_id": self.task_id,
         }
 
@@ -246,7 +246,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             return tasks[task_id]
 
         for idx, orig_task in enumerate(tasks):
-            tasks_wrapped.append(TaskProxy(orig_task, idx))
+            tasks_wrapped.append(DaskTaskProxy(orig_task, idx))
 
         futures = self._get_futures(tasks_wrapped)
         self._futures[cancel_id] = futures

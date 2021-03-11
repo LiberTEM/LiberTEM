@@ -3,7 +3,10 @@ import functools
 import asyncio
 import threading
 import queue
+from typing import Optional
+from contextlib import contextmanager
 
+from libertem.utils.threading import set_num_threads
 from libertem.utils.async_utils import adjust_event_loop_policy
 
 
@@ -16,6 +19,59 @@ class JobCancelledError(Exception):
     raised by async executors in run_tasks() or run_each_partition() if the task was cancelled
     """
     pass
+
+
+class Environment:
+    def __init__(self, threads_per_worker):
+        self._threads_per_worker = threads_per_worker
+
+    @property
+    def threads_per_worker(self) -> Optional[int]:
+        """
+        int or None : number of threads that a UDF is allowed to use in the `process_*` method.
+                      For numba, pyfftw, OMP, MKL, OpenBLAS, this limit is set automatically;
+                      this property can be used for other cases, like manually creating
+                      thread pools.
+                      None means no limit is set, and the UDF can use any number of threads
+                      it deems necessary (should be limited to system limits, of course).
+
+        See also: :func:`libertem.utils.threading.set_num_threads`
+
+        .. versionadded:: 0.7.0
+        """
+        return self._threads_per_worker
+
+    @contextmanager
+    def enter(self):
+        """
+        Note: we are using the @contextmanager decorator here,
+        because with separate `__enter__`, `__exit__` methods,
+        we can't easily delegate to `set_num_threads`, or other
+        contextmanagers that may come later.
+        """
+        with set_num_threads(self._threads_per_worker):
+            yield self
+
+
+class TaskProxy:
+    """
+    This type wraps `UDFTask` and adds executor-specific information
+    and behavior
+    """
+    def __init__(self, task):
+        self.task = task
+
+    def __getattr__(self, k):
+        if k in ["task"]:
+            return super().__getattr__(k)
+        return getattr(self.task, k)
+
+    def __call__(self, *args, **kwargs):
+        env = Environment(threads_per_worker=None)
+        return self.task(env=env)
+
+    def __repr__(self):
+        return "<TaskProxy: %r>" % (self.task,)
 
 
 class JobExecutor(object):

@@ -13,6 +13,7 @@ from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.api import Context
+from libertem.udf import UDF
 
 from utils import _mk_random
 
@@ -134,3 +135,21 @@ def test_run_each_worker_1(dask_executor):
     k = next(iter(results))
     result0 = results[k]
     assert result0 == "some result"
+
+
+class ThreadsPerWorkerUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'num_threads': self.buffer(kind='nav', dtype=int),
+        }
+
+    def process_frame(self, frame):
+        assert self.meta.threads_per_worker is not None,\
+            "threads_per_worker should be an integer"
+        self.results.num_threads[:] = self.meta.threads_per_worker
+
+
+def test_threads_per_worker(dask_executor, default_raw):
+    ctx = Context(executor=dask_executor)
+    res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())['num_threads']
+    assert np.allclose(res, 1)

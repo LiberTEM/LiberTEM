@@ -239,6 +239,22 @@ async def async_generator(gen, pool=None):
 
 class GenThread(threading.Thread):
     def __init__(self, gen, q, *args, **kwargs):
+        """
+        Wrap a generator and execute it in a thread, putting the generated
+        items into a queue.
+
+        Parameters
+        ----------
+        gen : iterable
+            The generator to wrap
+
+        q : queue.Queue
+            The result queue where the generated items will be put. The calling
+            thread should consume the items in this queue.
+
+        args, kwargs
+            will be passed to :code:`Thread.__init__`
+        """
         super().__init__(*args, **kwargs)
         self._gen = gen
         self._q = q
@@ -247,6 +263,8 @@ class GenThread(threading.Thread):
 
     def run(self):
         try:
+            # looping over `self._gen` can take some time for each item,
+            # this is where the "real" work happens:
             for item in self._gen:
                 self._q.put(item)
                 if self._should_stop.is_set():
@@ -257,30 +275,51 @@ class GenThread(threading.Thread):
             self._q.put(MyStopIteration)
         return
 
+    def get_exception(self):
+        return self.ex
+
     def stop(self):
         self._should_stop.set()
 
 
 async def async_generator_eager(gen, pool=None):
+    """
+    Convert the synchronous generator `gen` to an async generator. Eagerly run
+    `gen` in a thread and provide the result in a queue. This means that `gen`
+    can run ahead of the asynchronous generator that is returned.
+
+    Parameters:
+    -----------
+
+    gen : iterable
+        The generator to run
+
+    pool: ThreadPoolExecutor
+        The thread pool to run the generator in, can be None to create an
+        ad-hoc thread
+    """
     q = queue.Queue()
     t = GenThread(gen, q)
-
-    def _get_item(q):
-        return q.get()
 
     loop = asyncio.get_event_loop()
 
     t.start()
     try:
         while True:
-            item = await loop.run_in_executor(pool, _get_item, q)
+            # get a single item from the result queue:
+            item = await loop.run_in_executor(pool, q.get)
+
+            # MyStopIteration is a canary value to signal that the inner
+            # generator has finished running
             if item is MyStopIteration:
-                if t.ex is not None:
-                    raise t.ex
+                # propagate any uncaught exception in the wrapped generator to the calling thread:
+                ex = t.get_exception()
+                if ex is not None:
+                    raise ex
                 break
             yield item
     finally:
-        t.stop()
+        t.stop()  # in case our thread raises an exception, we may need to stop the `GenThread`:
         t.join()
 
 

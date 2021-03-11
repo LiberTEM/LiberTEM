@@ -1,6 +1,8 @@
 import concurrent
 import functools
 import asyncio
+import threading
+import queue
 
 from libertem.utils.async_utils import adjust_event_loop_policy
 
@@ -235,6 +237,53 @@ async def async_generator(gen, pool=None):
             break
 
 
+class GenThread(threading.Thread):
+    def __init__(self, gen, q, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._gen = gen
+        self._q = q
+        self._should_stop = threading.Event()
+        self.ex = None
+
+    def run(self):
+        try:
+            for item in self._gen:
+                self._q.put(item)
+                if self._should_stop.is_set():
+                    break
+        except Exception as e:
+            self.ex = e
+        finally:
+            self._q.put(MyStopIteration)
+        return
+
+    def stop(self):
+        self._should_stop.set()
+
+
+async def async_generator_eager(gen, pool=None):
+    q = queue.Queue()
+    t = GenThread(gen, q)
+
+    def _get_item(q):
+        return q.get()
+
+    loop = asyncio.get_event_loop()
+
+    t.start()
+    try:
+        while True:
+            item = await loop.run_in_executor(pool, _get_item, q)
+            if item is MyStopIteration:
+                if t.ex is not None:
+                    raise t.ex
+                break
+            yield item
+    finally:
+        t.stop()
+        t.join()
+
+
 class MyStopIteration(Exception):
     """
     TypeError: StopIteration interacts badly with generators
@@ -269,7 +318,7 @@ class AsyncAdapter(AsyncJobExecutor):
         run a number of Tasks
         """
         gen = self._wrapped.run_tasks(tasks, cancel_id)
-        agen = async_generator(gen, self._pool)
+        agen = async_generator_eager(gen, self._pool)
         async for i in agen:
             yield i
 

@@ -63,22 +63,8 @@ Integration with Dask arrays
 
 The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
-.. testsetup:: daskarray
-
-    import distributed as dd
-
-    from libertem import api
-    from libertem.executor.dask import DaskJobExecutor
-
-    # For doctest testing, don't use multiprocessing since it
-    # may trip during the test build.
-    # Using such a Dask client may not work for real datasets in production!
-    # processes=True because of https://github.com/dask/distributed/issues/4570
-    client = dd.Client(processes=True)
-    ctx = api.Context(executor=DaskJobExecutor(client=client))
-    dataset = ctx.load("memory", datashape=(16, 16, 16), sig_dims=2)
-
-.. testcode:: daskarray
+.. NOTE: keep in sync with tests/io/test_dask_array.py::test_dask_array_2
+.. code-block:: python
 
     from libertem.contrib.daskadapter import make_dask_array
 
@@ -93,8 +79,3 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     result = ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
-
-.. testcleanup:: daskarray
-
-    client.cluster.close()
-    client.close()

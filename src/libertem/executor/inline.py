@@ -1,5 +1,7 @@
 import cloudpickle
-from .base import JobExecutor
+import psutil
+
+from .base import JobExecutor, Environment
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 
@@ -12,10 +14,12 @@ class InlineJobExecutor(JobExecutor):
         self._debug = debug
 
     def run_tasks(self, tasks, cancel_id):
+        threads = psutil.cpu_count(logical=False)
+        env = Environment(threads_per_worker=threads)
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
-            result = task()
+            result = task(env=env)
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
             yield result, task

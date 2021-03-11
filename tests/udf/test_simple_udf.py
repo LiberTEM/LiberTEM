@@ -5,6 +5,7 @@ import pytest
 
 from libertem.udf.base import UDF, UDFRunner
 from libertem.udf.base import UDFMeta
+from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -533,6 +534,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
             partition=partition,
             roi=None,
             corrections=None,
+            env=Environment(threads_per_worker=1),
         )
 
     finally:

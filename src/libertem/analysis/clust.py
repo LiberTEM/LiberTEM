@@ -31,7 +31,7 @@ class ClusterTemplate(GeneratorHelper):
     def get_dependency(self):
         dep = [
            "from libertem.analysis import ClusterAnalysis",
-           "from libertem.udf.stddev import StdDevUDF, consolidate_result",
+           "from libertem.udf.stddev import StdDevUDF",
            "from libertem.masks import _make_circular_mask",
            "from skimage.feature import peak_local_max",
            "import sparse",
@@ -64,7 +64,7 @@ class ClusterTemplate(GeneratorHelper):
             "def run_sd_udf(roi, stddev_udf):",
             f"{indent}sd_udf_results = ctx.run_udf(dataset=ds, udf=stddev_udf, roi=roi,"
             " progress=True)",
-            f"{indent}return roi, consolidate_result(sd_udf_results)"
+            f"{indent}return roi, sd_udf_results"
         ]
         return "\n".join(temp_run_sd)
 

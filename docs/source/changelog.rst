@@ -222,7 +222,7 @@ New features
 * Relocatable GUI: Allow LiberTEM to run from different URL prefixes, allowing integration into,
   for example, JupyterLab. (:pr:`697`)
 * Run :meth:`~libertem.udf.base.UDFPreprocessMixin.preprocess` also before merge on
-  the master node to allocate or initialize buffers, in addition to running on the
+  the main node to allocate or initialize buffers, in addition to running on the
   workers (:pr:`624`).
 * No need to set thread count environment variables anymore since the thread count
   for OpenBLAS, OpenMP, Intel MKL and pyFFTW is now set on the workers at run-time.

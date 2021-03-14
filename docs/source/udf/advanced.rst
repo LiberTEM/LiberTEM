@@ -133,6 +133,12 @@ buffers:
                 out_heights=peak_values[f], out_elevations=peak_elevations[f]
             )
 
+The :meth:`libertem.udf.base.UDFPreprocessMixin.postprocess` method is called
+for each partition on the worker process, before the results from different
+partitions have been merged. If you want to implement a final post-processing
+step that is run on the main node, you can override
+:meth:`libertem.udf.base.UDF.get_results`.
+
 Pre-processing
 ---------------
 
@@ -148,8 +154,8 @@ by the ROI.
 .. versionadded:: 0.3.0
 
 .. versionchanged:: 0.5.0
-    :meth:`libertem.udf.base.UDFPreprocessMixin.preprocess` is executed on the master
-    node, too. Views for aux data are set correctly on the master node. Previously,
+    :meth:`libertem.udf.base.UDFPreprocessMixin.preprocess` is executed on the main
+    node, too. Views for aux data are set correctly on the main node. Previously,
     it was only executed on the worker nodes.
 
 Partition processing

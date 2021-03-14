@@ -32,7 +32,7 @@ def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=udf)
     assert np.allclose(
         results,
-        expected['varsum'].raw_data,
+        expected['varsum'],
     )
 
 
@@ -77,5 +77,5 @@ def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     expected = lt_ctx.run_udf(dataset=hdf5_ds_2, udf=udf, roi=roi)
     assert np.allclose(
         results,
-        expected['varsum'].raw_data,
+        expected['varsum'],
     )

@@ -297,6 +297,31 @@ class StdDevUDF(UDF):
                 varsum_inout=reshaped_view(self.results.varsum, (-1, )),
             )
 
+    def get_results(self):
+        '''
+        Calculate variance, mean and standard deviation
+        from raw UDF results and consolidate the per-tile frame counter
+        into a single value.
+
+        Returns
+        -------
+        pass_results : Dict[str, Union[numpy.ndarray, int]]
+            Result dictionary with keys :code:`'sum', 'varsum', 'var', 'std', 'mean'` as
+            :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
+        '''
+        num_frames = self.results['num_frames'].data[0]
+
+        var = self.results['varsum'].data / num_frames
+
+        return {
+            'num_frames': int(self.results['num_frames'].data[0]),
+            'varsum': self.results['varsum'].data,
+            'sum': self.results['sum'].data,
+            'var': var,
+            'std': np.sqrt(var),
+            'mean': self.results['sum'] / num_frames,
+        }
+
 
 def consolidate_result(udf_result):
     '''
@@ -315,17 +340,6 @@ def consolidate_result(udf_result):
         Result dictionary with keys :code:`'sum', 'varsum', 'var', 'std', 'mean'` as
         :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
     '''
-    udf_result = dict(udf_result.items())
-    num_frames = udf_result['num_frames'].data[0]
-
-    udf_result['num_frames'] = num_frames
-    udf_result['varsum'] = udf_result['varsum'].data
-    udf_result['sum'] = udf_result['sum'].data
-
-    udf_result['var'] = udf_result['varsum'] / num_frames
-    udf_result['std'] = np.sqrt(udf_result['var'])
-    udf_result['mean'] = udf_result['sum'] / num_frames
-
     return udf_result
 
 
@@ -370,4 +384,4 @@ def run_stddev(ctx, dataset, roi=None, progress=False):
         dataset=dataset, udf=stddev_udf, roi=roi, progress=progress
     )
 
-    return consolidate_result(pass_results)
+    return pass_results

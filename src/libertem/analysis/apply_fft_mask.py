@@ -38,8 +38,10 @@ class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
         rad_out = self.parameters["rad_out"]
         real_center = (self.parameters["real_centery"], self.parameters["real_centerx"])
         real_rad = self.parameters["real_rad"]
-        return crystal.CrystallinityUDF(rad_in=rad_in, rad_out=rad_out, real_center=real_center,
-         real_rad=real_rad)
+        return crystal.CrystallinityUDF(
+            rad_in=rad_in, rad_out=rad_out,
+            real_center=real_center, real_rad=real_rad,
+        )
 
     def get_udf_results(self, udf_results, roi):
         from libertem.viz import visualize_simple

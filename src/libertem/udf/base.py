@@ -418,7 +418,7 @@ class UDFPostprocessMixin:
     '''
     Implement :code:`postprocess` to modify the resulf buffers of a partition on the worker
     after the partition data has been completely processed, but before it is returned to the
-    master node for the final merging step.
+    main node for the final merging step.
     '''
 
     def postprocess(self):
@@ -692,6 +692,21 @@ class UDF(UDFBase):
         for k in dest:
             check_cast(dest[k], src[k])
             dest[k][:] = src[k]
+
+    def get_results(self):
+        """
+        Get results, allowing a final postprocessing step on the main node after
+        the results have been merged. See also: :class:`UDFPostprocessMixin`.
+
+        Returns
+        -------
+
+        results : dict
+            A `dict` containing the final post-processed results.
+
+        .. versionadded:: 0.7.0
+        """
+        return self.results.as_dict()
 
     def get_preferred_input_dtype(self):
         '''
@@ -1245,7 +1260,7 @@ class UDFRunner:
             udf.clear_views()
 
         return [
-            udf.results.as_dict()
+            udf.get_results()
             for udf in self._udfs
         ]
 
@@ -1264,7 +1279,7 @@ class UDFRunner:
                 )
                 udf.clear_views()
             yield tuple(
-                udf.results.as_dict()
+                udf.get_results()
                 for udf in self._udfs
             )
         else:
@@ -1272,7 +1287,7 @@ class UDFRunner:
             for udf in self._udfs:
                 udf.clear_views()
             yield tuple(
-                udf.results.as_dict()
+                udf.get_results()
                 for udf in self._udfs
             )
 

@@ -59,7 +59,6 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
 
     def get_udf_results(self, udf_results, roi):
         from libertem.viz import visualize_simple
-        udf_results = std.consolidate_result(udf_results)
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=udf_results['std'],

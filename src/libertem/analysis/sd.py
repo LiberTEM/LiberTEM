@@ -39,7 +39,7 @@ class SDTemplate(GeneratorHelper):
     def get_plot(self):
         plot = [
             "plt.figure()",
-            "plt.imshow(sd_result['varsum'], norm=colors.LogNorm())",
+            "plt.imshow(sd_result['varsum'].data, norm=colors.LogNorm())",
         ]
         return ['\n'.join(plot)]
 

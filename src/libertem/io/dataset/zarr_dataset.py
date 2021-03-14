@@ -238,20 +238,6 @@ class ZarrPartition(Partition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def _get_read_cache_size(self) -> Tuple[int, int]:
-        chunks = self._chunks
-        if chunks is None:
-            return 1*1024*1024
-        else:
-            # heuristic on maximum chunk cache size based on number of cores
-            # of the node this worker is running on, available memory, ...
-            import psutil
-            mem = psutil.virtual_memory()
-            num_cores = psutil.cpu_count(logical=False)
-            if num_cores is None:
-                num_cores = 2
-            return max(256*1024*1024, mem.available * 0.8 / num_cores)
-
     def _get_tiles_normal(self, tiling_scheme, dest_dtype):
         dataset = zarr.open(self._path, mode='r')
         # because the dtype conversion done by HDF5 itself can be quite slow,
@@ -329,26 +315,26 @@ class ZarrPartition(Partition):
     def adjust_tileshape(self, tileshape, roi):
         chunks = self._chunks
         if roi is not None:
-            return (1,) + self.shape.sig
-        if False:
-            if chunks is not None:
-                return chunks  # FIXME please
-        if True:
-            if chunks is not None and not _have_contig_chunks(chunks, self.shape):
-                sig_chunks = chunks[-self.shape.sig.dims:]
-                sig_ts = tileshape[-self.shape.sig.dims:]
-                # if larger signal chunking is requested in the negotiation,
-                # switch to full frames:
-                if any(t > c for t, c in zip(sig_ts, sig_chunks)):
-                    # try to keep total tileshape size:
-                    tileshape_size = np.prod(tileshape, dtype=np.int64)
-                    depth = max(1, tileshape_size // self.shape.sig.size)
-                    return (depth,) + self.shape.sig
-                else:
-                    # depth needs to be limited to prod(chunks.nav)
-                    return _tileshape_for_chunking(chunks, self.meta.shape)
-        print(tileshape)
-        return tileshape
+            new_tileshape = (1,) + self.shape.sig
+            print(new_tileshape)
+            return new_tileshape
+        if not _have_contig_chunks(chunks, self.shape):
+            sig_chunks = chunks[-self.shape.sig.dims:]
+            sig_ts = tileshape[-self.shape.sig.dims:]
+            # if larger signal chunking is requested in the negotiation,
+            # switch to full frames:
+            if any(t > c for t, c in zip(sig_ts, sig_chunks)):
+                # try to keep total tileshape size:
+                tileshape_size = np.prod(tileshape, dtype=np.int64)
+                depth = max(1, tileshape_size // self.shape.sig.size)
+                new_tileshape = (depth,) + self.shape.sig
+            else:
+                # depth needs to be limited to prod(chunks.nav)
+                new_tileshape = _tileshape_for_chunking(chunks, self.meta.shape)
+        else:
+            new_tileshape = chunks[-self.shape.sig.dims-1:]
+        print(new_tileshape)
+        return new_tileshape
 
     def need_decode(self, roi, read_dtype, corrections):
         return True
@@ -357,15 +343,7 @@ class ZarrPartition(Partition):
         self._corrections = corrections
 
     def get_max_io_size(self):
-        return 4*1024*1024
-        if self._chunks is not None and False:
-            # this may result in larger tile depth than necessary, but
-            # it needs to be so big to pass the validation of the Negotiator. The tiles
-            # won't ever be as large as the scheme dictates, anyway.
-            # We limit it here to 256e6 elements, to also keep the chunk cache
-            # usage reasonable:
-            return 256e6
-        return None  # use default value from Negotiator
+        return 2 * np.prod(self._chunks) * np.dtype(self.meta.raw_dtype).itemsize
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         import numcodecs

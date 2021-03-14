@@ -305,10 +305,9 @@ class StdDevUDF(UDF):
 
         Returns
         -------
-        pass_results : Dict[str, Union[BufferWrapper, numpy.ndarray, int]]
-            Result dictionary with keys :code:`'sum', 'varsum' as `BufferWrapper`,
-            'var', 'std', 'mean'` as :class:`numpy.ndarray`, and
-            :code:`'num_frames'` as :code:`int`
+        pass_results : Dict[str, Union[BufferWrapper, numpy.ndarray]]
+        Result dictionary with keys :code:`'sum', 'varsum', 'num_frames'` as :code:`BufferWrapper`,
+            and :code:`'var', 'std', 'mean'` as :class:`numpy.ndarray`.
         '''
         num_frames = int(self.results['num_frames'].data[0])
 

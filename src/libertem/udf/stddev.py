@@ -299,9 +299,7 @@ class StdDevUDF(UDF):
 
     def get_results(self):
         '''
-        Calculate variance, mean and standard deviation
-        from raw UDF results and consolidate the per-tile frame counter
-        into a single value.
+        Calculate variance, mean and standard deviation from raw UDF results
 
         Returns
         -------
@@ -327,7 +325,7 @@ def consolidate_result(udf_result):
     '''
     Calculate variance, mean and standard deviation
     from raw UDF results and consolidate the per-tile frame counter
-    into a single value.
+    into a single value. Convert all result arrays to `ndarray`.
 
     Parameters
     ----------

@@ -305,21 +305,22 @@ class StdDevUDF(UDF):
 
         Returns
         -------
-        pass_results : Dict[str, Union[numpy.ndarray, int]]
-            Result dictionary with keys :code:`'sum', 'varsum', 'var', 'std', 'mean'` as
-            :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
+        pass_results : Dict[str, Union[BufferWrapper, numpy.ndarray, int]]
+            Result dictionary with keys :code:`'sum', 'varsum' as `BufferWrapper`,
+            'var', 'std', 'mean'` as :class:`numpy.ndarray`, and
+            :code:`'num_frames'` as :code:`int`
         '''
-        num_frames = self.results['num_frames'].data[0]
+        num_frames = int(self.results['num_frames'].data[0])
 
         var = self.results['varsum'].data / num_frames
 
         return {
-            'num_frames': int(self.results['num_frames'].data[0]),
-            'varsum': self.results['varsum'].data,
-            'sum': self.results['sum'].data,
+            'num_frames': num_frames,
+            'varsum': self.results['varsum'],
+            'sum': self.results['sum'],
             'var': var,
             'std': np.sqrt(var),
-            'mean': self.results['sum'] / num_frames,
+            'mean': self.results['sum'].data / num_frames,
         }
 
 
@@ -340,7 +341,13 @@ def consolidate_result(udf_result):
         Result dictionary with keys :code:`'sum', 'varsum', 'var', 'std', 'mean'` as
         :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
     '''
-    return udf_result
+    result = {}
+    result.update(udf_result)
+    result.update({
+        'varsum': udf_result['varsum'].data,
+        'sum': udf_result['sum'].data,
+    })
+    return result
 
 
 def run_stddev(ctx, dataset, roi=None, progress=False):
@@ -384,4 +391,4 @@ def run_stddev(ctx, dataset, roi=None, progress=False):
         dataset=dataset, udf=stddev_udf, roi=roi, progress=progress
     )
 
-    return pass_results
+    return consolidate_result(pass_results)

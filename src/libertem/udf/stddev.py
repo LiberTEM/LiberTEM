@@ -315,7 +315,7 @@ class StdDevUDF(UDF):
         var = self.results['varsum'].data / num_frames
 
         return {
-            'num_frames': num_frames,
+            'num_frames': self.results['num_frames'],
             'varsum': self.results['varsum'],
             'sum': self.results['sum'],
             'var': var,
@@ -344,6 +344,7 @@ def consolidate_result(udf_result):
     result = {}
     result.update(udf_result)
     result.update({
+        'num_frames': udf_result['num_frames'].data[0],
         'varsum': udf_result['varsum'].data,
         'sum': udf_result['sum'].data,
     })

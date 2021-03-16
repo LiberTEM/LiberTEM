@@ -1,5 +1,6 @@
 from types import MappingProxyType
 from typing import Dict, Optional
+import warnings
 import logging
 import uuid
 
@@ -533,6 +534,16 @@ class UDFBase:
         else:
             raise TypeError("UDF should implement one of the `process_*` methods")
         return method
+
+    def do_get_results(self):
+        results = self.get_results()
+        for k in results.keys():
+            if k not in self.results:
+                warnings.warn(
+                    "Key %s not declared in get_result_buffers, can't be introspected!",
+                    RuntimeWarning
+                )
+        return results
 
 
 class UDF(UDFBase):
@@ -1260,7 +1271,7 @@ class UDFRunner:
             udf.clear_views()
 
         return [
-            udf.get_results()
+            udf.do_get_results()
             for udf in self._udfs
         ]
 
@@ -1279,7 +1290,7 @@ class UDFRunner:
                 )
                 udf.clear_views()
             yield tuple(
-                udf.get_results()
+                udf.do_get_results()
                 for udf in self._udfs
             )
         else:
@@ -1287,7 +1298,7 @@ class UDFRunner:
             for udf in self._udfs:
                 udf.clear_views()
             yield tuple(
-                udf.get_results()
+                udf.do_get_results()
                 for udf in self._udfs
             )
 

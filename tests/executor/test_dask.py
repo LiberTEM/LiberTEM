@@ -118,12 +118,15 @@ def test_multiple_clients(local_cluster_url, default_raw):
     # not affect setting the _client_ as the global default `Client`!
     # so any time `as_completed` is called, the `loop` needs to be set correctly, otherwise
     # this may result in strange hangs and crashes
-    DaskJobExecutor.connect(local_cluster_url)
+    ex2 = DaskJobExecutor.connect(local_cluster_url)
 
     udf = SumUDF()
 
     cx1 = Context(executor=ex1)
     cx1.run_udf(dataset=default_raw, udf=udf)
+
+    ex1.client.close()
+    ex2.client.close()
 
 
 def test_run_each_worker_1(dask_executor):

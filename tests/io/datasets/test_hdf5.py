@@ -535,7 +535,7 @@ def test_hdf5_result_dtype(lt_ctx, tmpdir_factory, in_dtype, read_dtype, use_roi
     ds = lt_ctx.load("hdf5", path=filename)
 
     if use_roi:
-        roi = np.zeros(ds.shape.nav, dtype=np.bool).reshape((-1,))
+        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
         roi[0] = 1
     else:
         roi = None

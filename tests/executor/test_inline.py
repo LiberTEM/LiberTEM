@@ -1,4 +1,3 @@
-import psutil
 import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
@@ -34,7 +33,7 @@ class ThreadsPerWorkerUDF(UDF):
 
 
 def test_inline_num_threads(lt_ctx, default_raw):
-    threads = psutil.cpu_count(logical=False)
+    threads = 2
     res = lt_ctx.run_udf(
         dataset=default_raw,
         udf=ThreadsPerWorkerUDF()

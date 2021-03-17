@@ -319,21 +319,22 @@ class StdDevUDF(UDF):
 
         Returns
         -------
-        pass_results : Dict[str, Union[BufferWrapper, numpy.ndarray]]
-        Result dictionary with keys :code:`'sum', 'varsum', 'num_frames'` as :code:`BufferWrapper`,
-            and :code:`'var', 'std', 'mean'` as :class:`numpy.ndarray`.
+        pass_results : Dict[str, BufferWrapper]
+            Result dictionary with keys
+            :code:`'sum', 'varsum', 'num_frames', 'var', 'std', and 'mean'`
+            as :code:`BufferWrapper`
         '''
-        num_frames = int(self.results['num_frames'].data[0])
+        num_frames = int(self.results['num_frames'].raw_data[0])
 
-        var = self.results['varsum'].data / num_frames
+        var = self.results['varsum'].raw_data / num_frames
 
         return {
             'num_frames': self.results['num_frames'],
             'varsum': self.results['varsum'],
             'sum': self.results['sum'],
-            'var': var,
-            'std': np.sqrt(var),
-            'mean': self.results['sum'].data / num_frames,
+            'var': self.result(name='var', data=var),
+            'std': self.result(name='std', data=np.sqrt(var)),
+            'mean': self.result(name='mean', data=self.results['sum'].raw_data / num_frames),
         }
 
 
@@ -343,10 +344,15 @@ def consolidate_result(udf_result):
     from raw UDF results and consolidate the per-tile frame counter
     into a single value. Convert all result arrays to `ndarray`.
 
+    Note
+    ----
+    This is mostly here for backwards-compatability - nowadays, 'var', 'std',
+    and 'mean' are already calculated in :meth:`StdDevUDF.get_results`.
+
     Parameters
     ----------
     udf_result : Dict[str, BufferWrapper]
-        UDF result with keys 'sum', 'varsum', 'num_frames'
+        UDF result with keys 'sum', 'varsum', 'num_frames', 'var', 'std', 'mean'
 
     Returns
     -------
@@ -354,14 +360,14 @@ def consolidate_result(udf_result):
         Result dictionary with keys :code:`'sum', 'varsum', 'var', 'std', 'mean'` as
         :class:`numpy.ndarray`, and :code:`'num_frames'` as :code:`int`
     '''
-    result = {}
-    result.update(udf_result)
-    result.update({
+    return {
         'num_frames': udf_result['num_frames'].data[0],
         'varsum': udf_result['varsum'].data,
         'sum': udf_result['sum'].data,
-    })
-    return result
+        'var': udf_result['var'].data,
+        'std': udf_result['std'].data,
+        'mean': udf_result['mean'].data,
+    }
 
 
 def run_stddev(ctx, dataset, roi=None, progress=False):

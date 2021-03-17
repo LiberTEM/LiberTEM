@@ -9,7 +9,7 @@ from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
-from libertem.common.buffers import reshaped_view
+from libertem.common.buffers import reshaped_view, BufferWrapper
 
 from utils import _mk_random, ValidationUDF
 
@@ -541,3 +541,117 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         set_use_cpu(0)
 
     assert np.all(res["sigbuf"].data == 1)
+
+
+class UndeclaredBufferUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'buf': self.buffer(kind='nav', dtype=np.float32),
+        }
+
+    def process_frame(self, frame):
+        pass
+
+    def get_results(self):
+        return {
+            'buf': self.results.buf,
+            'blah': np.zeros((128, 128), dtype=np.float64),
+        }
+
+
+def test_undeclared_buffer_warning(lt_ctx, default_raw):
+    udf = UndeclaredBufferUDF()
+    with pytest.warns(RuntimeWarning):
+        lt_ctx.run_udf(dataset=default_raw, udf=udf)
+
+
+class NoAllocateResultsUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'buf1': self.buffer(kind='sig', dtype=np.float32),
+            'buf2': self.buffer(kind='sig', dtype=np.float32, allocate=False),
+        }
+
+    def merge(self, dest, src):
+        assert 'buf2' not in dest
+        assert 'buf2' not in src
+        dest['buf1'][:] += src['buf1']
+
+    def process_frame(self, frame):
+        pass
+
+    def get_results(self):
+        return {
+            'buf1': self.results.buf1,
+            'buf2': np.array(self.results.buf1) + 1,
+        }
+
+
+def test_no_allocate_result(lt_ctx, default_raw):
+    udf = NoAllocateResultsUDF()
+    lt_ctx.run_udf(dataset=default_raw, udf=udf)
+
+
+class UnifyResultTypesUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'buf1': self.buffer(kind='sig', dtype=np.float32),
+            'buf2': self.buffer(kind='sig', dtype=np.float32, allocate=False),
+        }
+
+    def merge(self, dest, src):
+        assert 'buf2' not in dest
+        assert 'buf2' not in src
+        dest['buf1'][:] += src['buf1']
+
+    def process_frame(self, frame):
+        pass
+
+    def get_results(self):
+        return {
+            'buf1': self.results['buf1'],
+            'buf2': self.result('buf2', data=np.array(self.results.buf1) + 1),
+        }
+
+
+def test_unified_result_types(lt_ctx, default_raw):
+    udf = UnifyResultTypesUDF()
+    results = lt_ctx.run_udf(dataset=default_raw, udf=udf)
+    assert isinstance(results['buf1'], BufferWrapper)
+    assert isinstance(results['buf2'], BufferWrapper)
+
+
+class AverageUDF(UDF):
+    """
+    Like SumUDF, but also computes the average
+    """
+    def get_result_buffers(self):
+        return {
+            'sum': self.buffer(kind='sig', dtype=np.float32),
+            'num_frames': self.buffer(kind='single', dtype=np.uint64),
+            'average': self.buffer(kind='sig', dtype=np.float32, allocate=False),
+        }
+
+    def process_frame(self, frame):
+        self.results.sum[:] += frame
+        self.results.num_frames[:] += 1
+
+    def merge(self, dest, src):
+        dest['sum'][:] += src['sum']
+        dest['num_frames'][:] += src['num_frames']
+
+    def get_results(self):
+        avg = self.results.sum / self.results.num_frames
+        return {
+            'sum': self.results['sum'],  # a BufferWrapper
+            'average': self.result(name='average', data=avg),
+        }
+
+
+def test_delayed_buffer_alloc(lt_ctx, default_raw):
+    udf = AverageUDF()
+    results = lt_ctx.run_udf(dataset=default_raw, udf=udf)
+    assert np.allclose(
+        results['sum'].data / default_raw.shape.nav.size,
+        results['average']
+    )

@@ -137,7 +137,51 @@ The :meth:`libertem.udf.base.UDFPreprocessMixin.postprocess` method is called
 for each partition on the worker process, before the results from different
 partitions have been merged. If you want to implement a final post-processing
 step that is run on the main node, you can override
-:meth:`libertem.udf.base.UDF.get_results`.
+:meth:`libertem.udf.base.UDF.get_results`:
+
+.. testsetup::
+
+    from libertem.udf import UDF
+
+.. testcode::
+
+    class AverageUDF(UDF):
+        """
+        Like SumUDF, but also computes the average
+        """
+        def get_result_buffers(self):
+            return {
+                'sum': self.buffer(kind='sig', dtype=np.float32),
+                'num_frames': self.buffer(kind='single', dtype=np.uint64),
+                'average': self.buffer(kind='sig', dtype=np.float32, allocate=False),
+            }
+
+        def process_frame(self, frame):
+            self.results.sum[:] += frame
+            self.results.num_frames[:] += 1
+
+        def merge(self, dest, src):
+            dest['sum'][:] += src['sum']
+            dest['num_frames'][:] += src['num_frames']
+
+        def get_results(self):
+            avg = self.results.sum / self.results.num_frames
+            return {
+                'sum': self.results['sum'],  # a BufferWrapper
+                'average': self.result(name='average', data=avg),
+            }
+
+    ctx.run_udf(dataset=dataset, udf=AverageUDF())
+
+Note that :code:`get_result_buffers` returns a placeholder entry for the :code:`average`
+result using :code:`allocate=False`, which is then filled in :code:`get_results`.
+We use :code:`UDF.result(..., data=avg)` here to get consistent result types: all buffers are
+returned as :class:`BufferWrapper` instances.
+
+.. versionadded:: 0.7.0
+   :meth:`UDF.get_results`, :meth:`UDF.result`, and the :code:`allocate` argument for
+   :meth:`UDF.buffer` were added.
+
 
 Pre-processing
 ---------------

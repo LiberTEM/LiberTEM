@@ -190,19 +190,26 @@ class StdDevUDF(UDF):
     ..versionchanged:: 0.5.0
         Result buffers have been renamed
 
+    ..versionchanged:: 0.7.0
+        :code:`var`, :code:`mean`, and :code:`std` are now returned directly
+        from the UDF via :code:`get_results`.
+
     Examples
     --------
 
     >>> udf = StdDevUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
-    >>> # Note: These are raw results. Use run_stddev() instead of
-    >>> # using the UDF directly to obtain
-    >>> # variance, standard deviation and mean
     >>> np.array(result["varsum"])        # variance times number of frames
     array(...)
     >>> np.array(result["num_frames"])  # number of frames for each tile
     array(...)
     >>> np.array(result["sum"])  # sum of all frames
+    array(...)
+    >>> np.array(result["var"])
+    array(...)
+    >>> np.array(result["mean"])
+    array(...)
+    >>> np.array(result["std"])
     array(...)
     """
     def get_result_buffers(self):
@@ -226,7 +233,16 @@ class StdDevUDF(UDF):
             ),
             'sum': self.buffer(
                 kind='sig', dtype=dtype
-            )
+            ),
+            'var': self.buffer(
+                kind='sig', dtype=dtype, allocate=False,
+            ),
+            'std': self.buffer(
+                kind='sig', dtype=dtype, allocate=False,
+            ),
+            'mean': self.buffer(
+                kind='sig', dtype=dtype, allocate=False,
+            ),
         }
 
     def get_task_data(self):

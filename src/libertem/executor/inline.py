@@ -10,11 +10,24 @@ class InlineJobExecutor(JobExecutor):
     """
     naive JobExecutor that just iterates over partitions and processes them one after another
     """
-    def __init__(self, debug=False, *args, **kwargs):
+    def __init__(self, debug=False, inline_threads=None, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        debug : bool
+            Set this to enable additional serializability checks
+
+        inline_threads : Optional[int]
+            How many fine grained threads should be allowed? Leaving this `None` will
+            allow one thread per CPU core
+        """
         self._debug = debug
+        self._inline_threads = inline_threads
 
     def run_tasks(self, tasks, cancel_id):
-        threads = psutil.cpu_count(logical=False)
+        threads = self._inline_threads
+        if threads is None:
+            threads = psutil.cpu_count(logical=False)
         env = Environment(threads_per_worker=threads)
         for task in tasks:
             if self._debug:

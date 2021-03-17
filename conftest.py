@@ -462,7 +462,7 @@ def auto_files(doctest_namespace, hdf5, default_raw):
 
 @pytest.fixture
 def inline_executor():
-    return InlineJobExecutor(debug=True)
+    return InlineJobExecutor(debug=True, inline_threads=2)
 
 
 @pytest.fixture
@@ -472,7 +472,7 @@ def lt_ctx(inline_executor):
 
 @pytest.fixture
 def inline_executor_fast():
-    return InlineJobExecutor(debug=False)
+    return InlineJobExecutor(debug=False, inline_threads=2)
 
 
 @pytest.fixture

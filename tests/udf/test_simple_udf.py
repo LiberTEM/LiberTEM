@@ -655,3 +655,13 @@ def test_delayed_buffer_alloc(lt_ctx, default_raw):
         results['sum'].data / default_raw.shape.nav.size,
         results['average']
     )
+
+
+def test_delayed_buffer_alloc_roi(lt_ctx, default_raw):
+    udf = AverageUDF()
+    roi = np.random.choice([True, False], size=default_raw.shape.nav)
+    results = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
+    assert np.allclose(
+        results['sum'].data / np.sum(roi),
+        results['average']
+    )

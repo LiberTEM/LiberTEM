@@ -149,7 +149,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         rad_out = self.parameters["ro"]
         n_peaks = self.parameters["n_peaks"]
         min_dist = self.parameters["min_dist"]
-        sstd = sd_udf_results['std']
+        sstd = sd_udf_results['std'].data
         sshape = sstd.shape
         if not (center is None or rad_in is None or rad_out is None):
             mask_out = 1*_make_circular_mask(center[1], center[0], sshape[1], sshape[0], rad_out)

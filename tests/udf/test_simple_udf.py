@@ -665,3 +665,35 @@ def test_delayed_buffer_alloc_roi(lt_ctx, default_raw):
         results['sum'].data / np.sum(roi),
         results['average']
     )
+
+
+class SumSigUDFAndAHalf(UDF):
+    def get_result_buffers(self):
+        return {
+            'sum': self.buffer(kind='nav', dtype=np.float32),
+            'sum_half': self.buffer(kind='nav', dtype=np.float32, allocate=False),
+        }
+
+    def process_frame(self, frame):
+        self.results.sum[:] = np.sum(frame)
+
+    def get_results(self):
+        return {
+            'sum': self.results['sum'],  # a BufferWrapper
+            'sum_half': self.result(name='sum_half', data=self.results['sum'].raw_data / 2),
+        }
+
+
+def test_get_results_nav_with_roi(lt_ctx, default_raw):
+    udf = SumSigUDFAndAHalf()
+    roi = np.random.choice([True, False], size=default_raw.shape.nav)
+    results = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
+    assert np.allclose(
+        results['sum'].raw_data / 2,
+        results['sum_half'].raw_data
+    )
+    assert np.allclose(
+        results['sum'].data / 2,
+        results['sum_half'].data,
+        equal_nan=True,
+    )

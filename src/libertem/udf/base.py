@@ -712,6 +712,13 @@ class UDF(UDFBase):
         Get results, allowing a final postprocessing step on the main node after
         the results have been merged. See also: :class:`UDFPostprocessMixin`.
 
+        Note
+        ----
+        You should try to return the values with uniform result types,
+        so the :code:`dict` should map from `str` buffer names to `BufferWrapper`.
+        To support processing with `roi` set, use the `BufferWrappe.raw_data`
+        as a basis for your derived values.
+
         Returns
         -------
 

@@ -49,7 +49,7 @@ rotations are therefore clock-wise.
     doesn't deal with such transformations in the numerical back-end.
 
     In :meth:`~libertem.api.Context.create_com_analysis`, a capability to flip the y axis and rotate
-    the shift coordinates is added in version 0.6.0.dev0 to support processing MIB files and
+    the shift coordinates is added in version 0.6.0 to support processing MIB files and
     calculate results with physical meaning in electron microscopy, such as the curl and divergence.
     See also :issue:`325`.
 

@@ -2,7 +2,9 @@ import pytest
 import numpy as np
 
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.buffers import BufferWrapper, AuxBufferWrapper, reshaped_view
+from libertem.common.buffers import (
+    BufferWrapper, AuxBufferWrapper, reshaped_view, ResultBufferDecl,
+)
 from libertem.common import Shape
 
 from utils import _mk_random
@@ -44,13 +46,15 @@ def test_new_for_partition():
             auxdata.reshape(-1)[ps][roi_part]
         )
 
+
 def test_buffer_extra_shape_1():
-    buffer = BufferWrapper(kind = 'nav', extra_shape = (2, 3))
+    buffer = BufferWrapper(kind='nav', extra_shape=(2, 3))
     assert buffer._extra_shape == (2, 3)
 
+
 def test_buffer_extra_shape_2():
-    shape_obj = Shape(shape = (12, 13, 14, 15), sig_dims = 2)
-    buffer = BufferWrapper(kind = 'nav', extra_shape = shape_obj)
+    shape_obj = Shape(shape=(12, 13, 14, 15), sig_dims=2)
+    buffer = BufferWrapper(kind='nav', extra_shape=shape_obj)
     assert buffer._extra_shape == (12, 13, 14, 15)
 
 
@@ -64,3 +68,10 @@ def test_reshaped_view():
     assert data[0, 0] == 1
     assert np.all(data[0, 1:] == 0)
     assert np.all(data[1:] == 0)
+
+
+def test_result_buffer_decl():
+    buf = ResultBufferDecl(kind='sig', dtype=np.float32)
+    with pytest.raises(ValueError):
+        # no array associated with this bufferwrapper:
+        np.array(buf)

@@ -7,7 +7,9 @@ import uuid
 import cloudpickle
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper, AuxBufferWrapper
+from libertem.common.buffers import (
+    BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper, PreallocBufferWrapper,
+)
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
@@ -241,7 +243,8 @@ class UDFData:
     def get_proxy(self):
         return MappingProxyType({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
-            for k, v in self._data.items()
+            for k, v in self.items()
+            if v and v.has_data()
         })
 
     def _get_buffers(self, filter_allocated: bool = False):
@@ -262,7 +265,7 @@ class UDFData:
 
     def allocate_for_full(self, dataset, roi: np.ndarray):
         for k, buf in self._get_buffers():
-            buf.set_shape_ds(dataset, roi)
+            buf.set_shape_ds(dataset.shape, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
@@ -540,7 +543,7 @@ class UDFBase:
         for k in results.keys():
             if k not in self.results:
                 warnings.warn(
-                    "Key %s not declared in get_result_buffers, can't be introspected!",
+                    "Key '%s' not declared in get_result_buffers, can't be inspected!" % k,
                     RuntimeWarning
                 )
         return results
@@ -789,12 +792,40 @@ class UDF(UDFBase):
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32", where=None):
+    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, allocate=True):
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
         '''
+        if not allocate:
+            return PlaceholderBufferWrapper(kind, extra_shape, dtype)
         return BufferWrapper(kind, extra_shape, dtype, where)
+
+    def result(self, name : str, data : np.ndarray):
+        """
+        Create a filled :code:`BufferWrapper` from existing data.
+
+        .. versionadded:: 0.7.0
+
+        Parameters
+        ----------
+        name
+            The name of the buffer, as declared in `UDF.get_result_buffers`
+
+        data
+            The array with the result data
+        """
+        decl = self.get_result_buffers()
+        decl = decl[name]
+        buf = PreallocBufferWrapper(
+            kind=decl.kind, extra_shape=decl.extra_shape,
+            dtype=decl._dtype,
+            data=data,
+        )
+        decl.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
+        assert decl._shape == data.shape
+        buf.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
+        return buf
 
     @classmethod
     def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):
@@ -1153,7 +1184,7 @@ class UDFRunner:
                 raise TypeError("could not pickle partition")
             try:
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u.results for u in udfs]
+                    [u.do_get_results() for u in udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")

@@ -171,7 +171,13 @@ class BufferWrapper(object):
             :code:`None` means NumPy array, :code:`device` to use a back-end specified
             in :meth:`allocate`.
 
-            .. versionadded:: 0.6.0.dev0
+            .. versionadded:: 0.6.0
+
+        allocate : bool
+            If set to :code:`False`, this buffer won't actually be allocated when the
+            UDF is run, but is only declared for use in :meth:`UDF.get_results`.
+
+            .. versionadded:: 0.7.0
         """
 
         self._extra_shape = tuple(extra_shape)
@@ -203,14 +209,14 @@ class BufferWrapper(object):
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
         self._update_roi_is_zero()
 
-    def set_shape_ds(self, dataset, roi=None):
+    def set_shape_ds(self, dataset_shape, roi=None):
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
             roi_count = np.count_nonzero(self._roi)
-        self._shape = self._shape_for_kind(self._kind, dataset.shape.flatten_nav(), roi_count)
+        self._shape = self._shape_for_kind(self._kind, dataset_shape.flatten_nav(), roi_count)
         self._update_roi_is_zero()
-        self._ds_shape = dataset.shape
+        self._ds_shape = dataset_shape
 
     def _shape_for_kind(self, kind, orig_shape, roi_count=None):
         if self._kind == "nav":
@@ -276,7 +282,7 @@ class BufferWrapper(object):
         """
         Get the place where this buffer is to be allocated.
 
-        .. versionadded:: 0.6.0.dev0
+        .. versionadded:: 0.6.0
         """
         return self._where
 
@@ -291,7 +297,7 @@ class BufferWrapper(object):
         Allocate a new buffer, in the shape previously set
         via one of the `set_shape_*` methods.
 
-        .. versionchanged:: 0.6.0.dev0
+        .. versionchanged:: 0.6.0
             Support for allocating on device
         """
         assert self._shape is not None
@@ -464,6 +470,52 @@ class BufferWrapper(object):
         return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (
             self._kind, self._dtype, self._extra_shape
         )
+
+
+class PlaceholderBufferWrapper(BufferWrapper):
+    """
+    A declaration-only version of :code:`BufferWrapper` that doesn't
+    actually allocate a buffer. Meant as a placeholder for results
+    that are only materialized in :code:`UDF.get_results`.
+    """
+    def allocate(self, lib=None):
+        return None
+
+    def has_data(self):
+        return False
+
+    def export(self):
+        return None
+
+    def get_view_for_partition(self, partition):
+        return None
+
+    def get_view_for_frame(self, partition, tile, frame_idx):
+        return None
+
+    def get_view_for_tile(self, partition, tile):
+        return None
+
+    def get_contiguous_view_for_tile(self, partition, tile):
+        return None
+
+    @property
+    def data(self):
+        raise ValueError(
+            "this BufferWrapper doesn't have a value associated with it"
+        )
+
+    @property
+    def raw_data(self):
+        raise ValueError(
+            "this BufferWrapper doesn't have a value associated with it"
+        )
+
+
+class PreallocBufferWrapper(BufferWrapper):
+    def __init__(self, data, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = data
 
 
 class AuxBufferWrapper(BufferWrapper):

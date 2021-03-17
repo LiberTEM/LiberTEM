@@ -801,7 +801,7 @@ class UDF(UDFBase):
             return PlaceholderBufferWrapper(kind, extra_shape, dtype)
         return BufferWrapper(kind, extra_shape, dtype, where)
 
-    def result(self, name : str, data : np.ndarray):
+    def result(self, name: str, data: np.ndarray):
         """
         Create a filled :code:`BufferWrapper` from existing data.
 

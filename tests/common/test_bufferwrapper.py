@@ -3,7 +3,7 @@ import numpy as np
 
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.common.buffers import (
-    BufferWrapper, AuxBufferWrapper, reshaped_view, ResultBufferDecl,
+    BufferWrapper, AuxBufferWrapper, reshaped_view, PlaceholderBufferWrapper,
 )
 from libertem.common import Shape
 
@@ -71,7 +71,7 @@ def test_reshaped_view():
 
 
 def test_result_buffer_decl():
-    buf = ResultBufferDecl(kind='sig', dtype=np.float32)
+    buf = PlaceholderBufferWrapper(kind='sig', dtype=np.float32)
     with pytest.raises(ValueError):
         # no array associated with this bufferwrapper:
         np.array(buf)

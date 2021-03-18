@@ -360,7 +360,7 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          """
          Initialize buffer with neutral element for maximum.
          """
-         self.results.maxbuf[:] = np.float32('-inf')
+         self.results.maxbuf[:] = -np.inf
 
       def process_frame(self, frame):
          """

@@ -19,7 +19,8 @@ class InlineJobExecutor(JobExecutor):
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
-            result = task(env=env)
+            fn = task.get_callable()
+            result = fn(env=env, params=task.get_params())
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
             yield result, task

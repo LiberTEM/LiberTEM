@@ -22,8 +22,9 @@ class JobCancelledError(Exception):
 
 
 class Environment:
-    def __init__(self, threads_per_worker):
+    def __init__(self, threads_per_worker, shm=None):
         self._threads_per_worker = threads_per_worker
+        self._shm = shm
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -66,9 +67,11 @@ class TaskProxy:
             return super().__getattr__(k)
         return getattr(self.task, k)
 
-    def __call__(self, *args, **kwargs):
-        env = Environment(threads_per_worker=None)
-        return self.task(env=env)
+    def get_callable(self):
+        def _inner(*args, **kwargs):
+            env = Environment(threads_per_worker=None)
+            return self.task.get_callable()(env=env, *args, **kwargs)
+        return _inner
 
     def __repr__(self):
         return "<TaskProxy: %r>" % (self.task,)
@@ -195,6 +198,9 @@ class JobExecutor(object):
         return `self; in case of `AsyncJobExecutor` below more work is needed!
         """
         return self
+
+    def send_constant_data(self, data):
+        return data
 
 
 class AsyncJobExecutor(object):

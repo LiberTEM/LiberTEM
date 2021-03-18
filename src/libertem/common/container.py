@@ -106,6 +106,7 @@ class MaskContainer(object):
         return state
 
     def validate_mask_functions(self):
+        return
         fns = self.mask_factories
         # 1 MB, magic number L3 cache
         limit = 2**20

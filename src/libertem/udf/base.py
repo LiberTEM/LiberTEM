@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import Dict, Optional
 import logging
 import uuid
+import time
 
 import cloudpickle
 import numpy as np
@@ -534,6 +535,9 @@ class UDFBase:
             raise TypeError("UDF should implement one of the `process_*` methods")
         return method
 
+    def _split(self):
+        return self.__class__, self._kwargs
+
 
 class UDF(UDFBase):
     """
@@ -925,85 +929,72 @@ class Task(object):
         # No CUDA support for the deprecated Job interface
         return {'CPU': 1, 'compute': 1, 'ndarray': 1}
 
-    def __call__(self):
+    def get_callable(self):
+        """
+        Returns a callable that takes parameters `env` and `params`
+        """
         raise NotImplementedError()
 
 
-class UDFTask(Task):
-    def __init__(self, partition: Partition, idx, udfs, roi, backends, corrections=None):
-        super().__init__(partition=partition, idx=idx)
-        self._roi = roi
-        self._udfs = udfs
-        self._backends = backends
-        self._corrections = corrections
-
-    def __call__(self, env=None):
-        return UDFRunner(self._udfs).run_for_partition(
-            self.partition, self._roi, self._corrections, env,
-        )
-
-    def get_resources(self):
-        """
-        Intersection of resources of all UDFs, throws if empty.
-
-        See docstring of super class for details.
-        """
-        needs_cuda = 0
-        needs_cpu = 0
-        needs_ndarray = 0
-        backends_for_udfs = []
-        for udf in self._udfs:
-            b = udf.get_backends()
-            if isinstance(b, str):
-                b = (b, )
-            backends_for_udfs.append(set(b))
-
-        # Limit to externally specified backends
-        for backend_set in backends_for_udfs:
-            if self._backends is not None:
-                b = self._backends
-                if isinstance(b, str):
-                    b = (b, )
-                backends = set(b).intersection(backend_set)
-            else:
-                backends = backend_set
-            needs_cuda += 'numpy' not in backends
-            needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
-            needs_ndarray += 'cuda' not in backends
-        if needs_cuda and needs_cpu:
-            raise ValueError(
-                "There is no common supported UDF backend (have: %r, limited to %r)"
-                % (backends_for_udfs, self._backends)
-            )
-        result = {'compute': 1}
-        if needs_cpu:
-            result['CPU'] = 1
-        if needs_cuda:
-            result['CUDA'] = 1
-        if needs_ndarray:
-            result['ndarray'] = 1
-        return result
-
-    def __repr__(self):
-        return "<UDFTask %r>" % (self._udfs,)
-
-
-class UDFRunner:
-    def __init__(self, udfs, debug=False):
-        self._udfs = udfs
+class UDFPartitionRunner:
+    def __init__(self, udf_classes, debug=False):
+        self._udf_classes = udf_classes
         self._debug = debug
 
-    def _get_dtype(self, dtype, corrections):
-        if corrections is not None and corrections.have_corrections():
-            tmp_dtype = np.result_type(np.float32, dtype)
+    def run_for_partition(self, partition: Partition, roi, corrections, env, udf_params):
+        with env.enter():
+            self._udfs = []
+            for klass, kwargs in zip(self._udf_classes, udf_params):
+                udf = klass(**kwargs)
+                udf.params.new_for_partition(partition, roi)
+                self._udfs.append(udf)
+            try:
+                previous_id = None
+                device_class = get_device_class()
+                # numpy_udfs and cupy_udfs contain references to the objects in
+                # self._udfs
+                numpy_udfs, cupy_udfs = self._udf_lists(device_class)
+                # Will only be populated if actually on CUDA worker
+                # and any UDF supports 'cupy' (and not 'cuda')
+                if cupy_udfs:
+                    # Avoid importing if not used
+                    import cupy
+                    device = get_use_cuda()
+                    previous_id = cupy.cuda.Device().id
+                    cupy.cuda.Device(device).use()
+                (meta, tiling_scheme, dtype) = self._init_udfs(
+                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
+                )
+                # print("UDF TilingScheme: %r" % tiling_scheme.shape)
+                partition.set_corrections(corrections)
+                self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
+                self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
+            finally:
+                if previous_id is not None:
+                    cupy.cuda.Device(previous_id).use()
+            # Make sure results are in the same order as the UDFs
+            return tuple(udf.results for udf in self._udfs)
+
+    def _udf_lists(self, device_class):
+        numpy_udfs = []
+        cupy_udfs = []
+        if device_class == 'cuda':
+            for udf in self._udfs:
+                backends = udf.get_backends()
+                if 'cuda' in backends:
+                    numpy_udfs.append(udf)
+                elif 'cupy' in backends:
+                    cupy_udfs.append(udf)
+                else:
+                    raise ValueError(f"UDF backends are {backends}, supported on CUDA are "
+                            "'cuda' and 'cupy'")
+        elif device_class == 'cpu':
+            assert all('numpy' in udf.get_backends() for udf in self._udfs)
+            numpy_udfs = self._udfs
         else:
-            tmp_dtype = dtype
-        for udf in self._udfs:
-            tmp_dtype = np.result_type(
-                udf.get_preferred_input_dtype(),
-                tmp_dtype
-            )
-        return tmp_dtype
+            raise ValueError(f"Unknown device class {device_class}, "
+                "supported are 'cpu' and 'cuda'")
+        return (numpy_udfs, cupy_udfs)
 
     def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env):
         dtype = self._get_dtype(partition.dtype, corrections)
@@ -1066,6 +1057,25 @@ class UDFRunner:
             udf.set_meta(meta)
         return (meta, tiling_scheme, dtype)
 
+    def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):
+        # FIXME pass information on target location (numpy or cupy)
+        # to dataset so that is can already move it there.
+        # In the future, it might even decode data on the device instead of CPU
+        tiles = partition.get_tiles(
+            tiling_scheme=tiling_scheme,
+            roi=roi, dest_dtype=dtype,
+        )
+
+        if cupy_udfs:
+            xp = cupy_udfs[0].xp
+
+        for tile in tiles:
+            self._run_tile(numpy_udfs, partition, tile, tile)
+            if cupy_udfs:
+                # Work-around, should come from dataset later
+                device_tile = xp.asanyarray(tile)
+                self._run_tile(cupy_udfs, partition, tile, device_tile)
+
     def _run_tile(self, udfs, partition, tile, device_tile):
         for udf in udfs:
             method = udf.get_method()
@@ -1088,25 +1098,6 @@ class UDFRunner:
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(partition.slice)
                 udf.process_partition(device_tile)
-
-    def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):
-        # FIXME pass information on target location (numpy or cupy)
-        # to dataset so that is can already move it there.
-        # In the future, it might even decode data on the device instead of CPU
-        tiles = partition.get_tiles(
-            tiling_scheme=tiling_scheme,
-            roi=roi, dest_dtype=dtype,
-        )
-
-        if cupy_udfs:
-            xp = cupy_udfs[0].xp
-
-        for tile in tiles:
-            self._run_tile(numpy_udfs, partition, tile, tile)
-            if cupy_udfs:
-                # Work-around, should come from dataset later
-                device_tile = xp.asanyarray(tile)
-                self._run_tile(cupy_udfs, partition, tile, device_tile)
 
     def _wrapup_udfs(self, numpy_udfs, cupy_udfs, partition):
         udfs = numpy_udfs + cupy_udfs
@@ -1132,55 +1123,107 @@ class UDFRunner:
             except TypeError:
                 raise TypeError("could not pickle results")
 
-    def _udf_lists(self, device_class):
-        numpy_udfs = []
-        cupy_udfs = []
-        if device_class == 'cuda':
-            for udf in self._udfs:
-                backends = udf.get_backends()
-                if 'cuda' in backends:
-                    numpy_udfs.append(udf)
-                elif 'cupy' in backends:
-                    cupy_udfs.append(udf)
-                else:
-                    raise ValueError(f"UDF backends are {backends}, supported on CUDA are "
-                            "'cuda' and 'cupy'")
-        elif device_class == 'cpu':
-            assert all('numpy' in udf.get_backends() for udf in self._udfs)
-            numpy_udfs = self._udfs
+    def _get_dtype(self, dtype, corrections):  # FIXME: copy pasta
+        if corrections is not None and corrections.have_corrections():
+            tmp_dtype = np.result_type(np.float32, dtype)
         else:
-            raise ValueError(f"Unknown device class {device_class}, "
-                "supported are 'cpu' and 'cuda'")
-        return (numpy_udfs, cupy_udfs)
+            tmp_dtype = dtype
+        for udf in self._udfs:
+            tmp_dtype = np.result_type(
+                udf.get_preferred_input_dtype(),
+                tmp_dtype
+            )
+        return tmp_dtype
 
-    def run_for_partition(self, partition: Partition, roi, corrections, env):
-        with env.enter():
-            try:
-                previous_id = None
-                device_class = get_device_class()
-                # numpy_udfs and cupy_udfs contain references to the objects in
-                # self._udfs
-                numpy_udfs, cupy_udfs = self._udf_lists(device_class)
-                # Will only be populated if actually on CUDA worker
-                # and any UDF supports 'cupy' (and not 'cuda')
-                if cupy_udfs:
-                    # Avoid importing if not used
-                    import cupy
-                    device = get_use_cuda()
-                    previous_id = cupy.cuda.Device().id
-                    cupy.cuda.Device(device).use()
-                (meta, tiling_scheme, dtype) = self._init_udfs(
-                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
-                )
-                # print("UDF TilingScheme: %r" % tiling_scheme.shape)
-                partition.set_corrections(corrections)
-                self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
-                self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
-            finally:
-                if previous_id is not None:
-                    cupy.cuda.Device(previous_id).use()
-            # Make sure results are in the same order as the UDFs
-            return tuple(udf.results for udf in self._udfs)
+
+
+class UDFTask(Task):
+    def __init__(self, partition: Partition, idx, udfs, udf_classes, udf_params, roi, backends, corrections=None):
+        super().__init__(partition=partition, idx=idx)
+        self._roi = roi
+        self._backends = backends
+        self._corrections = corrections
+        self._udf_classes = udf_classes
+        self._udf_params = udf_params
+        self._resources = self._get_resources(udfs)
+
+    def get_callable(self):
+        """
+        Returns a callable that takes parameters `env` and `params`
+        """
+        part_runner = UDFPartitionRunner(self._udf_classes)
+        return lambda env, params: part_runner.run_for_partition(
+            self.partition, self._roi, self._corrections, env, params,
+        )
+
+    def get_params(self):
+        return self._udf_params
+
+    def get_resources(self):
+        return self._resources
+
+    def _get_resources(self, udfs):
+        """
+        Intersection of resources of all UDFs, throws if empty.
+
+        See docstring of super class for details.
+        """
+        needs_cuda = 0
+        needs_cpu = 0
+        needs_ndarray = 0
+        backends_for_udfs = []
+        for udf in udfs:
+            b = udf.get_backends()
+            if isinstance(b, str):
+                b = (b, )
+            backends_for_udfs.append(set(b))
+
+        # Limit to externally specified backends
+        for backend_set in backends_for_udfs:
+            if self._backends is not None:
+                b = self._backends
+                if isinstance(b, str):
+                    b = (b, )
+                backends = set(b).intersection(backend_set)
+            else:
+                backends = backend_set
+            needs_cuda += 'numpy' not in backends
+            needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
+            needs_ndarray += 'cuda' not in backends
+        if needs_cuda and needs_cpu:
+            raise ValueError(
+                "There is no common supported UDF backend (have: %r, limited to %r)"
+                % (backends_for_udfs, self._backends)
+            )
+        result = {'compute': 1}
+        if needs_cpu:
+            result['CPU'] = 1
+        if needs_cuda:
+            result['CUDA'] = 1
+        if needs_ndarray:
+            result['ndarray'] = 1
+        return result
+
+    def __repr__(self):
+        return "<UDFTask %r>" % (self._udf_classes,)
+
+
+class UDFRunner:
+    def __init__(self, udfs, debug=False):
+        self._udfs = udfs
+        self._debug = debug
+
+    def _get_dtype(self, dtype, corrections):
+        if corrections is not None and corrections.have_corrections():
+            tmp_dtype = np.result_type(np.float32, dtype)
+        else:
+            tmp_dtype = dtype
+        for udf in self._udfs:
+            tmp_dtype = np.result_type(
+                udf.get_preferred_input_dtype(),
+                tmp_dtype
+            )
+        return tmp_dtype
 
     def _debug_task_pickling(self, tasks):
         if self._debug:
@@ -1215,7 +1258,7 @@ class UDFRunner:
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
 
-        tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
+        tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends, executor))
         return tasks
 
     def run_for_dataset(self, dataset: DataSet, executor,
@@ -1279,18 +1322,26 @@ class UDFRunner:
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
-    def _make_udf_tasks(self, dataset: DataSet, roi, corrections, backends):
+    def _make_udf_tasks(self, dataset: DataSet, roi, corrections, backends, executor):
+        udf_classes = []
+        udf_params = []
+        for udf in self._udfs:
+            klass, kwargs = udf._split()
+            udf_classes.append(klass)
+            udf_params.append(kwargs)
+
+        t0 = time.time()
+        udf_params_ref = executor.ensure_sync().send_constant_data(udf_params)
+        print("send_constant_data took %.3fs" % (time.time() - t0,))
+            
         for idx, partition in enumerate(dataset.get_partitions()):
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
                 if np.count_nonzero(roi_for_part) == 0:
                     # roi is empty for this partition, ignore
                     continue
-            udfs = [
-                udf.copy_for_partition(partition, roi)
-                for udf in self._udfs
-            ]
             yield UDFTask(
-                partition=partition, idx=idx, udfs=udfs, roi=roi, corrections=corrections,
-                backends=backends,
+                partition=partition, idx=idx, roi=roi, corrections=corrections,
+                backends=backends, udf_classes=udf_classes, udf_params=udf_params_ref,
+                udfs=self._udfs,
             )

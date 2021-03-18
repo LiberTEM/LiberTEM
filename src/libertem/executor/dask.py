@@ -1,9 +1,13 @@
 from copy import deepcopy
+import threading
 import functools
 import logging
 import signal
 
 from dask import distributed as dd
+import pyarrow.plasma as plasma
+import pyarrow as pa
+import numpy as np
 
 from .base import (
     JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter, TaskProxy,
@@ -30,6 +34,42 @@ def worker_setup(resource, device):
         raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
 
 
+class SHMManager:
+    def __init__(self):
+        self._plasma_client = plasma.connect("/tmp/plasma")
+
+    @classmethod
+    def get_instance(cls):
+        return SHMManager()
+
+    @classmethod
+    def make_random_id(cls):
+        return plasma.ObjectID(np.random.bytes(20))
+
+    def get(self, obj_id, timeout_ms=-1):
+        print("SHMManager.get(%s)" % (obj_id,))
+        [buf] = self._plasma_client.get_buffers([obj_id], timeout_ms=timeout_ms)
+        reader = pa.BufferReader(buf)
+        tensor = pa.ipc.read_tensor(reader)
+        return tensor.to_numpy()
+
+    def put(self, arr, obj_id=None):
+        if obj_id is None:
+            obj_id = self.make_random_id()
+        tensor = pa.Tensor.from_numpy(arr)
+        size = pa.ipc.get_tensor_size(tensor)
+        buf = self._plasma_client.create(obj_id, size)
+        stream = pa.FixedSizeBufferWriter(buf)
+        pa.ipc.write_tensor(tensor, stream)
+        self._plasma_client.seal(obj_id)
+        return obj_id
+
+    def is_object_id(self, obj_id):
+        res = isinstance(obj_id, plasma.ObjectID)
+        print("is_object_id? %s %s" % (obj_id, res))
+        return res
+
+
 def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=None):
 
     if options is None:
@@ -45,7 +85,7 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
     cpu_options["resources"] = {"CPU": 1, "compute": 1, "ndarray": 1}
     cpu_base_spec = {
         "cls": dd.Nanny,
-        "options": cpu_options
+        "options": cpu_options,
     }
 
     # Service workers not for computation
@@ -91,16 +131,35 @@ class DaskTaskProxy(TaskProxy):
         super().__init__(task)
         self.task_id = task_id
 
-    def __call__(self, *args, **kwargs):
-        env = Environment(threads_per_worker=1)
-        task_result = self.task(env=env)
-        return {
-            "task_result": task_result,
-            "task_id": self.task_id,
-        }
+    def get_callable(self):
+        """
+        DaskJobExecutor-specific work that needs to be done on the worker
+        before/after running the actual `Task`
+        """
+        def _inner(params, *args, **kwargs):
+            shm = SHMManager.get_instance()
+            env = Environment(threads_per_worker=1, shm=shm)
+
+            params_real = [
+                {
+                    k: shm.get(v) if shm.is_object_id(v) else v
+                    for k, v in params_inner.items()
+                }
+                for params_inner in params
+            ]
+            task_result = self.task.get_callable()(
+                env=env,
+                params=params_real,
+                *args, **kwargs
+            )
+            return {
+                "task_result": task_result,
+                "task_id": self.task_id,
+            }
+        return _inner
 
     def __repr__(self):
-        return "<TaskProxy: %r (id=%s)>" % (self.task, self.task_id)
+        return "<DaskTaskProxy: %r (id=%s)>" % (self.task, self.task_id)
 
 
 class CommonDaskMixin(object):
@@ -128,13 +187,21 @@ class CommonDaskMixin(object):
                 if len(locations) == 0:
                     raise ValueError("no workers found for task")
                 locations = locations.names()
+            
+            if hasattr(task, 'get_callable'):
+                fn = task.get_callable()
+                submit_kwargs['params'] = task.get_params()
+            else:
+                fn = task
+
             submit_kwargs.update({
                 'resources': self._validate_resources(workers, resources),
                 'workers': locations,
                 'pure': False,
             })
+
             futures.append(
-                self.client.submit(task, **submit_kwargs)
+                self.client.submit(fn, **submit_kwargs)
             )
         return futures
 
@@ -167,7 +234,7 @@ class CommonDaskMixin(object):
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_futures(self, tasks):
+    def _futures_with_affinity(self, tasks):
         available_workers = self.get_available_workers()
         if len(available_workers) == 0:
             raise RuntimeError("no workers available!")
@@ -230,13 +297,14 @@ class CommonDaskMixin(object):
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):
-    def __init__(self, client, is_local=False, lt_resources=None):
+    def __init__(self, client, is_local=False, lt_resources=None, enable_shm=True):
         self.is_local = is_local
         self.client = client
         if lt_resources is None:
             lt_resources = self.has_libertem_resources()
         self.lt_resources = lt_resources
         self._futures = {}
+        self._enable_shm = enable_shm
 
     def run_tasks(self, tasks, cancel_id):
         tasks = list(tasks)
@@ -248,7 +316,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         for idx, orig_task in enumerate(tasks):
             tasks_wrapped.append(DaskTaskProxy(orig_task, idx))
 
-        futures = self._get_futures(tasks_wrapped)
+        futures = self._futures_with_affinity(tasks_wrapped)
         self._futures[cancel_id] = futures
 
         try:
@@ -376,6 +444,29 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         }
         return result_map
 
+    def send_constant_data(self, data):
+        def _put_into_shm(data, obj_id):
+            shm = SHMManager()
+            return shm.put(data, obj_id)
+
+        # data is a List[Dict[str, ...]]
+        res = []
+        for data_dict in data:
+            res_part = {}
+            for k, v in data_dict.items():
+                if not isinstance(v, np.ndarray) or not self._enable_shm:
+                    res_part[k] = v
+                else:
+                    obj_id = SHMManager.make_random_id()
+                    self.run_each_host(_put_into_shm, v, obj_id)
+                    res_part[k] = obj_id
+            res.append(res_part)
+        return res
+
+        assert False, "scatter code below"
+        [fut] = self.client.scatter([data], broadcast=True)
+        return fut
+
     def close(self):
         if self.is_local:
             if self.client.cluster is not None:
@@ -396,7 +487,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
+    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None, *args, **kwargs):
         """
         Spin up a local dask cluster
 
@@ -433,7 +524,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
         client.wait_for_workers(len(spec))
 
-        return cls(client=client, is_local=True, lt_resources=True)
+        return cls(client=client, is_local=True, lt_resources=True, *args, **kwargs)
 
     def __enter__(self):
         return self

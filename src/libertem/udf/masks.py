@@ -38,7 +38,7 @@ class ApplyMasksUDF(UDF):
 
     .. versionadded:: 0.4.0
     '''
-    def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
+    def __init__(self, mask_factories=None, masks=None, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None, backends=None):
         '''
         Parameters
@@ -91,6 +91,7 @@ class ApplyMasksUDF(UDF):
 
         super().__init__(
             mask_factories=mask_factories,
+            masks=masks,
             use_torch=use_torch,
             use_sparse=use_sparse,
             mask_count=mask_count,
@@ -134,8 +135,12 @@ class ApplyMasksUDF(UDF):
 
     def _make_mask_container(self):
         p = self.params
+        if p.masks is not None:
+            mask_factories = lambda: p.masks
+        else:
+            mask_factories = p.mask_factories
         return MaskContainer(
-            p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
+            mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
             backend=self.backend
         )
 

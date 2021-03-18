@@ -19,7 +19,7 @@ def test_sizefilter():
         (2, 0.5)
     ])
 
-    assert(np.allclose(fm.size_filter(polars, 0, np.inf)), polars))
+    assert(np.allclose(fm.size_filter(polars, 0, np.inf), polars))
     assert(len(fm.size_filter(polars, 3, np.inf)) == 0)
     assert(np.allclose(fm.size_filter(polars, 0.9, 1.1), polars[1]))
 

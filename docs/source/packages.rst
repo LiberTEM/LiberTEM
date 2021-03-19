@@ -16,3 +16,7 @@ This list provides an overview of the current sub-packages and is constantly upd
 :libertem-holo:
     Since 0.6.0: Off-axis electron holography (work in progress)
     https://github.com/LiberTEM/LiberTEM-holo/
+
+:ptychography40:
+    Ptychography implementations within the Ptychography 4.0 project.
+    https://ptychography-4-0.github.io/ptychography/

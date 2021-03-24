@@ -21,10 +21,32 @@ For more details, please see :ref:`loading data`, :ref:`dataset api` and
 .. include:: /../../examples/basic.py
     :code:
 
+Connect to a cluster
+--------------------
+
+See :ref:`cluster` on how to start a scheduler and workers.
+
+.. Not run with docs-check since it doesn't play well with launching a multiprocessing
+   cluster
+
+.. code-block:: python
+
+    from libertem import api
+    from libertem.executor.dask import DaskJobExecutor
+
+    # Connect to a Dask.Distributed scheduler at 'tcp://localhost:8786'
+    with DaskJobExecutor.connect('tcp://localhost:8786') as executor:
+        ctx = api.Context(executor=executor)
+        ...
+
+Customize CPUs and CUDA devices
+-------------------------------
+
 To control how many CPUs and which CUDA devices are used, you can specify them as follows:
 
 .. Not run with docs-check since it doesn't play well with launching a multiprocessing
    cluster
+
 .. code-block:: python
 
     from libertem import api

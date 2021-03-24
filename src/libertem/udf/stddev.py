@@ -235,13 +235,13 @@ class StdDevUDF(UDF):
                 kind='sig', dtype=dtype
             ),
             'var': self.buffer(
-                kind='sig', dtype=dtype, allocate=False,
+                kind='sig', dtype=dtype, use='result_only',
             ),
             'std': self.buffer(
-                kind='sig', dtype=dtype, allocate=False,
+                kind='sig', dtype=dtype, use='result_only',
             ),
             'mean': self.buffer(
-                kind='sig', dtype=dtype, allocate=False,
+                kind='sig', dtype=dtype, use='result_only',
             ),
         }
 
@@ -329,12 +329,9 @@ class StdDevUDF(UDF):
         var = self.results['varsum'].raw_data / num_frames
 
         return {
-            'num_frames': self.results['num_frames'],
-            'varsum': self.results['varsum'],
-            'sum': self.results['sum'],
-            'var': self.result(name='var', data=var),
-            'std': self.result(name='std', data=np.sqrt(var)),
-            'mean': self.result(name='mean', data=self.results['sum'].raw_data / num_frames),
+            'var': var,
+            'std': np.sqrt(var),
+            'mean': self.results.sum / num_frames,
         }
 
 

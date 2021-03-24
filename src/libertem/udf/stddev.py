@@ -269,18 +269,18 @@ class StdDevUDF(UDF):
             Partial results that contains sum of variances, sum of frames, and the
             number of frames of a partition to be merged into the aggregation buffers
         """
-        dest_n = dest['num_frames'][0]
-        src_n = src['num_frames'][0]
+        dest_n = dest.num_frames[0]
+        src_n = src.num_frames[0]
 
         n = merge(
             dest_n=dest_n,
-            dest_sum=reshaped_view(dest['sum'], (-1,)),
-            dest_varsum=reshaped_view(dest['varsum'], (-1,)),
+            dest_sum=reshaped_view(dest.sum, (-1,)),
+            dest_varsum=reshaped_view(dest.varsum, (-1,)),
             src_n=src_n,
-            src_sum=reshaped_view(src['sum'], (-1,)),
-            src_varsum=reshaped_view(src['varsum'], (-1,)),
+            src_sum=reshaped_view(src.sum, (-1,)),
+            src_varsum=reshaped_view(src.varsum, (-1,)),
         )
-        dest['num_frames'][:] = n
+        dest.num_frames[:] = n
 
     def process_tile(self, tile):
         """
@@ -324,9 +324,9 @@ class StdDevUDF(UDF):
             :code:`'sum', 'varsum', 'num_frames', 'var', 'std', and 'mean'`
             as :code:`BufferWrapper`
         '''
-        num_frames = int(self.results['num_frames'].raw_data[0])
+        num_frames = int(self.results.num_frames[0])
 
-        var = self.results['varsum'].raw_data / num_frames
+        var = self.results.varsum / num_frames
 
         return {
             'var': var,

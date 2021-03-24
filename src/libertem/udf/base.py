@@ -6,6 +6,8 @@ import uuid
 import cloudpickle
 import numpy as np
 
+from libertem.warnings import UseDiscouragedWarning
+from libertem.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper, PreallocBufferWrapper,
 )
@@ -18,10 +20,6 @@ from libertem.common.backend import get_use_cuda, get_device_class
 
 
 log = logging.getLogger(__name__)
-
-
-class UDFException(Exception):
-    pass
 
 
 class UDFMeta:
@@ -196,11 +194,18 @@ class ReadOnlyAttrMapping:
     def __getattr__(self, k):
         return self._dict[k]
 
+    def __setattr__(self, k, v):
+        if k in ['_dict']:
+            return super().__setattr__(k, v)
+        # FIXME: can we convert to array slice assignment instead of throwing error?
+        raise TypeError("can't set attributes on `ReadOnlyAttrMapping`"
+                        " (hint: use `.attr[:]` to change array contents instead)")
+
     def __getitem__(self, k):
         warnings.warn(
-            "dict-like access is deprecated, as it can be "
+            "dict-like access is discouraged, as it can be "
             "confusing vs. using attribute access",
-            FutureWarning,
+            UseDiscouragedWarning,
             stacklevel=2,
         )
         return self._dict[k]
@@ -261,10 +266,10 @@ class UDFData:
 
     def __getitem__(self, k):
         warnings.warn(
-            "dict-like access is deprecated, as it can be "
+            "dict-like access is discouraged, as it can be "
             "confusing vs. using attribute access. Please use `get_buffer` instead, "
             "if you really need the `BufferWrapper` and not the current view",
-            FutureWarning,
+            UseDiscouragedWarning,
             stacklevel=2,
         )
         return self._data[k]

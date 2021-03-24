@@ -40,4 +40,4 @@ class SumUDF(UDF):
 
     def merge(self, dest, src):
         ''
-        dest['intensity'][:] += src['intensity']
+        dest.intensity[:] += src.intensity

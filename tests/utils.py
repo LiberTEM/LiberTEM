@@ -125,18 +125,18 @@ class DebugDeviceUDF(UDF):
         print(f"meta device_class {self.meta.device_class}")
 
     def merge(self, dest, src):
-        de, sr = dest['device_id'][0], src['device_id'][0]
+        de, sr = dest.device_id[0], src.device_id[0]
         for key, value in sr.items():
             assert key not in de
             de[key] = value
 
-        de, sr = dest['backend'][0], src['backend'][0]
+        de, sr = dest.backend[0], src.backend[0]
         for key, value in sr.items():
             assert key not in de
             de[key] = value
 
-        dest['on_device'][:] += src['on_device']
-        dest['device_class'][:] = src['device_class']
+        dest.on_device[:] += src.on_device
+        dest.device_class[:] = src.device_class
 
     def get_backends(self):
         return self.params.backends

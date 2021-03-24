@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from libertem.udf.base import UDF, UDFException
+from libertem.exceptions import UDFException
+from libertem.udf.base import UDF
 from libertem.common.buffers import BufferWrapper
 
 
@@ -89,7 +90,7 @@ class UnifyResultTypesUDF(UDF):
     def merge(self, dest, src):
         assert 'buf2' not in dest
         assert 'buf2' not in src
-        dest['buf1'][:] += src['buf1']
+        dest.buf1[:] += src.buf1
 
     def process_frame(self, frame):
         pass
@@ -127,8 +128,8 @@ class AverageUDF(UDF):
         self.results.num_frames[:] += 1
 
     def merge(self, dest, src):
-        dest['sum'][:] += src['sum']
-        dest['num_frames'][:] += src['num_frames']
+        dest.sum[:] += src.sum
+        dest.num_frames[:] += src.num_frames
 
     def get_results(self):
         avg = self.results.sum / self.results.num_frames

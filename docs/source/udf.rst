@@ -389,7 +389,7 @@ Here is an example demonstrating :code:`kind="sig"` buffers and the :code:`merge
          """
          merge two partial results, from src into dest
          """
-         dest['maxbuf'][:] = np.maximum(dest['maxbuf'], src['maxbuf'])
+         dest.maxbuf[:] = np.maximum(dest.maxbuf, src.maxbuf)
 
    res = ctx.run_udf(
       udf=MaxUDF(),

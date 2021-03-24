@@ -128,9 +128,9 @@ def test_roi_extra_dimension_shape(lt_ctx):
             # self.results.test3[:] += (framecount, 2*framecount)
 
         def merge(self, dest, src):
-            dest['test'][:] = src['test'][:]
-            dest['test2'][:] += src['test2'][:]
-            # dest['test3'][:] += src['test3'][:]
+            dest.test[:] = src.test[:]
+            dest.test2[:] += src.test2[:]
+            # dest.test3[:] += src.test3[:]
 
     extra = ExtraShapeUDF()
     roi = _mk_random(size=dataset.shape.nav, dtype=bool)

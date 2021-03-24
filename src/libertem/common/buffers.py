@@ -321,8 +321,10 @@ class BufferWrapper(object):
         .. versionchanged:: 0.6.0
             Support for allocating on device
         """
-        assert self._shape is not None
-        assert self._data is None
+        if self._shape is None:
+            raise RuntimeError("cannot allocate: no shape set")
+        if self._data is not None:
+            raise RuntimeError("cannot allocate: data is already set")
         if self._where == 'device' and lib is not None:
             _z = lib.zeros
         else:
@@ -375,7 +377,8 @@ class BufferWrapper(object):
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
         """
-        assert partition.shape.dims == partition.shape.sig.dims + 1
+        if partition.shape.dims != partition.shape.sig.dims + 1:
+            raise RuntimeError("partition shape should be flat, is %s" % partition.shape)
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "sig":
@@ -472,8 +475,10 @@ class BufferWrapper(object):
             for key, view in self._contiguous_cache.items():
                 sl = key.get(sig_only=True)
                 self._data[sl] = view
-                if debug:
-                    assert disjoint(key, self._contiguous_cache.keys())
+                if debug and not disjoint(key, self._contiguous_cache.keys()):
+                    raise RuntimeError(
+                        "`key` %r should be disjoint with existing keys" % key
+                    )
             self._contiguous_cache = dict()
         else:
             if self._contiguous_cache:

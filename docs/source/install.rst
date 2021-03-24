@@ -10,8 +10,6 @@ Installation
     If you would like to install the latest development version, please also
     see :ref:`installing from a git clone`.
 
-.. include:: _single_node.rst
-
 The short version
 -----------------
 

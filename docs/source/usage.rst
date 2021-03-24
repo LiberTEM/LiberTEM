@@ -3,8 +3,6 @@
 GUI usage
 =========
 
-.. include:: _single_node.rst
-
 Starting the LiberTEM server
 ----------------------------
 
@@ -65,10 +63,13 @@ any (needs to have a working cupy installation).
 
 ..  figure:: ./images/use/create.png
 
+.. _`cluster`:
+
 Starting a custom cluster
 -------------------------
 
-LiberTEM can connect to a running dask cluster. To start a cluster, first run a scheduler:
+LiberTEM can connect to a running Dask cluster. To start a cluster on
+:code:`localhost`, first run a scheduler:
 
 .. code-block:: shell
 
@@ -105,6 +106,8 @@ There are a few command line options available::
 
 For a cluster setup, you can run the scheduler on the appropriate network interface and
 run workers on all cluster nodes to connect to the scheduler.
+
+You can then connect to the cluster's scheduler URL in the LiberTEM web GUI.
 
 Opening data
 ------------

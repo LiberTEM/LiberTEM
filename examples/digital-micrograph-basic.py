@@ -1,21 +1,24 @@
-import sys
-import multiprocessing
+import threading
+
+import numpy as np
 
 from libertem import api
+from libertem.executor.inline import InlineJobExecutor
 
 
-# Since the interpreter is embedded, we have to set the Python executable.
-# Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
-multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
-
-if __name__ == "__main__":
-
-    with api.Context() as ctx:
-
+# The workload is wrapped into a `main()` function
+# to run it in a separate background thread since using Numba
+# can hang when used directly in a GMS Python background thread
+def main():
+    # The distributed executor currently doesn't work since
+    # multiprocessing seems to run into issues.
+    with api.Context(executor=InlineJobExecutor()) as ctx:
         ds = ctx.load(
-            "EMPAD",
-            path=("C:/Users/weber/Nextcloud/Projects/Open Pixelated STEM framework/"
-            "Data/EMPAD/acquisition_12.xml")
+            "RAW",
+            path=r"C:\Users\Dieter\testfile-32-32-32-32-float32.raw",
+            nav_shape=(32, 32),
+            sig_shape=(32, 32),
+            dtype=np.float32
         )
 
         sum_analysis = ctx.create_sum_analysis(dataset=ds)
@@ -29,3 +32,10 @@ if __name__ == "__main__":
 
         haadf_image = DM.CreateImage(haadf_result.intensity.raw_data.copy())
         haadf_image.ShowImage()
+
+
+if __name__ == "__main__":
+    # Start the workload and wait for it to finish
+    th = threading.Thread(target=main)
+    th.start()
+    th.join()

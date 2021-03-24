@@ -164,6 +164,13 @@
         "contribution": "Discussions, requirements description"
     },
     {
+        "displayname": "Siu Kwan Lam",
+        "authorname": "Lam, Siu Kwan",
+        "affiliation": "Anaconda Inc.",
+        "github": "sklam",
+        "contribution": "Help work around issue with Numba in GMS"
+    },
+    {
         "displayname": "Weng I Lei",
         "authorname": "Lei, Weng I",
         "affiliation": "Gatan",

@@ -148,7 +148,7 @@ class BufferWrapper(object):
     This class is array_like, so you can directly use it, for example, as argument
     for numpy functions.
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
         """
         .. versionchanged:: 0.6.0
             Add option to specify backend, for example CuPy
@@ -173,9 +173,17 @@ class BufferWrapper(object):
 
             .. versionadded:: 0.6.0
 
-        allocate : bool
-            If set to :code:`False`, this buffer won't actually be allocated when the
-            UDF is run, but is only declared for use in :meth:`UDF.get_results`.
+        use : "private", "reault_only" or None
+            If you specify :code:`"private"` here, the result will only be made available
+            to internal functions, like :meth:`process_frame`, :meth:`merge` or
+            :meth:`get_results`. It will not be available to the user of the UDF, which means
+            you can use this to hide implementation details that are likely to change later.
+
+            Specify :code:`"result_only"` here if the buffer is only used in :meth:`get_results`,
+            this means we don't have to allocate and return it on the workers without actually
+            needing it.
+
+            :code:`None` means the buffer is used both as a final and intermediate result.
 
             .. versionadded:: 0.7.0
         """
@@ -192,6 +200,7 @@ class BufferWrapper(object):
         self._roi = None
         self._roi_is_zero = None
         self._contiguous_cache = dict()
+        self.use = use
 
     def set_roi(self, roi):
         if roi is not None:
@@ -247,9 +256,21 @@ class BufferWrapper(object):
         if self._roi is None or self._kind != 'nav':
             return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
+        if shape == self._data.shape:
+            # preallocated and already wrapped
+            return self._data
         wrapper = np.full(shape, np.nan, dtype=self._dtype)
         wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
         return wrapper
+
+    @property
+    def dtype(self):
+        """
+        Get the declared dtype of this buffer.
+
+        .. versionadded:: 0.7.0
+        """
+        return self._dtype
 
     @property
     def raw_data(self):

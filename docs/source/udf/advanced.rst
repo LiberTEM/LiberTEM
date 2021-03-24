@@ -153,7 +153,7 @@ step that is run on the main node, you can override
             return {
                 'sum': self.buffer(kind='sig', dtype=np.float32),
                 'num_frames': self.buffer(kind='single', dtype=np.uint64),
-                'average': self.buffer(kind='sig', dtype=np.float32, allocate=False),
+                'average': self.buffer(kind='sig', dtype=np.float32, use='result_only'),
             }
 
         def process_frame(self, frame):
@@ -161,26 +161,30 @@ step that is run on the main node, you can override
             self.results.num_frames[:] += 1
 
         def merge(self, dest, src):
-            dest['sum'][:] += src['sum']
-            dest['num_frames'][:] += src['num_frames']
+            dest.sum[:] += src.sum
+            dest.num_frames[:] += src.num_frames
 
         def get_results(self):
-            avg = self.results.sum / self.results.num_frames
             return {
-                'sum': self.results['sum'],  # a BufferWrapper
-                'average': self.result(name='average', data=avg),
+                # NOTE: 'sum' omitted here, will be returned unchanged
+                'average': self.results.sum / self.results.num_frames,
             }
 
     ctx.run_udf(dataset=dataset, udf=AverageUDF())
 
 Note that :code:`get_result_buffers` returns a placeholder entry for the :code:`average`
-result using :code:`allocate=False`, which is then filled in :code:`get_results`.
-We use :code:`UDF.result(..., data=avg)` here to get consistent result types: all buffers are
-returned as :class:`BufferWrapper` instances.
+result using :code:`use='result_only'`, which is then filled in :code:`get_results`.
+We don't need to repeat those buffers that should be returned unchanged; if you want
+to omit a buffer from the results completely, you can declare it as private with
+:code:`self.buffer(..., use='private')` in :code:`get_result_buffers`.
+
+When returned from :meth:`Context.run_udf`, all results are wrapped into :code:`BufferWrapper`
+instances. This is done primarily to get convenient access to a version of the result that is
+suitable for visualization, even if a :code:`roi` was used, but still allow access to the
+raw result using :attr:`BufferWrapper.raw_data` attribute.
 
 .. versionadded:: 0.7.0
-   :meth:`UDF.get_results`, :meth:`UDF.result`, and the :code:`allocate` argument for
-   :meth:`UDF.buffer` were added.
+   :meth:`UDF.get_results` and the :code:`use` argument for :meth:`UDF.buffer` were added.
 
 
 Pre-processing

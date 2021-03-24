@@ -9,7 +9,7 @@ from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
-from libertem.common.buffers import reshaped_view, BufferWrapper
+from libertem.common.buffers import reshaped_view
 
 from utils import _mk_random, ValidationUDF
 
@@ -485,7 +485,7 @@ def test_with_progress_bar(lt_ctx):
                             num_partitions=2, sig_dims=2)
 
     pixelsum = PixelsumUDF()
-    res = lt_ctx.run_udf(dataset=dataset, udf=pixelsum, progress=True)
+    lt_ctx.run_udf(dataset=dataset, udf=pixelsum, progress=True)
     # TODO: maybe assert that some output happened on stderr?
 
 
@@ -496,7 +496,7 @@ class ReshapedViewUDF(UDF):
         }
 
     def process_tile(self, tile):
-        flat_tile = reshaped_view(tile, (tile.shape[0], -1))
+        reshaped_view(tile, (tile.shape[0], -1))
         flat_buf = reshaped_view(self.results.sigbuf, (-1, ))
         flat_buf[:] = 1
 
@@ -530,7 +530,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         partition = next(dataset.get_partitions())
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
         # Enabling debug=True checks for disjoint cache keys
-        part_res = UDFRunner([p_udf], debug=True).run_for_partition(
+        UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,
             roi=None,
             corrections=None,
@@ -541,159 +541,3 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         set_use_cpu(0)
 
     assert np.all(res["sigbuf"].data == 1)
-
-
-class UndeclaredBufferUDF(UDF):
-    def get_result_buffers(self):
-        return {
-            'buf': self.buffer(kind='nav', dtype=np.float32),
-        }
-
-    def process_frame(self, frame):
-        pass
-
-    def get_results(self):
-        return {
-            'buf': self.results.buf,
-            'blah': np.zeros((128, 128), dtype=np.float64),
-        }
-
-
-def test_undeclared_buffer_warning(lt_ctx, default_raw):
-    udf = UndeclaredBufferUDF()
-    with pytest.warns(RuntimeWarning):
-        lt_ctx.run_udf(dataset=default_raw, udf=udf)
-
-
-class NoAllocateResultsUDF(UDF):
-    def get_result_buffers(self):
-        return {
-            'buf1': self.buffer(kind='sig', dtype=np.float32),
-            'buf2': self.buffer(kind='sig', dtype=np.float32, allocate=False),
-        }
-
-    def merge(self, dest, src):
-        assert 'buf2' not in dest
-        assert 'buf2' not in src
-        dest['buf1'][:] += src['buf1']
-
-    def process_frame(self, frame):
-        pass
-
-    def get_results(self):
-        return {
-            'buf1': self.results.buf1,
-            'buf2': np.array(self.results.buf1) + 1,
-        }
-
-
-def test_no_allocate_result(lt_ctx, default_raw):
-    udf = NoAllocateResultsUDF()
-    lt_ctx.run_udf(dataset=default_raw, udf=udf)
-
-
-class UnifyResultTypesUDF(UDF):
-    def get_result_buffers(self):
-        return {
-            'buf1': self.buffer(kind='sig', dtype=np.float32),
-            'buf2': self.buffer(kind='sig', dtype=np.float32, allocate=False),
-        }
-
-    def merge(self, dest, src):
-        assert 'buf2' not in dest
-        assert 'buf2' not in src
-        dest['buf1'][:] += src['buf1']
-
-    def process_frame(self, frame):
-        pass
-
-    def get_results(self):
-        return {
-            'buf1': self.results['buf1'],
-            'buf2': self.result('buf2', data=np.array(self.results.buf1) + 1),
-        }
-
-
-def test_unified_result_types(lt_ctx, default_raw):
-    udf = UnifyResultTypesUDF()
-    results = lt_ctx.run_udf(dataset=default_raw, udf=udf)
-    assert isinstance(results['buf1'], BufferWrapper)
-    assert isinstance(results['buf2'], BufferWrapper)
-
-
-class AverageUDF(UDF):
-    """
-    Like SumUDF, but also computes the average
-    """
-    def get_result_buffers(self):
-        return {
-            'sum': self.buffer(kind='sig', dtype=np.float32),
-            'num_frames': self.buffer(kind='single', dtype=np.uint64),
-            'average': self.buffer(kind='sig', dtype=np.float32, allocate=False),
-        }
-
-    def process_frame(self, frame):
-        self.results.sum[:] += frame
-        self.results.num_frames[:] += 1
-
-    def merge(self, dest, src):
-        dest['sum'][:] += src['sum']
-        dest['num_frames'][:] += src['num_frames']
-
-    def get_results(self):
-        avg = self.results.sum / self.results.num_frames
-        return {
-            'sum': self.results['sum'],  # a BufferWrapper
-            'average': self.result(name='average', data=avg),
-        }
-
-
-def test_delayed_buffer_alloc(lt_ctx, default_raw):
-    udf = AverageUDF()
-    results = lt_ctx.run_udf(dataset=default_raw, udf=udf)
-    assert np.allclose(
-        results['sum'].data / default_raw.shape.nav.size,
-        results['average']
-    )
-
-
-def test_delayed_buffer_alloc_roi(lt_ctx, default_raw):
-    udf = AverageUDF()
-    roi = np.random.choice([True, False], size=default_raw.shape.nav)
-    results = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
-    assert np.allclose(
-        results['sum'].data / np.sum(roi),
-        results['average']
-    )
-
-
-class SumSigUDFAndAHalf(UDF):
-    def get_result_buffers(self):
-        return {
-            'sum': self.buffer(kind='nav', dtype=np.float32),
-            'sum_half': self.buffer(kind='nav', dtype=np.float32, allocate=False),
-        }
-
-    def process_frame(self, frame):
-        self.results.sum[:] = np.sum(frame)
-
-    def get_results(self):
-        return {
-            'sum': self.results['sum'],  # a BufferWrapper
-            'sum_half': self.result(name='sum_half', data=self.results['sum'].raw_data / 2),
-        }
-
-
-def test_get_results_nav_with_roi(lt_ctx, default_raw):
-    udf = SumSigUDFAndAHalf()
-    roi = np.random.choice([True, False], size=default_raw.shape.nav)
-    results = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
-    assert np.allclose(
-        results['sum'].raw_data / 2,
-        results['sum_half'].raw_data
-    )
-    assert np.allclose(
-        results['sum'].data / 2,
-        results['sum_half'].data,
-        equal_nan=True,
-    )

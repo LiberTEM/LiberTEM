@@ -1,4 +1,3 @@
-from types import MappingProxyType
 from typing import Dict, Optional
 import warnings
 import logging
@@ -19,6 +18,10 @@ from libertem.common.backend import get_use_cuda, get_device_class
 
 
 log = logging.getLogger(__name__)
+
+
+class UDFException(Exception):
+    pass
 
 
 class UDFMeta:
@@ -180,6 +183,29 @@ class UDFMeta:
         return self._threads_per_worker
 
 
+class ReadOnlyAttrMapping:
+    def __init__(self, dict_input):
+        self._dict = dict_input
+
+    def __iter__(self):
+        return iter(self._dict)
+
+    def __contains__(self, k):
+        return k in self._dict
+
+    def __getattr__(self, k):
+        return self._dict[k]
+
+    def __getitem__(self, k):
+        warnings.warn(
+            "dict-like access is deprecated, as it can be "
+            "confusing vs. using attribute access",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return self._dict[k]
+
+
 class UDFData:
     '''
     Container for result buffers, return value from running UDFs
@@ -201,6 +227,14 @@ class UDFData:
             return self._get_view_or_data(k)
         except KeyError as e:
             raise AttributeError(str(e))
+
+    def get_buffer(self, name):
+        """
+        Return the `BufferWrapper` for buffer `name`
+
+        .. versionadded:: 0.7.0
+        """
+        return self._data[name]
 
     def get(self, k, default=None):
         try:
@@ -226,6 +260,13 @@ class UDFData:
         return res
 
     def __getitem__(self, k):
+        warnings.warn(
+            "dict-like access is deprecated, as it can be "
+            "confusing vs. using attribute access. Please use `get_buffer` instead, "
+            "if you really need the `BufferWrapper` and not the current view",
+            FutureWarning,
+            stacklevel=2,
+        )
         return self._data[k]
 
     def __contains__(self, k):
@@ -241,7 +282,7 @@ class UDFData:
         return dict(self.items())
 
     def get_proxy(self):
-        return MappingProxyType({
+        return ReadOnlyAttrMapping({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
             for k, v in self.items()
             if v and v.has_data()
@@ -538,14 +579,40 @@ class UDFBase:
             raise TypeError("UDF should implement one of the `process_*` methods")
         return method
 
-    def do_get_results(self):
-        results = self.get_results()
-        for k in results.keys():
-            if k not in self.results:
-                warnings.warn(
-                    "Key '%s' not declared in get_result_buffers, can't be inspected!" % k,
-                    RuntimeWarning
+    def _do_get_results(self):
+        results_tmp = self.get_results()
+        decl = self.get_result_buffers()
+
+        # include any results that were not explicitly included, but have non-private `use`:
+        for k, v in decl.items():
+            if k not in results_tmp and v.use is None:
+                results_tmp[k] = getattr(self.results, k)
+
+        # wrap numpy results into `ResultBuffer`s:
+        results = {}
+        for name, arr in results_tmp.items():
+            if name not in decl:
+                raise UDFException(
+                    "buffer '%s' is not declared in `get_result_buffers` "
+                    "(hint: `self.buffer(..., use='result_only')`" % name
                 )
+            buf_decl = decl[name]
+            if buf_decl.use == "private":
+                raise UDFException("Don't return `use='private'` buffers from `get_results`")
+            if np.dtype(arr.dtype).kind != np.dtype(buf_decl.dtype).kind:
+                raise UDFException(
+                    "the returned ndarray '%s' has a different dtype kind (%s) "
+                    "than declared (%s)" % (
+                        name, arr.dtype, buf_decl.dtype
+                    )
+                )
+            buf = PreallocBufferWrapper(
+                kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
+                dtype=buf_decl.dtype,
+                data=arr,
+            )
+            buf.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
+            results[name] = buf
         return results
 
 
@@ -704,8 +771,8 @@ class UDF(UDFBase):
                 "Please implement a suitable custom merge function."
             )
         for k in dest:
-            check_cast(dest[k], src[k])
-            dest[k][:] = src[k]
+            check_cast(getattr(dest, k), getattr(src, k))
+            getattr(dest, k)[:] = getattr(src, k)
 
     def get_results(self):
         """
@@ -727,7 +794,19 @@ class UDF(UDFBase):
 
         .. versionadded:: 0.7.0
         """
-        return self.results.as_dict()
+        for k in self.results.keys():
+            buf = self.results.get_buffer(k)
+            if buf.use == "result_only":
+                raise UDFException(
+                    "don't know how to set use='result_only' buffer '%s';"
+                    " please implement `get_results`" % k
+                )
+        decls = self.get_result_buffers()
+        return {
+            k: getattr(self.results, k)
+            for k in self.results.keys()
+            if decls[k].use != "private"
+        }
 
     def get_preferred_input_dtype(self):
         '''
@@ -799,40 +878,48 @@ class UDF(UDFBase):
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, allocate=True):
+    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
-        '''
-        if not allocate:
-            return PlaceholderBufferWrapper(kind, extra_shape, dtype)
-        return BufferWrapper(kind, extra_shape, dtype, where)
-
-    def result(self, name: str, data: np.ndarray):
-        """
-        Create a filled :code:`BufferWrapper` from existing data.
-
-        .. versionadded:: 0.7.0
 
         Parameters
         ----------
-        name
-            The name of the buffer, as declared in `UDF.get_result_buffers`
+        kind : "nav", "sig" or "single"
+            The abstract shape of the buffer, corresponding either to the navigation
+            or the signal dimensions of the dataset, or a single value.
 
-        data
-            The array with the result data
-        """
-        decl = self.get_result_buffers()
-        decl = decl[name]
-        buf = PreallocBufferWrapper(
-            kind=decl.kind, extra_shape=decl.extra_shape,
-            dtype=decl._dtype,
-            data=data,
-        )
-        decl.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
-        assert decl._shape == data.shape
-        buf.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
-        return buf
+        extra_shape : optional, tuple of int or a Shape object
+            You can specify additional dimensions for your data. For example, if
+            you want to store 2D coords, you would specify :code:`(2,)` here.
+            If this is specified as a Shape object, it is converted to a tuple first.
+
+        dtype : string or numpy dtype
+            The dtype of this buffer
+
+        where : string or None
+            :code:`None` means NumPy array, specify :code:`'device'` to use a device buffer
+            (for example on a CUDA device)
+
+            .. versionadded:: 0.6.0
+
+        use : "private", "reault_only" or None
+            If you specify :code:`"private"` here, the result will only be made available
+            to internal functions, like :meth:`process_frame`, :meth:`merge` or
+            :meth:`get_results`. It will not be available to the user of the UDF, which means
+            you can use this to hide implementation details that are likely to change later.
+
+            Specify :code:`"result_only"` here if the buffer is only used in :meth:`get_results`,
+            this means we don't have to allocate and return it on the workers without actually
+            needing it.
+
+            :code:`None` means the buffer is used both as a final and intermediate result.
+
+            .. versionadded:: 0.7.0
+        '''
+        if use is not None and use.lower() == "result_only":
+            return PlaceholderBufferWrapper(kind, extra_shape, dtype, use=use)
+        return BufferWrapper(kind, extra_shape, dtype, where, use=use)
 
     @classmethod
     def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):
@@ -1191,7 +1278,7 @@ class UDFRunner:
                 raise TypeError("could not pickle partition")
             try:
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u.do_get_results() for u in udfs]
+                    [u._do_get_results() for u in udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")
@@ -1309,7 +1396,7 @@ class UDFRunner:
             udf.clear_views()
 
         return [
-            udf.do_get_results()
+            udf._do_get_results()
             for udf in self._udfs
         ]
 
@@ -1328,7 +1415,7 @@ class UDFRunner:
                 )
                 udf.clear_views()
             yield tuple(
-                udf.do_get_results()
+                udf._do_get_results()
                 for udf in self._udfs
             )
         else:
@@ -1336,7 +1423,7 @@ class UDFRunner:
             for udf in self._udfs:
                 udf.clear_views()
             yield tuple(
-                udf.do_get_results()
+                udf._do_get_results()
                 for udf in self._udfs
             )
 

@@ -127,8 +127,8 @@ def test_kind_single(lt_ctx):
             self.results.sum_frame[:] += np.sum(frame, axis=1)
 
         def merge(self, dest, src):
-            dest['counter'][:] += src['counter']
-            dest['sum_frame'][:] += src['sum_frame']
+            dest.counter[:] += src.counter
+            dest.sum_frame[:] += src.sum_frame
 
     counter = CounterUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=counter)
@@ -160,8 +160,8 @@ def test_bad_merge(lt_ctx):
             self.results.pixelsum[:] = np.sum(frame)
 
         def merge(self, dest, src):
-            # bad, because it just sets a key in dest, it doesn't copy over the data to dest
-            dest['pixelsum'] = src['pixelsum']
+            # bad, because it just sets an attribute in dest, it doesn't copy over the data to dest
+            dest.pixelsum = src.pixelsum
 
     with pytest.raises(TypeError):
         bm = BadmergeUDF()
@@ -229,9 +229,9 @@ def test_extra_dimension_shape(lt_ctx):
             self.results.test3[:] += (1, 2)
 
         def merge(self, dest, src):
-            dest['test'][:] = src['test'][:]
-            dest['test2'][:] += src['test2'][:]
-            dest['test3'][:] += src['test3'][:]
+            dest.test[:] = src.test[:]
+            dest.test2[:] += src.test2[:]
+            dest.test3[:] += src.test3[:]
 
     extra = ExtraShapeUDF()
     res = lt_ctx.run_udf(dataset=dataset, udf=extra)
@@ -339,9 +339,9 @@ def test_roi_extra_dimension_shape(lt_ctx):
             self.results.test3[:] += (1, 2)
 
         def merge(self, dest, src):
-            dest['test'][:] = src['test'][:]
-            dest['test2'][:] += src['test2'][:]
-            dest['test3'][:] += src['test3'][:]
+            dest.test[:] = src.test[:]
+            dest.test2[:] += src.test2[:]
+            dest.test3[:] += src.test3[:]
 
     extra = ExtraShapeUDF()
     roi = _mk_random(size=dataset.shape.nav, dtype=bool)
@@ -460,7 +460,7 @@ def test_dtypes(lt_ctx, preferred_dtype, data_dtype, expected_dtype):
             assert self.results.dataset_dtype.dtype == self.meta.dataset_dtype
 
         def merge(self, dest, src):
-            dest['dtype'][:] = src['dtype'][:]
+            dest.dtype[:] = src.dtype[:]
 
     if expected_dtype is None:
         expected_dtype = np.result_type(preferred_dtype, data_dtype)
@@ -501,7 +501,7 @@ class ReshapedViewUDF(UDF):
         flat_buf[:] = 1
 
     def merge(self, dest, src):
-        dest["sigbuf"][:] = src["sigbuf"][:]
+        dest.sigbuf[:] = src.sigbuf[:]
 
     def get_backends(self):
         return ('numpy', 'cupy')

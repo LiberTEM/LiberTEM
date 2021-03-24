@@ -27,10 +27,10 @@ class PixelsumBaseUDF(UDF):
         }
 
     def merge(self, dest, src):
-        dest['pixelsum_nav_raw'][:] += src['pixelsum_nav_raw']
-        dest['pixelsum_sig_raw'][:] += src['pixelsum_sig_raw']
-        dest['pixelsum_nav'][:] += src['pixelsum_nav']
-        dest['pixelsum_sig'][:] += src['pixelsum_sig']
+        dest.pixelsum_nav_raw[:] += src.pixelsum_nav_raw
+        dest.pixelsum_sig_raw[:] += src.pixelsum_sig_raw
+        dest.pixelsum_nav[:] += src.pixelsum_nav
+        dest.pixelsum_sig[:] += src.pixelsum_sig
 
 
 class PixelsumPartitionUDF(PixelsumBaseUDF):

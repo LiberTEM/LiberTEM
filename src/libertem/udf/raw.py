@@ -59,4 +59,4 @@ class PickUDF(UDF):
         # We receive full-size buffers from each node that
         # contributes at least one frame and rely on the rest being filled
         # with zeros correctly.
-        dest['intensity'][:] += src['intensity']
+        dest.intensity[:] += src.intensity

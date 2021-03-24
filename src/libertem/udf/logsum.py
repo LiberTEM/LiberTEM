@@ -31,7 +31,7 @@ class LogsumUDF(UDF):
 
     def merge(self, dest, src):
         ""
-        dest['logsum'][:] += src['logsum'][:]
+        dest.logsum[:] += src.logsum[:]
 
     def process_frame(self, frame):
         ""

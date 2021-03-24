@@ -10,8 +10,10 @@ from libertem.executor.inline import InlineJobExecutor
 # to run it in a separate background thread since using Numba
 # can hang when used directly in a GMS Python background thread
 def main():
-    # The distributed executor currently doesn't work since
-    # multiprocessing seems to run into issues.
+    # Starting a multiprocess local `Context` from within GMS currently doesn't
+    # work since multiprocessing seems to run into issues. This example shows
+    # how to use an `InlineJobExecutor` instead. Alternatively you can connect
+    # to an external cluster, see digital-micrograph-cluster.py for an example.
     with api.Context(executor=InlineJobExecutor()) as ctx:
         ds = ctx.load(
             "RAW",

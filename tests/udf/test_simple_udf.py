@@ -10,6 +10,8 @@ from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
+from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.sum import SumUDF
 
 from utils import _mk_random, ValidationUDF
 
@@ -140,9 +142,9 @@ def test_kind_single(lt_ctx):
     assert np.allclose(res['sum_frame'].data, np.sum(data, axis=(0, 1, 3)))
 
 
-def test_bad_merge(lt_ctx):
+def test_bad_merge_now_actually_good(lt_ctx):
     """
-    Test bad example of updating buffer
+    Test previously bad example of updating buffer
     """
     data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
@@ -160,12 +162,36 @@ def test_bad_merge(lt_ctx):
             self.results.pixelsum[:] = np.sum(frame)
 
         def merge(self, dest, src):
-            # bad, because it just sets an attribute in dest, it doesn't copy over the data to dest
+            # this used not to work, now it should:
             dest.pixelsum = src.pixelsum
 
-    with pytest.raises(TypeError):
-        bm = BadmergeUDF()
-        lt_ctx.run_udf(dataset=dataset, udf=bm)
+    bm = BadmergeUDF()
+    assert np.allclose(
+        lt_ctx.run_udf(dataset=dataset, udf=bm)['pixelsum'],
+        lt_ctx.run_udf(dataset=dataset, udf=SumSigUDF())['intensity'],
+    )
+
+
+def test_plusequal_without_slice_assignment(lt_ctx, default_raw):
+    class SigNoSlicePLusEqual(UDF):
+        def get_result_buffers(self):
+            return {
+                'sum': self.buffer(
+                    kind="sig", dtype="float32"
+                )
+            }
+
+        def process_frame(self, frame):
+            self.results.sum += frame
+
+        def merge(self, dest, src):
+            dest.sum += src.sum
+
+    bm = SigNoSlicePLusEqual()
+    assert np.allclose(
+        lt_ctx.run_udf(dataset=default_raw, udf=bm)['sum'],
+        lt_ctx.run_udf(dataset=default_raw, udf=SumUDF())['intensity'],
+    )
 
 
 def test_no_default_merge(lt_ctx):

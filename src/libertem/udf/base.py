@@ -196,10 +196,9 @@ class ReadOnlyAttrMapping:
 
     def __setattr__(self, k, v):
         if k in ['_dict']:
-            return super().__setattr__(k, v)
-        # FIXME: can we convert to array slice assignment instead of throwing error?
-        raise TypeError("can't set attributes on `ReadOnlyAttrMapping`"
-                        " (hint: use `.attr[:]` to change array contents instead)")
+            super().__setattr__(k, v)
+        else:
+            self._dict[k][:] = v
 
     def __getitem__(self, k):
         warnings.warn(
@@ -249,12 +248,10 @@ class UDFData:
 
     def __setattr__(self, k, v):
         if not k.startswith("_"):
-            raise AttributeError(
-                "cannot re-assign attribute %s, did you mean `.%s[:] = ...`?" % (
-                    k, k
-                )
-            )
-        super().__setattr__(k, v)
+            # convert UDFData.some_attr = something to array slice assignment
+            getattr(self, k)[:] = v
+        else:
+            super().__setattr__(k, v)
 
     def _get_view_or_data(self, k):
         if k in self._views:
@@ -584,33 +581,47 @@ class UDFBase:
             raise TypeError("UDF should implement one of the `process_*` methods")
         return method
 
+    def _check_results(self, decl, arr, name):
+        """
+        Check results in `arr` for buffer `name` for consistency with the
+        declaration in `decl`.
+
+        1) All returned buffers need to be declared
+        2) Private buffers can't be returned from `get_results`
+        3) The `dtype` of `arr` needs to be compatible with the declared `dtype`
+        """
+        if name not in decl:
+            raise UDFException(
+                "buffer '%s' is not declared in `get_result_buffers` "
+                "(hint: `self.buffer(..., use='result_only')`" % name
+            )
+        buf_decl = decl[name]
+        if buf_decl.use == "private":
+            raise UDFException("Don't return `use='private'` buffers from `get_results`")
+        if np.dtype(arr.dtype).kind != np.dtype(buf_decl.dtype).kind:
+            raise UDFException(
+                "the returned ndarray '%s' has a different dtype kind (%s) "
+                "than declared (%s)" % (
+                    name, arr.dtype, buf_decl.dtype
+                )
+            )
+
     def _do_get_results(self):
         results_tmp = self.get_results()
         decl = self.get_result_buffers()
 
         # include any results that were not explicitly included, but have non-private `use`:
-        for k, v in decl.items():
-            if k not in results_tmp and v.use is None:
-                results_tmp[k] = getattr(self.results, k)
+        results_tmp.update({
+            k: getattr(self.results, k)
+            for k, v in decl.items()
+            if k not in results_tmp and v.use is None
+        })
 
         # wrap numpy results into `ResultBuffer`s:
         results = {}
         for name, arr in results_tmp.items():
-            if name not in decl:
-                raise UDFException(
-                    "buffer '%s' is not declared in `get_result_buffers` "
-                    "(hint: `self.buffer(..., use='result_only')`" % name
-                )
+            self._check_results(decl, arr, name)
             buf_decl = decl[name]
-            if buf_decl.use == "private":
-                raise UDFException("Don't return `use='private'` buffers from `get_results`")
-            if np.dtype(arr.dtype).kind != np.dtype(buf_decl.dtype).kind:
-                raise UDFException(
-                    "the returned ndarray '%s' has a different dtype kind (%s) "
-                    "than declared (%s)" % (
-                        name, arr.dtype, buf_decl.dtype
-                    )
-                )
             buf = PreallocBufferWrapper(
                 kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
                 dtype=buf_decl.dtype,

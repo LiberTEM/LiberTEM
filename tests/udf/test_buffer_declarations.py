@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
 from libertem.udf.base import UDF
 from libertem.common.buffers import BufferWrapper
@@ -334,3 +335,22 @@ def test_get_results_nav_with_roi_full_shape(lt_ctx, default_raw):
         results['result_only'].data[roi]
     )
     assert np.allclose(results['result_only'].data[~roi], 0)
+
+
+class OldDictMergeAccess(UDF):
+    def get_result_buffers(self):
+        return {
+            'default': self.buffer(kind='nav', dtype=np.float32),
+        }
+
+    def process_frame(self, frame):
+        self.results.default[:] = np.sum(frame)
+
+    def merge(self, dest, src):
+        dest['default'][:] += src['default'][:]
+
+
+def test_warning_for_dict_access(lt_ctx, default_raw):
+    udf = OldDictMergeAccess()
+    with pytest.warns(UseDiscouragedWarning):
+        results = lt_ctx.run_udf(dataset=default_raw, udf=udf)

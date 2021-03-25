@@ -1,22 +1,31 @@
+import sys
+import os
+import multiprocessing
 import threading
 
 import numpy as np
 
 from libertem import api
-from libertem.executor.inline import InlineJobExecutor
 
-# This example uses an InlineJobExecutor, which is convenient for testing,
-# smaller processing tasks or special cases that benefit from threading.
-# Alternatively you can connect to an external cluster (see
-# digital-micrograph-cluster.py) or start a local cluster each time the script
-# is run (see digital-micrograph-local.py).
+# This example starts a local cluster each time the script is run. This can be
+# time-consuming. Using an external cluster (see digital-micrograph-cluster.py)
+# or using the InlineJobExecutor (see digital-micrograph-inline.py) can speed up
+# script execution.
+
+# Change to a writable folder since Dask.Distributed uses the working directory
+# as a default for scratch space, and GMS runs in C:\Windows\system32 by default.
+os.chdir(os.environ['USERPROFILE'])
+
+# Since the interpreter is embedded, we have to set the Python executable.
+# Otherwise we'd spawn new instances of Digital Micrograph instead of workers.
+multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
 
 
 # The workload is wrapped into a `main()` function
 # to run it in a separate background thread since using Numba
 # can hang when used directly in a GMS Python background thread
 def main():
-    with api.Context(executor=InlineJobExecutor()) as ctx:
+    with api.Context() as ctx:
         ds = ctx.load(
             "RAW",
             path=r"C:\Users\Dieter\testfile-32-32-32-32-float32.raw",

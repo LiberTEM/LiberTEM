@@ -67,7 +67,7 @@ class NoAllocateResultsUDF(UDF):
     def get_results(self):
         return {
             'buf1': self.results.buf1,
-            'buf2': np.array(self.results.buf1) + 1,
+            'buf2': self.results.buf1 + 1,
         }
 
 
@@ -98,7 +98,7 @@ class UnifyResultTypesUDF(UDF):
     def get_results(self):
         return {
             'buf1': self.results.buf1,
-            'buf2': np.array(self.results.buf1) + 1,
+            'buf2': self.results.buf1 + 1,
         }
 
 

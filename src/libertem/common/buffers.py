@@ -173,7 +173,7 @@ class BufferWrapper(object):
 
             .. versionadded:: 0.6.0
 
-        use : "private", "reault_only" or None
+        use : "private", "result_only" or None
             If you specify :code:`"private"` here, the result will only be made available
             to internal functions, like :meth:`process_frame`, :meth:`merge` or
             :meth:`get_results`. It will not be available to the user of the UDF, which means

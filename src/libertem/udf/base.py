@@ -181,7 +181,7 @@ class UDFMeta:
         return self._threads_per_worker
 
 
-class ReadOnlyAttrMapping:
+class MergeAttrMapping:
     def __init__(self, dict_input):
         self._dict = dict_input
 
@@ -284,7 +284,7 @@ class UDFData:
         return dict(self.items())
 
     def get_proxy(self):
-        return ReadOnlyAttrMapping({
+        return MergeAttrMapping({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
             for k, v in self.items()
             if v and v.has_data()
@@ -757,7 +757,7 @@ class UDF(UDFBase):
             self._requires_custom_merge = any(buffer.kind != 'nav' for buffer in buffers.values())
         return self._requires_custom_merge
 
-    def merge(self, dest: Dict[str, np.array], src: Dict[str, np.array]):
+    def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
         """
         Merge a partial result `src` into the current global result `dest`.
 
@@ -769,16 +769,16 @@ class UDF(UDFBase):
         ----------
 
         dest
-            global results; dictionary mapping the buffer name (from `get_result_buffers`)
-            to a numpy array
+            global results; you can access the ndarrays for each buffer name (from `get_result_buffers`)
+            by attribute access (:code:`dest.your_buffer_name`)
 
         src
-            results for a partition; dictionary mapping the buffer name (from `get_result_buffers`)
-            to a numpy array
+            results for a partition; you can access the ndarrays for each buffer name (from `get_result_buffers`)
+            by attribute access (:code:`src.your_buffer_name`)
 
         Note
         ----
-        This function is running on the leader node, which means `self.results`
+        This function is running on the main node, which means `self.results`
         and `self.task_data` are not available.
         """
         if self.requires_custom_merge:
@@ -797,10 +797,11 @@ class UDF(UDFBase):
 
         Note
         ----
-        You should try to return the values with uniform result types,
-        so the :code:`dict` should map from `str` buffer names to `BufferWrapper`.
-        To support processing with `roi` set, use the `BufferWrappe.raw_data`
-        as a basis for your derived values.
+        You should return all values as numpy arrays, they will be wrapped
+        in `BufferWrapper` instances before they are returned to the user.
+
+        See the :ref:`udf post processing` section in the documentation for details
+        and examples.
 
         Returns
         -------

@@ -91,6 +91,8 @@ be calculated.
         sl = c.get(key=tile_slice, transpose=False)
         self.results.corr[:] += sl.dot(tile_t).T
 
+.. _`udf post processing`:
+
 Post-processing
 ---------------
 

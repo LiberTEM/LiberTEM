@@ -347,10 +347,29 @@ class OldDictMergeAccess(UDF):
         self.results.default[:] = np.sum(frame)
 
     def merge(self, dest, src):
-        dest['default'][:] += src['default'][:]
+        dest['default'][:] = src['default'][:]
 
 
-def test_warning_for_dict_access(lt_ctx, default_raw):
+def test_warning_for_dict_access_merge(lt_ctx, default_raw):
     udf = OldDictMergeAccess()
     with pytest.warns(UseDiscouragedWarning):
-        results = lt_ctx.run_udf(dataset=default_raw, udf=udf)
+        lt_ctx.run_udf(dataset=default_raw, udf=udf)
+
+
+class OldUDFDataDictAccess(UDF):
+    def get_result_buffers(self):
+        return {
+            'default': self.buffer(kind='nav', dtype=np.float32),
+        }
+
+    def process_frame(self, frame):
+        self.results.default[:] = np.sum(frame)
+
+    def postprocess(self):
+        self.results['default'].raw_data
+
+
+def test_warning_for_dict_access_postprocess(lt_ctx, default_raw):
+    udf = OldUDFDataDictAccess()
+    with pytest.warns(UseDiscouragedWarning):
+        lt_ctx.run_udf(dataset=default_raw, udf=udf)

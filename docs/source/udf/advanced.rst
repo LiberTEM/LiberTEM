@@ -189,6 +189,20 @@ access to a version of the result that is suitable for visualization, even if
 a :code:`roi` was used, but still allow access to the raw result using
 :attr:`BufferWrapper.raw_data` attribute.
 
+The detailed rules for buffer declarations, :code:`get_result_buffers` and :code:`get_results` are:
+
+1) All buffers are declared in :code:`get_result_buffers`
+2) If a buffer is only computed in :code:`get_results`, it should be marked via
+   :code:`use='result_only'` so it isn't allocated on workers
+3) If a buffer is only used as intermediary result, it should be marked via :code:`use='private'`
+4) Not including a buffer in :code:`get_results` means it will either be passed on
+   unchanged, or dropped if :code:`use='private'`
+5) It's an error to omit an :code:`use='result_only'` buffer in :code:`get_results`
+6) It's an error to include a :code:`use='private'` buffer in :code:`get_results`
+7) All results are returned from :code:`Context.run_udf` as :code:`BufferWrapper` instances
+8) By default, if :code:`get_results` is not implemented, :code:`use='private'` buffers are dropped,
+   and others are passed through unchanged
+
 .. versionadded:: 0.7.0
    :meth:`UDF.get_results` and the :code:`use` argument for :meth:`UDF.buffer` were added.
 

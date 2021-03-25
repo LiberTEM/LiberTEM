@@ -769,12 +769,14 @@ class UDF(UDFBase):
         ----------
 
         dest
-            global results; you can access the ndarrays for each buffer name (from `get_result_buffers`)
-            by attribute access (:code:`dest.your_buffer_name`)
+            global results; you can access the ndarrays for each
+            buffer name (from `get_result_buffers`) by attribute access
+            (:code:`dest.your_buffer_name`)
 
         src
-            results for a partition; you can access the ndarrays for each buffer name (from `get_result_buffers`)
-            by attribute access (:code:`src.your_buffer_name`)
+            results for a partition; you can access the ndarrays for each
+            buffer name (from `get_result_buffers`) by attribute access
+            (:code:`src.your_buffer_name`)
 
         Note
         ----

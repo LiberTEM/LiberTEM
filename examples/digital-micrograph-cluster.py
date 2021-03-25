@@ -5,11 +5,12 @@ import numpy as np
 from libertem import api
 from libertem.executor.dask import DaskJobExecutor
 
-# This example connects to an external Dask.Distributed cluster since starting a
-# local cluster from within GMS currently doesn't work. See
-# https://libertem.github.io/LiberTEM/usage.html#cluster on how to start an
-# external cluster. Alternatively, you can use an InlineJobExecutor, see example
-# digital-micrograph-inline.py
+# This example connects to an external Dask.Distributed cluster. See
+# https://libertem.github.io/LiberTEM/usage.html#cluster on how to start such a
+# cluster. This method gives the fastest script execution in GMS for most use
+# cases. Alternatively, you can use an InlineJobExecutor (see
+# digital-micrograph-inline.py) or start a local cluster each time the script is
+# run (see digital-micrograph-local.py).
 
 
 # The workload is wrapped into a `main()` function

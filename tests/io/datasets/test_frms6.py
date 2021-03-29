@@ -230,7 +230,8 @@ def test_correction(default_frms6, lt_ctx, with_roi):
 @pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     udf = ValidationUDF(
-        reference=reshaped_view(default_frms6_raw, (-1, *tuple(default_frms6_uncorr.shape.sig)))
+        reference=reshaped_view(default_frms6_raw, (-1, *tuple(default_frms6_uncorr.shape.sig))),
+        validation_function=lambda a, b: np.all(a == b),
     )
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr)
 
@@ -242,7 +243,10 @@ def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
         size=tuple(default_frms6_uncorr.shape.nav),
         p=[0.001, 0.999]
     )
-    udf = ValidationUDF(reference=default_frms6_raw[roi])
+    udf = ValidationUDF(
+        reference=default_frms6_raw[roi],
+        validation_function=lambda a, b: np.all(a == b),
+    )
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr, roi=roi)
 
 

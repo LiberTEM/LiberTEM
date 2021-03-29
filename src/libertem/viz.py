@@ -22,7 +22,7 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
 
     valid_mask = (result != 0) & ~np.isnan(result)
     if valid_mask.sum() == 0:
-        return norm_cls(vmin=0, vmax=0)  # all-NaN or all-zero
+        return norm_cls(vmin=1, vmax=1)  # all-NaN or all-zero
 
     if vmin is None:
         vmin = np.min(result[valid_mask])

@@ -109,7 +109,8 @@ def test_read(default_k2is):
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     udf = ValidationUDF(
-        reference=reshaped_view(default_k2is_raw, (-1, *tuple(default_k2is.shape.sig)))
+        reference=reshaped_view(default_k2is_raw, (-1, *tuple(default_k2is.shape.sig))),
+        validation_function=lambda a, b: np.all(a == b),
     )
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is)
 
@@ -121,7 +122,10 @@ def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
         size=tuple(default_k2is.shape.nav),
         p=[0.5, 0.5]
     )
-    udf = ValidationUDF(reference=default_k2is_raw[roi])
+    udf = ValidationUDF(
+        reference=default_k2is_raw[roi],
+        validation_function=lambda a, b: np.all(a == b),
+    )
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is, roi=roi)
 
 

@@ -17,14 +17,18 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
     # TODO: only normalize across the area where we already have values
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
+
     result = result.astype(np.float32)
+
+    valid_mask = (result != 0) & ~np.isnan(result)
+    if valid_mask.sum() == 0:
+        return norm_cls(vmin=0, vmax=0)  # all-NaN or all-zero
+
     if vmin is None:
-        vmin = 0
-        result_ne_zero = result[result != 0]
-        if len(result_ne_zero) > 0:
-            vmin = np.min(result_ne_zero)
+        vmin = np.min(result[valid_mask])
     if vmax is None:
-        vmax = np.max(result)
+        vmax = np.max(result[valid_mask])
+
     return norm_cls(vmin=vmin, vmax=vmax)
 
 
@@ -87,7 +91,8 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
     if colormap is None:
         colormap = cm.gist_earth
     norm = _get_norm(result, norm_cls=cnorm, vmin=vmin, vmax=vmax)
-    normalized = norm(result)
+    shape = result.shape
+    normalized = norm(result.reshape((-1,))).reshape(shape)
     colored = colormap(normalized, bytes=True)
     return colored
 

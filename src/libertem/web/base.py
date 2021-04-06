@@ -1,7 +1,7 @@
 import logging
 import asyncio
 
-from libertem.utils.async_utils import run_blocking
+from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.analysis.base import AnalysisResultSet
 from .messages import Message
@@ -25,7 +25,7 @@ def log_message(message, exception=False):
 
 async def result_images(results, save_kwargs=None):
     futures = [
-        run_blocking(result.get_image, save_kwargs)
+        sync_to_async(result.get_image, save_kwargs)
         for result in results
     ]
 

@@ -1,13 +1,13 @@
 import concurrent
 import functools
 import asyncio
-import threading
-import queue
 from typing import Optional
 from contextlib import contextmanager
 
 from libertem.utils.threading import set_num_threads
-from libertem.utils.async_utils import adjust_event_loop_policy
+from libertem.utils.async_utils import (
+    adjust_event_loop_policy, sync_to_async, async_generator_eager
+)
 
 
 class ExecutorError(Exception):
@@ -196,6 +196,12 @@ class JobExecutor(object):
         """
         return self
 
+    def ensure_async(self, pool=None):
+        """
+        Returns an asynchronous executor; by default just wrap into `AsyncAdapter`.
+        """
+        return AsyncAdapter(wrapped=self, pool=pool)
+
 
 class AsyncJobExecutor(object):
     async def run_tasks(self, tasks, cancel_id):
@@ -271,120 +277,11 @@ class AsyncJobExecutor(object):
     def ensure_sync(self):
         raise NotImplementedError()
 
-
-async def sync_to_async(fn, pool=None):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(pool, fn)
-
-
-async def async_generator(gen, pool=None):
-    def inner_next(gen):
-        try:
-            return next(gen)
-        except StopIteration:
-            raise MyStopIteration()
-
-    loop = asyncio.get_event_loop()
-    while True:
-        try:
-            item = await loop.run_in_executor(pool, inner_next, gen)
-            yield item
-        except MyStopIteration:
-            break
-
-
-class GenThread(threading.Thread):
-    def __init__(self, gen, q, *args, **kwargs):
+    def ensure_async(self, pool=None):
         """
-        Wrap a generator and execute it in a thread, putting the generated
-        items into a queue.
-
-        Parameters
-        ----------
-        gen : iterable
-            The generator to wrap
-
-        q : queue.Queue
-            The result queue where the generated items will be put. The calling
-            thread should consume the items in this queue.
-
-        args, kwargs
-            will be passed to :code:`Thread.__init__`
+        Returns an asynchronous executor; by default just return `self`.
         """
-        super().__init__(*args, **kwargs)
-        self._gen = gen
-        self._q = q
-        self._should_stop = threading.Event()
-        self.ex = None
-
-    def run(self):
-        try:
-            # looping over `self._gen` can take some time for each item,
-            # this is where the "real" work happens:
-            for item in self._gen:
-                self._q.put(item)
-                if self._should_stop.is_set():
-                    break
-        except Exception as e:
-            self.ex = e
-        finally:
-            self._q.put(MyStopIteration)
-        return
-
-    def get_exception(self):
-        return self.ex
-
-    def stop(self):
-        self._should_stop.set()
-
-
-async def async_generator_eager(gen, pool=None):
-    """
-    Convert the synchronous generator `gen` to an async generator. Eagerly run
-    `gen` in a thread and provide the result in a queue. This means that `gen`
-    can run ahead of the asynchronous generator that is returned.
-
-    Parameters:
-    -----------
-
-    gen : iterable
-        The generator to run
-
-    pool: ThreadPoolExecutor
-        The thread pool to run the generator in, can be None to create an
-        ad-hoc thread
-    """
-    q = queue.Queue()
-    t = GenThread(gen, q)
-
-    loop = asyncio.get_event_loop()
-
-    t.start()
-    try:
-        while True:
-            # get a single item from the result queue:
-            item = await loop.run_in_executor(pool, q.get)
-
-            # MyStopIteration is a canary value to signal that the inner
-            # generator has finished running
-            if item is MyStopIteration:
-                # propagate any uncaught exception in the wrapped generator to the calling thread:
-                ex = t.get_exception()
-                if ex is not None:
-                    raise ex
-                break
-            yield item
-    finally:
-        t.stop()  # in case our thread raises an exception, we may need to stop the `GenThread`:
-        t.join()
-
-
-class MyStopIteration(Exception):
-    """
-    TypeError: StopIteration interacts badly with generators
-    and cannot be raised into a Future
-    """
-    pass
+        return self
 
 
 class AsyncAdapter(AsyncJobExecutor):

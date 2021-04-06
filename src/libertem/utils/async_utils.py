@@ -1,24 +1,181 @@
-from functools import partial
 import sys
+import queue
 import asyncio
-
-import tornado
-import tornado.web
-import tornado.gen
-import tornado.websocket
-import tornado.ioloop
-import tornado.escape
-import tornado.ioloop
+import threading
+import functools
 
 
-async def run_blocking(fn, *args, **kwargs):
+async def sync_to_async(fn, pool=None, *args, **kwargs):
     """
-    run blocking function fn with args, kwargs in a thread and return a corresponding future
+    Run blocking function with `*args`, `**kwargs` in a thread pool.
+
+    Parameters
+    ----------
+    fn : callable
+        The blocking function to run in a background thread
+
+    pool : ThreadPoolExecutor or None
+        In which thread pool should the function be run? If `None`, we create a new one
+
+    *args, **kwargs
+        Passed on to `fn`
     """
-    return await tornado.ioloop.IOLoop.current().run_in_executor(None, partial(fn, *args, **kwargs))
+    loop = asyncio.get_event_loop()
+    fn = functools.partial(fn, *args, **kwargs)
+    return await loop.run_in_executor(pool, fn)
+
+
+async def async_generator(gen, pool=None):
+    def inner_next(gen):
+        try:
+            return next(gen)
+        except StopIteration:
+            raise MyStopIteration()
+
+    loop = asyncio.get_event_loop()
+    while True:
+        try:
+            item = await loop.run_in_executor(pool, inner_next, gen)
+            yield item
+        except MyStopIteration:
+            break
+
+
+def async_to_sync_generator(agen, pool=None):
+    q = queue.Queue()
+
+    def _wrap_gen(agen):
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            adjust_event_loop_policy()
+
+            async def _wrap_gen(agen):
+                try:
+                    async for result in agen:
+                        q.put(result)
+                finally:
+                    q.put(MyStopIteration)
+            loop.run_until_complete(_wrap_gen(agen))
+        except Exception as e:
+            q.put(e)
+
+    t = threading.Thread(target=_wrap_gen, args=(agen,))
+    t.start()
+    try:
+        while True:
+            res = q.get()
+            if res is MyStopIteration:
+                break
+            yield res
+
+        if q.qsize() > 0:
+            res = q.get()
+            if isinstance(res, Exception):
+                raise res  # TODO: re-raise in a better way?
+    finally:
+        t.join()
+
+
+class GenThread(threading.Thread):
+    def __init__(self, gen, q, *args, **kwargs):
+        """
+        Wrap a generator and execute it in a thread, putting the generated
+        items into a queue.
+
+        Parameters
+        ----------
+        gen : iterable
+            The generator to wrap
+
+        q : queue.Queue
+            The result queue where the generated items will be put. The calling
+            thread should consume the items in this queue.
+
+        args, kwargs
+            will be passed to :code:`Thread.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        self._gen = gen
+        self._q = q
+        self._should_stop = threading.Event()
+        self.ex = None
+
+    def run(self):
+        try:
+            # looping over `self._gen` can take some time for each item,
+            # this is where the "real" work happens:
+            for item in self._gen:
+                self._q.put(item)
+                if self._should_stop.is_set():
+                    break
+        except Exception as e:
+            self.ex = e
+        finally:
+            self._q.put(MyStopIteration)
+        return
+
+    def get_exception(self):
+        return self.ex
+
+    def stop(self):
+        self._should_stop.set()
+
+
+async def async_generator_eager(gen, pool=None):
+    """
+    Convert the synchronous generator `gen` to an async generator. Eagerly run
+    `gen` in a thread and provide the result in a queue. This means that `gen`
+    can run ahead of the asynchronous generator that is returned.
+
+    Parameters:
+    -----------
+
+    gen : iterable
+        The generator to run
+
+    pool: ThreadPoolExecutor
+        The thread pool to run the generator in, can be None to create an
+        ad-hoc thread
+    """
+    q = queue.Queue()
+    t = GenThread(gen, q)
+
+    loop = asyncio.get_event_loop()
+
+    t.start()
+    try:
+        while True:
+            # get a single item from the result queue:
+            item = await loop.run_in_executor(pool, q.get)
+
+            # MyStopIteration is a canary value to signal that the inner
+            # generator has finished running
+            if item is MyStopIteration:
+                # propagate any uncaught exception in the wrapped generator to the calling thread:
+                ex = t.get_exception()
+                if ex is not None:
+                    raise ex
+                break
+            yield item
+    finally:
+        t.stop()  # in case our thread raises an exception, we may need to stop the `GenThread`:
+        t.join()
+
+
+class MyStopIteration(Exception):
+    """
+    TypeError: StopIteration interacts badly with generators
+    and cannot be raised into a Future
+    """
+    pass
 
 
 def adjust_event_loop_policy():
+    """
+    Set an appropriate event loop policy on Windows. The new one from Python 3.8 doesn't
+    work for us by default, so call this as early as possible!
+    """
     # stolen from ipykernel:
     if sys.platform.startswith("win") and sys.version_info >= (3, 8):
         try:

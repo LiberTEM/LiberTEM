@@ -17,6 +17,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
+from libertem.utils.async_utils import async_to_sync_generator
 
 
 log = logging.getLogger(__name__)
@@ -1396,36 +1397,39 @@ class UDFRunner:
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
-        if progress:
-            import tqdm
-            t = tqdm.tqdm(total=len(tasks))
-        for part_results, task in executor.run_tasks(tasks, cancel_id):
-            if progress:
-                t.update(1)
-            for results, udf in zip(part_results, self._udfs):
-                udf.set_views_for_partition(task.partition)
-                udf.merge(
-                    dest=udf.results.get_proxy(),
-                    src=results.get_proxy()
-                )
+        agen = self.run_for_dataset_async(
+            dataset=dataset,
+            executor=executor.ensure_async(),
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+            cancel_id=cancel_id,
+        )
 
-        if progress:
-            t.close()
-        for udf in self._udfs:
-            udf.clear_views()
+        # FIXME: pool? not needed, as we don't rapidly call this function??
+        for res in async_to_sync_generator(agen):
+            pass
 
-        return [
-            udf._do_get_results()
-            for udf in self._udfs
-        ]
+        # `res` is a defined name, because `run_for_dataset_async` yields at least one
+        # result, or throws an `Exception`.
+        return res
 
     async def run_for_dataset_async(
-            self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None):
+        self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
+        progress=False,
+    ):
         tasks = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends,
         )
 
+        if progress:
+            import tqdm
+            t = tqdm.tqdm(total=len(tasks))
+
         async for part_results, task in executor.run_tasks(tasks, cancel_id):
+            if progress:
+                t.update(1)
             for results, udf in zip(part_results, self._udfs):
                 udf.set_views_for_partition(task.partition)
                 udf.merge(
@@ -1445,6 +1449,9 @@ class UDFRunner:
                 udf._do_get_results()
                 for udf in self._udfs
             )
+
+        if progress:
+            t.close()
 
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

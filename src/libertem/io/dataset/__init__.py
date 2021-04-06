@@ -2,7 +2,7 @@ import typing
 import importlib
 
 from libertem.io.dataset.base import DataSetException
-from libertem.utils.async_utils import run_blocking
+from libertem.utils.async_utils import sync_to_async
 
 
 filetypes = {
@@ -60,7 +60,7 @@ def load(filetype, *args, enable_async=False, executor, **kwargs):
 
     async def _init_async():
         ds = cls(*args, **kwargs)
-        ds = await run_blocking(ds.initialize, executor=executor.ensure_sync())
+        ds = await sync_to_async(ds.initialize, executor=executor.ensure_sync())
         workers = await executor.get_available_workers()
         ds.set_num_cores(len(workers))
         await executor.run_function(ds.check_valid)

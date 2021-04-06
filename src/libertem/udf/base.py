@@ -17,7 +17,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
-from libertem.utils.async_utils import async_generator_eager, async_generator
+from libertem.utils.async_utils import async_generator_eager
 
 
 log = logging.getLogger(__name__)
@@ -1411,7 +1411,7 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         if progress:
-            from tqdm.autonotebook import tqdm
+            from tqdm import tqdm
             t = tqdm(total=len(tasks))
 
         executor = executor.ensure_sync()

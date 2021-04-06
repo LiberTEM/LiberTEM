@@ -17,7 +17,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
-from libertem.utils.async_utils import async_to_sync_generator
+from libertem.utils.async_utils import async_generator_eager, async_generator
 
 
 log = logging.getLogger(__name__)
@@ -1391,43 +1391,32 @@ class UDFRunner:
 
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None):
+        for res in self.run_for_dataset_sync(
+            dataset=dataset,
+            executor=executor.ensure_sync(),
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+        ):
+            pass
+        return res
+
+    def run_for_dataset_sync(self, dataset: DataSet, executor,
+                        roi=None, progress=False, corrections=None, backends=None):
         tasks = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends,
         )
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
-        agen = self.run_for_dataset_async(
-            dataset=dataset,
-            executor=executor.ensure_async(),
-            roi=roi,
-            progress=progress,
-            corrections=corrections,
-            backends=backends,
-            cancel_id=cancel_id,
-        )
-
-        # FIXME: pool? not needed, as we don't rapidly call this function??
-        for res in async_to_sync_generator(agen):
-            pass
-
-        # `res` is a defined name, because `run_for_dataset_async` yields at least one
-        # result, or throws an `Exception`.
-        return res
-
-    async def run_for_dataset_async(
-        self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
-        progress=False,
-    ):
-        tasks = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends,
-        )
-
         if progress:
-            import tqdm
-            t = tqdm.tqdm(total=len(tasks))
+            from tqdm.autonotebook import tqdm
+            t = tqdm(total=len(tasks))
 
-        async for part_results, task in executor.run_tasks(tasks, cancel_id):
+        executor = executor.ensure_sync()
+
+        for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
             for results, udf in zip(part_results, self._udfs):
@@ -1452,6 +1441,22 @@ class UDFRunner:
 
         if progress:
             t.close()
+
+    async def run_for_dataset_async(
+        self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
+        progress=False,
+    ):
+        gen = self.run_for_dataset_sync(
+            dataset=dataset,
+            executor=executor.ensure_sync(),
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+        )
+
+        async for res in async_generator_eager(gen):
+            yield res
 
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

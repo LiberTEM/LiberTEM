@@ -41,33 +41,69 @@ async def async_generator(gen, pool=None):
             break
 
 
-def async_to_sync_generator(agen, pool=None):
-    q = queue.Queue()
+class AsyncGenToQueueThread(threading.Thread):
+    def __init__(self, agen, q, *args, **kwargs):
+        """
+        Wrap an async generator and execute it in a thread, putting the generated
+        items into a queue.
 
-    def _wrap_gen(agen):
+        Parameters
+        ----------
+        agen : iterable
+            The async generator to wrap
+
+        q : queue.Queue
+            The result queue where the generated items will be put. The calling
+            thread should consume the items in this queue.
+
+        args, kwargs
+            will be passed to :code:`Thread.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        self._agen = agen
+        self._q = q
+        self._should_stop = threading.Event()
+        self.ex = None
+
+    def run(self):
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             adjust_event_loop_policy()
 
             async def _wrap_gen(agen):
-                try:
-                    async for result in agen:
-                        q.put(result)
-                finally:
-                    q.put(MyStopIteration)
-            loop.run_until_complete(_wrap_gen(agen))
+                async for item in agen:
+                    self._q.put(item)
+                    if self._should_stop.is_set():
+                        break
+            loop.run_until_complete(_wrap_gen(self._agen))
         except Exception as e:
-            q.put(e)
+            self.ex = e
+        finally:
+            self._q.put(MyStopIteration)
+        return
 
-    t = threading.Thread(target=_wrap_gen, args=(agen,))
+    def get_exception(self):
+        return self.ex
+
+    def stop(self):
+        self._should_stop.set()
+
+
+def async_to_sync_generator(agen, pool=None):
+    q = queue.Queue()
+    t = AsyncGenToQueueThread(agen, q)
     t.start()
     try:
         while True:
-            res = q.get()
-            if res is MyStopIteration:
+            item = q.get()
+            if item is MyStopIteration:
+                # propagate any uncaught exception in the wrapped generator to the calling thread:
+                ex = t.get_exception()
+                if ex is not None:
+                    raise ex
                 break
-            yield res
+            yield item
 
         if q.qsize() > 0:
             res = q.get()
@@ -77,7 +113,7 @@ def async_to_sync_generator(agen, pool=None):
         t.join()
 
 
-class GenThread(threading.Thread):
+class SyncGenToQueueThread(threading.Thread):
     def __init__(self, gen, q, *args, **kwargs):
         """
         Wrap a generator and execute it in a thread, putting the generated
@@ -139,7 +175,7 @@ async def async_generator_eager(gen, pool=None):
         ad-hoc thread
     """
     q = queue.Queue()
-    t = GenThread(gen, q)
+    t = SyncGenToQueueThread(gen, q)
 
     loop = asyncio.get_event_loop()
 
@@ -159,7 +195,8 @@ async def async_generator_eager(gen, pool=None):
                 break
             yield item
     finally:
-        t.stop()  # in case our thread raises an exception, we may need to stop the `GenThread`:
+        # in case our thread raises an exception, we may need to stop the `SyncGenToQueueThread`:
+        t.stop()
         t.join()
 
 

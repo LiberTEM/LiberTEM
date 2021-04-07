@@ -14,7 +14,6 @@ class BQLivePlot(LivePlot):
         from bqplot import Figure, LinearScale, Axis, ColorScale
         from bqplot_image_gl import ImageGL
 
-
         scale_x = LinearScale(min=0, max=1)
         scale_y = LinearScale(min=0, max=1)
         scales = {'x': scale_x,

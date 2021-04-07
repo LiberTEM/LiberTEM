@@ -227,6 +227,11 @@ class BufferWrapper(object):
         self._update_roi_is_zero()
         self._ds_shape = dataset_shape
 
+    @property
+    def shape(self):
+        # precondition: _shape_for_kind has been called
+        return self._shape
+
     def _shape_for_kind(self, kind, orig_shape, roi_count=None):
         if self._kind == "nav":
             if roi_count is None:

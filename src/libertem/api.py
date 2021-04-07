@@ -1,4 +1,5 @@
 from typing import Union, Dict
+import html
 
 import numpy as np
 from libertem.corrections import CorrectionSet
@@ -577,6 +578,96 @@ class Context:
             backends=backends,
         )
         return results[0]
+
+    def display(self, dataset: DataSet, udf: UDF, roi=None):
+        """
+        Show information about the UDF in combination with the given DataSet.
+        """
+        class _UDFInfo:
+            def __init__(self, title, buffers):
+                self.title = title
+                self.buffers = buffers
+
+            def _repr_html_(self):
+                for buf in self.buffers.values():
+                    buf.set_shape_ds(dataset.shape, roi)
+
+                def _e(obj):
+                    return html.escape(str(obj))
+
+                rows = [
+                    "<tr>"
+                    f"<td>{_e(key)}</td>"
+                    f"<td>{_e(buf.kind)}</td>"
+                    f"<td>{_e(buf.extra_shape)}</td>"
+                    f"<td>{_e(buf.shape)}</td>"
+                    f"<td>{_e(buf.dtype)}</td>"
+                    "</tr>"
+                    for key, buf in self.buffers.items()
+                    if buf.use != "private"
+                ]
+                rows = "\n".join(rows)
+                general = f"""
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Processing method</th>
+                            <td>{_e(udf.get_method())}</td>
+                        </tr>
+                        <tr>
+                            <th>Compute Backends</th>
+                            <td>{_e(" ,".join(udf.get_backends()))}</td>
+                        </tr>
+                        <tr>
+                            <th>Preferred input dtype</th>
+                            <td>{_e(np.dtype(udf.get_preferred_input_dtype()))}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """
+                return f"""
+                <h2>{_e(self.title)}</h2>
+                <h3>General</h3>
+                {general}
+                <h3>Result types</h3>
+                <p>Note: these may vary with different data sets</p>
+                <table>
+                    <thead>
+                        <th>Name</th>
+                        <th>Kind</th>
+                        <th>Extra Shape</th>
+                        <th>Concrete Shape</th>
+                        <th>dtype</th>
+                    </thead>
+                    <tbody>
+                    {rows}
+                    </tbody>
+                </table>
+                """
+
+        from libertem.udf.base import UDFMeta
+
+        runner = UDFRunner([udf])
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=None,
+            dataset_dtype=dataset.dtype,
+            input_dtype=runner._get_dtype(
+                dataset.dtype,
+                corrections=None,
+            ),
+            corrections=None,
+        )
+
+        udf = udf.copy()
+        udf.set_meta(meta)
+        buffers = udf.get_result_buffers()
+
+        return _UDFInfo(
+            title=udf.__class__.__name__,
+            buffers=buffers,
+        )
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,
             progress: bool = False,

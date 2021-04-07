@@ -1,8 +1,5 @@
 import logging
 
-from bqplot import Figure, LinearScale, Axis, ColorScale
-from bqplot_image_gl import ImageGL
-
 from .base import LivePlot
 
 
@@ -14,6 +11,9 @@ class BQLivePlot(LivePlot):
             self, ds, udf, channel=None, postprocess=None,
     ):
         super().__init__(ds, udf, postprocess, channel)
+        from bqplot import Figure, LinearScale, Axis, ColorScale
+        from bqplot_image_gl import ImageGL
+
 
         scale_x = LinearScale(min=0, max=1)
         scale_y = LinearScale(min=0, max=1)

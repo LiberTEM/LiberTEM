@@ -1164,6 +1164,31 @@ class UDFRunner:
         self._udfs = udfs
         self._debug = debug
 
+    @classmethod
+    def inspect_udf(cls, udf, dataset, roi=None):
+        """
+        Return result buffer declarations for a given UDF/DataSet/roi combination
+        """
+        runner = UDFRunner([udf])
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=None,
+            dataset_dtype=dataset.dtype,
+            input_dtype=runner._get_dtype(
+                dataset.dtype,
+                corrections=None,
+            ),
+            corrections=None,
+        )
+
+        udf = udf.copy()
+        udf.set_meta(meta)
+        buffers = udf.get_result_buffers()
+        for buf in buffers.values():
+            buf.set_shape_ds(dataset.shape, roi)
+        return buffers
+
     def _get_dtype(self, dtype, corrections):
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)

@@ -1,5 +1,4 @@
 from typing import Union, Dict
-import html
 
 import numpy as np
 from libertem.corrections import CorrectionSet
@@ -20,6 +19,7 @@ from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
+from libertem.utils.async_utils import async_generator
 
 
 class Context:
@@ -495,13 +495,18 @@ class Context:
         )
         return analysis.get_udf_results(udf_results, roi)
 
-    def run_udf(self,
-                dataset: DataSet,
-                udf: UDF,
-                roi: np.ndarray = None,
-                corrections: CorrectionSet = None,
-                progress: bool = False,
-                backends=None) -> Dict[str, BufferWrapper]:
+    def run_udf(
+            self,
+            dataset: DataSet,
+            udf: UDF,
+            roi: np.ndarray = None,
+            corrections: CorrectionSet = None,
+            progress: bool = False,
+            backends=None,
+            plots=None,
+            sync=True,
+            iterate=False,
+    ) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -510,6 +515,10 @@ class Context:
 
         .. versionchanged:: 0.6.0
             Added the :code:`corrections` and :code:`backends` parameter
+
+        .. versionchanged:: 0.7.0
+            Added the :code:`plots`, :code:`sync`, and :code:`iterate` parameters,
+            and the ability to run multiple UDFs on the same data at the same time.
 
         Parameters
         ----------
@@ -534,15 +543,32 @@ class Context:
             Restrict the back-end to a subset of the capabilities of the UDF.
             This can be useful for testing hybrid UDFs.
 
+        plots : None or True or List[List[str]] or List[LivePlot]
+
+        sync : bool
+            By default, `run_udf` is a synchronous method. If `sync` is set to `False`,
+            it is awaitable instead; together with `iterate`, an asynchronous generator
+            will be returned.
+
+        iterate : bool
+            If :code:`iterate` is :code:`True`, a generator will be returned instead,
+            which yield partial results as they are computed.
+
         Returns
         -------
-        dict
+        dict or Tuple[dict] or Generator[Tuple[dict]]
             Return value of the UDF containing the result buffers of
             type :class:`libertem.common.buffers.BufferWrapper`. Note that a
             :class:`~libertem.common.buffers.BufferWrapper` can be used like
             a :class:`numpy.ndarray` in many cases because it implements
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
+
+            If a list of UDFs was passed in, the returned type is also
+            a List[dict[str,BufferWrapper]].
+
+            If :code:`iterate` is :code:`True`, a generator will be returned instead,
+            which yield partial results as they are computed.
 
         Examples
         --------
@@ -567,31 +593,163 @@ class Context:
         >>> result["intensity"].raw_data.shape
         (1,)
         """
+
+        fn = self._run_async
+        if sync:
+            fn = self._run_sync
+
+        return fn(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            corrections=corrections,
+            progress=progress,
+            backends=backends,
+            plots=plots,
+            iterate=iterate,
+        )
+
+    def _run_sync(
+            self,
+            dataset: DataSet,
+            udf: UDF,
+            roi: np.ndarray = None,
+            corrections: CorrectionSet = None,
+            progress: bool = False,
+            backends=None,
+            plots=None,
+            iterate=False,
+    ):
+        enable_plotting = bool(plots)
+
+        udf_is_list = isinstance(udf, (tuple, list))
+        if not udf_is_list:
+            udfs = [udf]
+        else:
+            udfs = udf
+
+        if enable_plotting:
+            plots = self._prepare_plots(udfs, dataset, plots)
+
         if corrections is None:
             corrections = dataset.get_correction_data()
-        results = UDFRunner([udf]).run_for_dataset(
+
+        def _run_sync_wrap():
+            result_iter = UDFRunner(udfs).run_for_dataset_sync(
+                dataset=dataset,
+                executor=self.executor,
+                roi=roi,
+                progress=progress,
+                corrections=corrections,
+                backends=backends,
+            )
+            for udf_results in result_iter:
+                yield udf_results
+                if enable_plotting:
+                    self._update_plots(plots, udfs, udf_results, force=False)
+            if enable_plotting:
+                self._update_plots(plots, udfs, udf_results, force=True)
+
+        if iterate:
+            return _run_sync_wrap()
+        else:
+            for udf_results in _run_sync_wrap():
+                pass
+            if udf_is_list:
+                return udf_results
+            else:
+                return udf_results[0]
+
+    def _run_async(
+            self,
+            dataset: DataSet,
+            udf: UDF,
+            roi: np.ndarray = None,
+            corrections: CorrectionSet = None,
+            progress: bool = False,
+            backends=None,
+            plots=None,
+            iterate=False,
+    ):
+        sync_generator = self._run_sync(
             dataset=dataset,
-            executor=self.executor,
+            udf=udf,
             roi=roi,
-            progress=progress,
             corrections=corrections,
+            progress=progress,
             backends=backends,
+            plots=plots,
+            iterate=True,
         )
-        return results[0]
+        udfres_iter = async_generator(sync_generator)
+
+        async def _run_async_wrap():
+            async for udf_results in udfres_iter:
+                pass
+            return udf_results
+
+        if iterate:
+            return udfres_iter
+        else:
+            return _run_async_wrap()
+
+    def _get_default_plot_chans(self, udfs, dataset):
+        from libertem.viz import get_plottable_channels
+        return [
+            get_plottable_channels(udf, dataset)
+            for udf in udfs
+        ]
+
+    def _prepare_plots(self, udfs, dataset, plots):
+        from libertem.viz.mpl import MPLLivePlot
+
+        # cases to consider:
+        # 1) plots is `True`: default plots of all eligible channels
+        # 2) plots is List[List[str]]: set channels from `plots`
+        # 3) plots is List[LivePlot]: use customized plots as they are
+
+        channels = None
+
+        # 1) plots is `True`: default plots of all eligible channels
+        if plots is True:
+            channels = self._get_default_plot_chans(udfs, dataset)
+        # 2) plots is List[List[str]]: set channels from `plots`
+        elif isinstance(plots[0], (list, tuple)) and isinstance(plots[0][0], str):
+            channels = plots
+        # 3) plots is probably List[LivePlot]: use customized plots as they are
+        else:
+            return plots
+
+        plots = []
+        for idx, (udf, udf_channels) in enumerate(zip(udfs, channels)):
+            for channel in udf_channels:
+                p0 = MPLLivePlot(
+                    dataset,
+                    udf=udf,
+                    channel=channel,
+                    min_delta=0.3
+                )
+                plots.append(p0)
+        return plots
+
+    def _update_plots(self, plots, udfs, udf_results, force=False):
+        for plot in plots:
+            udf = plot.get_udf()
+            udf_index = udfs.index(udf)
+            plot.new_data(udf_results[udf_index], force=force)
 
     def display(self, dataset: DataSet, udf: UDF, roi=None):
         """
         Show information about the UDF in combination with the given DataSet.
         """
+        import html
+
         class _UDFInfo:
             def __init__(self, title, buffers):
                 self.title = title
                 self.buffers = buffers
 
             def _repr_html_(self):
-                for buf in self.buffers.values():
-                    buf.set_shape_ds(dataset.shape, roi)
-
                 def _e(obj):
                     return html.escape(str(obj))
 
@@ -645,28 +803,9 @@ class Context:
                 </table>
                 """
 
-        from libertem.udf.base import UDFMeta
-
-        runner = UDFRunner([udf])
-        meta = UDFMeta(
-            partition_shape=None,
-            dataset_shape=dataset.shape,
-            roi=None,
-            dataset_dtype=dataset.dtype,
-            input_dtype=runner._get_dtype(
-                dataset.dtype,
-                corrections=None,
-            ),
-            corrections=None,
-        )
-
-        udf = udf.copy()
-        udf.set_meta(meta)
-        buffers = udf.get_result_buffers()
-
         return _UDFInfo(
             title=udf.__class__.__name__,
-            buffers=buffers,
+            buffers=UDFRunner.inspect_udf(udf, dataset, roi),
         )
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,

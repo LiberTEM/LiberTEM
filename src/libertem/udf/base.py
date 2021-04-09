@@ -674,6 +674,9 @@ class UDF(UDFBase):
     TILE_DEPTH_DEFAULT = object()
     TILE_DEPTH_MAX = np.inf
 
+    title = None
+    description = None
+
     def __init__(self, **kwargs):
         self._backend = 'numpy'  # default so that self.xp can always be used
         self._kwargs = kwargs
@@ -900,7 +903,7 @@ class UDF(UDFBase):
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None, title=None):
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
@@ -936,6 +939,11 @@ class UDF(UDFBase):
             needing it.
 
             :code:`None` means the buffer is used both as a final and intermediate result.
+
+            .. versionadded:: 0.7.0
+
+        title : Optional[str]
+            Short title describing this result buffer
 
             .. versionadded:: 0.7.0
         '''

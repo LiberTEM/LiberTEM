@@ -25,7 +25,7 @@ from libertem.utils.async_utils import async_generator
 RunUDFResultType = Dict[str, BufferWrapper]
 RunUDFAsync = Coroutine[RunUDFResultType, None, None]
 RunUDFGenType = Generator[RunUDFResultType, None, None]
-RunUDFAGenType = AsyncGenerator[RunUDFResultType, None, None]
+RunUDFAGenType = AsyncGenerator[RunUDFResultType, None]
 
 
 class Context:
@@ -562,7 +562,7 @@ class Context:
 
         Returns
         -------
-        dict or Tuple[dict] or Generator[Tuple[dict]]
+        dict or Tuple[dict]
             Return value of the UDF containing the result buffers of
             type :class:`libertem.common.buffers.BufferWrapper`. Note that a
             :class:`~libertem.common.buffers.BufferWrapper` can be used like

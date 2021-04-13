@@ -20,7 +20,7 @@ See :ref:`user-defined functions` for an introduction and in-depth explanation.
 Running UDFs
 ~~~~~~~~~~~~
 
-Two methods of :class:`libertem.api.Context` are relevant for running user-defined functions:
+Three methods of :class:`libertem.api.Context` are relevant for running user-defined functions:
 
 .. autoclass:: libertem.api.Context
    :members: run_udf,run_udf_iter,map

@@ -1,4 +1,4 @@
-from typing import Union, Dict, Iterable
+from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator
 
 import numpy as np
 from libertem.corrections import CorrectionSet
@@ -20,6 +20,12 @@ from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator
+
+
+RunUDFResultType = Dict[str, BufferWrapper]
+RunUDFAsync = Coroutine[RunUDFResultType, None, None]
+RunUDFGenType = Generator[RunUDFResultType, None, None]
+RunUDFAGenType = AsyncGenerator[RunUDFResultType, None, None]
 
 
 class Context:
@@ -505,7 +511,7 @@ class Context:
             backends=None,
             plots=None,
             sync=True,
-    ) -> Dict[str, BufferWrapper]:
+    ) -> Union[RunUDFResultType, RunUDFAsync]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -543,6 +549,12 @@ class Context:
             This can be useful for testing hybrid UDFs.
 
         plots : None or True or List[List[str]] or List[LivePlot]
+            - :code:`None`: don't plot anything (default)
+            - :code:`True`: plot all 2D UDF result buffers
+            - :code:`List[List[str]]`: plot the named UDF buffers. Pass a list of names for each
+              UDF you want to plot
+            - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each
+              channel you want to plot
 
         sync : bool
             By default, `run_udf` is a synchronous method. If `sync` is set to `False`,
@@ -610,7 +622,7 @@ class Context:
             backends=None,
             plots=None,
             sync=True,
-    ):
+    ) -> Union[RunUDFGenType, RunUDFAGenType]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
         Yields partial results after each merge operation.
@@ -641,11 +653,12 @@ class Context:
             This can be useful for testing hybrid UDFs.
 
         plots : None or True or List[List[str]] or List[LivePlot]
-            None: don't plot anything (default)
-            True: plot all 2D UDF result buffers
-            List[List[str]]: plot the named UDF buffers. Pass a list of names for each UDF you
-            want to plot
-            List[LivePlot]: `LivePlot` instance for each channel you want to plot
+            - :code:`None`: don't plot anything (default)
+            - :code:`True`: plot all 2D UDF result buffers
+            - :code:`List[List[str]]`: plot the named UDF buffers. Pass a list of names for each
+              UDF you want to plot
+            - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each
+              channel you want to plot
 
         sync : bool
             By default, `run_udf_iter` is a synchronous method. If `sync` is set to `False`,

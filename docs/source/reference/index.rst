@@ -17,6 +17,7 @@ Python API reference
    cluster-ds
    caching
    corrections
+   viz
 
 Indices and tables
 ------------------

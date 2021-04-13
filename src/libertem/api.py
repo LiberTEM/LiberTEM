@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Iterable
 
 import numpy as np
 from libertem.corrections import CorrectionSet
@@ -498,7 +498,7 @@ class Context:
     def run_udf(
             self,
             dataset: DataSet,
-            udf: UDF,
+            udf: Union[UDF, Iterable[UDF]],
             roi: np.ndarray = None,
             corrections: CorrectionSet = None,
             progress: bool = False,
@@ -525,7 +525,7 @@ class Context:
             The dataset to work on
 
         udf
-            UDF instance you want to run, or list of UDF instances
+            UDF instance you want to run, or a list of UDF instances
 
         roi : numpy.ndarray
             Region of interest as bool mask over the navigation axes of the dataset
@@ -603,7 +603,7 @@ class Context:
     def run_udf_iter(
             self,
             dataset: DataSet,
-            udf: UDF,
+            udf: Union[UDF, Iterable[UDF]],
             roi: np.ndarray = None,
             corrections: CorrectionSet = None,
             progress: bool = False,
@@ -623,7 +623,7 @@ class Context:
             The dataset to work on
 
         udf
-            UDF instance you want to run, or list of UDF instances
+            UDF instance you want to run, or a list of UDF instances
 
         roi : numpy.ndarray
             Region of interest as bool mask over the navigation axes of the dataset
@@ -641,6 +641,11 @@ class Context:
             This can be useful for testing hybrid UDFs.
 
         plots : None or True or List[List[str]] or List[LivePlot]
+            None: don't plot anything (default)
+            True: plot all 2D UDF result buffers
+            List[List[str]]: plot the named UDF buffers. Pass a list of names for each UDF you
+            want to plot
+            List[LivePlot]: `LivePlot` instance for each channel you want to plot
 
         sync : bool
             By default, `run_udf_iter` is a synchronous method. If `sync` is set to `False`,

@@ -485,6 +485,19 @@ the :code:`.data` attribute, or by calling :meth:`numpy.array`:
    # or directly treat as array:
    np.sum(res['buf1'])
 
+If you want to run multiple independent UDFs on a single :code:`DataSet`,
+you can pass in a list of UDFs to :meth:`~libertem.api.Context.run_udf`. This can be faster
+than making two passes over the whole :code:`DataSet`:
+
+.. testcode:: run
+
+   from libertem.udf.sum import SumUDF
+
+   # results are returned as a tuple, so we can unpack them here into
+   # `res` and `res_sum`:
+   res, res_sum = ctx.run_udf(udf=[udf, SumUDF()], dataset=dataset)
+
+
 .. _`udf roi`:
 
 Regions of interest

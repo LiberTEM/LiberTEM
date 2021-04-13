@@ -538,3 +538,49 @@ Example: Calculate sum over the last signal axis.
 
     udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
     result = ctx.run_udf(dataset=dataset, udf=udf)
+
+Plotting
+--------
+
+TODO:
+
+- simple
+- choose channels
+- flexible plotting w/ LivePlot instances
+
+
+Partial results
+---------------
+
+Instead of only getting the whole result after the UDF has finished running, you can
+also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for partial results:
+
+
+.. testsetup:: partial
+
+    from libertem.udf.sum import SumUDF
+    udf = SumUDF()
+
+
+.. testcode:: partial
+
+    for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf):
+        # ... do something interesting with `udf_results`:
+        a = np.sum(udf_results[0]['intensity'])
+
+    # after the loop, `udf_results` contains the final results as usual
+
+It's also possible to integrate LiberTEM into an async script or application, by passing
+:code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or :meth:`~libertem.api.Context.run_udf`:
+
+.. testcode:: partial
+
+    async for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf, sync=False):
+        # ... do something interesting with `udf_results`:
+        a = np.sum(udf_results[0]['intensity'])
+
+    # or the version without intermediate results:
+    udf_results = await ctx.run_udf(dataset=dataset, udf=udf, sync=False)
+
+
+.. versionadded:: 0.7.0

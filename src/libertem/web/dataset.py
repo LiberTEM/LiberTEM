@@ -7,7 +7,7 @@ import tornado.web
 from libertem.io.dataset import load, detect, get_dataset_cls
 from libertem.common.numba import prime_numba_cache
 from .base import CORSMixin, log_message
-from libertem.utils.async_utils import run_blocking
+from libertem.utils.async_utils import sync_to_async
 from .messages import Message
 from .state import SharedState
 
@@ -119,7 +119,7 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = self.state.executor_state.get_executor()
 
-        detected_params = await run_blocking(
+        detected_params = await sync_to_async(
             detect, path=path, executor=executor.ensure_sync()
         )
 

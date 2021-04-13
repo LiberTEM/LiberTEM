@@ -17,6 +17,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
+from libertem.utils.async_utils import async_generator_eager
 
 
 log = logging.getLogger(__name__)
@@ -643,6 +644,9 @@ class UDF(UDFBase):
     TILE_DEPTH_DEFAULT = object()
     TILE_DEPTH_MAX = np.inf
 
+    title = None
+    description = None
+
     def __init__(self, **kwargs):
         """
         Create a new UDF instance. If you override `__init__`, please take care,
@@ -897,7 +901,7 @@ class UDF(UDFBase):
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None, title=None):
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
@@ -933,6 +937,11 @@ class UDF(UDFBase):
             needing it.
 
             :code:`None` means the buffer is used both as a final and intermediate result.
+
+            .. versionadded:: 0.7.0
+
+        title : Optional[str]
+            Short title describing this result buffer
 
             .. versionadded:: 0.7.0
         '''
@@ -1163,6 +1172,31 @@ class UDFRunner:
         self._udfs = udfs
         self._debug = debug
 
+    @classmethod
+    def inspect_udf(cls, udf, dataset, roi=None):
+        """
+        Return result buffer declarations for a given UDF/DataSet/roi combination
+        """
+        runner = UDFRunner([udf])
+        meta = UDFMeta(
+            partition_shape=None,
+            dataset_shape=dataset.shape,
+            roi=None,
+            dataset_dtype=dataset.dtype,
+            input_dtype=runner._get_dtype(
+                dataset.dtype,
+                corrections=None,
+            ),
+            corrections=None,
+        )
+
+        udf = udf.copy()
+        udf.set_meta(meta)
+        buffers = udf.get_result_buffers()
+        for buf in buffers.values():
+            buf.set_shape_ds(dataset.shape, roi)
+        return buffers
+
     def _get_dtype(self, dtype, corrections):
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
@@ -1390,6 +1424,19 @@ class UDFRunner:
 
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None):
+        for res in self.run_for_dataset_sync(
+            dataset=dataset,
+            executor=executor.ensure_sync(),
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+        ):
+            pass
+        return res
+
+    def run_for_dataset_sync(self, dataset: DataSet, executor,
+                        roi=None, progress=False, corrections=None, backends=None):
         tasks = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends,
         )
@@ -1397,35 +1444,14 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         if progress:
-            import tqdm
-            t = tqdm.tqdm(total=len(tasks))
+            from tqdm import tqdm
+            t = tqdm(total=len(tasks))
+
+        executor = executor.ensure_sync()
+
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
-            for results, udf in zip(part_results, self._udfs):
-                udf.set_views_for_partition(task.partition)
-                udf.merge(
-                    dest=udf.results.get_proxy(),
-                    src=results.get_proxy()
-                )
-
-        if progress:
-            t.close()
-        for udf in self._udfs:
-            udf.clear_views()
-
-        return [
-            udf._do_get_results()
-            for udf in self._udfs
-        ]
-
-    async def run_for_dataset_async(
-            self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None):
-        tasks = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends,
-        )
-
-        async for part_results, task in executor.run_tasks(tasks, cancel_id):
             for results, udf in zip(part_results, self._udfs):
                 udf.set_views_for_partition(task.partition)
                 udf.merge(
@@ -1445,6 +1471,25 @@ class UDFRunner:
                 udf._do_get_results()
                 for udf in self._udfs
             )
+
+        if progress:
+            t.close()
+
+    async def run_for_dataset_async(
+        self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
+        progress=False,
+    ):
+        gen = self.run_for_dataset_sync(
+            dataset=dataset,
+            executor=executor.ensure_sync(),
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+        )
+
+        async for res in async_generator_eager(gen):
+            yield res
 
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

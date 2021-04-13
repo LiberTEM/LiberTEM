@@ -1,16 +1,13 @@
 import logging
 from io import BytesIO
 
-from matplotlib import colors, cm
 import numpy as np
+from matplotlib import colors, cm
 from PIL import Image
-from empyre.vis.colors import ColormapCubehelix, ColormapPerception, ColormapHLS, ColormapClassic
 
+from libertem.udf.base import UDFRunner
 
-__all__ = ['ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',
-           'ColormapClassic', 'cmaps', 'CMAP_CIRCULAR_DEFAULT',
-           'visualize_simple', 'encode_image']
-_log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
@@ -97,12 +94,65 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
     return colored
 
 
-cmaps = {'cubehelix_standard': ColormapCubehelix(),
-         'cubehelix_reverse': ColormapCubehelix(reverse=True),
-         'cubehelix_circular': ColormapCubehelix(start=1, rot=1,
-                                                 minLight=0.5, maxLight=0.5, sat=2),
-         'perception_circular': ColormapPerception(),
-         'hls_circular': ColormapHLS(),
-         'classic_circular': ColormapClassic()}
+def get_plottable_channels(udf, dataset):
+    from libertem.udf.base import UDFRunner
 
-CMAP_CIRCULAR_DEFAULT = cmaps['cubehelix_circular']
+    bufs = UDFRunner.inspect_udf(udf, dataset)
+
+    return [
+        k
+        for k, buf in bufs.items()
+        if buf.kind in ('sig', 'nav') and buf.extra_shape == ()
+    ]
+
+
+class LivePlot:
+    def __init__(
+            self, ds, udf, postprocess=None, channel=None,
+    ):
+        eligible_channels = get_plottable_channels(udf, ds)
+        if channel is None:
+            assert len(eligible_channels) > 0, "should have at least one plottable channel"
+            channel = eligible_channels[0]
+
+        if channel not in eligible_channels:
+            raise ValueError("channel %s not found or not plottable, have: %r" % (
+                channel, eligible_channels
+            ))
+
+        buf = UDFRunner.inspect_udf(udf, ds)[channel]
+        kind = buf.kind
+        if kind == 'sig':
+            shape = ds.shape.sig
+        elif kind == 'nav':
+            shape = ds.shape.nav
+        else:
+            raise ValueError("unknown plot kind")
+
+        self.shape = shape
+        self.data = np.zeros(shape, dtype=np.float32)
+        self.channel = channel
+        self.pp = postprocess or (lambda x: x)
+        self.udf = udf
+
+    def get_udf(self):
+        return self.udf
+
+    def postprocess(self, udf_results):
+        return self.pp(udf_results[self.channel].data)
+
+    def new_data(self, udf_results, force=False):
+        self.data[:] = self.postprocess(udf_results)
+        self.update(force=force)
+
+    def update(self, force=False):
+        """
+        Update the plot based on `self.data`
+        """
+        raise NotImplementedError()
+
+    def display(self):
+        """
+        possibly implement to show the plot ("bind it to the current jupyter cell")
+        """
+        pass

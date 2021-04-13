@@ -9,7 +9,7 @@ from .state import SharedState
 from .messages import Message
 from libertem.executor.base import JobCancelledError
 from libertem.udf.base import UDFRunner
-from libertem.utils.async_utils import run_blocking
+from libertem.utils.async_utils import sync_to_async
 
 log = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
             window = min(max(window, 2*(t - post_t)), 5)
             if time.time() - t < window:
                 continue
-            results = await run_blocking(
+            results = await sync_to_async(
                 analysis.get_udf_results,
                 udf_results=udf_results,
                 roi=roi,
@@ -125,7 +125,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
 
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
-        results = await run_blocking(
+        results = await sync_to_async(
             analysis.get_udf_results,
             udf_results=udf_results,
             roi=roi,

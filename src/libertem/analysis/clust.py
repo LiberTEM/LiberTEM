@@ -5,7 +5,7 @@ import re
 from textwrap import dedent
 
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-from libertem.utils.async_utils import run_blocking
+from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDFRunner
@@ -191,7 +191,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         if job_is_cancelled():
             raise JobCancelledError()
 
-        results = await run_blocking(
+        results = await sync_to_async(
             self.get_udf_results,
             udf_results=udf_results,
             roi=roi,

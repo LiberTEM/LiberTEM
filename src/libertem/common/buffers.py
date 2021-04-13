@@ -148,7 +148,7 @@ class BufferWrapper(object):
     This class is array_like, so you can directly use it, for example, as argument
     for numpy functions.
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None, title=None):
         """
         .. versionchanged:: 0.6.0
             Add option to specify backend, for example CuPy
@@ -186,6 +186,11 @@ class BufferWrapper(object):
             :code:`None` means the buffer is used both as a final and intermediate result.
 
             .. versionadded:: 0.7.0
+
+        title : Optional[str]
+            Short title describing this result buffer
+
+            .. versionadded:: 0.7.0
         """
 
         self._extra_shape = tuple(extra_shape)
@@ -201,6 +206,7 @@ class BufferWrapper(object):
         self._roi_is_zero = None
         self._contiguous_cache = dict()
         self.use = use
+        self.title = title
 
     def set_roi(self, roi):
         if roi is not None:
@@ -226,6 +232,11 @@ class BufferWrapper(object):
         self._shape = self._shape_for_kind(self._kind, dataset_shape.flatten_nav(), roi_count)
         self._update_roi_is_zero()
         self._ds_shape = dataset_shape
+
+    @property
+    def shape(self):
+        # precondition: _shape_for_kind has been called
+        return self._shape
 
     def _shape_for_kind(self, kind, orig_shape, roi_count=None):
         if self._kind == "nav":

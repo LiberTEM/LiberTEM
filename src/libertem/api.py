@@ -505,7 +505,6 @@ class Context:
             backends=None,
             plots=None,
             sync=True,
-            iterate=False,
     ) -> Dict[str, BufferWrapper]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
@@ -526,7 +525,7 @@ class Context:
             The dataset to work on
 
         udf
-            UDF instance you want to run
+            UDF instance you want to run, or list of UDF instances
 
         roi : numpy.ndarray
             Region of interest as bool mask over the navigation axes of the dataset
@@ -547,12 +546,7 @@ class Context:
 
         sync : bool
             By default, `run_udf` is a synchronous method. If `sync` is set to `False`,
-            it is awaitable instead; together with `iterate`, an asynchronous generator
-            will be returned.
-
-        iterate : bool
-            If :code:`iterate` is :code:`True`, a generator will be returned instead,
-            which yield partial results as they are computed.
+            it is awaitable instead.
 
         Returns
         -------
@@ -564,11 +558,8 @@ class Context:
             :meth:`__array__`. You can access the underlying numpy array using the
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
 
-            If a list of UDFs was passed in, the returned type is also
-            a List[dict[str,BufferWrapper]].
-
-            If :code:`iterate` is :code:`True`, a generator will be returned instead,
-            which yield partial results as they are computed.
+            If a list of UDFs was passed in, the returned type is
+            a Tuple[dict[str,BufferWrapper]].
 
         Examples
         --------
@@ -606,7 +597,85 @@ class Context:
             progress=progress,
             backends=backends,
             plots=plots,
-            iterate=iterate,
+            iterate=False,
+        )
+
+    def run_udf_iter(
+            self,
+            dataset: DataSet,
+            udf: UDF,
+            roi: np.ndarray = None,
+            corrections: CorrectionSet = None,
+            progress: bool = False,
+            backends=None,
+            plots=None,
+            sync=True,
+    ):
+        """
+        Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
+        Yields partial results after each merge operation.
+
+        .. versionadded:: 0.7.0
+
+        Parameters
+        ----------
+        dataset
+            The dataset to work on
+
+        udf
+            UDF instance you want to run, or list of UDF instances
+
+        roi : numpy.ndarray
+            Region of interest as bool mask over the navigation axes of the dataset
+
+        progress : bool
+            Show progress bar
+
+        corrections
+            Corrections to apply while running the UDF. If none are given,
+            the corrections that are part of the :code:`DataSet` are used,
+            if there are any. See also :ref:`corrections`.
+
+        backends : None or iterable containing 'numpy', 'cupy' and/or 'cuda'
+            Restrict the back-end to a subset of the capabilities of the UDF.
+            This can be useful for testing hybrid UDFs.
+
+        plots : None or True or List[List[str]] or List[LivePlot]
+
+        sync : bool
+            By default, `run_udf_iter` is a synchronous method. If `sync` is set to `False`,
+            an async generator will be returned instead.
+
+        Returns
+        -------
+        Generator[Tuple[dict[str, BufferWrapper]]]
+            Generator of return values of the UDFs containing the result buffers of
+            type :class:`libertem.common.buffers.BufferWrapper`.
+
+        Examples
+        --------
+        Run the `SumUDF` on a data set:
+
+        >>> from libertem.udf.sum import SumUDF
+        >>> for result in ctx.run_udf_iter(dataset=dataset, udf=SumUDF()):
+        ...     assert np.array(result[0]["intensity"]).shape == (32, 32)
+        >>> np.array(result[0]["intensity"]).shape
+        (32, 32)
+        >>> # intensity is the name of the result buffer, defined in the SumUDF
+        """
+        fn = self._run_async
+        if sync:
+            fn = self._run_sync
+
+        return fn(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            corrections=corrections,
+            progress=progress,
+            backends=backends,
+            plots=plots,
+            iterate=True,
         )
 
     def _run_sync(
@@ -620,6 +689,10 @@ class Context:
             plots=None,
             iterate=False,
     ):
+        """
+        Run the given UDF(s), either returning the final result (when
+        :code:`iterate=False` is given), or a generator that yields partial results.
+        """
         enable_plotting = bool(plots)
 
         udf_is_list = isinstance(udf, (tuple, list))
@@ -671,6 +744,10 @@ class Context:
             plots=None,
             iterate=False,
     ):
+        """
+        Wraps :code:`_run_sync` into an asynchronous generator,
+        and either returns the generator itself, or the end result.
+        """
         sync_generator = self._run_sync(
             dataset=dataset,
             udf=udf,

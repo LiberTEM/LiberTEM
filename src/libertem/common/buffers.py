@@ -183,12 +183,12 @@ class BufferWrapper:
 
         :code:`None` means the buffer is used both as a final and intermediate result.
 
-            .. versionadded:: 0.7.0
+        .. versionadded:: 0.7.0
 
     title : Optional[str]
         Short title describing this result buffer
 
-            .. versionadded:: 0.8.0
+        .. versionadded:: 0.8.0
     """
     def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None, title=None):
         self._extra_shape = tuple(extra_shape)

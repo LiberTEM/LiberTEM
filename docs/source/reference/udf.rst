@@ -23,7 +23,7 @@ Running UDFs
 Two methods of :class:`libertem.api.Context` are relevant for running user-defined functions:
 
 .. autoclass:: libertem.api.Context
-   :members: run_udf,map
+   :members: run_udf,run_udf_iter,map
    :noindex:
 
 .. _`buffer udf ref`:

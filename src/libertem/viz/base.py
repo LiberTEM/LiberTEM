@@ -108,9 +108,31 @@ def get_plottable_channels(udf, dataset):
 
 
 class LivePlot:
+    """
+    Base plotting class for interactive use. Please see the subclasses for concrete details.
+    """
     def __init__(
             self, ds, udf, postprocess=None, channel=None,
     ):
+        """
+        Construct a new `LivePlot`
+
+        Parameters
+        ----------
+        ds : DataSet
+            The dataset on which the UDf will be run - needed to have access to
+            concrete shapes for the plot results.
+
+        udf : UDF
+            The UDF instance this plot is associated to. This needs to be
+            the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
+
+        postprocess : function ndarray -> ndarray
+            Optional postprocessing function, identity by default.
+
+        channel : str
+            The UDF result buffer name that should be plotted.
+        """
         eligible_channels = get_plottable_channels(udf, ds)
         if channel is None:
             assert len(eligible_channels) > 0, "should have at least one plottable channel"
@@ -139,23 +161,39 @@ class LivePlot:
         self.udf = udf
 
     def get_udf(self):
+        """
+        Returns the associated UDF instance
+        """
         return self.udf
 
     def postprocess(self, udf_results):
+        """
+        Optional post-processing, before the data is visualized
+        (useful, for example, for quick-and-dirty custom re-scaling)
+        """
         return self.pp(udf_results[self.channel].data)
 
     def new_data(self, udf_results, force=False):
+        """
+        This method is called with the raw `udf_results` any time a new
+        partition has finished processing.
+        """
         self.data[:] = self.postprocess(udf_results)
         self.update(force=force)
 
     def update(self, force=False):
         """
-        Update the plot based on `self.data`
+        Update the plot based on `self.data`. This should be implemented by subclasses.
+
+        Parameters
+        ----------
+        force : bool
+            Force an update, disabling any throttling mechanisms
         """
         raise NotImplementedError()
 
     def display(self):
         """
-        possibly implement to show the plot ("bind it to the current jupyter cell")
+        Show the plot ("bind it to the current jupyter cell")
         """
         pass

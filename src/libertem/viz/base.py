@@ -102,7 +102,8 @@ def get_plottable_channels(udf, dataset):
     return [
         k
         for k, buf in bufs.items()
-        if buf.kind in ('sig', 'nav') and buf.extra_shape == ()
+        if (buf.kind in ('sig', 'nav') and buf.extra_shape == ())
+        or (buf.kind == 'single' and len(buf.extra_shape) == 2)
     ]
 
 
@@ -126,6 +127,8 @@ class LivePlot:
             shape = ds.shape.sig
         elif kind == 'nav':
             shape = ds.shape.nav
+        elif kind == 'single':
+            shape = buf.extra_shape
         else:
             raise ValueError("unknown plot kind")
 

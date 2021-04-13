@@ -573,7 +573,9 @@ also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for parti
 It's also possible to integrate LiberTEM into an async script or application, by passing
 :code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or :meth:`~libertem.api.Context.run_udf`:
 
-.. testcode:: partial
+.. Not run with docs-check since we can't easily test async code there...
+
+.. code-block:: python
 
     async for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf, sync=False):
         # ... do something interesting with `udf_results`:
@@ -581,6 +583,5 @@ It's also possible to integrate LiberTEM into an async script or application, by
 
     # or the version without intermediate results:
     udf_results = await ctx.run_udf(dataset=dataset, udf=udf, sync=False)
-
 
 .. versionadded:: 0.7.0

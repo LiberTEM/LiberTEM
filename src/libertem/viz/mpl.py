@@ -50,6 +50,7 @@ class MPLLivePlot(LivePlot):
         super().__init__(ds, udf, postprocess, channel)
         self.fig, self.axes = plt.subplots()
         self.im_obj = self.axes.imshow(self.data, cmap=cmap, **kwargs)
+        self.axes.set_title(f"{udf.__class__.__name__}: {self.channel}")
         self.last_update = 0
         self.min_delta = min_delta
 

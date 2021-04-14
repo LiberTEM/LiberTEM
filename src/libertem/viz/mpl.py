@@ -73,7 +73,7 @@ class MPLLive2DPlot(Live2DPlot):
         self.im_obj = self.axes.imshow(self.data, cmap=self.cmap, **self.kwargs)
         self.axes.set_title(self.title)
 
-    def update(self, force=False):
+    def update(self, damage, force=False):
         """
         Update the plot based on `self.data`.
 
@@ -94,6 +94,7 @@ class MPLLive2DPlot(Live2DPlot):
         i_o = self.im_obj
         i_o.set_data(self.data)
         # Buffer is initialized by the UDF, by default NaN for floats
+        # TODO use damage
         valid_data = self.data[np.isfinite(self.data)]
         if len(valid_data) > 0:
             i_o.norm.vmin = np.min(valid_data)

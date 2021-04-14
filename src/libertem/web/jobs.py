@@ -108,13 +108,13 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         result_iter = UDFRunner([udf]).run_for_dataset_async(
             dataset, executor, roi=roi, cancel_id=job_id, corrections=corrections,
         )
-        async for (udf_results,) in result_iter:
+        async for udf_results in result_iter:
             window = min(max(window, 2*(t - post_t)), 5)
             if time.time() - t < window:
                 continue
             results = await sync_to_async(
                 analysis.get_udf_results,
-                udf_results=udf_results,
+                udf_results=udf_results.buffers[0],
                 roi=roi,
             )
             post_t = time.time()
@@ -127,7 +127,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
             raise JobCancelledError()
         results = await sync_to_async(
             analysis.get_udf_results,
-            udf_results=udf_results,
+            udf_results=udf_results.buffers[0],
             roi=roi,
         )
         await self.send_results(results, job_id, analysis_id, details, finished=True)

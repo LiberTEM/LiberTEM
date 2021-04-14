@@ -131,11 +131,11 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
             self.dataset, executor, roi=roi, cancel_id=cancel_id
         )
-        async for (sd_udf_results,) in result_iter:
+        async for sd_udf_results in result_iter:
             pass
         if job_is_cancelled():
             raise JobCancelledError()
-        return roi, consolidate_result(sd_udf_results)
+        return roi, consolidate_result(sd_udf_results.buffers[0])
 
     def get_sd_results(self, executor, cancel_id, job_is_cancelled):
         stddev_udf = StdDevUDF()
@@ -185,7 +185,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         result_iter = UDFRunner([udf]).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id
         )
-        async for (udf_results,) in result_iter:
+        async for udf_results in result_iter:
             pass
 
         if job_is_cancelled():
@@ -193,7 +193,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
 
         results = await sync_to_async(
             self.get_udf_results,
-            udf_results=udf_results,
+            udf_results=udf_results.buffers[0],
             roi=roi,
         )
         await send_results(results, True)

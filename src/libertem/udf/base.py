@@ -1475,17 +1475,23 @@ class UDFRunner:
                     src=results.get_proxy()
                 )
                 udf.clear_views()
-            yield tuple(
-                udf._do_get_results()
-                for udf in self._udfs
+            yield UDFResults(
+                buffers=tuple(
+                    udf._do_get_results()
+                    for udf in self._udfs
+                ),
+                damage=None
             )
         else:
             # yield at least one result (which should be empty):
             for udf in self._udfs:
                 udf.clear_views()
-            yield tuple(
-                udf._do_get_results()
-                for udf in self._udfs
+            yield UDFResults(
+                buffers=tuple(
+                    udf._do_get_results()
+                    for udf in self._udfs
+                ),
+                damage=None
             )
 
         if progress:
@@ -1526,3 +1532,9 @@ class UDFRunner:
                 partition=partition, idx=idx, udfs=udfs, roi=roi, corrections=corrections,
                 backends=backends,
             )
+
+
+class UDFResults:
+    def __init__(self, buffers, damage):
+        self.buffers = buffers
+        self.damage = damage

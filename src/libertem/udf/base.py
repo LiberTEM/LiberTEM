@@ -18,6 +18,7 @@ from libertem.io.dataset.base import (
 from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.utils.async_utils import async_generator_eager
+from libertem.executor.inline import InlineJobExecutor
 
 
 log = logging.getLogger(__name__)
@@ -923,7 +924,7 @@ class UDF(UDFBase):
 
             .. versionadded:: 0.6.0
 
-        use : "private", "reault_only" or None
+        use : "private", "result_only" or None
             If you specify :code:`"private"` here, the result will only be made available
             to internal functions, like :meth:`process_frame`, :meth:`merge` or
             :meth:`get_results`. It will not be available to the user of the UDF, which means
@@ -1189,6 +1190,26 @@ class UDFRunner:
             buf.set_shape_ds(dataset.shape, roi)
         return buffers
 
+    @classmethod
+    def dry_run(cls, udfs, dataset, roi=None):
+        """
+        Return result buffers for a given UDF/DataSet/roi combination
+        exactly as running the UDFs would, just skipping execution and
+        merging of the processing tasks.
+
+        This can be used to create an empty result to initialize live plots
+        before running an UDF.
+        """
+        runner = UDFRunner(udfs)
+        executor = InlineJobExecutor()
+        res = runner.run_for_dataset(
+            dataset=dataset,
+            executor=executor,
+            roi=roi,
+            dry=True
+        )
+        return res
+
     def _get_dtype(self, dtype, corrections):
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
@@ -1391,7 +1412,7 @@ class UDFRunner:
             )
 
     def _prepare_run_for_dataset(
-        self, dataset: DataSet, executor, roi, corrections, backends,
+        self, dataset: DataSet, executor, roi, corrections, backends, dry
     ):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
@@ -1410,12 +1431,14 @@ class UDFRunner:
             if hasattr(udf, 'preprocess'):
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
-
-        tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
+        if dry:
+            tasks = []
+        else:
+            tasks = list(self._make_udf_tasks(dataset, roi, corrections, backends))
         return tasks
 
     def run_for_dataset(self, dataset: DataSet, executor,
-                        roi=None, progress=False, corrections=None, backends=None):
+                        roi=None, progress=False, corrections=None, backends=None, dry=False):
         for res in self.run_for_dataset_sync(
             dataset=dataset,
             executor=executor.ensure_sync(),
@@ -1423,14 +1446,15 @@ class UDFRunner:
             progress=progress,
             corrections=corrections,
             backends=backends,
+            dry=dry
         ):
             pass
         return res
 
     def run_for_dataset_sync(self, dataset: DataSet, executor,
-                        roi=None, progress=False, corrections=None, backends=None):
+                        roi=None, progress=False, corrections=None, backends=None, dry=False):
         tasks = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends,
+            dataset, executor, roi, corrections, backends, dry
         )
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
@@ -1469,7 +1493,7 @@ class UDFRunner:
 
     async def run_for_dataset_async(
         self, dataset: DataSet, executor, cancel_id, roi=None, corrections=None, backends=None,
-        progress=False,
+        progress=False, dry=False
     ):
         gen = self.run_for_dataset_sync(
             dataset=dataset,
@@ -1478,6 +1502,7 @@ class UDFRunner:
             progress=progress,
             corrections=corrections,
             backends=backends,
+            dry=dry
         )
 
         async for res in async_generator_eager(gen):

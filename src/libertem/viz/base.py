@@ -94,70 +94,70 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
     return colored
 
 
-def get_plottable_channels(udf, dataset):
-    from libertem.udf.base import UDFRunner
-
-    bufs = UDFRunner.inspect_udf(udf, dataset)
-
+def get_plottable_2D_channels(buffers):
     return [
         k
-        for k, buf in bufs.items()
-        if (buf.kind in ('sig', 'nav') and buf.extra_shape == ())
-        or (buf.kind == 'single' and len(buf.extra_shape) == 2)
+        for k, buf in buffers.items()
+        # 2D data, removing axes of size 1
+        if len(buf.data.squeeze().shape) == 2
     ]
 
 
-class LivePlot:
+class Live2DPlot:
     """
     Base plotting class for interactive use. Please see the subclasses for concrete details.
     """
     def __init__(
-            self, ds, udf, postprocess=None, channel=None,
+            self, dataset, udf, roi=None, channel=None, buffers=None
     ):
         """
         Construct a new `LivePlot`
 
         Parameters
         ----------
-        ds : DataSet
-            The dataset on which the UDf will be run - needed to have access to
-            concrete shapes for the plot results.
+        dataset : DataSet
+            The dataset on which the UDf will be run. This allows to determine the
+            shape of the plots for initialization.
 
         udf : UDF
             The UDF instance this plot is associated to. This needs to be
             the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
 
-        postprocess : function ndarray -> ndarray
-            Optional postprocessing function, identity by default.
+        roi : numpy.ndarray or None
+            Region of interest (ROI) that the UDF will be run on. This is necessary for UDFs
+            where the `extra_shape` parameter of result buffers is a function of the ROI,
+            such as :class:`~libertem.udf.raw.PickUDF`.
 
-        channel : str
-            The UDF result buffer name that should be plotted.
+        channel : str or function udf_result -> ndarray
+            The UDF result buffer name that should be plotted, or a function
+            that derives a plottable 2D ndarray from the full UDF results.
+
+        buffers : None or UDF result
+            UDF result used to initialize the plot data and determine plot shape.
+            If None (default), this is determined using
+            :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
+            buffers to avoid unnecessary dry runs.
         """
-        eligible_channels = get_plottable_channels(udf, ds)
+        if buffers is None:
+            buffers = UDFRunner.dry_run([udf], dataset, roi)[0]
+        eligible_channels = get_plottable_2D_channels(buffers)
         if channel is None:
             assert len(eligible_channels) > 0, "should have at least one plottable channel"
             channel = eligible_channels[0]
 
-        if channel not in eligible_channels:
-            raise ValueError("channel %s not found or not plottable, have: %r" % (
-                channel, eligible_channels
-            ))
-
-        buf = UDFRunner.inspect_udf(udf, ds)[channel]
-        kind = buf.kind
-        if kind == 'sig':
-            shape = ds.shape.sig
-        elif kind == 'nav':
-            shape = ds.shape.nav
-        elif kind == 'single':
-            shape = buf.extra_shape
+        if callable(channel):
+            extract = channel
+            channel = channel.__name__
         else:
-            raise ValueError("unknown plot kind")
+            extract = None
+            if channel not in eligible_channels:
+                raise ValueError("channel %s not found or not plottable, have: %r" % (
+                    channel, eligible_channels
+                ))
 
-        self.shape = shape
-        self.data = np.zeros(shape, dtype=np.float32)
+        self._extract = extract
         self.channel = channel
-        self.pp = postprocess or (lambda x: x)
+        self.data = self.extract(buffers)
         self.udf = udf
 
     def get_udf(self):
@@ -166,19 +166,21 @@ class LivePlot:
         """
         return self.udf
 
-    def postprocess(self, udf_results):
+    def extract(self, udf_results):
         """
-        Optional post-processing, before the data is visualized
-        (useful, for example, for quick-and-dirty custom re-scaling)
+        Extract plotting data from UDF result
         """
-        return self.pp(udf_results[self.channel].data)
+        if self._extract is None:
+            return udf_results[self.channel].data.squeeze()
+        else:
+            return self._extract(udf_results)
 
     def new_data(self, udf_results, force=False):
         """
         This method is called with the raw `udf_results` any time a new
         partition has finished processing.
         """
-        self.data[:] = self.postprocess(udf_results)
+        self.data = self.extract(udf_results)
         self.update(force=force)
 
     def update(self, force=False):
@@ -196,4 +198,4 @@ class LivePlot:
         """
         Show the plot ("bind it to the current jupyter cell")
         """
-        pass
+        raise NotImplementedError()

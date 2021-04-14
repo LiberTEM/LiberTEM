@@ -1,4 +1,5 @@
 from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator
+import warnings
 
 import numpy as np
 from libertem.corrections import CorrectionSet
@@ -720,7 +721,7 @@ class Context:
             udfs = udf
 
         if enable_plotting:
-            plots = self._prepare_plots(udfs, dataset, plots)
+            plots = self._prepare_plots(udfs, dataset, roi, plots)
 
         if corrections is None:
             corrections = dataset.get_correction_data()
@@ -788,15 +789,17 @@ class Context:
         else:
             return _run_async_wrap()
 
-    def _get_default_plot_chans(self, udfs, dataset):
-        from libertem.viz import get_plottable_channels
+    def _get_default_plot_chans(self, buffers):
+        from libertem.viz import get_plottable_2D_channels
         return [
-            get_plottable_channels(udf, dataset)
-            for udf in udfs
+            get_plottable_2D_channels(bufferset)
+            for bufferset in buffers
         ]
 
-    def _prepare_plots(self, udfs, dataset, plots):
-        from libertem.viz.mpl import MPLLivePlot
+    def _prepare_plots(self, udfs, dataset, roi, plots):
+        from libertem.viz.mpl import MPLLive2DPlot
+
+        buffers = UDFRunner.dry_run(udfs, dataset, roi)
 
         # cases to consider:
         # 1) plots is `True`: default plots of all eligible channels
@@ -807,7 +810,13 @@ class Context:
 
         # 1) plots is `True`: default plots of all eligible channels
         if plots is True:
-            channels = self._get_default_plot_chans(udfs, dataset)
+            channels = self._get_default_plot_chans(buffers)
+            for idx, udf in enumerate(udfs):
+                if len(channels[idx]) == 0:
+                    warnings.warn(
+                        f"No plottable channels found for UDF "
+                        f"#{idx}: {udf.__class__.__name__}, not plotting."
+                    )
         # 2) plots is List[List[str]]: set channels from `plots`
         elif isinstance(plots[0], (list, tuple)) and isinstance(plots[0][0], str):
             channels = plots
@@ -818,12 +827,15 @@ class Context:
         plots = []
         for idx, (udf, udf_channels) in enumerate(zip(udfs, channels)):
             for channel in udf_channels:
-                p0 = MPLLivePlot(
+                p0 = MPLLive2DPlot(
                     dataset,
                     udf=udf,
+                    roi=roi,
                     channel=channel,
+                    buffers=buffers[idx],
                     min_delta=0.3
                 )
+                p0.display()
                 plots.append(p0)
         return plots
 

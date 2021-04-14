@@ -82,8 +82,8 @@ const useDefaultFrameView = ({
         roiSelector = <></>;
     }
 
-    const [cx, setCx] = React.useState(Math.round(scanWidth / 2));
-    const [cy, setCy] = React.useState(Math.round(scanHeight / 2));
+    const [cx, setCx] = React.useState(Math.floor(scanWidth / 2));
+    const [cy, setCy] = React.useState(Math.floor(scanHeight / 2));
 
     const { coords: pickCoords, handles: pickHandles } = useFramePicker({
         enabled: frameMode === DefaultModes.PICK,

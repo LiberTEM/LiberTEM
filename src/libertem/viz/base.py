@@ -10,21 +10,25 @@ from libertem.udf.base import UDFRunner
 logger = logging.getLogger(__name__)
 
 
-def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None):
+def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=None):
     # TODO: only normalize across the area where we already have values
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
 
     result = result.astype(np.float32)
 
-    valid_mask = (result != 0) & ~np.isnan(result)
-    if valid_mask.sum() == 0:
+    if damage is None:
+        damage = (result != 0)
+
+    damage = damage & np.isfinite(result)
+
+    if damage.sum() == 0:
         return norm_cls(vmin=1, vmax=1)  # all-NaN or all-zero
 
     if vmin is None:
-        vmin = np.min(result[valid_mask])
+        vmin = np.min(result[damage])
     if vmax is None:
-        vmax = np.max(result[valid_mask])
+        vmax = np.max(result[damage])
 
     return norm_cls(vmin=vmin, vmax=vmax)
 
@@ -60,7 +64,7 @@ def encode_image(result, save_kwargs=None):
     return buf
 
 
-def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=None):
+def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=None, damage=None):
     """
     Normalize and visualize ``result`` with ``colormap`` and return the
     resulting RGBA data as an array.
@@ -87,7 +91,7 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
         cnorm = colors.Normalize
     if colormap is None:
         colormap = cm.gist_earth
-    norm = _get_norm(result, norm_cls=cnorm, vmin=vmin, vmax=vmax)
+    norm = _get_norm(result, norm_cls=cnorm, vmin=vmin, vmax=vmax, damage=damage)
     shape = result.shape
     normalized = norm(result.reshape((-1,))).reshape(shape)
     colored = colormap(normalized, bytes=True)
@@ -108,7 +112,7 @@ class Live2DPlot:
     Base plotting class for interactive use. Please see the subclasses for concrete details.
     """
     def __init__(
-            self, dataset, udf, roi=None, channel=None, buffers=None
+            self, dataset, udf, roi=None, channel=None, udfresult=None
     ):
         """
         Construct a new `LivePlot`
@@ -132,15 +136,15 @@ class Live2DPlot:
             The UDF result buffer name that should be plotted, or a function
             that derives a plottable 2D ndarray from the full UDF results.
 
-        buffers : None or UDF result
+        udfresult : None or UDF result
             UDF result used to initialize the plot data and determine plot shape.
             If None (default), this is determined using
             :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
             buffers to avoid unnecessary dry runs.
         """
-        if buffers is None:
-            buffers = UDFRunner.dry_run([udf], dataset, roi).buffers[0]
-        eligible_channels = get_plottable_2D_channels(buffers)
+        if udfresult is None:
+            udfresult = UDFRunner.dry_run([udf], dataset, roi)
+        eligible_channels = get_plottable_2D_channels(udfresult.buffers[0])
         if channel is None:
             assert len(eligible_channels) > 0, "should have at least one plottable channel"
             channel = eligible_channels[0]
@@ -157,7 +161,7 @@ class Live2DPlot:
 
         self._extract = extract
         self.channel = channel
-        self.data = self.extract(buffers)
+        self.data, _ = self.extract(udfresult.buffers[0], udfresult.damage)
         self.udf = udf
 
     def get_udf(self):
@@ -166,21 +170,28 @@ class Live2DPlot:
         """
         return self.udf
 
-    def extract(self, udf_results):
+    def extract(self, udf_results, damage):
         """
         Extract plotting data from UDF result
         """
         if self._extract is None:
-            return udf_results[self.channel].data.squeeze()
+            buffer = udf_results[self.channel]
+            squeezed = buffer.data.squeeze()
+            if buffer.kind == 'nav':
+                res_damage = damage
+            else:
+                res_damage = np.ones_like(squeezed, dtype=bool)
+            return (squeezed, res_damage)
         else:
-            return self._extract(udf_results)
+            return self._extract(udf_results, damage)
 
     def new_data(self, udf_results, damage, force=False):
         """
         This method is called with the raw `udf_results` any time a new
         partition has finished processing.
         """
-        self.data = self.extract(udf_results)
+        (self.data, damage) = self.extract(udf_results, damage)
+        damage = np.broadcast_to(damage, self.data.shape)
         self.update(damage, force=force)
 
     def update(self, damage, force=False):

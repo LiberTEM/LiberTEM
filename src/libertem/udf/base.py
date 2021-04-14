@@ -1465,6 +1465,10 @@ class UDFRunner:
 
         executor = executor.ensure_sync()
 
+        damage = BufferWrapper(kind='nav', dtype=bool)
+        damage.set_shape_ds(dataset.shape, roi)
+        damage.allocate()
+
         for part_results, task in executor.run_tasks(tasks, cancel_id):
             if progress:
                 t.update(1)
@@ -1475,12 +1479,14 @@ class UDFRunner:
                     src=results.get_proxy()
                 )
                 udf.clear_views()
+            v = damage.get_view_for_partition(task.partition)
+            v[:] = True
             yield UDFResults(
                 buffers=tuple(
                     udf._do_get_results()
                     for udf in self._udfs
                 ),
-                damage=None
+                damage=damage
             )
         else:
             # yield at least one result (which should be empty):
@@ -1491,7 +1497,7 @@ class UDFRunner:
                     udf._do_get_results()
                     for udf in self._udfs
                 ),
-                damage=None
+                damage=damage
             )
 
         if progress:

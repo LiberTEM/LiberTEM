@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from .base import Live2DPlot
 
 
@@ -79,8 +81,10 @@ class BQLive2DPlot(Live2DPlot):
 
     def update(self, damage, force=False):
         # TODO use damage for min and max
-        mmin = self.data.min()
-        mmax = self.data.max()
+        damage = damage & np.isfinite(self.data)
+        valid_data = self.data[damage]
+        mmin = valid_data.min()
+        mmax = valid_data.max()
         delta = mmax - mmin
         if delta <= 0:
             delta = 1

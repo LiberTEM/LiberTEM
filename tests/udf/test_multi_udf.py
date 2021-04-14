@@ -24,10 +24,11 @@ def test_simple_multi_udf_run():
         SumSigUDF(),
         SumUDF(),
     ]
-    sumsigres, sumres = UDFRunner(udfs=udfs).run_for_dataset(
+    res = UDFRunner(udfs=udfs).run_for_dataset(
         dataset=dataset,
         executor=executor,
     )
+    sumsigres, sumres = res.buffers
     print(sumsigres, sumres)
     assert np.allclose(
         sumres['intensity'],

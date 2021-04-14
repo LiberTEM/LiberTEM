@@ -35,7 +35,8 @@ async def test_async_run_for_dset(async_executor):
         dataset, async_executor, roi=roi, cancel_id="42"
     )
 
-    async for (udf_results,) in udf_iter:
+    async for udf_results in udf_iter:
+        udf_results.buffers
         pass
     assert "udf_results" in locals(), "must yield at least one result"
 

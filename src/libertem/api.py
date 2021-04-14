@@ -18,7 +18,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFRunner, UDF
+from libertem.udf.base import UDFRunner, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator
 
@@ -801,7 +801,7 @@ class Context:
     def _prepare_plots(self, udfs, dataset, roi, plots):
         from libertem.viz.mpl import MPLLive2DPlot
 
-        buffers = UDFRunner.dry_run(udfs, dataset, roi).buffers
+        dry_results = UDFRunner.dry_run(udfs, dataset, roi)
 
         # cases to consider:
         # 1) plots is `True`: default plots of all eligible channels
@@ -812,7 +812,7 @@ class Context:
 
         # 1) plots is `True`: default plots of all eligible channels
         if plots is True:
-            channels = self._get_default_plot_chans(buffers)
+            channels = self._get_default_plot_chans(dry_results.buffers)
             for idx, udf in enumerate(udfs):
                 if len(channels[idx]) == 0:
                     warnings.warn(
@@ -834,7 +834,11 @@ class Context:
                     udf=udf,
                     roi=roi,
                     channel=channel,
-                    buffers=buffers[idx],
+                    # Create an UDFResult from this single UDF
+                    buffers=UDFResults(
+                        (dry_results.buffers[idx],),
+                        dry_results.damage
+                    ),
                     min_delta=0.3
                 )
                 p0.display()

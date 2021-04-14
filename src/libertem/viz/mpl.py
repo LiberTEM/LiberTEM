@@ -93,9 +93,10 @@ class MPLLive2DPlot(Live2DPlot):
             return  # don't update plot if we recently updated
         i_o = self.im_obj
         i_o.set_data(self.data)
-        # Buffer is initialized by the UDF, by default NaN for floats
-        # TODO use damage
-        valid_data = self.data[np.isfinite(self.data)]
+        # Exclude infinite or NaN that would make min and max
+        # meaningless
+        damage = damage & np.isfinite(self.data)
+        valid_data = self.data[damage]
         if len(valid_data) > 0:
             i_o.norm.vmin = np.min(valid_data)
             i_o.norm.vmax = np.max(valid_data)

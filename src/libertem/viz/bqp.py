@@ -1,44 +1,48 @@
 import logging
 
-from .base import LivePlot
+from .base import Live2DPlot
 
 
 logger = logging.getLogger(__name__)
 
 
-class BQLivePlot(LivePlot):
+class BQLive2DPlot(Live2DPlot):
     """
     bqplot-image-gl-based live plot (experimental).
-
-    Note
-    ----
-    As opposed to the matplotlib-base live plot, you need to explicitly call
-    the :meth:`display` method to show the plot in a specific notebook cell.
     """
     def __init__(
-            self, ds, udf, channel=None, postprocess=None,
+            self, dataset, udf, roi=None, channel=None, buffers=None
     ):
         """
-        Construct a new :class:`BQLivePlot` instance.
+        Construct a new :class:`BQLive2DPlot` instance.
 
         Parameters
         ----------
-
-        ds : DataSet
-            The dataset on which the UDf will be run - needed to have access to
-            concrete shapes for the plot results.
+        dataset : DataSet
+            The dataset on which the UDf will be run. This allows to determine the
+            shape of the plots for initialization.
 
         udf : UDF
             The UDF instance this plot is associated to. This needs to be
             the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
 
-        postprocess : function ndarray -> ndarray
-            Optional postprocessing function, identity by default.
+        roi : numpy.ndarray or None
+            Region of interest (ROI) that the UDF will be run on. This is necessary for UDFs
+            where the `extra_shape` parameter of result buffers is a function of the ROI,
+            such as :class:`~libertem.udf.raw.PickUDF`.
 
-        channel : str
-            The UDF result buffer name that should be plotted.
+        channel : str or function udf_result -> ndarray
+            The UDF result buffer name that should be plotted, or a function
+            that derives a plottable 2D ndarray from the full UDF results.
+
+        buffers : None or udf_result
+            UDF result used to initialize the plot data and determine plot shape.
+            If None (default), this is determined using
+            :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
+            buffers to avoid unnecessary dry runs.
         """
-        super().__init__(ds, udf, postprocess, channel)
+        super().__init__(dataset, udf, roi, channel, buffers)
+        # keep bqplot and bqplot_image_gl as optional dependencies
         from bqplot import Figure, LinearScale, Axis, ColorScale
         from bqplot_image_gl import ImageGL
 
@@ -74,4 +78,10 @@ class BQLivePlot(LivePlot):
         return self.figure
 
     def update(self, force=False):
-        self.image.image = self.data / self.data.max()
+        mmin = self.data.min()
+        mmax = self.data.max()
+        delta = mmax - mmin
+        if delta <= 0:
+            delta = 1
+        # Map on color scale range 0..1
+        self.image.image = (self.data - mmin) / delta

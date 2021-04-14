@@ -1,11 +1,11 @@
 from empyre.vis.colors import ColormapCubehelix, ColormapPerception, ColormapHLS, ColormapClassic
 
-from .base import encode_image, visualize_simple, get_plottable_channels
+from .base import encode_image, visualize_simple, get_plottable_2D_channels
 
 
 __all__ = ['ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',
            'ColormapClassic', 'cmaps', 'CMAP_CIRCULAR_DEFAULT',
-           'visualize_simple', 'encode_image', 'get_plottable_channels']
+           'visualize_simple', 'encode_image', 'get_plottable_2D_channels']
 
 
 cmaps = {'cubehelix_standard': ColormapCubehelix(),

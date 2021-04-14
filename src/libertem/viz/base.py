@@ -139,7 +139,7 @@ class Live2DPlot:
             buffers to avoid unnecessary dry runs.
         """
         if buffers is None:
-            buffers = UDFRunner.dry_run([udf], dataset, roi)[0]
+            buffers = UDFRunner.dry_run([udf], dataset, roi).buffers[0]
         eligible_channels = get_plottable_2D_channels(buffers)
         if channel is None:
             assert len(eligible_channels) > 0, "should have at least one plottable channel"
@@ -175,15 +175,15 @@ class Live2DPlot:
         else:
             return self._extract(udf_results)
 
-    def new_data(self, udf_results, force=False):
+    def new_data(self, udf_results, damage, force=False):
         """
         This method is called with the raw `udf_results` any time a new
         partition has finished processing.
         """
         self.data = self.extract(udf_results)
-        self.update(force=force)
+        self.update(damage, force=force)
 
-    def update(self, force=False):
+    def update(self, damage, force=False):
         """
         Update the plot based on `self.data`. This should be implemented by subclasses.
 

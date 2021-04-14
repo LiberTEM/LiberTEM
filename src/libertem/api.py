@@ -736,11 +736,13 @@ class Context:
                 backends=backends,
             )
             for udf_results in result_iter:
-                yield udf_results
+                yield udf_results.buffers
                 if enable_plotting:
-                    self._update_plots(plots, udfs, udf_results, force=False)
+                    self._update_plots(
+                        plots, udfs, udf_results.buffers, udf_results.damage, force=False
+                    )
             if enable_plotting:
-                self._update_plots(plots, udfs, udf_results, force=True)
+                self._update_plots(plots, udfs, udf_results.buffers, udf_results.damage, force=True)
 
         if iterate:
             return _run_sync_wrap()
@@ -799,7 +801,7 @@ class Context:
     def _prepare_plots(self, udfs, dataset, roi, plots):
         from libertem.viz.mpl import MPLLive2DPlot
 
-        buffers = UDFRunner.dry_run(udfs, dataset, roi)
+        buffers = UDFRunner.dry_run(udfs, dataset, roi).buffers
 
         # cases to consider:
         # 1) plots is `True`: default plots of all eligible channels
@@ -839,11 +841,11 @@ class Context:
                 plots.append(p0)
         return plots
 
-    def _update_plots(self, plots, udfs, udf_results, force=False):
+    def _update_plots(self, plots, udfs, udf_results, damage, force=False):
         for plot in plots:
             udf = plot.get_udf()
             udf_index = udfs.index(udf)
-            plot.new_data(udf_results[udf_index], force=force)
+            plot.new_data(udf_results[udf_index], damage, force=force)
 
     def display(self, dataset: DataSet, udf: UDF, roi=None):
         """

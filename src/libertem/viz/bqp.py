@@ -77,7 +77,8 @@ class BQLive2DPlot(Live2DPlot):
     def display(self):
         return self.figure
 
-    def update(self, force=False):
+    def update(self, damage, force=False):
+        # TODO use damage for min and max
         mmin = self.data.min()
         mmax = self.data.max()
         delta = mmax - mmin

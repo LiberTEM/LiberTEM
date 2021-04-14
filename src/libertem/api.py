@@ -523,8 +523,8 @@ class Context:
             Added the :code:`corrections` and :code:`backends` parameter
 
         .. versionchanged:: 0.7.0
-            Added the :code:`plots`, :code:`sync`, and :code:`iterate` parameters,
-            and the ability to run multiple UDFs on the same data at the same time.
+            Added the :code:`plots` and :code:`sync` parameters,
+            and the ability to run multiple UDFs on the same data in a single pass.
 
         Parameters
         ----------

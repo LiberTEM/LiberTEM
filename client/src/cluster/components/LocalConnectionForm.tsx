@@ -33,7 +33,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
     // default value:
     React.useEffect(() => {
         setFieldValue("cudas", config.devices.cudas);
-    }, []);
+    }, [config.devices.cudas, setFieldValue]);
 
     return (
         <Form onSubmit={handleSubmit}>

@@ -100,7 +100,7 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         if udf_results['intensity'].data.dtype.kind == 'c':
             return AnalysisResultSet(
@@ -110,6 +110,7 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
                     title="intensity",
                     desc="sum of all frames",
                     default_lin=False,
+                    damage=True
                 )
             )
 
@@ -117,13 +118,15 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
             AnalysisResult(
                 raw_data=udf_results['intensity'].data,
                 visualized=visualize_simple(
-                    udf_results['intensity'].data, logarithmic=True
+                    udf_results['intensity'].data, logarithmic=True,
+                    damage=True
                 ),
                 key="intensity", title="intensity [log]", desc="sum of frames log-scaled"
             ),
             AnalysisResult(raw_data=udf_results['intensity'].data,
                 visualized=visualize_simple(
-                    udf_results['intensity'].data, logarithmic=False
+                    udf_results['intensity'].data, logarithmic=False,
+                    damage=True
                 ),
                 key="intensity_lin", title="intensity [lin]", desc="sum of frames lin-scaled"
             ),

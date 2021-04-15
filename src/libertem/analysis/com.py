@@ -169,16 +169,16 @@ class COMResultSet(AnalysisResultSet):
 class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         data = udf_results['intensity'].data
         img_sum, img_y, img_x = (
             data[..., 0],
             data[..., 1],
             data[..., 2],
         )
-        return self.get_generic_results(img_sum, img_y, img_x)
+        return self.get_generic_results(img_sum, img_y, img_x, damage=damage)
 
-    def get_generic_results(self, img_sum, img_y, img_x):
+    def get_generic_results(self, img_sum, img_y, img_x, damage=None):
         from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
@@ -200,35 +200,60 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             y_real, y_imag = np.real(y_centers), np.imag(y_centers)
 
             return COMResultSet([
-                AnalysisResult(raw_data=x_real, visualized=visualize_simple(x_real),
+                AnalysisResult(raw_data=x_real, visualized=visualize_simple(x_real, damage=damage),
                        key="x_real", title="x [real]", desc="x component of the center"),
-                AnalysisResult(raw_data=y_real, visualized=visualize_simple(y_real),
+                AnalysisResult(raw_data=y_real, visualized=visualize_simple(y_real, damage=damage),
                        key="y_real", title="y [real]", desc="y component of the center"),
-                AnalysisResult(raw_data=x_imag, visualized=visualize_simple(x_imag),
+                AnalysisResult(raw_data=x_imag, visualized=visualize_simple(x_imag, damage=damage),
                        key="x_imag", title="x [imag]", desc="x component of the center"),
-                AnalysisResult(raw_data=y_imag, visualized=visualize_simple(y_imag),
+                AnalysisResult(raw_data=y_imag, visualized=visualize_simple(y_imag, damage=damage),
                        key="y_imag", title="y [imag]", desc="y component of the center"),
             ])
         else:
-            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0))
+            if damage is None:
+                damage = (x_centers != 0) | (y_centers != 0)
+            damage = damage & np.isfinite(x_centers) & np.isfinite(y_centers)
+            if np.count_nonzero(damage) > 0:
+                vmax = np.sqrt(np.max(x_centers[damage]**2 + y_centers[damage]**2))
+            else:
+                vmax = 1
+            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0), vmax=vmax)
             d = divergence(y_centers, x_centers)
             c = curl_2d(y_centers, x_centers)
             m = magnitude(y_centers, x_centers)
 
             return COMResultSet([
-                AnalysisResult(raw_data=(x_centers, y_centers), visualized=f,
-                       key="field", title="field", desc="cubehelix colorwheel visualization",
-                       include_in_download=False),
-                AnalysisResult(raw_data=m, visualized=visualize_simple(m),
-                       key="magnitude", title="magnitude", desc="magnitude of the vector field"),
-                AnalysisResult(raw_data=d, visualized=visualize_simple(d),
-                       key="divergence", title="divergence", desc="divergence of the vector field"),
-                AnalysisResult(raw_data=c, visualized=visualize_simple(c),
-                       key="curl", title="curl", desc="curl of the 2D vector field"),
-                AnalysisResult(raw_data=x_centers, visualized=visualize_simple(x_centers),
-                       key="x", title="x", desc="x component of the center"),
-                AnalysisResult(raw_data=y_centers, visualized=visualize_simple(y_centers),
-                       key="y", title="y", desc="y component of the center"),
+                AnalysisResult(
+                    raw_data=(x_centers, y_centers),
+                    visualized=f,
+                    key="field", title="field", desc="cubehelix colorwheel visualization",
+                    include_in_download=False
+                ),
+                AnalysisResult(
+                    raw_data=m,
+                    visualized=visualize_simple(m, damage=damage),
+                    key="magnitude", title="magnitude", desc="magnitude of the vector field"
+                ),
+                AnalysisResult(
+                    raw_data=d,
+                    visualized=visualize_simple(d, damage=damage),
+                    key="divergence", title="divergence", desc="divergence of the vector field"
+                ),
+                AnalysisResult(
+                    raw_data=c,
+                    visualized=visualize_simple(c, damage=damage),
+                    key="curl", title="curl", desc="curl of the 2D vector field"
+                ),
+                AnalysisResult(
+                    raw_data=x_centers,
+                    visualized=visualize_simple(x_centers, damage=damage),
+                    key="x", title="x", desc="x component of the center"
+                ),
+                AnalysisResult(
+                    raw_data=y_centers,
+                    visualized=visualize_simple(y_centers, damage=damage),
+                    key="y", title="y", desc="y component of the center"
+                ),
             ])
 
     def get_mask_factories(self):

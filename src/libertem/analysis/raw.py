@@ -115,8 +115,8 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         roi[self.get_origin()] = True
         return roi
 
-    def get_udf_results(self, udf_results, roi):
-        return self.get_generic_results(udf_results['intensity'].data[0])
+    def get_udf_results(self, udf_results, roi, damage=None):
+        return self.get_generic_results(udf_results['intensity'].data[0], damage=True)
 
     def get_coords(self):
         parameters = self.parameters
@@ -127,7 +127,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         ]
         return " ".join(coords)
 
-    def get_generic_results(self, data):
+    def get_generic_results(self, data, damage=None):
         from libertem.viz import visualize_simple
         coords = self.get_coords()
 
@@ -139,15 +139,22 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                     title="intensity",
                     desc="the frame at %s" % (coords,),
                     default_lin=False,
+                    damage=True
                 )
             )
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=True),
-                           key="intensity", title="intensity [log]",
-                           desc="the frame at %s log-scaled" % (coords,)),
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=False),
-                           key="intensity_lin", title="intensity [lin]",
-                           desc="the frame at %s lin-scaled" % (coords,)),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data, logarithmic=True, damage=True),
+                key="intensity", title="intensity [log]",
+                desc="the frame at %s log-scaled" % (coords,)
+            ),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data, logarithmic=False, damage=True),
+                key="intensity_lin", title="intensity [lin]",
+                desc="the frame at %s lin-scaled" % (coords,)
+            ),
         ])
 
     @classmethod

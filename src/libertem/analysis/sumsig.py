@@ -35,12 +35,13 @@ class SumSigAnalysis(BaseAnalysis, id_="SUM_SIG"):
     def get_udf(self):
         return sumsigudf.SumSigUDF()
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'],
                            visualized=visualize_simple(
-                               udf_results['intensity'].data.reshape(self.dataset.shape.nav)
+                               udf_results['intensity'].data.reshape(self.dataset.shape.nav),
+                               damage=damage
                            ),
                            key="intensity", title="intensity",
                            desc="result from frame integration"),

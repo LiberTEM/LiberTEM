@@ -100,7 +100,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         # that implement the `controller` method
         return None
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         from sklearn.cluster import AgglomerativeClustering
         from sklearn.feature_extraction.image import grid_to_graph
@@ -122,7 +122,9 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         return AnalysisResultSet([
             AnalysisResult(raw_data=labels.reshape(self.dataset.shape.nav),
                            visualized=visualize_simple(
-                               labels.reshape(self.dataset.shape.nav)),
+                               labels.reshape(self.dataset.shape.nav),
+                               damage=True
+                            ),
                            key="intensity", title="intensity",
                            desc="result from integration over mask in Fourier space"),
         ])

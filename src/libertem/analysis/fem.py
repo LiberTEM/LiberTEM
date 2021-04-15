@@ -55,12 +55,14 @@ class FEMAnalysis(BaseAnalysis, id_="FEM"):
         rad_out = self.parameters["ro"]
         return FEM.FEMUDF(center=center, rad_in=rad_in, rad_out=rad_out)
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'].data,
                            visualized=visualize_simple(
-                               udf_results['intensity'].data.reshape(self.dataset.shape.nav)),
+                               udf_results['intensity'].data.reshape(self.dataset.shape.nav),
+                               damage=damage
+                            ),
                            key="intensity", title="intensity",
                            desc="result from SD calculation over ring"),
         ])

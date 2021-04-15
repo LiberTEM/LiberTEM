@@ -43,14 +43,19 @@ class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
             real_center=real_center, real_rad=real_rad,
         )
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         data = udf_results['intensity'].data
         return AnalysisResultSet([
-            AnalysisResult(raw_data=data,
-                           visualized=visualize_simple(data.reshape(self.dataset.shape.nav)),
-                           key="intensity", title="intensity",
-                           desc="result from integration over mask in Fourier space"),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(
+                    data.reshape(self.dataset.shape.nav),
+                    damage=True
+                ),
+                key="intensity", title="intensity",
+                desc="result from integration over mask in Fourier space"
+            ),
         ])
 
     @classmethod

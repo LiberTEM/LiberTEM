@@ -122,7 +122,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
 
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         '''
         The AnalysisResults are calculated lazily in this function to reduce
         overhead.
@@ -140,8 +140,16 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             sets = []
             absolute = np.absolute(udf_results)
             normal = np.maximum(1, absolute[:, 0])
-            min_absolute = np.min(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
-            max_absolute = np.max(absolute[:, 1:, ...] / normal[:, np.newaxis, ...])
+            if damage is None:
+                # Collapse made-up damage to nav shape
+                # Indexing: bin, order, (navshape)
+                dam = np.any(absolute != 0, axis=(0, 1))
+            else:
+                dam = damage
+            dam = dam & np.all(np.isfinite(absolute), axis=(0, 1))
+            normalized = absolute[:, 1:, ...] / normal[:, np.newaxis, ...]
+            min_absolute = np.min(normalized[..., dam])
+            max_absolute = np.max(normalized[..., dam])
             angle = np.angle(udf_results)
             threshold_map = absolute[:, 1:, ...].reshape((n_bins, -1)).max(axis=1) * 0.2
             below_threshold = np.all(
@@ -165,7 +173,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 sets.append(
                     AnalysisResult(
                         raw_data=absolute[b, 0],
-                        visualized=partial(visualize_simple, absolute[b, 0]),
+                        visualized=partial(visualize_simple, absolute[b, 0], damage=dam),
                         key="absolute_%s_%s" % (b, 0),
                         title="absolute of bin %s order %s" % (b, 0),
                         desc="Absolute value of Fourier component",
@@ -176,7 +184,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         AnalysisResult(
                             raw_data=absolute[b, o],
                             visualized=partial(visualize_simple,
-                                absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute
+                                absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute,
+                                damage=dam
                             ),
                             key="absolute_%s_%s" % (b, o),
                             title="absolute of bin %s order %s" % (b, o),
@@ -189,7 +198,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         AnalysisResult(
                             raw_data=angle[b, o],
                             visualized=partial(visualize_simple,
-                                angle[b, o], colormap=cmaps['perception_circular']
+                                angle[b, o], colormap=cmaps['perception_circular'],
+                                damage=dam
                             ),
                             key="phase_%s_%s" % (b, o),
                             title="phase of bin %s order %s" % (b, o),
@@ -200,7 +210,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 data = udf_results[b, 0]
                 f = partial(
                     CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                    (data.real, data.imag, 0)
+                    (data.real, data.imag, 0),
+                    vmax=np.max(np.abs(data[..., dam]))
                 )
                 sets.append(
                     AnalysisResult(

@@ -15,6 +15,9 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=No
     # can be accomplished by calculating min/max over are that was
     # affected by the result tiles. for now, ignoring 0 works fine
 
+    if (vmin is not None) and (vmax is not None):
+        return norm_cls(vmin=vmin, vmax=vmax)
+
     result = result.astype(np.float32)
 
     if damage is None:

@@ -35,12 +35,12 @@ class PickfftTemplate(GeneratorHelper):
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         data = udf_results['intensity'].data[0]
         real_rad = self.parameters.get("real_rad")
         real_center = (self.parameters.get("real_centery"), self.parameters.get("real_centerx"))
         if data.dtype.kind == 'c':
-            return self.get_generic_results(data)
+            return self.get_generic_results(data, damage=damage)
         if not (real_center is None or real_rad is None):
             sigshape = data.shape
             real_mask = 1-1*_make_circular_mask(
@@ -49,7 +49,7 @@ class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
             fft_data = np.fft.fftshift(abs(np.fft.fft2(data*real_mask)))
         else:
             fft_data = np.fft.fftshift(abs(np.fft.fft2(data)))
-        return self.get_generic_results(fft_data)
+        return self.get_generic_results(fft_data, damage=damage)
 
     @classmethod
     def get_template_helper(cls):

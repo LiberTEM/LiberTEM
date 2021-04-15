@@ -41,14 +41,14 @@ class BaseMasksAnalysis(BaseAnalysis):
 
 
 class SingleMaskAnalysis(BaseMasksAnalysis):
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         data = udf_results['intensity'].data
-        return self.get_generic_results(data[..., 0])
+        return self.get_generic_results(data[..., 0], damage=damage)
 
     def get_description(self):
         raise NotImplementedError
 
-    def get_generic_results(self, data):
+    def get_generic_results(self, data, damage=None):
         from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             return SingleMaskResultSet(
@@ -57,15 +57,22 @@ class SingleMaskAnalysis(BaseMasksAnalysis):
                     key_prefix='intensity',
                     title='intensity',
                     desc=self.get_description(),
+                    damage=damage,
                 )
             )
         return SingleMaskResultSet([
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data),
-                           key="intensity", title="intensity [lin]",
-                           desc=f'{self.get_description()} lin-scaled'),
-            AnalysisResult(raw_data=data, visualized=visualize_simple(data, logarithmic=True),
-                           key="intensity_log", title="intensity [log]",
-                           desc=f'{self.get_description()} log-scaled'),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data, damage=damage),
+                key="intensity", title="intensity [lin]",
+                desc=f'{self.get_description()} lin-scaled'
+            ),
+            AnalysisResult(
+                raw_data=data,
+                visualized=visualize_simple(data, logarithmic=True, damage=damage),
+                key="intensity_log", title="intensity [log]",
+                desc=f'{self.get_description()} log-scaled'
+            ),
         ])
 
 
@@ -144,7 +151,7 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         return self.parameters['factories']
 
-    def get_generic_results(self, data):
+    def get_generic_results(self, data, damage=None):
         from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             results = []
@@ -155,13 +162,14 @@ class MasksAnalysis(BaseMasksAnalysis):
                         key_prefix="mask_%d" % idx,
                         title="mask %d" % idx,
                         desc="integrated intensity for mask %d" % idx,
+                        damage=damage
                     )
                 )
             return MasksResultSet(results)
         return MasksResultSet([
             AnalysisResult(
                 raw_data=data[..., idx],
-                visualized=visualize_simple(data[..., idx]),
+                visualized=visualize_simple(data[..., idx], damage=damage),
                 key="mask_%d" % idx,
                 title="mask %d" % idx,
                 desc="integrated intensity for mask %d" % idx)
@@ -171,6 +179,6 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         data = udf_results['intensity'].data
-        return self.get_generic_results(data)
+        return self.get_generic_results(data, damage=damage)

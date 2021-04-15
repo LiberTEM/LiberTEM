@@ -57,13 +57,14 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi):
+    def get_udf_results(self, udf_results, roi, damage=None):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(
                 raw_data=udf_results['std'].data,
                 visualized=visualize_simple(
-                    udf_results['std'].data, logarithmic=True
+                    udf_results['std'].data, logarithmic=True,
+                    damage=True
                 ),
                 key="intensity", title="intensity [log]",
                 desc="Standard deviation of frames log-scaled"
@@ -72,6 +73,7 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
                 raw_data=udf_results['std'],
                 visualized=visualize_simple(
                     udf_results['std'].data, logarithmic=False,
+                    damage=True
                 ),
                 key="intensity_lin",
                 title="intensity [lin]",

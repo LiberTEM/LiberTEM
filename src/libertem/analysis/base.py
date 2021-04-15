@@ -253,44 +253,51 @@ class BaseAnalysis(Analysis):
     def get_roi(self):
         return None
 
-    def get_complex_results(self, job_result, key_prefix, title, desc, default_lin=True):
+    def get_complex_results(
+            self, job_result, key_prefix, title, desc, default_lin=True, damage=None):
         from libertem.viz import visualize_simple, CMAP_CIRCULAR_DEFAULT
+        if damage is None:
+            damage = (job_result != 0)
+        damage = damage & np.isfinite(job_result)
         magn = np.abs(job_result)
         angle = np.angle(job_result)
-        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((job_result.real, job_result.imag, 0))
+        wheel = CMAP_CIRCULAR_DEFAULT.rgb_from_vector(
+            (job_result.real, job_result.imag, 0),
+            vmax=np.max(magn[damage])
+        )
         return [
             # for compatability, the magnitude has key=key_prefix
             AnalysisResult(
                 raw_data=magn,
-                visualized=visualize_simple(magn),
+                visualized=visualize_simple(magn, damage=damage),
                 key=key_prefix if default_lin else f'{key_prefix}_lin',
                 title="%s [magn]" % title,
                 desc="%s [magn]" % desc,
             ),
             AnalysisResult(
                 raw_data=magn,
-                visualized=visualize_simple(magn, logarithmic=True),
+                visualized=visualize_simple(magn, logarithmic=True, damage=damage),
                 key=f'{key_prefix}_log' if default_lin else key_prefix,
                 title="%s [log(magn)]" % title,
                 desc="%s [log(magn)]" % desc,
             ),
             AnalysisResult(
                 raw_data=job_result.real,
-                visualized=visualize_simple(job_result.real),
+                visualized=visualize_simple(job_result.real, damage=damage),
                 key="%s_real" % key_prefix,
                 title="%s [real]" % title,
                 desc="%s [real]" % desc,
             ),
             AnalysisResult(
                 raw_data=job_result.imag,
-                visualized=visualize_simple(job_result.imag),
+                visualized=visualize_simple(job_result.imag, damage=damage),
                 key="%s_imag" % key_prefix,
                 title="%s [imag]" % title,
                 desc="%s [imag]" % desc,
             ),
             AnalysisResult(
                 raw_data=angle,
-                visualized=visualize_simple(angle),
+                visualized=visualize_simple(angle, damage=damage),
                 key="%s_angle" % key_prefix,
                 title="%s [angle]" % title,
                 desc="%s [angle]" % desc,

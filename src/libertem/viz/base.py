@@ -88,6 +88,9 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
         passing to `Image.fromarray` in PIL.
     """
     if logarithmic:
+        # Convert to the smallest dtype that supports subtractions
+        dtype = np.result_type(result, np.int8)
+        result = result.astype(dtype)
         cnorm = colors.LogNorm
         result = result - np.min(result) + 1
     else:

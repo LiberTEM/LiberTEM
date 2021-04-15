@@ -500,7 +500,15 @@ class Context:
             dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
             progress=progress, corrections=corrections,
         )
-        return analysis.get_udf_results(udf_results, roi)
+        # Here we plot only after the computation is completed, meaning the damage should be
+        # the ROI or the entire nav dimension.
+        # TODO live plotting following libertem.web.jobs.JobDetailHandler.run_udf
+        # Current Analysis interface possibly made obsolete by #1013, so deferred
+        if roi is None:
+            damage = True
+        else:
+            damage = roi
+        return analysis.get_udf_results(udf_results, roi, damage=damage)
 
     def run_udf(
             self,

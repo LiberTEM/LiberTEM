@@ -116,6 +116,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
                 analysis.get_udf_results,
                 udf_results=udf_results.buffers[0],
                 roi=roi,
+                damage=udf_results.damage
             )
             post_t = time.time()
             await self.send_results(results, job_id, analysis_id, details)
@@ -129,5 +130,6 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
             analysis.get_udf_results,
             udf_results=udf_results.buffers[0],
             roi=roi,
+            damage=udf_results.damage
         )
         await self.send_results(results, job_id, analysis_id, details, finished=True)

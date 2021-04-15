@@ -254,7 +254,12 @@ class BufferWrapper(object):
         """
         Get the buffer contents in shape that corresponds to the
         original dataset shape. If a ROI is set, embed the result into a new
-        array; unset values have nan value, if supported by the underlying dtype.
+        array; unset values have NaN value for floating point types,
+        False for boolean, 0 for integer types and structs,
+        '' for string types and None for objects.
+
+        .. versionchanged:: 0.7.0
+            Better initialization values for dtypes other than floating point.
         """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
@@ -264,7 +269,19 @@ class BufferWrapper(object):
         if shape == self._data.shape:
             # preallocated and already wrapped
             return self._data
-        wrapper = np.full(shape, np.nan, dtype=self._dtype)
+        # Integer types and "void" (structs and such)
+        if self.dtype.kind in ('i', 'u', 'V'):
+            fill = 0
+        # Bytes and Unicode strings
+        elif self.dtype.kind in ('S', 'U'):
+            fill = ''
+        else:
+            # 'b' (boolean): False
+            # 'f', 'c': NaN
+            # 'm', 'M' (datetime, timedelta): NaT
+            # 'O' (object): None
+            fill = None
+        wrapper = np.full(shape, fill, dtype=self._dtype)
         wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
         return wrapper
 

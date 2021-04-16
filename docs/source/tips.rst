@@ -27,6 +27,19 @@ This makes LiberTEM, which is running on `remote-hostname`, available on your
 local host via http://localhost:9000/
 
 
+Activating iywidgets in Jupyter
+===============================
+
+Some examples use :code:`ipywidgets` in notebooks, most notably the fast
+:class:`~libertem.viz.bqp.BQLive2DPlot`. In some cases the corresponding Jupyter
+Notebook extension `has to be activated manually
+<https://ipywidgets.readthedocs.io/en/stable/user_install.html#installing-in-classic-jupyter-notebook>`_:
+
+.. code-block:: shell
+
+    $ jupyter nbextension enable --py widgetsnbextension
+
+
 Running LiberTEM from an embedded interpreter
 ---------------------------------------------
 

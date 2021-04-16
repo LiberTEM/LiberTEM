@@ -1,5 +1,6 @@
 import logging
 from io import BytesIO
+import time
 
 import numpy as np
 from matplotlib import colors, cm
@@ -115,10 +116,11 @@ def get_plottable_2D_channels(buffers):
 
 class Live2DPlot:
     """
-    Base plotting class for interactive use. Please see the subclasses for concrete details.
+    Base plotting class for interactive use. Please see the subclasses for
+    concrete details.
     """
     def __init__(
-            self, dataset, udf, roi=None, channel=None, udfresult=None
+            self, dataset, udf, roi=None, channel=None, title=None, min_delta=0, udfresult=None
     ):
         """
         Construct a new `LivePlot`
@@ -126,27 +128,46 @@ class Live2DPlot:
         Parameters
         ----------
         dataset : DataSet
-            The dataset on which the UDf will be run. This allows to determine the
-            shape of the plots for initialization.
-
+            The dataset on which the UDf will be run. This allows
+            to determine the shape of the plots for initialization.
         udf : UDF
             The UDF instance this plot is associated to. This needs to be
-            the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
-
+            the same instance that is passed to
+            :meth:`~libertem.api.Context.run_udf`.
         roi : numpy.ndarray or None
-            Region of interest (ROI) that the UDF will be run on. This is necessary for UDFs
-            where the `extra_shape` parameter of result buffers is a function of the ROI,
-            such as :class:`~libertem.udf.raw.PickUDF`.
+            Region of interest (ROI) that the UDF will
+            be run on. This is necessary for UDFs where the `extra_shape`
+            parameter of result buffers is a function of the ROI, such as
+            :class:`~libertem.udf.raw.PickUDF`.
+        channel : str or function (udf_result, damage) -> (ndarray, damage)
+            The UDF result buffer name that should be plotted, or a function that
+            derives a plottable 2D ndarray and damage indicator from the full
+            UDF results and the processed nav space.
 
-        channel : str or function udf_result -> ndarray
-            The UDF result buffer name that should be plotted, or a function
-            that derives a plottable 2D ndarray from the full UDF results.
+            The function receives the partial result of the UDF together with :code:`damage`, a
+            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
+            and :code:`dtype=bool` that indicates the area of the nav dimension that
+            has been processed by the UDF already.
 
-        udfresult : None or UDF result
-            UDF result used to initialize the plot data and determine plot shape.
-            If None (default), this is determined using
-            :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
-            buffers to avoid unnecessary dry runs.
+            If the extracted value is derived from :code:`kind='nav'`buffers,
+            the function can just pass through :code:`damage`
+            as its return value. If it is unrelated to the navigations space, for example
+            :code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
+            to indicate that the entire buffer was updated. The damage information
+            is currently used to determine the correct plot range by ignoring the
+            buffer's initialization value.
+
+            If no channel is given, the first plottable (2D) channel of the UDF
+            is chosen.
+        title : str
+            The plot title. By default UDF class name and channel name.
+        min_delta : float
+            Minimum time span in seconds between updates to reduce overheads for slow plotting.
+        udfresult : None or UDF result from UDFRunner
+            Internal use only: UDF result used to initialize the plot
+            data and determine plot shape. If None (default, recommended), this is determined
+            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
+            This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
         if udfresult is None:
             udfresult = UDFRunner.dry_run([udf], dataset, roi)
@@ -167,8 +188,13 @@ class Live2DPlot:
 
         self._extract = extract
         self.channel = channel
+        if title is None:
+            title = f"{udf.__class__.__name__}: {self.channel}"
+        self.title = title
         self.data, _ = self.extract(udfresult.buffers[0], udfresult.damage)
         self.udf = udf
+        self.last_update = 0
+        self.min_delta = min_delta
 
     def get_udf(self):
         """
@@ -178,7 +204,26 @@ class Live2DPlot:
 
     def extract(self, udf_results, damage):
         """
-        Extract plotting data from UDF result
+        Extract plotting data from UDF result.
+
+
+        Parameters
+        ----------
+
+        udf_results : UDF result
+            (Partial) UDF result
+
+        damage : BufferWrapper
+            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
+            and :code:`dtype=bool` that indicates the area of the nav dimension that
+            has been processed by the UDF already.
+
+        Returns
+        -------
+        (numpy.ndarray, damage)
+            It returns the data and damage of a UDF result buffer indicated by :code:`channel`
+            if that is a string, or a numpy.ndarray and damage derived from the UDF results by
+            calling :code:`channel` with this method's arguments if it is callable.
         """
         if self._extract is None:
             buffer = udf_results[self.channel]
@@ -186,7 +231,7 @@ class Live2DPlot:
             if buffer.kind == 'nav':
                 res_damage = damage
             else:
-                res_damage = np.ones_like(squeezed, dtype=bool)
+                res_damage = True
             return (squeezed, res_damage)
         else:
             return self._extract(udf_results, damage)
@@ -195,19 +240,35 @@ class Live2DPlot:
         """
         This method is called with the raw `udf_results` any time a new
         partition has finished processing.
+
+        The :code:`damage` parameter is filtered to only cover finite
+        values of :code:`self.data` and passed to :meth:`self.update`,
+        which should then be implemented by a subclass.
         """
+        t0 = time.time()
+        delta = t0 - self.last_update
+        if (not force) and delta < self.min_delta:
+            return  # don't update plot if we recently updated
         (self.data, damage) = self.extract(udf_results, damage)
-        damage = np.broadcast_to(damage, self.data.shape)
+        damage = damage & np.isfinite(self.data)
         self.update(damage, force=force)
+        self.last_update = time.time()
+        logger.debug("%s updated in %.3f seconds", self.__class__.__name__, self.last_update - t0)
 
     def update(self, damage, force=False):
         """
-        Update the plot based on `self.data`. This should be implemented by subclasses.
+        Update the plot based on `self.data`. This should be implemented by
+        subclasses.
 
         Parameters
         ----------
-        force : bool
-            Force an update, disabling any throttling mechanisms
+        damage : numpy.ndarray Boolean array with the shape of
+            :code:`self.data`. It is :code:`True` for all positions in
+            :code:`self.data` that contain finite values and have potentially
+            been touched by the UDF. This can be used to extract the correct
+            plot range by ignoring invalid buffer portions.
+
+        force : bool Force an update, disabling any throttling mechanisms
         """
         raise NotImplementedError()
 

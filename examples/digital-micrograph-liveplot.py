@@ -16,7 +16,8 @@ from libertem.masks import ring
 # See this and other examples for general info on running LiberTEM in GMS.
 
 def main():
-    with api.Context(executor=InlineJobExecutor()) as ctx:
+    # Set a plot class for Digital Micrograph
+    with api.Context(executor=InlineJobExecutor(), plot_class=GMSLive2DPlot) as ctx:
         ds = ctx.load(
             "RAW",
             path=r"C:\Users\Dieter\testfile-32-32-32-32-float32.raw",
@@ -39,13 +40,7 @@ def main():
             )]
         )
 
-        live_sum = GMSLive2DPlot(DM=DM, dataset=ds, udf=sum_udf)
-        live_ring = GMSLive2DPlot(DM=DM, dataset=ds, udf=ring_udf)
-
-        live_sum.display()
-        live_ring.display()
-
-        ctx.run_udf(dataset=ds, udf=[sum_udf, ring_udf], plots=[live_sum, live_ring])
+        ctx.run_udf(dataset=ds, udf=[sum_udf, ring_udf], plots=True)
 
 
 if __name__ == "__main__":

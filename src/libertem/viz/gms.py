@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 
 from .base import Live2DPlot
@@ -12,56 +10,73 @@ class GMSLive2DPlot(Live2DPlot):
     This works with Python scripting within GMS
     """
     def __init__(
-            self, DM, dataset, udf, roi=None, channel=None, buffers=None, title=None,
-            min_delta=0.2
+            self, dataset, udf, roi=None, channel=None, title=None,
+            min_delta=0.2, udfresult=None,
+
     ):
         """
         Construct a new :class:`GMSLive2DPlot` instance.
 
         Parameters
         ----------
-        DM : DM
-            The DM module used for interfacing between GMS and Python
-            TODO how to import that in a submodule?
         dataset : DataSet
-            The dataset on which the UDf will be run. This allows to determine the
-            shape of the plots for initialization.
-
+            The dataset on which the UDf will be run. This allows
+            to determine the shape of the plots for initialization.
         udf : UDF
             The UDF instance this plot is associated to. This needs to be
-            the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
-
+            the same instance that is passed to
+            :meth:`~libertem.api.Context.run_udf`.
         roi : numpy.ndarray or None
-            Region of interest (ROI) that the UDF will be run on. This is necessary for UDFs
-            where the `extra_shape` parameter of result buffers is a function of the ROI,
-            such as :class:`~libertem.udf.raw.PickUDF`.
+            Region of interest (ROI) that the UDF will
+            be run on. This is necessary for UDFs where the `extra_shape`
+            parameter of result buffers is a function of the ROI, such as
+            :class:`~libertem.udf.raw.PickUDF`.
+        channel : str or function (udf_result, damage) -> (ndarray, damage)
+            The UDF result buffer name that should be plotted, or a function that
+            derives a plottable 2D ndarray and damage indicator from the full
+            UDF results and the processed nav space.
 
-        channel : str or function udf_result -> ndarray
-            The UDF result buffer name that should be plotted, or a function
-            that derives a plottable 2D ndarray from the full UDF results.
+            The function receives the partial result of the UDF together with :code:`damage`, a
+            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
+            and :code:`dtype=bool` that indicates the area of the nav dimension that
+            has been processed by the UDF already.
 
-        buffers : None or udf_result
-            UDF result used to initialize the plot data and determine plot shape.
-            If None (default), this is determined using
-            :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
-            buffers to avoid unnecessary dry runs.
+            If the extracted value is derived from :code:`kind='nav'`buffers,
+            the function can just pass through :code:`damage`
+            as its return value. If it is unrelated to the navigations space, for example
+            :code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
+            to indicate that the entire buffer was updated. The damage information
+            is currently used to determine the correct plot range by ignoring the
+            buffer's initialization value.
 
-        cmap : str
-            Colormap
-
-        min_delta : float in seconds
-            Don't update more frequently than this value.
+            If no channel is given, the first plottable (2D) channel of the UDF
+            is chosen.
+        title : str
+            The plot title. By default UDF class name and channel name.
+        min_delta : float
+            Minimum time span in seconds between updates to reduce overheads for slow plotting.
+        udfresult : None or UDF result
+            UDF result used to initialize the plot
+            data and determine plot shape. If None (default), this is determined
+            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
+            This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
-        super().__init__(dataset, udf, roi, channel, buffers)
-        self.DM = DM
+        super().__init__(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            channel=channel,
+            title=title,
+            min_delta=min_delta,
+            udfresult=udfresult
+        )
+        # Optional dependency, don't import top-level
+        import DigitalMicrograph as DM
+
         self.image = DM.CreateImage(self.data.copy())
         self.window = None
         self.disp = None
-        if title is None:
-            title = f"{udf.__class__.__name__}: {self.channel}"
-        self.image.SetName(title)
-        self.last_update = 0
-        self.min_delta = min_delta
+        self.image.SetName(self.title)
 
     def display(self):
         self.window = self.image.ShowImage()
@@ -69,14 +84,9 @@ class GMSLive2DPlot(Live2DPlot):
         self.disp.SetDoAutoSurvey(False)
 
     def update(self, damage, force=False):
-        t0 = time.time()
-        delta = t0 - self.last_update
-        if (not force) and delta < self.min_delta:
-            return  # don't update plot if we recently updated
         if self.disp is None:
             assert self.window is None
             return
-        damage = damage & np.isfinite(self.data)
         valid_data = self.data[damage]
         if len(valid_data) > 0:
             vmin = np.min(valid_data)
@@ -85,4 +95,3 @@ class GMSLive2DPlot(Live2DPlot):
         buffer = self.image.GetNumArray()
         buffer[:] = self.data
         self.image.UpdateImage()
-        self.last_update = time.time()

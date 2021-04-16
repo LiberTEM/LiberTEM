@@ -39,7 +39,7 @@ class Context:
         Removed deprecated methods :code:`create_mask_job`, :code:`create_pick_job`
     """
 
-    def __init__(self, executor: JobExecutor = None):
+    def __init__(self, executor: JobExecutor = None, plot_class=None):
         """
         Create a new context. In the background, this creates a suitable
         executor and spins up a local Dask cluster.
@@ -51,6 +51,10 @@ class Context:
             If None, create a
             :class:`~libertem.executor.dask.DaskJobExecutor` that uses all cores
             on the local system.
+
+        plot_class : libertem.viz.base.Live2DPlot
+            Plot class to use for live plotting if not specified.
+            Defaults to libertem.viz.mpl.MPLLive2DPlot.
 
         Examples
         --------
@@ -69,6 +73,11 @@ class Context:
                 f'got type "{type(executor)}" instead.'
             )
         self.executor = executor
+
+        if plot_class is None:
+            from libertem.viz.mpl import MPLLive2DPlot
+            plot_class = MPLLive2DPlot
+        self.plot_class = plot_class
 
     def load(self, filetype: str, *args, io_backend=None, **kwargs) -> DataSet:
         """
@@ -807,8 +816,6 @@ class Context:
         ]
 
     def _prepare_plots(self, udfs, dataset, roi, plots):
-        from libertem.viz.mpl import MPLLive2DPlot
-
         dry_results = UDFRunner.dry_run(udfs, dataset, roi)
 
         # cases to consider:
@@ -837,17 +844,16 @@ class Context:
         plots = []
         for idx, (udf, udf_channels) in enumerate(zip(udfs, channels)):
             for channel in udf_channels:
-                p0 = MPLLive2DPlot(
+                p0 = self.plot_class(
                     dataset,
                     udf=udf,
                     roi=roi,
                     channel=channel,
                     # Create an UDFResult from this single UDF
-                    buffers=UDFResults(
+                    udfresult=UDFResults(
                         (dry_results.buffers[idx],),
                         dry_results.damage
                     ),
-                    min_delta=0.3
                 )
                 p0.display()
                 plots.append(p0)

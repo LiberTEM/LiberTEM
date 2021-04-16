@@ -13,7 +13,7 @@ class BQLive2DPlot(Live2DPlot):
     bqplot-image-gl-based live plot (experimental).
     """
     def __init__(
-            self, dataset, udf, roi=None, channel=None, buffers=None
+            self, dataset, udf, roi=None, channel=None, title=None, min_delta=0.0001, udfresult=None
     ):
         """
         Construct a new :class:`BQLive2DPlot` instance.
@@ -21,35 +21,70 @@ class BQLive2DPlot(Live2DPlot):
         Parameters
         ----------
         dataset : DataSet
-            The dataset on which the UDf will be run. This allows to determine the
-            shape of the plots for initialization.
+            The dataset on which the UDf will be run. This allows
+            to determine the shape of the plots for initialization.
 
         udf : UDF
             The UDF instance this plot is associated to. This needs to be
-            the same instance that is passed to :meth:`~libertem.api.Context.run_udf`.
+            the same instance that is passed to
+            :meth:`~libertem.api.Context.run_udf`.
 
         roi : numpy.ndarray or None
-            Region of interest (ROI) that the UDF will be run on. This is necessary for UDFs
-            where the `extra_shape` parameter of result buffers is a function of the ROI,
-            such as :class:`~libertem.udf.raw.PickUDF`.
+            Region of interest (ROI) that the UDF will
+            be run on. This is necessary for UDFs where the `extra_shape`
+            parameter of result buffers is a function of the ROI, such as
+            :class:`~libertem.udf.raw.PickUDF`.
 
-        channel : str or function udf_result -> ndarray
-            The UDF result buffer name that should be plotted, or a function
-            that derives a plottable 2D ndarray from the full UDF results.
+        channel : str or function (udf_result, damage) -> (ndarray, damage)
+            The UDF result buffer name that should be plotted, or a function that
+            derives a plottable 2D ndarray and damage indicator from the full
+            UDF results and the processed nav space.
 
-        buffers : None or udf_result
-            UDF result used to initialize the plot data and determine plot shape.
-            If None (default), this is determined using
-            :meth:`~libertem.udf.base.UDFRunner.dry_run`. This parameter allows re-using
-            buffers to avoid unnecessary dry runs.
+            The function receives the partial result of the UDF together with :code:`damage`, a
+            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
+            and :code:`dtype=bool` that indicates the area of the nav dimension that
+            has been processed by the UDF already.
+
+            If the extracted value is derived from :code:`kind='nav'`buffers,
+            the function can just pass through :code:`damage`
+            as its return value. If it is unrelated to the navigations space, for example
+            :code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
+            to indicate that the entire buffer was updated. The damage information
+            is currently used to determine the correct plot range by ignoring the
+            buffer's initialization value.
+
+            If no channel is given, the first plottable (2D) channel of the UDF
+            is chosen.
+
+        title : str
+            The plot title. By default UDF class name and channel name.
+
+        min_delta : float
+            Minimum time span in seconds between updates to reduce overheads for slow plotting.
+
+        udfresult : None or UDF result
+            UDF result used to initialize the plot
+            data and determine plot shape. If None (default), this is determined
+            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
+            This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
-        super().__init__(dataset, udf, roi, channel, buffers)
+        super().__init__(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            channel=channel,
+            title=title,
+            min_delta=min_delta,
+            udfresult=udfresult,
+        )
         # keep bqplot and bqplot_image_gl as optional dependencies
         from bqplot import Figure, LinearScale, Axis, ColorScale
         from bqplot_image_gl import ImageGL
 
         scale_x = LinearScale(min=0, max=1)
-        scale_y = LinearScale(min=0, max=1)
+        # Make sure y points down
+        # See https://libertem.github.io/LiberTEM/concepts.html#coordinate-system
+        scale_y = LinearScale(min=1, max=0)
         scales = {'x': scale_x,
                   'y': scale_y}
         axis_x = Axis(scale=scale_x, label='x')
@@ -65,28 +100,31 @@ class BQLive2DPlot(Live2DPlot):
             scale_y=scale_y,
             min_aspect_ratio=aspect,
             max_aspect_ratio=aspect,
+            title=self.title
         )
 
         scales_image = {'x': scale_x,
                         'y': scale_y,
                         'image': ColorScale(min=0, max=1)}
 
-        image = ImageGL(image=self.data, scales=scales_image)
+        dtype = np.result_type(self.data, np.int8)
+        image = ImageGL(image=self.data.astype(dtype), scales=scales_image)
         figure.marks = (image,)
         self.figure = figure
         self.image = image
 
     def display(self):
-        return self.figure
+        from IPython.display import display
+        display(self.figure)
 
     def update(self, damage, force=False):
-        # TODO use damage for min and max
-        damage = damage & np.isfinite(self.data)
-        valid_data = self.data[damage]
+        dtype = np.result_type(self.data, np.int8)
+        # Map on dtype that supports subtraction
+        valid_data = self.data[damage].astype(dtype)
         mmin = valid_data.min()
         mmax = valid_data.max()
         delta = mmax - mmin
         if delta <= 0:
             delta = 1
         # Map on color scale range 0..1
-        self.image.image = (self.data - mmin) / delta
+        self.image.image = (self.data.astype(dtype) - mmin) / delta

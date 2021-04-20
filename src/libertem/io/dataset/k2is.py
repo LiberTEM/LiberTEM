@@ -552,22 +552,7 @@ class K2ISDataSet(DataSet):
 
     def _do_initialize(self):
         self._files = self._get_files()
-        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
-            nav_shape_y = dm_file.allTags.get('.SI Dimensions.Size Y')
-            nav_shape_x = dm_file.allTags.get('.SI Dimensions.Size X')
-            if nav_shape_y and nav_shape_x:
-                self._scan_size = (int(nav_shape_y), int(nav_shape_x))
-                # NOTE: the sync flag appears to be set one frame too late, so
-                # we compensate here by setting a negative _skip_frames value.
-                # skip_frames is applied after synchronization.
-                self._skip_frames = -1
-            else:
-                # data set is time series and does not have any frames with
-                # SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.
-                self._skip_frames = 0
-        self._get_syncer(do_sync=True)
-        if self._skip_frames == 0:
-            self._scan_size = self._get_frame_count()
+        self._set_skip_frames_and_scan_size()
         self._image_count = int(np.prod(self._scan_size))
         self._nav_shape_product = self._image_count
         self._sync_offset_info = self.get_sync_offset_info()
@@ -583,6 +568,24 @@ class K2ISDataSet(DataSet):
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)
 
+    def _set_skip_frames_and_scan_size(self):
+        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
+            nav_shape_y = dm_file.allTags.get('.SI Dimensions.Size Y')
+            nav_shape_x = dm_file.allTags.get('.SI Dimensions.Size X')
+            if nav_shape_y and nav_shape_x:
+                # the sync flag appears to be set one frame too late, so
+                # we compensate here by setting a negative _skip_frames value.
+                # skip_frames is applied after synchronization.
+                self._skip_frames = -1
+                self._get_syncer(do_sync=True)
+                self._scan_size = (int(nav_shape_y), int(nav_shape_x))
+            else:
+                # data set is time series and does not have any frames with
+                # SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.
+                self._skip_frames = 0
+                self._get_syncer(do_sync=True)
+                self._scan_size = (self._get_frame_count(),)
+
     def _get_frame_count(self):
         with self._get_syncer().sectors[0] as sector:
             first_block = sector.first_block()
@@ -590,7 +593,7 @@ class K2ISDataSet(DataSet):
         first_frame_id = int(first_block.header['frame_id'])
         last_frame_id = int(last_block.header['frame_id'])
         frame_count = last_frame_id - first_frame_id
-        return (frame_count,)
+        return frame_count
 
     def _scansize_without_flyback(self):
         with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
@@ -664,14 +667,17 @@ class K2ISDataSet(DataSet):
             {"name": "first block offsets for all sectors",
              "value": ", ".join([str(s) for s in self._start_offsets])},
 
-            {"name": "est. number of frames (from first sector)",
+            {"name": "est. number of frames before sync (from first sector)",
              "value": str(est_num_frames)},
-
-            {"name": "first frame id after sync (from first sector)",
-             "value": str(first_block.header['frame_id'])},
 
             {"name": "first frame id before sync (from first sector)",
              "value": str(first_block_nosync.header['frame_id'])},
+
+            {"name": "number of frames after sync (from first sector)",
+             "value": str(self._get_frame_count())},
+
+            {"name": "first frame id after sync (from first sector)",
+             "value": str(first_block.header['frame_id'])},
         ]
 
     def _get_files(self):

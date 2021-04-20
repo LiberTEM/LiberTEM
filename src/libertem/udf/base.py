@@ -1541,6 +1541,26 @@ class UDFRunner:
 
 
 class UDFResults:
+    '''
+    Container class to combine UDF results with additional information.
+
+    This class allows to return additional information from UDF execution
+    together with UDF result buffers. This is currently used to pass
+    "damage" information when running UDFs as an iterator using
+    :meth:`libertem.api.Context.run_udf_iter`. "Damage" is
+    a map of the nav space that is set to :code:`True`
+    for all positions that have already been processed.
+
+    Parameters
+    ----------
+
+    buffers : Iterable[dict]
+        Iterable containing the result buffer dictionaries for each of the UDFs being executed
+
+    damage : BufferWrapper
+        :class:`libertem.common.buffers.BufferWrapper` of :code:`kind='nav'`, :code:`dtype=bool`.
+        It is set to :code:`True` for all positions in nav space that have been processed already.
+    '''
     def __init__(self, buffers, damage):
         self.buffers = buffers
         self.damage = damage

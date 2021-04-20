@@ -22,7 +22,7 @@ class MPLLive2DPlot(Live2DPlot):
 
         Parameters
         ----------
-    dataset : DataSet
+        dataset : DataSet
             The dataset on which the UDf will be run. This allows
             to determine the shape of the plots for initialization.
         udf : UDF
@@ -34,26 +34,16 @@ class MPLLive2DPlot(Live2DPlot):
             be run on. This is necessary for UDFs where the `extra_shape`
             parameter of result buffers is a function of the ROI, such as
             :class:`~libertem.udf.raw.PickUDF`.
-        channel : str or function (udf_result, damage) -> (ndarray, damage)
-            The UDF result buffer name that should be plotted, or a function that
-            derives a plottable 2D ndarray and damage indicator from the full
-            UDF results and the processed nav space.
+        channel : misc
+            Indicate the channel to be plotted.
 
-            The function receives the partial result of the UDF together with :code:`damage`, a
-            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
-            and :code:`dtype=bool` that indicates the area of the nav dimension that
-            has been processed by the UDF already.
-
-            If the extracted value is derived from :code:`kind='nav'`buffers,
-            the function can just pass through :code:`damage`
-            as its return value. If it is unrelated to the navigations space, for example
-            :code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
-            to indicate that the entire buffer was updated. The damage information
-            is currently used to determine the correct plot range by ignoring the
-            buffer's initialization value.
-
-            If no channel is given, the first plottable (2D) channel of the UDF
-            is chosen.
+            - :code:`None`: The first plottable (2D) channel of the UDF is plotted.
+            - :code:`str`: The UDF result buffer name that should be plotted.
+            - :code:`tuple(str, function(ndarray) -> ndarray)`: The UDF result buffer name that
+                should be plotted together with a function that extracts a plottable result
+            - :code:`function(udf_result, damage) -> (ndarray, damage)`: Function that derives a
+                plottable 2D ndarray and damage indicator from the full
+                UDF results and the processed nav space. See :ref:`plotting` for more details!
         title : str
             The plot title. By default UDF class name and channel name.
         min_delta : float

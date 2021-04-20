@@ -128,7 +128,7 @@ class Live2DPlot:
         Parameters
         ----------
         dataset : DataSet
-            The dataset on which the UDf will be run. This allows
+            The dataset on which the UDF will be run. This allows
             to determine the shape of the plots for initialization.
         udf : UDF
             The UDF instance this plot is associated to. This needs to be

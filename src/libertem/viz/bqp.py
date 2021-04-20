@@ -21,7 +21,7 @@ class BQLive2DPlot(Live2DPlot):
         Parameters
         ----------
         dataset : DataSet
-            The dataset on which the UDf will be run. This allows
+            The dataset on which the UDF will be run. This allows
             to determine the shape of the plots for initialization.
 
         udf : UDF
@@ -38,11 +38,11 @@ class BQLive2DPlot(Live2DPlot):
         channel : misc
             Indicate the channel to be plotted.
 
-            None: The first plottable (2D) channel of the UDF is plotted.
-            str: The UDF result buffer name that should be plotted.
-            tuple(str, function(ndarray) -> ndarray): The UDF result buffer name that
+            - :code:`None`: The first plottable (2D) channel of the UDF is plotted.
+            - :code:`str`: The UDF result buffer name that should be plotted.
+            - :code:`tuple(str, function(ndarray) -> ndarray)`: The UDF result buffer name that
                 should be plotted together with a function that extracts a plottable result
-            function (udf_result, damage) -> (ndarray, damage): Function that derives a
+            - :code:`function(udf_result, damage) -> (ndarray, damage)`: Function that derives a
                 plottable 2D ndarray and damage indicator from the full
                 UDF results and the processed nav space. See :ref:`plotting` for more details!
 

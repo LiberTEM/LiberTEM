@@ -12,10 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=None):
-    # TODO: only normalize across the area where we already have values
-    # can be accomplished by calculating min/max over are that was
-    # affected by the result tiles. for now, ignoring 0 works fine
-
     if (vmin is not None) and (vmax is not None):
         return norm_cls(vmin=vmin, vmax=vmax)
 

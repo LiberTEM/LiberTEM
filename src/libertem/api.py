@@ -566,11 +566,12 @@ class Context:
             Restrict the back-end to a subset of the capabilities of the UDF.
             This can be useful for testing hybrid UDFs.
 
-        plots : None or True or List[List[str]] or List[LivePlot]
+        plots : None or True or List[List[Union[str, Tuple[str, Callable]]]] or List[LivePlot]
             - :code:`None`: don't plot anything (default)
             - :code:`True`: plot all 2D UDF result buffers
-            - :code:`List[List[str]]`: plot the named UDF buffers. Pass a list of names for each
-              UDF you want to plot
+            - :code:`List[List[...]]`: plot the named UDF buffers. Pass a list of names or
+              (name, callable) tuples for each UDF you want to plot. If the callable is specified,
+              it is applied to the UDF buffer before plotting.
             - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each
               channel you want to plot
 
@@ -670,11 +671,12 @@ class Context:
             Restrict the back-end to a subset of the capabilities of the UDF.
             This can be useful for testing hybrid UDFs.
 
-        plots : None or True or List[List[str]] or List[LivePlot]
+        plots : None or True or List[List[Union[str, Tuple[str, Callable]]]] or List[LivePlot]
             - :code:`None`: don't plot anything (default)
             - :code:`True`: plot all 2D UDF result buffers
-            - :code:`List[List[str]]`: plot the named UDF buffers. Pass a list of names for each
-              UDF you want to plot
+            - :code:`List[List[...]]`: plot the named UDF buffers. Pass a list of names or
+              (name, callable) tuples for each UDF you want to plot. If the callable is specified,
+              it is applied to the UDF buffer before plotting.
             - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each
               channel you want to plot
 
@@ -684,9 +686,12 @@ class Context:
 
         Returns
         -------
-        Generator[Tuple[dict[str, BufferWrapper]]]
-            Generator of return values of the UDFs containing the result buffers of
-            type :class:`libertem.common.buffers.BufferWrapper`.
+        Generator[UDFResults]
+            Generator of :class:`~libertem.udf.base.UDFResults` container objects.
+            Attribute :code:`buffers` is the list of result buffer dictionaries for the UDFs.
+            Attribute :code:`damage` is a :class:`~libertem.common.buffers.BufferWrapper`
+            of :code:`kind='nav'`, :code:`dtype=bool`indicatng the positions
+            in nav space that have been processed already.
 
         Examples
         --------
@@ -694,8 +699,8 @@ class Context:
 
         >>> from libertem.udf.sum import SumUDF
         >>> for result in ctx.run_udf_iter(dataset=dataset, udf=SumUDF()):
-        ...     assert np.array(result[0]["intensity"]).shape == (32, 32)
-        >>> np.array(result[0]["intensity"]).shape
+        ...     assert np.array(result.buffers[0]["intensity"]).shape == (32, 32)
+        >>> np.array(result.buffers[0]["intensity"]).shape
         (32, 32)
         >>> # intensity is the name of the result buffer, defined in the SumUDF
         """
@@ -735,7 +740,7 @@ class Context:
         if not udf_is_list:
             udfs = [udf]
         else:
-            udfs = udf
+            udfs = list(udf)
 
         if enable_plotting:
             plots = self._prepare_plots(udfs, dataset, roi, plots)
@@ -753,7 +758,7 @@ class Context:
                 backends=backends,
             )
             for udf_results in result_iter:
-                yield udf_results.buffers
+                yield udf_results
                 if enable_plotting:
                     self._update_plots(
                         plots, udfs, udf_results.buffers, udf_results.damage, force=False
@@ -767,9 +772,9 @@ class Context:
             for udf_results in _run_sync_wrap():
                 pass
             if udf_is_list:
-                return udf_results
+                return udf_results.buffers
             else:
-                return udf_results[0]
+                return udf_results.buffers[0]
 
     def _run_async(
             self,
@@ -820,7 +825,7 @@ class Context:
 
         # cases to consider:
         # 1) plots is `True`: default plots of all eligible channels
-        # 2) plots is List[List[str]]: set channels from `plots`
+        # 2) plots is List[List[str]] or List[List[(str, callable)]]: set channels from `plots`
         # 3) plots is List[LivePlot]: use customized plots as they are
 
         channels = None
@@ -834,8 +839,8 @@ class Context:
                         f"No plottable channels found for UDF "
                         f"#{idx}: {udf.__class__.__name__}, not plotting."
                     )
-        # 2) plots is List[List[str]]: set channels from `plots`
-        elif isinstance(plots[0], (list, tuple)) and isinstance(plots[0][0], str):
+        # 2) plots is List[List[str]] or List[List[(str, callable)]]: set channels from `plots`
+        elif isinstance(plots[0], (list, tuple)) and isinstance(plots[0][0], (str, list, tuple)):
             channels = plots
         # 3) plots is probably List[LivePlot]: use customized plots as they are
         else:

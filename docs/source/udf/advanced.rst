@@ -539,6 +539,8 @@ Example: Calculate sum over the last signal axis.
     udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
     result = ctx.run_udf(dataset=dataset, udf=udf)
 
+.. _plotting:
+
 Plotting
 --------
 
@@ -547,6 +549,21 @@ TODO:
 - simple
 - choose channels
 - flexible plotting w/ LivePlot instances
+
+TODO extracted from docstring, to be integrated properly
+
+The function receives the partial result of the UDF together with :code:`damage`, a
+:class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
+and :code:`dtype=bool` that indicates the area of the nav dimension that
+has been processed by the UDF already.
+
+If the extracted value is derived from :code:`kind='nav'`buffers,
+the function can just pass through :code:`damage`
+in its return value. If it is unrelated to the navigations space, for example
+:code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
+to indicate that the entire buffer was updated. The damage information
+is currently used to determine the correct plot range by ignoring the
+buffer's initialization value.
 
 
 Partial results

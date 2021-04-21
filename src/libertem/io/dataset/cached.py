@@ -310,11 +310,11 @@ class LRUCacheStrategy(CacheStrategy):
 
 
 class Cache:
+    """
+    Cache object, to be used on a worker node. The interface used by `Partition`\\ s
+    to manage the cache. May directly remove files, directories, etc.
+    """
     def __init__(self, stats: CacheStats, strategy: CacheStrategy):
-        """
-        Cache object, to be used on a worker node. The interface used by `Partition`\\ s
-        to manage the cache. May directly remove files, directories, etc.
-        """
         self._stats = stats
         self.strategy = strategy
 

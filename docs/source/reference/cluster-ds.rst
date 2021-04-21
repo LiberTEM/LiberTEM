@@ -7,4 +7,3 @@ using raw binary files.
 .. automodule:: libertem.io.dataset.cluster
    :members:
    :undoc-members:
-   :special-members: __init__

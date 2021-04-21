@@ -20,7 +20,6 @@ which implies following processing steps:
 .. automodule:: libertem.udf.holography
    :members:
    :undoc-members:
-   :special-members: __init__
 
 Hologram simulation
 -------------------

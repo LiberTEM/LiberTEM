@@ -8,5 +8,3 @@ device (i.e. NFS or a slower spinning disk).
 .. automodule:: libertem.io.dataset.cached
    :members:
    :undoc-members:
-   :special-members: __init__
-

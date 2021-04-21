@@ -42,23 +42,23 @@ async def async_generator(gen, pool=None):
 
 
 class AsyncGenToQueueThread(threading.Thread):
+    """
+    Wrap an async generator and execute it in a thread, putting the generated
+    items into a queue.
+
+    Parameters
+    ----------
+    agen : iterable
+        The async generator to wrap
+
+    q : queue.Queue
+        The result queue where the generated items will be put. The calling
+        thread should consume the items in this queue.
+
+    args, kwargs
+        will be passed to :code:`Thread.__init__`
+    """
     def __init__(self, agen, q, *args, **kwargs):
-        """
-        Wrap an async generator and execute it in a thread, putting the generated
-        items into a queue.
-
-        Parameters
-        ----------
-        agen : iterable
-            The async generator to wrap
-
-        q : queue.Queue
-            The result queue where the generated items will be put. The calling
-            thread should consume the items in this queue.
-
-        args, kwargs
-            will be passed to :code:`Thread.__init__`
-        """
         super().__init__(*args, **kwargs)
         self._agen = agen
         self._q = q
@@ -114,23 +114,23 @@ def async_to_sync_generator(agen, pool=None):
 
 
 class SyncGenToQueueThread(threading.Thread):
+    """
+    Wrap a generator and execute it in a thread, putting the generated
+    items into a queue.
+
+    Parameters
+    ----------
+    gen : iterable
+        The generator to wrap
+
+    q : queue.Queue
+        The result queue where the generated items will be put. The calling
+        thread should consume the items in this queue.
+
+    args, kwargs
+        will be passed to :code:`Thread.__init__`
+    """
     def __init__(self, gen, q, *args, **kwargs):
-        """
-        Wrap a generator and execute it in a thread, putting the generated
-        items into a queue.
-
-        Parameters
-        ----------
-        gen : iterable
-            The generator to wrap
-
-        q : queue.Queue
-            The result queue where the generated items will be put. The calling
-            thread should consume the items in this queue.
-
-        args, kwargs
-            will be passed to :code:`Thread.__init__`
-        """
         super().__init__(*args, **kwargs)
         self._gen = gen
         self._q = q

@@ -20,25 +20,25 @@ class WritablePartition:
 
 
 class Partition(object):
+    """
+    Parameters
+    ----------
+    meta
+        The `DataSet`'s `DataSetMeta` instance
+
+    partition_slice
+        The partition slice in non-flattened form
+
+    fileset
+        The files that are part of this partition (the FileSet may also contain files
+        from the dataset which are not part of this partition, but that may harm performance)
+
+    io_backend
+        The I/O backend to use for accessing this partition
+    """
     def __init__(
         self, meta: DataSetMeta, partition_slice: Slice, io_backend: IOBackend,
     ):
-        """
-        Parameters
-        ----------
-        meta
-            The `DataSet`'s `DataSetMeta` instance
-
-        partition_slice
-            The partition slice in non-flattened form
-
-        fileset
-            The files that are part of this partition (the FileSet may also contain files
-            from the dataset which are not part of this partition, but that may harm performance)
-
-        io_backend
-            The I/O backend to use for accessing this partition
-        """
         self.meta = meta
         self.slice = partition_slice
         self._io_backend = io_backend
@@ -133,34 +133,33 @@ class Partition(object):
 class BasePartition(Partition):
     """
     Base class with default implementations
+
+    Parameters
+    ----------
+    meta
+        The `DataSet`'s `DataSetMeta` instance
+
+    partition_slice
+        The partition slice in non-flattened form
+
+    fileset
+        The files that are part of this partition (the FileSet may also contain files
+        from the dataset which are not part of this partition, but that may harm performance)
+
+    start_frame
+        The index of the first frame of this partition (global coords)
+
+    num_frames
+        How many frames this partition should contain
+
+    io_backend
+        The I/O backend to use for accessing this partition
     """
     def __init__(
         self, meta: DataSetMeta, partition_slice: Slice,
         fileset: FileSet, start_frame: int, num_frames: int,
         io_backend: IOBackend,
     ):
-        """
-        Parameters
-        ----------
-        meta
-            The `DataSet`'s `DataSetMeta` instance
-
-        partition_slice
-            The partition slice in non-flattened form
-
-        fileset
-            The files that are part of this partition (the FileSet may also contain files
-            from the dataset which are not part of this partition, but that may harm performance)
-
-        start_frame
-            The index of the first frame of this partition (global coords)
-
-        num_frames
-            How many frames this partition should contain
-
-        io_backend
-            The I/O backend to use for accessing this partition
-        """
         super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
         if start_frame < self.meta.image_count:
             self._fileset = fileset.get_for_range(

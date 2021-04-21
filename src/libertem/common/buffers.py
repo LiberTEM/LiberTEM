@@ -147,47 +147,45 @@ class BufferWrapper(object):
 
     This class is array_like, so you can directly use it, for example, as argument
     for numpy functions.
+
+    .. versionchanged:: 0.6.0
+        Add option to specify backend, for example CuPy
+
+    Parameters
+    ----------
+    kind : "nav", "sig" or "single"
+        The abstract shape of the buffer, corresponding either to the navigation
+        or the signal dimensions of the dataset, or a single value.
+
+    extra_shape : optional, tuple of int or a Shape object
+        You can specify additional dimensions for your data. For example, if
+        you want to store 2D coords, you would specify (2,) here.
+        For a Shape object, sig_dims is discarded and the entire shape is used.
+
+    dtype : string or numpy dtype
+        The dtype of this buffer
+
+    where : string or None
+        :code:`None` means NumPy array, :code:`device` to use a back-end specified
+        in :meth:`allocate`.
+
+        .. versionadded:: 0.6.0
+
+    use : "private", "result_only" or None
+        If you specify :code:`"private"` here, the result will only be made available
+        to internal functions, like :meth:`process_frame`, :meth:`merge` or
+        :meth:`get_results`. It will not be available to the user of the UDF, which means
+        you can use this to hide implementation details that are likely to change later.
+
+        Specify :code:`"result_only"` here if the buffer is only used in :meth:`get_results`,
+        this means we don't have to allocate and return it on the workers without actually
+        needing it.
+
+        :code:`None` means the buffer is used both as a final and intermediate result.
+
+        .. versionadded:: 0.7.0
     """
     def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
-        """
-        .. versionchanged:: 0.6.0
-            Add option to specify backend, for example CuPy
-
-        Parameters
-        ----------
-        kind : "nav", "sig" or "single"
-            The abstract shape of the buffer, corresponding either to the navigation
-            or the signal dimensions of the dataset, or a single value.
-
-        extra_shape : optional, tuple of int or a Shape object
-            You can specify additional dimensions for your data. For example, if
-            you want to store 2D coords, you would specify (2,) here.
-            For a Shape object, sig_dims is discarded and the entire shape is used.
-
-        dtype : string or numpy dtype
-            The dtype of this buffer
-
-        where : string or None
-            :code:`None` means NumPy array, :code:`device` to use a back-end specified
-            in :meth:`allocate`.
-
-            .. versionadded:: 0.6.0
-
-        use : "private", "result_only" or None
-            If you specify :code:`"private"` here, the result will only be made available
-            to internal functions, like :meth:`process_frame`, :meth:`merge` or
-            :meth:`get_results`. It will not be available to the user of the UDF, which means
-            you can use this to hide implementation details that are likely to change later.
-
-            Specify :code:`"result_only"` here if the buffer is only used in :meth:`get_results`,
-            this means we don't have to allocate and return it on the workers without actually
-            needing it.
-
-            :code:`None` means the buffer is used both as a final and intermediate result.
-
-            .. versionadded:: 0.7.0
-        """
-
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)

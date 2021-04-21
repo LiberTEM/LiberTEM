@@ -3,20 +3,21 @@ import functools
 
 
 class Shape(object):
+    """
+    Create a Shape that knows how many dimensions are part of navigation/signal.
+    It is assumed that the signal is in the last `sig_dims` dimensions.
+
+    Parameters
+    ----------
+    shape : tuple of int
+        the shape we want to work with, as n-tuple (like numpy array shapes)
+    sig_dims : int
+        the number of dimensions that are considered part of the signal
+    """
+
     __slots__ = ["_sig_dims", "_nav_shape", "_sig_shape"]
 
     def __init__(self, shape, sig_dims):
-        """
-        Create a Shape that knows how many dimensions are part of navigation/signal.
-        It is assumed that the signal is in the last `sig_dims` dimensions.
-
-        Parameters
-        ----------
-        shape : tuple of int
-            the shape we want to work with, as n-tuple (like numpy array shapes)
-        sig_dims : int
-            the number of dimensions that are considered part of the signal
-        """
         nav_dims = len(shape) - sig_dims
         self._sig_dims = sig_dims
         self._nav_shape = tuple(shape[:nav_dims])

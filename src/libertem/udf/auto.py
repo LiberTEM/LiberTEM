@@ -12,17 +12,17 @@ class AutoUDF(UDF):
     '''
     Generate a UDF for reduction along the signal axis from a regular function
     that processes one frame, generating result buffers automatically.
+
+    Parameters
+    ----------
+
+    f:
+        Function that accepts a frame as a single parameter. It will
+        be called with np.ones(tuple(dataset.shape.sig)) to determine the output
+        type and shape.
     '''
     def __init__(self, *args, **kwargs):
-        '''
-        Parameters
-        ----------
 
-        f:
-            Function that accepts a frame as a single parameter. It will
-            be called with np.ones(tuple(dataset.shape.sig)) to determine the output
-            type and shape.
-        '''
         super().__init__(*args, **kwargs)
 
     def auto_buffer(self, var):

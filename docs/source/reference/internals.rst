@@ -14,7 +14,6 @@ vector calculations.
 
 .. automodule:: libertem.common.container
    :members: MaskContainer
-   :special-members: __init__
 
 Shapes and slices
 ~~~~~~~~~~~~~~~~~
@@ -26,12 +25,10 @@ a high-level introduction.
 .. automodule:: libertem.common.shape
    :members:
    :undoc-members:
-   :special-members: __init__
 
 .. automodule:: libertem.common.slice
    :members:
    :undoc-members:
-   :special-members: __init__
 
 CPU and CUDA devices
 ~~~~~~~~~~~~~~~~~~~~
@@ -42,9 +39,7 @@ computation runs.
 .. automodule:: libertem.common.backend
    :members:
    :undoc-members:
-   :special-members: __init__
 
 .. automodule:: libertem.utils.devices
    :members:
    :undoc-members:
-   :special-members: __init__

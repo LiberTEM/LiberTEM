@@ -4,19 +4,20 @@ from libertem.common.shape import Shape
 
 
 class Slice(object):
+    """
+    A n-dimensional slice, defined by origin and shape
+
+    Parameters
+    ----------
+    origin : tuple of int
+        global "top-left" coordinates of this slice
+    shape : Shape instance
+        the size of this slice
+    """
+
     __slots__ = ["origin", "shape"]
 
     def __init__(self, origin, shape):
-        """
-        A n-dimensional slice, defined by origin and shape
-
-        Parameters
-        ----------
-        origin : tuple of int
-            global "top-left" coordinates of this slice
-        shape : Shape instance
-            the size of this slice
-        """
         self.origin = tuple(origin)
         self.shape = shape
         if len(self.origin) != len(self.shape):

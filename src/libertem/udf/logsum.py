@@ -18,7 +18,6 @@ class LogsumUDF(UDF):
     (32, 32)
     """
     def __init__(self):
-        ''
         super().__init__()
 
     def get_result_buffers(self):

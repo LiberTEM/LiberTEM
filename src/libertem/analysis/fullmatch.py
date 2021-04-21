@@ -22,59 +22,59 @@ class FullMatcher(grm.Matcher):
     from the other code since it currently only works with :class:`~hdbscan.HDBSCAN`,
     which can be problematic
     to install on some platforms. For that reason it is an optional dependency.
+
+    Parameters
+    ----------
+
+    tolerance : float
+        Position tolerance in px for peaks to be considered matches
+    min_weight : float
+        Minimum peak elevation of a peak to be considered for matching
+    min_match : int
+        Minimum number of matching peaks to be considered a match.
+    min_angle : float
+        Minimum angle in radians between two vectors to be considered candidates
+    min_points : int
+        Minimum points to try clustering matching. Otherwise match directly
+    min_delta : float
+        Minimum length of a potential grid vector
+    max_delta : float
+        Maximum length of a potential grid vector
+    min_candidates : int
+        Minimum number of candidates to consider clustering matching successful.
+        If not enough are found, the algorithm uses a brute-force search with all
+        pairwise vectors between points
+    max_candidates : int
+        Maximum number of candidates to return from clustering matching
+    clusterer
+        Instance of sklearn.cluster compatible clusterer. Default is :class:`~hdbscan.HDBSCAN`.
+    min_cluster_size_fraction : float
+        Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
+        Larger values allow
+        smaller or fuzzier clusters. This is used to adapt the :code:`min_cluster_size`
+        parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
+        matched.
+        Set this to :code:`None` to disable dynamic adjustment of :code:`min_cluster_size`.
+        If you like to set :code:`min_cluster_size` to a constant value, you can
+        set this to :code:`None` and additionally set the :code:`clusterer` parameter with
+        your own clusterer object to have direct control over all parameters.
+    min_samples_fraction : float
+        Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
+        Larger values allow
+        smaller or fuzzier clusters. This is used to adapt the :code:`min_samples`
+        parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
+        matched.
+        Set this to :code:`None` to disable dynamic adjustment of :code:`min_samples`.
+        If you like to set :code:`min_samples` to a constant value, you can
+        set this to :code:`None` and additionally set the :code:`clusterer` parameter with
+        your own clusterer object to have direct control over all parameters.
     '''
     def __init__(
             self, tolerance=3, min_weight=0.1, min_match=3, min_angle=np.pi/10,
             min_points=10, min_delta=0, max_delta=np.inf, min_candidates=3,
             max_candidates=7, clusterer=None, min_cluster_size_fraction=4,
             min_samples_fraction=20):
-        '''
-        Parameters
-        ----------
 
-        tolerance : float
-            Position tolerance in px for peaks to be considered matches
-        min_weight : float
-            Minimum peak elevation of a peak to be considered for matching
-        min_match : int
-            Minimum number of matching peaks to be considered a match.
-        min_angle : float
-            Minimum angle in radians between two vectors to be considered candidates
-        min_points : int
-            Minimum points to try clustering matching. Otherwise match directly
-        min_delta : float
-            Minimum length of a potential grid vector
-        max_delta : float
-            Maximum length of a potential grid vector
-        min_candidates : int
-            Minimum number of candidates to consider clustering matching successful.
-            If not enough are found, the algorithm uses a brute-force search with all
-            pairwise vectors between points
-        max_candidates : int
-            Maximum number of candidates to return from clustering matching
-        clusterer
-            Instance of sklearn.cluster compatible clusterer. Default is :class:`~hdbscan.HDBSCAN`.
-        min_cluster_size_fraction : float
-            Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
-            Larger values allow
-            smaller or fuzzier clusters. This is used to adapt the :code:`min_cluster_size`
-            parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
-            matched.
-            Set this to :code:`None` to disable dynamic adjustment of :code:`min_cluster_size`.
-            If you like to set :code:`min_cluster_size` to a constant value, you can
-            set this to :code:`None` and additionally set the :code:`clusterer` parameter with
-            your own clusterer object to have direct control over all parameters.
-        min_samples_fraction : float
-            Tuning parameter for clustering matching with :class:`~hdbscan.HDBSCAN`.
-            Larger values allow
-            smaller or fuzzier clusters. This is used to adapt the :code:`min_samples`
-            parameter of :class:`~hdbscan.HDBSCAN` dynamically to the number of points to be
-            matched.
-            Set this to :code:`None` to disable dynamic adjustment of :code:`min_samples`.
-            If you like to set :code:`min_samples` to a constant value, you can
-            set this to :code:`None` and additionally set the :code:`clusterer` parameter with
-            your own clusterer object to have direct control over all parameters.
-        '''
         super().__init__(tolerance=tolerance, min_weight=min_weight, min_match=min_match)
         if clusterer is None:
             clusterer = hdbscan.HDBSCAN()

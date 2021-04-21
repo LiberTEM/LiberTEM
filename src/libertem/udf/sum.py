@@ -7,6 +7,13 @@ class SumUDF(UDF):
     """
     Sum up frames, preserving the signal dimension
 
+    Parameters
+    ----------
+    dtype : numpy.dtype, optional
+        Preferred dtype for computation, default 'float32'. The actual dtype will be determined
+        from this value and the dataset's dtype using :meth:`numpy.result_type`.
+        See also :ref:`udf dtype`.
+
     Examples
     --------
     >>> udf = SumUDF()
@@ -15,14 +22,6 @@ class SumUDF(UDF):
     (32, 32)
     """
     def __init__(self, dtype='float32'):
-        '''
-        Parameters
-        ----------
-        dtype : numpy.dtype, optional
-            Preferred dtype for computation, default 'float32'. The actual dtype will be determined
-            from this value and the dataset's dtype using :meth:`numpy.result_type`.
-            See also :ref:`udf dtype`.
-        '''
         super().__init__(dtype=dtype)
 
     def get_preferred_input_dtype(self):

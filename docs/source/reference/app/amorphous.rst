@@ -15,7 +15,6 @@ This module contains the UDF for applying FEM to a single ring (mostly useful fo
 .. automodule:: libertem.udf.FEM
    :members:
    :exclude-members: get_result_buffers, get_task_data
-   :special-members: __init__
 
 .. _`radial fourier api`:
 
@@ -27,4 +26,3 @@ symmetries of diffraction patterns.
 
 .. automodule:: libertem.analysis.radialfourier
    :members: RadialFourierResultSet
-   :special-members: __init__

@@ -18,7 +18,7 @@ class MPLLive2DPlot(Live2DPlot):
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None, min_delta=0.5, udfresult=None,
-            cmap='viridis', **kwargs,
+            **kwargs,
     ):
         """
         Construct a new :class:`MPLLivePlot` instance.
@@ -55,8 +55,6 @@ class MPLLive2DPlot(Live2DPlot):
             UDF result to initialize the plot data and determine plot shape. If None (default),
             this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
             UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
-        cmap : str
-            Colormap
 
         **kwargs
             Passed on to :code:`imshow`
@@ -70,7 +68,6 @@ class MPLLive2DPlot(Live2DPlot):
             min_delta=min_delta,
             udfresult=udfresult
         )
-        self.cmap = cmap
         self.kwargs = kwargs
         self.fig = None
         self.axes = None
@@ -78,7 +75,10 @@ class MPLLive2DPlot(Live2DPlot):
 
     def display(self):
         self.fig, self.axes = plt.subplots()
-        self.im_obj = self.axes.imshow(self.data, cmap=self.cmap, **self.kwargs)
+        self.im_obj = self.axes.imshow(self.data, **self.kwargs)
+        # Set values compatible with log norm
+        self.im_obj.norm.vmin = 1
+        self.im_obj.norm.vmax = 1 + 1e-12
         self.axes.set_title(self.title)
 
     def update(self, damage, force=False):

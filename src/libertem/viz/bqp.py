@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 class BQLive2DPlot(Live2DPlot):
     """
     bqplot-image-gl-based live plot (experimental).
+
+    .. versionadded:: 0.7.0
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None, min_delta=1/60, udfresult=None

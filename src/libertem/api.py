@@ -21,6 +21,7 @@ from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator
+from libertem.viz.mpl import MPLLive2DPlot
 
 
 RunUDFResultType = Dict[str, BufferWrapper]
@@ -53,8 +54,10 @@ class Context:
             on the local system.
 
         plot_class : libertem.viz.base.Live2DPlot
-            Plot class to use for live plotting if not specified.
+            Default plot class for live plotting.
             Defaults to libertem.viz.mpl.MPLLive2DPlot.
+
+            .. versionadded:: 0.7.0
 
         Examples
         --------
@@ -75,7 +78,6 @@ class Context:
         self.executor = executor
 
         if plot_class is None:
-            from libertem.viz.mpl import MPLLive2DPlot
             plot_class = MPLLive2DPlot
         self.plot_class = plot_class
 
@@ -575,9 +577,13 @@ class Context:
             - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each
               channel you want to plot
 
+            .. versionadded:: 0.7.0
+
         sync : bool
             By default, `run_udf` is a synchronous method. If `sync` is set to `False`,
             it is awaitable instead.
+
+            .. versionadded:: 0.7.0
 
         Returns
         -------
@@ -688,9 +694,9 @@ class Context:
         -------
         Generator[UDFResults]
             Generator of :class:`~libertem.udf.base.UDFResults` container objects.
-            Attribute :code:`buffers` is the list of result buffer dictionaries for the UDFs.
+            Their attribute :code:`buffers` is the list of result buffer dictionaries for the UDFs.
             Attribute :code:`damage` is a :class:`~libertem.common.buffers.BufferWrapper`
-            of :code:`kind='nav'`, :code:`dtype=bool`indicatng the positions
+            of :code:`kind='nav'`, :code:`dtype=bool` indicating the positions
             in nav space that have been processed already.
 
         Examples

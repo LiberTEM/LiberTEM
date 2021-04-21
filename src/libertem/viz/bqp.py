@@ -52,11 +52,10 @@ class BQLive2DPlot(Live2DPlot):
         min_delta : float
             Minimum time span in seconds between updates to reduce overheads for slow plotting.
 
-        udfresult : None or UDF result
-            UDF result used to initialize the plot
-            data and determine plot shape. If None (default), this is determined
-            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
-            This parameter allows re-using buffers to avoid unnecessary dry runs.
+        udfresult : UDFResults, optional
+            UDF result to initialize the plot data and determine plot shape. If None (default),
+            this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
+            UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
         super().__init__(
             dataset=dataset,

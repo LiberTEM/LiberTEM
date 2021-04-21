@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from .base import Live2DPlot
@@ -8,6 +10,8 @@ class GMSLive2DPlot(Live2DPlot):
     Live plot for Gatan Microscopy Suite, Digital Micrograph (experimental).
 
     This works with Python scripting within GMS
+
+    .. versionadded:: 0.7.0
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None,
@@ -45,11 +49,10 @@ class GMSLive2DPlot(Live2DPlot):
             The plot title. By default UDF class name and channel name.
         min_delta : float
             Minimum time span in seconds between updates to reduce overheads for slow plotting.
-        udfresult : None or UDF result
-            UDF result used to initialize the plot
-            data and determine plot shape. If None (default), this is determined
-            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
-            This parameter allows re-using buffers to avoid unnecessary dry runs.
+        udfresult : UDFResults, optional
+            UDF result to initialize the plot data and determine plot shape. If None (default),
+            this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
+            UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
         super().__init__(
             dataset=dataset,
@@ -76,6 +79,10 @@ class GMSLive2DPlot(Live2DPlot):
     def update(self, damage, force=False):
         if self.disp is None:
             assert self.window is None
+            warnings.warn(
+                "Plot is not displayed, not plotting. "
+                "Call display() to display the plot."
+            )
             return
         valid_data = self.data[damage]
         if len(valid_data) > 0:

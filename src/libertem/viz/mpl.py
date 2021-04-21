@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 class MPLLive2DPlot(Live2DPlot):
     """
     Matplotlib-based live plot
+
+    .. versionadded:: 0.7.0
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None, min_delta=0.5, udfresult=None,
@@ -48,11 +51,10 @@ class MPLLive2DPlot(Live2DPlot):
             The plot title. By default UDF class name and channel name.
         min_delta : float
             Minimum time span in seconds between updates to reduce overheads for slow plotting.
-        udfresult : None or UDF result
-            UDF result used to initialize the plot
-            data and determine plot shape. If None (default), this is determined
-            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
-            This parameter allows re-using buffers to avoid unnecessary dry runs.
+        udfresult : UDFResults, optional
+            UDF result to initialize the plot data and determine plot shape. If None (default),
+            this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
+            UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
         cmap : str
             Colormap
 
@@ -92,6 +94,10 @@ class MPLLive2DPlot(Live2DPlot):
         if self.im_obj is None:
             assert self.fig is None
             assert self.axes is None
+            warnings.warn(
+                "Plot is not displayed, not plotting. "
+                "Call display() to display the plot."
+            )
             return
 
         i_o = self.im_obj

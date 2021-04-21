@@ -275,3 +275,16 @@ class Live2DPlot:
         Show the plot, for example in the current Jupyter cell.
         """
         raise NotImplementedError()
+
+
+class Dummy2DPlot(Live2DPlot):
+    '''
+    No-op plot. This is useful for test and example code to not
+    attempt displaying :code:`matplotlib` plots in a headless environment
+    or during batch operation.
+    '''
+    def update(self, damage, force=False):
+        pass
+
+    def display(self):
+        pass

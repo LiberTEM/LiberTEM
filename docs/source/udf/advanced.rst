@@ -8,8 +8,9 @@ User-defined functions: advanced topics
     import numpy as np
     from libertem import api
     from libertem.executor.inline import InlineJobExecutor
+    from libertem.viz.base import Dummy2DPlot
 
-    ctx = api.Context(executor=InlineJobExecutor())
+    ctx = api.Context(executor=InlineJobExecutor(), plot_class=Dummy2DPlot)
     data = np.random.random((16, 16, 32, 32)).astype(np.float32)
     dataset = ctx.load("memory", data=data, sig_dims=2)
     roi = np.random.choice([True, False], dataset.shape.nav)
@@ -541,37 +542,39 @@ Example: Calculate sum over the last signal axis.
 
 .. _plotting:
 
-Plotting
---------
+Live Plotting
+-------------
 
-TODO:
+.. versionadded:: 0.7.0
 
-- simple
-- choose channels
-- flexible plotting w/ LivePlot instances
+LiberTEM can display a live plot of the UDF results. In the most simple case,
+this can be done by setting :code:`plots=True` in
+:meth:`~libertem.api.Context.run_udf`. 
 
-TODO extracted from docstring, to be integrated properly
+.. testsetup:: live
 
-The function receives the partial result of the UDF together with :code:`damage`, a
-:class:`~libertem.common.buffers.BufferWraper` with :code:`kind='nav'`
-and :code:`dtype=bool` that indicates the area of the nav dimension that
-has been processed by the UDF already.
+    from libertem.udf.sum import SumUDF
+    udf = SumUDF()
 
-If the extracted value is derived from :code:`kind='nav'`buffers,
-the function can just pass through :code:`damage`
-in its return value. If it is unrelated to the navigations space, for example
-:code:`kind='sig'` or :code:`kind='single'`, the function can return :code:`True`
-to indicate that the entire buffer was updated. The damage information
-is currently used to determine the correct plot range by ignoring the
-buffer's initialization value.
+.. testcode:: live
 
+    ctx.run_udf(dataset=dataset, udf=udf, plots=True)
+
+See the following items for a full demonstration, including setting up fully
+customized plots. The API reference can be found in :ref:`viz reference`.
+
+.. toctree::
+
+    liveplotting
 
 Partial results
 ---------------
 
-Instead of only getting the whole result after the UDF has finished running, you can
-also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for partial results:
+.. versionadded:: 0.7.0
 
+Instead of only getting the whole result after the UDF has finished running, you
+can also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for
+partial results:
 
 .. testsetup:: partial
 
@@ -583,11 +586,11 @@ also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for parti
 
     for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf):
         # ... do something interesting with `udf_results`:
-        a = np.sum(udf_results[0]['intensity'])
+        a = np.sum(udf_results.buffers[0]['intensity'])
 
     # after the loop, `udf_results` contains the final results as usual
 
-It's also possible to integrate LiberTEM into an async script or application, by passing
+It is also possible to integrate LiberTEM into an async script or application by passing
 :code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or :meth:`~libertem.api.Context.run_udf`:
 
 .. Not run with docs-check since we can't easily test async code there...
@@ -601,4 +604,8 @@ It's also possible to integrate LiberTEM into an async script or application, by
     # or the version without intermediate results:
     udf_results = await ctx.run_udf(dataset=dataset, udf=udf, sync=False)
 
-.. versionadded:: 0.7.0
+See the items below for a more comprehensive demonstration and documentation:
+
+.. toctree::
+
+    async

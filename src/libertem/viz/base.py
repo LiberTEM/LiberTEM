@@ -114,6 +114,8 @@ class Live2DPlot:
     """
     Base plotting class for interactive use. Please see the subclasses for
     concrete details.
+
+    .. versionadded:: 0.7.0
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None, min_delta=0, udfresult=None
@@ -149,43 +151,47 @@ class Live2DPlot:
             The plot title. By default UDF class name and channel name.
         min_delta : float
             Minimum time span in seconds between updates to reduce overheads for slow plotting.
-        udfresult : None or UDF result from UDFRunner
-            Internal use only: UDF result used to initialize the plot
-            data and determine plot shape. If None (default, recommended), this is determined
-            using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset, UDF and ROI.
-            This parameter allows re-using buffers to avoid unnecessary dry runs.
+        udfresult : UDFResults, optional
+            UDF result to initialize the plot data and determine plot shape. If None (default),
+            this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
+            UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
         """
         if udfresult is None:
             udfresult = UDFRunner.dry_run([udf], dataset, roi)
         eligible_channels = get_plottable_2D_channels(udfresult.buffers[0])
         if channel is None:
-            assert len(eligible_channels) > 0, "should have at least one plottable channel"
+            if not eligible_channels:
+                raise ValueError(f"No plottable 2D channel found for {udf.__class__.__name__}")
             channel = eligible_channels[0]
+            channel_title = channel
 
         if callable(channel):
             extract = channel
-            channel = channel.__name__
+            channel_title = channel.__name__
+            channel = None
         elif isinstance(channel, (tuple, list)):
-            chan, func = channel
-            kind = udfresult.buffers[0][chan].kind
+            channel, func = channel
+            kind = udfresult.buffers[0][channel].kind
             if kind == 'nav':
                 def extract(udf_results, damage):
-                    return (func(udf_results[chan].data), damage)
+                    return (func(udf_results[channel].data), damage)
             else:
                 def extract(udf_results, damage):
-                    return (func(udf_results[chan].data), True)
-            channel = f"{func.__name__}({chan})"
+                    return (func(udf_results[channel].data), True)
+
+            channel_title = f"{func.__name__}({channel})"
         else:
             extract = None
             if channel not in eligible_channels:
                 raise ValueError("channel %s not found or not plottable, have: %r" % (
                     channel, eligible_channels
                 ))
+            channel_title = channel
 
         self._extract = extract
         self.channel = channel
         if title is None:
-            title = f"{udf.__class__.__name__}: {self.channel}"
+            title = f"{udf.__class__.__name__}: {channel_title}"
         self.title = title
         self.data, _ = self.extract(udfresult.buffers[0], udfresult.damage)
         self.udf = udf

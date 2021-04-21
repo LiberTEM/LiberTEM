@@ -167,7 +167,7 @@ setup(
         'torch': 'torch',
         'hdbscan': 'hdbscan',
         'cupy': 'cupy',
-        'bqplot': ['bqplot', 'bqplot-image-gl'],
+        'bqplot': ['bqplot', 'bqplot-image-gl', 'ipython'],
     },
     package_dir={"": "src"},
     packages=find_packages(where='src'),

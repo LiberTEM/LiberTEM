@@ -123,10 +123,10 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
             AnalysisResult(raw_data=labels.reshape(self.dataset.shape.nav),
                            visualized=visualize_simple(
                                labels.reshape(self.dataset.shape.nav),
-                               damage=True
+                               damage=damage
                             ),
                            key="intensity", title="intensity",
-                           desc="result from integration over mask in Fourier space"),
+                           desc="Labels for the clustering"),
         ])
 
     async def run_sd_udf(self, roi, stddev_udf, executor, cancel_id, job_is_cancelled):
@@ -197,6 +197,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
             self.get_udf_results,
             udf_results=udf_results.buffers[0],
             roi=roi,
+            damage=udf_results.damage
         )
         await send_results(results, True)
 

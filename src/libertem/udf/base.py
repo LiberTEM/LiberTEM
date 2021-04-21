@@ -1551,6 +1551,8 @@ class UDFResults:
     a map of the nav space that is set to :code:`True`
     for all positions that have already been processed.
 
+    .. versionadded:: 0.7.0
+
     Parameters
     ----------
 

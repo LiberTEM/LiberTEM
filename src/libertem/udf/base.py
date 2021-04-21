@@ -1468,26 +1468,26 @@ class UDFRunner:
         damage = BufferWrapper(kind='nav', dtype=bool)
         damage.set_shape_ds(dataset.shape, roi)
         damage.allocate()
-
-        for part_results, task in executor.run_tasks(tasks, cancel_id):
-            if progress:
-                t.update(1)
-            for results, udf in zip(part_results, self._udfs):
-                udf.set_views_for_partition(task.partition)
-                udf.merge(
-                    dest=udf.results.get_proxy(),
-                    src=results.get_proxy()
+        if tasks:
+            for part_results, task in executor.run_tasks(tasks, cancel_id):
+                if progress:
+                    t.update(1)
+                for results, udf in zip(part_results, self._udfs):
+                    udf.set_views_for_partition(task.partition)
+                    udf.merge(
+                        dest=udf.results.get_proxy(),
+                        src=results.get_proxy()
+                    )
+                    udf.clear_views()
+                v = damage.get_view_for_partition(task.partition)
+                v[:] = True
+                yield UDFResults(
+                    buffers=tuple(
+                        udf._do_get_results()
+                        for udf in self._udfs
+                    ),
+                    damage=damage
                 )
-                udf.clear_views()
-            v = damage.get_view_for_partition(task.partition)
-            v[:] = True
-            yield UDFResults(
-                buffers=tuple(
-                    udf._do_get_results()
-                    for udf in self._udfs
-                ),
-                damage=damage
-            )
         else:
             # yield at least one result (which should be empty):
             for udf in self._udfs:

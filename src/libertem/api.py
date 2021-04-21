@@ -809,10 +809,15 @@ class Context:
         )
         udfres_iter = async_generator(sync_generator)
 
+        udf_is_list = isinstance(udf, (tuple, list))
+
         async def _run_async_wrap():
             async for udf_results in udfres_iter:
                 pass
-            return udf_results
+            if udf_is_list:
+                return udf_results.buffers
+            else:
+                return udf_results.buffers[0]
 
         if iterate:
             return udfres_iter

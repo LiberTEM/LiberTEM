@@ -81,6 +81,27 @@ class HoloReconstructUDF(UDF):
 
     .. versionadded:: 0.3.0
 
+    Parameters
+    ----------
+
+    out_shape : (int, int)
+        Shape of the returned complex wave image. Note that the result should fit into the
+        main memory.
+        See :ref:`holography app` for more details
+
+    sb_position : tuple, or vector
+        Coordinates of sideband position with respect to non-shifted FFT of a hologram
+
+    sb_size : float
+        Radius of side band filter in pixels
+
+    sb_smoothness : float, optional (Default: 0.05)
+        Fraction of `sb_size` over which the edge of the filter aperture to be smoothed
+
+    precision : bool, optional, (Default: True)
+        Defines precision of the reconstruction, True for complex128 for the resulting
+        complex wave, otherwise results will be complex64
+
     Examples
     --------
     >>> shape = tuple(dataset.shape.sig)
@@ -91,32 +112,12 @@ class HoloReconstructUDF(UDF):
     ...                               sb_size=sb_size)
     >>> wave = ctx.run_udf(dataset=dataset, udf=holo_udf)['wave'].data
     """
-
     def __init__(self,
                  out_shape,
                  sb_position,
                  sb_size,
                  sb_smoothness=.05,
                  precision=True):
-        """
-        out_shape : (int, int)
-            Shape of the returned complex wave image. Note that the result should fit into the
-            main memory.
-            See :ref:`holography app` for more details
-
-        sb_position : tuple, or vector
-            Coordinates of sideband position with respect to non-shifted FFT of a hologram
-
-        sb_size : float
-            Radius of side band filter in pixels
-
-        sb_smoothness : float, optional (Default: 0.05)
-            Fraction of `sb_size` over which the edge of the filter aperture to be smoothed
-
-        precision : bool, optional, (Default: True)
-            Defines precision of the reconstruction, True for complex128 for the resulting
-            complex wave, otherwise results will be complex64
-        """
         if len(sb_position) != 2:
             raise ValueError("invalid sb_position %r, must be tuple of length 2" % (sb_position,))
         super().__init__(out_shape=out_shape,

@@ -638,6 +638,34 @@ class UDF(UDFBase):
     """
     The main user-defined functions interface. You can implement your functionality
     by overriding methods on this class.
+
+    If you override `__init__`, please take care,
+    as it is called multiple times during evaluation of a UDF. You can handle
+    some pre-conditioning of parameters, but you also have to accept the results
+    as input again.
+
+    Arguments passed as `**kwargs` will be automatically available on `self.params`
+    when running the UDF.
+
+    Example
+    -------
+
+    >>> class MyUDF(UDF):
+    ...     def __init__(self, param1, param2="def2", **kwargs):
+    ...         param1 = int(param1)
+    ...         if "param3" not in kwargs:
+    ...             raise TypeError("missing argument param3")
+    ...         super().__init__(param1=param1, param2=param2, **kwargs)
+
+    Parameters
+    ----------
+    kwargs
+        Input parameters. They are scattered to the worker processes and
+        available as `self.params` from here on.
+
+        Values can be `BufferWrapper` instances, which, when accessed via
+        `self.params.the_key_here`, will automatically return a view corresponding
+        to the current unit of data (frame, tile, partition).
     """
     USE_NATIVE_DTYPE = bool
     TILE_SIZE_BEST_FIT = object()
@@ -646,35 +674,6 @@ class UDF(UDFBase):
     TILE_DEPTH_MAX = np.inf
 
     def __init__(self, **kwargs):
-        """
-        Create a new UDF instance. If you override `__init__`, please take care,
-        as it is called multiple times during evaluation of a UDF. You can handle
-        some pre-conditioning of parameters, but you also have to accept the results
-        as input again.
-
-        Arguments passed as `**kwargs` will be automatically available on `self.params`
-        when running the UDF.
-
-        Example
-        -------
-
-        >>> class MyUDF(UDF):
-        ...     def __init__(self, param1, param2="def2", **kwargs):
-        ...         param1 = int(param1)
-        ...         if "param3" not in kwargs:
-        ...             raise TypeError("missing argument param3")
-        ...         super().__init__(param1=param1, param2=param2, **kwargs)
-
-        Parameters
-        ----------
-        kwargs
-            Input parameters. They are scattered to the worker processes and
-            available as `self.params` from here on.
-
-            Values can be `BufferWrapper` instances, which, when accessed via
-            `self.params.the_key_here`, will automatically return a view corresponding
-            to the current unit of data (frame, tile, partition).
-        """
         self._backend = 'numpy'  # default so that self.xp can always be used
         self._kwargs = kwargs
         self.params = UDFData(kwargs)
@@ -723,8 +722,8 @@ class UDF(UDFBase):
         """
         Return result buffer declaration.
 
-        Values of the returned dict should be `BufferWrapper`
-        instances, which, when accessed via `self.results.key`,
+        Values of the returned dict should be :class:`~libertem.common.buffers.BufferWrapper`
+        instances, which, when accessed via :code:`self.results.key`,
         will automatically return a view corresponding to the
         current unit of data (frame, tile, partition).
 
@@ -732,10 +731,10 @@ class UDF(UDFBase):
 
         Data available in this method:
 
-        - `self.params` - the parameters of this UDF
-        - `self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
-            Please note that partition metadata will not be set when this method is
-            executed on the head node.
+        - :code:`self.params` - the parameters of this UDF
+        - :code:`self.meta` - relevant metadata, see :class:`UDFMeta` documentation.
+          Please note that partition metadata will not be set when this method is
+          executed on the head node.
 
         Returns
         -------
@@ -995,7 +994,6 @@ class NoOpUDF(UDF):
         Perform dtype conversion. By default, this is :attr:`UDF.USE_NATIVE_DTYPE`.
     '''
     def __init__(self, preferred_input_dtype=UDF.USE_NATIVE_DTYPE):
-        ""
         super().__init__(preferred_input_dtype=preferred_input_dtype)
 
     def process_tile(self, tile):

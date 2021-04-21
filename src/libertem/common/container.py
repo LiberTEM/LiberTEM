@@ -78,12 +78,10 @@ class MaskContainer(object):
 
     It allows stacking, cached slicing, transposing and conversion
     to condition the masks for high-performance dot products.
-    '''
 
+    use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+    '''
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None, backend=None):
-        '''
-        use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
-        '''
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack

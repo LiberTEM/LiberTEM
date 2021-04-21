@@ -77,14 +77,12 @@ HDF5
 
 .. autoclass:: libertem.io.dataset.hdf5.H5DataSet
 
-
 .. _`seq`:
 
 Norpix SEQ
 ~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.seq.SEQDataSet
-
 
 .. _`mrc`:
 
@@ -93,14 +91,12 @@ MRC
 
 .. autoclass:: libertem.io.dataset.mrc.MRCDataSet
 
-
 .. _`memory`:
 
 Memory data set
 ~~~~~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.memory.MemoryDataSet
-    :special-members: __init__
 
 Internal DataSet API
 --------------------
@@ -108,5 +104,3 @@ Internal DataSet API
 .. automodule:: libertem.io.dataset.base
    :members:
    :undoc-members:
-   :special-members: __init__
-

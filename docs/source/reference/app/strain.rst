@@ -24,9 +24,7 @@ These modules contain classes and helper functions that extract and manipulate l
 .. automodule:: libertem.analysis.gridmatching
    :members:
    :show-inheritance:
-   :special-members: __init__
 
 .. automodule:: libertem.analysis.fullmatch
    :members:
    :show-inheritance:
-   :special-members: __init__

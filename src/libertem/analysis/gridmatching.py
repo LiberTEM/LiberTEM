@@ -89,19 +89,18 @@ class Matcher:
     '''
     The main job of the Matcher object is managing the matching parameters
     and making them available for the various matching routines.
+
+    Parameters
+    ----------
+
+    tolerance : float
+        Position tolerance in px for peaks to be considered matches
+    min_weight : float
+        Minimum peak elevation of a peak to be considered for matching
+    min_match : int
+        Minimum number of matching peaks to be considered a match.
     '''
     def __init__(self, tolerance=3, min_weight=0.1, min_match=3):
-        '''
-        Parameters
-        ----------
-
-        tolerance : float
-            Position tolerance in px for peaks to be considered matches
-        min_weight : float
-            Minimum peak elevation of a peak to be considered for matching
-        min_match : int
-            Minimum number of matching peaks to be considered a match.
-        '''
         self.tolerance = tolerance
         self.min_match = min_match
         self.min_weight = min_weight

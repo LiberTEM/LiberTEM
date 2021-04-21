@@ -6,24 +6,24 @@ import numpy as np
 
 
 class WriteHandle:
+    """
+    Parameters:
+    -----------
+    path : str
+        Full path to the file to be written (should not exist, but the directory should)
+
+    tmp_base_path : str
+        Path to a directory where temporary files should be written
+        (must be on the same file system as `path`, so maybe)
+
+    part_slice : Slice
+        Slice of the object (i.e. Partition) we are writing, to convert
+        from global tile coordinates to local slices.
+
+    dtype : numpy dtype
+        For which dtype should the file be opened
+    """
     def __init__(self, path, tmp_base_path, part_slice, dtype):
-        """
-        Parameters:
-        -----------
-        path : str
-            Full path to the file to be written (should not exist, but the directory should)
-
-        tmp_base_path : str
-            Path to a directory where temporary files should be written
-            (must be on the same file system as `path`, so maybe)
-
-        part_slice : Slice
-            Slice of the object (i.e. Partition) we are writing, to convert
-            from global tile coordinates to local slices.
-
-        dtype : numpy dtype
-            For which dtype should the file be opened
-        """
         # TODO: support for direct I/O
         # (useful if we have a very high write rate, otherwise not so much; very high being
         # multiple GiB/s)

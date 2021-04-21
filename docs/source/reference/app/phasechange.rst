@@ -13,4 +13,3 @@ Crystallinity map
 .. automodule:: libertem.udf.crystallinity
    :members:
    :exclude-members: get_result_buffers, get_task_data
-   :special-members: __init__

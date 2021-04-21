@@ -34,40 +34,38 @@ class Context:
     """
     Context is the main entry point of the LiberTEM API. It contains
     methods for loading datasets, creating analyses on them and running
-    them.
+    them. In the background, instantiating a Context creates a suitable
+    executor and spins up a local Dask cluster unless the executor is
+    passed to the constructor.
+
 
     .. versionchanged:: 0.7.0
         Removed deprecated methods :code:`create_mask_job`, :code:`create_pick_job`
+
+    Parameters
+    ----------
+
+    executor : ~libertem.executor.base.JobExecutor or None
+        If None, create a
+        :class:`~libertem.executor.dask.DaskJobExecutor` that uses all cores
+        on the local system.
+    plot_class : libertem.viz.base.Live2DPlot
+        Default plot class for live plotting.
+        Defaults to :class:`libertem.viz.mpl.MPLLive2DPlot`.
+
+        .. versionadded:: 0.7.0
+
+    Examples
+    --------
+
+    >>> ctx = libertem.api.Context()  # doctest: +SKIP
+
+    >>> # Create a Context using an inline executor for debugging
+    >>> from libertem.executor.inline import InlineJobExecutor
+    >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
     """
 
     def __init__(self, executor: JobExecutor = None, plot_class=None):
-        """
-        Create a new context. In the background, this creates a suitable
-        executor and spins up a local Dask cluster.
-
-        Parameters
-        ----------
-
-        executor : ~libertem.executor.base.JobExecutor or None
-            If None, create a
-            :class:`~libertem.executor.dask.DaskJobExecutor` that uses all cores
-            on the local system.
-
-        plot_class : libertem.viz.base.Live2DPlot
-            Default plot class for live plotting.
-            Defaults to libertem.viz.mpl.MPLLive2DPlot.
-
-            .. versionadded:: 0.7.0
-
-        Examples
-        --------
-
-        >>> ctx = libertem.api.Context()  # doctest: +SKIP
-
-        >>> # Create a Context using an inline executor for debugging
-        >>> from libertem.executor.inline import InlineJobExecutor
-        >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
-        """
         if executor is None:
             executor = self._create_local_executor()
         if not isinstance(executor, JobExecutor):

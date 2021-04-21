@@ -8,19 +8,18 @@ from libertem.common.backend import get_use_cuda
 
 class InlineJobExecutor(JobExecutor):
     """
-    naive JobExecutor that just iterates over partitions and processes them one after another
+    Naive JobExecutor that just iterates over partitions and processes them one after another
+
+    Parameters
+    ----------
+    debug : bool
+        Set this to enable additional serializability checks
+
+    inline_threads : Optional[int]
+        How many fine grained threads should be allowed? Leaving this `None` will
+        allow one thread per CPU core
     """
     def __init__(self, debug=False, inline_threads=None, *args, **kwargs):
-        """
-        Parameters
-        ----------
-        debug : bool
-            Set this to enable additional serializability checks
-
-        inline_threads : Optional[int]
-            How many fine grained threads should be allowed? Leaving this `None` will
-            allow one thread per CPU core
-        """
         self._debug = debug
         self._inline_threads = inline_threads
 

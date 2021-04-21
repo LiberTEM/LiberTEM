@@ -7,35 +7,33 @@ from libertem.udf import UDF
 class CrystallinityUDF(UDF):
     """
     Determine crystallinity by integration over a ring in the fourier spectrum of each frame.
+
+    Parameters
+    ----------
+
+    rad_in: float
+        Inner radius in pixels of a ring mask for the integration in Fourier space
+
+    rad_out: float
+        Outer radius in pixels of a ring mask for the integration in Fourier space
+
+    real_center: Tuple[float], optional
+        (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
+        in real space.
+
+    real_rad: float, optional
+        Radius in pixels of circle for a masking out zero-order peak in real space.
+        If one of real_center or real_rad is missing: the integration will be done without
+        masking zero-order peak out.
+
+    Examples
+    --------
+    >>> cryst_udf = CrystallinityUDF(rad_in=4, rad_out=6, real_center=(8, 8), real_rad=3)
+    >>> result = ctx.run_udf(dataset=dataset, udf=cryst_udf)
+    >>> np.array(result["intensity"]).shape
+    (16, 16)
     """
-
     def __init__(self, rad_in, rad_out, real_center, real_rad):
-        """
-        Examples
-        --------
-        >>> cryst_udf = CrystallinityUDF(rad_in=4, rad_out=6, real_center=(8, 8), real_rad=3)
-        >>> result = ctx.run_udf(dataset=dataset, udf=cryst_udf)
-        >>> np.array(result["intensity"]).shape
-        (16, 16)
-
-        Parameters
-        ----------
-
-        rad_in: float
-            Inner radius in pixels of a ring mask for the integration in Fourier space
-
-        rad_out: float
-            Outer radius in pixels of a ring mask for the integration in Fourier space
-
-        real_center: Tuple[float], optional
-            (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
-            in real space.
-
-        real_rad: float, optional
-            Radius in pixels of circle for a masking out zero-order peak in real space.
-            If one of real_center or real_rad is missing: the integration will be done without
-            masking zero-order peak out.
-        """
         super().__init__(rad_in=rad_in, rad_out=rad_out,
                          real_center=real_center, real_rad=real_rad)
 

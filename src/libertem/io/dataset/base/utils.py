@@ -5,32 +5,32 @@ NodeType = typing.Union[None, 'FileTree']
 
 
 class FileTree(object):
+    """
+    Construct a FileTree node
+
+    Parameters
+    ----------
+
+    low
+        First frame contained in this file
+
+    high
+        First index of the next file
+
+    value
+        The corresponding file object
+
+    idx
+        The index of the file object in the fileset
+
+    left
+        Nodes with a lower low
+
+    right
+        Nodes with a higher low
+    """
     def __init__(self, low: int, high: int, value: typing.Any, idx: int,
                  left: NodeType, right: NodeType):
-        """
-        Construct a FileTree node
-
-        Parameters
-        ----------
-
-        low
-            First frame contained in this file
-
-        high
-            First index of the next file
-
-        value
-            The corresponding file object
-
-        idx
-            The index of the file object in the fileset
-
-        left
-            Nodes with a lower low
-
-        right
-            Nodes with a higher low
-        """
         if low >= high:
             raise ValueError("low should be < high")
         self.low = low

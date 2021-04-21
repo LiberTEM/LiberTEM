@@ -48,4 +48,3 @@ can also be empty to disable corrections completely. For example:
 
 
 .. autoclass:: libertem.corrections.corrset.CorrectionSet
-   :special-members: __init__

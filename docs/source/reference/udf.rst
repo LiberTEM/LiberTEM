@@ -12,7 +12,6 @@ See :ref:`user-defined functions` for an introduction and in-depth explanation.
 
 .. automodule:: libertem.udf.base
    :members:
-   :special-members: __init__
    :exclude-members: Task,UDFTask,UDFRunner
 
 .. _`run udf ref`:
@@ -36,7 +35,6 @@ Buffers
 .. automodule:: libertem.common.buffers
    :members:
    :undoc-members:
-   :special-members: __init__
 
 .. _`utilify udfs`:
 
@@ -55,7 +53,6 @@ Sum of frames
 
 .. autoclass:: libertem.udf.sum.SumUDF
     :members:
-    :special-members: __init__
 
 .. _`logsum udf`:
 
@@ -64,7 +61,6 @@ Sum of log-scaled frames
 
 .. autoclass:: libertem.udf.logsum.LogsumUDF
     :members:
-    :special-members: __init__
 
 .. _`stddev udf`:
 
@@ -73,7 +69,6 @@ Standard deviation
 
 .. autoclass:: libertem.udf.stddev.StdDevUDF
     :members:
-    :special-members: __init__
 
 .. autofunction:: libertem.udf.stddev.run_stddev
 
@@ -86,7 +81,6 @@ Sum per frame
 
 .. autoclass:: libertem.udf.sumsigudf.SumSigUDF
     :members:
-    :special-members: __init__
 
 .. _`masks udf`:
 
@@ -95,7 +89,6 @@ Apply masks
 
 .. autoclass:: libertem.udf.masks.ApplyMasksUDF
     :members:
-    :special-members: __init__
 
 .. _`pick udf`:
 
@@ -104,4 +97,3 @@ Load data
 
 .. autoclass:: libertem.udf.raw.PickUDF
     :members:
-    :special-members: __init__

@@ -116,46 +116,43 @@ class Live2DPlot:
     concrete details.
 
     .. versionadded:: 0.7.0
+
+    Parameters
+    ----------
+    dataset : DataSet
+        The dataset on which the UDF will be run. This allows
+        to determine the shape of the plots for initialization.
+    udf : UDF
+        The UDF instance this plot is associated to. This needs to be
+        the same instance that is passed to
+        :meth:`~libertem.api.Context.run_udf`.
+    roi : numpy.ndarray or None
+        Region of interest (ROI) that the UDF will
+        be run on. This is necessary for UDFs where the `extra_shape`
+        parameter of result buffers is a function of the ROI, such as
+        :class:`~libertem.udf.raw.PickUDF`.
+    channel : misc
+        Indicate the channel to be plotted.
+
+        - :code:`None`: The first plottable (2D) channel of the UDF is plotted.
+        - :code:`str`: The UDF result buffer name that should be plotted.
+        - :code:`tuple(str, function(ndarray) -> ndarray)`: The UDF result buffer name that
+          should be plotted together with a function that extracts a plottable result
+        - :code:`function(udf_result, damage) -> (ndarray, damage)`: Function that derives a
+          plottable 2D ndarray and damage indicator from the full
+          UDF results and the processed nav space. See :ref:`plotting` for more details!
+    title : str
+        The plot title. By default UDF class name and channel name.
+    min_delta : float
+        Minimum time span in seconds between updates to reduce overheads for slow plotting.
+    udfresult : UDFResults, optional
+        UDF result to initialize the plot data and determine plot shape. If None (default),
+        this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
+        UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
     """
     def __init__(
             self, dataset, udf, roi=None, channel=None, title=None, min_delta=0, udfresult=None
     ):
-        """
-        Construct a new `LivePlot`
-
-        Parameters
-        ----------
-        dataset : DataSet
-            The dataset on which the UDF will be run. This allows
-            to determine the shape of the plots for initialization.
-        udf : UDF
-            The UDF instance this plot is associated to. This needs to be
-            the same instance that is passed to
-            :meth:`~libertem.api.Context.run_udf`.
-        roi : numpy.ndarray or None
-            Region of interest (ROI) that the UDF will
-            be run on. This is necessary for UDFs where the `extra_shape`
-            parameter of result buffers is a function of the ROI, such as
-            :class:`~libertem.udf.raw.PickUDF`.
-        channel : misc
-            Indicate the channel to be plotted.
-
-            - :code:`None`: The first plottable (2D) channel of the UDF is plotted.
-            - :code:`str`: The UDF result buffer name that should be plotted.
-            - :code:`tuple(str, function(ndarray) -> ndarray)`: The UDF result buffer name that
-                should be plotted together with a function that extracts a plottable result
-            - :code:`function(udf_result, damage) -> (ndarray, damage)`: Function that derives a
-                plottable 2D ndarray and damage indicator from the full
-                UDF results and the processed nav space. See :ref:`plotting` for more details!
-        title : str
-            The plot title. By default UDF class name and channel name.
-        min_delta : float
-            Minimum time span in seconds between updates to reduce overheads for slow plotting.
-        udfresult : UDFResults, optional
-            UDF result to initialize the plot data and determine plot shape. If None (default),
-            this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,
-            UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.
-        """
         if udfresult is None:
             udfresult = UDFRunner.dry_run([udf], dataset, roi)
         eligible_channels = get_plottable_2D_channels(udfresult.buffers[0])
@@ -259,8 +256,7 @@ class Live2DPlot:
 
     def update(self, damage, force=False):
         """
-        Update the plot based on `self.data`. This should be implemented by
-        subclasses.
+        Update the plot based on `self.data`.
 
         Parameters
         ----------
@@ -276,6 +272,6 @@ class Live2DPlot:
 
     def display(self):
         """
-        Show the plot ("bind it to the current jupyter cell")
+        Show the plot, for example in the current Jupyter cell.
         """
         raise NotImplementedError()

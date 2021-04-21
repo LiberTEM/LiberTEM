@@ -8,16 +8,16 @@ from .tiling import default_get_read_ranges, TilingScheme
 
 
 class FileSet:
+    """
+    Parameters
+    ----------
+    files
+        files that are part of a partition or dataset
+    """
     def __init__(
         self, files: typing.List[File],
         frame_header_bytes: int = 0, frame_footer_bytes: int = 0,
     ):
-        """
-        Parameters
-        ----------
-        files
-            files that are part of a partition or dataset
-        """
         self._files = files
         assert len(files) > 0
         self._tree = FileTree.make(files)

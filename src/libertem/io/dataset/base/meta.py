@@ -5,30 +5,30 @@ from libertem.common import Shape
 
 
 class DataSetMeta(object):
+    """
+    shape
+        "native" dataset shape, can have any dimensionality
+
+    raw_dtype : np.dtype
+        dtype used internally in the data set for reading
+
+    dtype : np.dtype
+        Best-fitting output dtype. This can be different from raw_dtype, for example
+        if there are post-processing steps done as part of reading, which need a different
+        dtype. Assumed equal to raw_dtype if not given
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
+
+    image_count
+        Total number of frames in the dataset
+
+    metadata
+        Any metadata offered by the DataSet, not specified yet
+    """
     def __init__(self, shape: Shape, image_count=0, raw_dtype=None, dtype=None, metadata=None,
                  sync_offset=0):
-        """
-        shape
-            "native" dataset shape, can have any dimensionality
-
-        raw_dtype : np.dtype
-            dtype used internally in the data set for reading
-
-        dtype : np.dtype
-            Best-fitting output dtype. This can be different from raw_dtype, for example
-            if there are post-processing steps done as part of reading, which need a different
-            dtype. Assumed equal to raw_dtype if not given
-
-        sync_offset: int, optional
-            If positive, number of frames to skip from start
-            If negative, number of blank frames to insert at start
-
-        image_count
-            Total number of frames in the dataset
-
-        metadata
-            Any metadata offered by the DataSet, not specified yet
-        """
         self.shape = shape
         if dtype is None:
             dtype = raw_dtype
@@ -43,6 +43,25 @@ class DataSetMeta(object):
 
 
 class PartitionStructure:
+    """
+    Structure of the dataset.
+
+    Assumed to be contiguous on the flattened navigation axis.
+
+    Parameters
+    ----------
+
+    slices : List[Tuple[Int]]
+        List of tuples [start_idx, end_idx) that partition the data set by the flattened
+        navigation axis
+
+    shape : Shape
+        shape of the whole dataset
+
+    dtype : numpy dtype
+        The dtype of the data as it is on disk. Can contain endian indicator, for
+        example >u2 for big-endian 16bit data.
+    """
     SCHEMA = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "$id": "http://libertem.org/PartitionStructure.schema.json",
@@ -72,25 +91,6 @@ class PartitionStructure:
     }
 
     def __init__(self, shape, slices, dtype):
-        """
-        Structure of the dataset.
-
-        Assumed to be contiguous on the flattened navigation axis.
-
-        Parameters
-        ----------
-
-        slices : List[Tuple[Int]]
-            List of tuples [start_idx, end_idx) that partition the data set by the flattened
-            navigation axis
-
-        shape : Shape
-            shape of the whole dataset
-
-        dtype : numpy dtype
-            The dtype of the data as it is on disk. Can contain endian indicator, for
-            example >u2 for big-endian 16bit data.
-        """
         self.slices = slices
         self.shape = shape
         self.dtype = np.dtype(dtype)

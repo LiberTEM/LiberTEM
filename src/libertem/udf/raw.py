@@ -17,7 +17,6 @@ class PickUDF(UDF):
     .. versionadded:: 0.4.0
     '''
     def __init__(self):
-        ''
         super().__init__()
 
     def get_preferred_input_dtype(self):

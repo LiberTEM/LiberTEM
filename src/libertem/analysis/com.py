@@ -169,7 +169,7 @@ class COMResultSet(AnalysisResultSet):
 class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         data = udf_results['intensity'].data
         img_sum, img_y, img_x = (
             data[..., 0],
@@ -178,7 +178,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         )
         return self.get_generic_results(img_sum, img_y, img_x, damage=damage)
 
-    def get_generic_results(self, img_sum, img_y, img_x, damage=None):
+    def get_generic_results(self, img_sum, img_y, img_x, damage):
         from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
@@ -210,8 +210,6 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                        key="y_imag", title="y [imag]", desc="y component of the center"),
             ])
         else:
-            if damage is None:
-                damage = (x_centers != 0) | (y_centers != 0)
             damage = damage & np.isfinite(x_centers) & np.isfinite(y_centers)
             if np.count_nonzero(damage) > 0:
                 vmax = np.sqrt(np.max(x_centers[damage]**2 + y_centers[damage]**2))

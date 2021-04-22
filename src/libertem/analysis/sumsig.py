@@ -35,7 +35,7 @@ class SumSigAnalysis(BaseAnalysis, id_="SUM_SIG"):
     def get_udf(self):
         return sumsigudf.SumSigUDF()
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'],

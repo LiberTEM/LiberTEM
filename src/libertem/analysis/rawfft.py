@@ -35,7 +35,7 @@ class PickfftTemplate(GeneratorHelper):
 
 
 class PickFFTFrameAnalysis(PickFrameAnalysis, id_="PICK_FFT_FRAME"):
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         data = udf_results['intensity'].data[0]
         real_rad = self.parameters.get("real_rad")
         real_center = (self.parameters.get("real_centery"), self.parameters.get("real_centerx"))

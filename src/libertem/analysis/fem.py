@@ -55,7 +55,7 @@ class FEMAnalysis(BaseAnalysis, id_="FEM"):
         rad_out = self.parameters["ro"]
         return FEM.FEMUDF(center=center, rad_in=rad_in, rad_out=rad_out)
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(raw_data=udf_results['intensity'].data,

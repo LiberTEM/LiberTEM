@@ -122,7 +122,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
 
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         '''
         The AnalysisResults are calculated lazily in this function to reduce
         overhead.
@@ -140,13 +140,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             sets = []
             absolute = np.absolute(udf_results)
             normal = np.maximum(1, absolute[:, 0])
-            if damage is None:
-                # Collapse made-up damage to nav shape
-                # Indexing: bin, order, (navshape)
-                dam = np.any(absolute != 0, axis=(0, 1))
-            else:
-                dam = damage
-            dam = dam & np.all(np.isfinite(absolute), axis=(0, 1))
+            # New local variable since this is a closure over damage
+            dam = damage & np.all(np.isfinite(absolute), axis=(0, 1))
             normalized = absolute[:, 1:, ...] / normal[:, np.newaxis, ...]
             min_absolute = np.min(normalized[..., dam])
             max_absolute = np.max(normalized[..., dam])

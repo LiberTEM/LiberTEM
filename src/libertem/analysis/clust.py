@@ -100,7 +100,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         # that implement the `controller` method
         return None
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         from sklearn.cluster import AgglomerativeClustering
         from sklearn.feature_extraction.image import grid_to_graph

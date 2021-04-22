@@ -2,6 +2,10 @@ import numpy as np
 import pytest
 
 from libertem import viz
+from libertem.viz.base import Dummy2DPlot
+from libertem.udf.base import NoOpUDF
+from libertem.udf.sum import SumUDF
+from libertem.udf.sumsigudf import SumSigUDF
 
 
 def test_rgb_from_vector():
@@ -47,3 +51,16 @@ def test_some_nonnegative(log):
     data[0] = 0
     data[1] = 1
     viz.visualize_simple(data, logarithmic=log)
+
+
+def test_live_nochannels(default_raw):
+    udf = NoOpUDF()
+    with pytest.raises(ValueError):
+        Dummy2DPlot(dataset=default_raw, udf=udf)
+
+
+@pytest.mark.parametrize('udf_cls', (SumUDF, SumSigUDF))
+def test_live_autoextraction(lt_ctx, default_raw, udf_cls):
+    udf = udf_cls()
+    plots = [Dummy2DPlot(dataset=default_raw, udf=udf, channel=('intensity', np.abs))]
+    lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=plots)

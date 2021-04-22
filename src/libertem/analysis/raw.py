@@ -138,8 +138,8 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                     key_prefix="intensity",
                     title="intensity",
                     desc="the frame at %s" % (coords,),
+                    damage=True,
                     default_lin=False,
-                    damage=True
                 )
             )
         return AnalysisResultSet([

@@ -109,8 +109,8 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
                     key_prefix="intensity",
                     title="intensity",
                     desc="sum of all frames",
+                    damage=True,
                     default_lin=False,
-                    damage=True
                 )
             )
 

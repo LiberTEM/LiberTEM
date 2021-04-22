@@ -100,7 +100,7 @@ class SumAnalysis(BaseAnalysis, id_="SUM_FRAMES"):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         if udf_results['intensity'].data.dtype.kind == 'c':
             return AnalysisResultSet(

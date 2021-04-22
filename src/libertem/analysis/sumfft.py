@@ -39,7 +39,7 @@ class SumfftTemplate(GeneratorHelper):
 class SumfftAnalysis(SumAnalysis, id_="FFTSUM_FRAMES"):
     TYPE = 'UDF'
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         sum_results = np.array(udf_results['intensity'])
         real_rad = self.parameters.get("real_rad")

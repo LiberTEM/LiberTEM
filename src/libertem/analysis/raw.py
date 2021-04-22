@@ -115,7 +115,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         roi[self.get_origin()] = True
         return roi
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         return self.get_generic_results(udf_results['intensity'].data[0], damage=True)
 
     def get_coords(self):
@@ -127,7 +127,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         ]
         return " ".join(coords)
 
-    def get_generic_results(self, data, damage=None):
+    def get_generic_results(self, data, damage):
         from libertem.viz import visualize_simple
         coords = self.get_coords()
 

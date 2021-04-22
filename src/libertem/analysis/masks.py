@@ -41,14 +41,14 @@ class BaseMasksAnalysis(BaseAnalysis):
 
 
 class SingleMaskAnalysis(BaseMasksAnalysis):
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         data = udf_results['intensity'].data
         return self.get_generic_results(data[..., 0], damage=damage)
 
     def get_description(self):
         raise NotImplementedError
 
-    def get_generic_results(self, data, damage=None):
+    def get_generic_results(self, data, damage):
         from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             return SingleMaskResultSet(
@@ -151,7 +151,7 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_mask_factories(self):
         return self.parameters['factories']
 
-    def get_generic_results(self, data, damage=None):
+    def get_generic_results(self, data, damage):
         from libertem.viz import visualize_simple
         if data.dtype.kind == 'c':
             results = []
@@ -179,6 +179,6 @@ class MasksAnalysis(BaseMasksAnalysis):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         data = udf_results['intensity'].data
         return self.get_generic_results(data, damage=damage)

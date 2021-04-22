@@ -43,7 +43,7 @@ class ApplyFFTMask(BaseAnalysis, id_="APPLY_FFT_MASK"):
             real_center=real_center, real_rad=real_rad,
         )
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         data = udf_results['intensity'].data
         return AnalysisResultSet([

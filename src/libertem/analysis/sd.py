@@ -57,7 +57,7 @@ class SDAnalysis(BaseAnalysis, id_="SD_FRAMES"):
     def get_roi(self):
         return get_roi(params=self.parameters, shape=self.dataset.shape.nav)
 
-    def get_udf_results(self, udf_results, roi, damage=None):
+    def get_udf_results(self, udf_results, roi, damage):
         from libertem.viz import visualize_simple
         return AnalysisResultSet([
             AnalysisResult(

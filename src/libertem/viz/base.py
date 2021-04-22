@@ -168,6 +168,10 @@ class Live2DPlot:
             channel = None
         elif isinstance(channel, (tuple, list)):
             channel, func = channel
+            if channel not in udfresult.buffers[0]:
+                raise ValueError(
+                    f"channel {channel} not found, have: {udfresult.buffers[0].keys()}"
+                )
             kind = udfresult.buffers[0][channel].kind
             if kind == 'nav':
                 def extract(udf_results, damage):

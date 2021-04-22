@@ -7,6 +7,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.base import MMapBackend
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.base import NoOpUDF
 from libertem.api import Context
 
 
@@ -43,11 +44,12 @@ def test_run_udf_with_io_backend(lt_ctx, default_raw):
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 def test_multi_udf(lt_ctx, default_raw, progress, plots):
-    udfs = [SumUDF(), SumSigUDF()]
+    udfs = [NoOpUDF(), SumUDF(), SumSigUDF()]
     combined_res = lt_ctx.run_udf(dataset=default_raw, udf=udfs, progress=progress, plots=plots)
     ref_res = (
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[0]),
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[1]),
+        lt_ctx.run_udf(dataset=default_raw, udf=udfs[2]),
     )
 
     assert isinstance(ref_res[0], dict)
@@ -60,17 +62,19 @@ def test_multi_udf(lt_ctx, default_raw, progress, plots):
 @pytest.mark.parametrize('plots', (None, True))
 @pytest.mark.asyncio
 async def test_multi_udf_async(lt_ctx, default_raw, progress, plots):
-    udfs = [SumUDF(), SumSigUDF()]
+    udfs = [NoOpUDF(), SumUDF(), SumSigUDF()]
     combined_res = await lt_ctx.run_udf(
         dataset=default_raw, udf=udfs, progress=progress, plots=plots, sync=False
     )
     single_res = (
         await lt_ctx.run_udf(dataset=default_raw, udf=udfs[0], sync=False),
         await lt_ctx.run_udf(dataset=default_raw, udf=udfs[1], sync=False),
+        await lt_ctx.run_udf(dataset=default_raw, udf=udfs[2], sync=False),
     )
     ref_res = (
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[0]),
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[1]),
+        lt_ctx.run_udf(dataset=default_raw, udf=udfs[2]),
     )
     assert isinstance(ref_res[0], dict)
     for index, res in enumerate(ref_res):
@@ -82,18 +86,19 @@ async def test_multi_udf_async(lt_ctx, default_raw, progress, plots):
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 def test_udf_iter(lt_ctx, default_raw, progress, plots):
-    udfs = [SumUDF(), SumSigUDF()]
+    udfs = [NoOpUDF(), SumUDF(), SumSigUDF()]
     for res in lt_ctx.run_udf_iter(dataset=default_raw, udf=udfs, progress=progress, plots=plots):
         ref_res = lt_ctx.run_udf(dataset=default_raw, udf=copy.deepcopy(udfs), roi=res.damage.data)
+        # first one is empty, skipping
         # kind='sig'
-        for key in ref_res[0].keys():
-            ref_item = ref_res[0][key].data
-            res_item = res.buffers[0][key].data
+        for key in ref_res[1].keys():
+            ref_item = ref_res[1][key].data
+            res_item = res.buffers[1][key].data
             assert np.all(ref_item == res_item)
         # kind='nav'
-        for key in ref_res[1].keys():
-            ref_item = ref_res[1][key].data[res.damage.data]
-            res_item = res.buffers[1][key].data[res.damage.data]
+        for key in ref_res[2].keys():
+            ref_item = ref_res[2][key].data[res.damage.data]
+            res_item = res.buffers[2][key].data[res.damage.data]
             assert np.all(ref_item == res_item)
 
 
@@ -101,33 +106,34 @@ def test_udf_iter(lt_ctx, default_raw, progress, plots):
 @pytest.mark.parametrize('plots', (None, True))
 @pytest.mark.asyncio
 async def test_udf_iter_async(lt_ctx, default_raw, progress, plots):
-    udfs = [SumUDF(), SumSigUDF()]
+    udfs = [NoOpUDF(), SumUDF(), SumSigUDF()]
     async for res in lt_ctx.run_udf_iter(
             dataset=default_raw, udf=udfs, progress=progress, plots=plots, sync=False):
         # Nested execution of UDFs doesn't work, so we take a copy
         ref_res = lt_ctx.run_udf(dataset=default_raw, udf=copy.deepcopy(udfs), roi=res.damage.data)
+        # first one is empty, skipping
         # kind='sig'
-        for key in ref_res[0].keys():
-            ref_item = ref_res[0][key].data
-            res_item = res.buffers[0][key].data
+        for key in ref_res[1].keys():
+            ref_item = ref_res[1][key].data
+            res_item = res.buffers[1][key].data
             assert np.all(ref_item == res_item)
         # kind='nav'
-        for key in ref_res[1].keys():
-            ref_item = ref_res[1][key].data[res.damage.data]
-            res_item = res.buffers[1][key].data[res.damage.data]
+        for key in ref_res[2].keys():
+            ref_item = ref_res[2][key].data[res.damage.data]
+            res_item = res.buffers[2][key].data[res.damage.data]
             assert np.all(ref_item == res_item)
 
 
 @pytest.mark.parametrize(
     'plots', (
         True,
-        [['intensity']],
+        [[], ['intensity']],
         [[], [('intensity', np.abs), ('intensity', np.sin)]],
         None
     )
 )
 def test_plots(lt_ctx, default_raw, plots):
-    udfs = [SumUDF(), SumSigUDF()]
+    udfs = [NoOpUDF(), SumUDF(), SumSigUDF()]
     if plots is None:
 
         def test_channel(udf_result, damage):
@@ -140,7 +146,11 @@ def test_plots(lt_ctx, default_raw, plots):
 
         real_plots = [
             lt_ctx.plot_class(
-                dataset=default_raw, udf=udfs[0], channel=test_channel,
+                dataset=default_raw, udf=udfs[1], channel=test_channel,
+                title="Test title"
+            ),
+            lt_ctx.plot_class(
+                dataset=default_raw, udf=udfs[2], channel=test_channel,
                 title="Test title"
             )
         ]
@@ -152,18 +162,27 @@ def test_plots(lt_ctx, default_raw, plots):
         with mock.patch.object(mock_target, 'display') as plot_display:
             if plots is None:
                 real_plots[0].display()
+                real_plots[1].display()
             combined_res = lt_ctx.run_udf(dataset=default_raw, udf=udfs, plots=real_plots)
             plot_update.assert_called()
             plot_display.assert_called()
     ref_res = (
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[0]),
         lt_ctx.run_udf(dataset=default_raw, udf=udfs[1]),
+        lt_ctx.run_udf(dataset=default_raw, udf=udfs[2]),
     )
 
     assert isinstance(ref_res[0], dict)
     for index, res in enumerate(ref_res):
         for key in res.keys():
             assert np.all(res[key].data == combined_res[index][key].data)
+
+
+@pytest.mark.parametrize('plots', ([['hello']], [[('hello', np.abs)]]))
+def test_plots_fail(lt_ctx, default_raw, plots):
+    udfs = [NoOpUDF()]
+    with pytest.raises(ValueError):
+        lt_ctx.run_udf(dataset=default_raw, udf=udfs, plots=plots)
 
 
 @pytest.mark.parametrize(

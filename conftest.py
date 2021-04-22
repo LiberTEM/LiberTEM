@@ -25,6 +25,7 @@ from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import BufferedBackend, MMapBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
+from libertem.viz.base import Dummy2DPlot
 
 from libertem.utils.devices import detect
 
@@ -467,7 +468,7 @@ def inline_executor():
 
 @pytest.fixture
 def lt_ctx(inline_executor):
-    return lt.Context(executor=inline_executor)
+    return lt.Context(executor=inline_executor, plot_class=Dummy2DPlot)
 
 
 @pytest.fixture
@@ -477,7 +478,7 @@ def inline_executor_fast():
 
 @pytest.fixture
 def lt_ctx_fast(inline_executor_fast):
-    return lt.Context(executor=inline_executor_fast)
+    return lt.Context(executor=inline_executor_fast, plot_class=Dummy2DPlot)
 
 
 @pytest.fixture

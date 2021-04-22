@@ -590,8 +590,14 @@ partial results:
 
     # after the loop, `udf_results` contains the final results as usual
 
-It is also possible to integrate LiberTEM into an async script or application by passing
-:code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or :meth:`~libertem.api.Context.run_udf`:
+While the UDF execution is running, the UDF object should not be modified since
+that leads to undefined behavior. In particular, nested or concurrent execution
+of the same UDF objects must be avoided since it modifies the buffers that are
+allocated internally while a UDF is running.
+
+It is also possible to integrate LiberTEM into an async script or application by
+passing :code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or
+:meth:`~libertem.api.Context.run_udf`:
 
 .. Not run with docs-check since we can't easily test async code there...
 

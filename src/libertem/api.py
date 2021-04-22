@@ -21,7 +21,6 @@ from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator
-from libertem.viz.mpl import MPLLive2DPlot
 
 
 RunUDFResultType = Dict[str, BufferWrapper]
@@ -55,6 +54,15 @@ class Context:
 
         .. versionadded:: 0.7.0
 
+    Properties
+    ----------
+
+    plot_class : libertem.viz.base.Live2DPlot
+        Default plot class for live plotting.
+        Defaults to :class:`libertem.viz.mpl.MPLLive2DPlot`.
+
+        .. versionadded:: 0.7.0
+
     Examples
     --------
 
@@ -74,10 +82,18 @@ class Context:
                 f'got type "{type(executor)}" instead.'
             )
         self.executor = executor
+        self._plot_class = plot_class
 
-        if plot_class is None:
-            plot_class = MPLLive2DPlot
-        self.plot_class = plot_class
+    @property
+    def plot_class(self):
+        if self._plot_class is None:
+            from libertem.viz.mpl import MPLLive2DPlot
+            self._plot_class = MPLLive2DPlot
+        return self._plot_class
+
+    @plot_class.setter
+    def plot_class(self, value):
+        self._plot_class = value
 
     def load(self, filetype: str, *args, io_backend=None, **kwargs) -> DataSet:
         """

@@ -50,7 +50,7 @@ class ClusterTemplate(GeneratorHelper):
                         "roi, sd_udf_results = get_sd_results()",
                         "cluster_udf = get_cluster_udf(sd_udf_results)",
                         "udf_results = ctx.run_udf(dataset=ds, udf=cluster_udf, progress=True)",
-                        "cluster_result = get_udf_results(udf_results, roi)",
+                        "cluster_result = get_udf_results(udf_results, roi, damage=True)",
         ]
         return '\n'.join(temp_controller)
 

@@ -19,7 +19,7 @@ def test_mpl_smoke(monkeypatch, lt_ctx, default_raw):
     matplotlib.pyplot.subplots.assert_called()
 
 
-def test_bqp_nodisplay(monkeypatch, lt_ctx, default_raw):
+def test_mpl_nodisplay(monkeypatch, lt_ctx, default_raw):
     udf = SumUDF()
     monkeypatch.setattr(
         matplotlib.pyplot,

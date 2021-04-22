@@ -80,39 +80,30 @@ class AnalysisResultSet:
     Examples
     --------
     >>> mask_shape = tuple(dataset.shape.sig)
-
     >>> def m0():
     ...    return np.ones(shape=mask_shape)
-
     >>> def m1():
     ...     result = np.zeros(shape=mask_shape)
     ...     result[0,0] = 1
     ...     return result
-
     >>> analysis = ctx.create_mask_analysis(
     ...     dataset=dataset, factories=[m0, m1]
     ... )
-
     >>> result = ctx.run(analysis)
-
     >>> # As an object with attributes
     >>> print(result.mask_0.title)
     mask 0
-
     >>> print(result.mask_1.title)
     mask 1
-
     >>> # As a list
     >>> print(result[0].title)
     mask 0
-
     >>> # As an iterator
     >>> # New since 0.3.0
     >>> for m in result:
     ...     print(m.title)
     mask 0
     mask 1
-
     >>> # As a dictionary
     >>> print(result['mask_1'].title)
     mask 1

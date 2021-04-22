@@ -54,7 +54,7 @@ class Context:
 
         .. versionadded:: 0.7.0
 
-    Properties
+    Attributes
     ----------
 
     plot_class : libertem.viz.base.Live2DPlot

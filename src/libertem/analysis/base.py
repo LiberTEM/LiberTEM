@@ -229,7 +229,7 @@ class Analysis:
         """
         raise NotImplementedError()
 
-    def get_complex_results(self, job_result, key_prefix, title, desc):
+    def get_complex_results(self, job_result, key_prefix, title, desc, damage, default_lin=True):
         raise NotImplementedError()
 
     def get_parameters(self, parameters):
@@ -254,7 +254,7 @@ class BaseAnalysis(Analysis):
         return None
 
     def get_complex_results(
-            self, job_result, key_prefix, title, desc, default_lin=True, damage):
+            self, job_result, key_prefix, title, desc, damage, default_lin=True):
         from libertem.viz import visualize_simple, CMAP_CIRCULAR_DEFAULT
         damage = damage & np.isfinite(job_result)
         magn = np.abs(job_result)

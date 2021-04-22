@@ -211,6 +211,12 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             ])
         else:
             damage = damage & np.isfinite(x_centers) & np.isfinite(y_centers)
+            # Make sure that an all-False `damage` is handled since np.max()
+            # trips on an empty array.
+            # As a remark -- the NumPy error message
+            # "zero-size array to reduction operation maximum which has no identity"
+            # is probably wrong since -np.inf is the identity element for maximum on
+            # floating point numbers and should be returned here.
             if np.count_nonzero(damage) > 0:
                 vmax = np.sqrt(np.max(x_centers[damage]**2 + y_centers[damage]**2))
             else:

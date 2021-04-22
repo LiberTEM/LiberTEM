@@ -28,7 +28,7 @@ local host via http://localhost:9000/
 
 
 Activating iywidgets in Jupyter
-===============================
+-------------------------------
 
 Some examples use :code:`ipywidgets` in notebooks, most notably the fast
 :class:`~libertem.viz.bqp.BQLive2DPlot`. In some cases the corresponding Jupyter

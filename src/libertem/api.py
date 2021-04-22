@@ -849,7 +849,9 @@ class Context:
                         f"#{idx}: {udf.__class__.__name__}, not plotting."
                     )
         # 2) plots is List[List[str]] or List[List[(str, callable)]]: set channels from `plots`
-        elif isinstance(plots[0], (list, tuple)) and isinstance(plots[0][0], (str, list, tuple)):
+        elif (isinstance(plots, (list, tuple))
+                and all(isinstance(p, (list, tuple)) for p in plots)
+                and all(all(isinstance(pp, (str, list, tuple)) for pp in p) for p in plots)):
             channels = plots
         # 3) plots is probably List[LivePlot]: use customized plots as they are
         else:

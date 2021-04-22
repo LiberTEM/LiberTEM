@@ -118,10 +118,16 @@ async def test_udf_iter_async(lt_ctx, default_raw):
 def test_plots(lt_ctx, default_raw, plots):
     udfs = [SumUDF(), SumSigUDF()]
     if plots is None:
-        plots = [lt_ctx.plot_class(dataset=default_raw, udf=udfs[0])]
-    with mock.patch.object(lt_ctx.plot_class, 'update') as plot_update:
-        with mock.patch.object(lt_ctx.plot_class, 'display') as plot_display:
-            combined_res = lt_ctx.run_udf(dataset=default_raw, udf=udfs, plots=True)
+        real_plots = [lt_ctx.plot_class(dataset=default_raw, udf=udfs[0])]
+        mock_target = real_plots[0]
+    else:
+        real_plots = plots
+        mock_target = lt_ctx.plot_class
+    with mock.patch.object(mock_target, 'update') as plot_update:
+        with mock.patch.object(mock_target, 'display') as plot_display:
+            if plots is None:
+                real_plots[0].display()
+            combined_res = lt_ctx.run_udf(dataset=default_raw, udf=udfs, plots=real_plots)
             plot_update.assert_called()
             plot_display.assert_called()
     ref_res = (

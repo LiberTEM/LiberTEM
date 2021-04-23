@@ -52,7 +52,7 @@ class ComTemplate(GeneratorHelper):
         plot = [
             "fig, axes = plt.subplots()",
             'axes.set_title("field")',
-            "y_centers, x_centers = com_result.field.raw_data",
+            "x_centers, y_centers = com_result.field.raw_data",
             "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
             "axes.imshow(ch.rgb_from_vector((x_centers, y_centers, 0)))"
         ]

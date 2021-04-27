@@ -194,6 +194,7 @@ class BufferWrapper(object):
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
+        self._part_sig_slice = None
         self._ds_shape = None
         self._roi = None
         self._roi_is_zero = None
@@ -206,6 +207,9 @@ class BufferWrapper(object):
         self._roi = roi
 
     def set_shape_partition(self, partition, roi=None):
+        """
+        Set shape and slice information from `partition`.
+        """
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -214,6 +218,7 @@ class BufferWrapper(object):
             assert roi_count <= partition.shape[0]
             assert roi_part.shape[0] == partition.shape[0]
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
+        self._part_sig_slice = partition.slice.discard_nav()
         self._update_roi_is_zero()
 
     def set_shape_ds(self, dataset_shape, roi=None):
@@ -470,7 +475,7 @@ class BufferWrapper(object):
 
         '''
         if self._kind == "sig":
-            key = tile.tile_slice.discard_nav()
+            key = tile.tile_slice.discard_nav().shift(self._part_sig_slice)
             if key in self._contiguous_cache:
                 view = self._contiguous_cache[key]
             else:

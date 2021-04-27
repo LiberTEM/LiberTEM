@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+from libertem.io.dataset.base import Partition
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, reshaped_view, PlaceholderBufferWrapper,
@@ -75,3 +76,161 @@ def test_result_buffer_decl():
     with pytest.raises(ValueError):
         # no array associated with this bufferwrapper:
         np.array(buf)
+
+
+class PlaceholderPartition(Partition):
+    def __init__(
+        self, meta, partition_slice, tiles, start_frame: int, num_frames: int,
+    ):
+        self._tiles = tiles
+        self._start_frame = start_frame
+        self._num_frames = num_frames
+        super().__init__(
+            meta=meta,
+            partition_slice=partition_slice,
+            io_backend=None,
+        )
+
+    def get_tiles(self, tiling_scheme, dest_dtype=np.float32, roi=None):
+        assert roi is None
+
+        # FIXME: stop after processing `num_frames`
+        for tile in self._tiles:
+            yield tile
+
+    def need_decode(self, read_dtype, roi, corrections):
+        return True
+
+    def get_base_shape(self, roi):
+        return (930, 16)
+
+    def adjust_tileshape(self, tileshape, roi):
+        return tileshape  # FIXME
+
+    def set_corrections(self, corrections):
+        self._corrections = corrections
+
+
+def test_sig_slicing():
+    from libertem.common import Shape, Slice
+    from libertem.udf.sum import SumUDF
+    from libertem.io.dataset.base import DataTile, DataSetMeta
+    from libertem.udf.base import UDFMeta
+    from libertem.executor.base import Environment
+
+    partition_slice = Slice(
+        origin=(0, 0, 256),
+        shape=Shape((4000, 1860, 256), sig_dims=2),
+    )
+
+    dataset_shape = Shape(
+        (4000, 1860, 2048), sig_dims=2,
+    )
+
+    dsmeta = DataSetMeta(
+        shape=dataset_shape,
+        raw_dtype=np.uint16,
+        image_count=4000,
+    )
+
+    partition = PlaceholderPartition(
+        meta=dsmeta,
+        partition_slice=partition_slice,
+        start_frame=0,
+        num_frames=4000,
+        tiles=[],
+    )
+
+    roi = None
+    corrections = None  # FIXME?
+    device_class = 'cpu'
+    dtype = np.uint16
+    env = Environment(threads_per_worker=2)
+
+    tile_slice = Slice(
+        origin=(0, 0, 480),
+        shape=Shape((1, 930, 16), sig_dims=2),
+    )
+    data = np.zeros((1, 930, 16), dtype=np.uint16)
+    tile = DataTile(
+        data,
+        tile_slice=tile_slice,
+        scheme_idx=30,
+    )
+
+    udf = SumUDF()
+
+    meta = UDFMeta(
+        partition_shape=partition.slice.adjust_for_roi(roi).shape,
+        dataset_shape=dataset_shape,
+        roi=roi,
+        dataset_dtype=partition.dtype,
+        input_dtype=dtype,
+        tiling_scheme=None,
+        corrections=corrections,
+        device_class=device_class,
+        threads_per_worker=env.threads_per_worker,
+    )
+
+    udf.set_meta(meta)
+    udf.init_result_buffers()
+    udf.allocate_for_part(partition=partition, roi=None)
+    udf.init_task_data()
+
+    udf.set_contiguous_views_for_tile(
+        partition=partition,
+        tile=tile,
+    )
+    udf.process_tile(tile)
+
+
+def test_sig_slicing_2():
+    from libertem.common import Shape, Slice
+    from libertem.io.dataset.base import DataTile, DataSetMeta
+
+    partition_slice = Slice(
+        origin=(0, 0, 256),
+        shape=Shape((4000, 1860, 256), sig_dims=2),
+    )
+
+    dataset_shape = Shape(
+        (4000, 1860, 2048), sig_dims=2,
+    )
+
+    dsmeta = DataSetMeta(
+        shape=dataset_shape,
+        raw_dtype=np.uint16,
+        image_count=4000,
+    )
+
+    partition = PlaceholderPartition(
+        meta=dsmeta,
+        partition_slice=partition_slice,
+        start_frame=0,
+        num_frames=4000,
+        tiles=[],
+    )
+
+    tile_slice = Slice(
+        origin=(0, 0, 480),
+        shape=Shape((1, 930, 16), sig_dims=2),
+    )
+    data = np.zeros((1, 930, 16), dtype=np.uint16)
+    tile = DataTile(
+        data,
+        tile_slice=tile_slice,
+        scheme_idx=30,
+    )
+    roi = None
+
+    buf = BufferWrapper(
+        kind='sig',
+        extra_shape=(),
+        dtype=np.uint16,
+        where=None,
+        use=None,
+    )
+    buf.set_shape_partition(partition, roi)
+    buf.allocate(lib=None)
+    view = buf.get_contiguous_view_for_tile(partition, tile)
+    assert view.size > 0

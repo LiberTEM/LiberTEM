@@ -7,6 +7,7 @@ from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, reshaped_view, PlaceholderBufferWrapper,
 )
 from libertem.common import Shape
+from libertem.udf.base import UDFData
 
 from utils import _mk_random
 
@@ -234,3 +235,168 @@ def test_sig_slicing_2():
     buf.allocate(lib=None)
     view = buf.get_contiguous_view_for_tile(partition, tile)
     assert view.size > 0
+
+
+def test_sig_slicing_views_for_partition():
+    from libertem.common import Shape, Slice
+    from libertem.io.dataset.base import DataTile, DataSetMeta
+
+    partition_slice = Slice(
+        origin=(0, 0, 256),
+        shape=Shape((4000, 1860, 256), sig_dims=2),
+    )
+
+    dataset_shape = Shape(
+        (4000, 1860, 2048), sig_dims=2,
+    )
+
+    dsmeta = DataSetMeta(
+        shape=dataset_shape,
+        raw_dtype=np.uint16,
+        image_count=4000,
+    )
+
+    partition = PlaceholderPartition(
+        meta=dsmeta,
+        partition_slice=partition_slice,
+        start_frame=0,
+        num_frames=4000,
+        tiles=[],
+    )
+
+    tile_slice = Slice(
+        origin=(0, 0, 480),
+        shape=Shape((1, 930, 16), sig_dims=2),
+    )
+    data = np.zeros((1, 930, 16), dtype=np.uint16)
+    tile = DataTile(
+        data,
+        tile_slice=tile_slice,
+        scheme_idx=30,
+    )
+    roi = None
+
+    buf = BufferWrapper(
+        kind='sig',
+        extra_shape=(),
+        dtype=np.uint16,
+        where=None,
+        use=None,
+    )
+    buf.set_shape_ds(dataset_shape, roi)
+    buf.allocate(lib=None)
+    view_p = buf.get_view_for_partition(partition)
+    view_p[:] = 1
+
+    # FIXME: this works for now, as the dataset parameter is not used yet. we
+    # may need to stub out the dataset, too, in the future
+    view_ds = buf.get_view_for_dataset(dataset=None)
+
+    assert np.allclose(view_ds[partition.slice.sig.get()], 1)
+
+    # the partition "left" of that is zero:
+    partition_slice_0 = Slice(
+        origin=(0, 0, 0),
+        shape=Shape((4000, 1860, 256), sig_dims=2),
+    )
+    assert np.allclose(view_ds[partition_slice_0.sig.get()], 0)
+
+    # actually, everything _but_ the give partition is 0:
+    view_roi = np.zeros(dataset_shape.sig, dtype=bool)
+    view_roi[partition.slice.sig.get()] = 1
+    assert np.allclose(view_ds[~view_roi], 0)
+
+
+def test_sig_slicing_views_for_partition_2():
+    from libertem.common import Shape, Slice
+    from libertem.io.dataset.base import DataTile, DataSetMeta
+
+    partition_slice = Slice(
+        origin=(0, 0, 256),
+        shape=Shape((4000, 1860, 256), sig_dims=2),
+    )
+
+    dataset_shape = Shape(
+        (4000, 1860, 2048), sig_dims=2,
+    )
+
+    dsmeta = DataSetMeta(
+        shape=dataset_shape,
+        raw_dtype=np.uint16,
+        image_count=4000,
+    )
+
+    partition = PlaceholderPartition(
+        meta=dsmeta,
+        partition_slice=partition_slice,
+        start_frame=0,
+        num_frames=4000,
+        tiles=[],
+    )
+
+    tile_slice = Slice(
+        origin=(0, 0, 480),
+        shape=Shape((1, 930, 16), sig_dims=2),
+    )
+    data = np.zeros((1, 930, 16), dtype=np.uint16)
+    tile = DataTile(
+        data,
+        tile_slice=tile_slice,
+        scheme_idx=30,
+    )
+    roi = None
+
+    # we want to test merging of a partition into the dataset buffer, so we
+    # create two UDFData instances:
+    ud_ds = UDFData({
+        'buf': BufferWrapper(
+            kind='sig',
+            extra_shape=(),
+            dtype=np.uint16,
+            where=None,
+            use=None,
+        )
+    })
+    for k, buf in ud_ds._get_buffers():
+        buf.set_shape_ds(dataset_shape, roi)
+    for k, buf in ud_ds._get_buffers(filter_allocated=True):
+        buf.allocate()
+
+    # emulate what's happening in run_for_partition:
+    ud_p = UDFData({
+        'buf': BufferWrapper(
+            kind='sig',
+            extra_shape=(),
+            dtype=np.uint16,
+            where=None,
+            use=None,
+        )
+    })
+    for k, buf in ud_p._get_buffers():
+        buf.set_shape_partition(partition, roi)
+    for k, buf in ud_p._get_buffers(filter_allocated=True):
+        buf.allocate(lib=None)
+
+    # set the whole partition result to 1:
+    ud_p.buf[:] = 1
+
+    # and wrap up:
+    ud_p.clear_views()
+    ud_p.export()
+
+    # prepare ds result buffer:
+    ud_ds.set_view_for_partition(partition)
+
+    # now, simulate a merge:
+    dest = ud_ds.get_proxy()
+    src = ud_p.get_proxy()
+    dest.buf[:] += src.buf
+
+    ud_p.clear_views()
+    ud_ds.clear_views()
+
+    # everything _but_ the give partition is 0:
+    view_roi = np.zeros(dataset_shape.sig, dtype=bool)
+    view_roi[partition.slice.sig.get()] = 1
+    assert np.allclose(ud_ds.buf[~view_roi], 0)
+    assert np.allclose(ud_ds.buf[view_roi], 1)

@@ -318,7 +318,7 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_dataset(dataset)
 
-    def set_view_for_partition(self, partition: Shape):
+    def set_view_for_partition(self, partition: Partition):
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_partition(partition)
 

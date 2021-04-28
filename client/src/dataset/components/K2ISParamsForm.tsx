@@ -3,8 +3,9 @@ import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetInfoK2IS, DatasetParamsK2IS, DatasetTypes } from "../../messages";
-import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
+import { getInitial, getInitialName, parseNumList, validateSyncOffsetAndSigShape, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
 type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
@@ -20,6 +21,7 @@ type MergedProps = FormikProps<DatasetParamsK2ISForForm> & OpenFormProps<Dataset
 
 const K2ISFileParamsForm: React.SFC<MergedProps> = ({
     values,
+    info,
     touched,
     errors,
     dirty,
@@ -39,6 +41,7 @@ const K2ISFileParamsForm: React.SFC<MergedProps> = ({
                 <ErrorMessage name="name" />
                 <Field name="name" id="id_name" />
             </Form.Field>
+            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
             <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button type="button" onClick={onCancel}>Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
@@ -62,6 +65,14 @@ export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm, Datas
             sig_shape: parseNumList(values.sig_shape),
             sync_offset: values.sync_offset,
         }
+    },
+    customValidation: (values, { info }) => {
+        return validateSyncOffsetAndSigShape(
+            info?.native_sig_shape,
+            values.sig_shape,
+            values.sync_offset,
+            info?.image_count
+        )
     },
     type: DatasetTypes.K2IS,
 })(K2ISFileParamsForm);

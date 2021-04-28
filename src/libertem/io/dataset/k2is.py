@@ -45,6 +45,19 @@ class K2ISDatasetParams(MessageConverter):
       "properties": {
           "type": {"const": "K2IS"},
           "path": {"type": "string"},
+          "nav_shape": {
+              "type": "array",
+              "items": {"type": "number", "minimum": 1},
+              "minItems": 2,
+              "maxItems": 2
+          },
+          "sig_shape": {
+              "type": "array",
+              "items": {"type": "number", "minimum": 1},
+              "minItems": 2,
+              "maxItems": 2
+          },
+          "sync_offset": {"type": "number"},
       },
       "required": ["type", "path"]
     }
@@ -54,6 +67,12 @@ class K2ISDatasetParams(MessageConverter):
             k: raw_data[k]
             for k in ["path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
@@ -237,6 +256,69 @@ def _get_gtg_path(full_path):
         )
 
 
+def _get_nav_shape(path):
+    with dm.fileDM(_get_gtg_path(path), on_memory=True) as dm_file:
+        nav_shape_y = dm_file.allTags.get('.SI Dimensions.Size Y')
+        nav_shape_x = dm_file.allTags.get('.SI Dimensions.Size X')
+        if nav_shape_y is not None and nav_shape_x is not None:
+            return (int(nav_shape_y), int(nav_shape_x))
+        return None
+
+
+def _nav_shape_without_flyback(path):
+    with dm.fileDM(_get_gtg_path(path), on_memory=True) as dm_file:
+        nav_shape_y = dm_file.allTags.get(
+            '.SI Image Tags.SI.Acquisition.Spatial Sampling.Height (pixels)'
+        )
+        nav_shape_x = dm_file.allTags.get(
+            '.SI Image Tags.SI.Acquisition.Spatial Sampling.Width (pixels)'
+        )
+        if nav_shape_y is not None and nav_shape_x is not None:
+            return (int(nav_shape_y), int(nav_shape_x))
+        return None
+
+
+def _get_num_frames_with_shutter_active_flag_set(syncer):
+    syncer.sync()
+    with syncer.sectors[0] as s:
+        first_block = s.first_block()
+        last_block = s.last_block()
+    first_block_count = int(first_block.header['block_count'])
+    last_block_count = int(last_block.header['block_count'])
+    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
+    # print("last_block ", last_block.header['block_count'], last_block.header['frame_id'])
+    # print("first_block ", first_block.header['block_count'], first_block.header['frame_id'])
+    return num_frames
+
+
+def _get_num_frames_without_shutter_active_flag_set(syncer):
+    syncer.sync_sectors()
+    with syncer.sectors[0] as s:
+        first_block = s.first_block()
+    if first_block.shutter_active:
+        return 0
+    first_block_w_shutter_flag = s.first_block_with_search(lambda b: b.shutter_active)
+    first_block_count = int(first_block.header['block_count'])
+    last_block_count = int(first_block_w_shutter_flag.header['block_count'])
+    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
+    return num_frames
+
+
+def _get_num_complete_frames(syncer):
+    syncer.sync_sectors()
+    with syncer.sectors[0] as s:
+        first_block = s.first_block()
+        last_block = s.last_block()
+    first_block_count = int(first_block.header['block_count'])
+    last_block_count = int(last_block.header['block_count'])
+    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
+    return num_frames
+
+
+def _get_syncer_for_detect_params(files):
+    return K2Syncer(files)
+
+
 class K2Syncer:
     def __init__(self, paths, start_offsets=None):
         self.paths = paths
@@ -279,6 +361,19 @@ class K2Syncer:
         log.debug("first_block_offsets #2: %r", [s.first_block_offset for s in self.sectors])
         for b in self.first_blocks():
             assert b.is_valid
+        for s in self.sectors:
+            offset = s.last_block().offset
+            s.set_last_block_offset(offset)
+        lol = (
+            len({
+                b.header['frame_id']
+                for b in itertools.islice(s.get_blocks_from_offset(s.last_block().offset - 32 * BLOCK_SIZE), BLOCKS_PER_SECTOR_PER_FRAME)
+            }) > 1
+            for s in self.sectors
+        )
+        if any(lol):
+            for a in lol:
+                print(a)
 
     def sync_to_first_frame(self):
         log.debug("synchronizing to shutter_active flag...")
@@ -320,6 +415,7 @@ class Sector:
         self.idx = idx
         self.filesize = os.stat(fname).st_size
         self.first_block_offset = initial_offset
+        self.last_block_offset = initial_offset
         # FIXME: hardcoded sig_dims
         self.sig_dims = 2
 
@@ -353,11 +449,19 @@ class Sector:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
+    def get_blocks_from_offset(self, offset):
+        while offset + BLOCK_SIZE < self.filesize:
+            yield DataBlock(offset=offset, sector=self)
+            offset += BLOCK_SIZE
+
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset
 
     def first_block(self):
         return next(self.get_blocks())
+
+    def set_last_block_offset(self, offset):
+        self.last_block_offset = offset
 
     def last_block(self):
         offset = self.first_block_offset
@@ -535,30 +639,48 @@ class K2ISDataSet(DataSet):
     """
     Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
     Currently, data acquired using the STEMx unit is supported, metadata
-    about the scan size is read from the .gtg file.
+    about the nav_shape is read from the .gtg file.
 
     Parameters
     ----------
     path: str
         Path to one of the files of the data set (either one of the .bin files or the .gtg file)
+
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the size of the navigation region ((y, x), but
+        can also be of length 1 for example for a line scan, or length 3 for
+        a data cube, for example)
+
+    sig_shape: tuple of int, optional
+        Signal/detector size (height, width)
+
+    sync_offset: int, optional
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
     """
 
-    def __init__(self, path, io_backend=None):
+    def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
         super().__init__(io_backend=io_backend)
         self._path = path
         self._start_offsets = None
         self._files = None
-        self._sync_offset = 0
+        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
+        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._native_sync_offset = 0
+        self._sync_offset = sync_offset
 
     def _do_initialize(self):
         self._files = self._get_files()
-        self._set_skip_frames_and_scan_size()
-        self._image_count = int(np.prod(self._scan_size))
-        self._nav_shape_product = self._image_count
+        _get_num_frames_with_shutter_active_flag_set(self._get_syncer(do_sync=False))
+        self._set_skip_frames_and_nav_shape()
+        self._get_syncer(do_sync=True)
+        if self._sig_shape is None:
+            self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+        self._image_count = _get_num_complete_frames(self._get_syncer(do_sync=False))
+        self._nav_shape_product = int(np.prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
-            shape=Shape(self._scan_size + (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
-                     sig_dims=2),
+            shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
             raw_dtype=np.dtype("uint16"),
             sync_offset=self._sync_offset,
             image_count=self._image_count,
@@ -568,40 +690,23 @@ class K2ISDataSet(DataSet):
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)
 
-    def _set_skip_frames_and_scan_size(self):
-        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
-            nav_shape_y = dm_file.allTags.get('.SI Dimensions.Size Y')
-            nav_shape_x = dm_file.allTags.get('.SI Dimensions.Size X')
-            if nav_shape_y and nav_shape_x:
-                # the sync flag appears to be set one frame too late, so
-                # we compensate here by setting a negative _skip_frames value.
-                # skip_frames is applied after synchronization.
-                self._skip_frames = -1
-                self._get_syncer(do_sync=True)
-                self._scan_size = (int(nav_shape_y), int(nav_shape_x))
-            else:
-                # data set is time series and does not have any frames with
-                # SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.
-                self._skip_frames = 0
-                self._get_syncer(do_sync=True)
-                self._scan_size = (self._get_frame_count(),)
-
-    def _get_frame_count(self):
-        with self._get_syncer().sectors[0] as sector:
-            first_block = sector.first_block()
-            last_block = sector.last_block()
-        first_frame_id = int(first_block.header['frame_id'])
-        last_frame_id = int(last_block.header['frame_id'])
-        frame_count = last_frame_id - first_frame_id
-        return frame_count
-
-    def _scansize_without_flyback(self):
-        with dm.fileDM(_get_gtg_path(self._path), on_memory=True) as dm_file:
-            ss = (
-                dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Height (pixels)'],
-                dm_file.allTags['.SI Image Tags.SI.Acquisition.Spatial Sampling.Width (pixels)']
-            )
-            return tuple(int(i) for i in ss)
+    def _set_skip_frames_and_nav_shape(self):
+        nav_shape = _get_nav_shape(self._path)
+        if nav_shape is not None:
+            # the sync flag appears to be set one frame too late, so
+            # we compensate here by setting a negative _skip_frames value.
+            # skip_frames is applied after synchronization.
+            self._skip_frames = -1
+            if self._nav_shape is None:
+                self._nav_shape = nav_shape
+        else:
+            # data set is time series and does not have any frames with
+            # SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.
+            self._skip_frames = 0
+            if self._nav_shape is None:
+                self._nav_shape = (
+                    _get_num_frames_with_shutter_active_flag_set(self._get_syncer(do_sync=False)),
+                )
 
     @property
     def dtype(self):
@@ -635,10 +740,24 @@ class K2ISDataSet(DataSet):
                 return False
         except DataSetException:
             return False
+        s = executor.run_function(_get_syncer_for_detect_params, files)
+        sync_offset = executor.run_function(_get_num_frames_without_shutter_active_flag_set, s)
+        image_count = executor.run_function(_get_num_complete_frames, s)
+        nav_shape = executor.run_function(_get_nav_shape, path)
+        if nav_shape is None:
+            nav_shape = (
+                executor.run_function(_get_num_frames_with_shutter_active_flag_set, s),
+            )
         return {
             "parameters": {
                 "path": path,
+                "nav_shape": nav_shape,
+                "sig_shape": (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
+                "sync_offset": sync_offset,
             },
+            "info": {
+                "image_count": image_count,
+            }
         }
 
     def check_valid(self):
@@ -653,6 +772,8 @@ class K2ISDataSet(DataSet):
         gtg = _get_gtg_path(self._path)
         return {
             "gtg_path": gtg,
+            "shape": tuple(self.shape),
+            "sync_offset": self._sync_offset,
         }
 
     def get_diagnostics(self):
@@ -667,14 +788,14 @@ class K2ISDataSet(DataSet):
             {"name": "first block offsets for all sectors",
              "value": ", ".join([str(s) for s in self._start_offsets])},
 
-            {"name": "est. number of frames before sync (from first sector)",
+            {"name": "number of frames before sync (from first sector)",
              "value": str(est_num_frames)},
 
             {"name": "first frame id before sync (from first sector)",
              "value": str(first_block_nosync.header['frame_id'])},
 
             {"name": "number of frames after sync (from first sector)",
-             "value": str(self._get_frame_count())},
+             "value": str(_get_num_complete_frames(self._get_syncer(do_sync=False)))},
 
             {"name": "first frame id after sync (from first sector)",
              "value": str(first_block.header['frame_id'])},
@@ -712,22 +833,20 @@ class K2ISDataSet(DataSet):
         return sy
 
     def _get_fileset(self, with_sync=True):
-        sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-        num_frames = int(np.prod(self._scan_size))
         files = [
             K2ISFile(
                 path=path,
                 start_idx=0,
-                end_idx=num_frames,
+                end_idx=self._image_count,
                 native_dtype=np.uint8,
-                sig_shape=sig_shape,
+                sig_shape=self._sig_shape,
                 file_header=offset,
             )
             for path, offset in zip(self._files, self._start_offsets)
         ]
         return K2FileSet(files=files)
 
-    def _get_num_partitions(self):
+    def get_num_partitions(self):
         """
         returns the number of partitions the dataset should be split into
         """
@@ -739,12 +858,10 @@ class K2ISDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for part_slice, start, stop in K2ISPartition.make_slices(
-                shape=self.shape,
-                num_partitions=self._get_num_partitions()):
+        for part_slice, start, stop in self.get_slices():
             yield K2ISPartition(
                 meta=self._meta,
-                fileset=fileset.get_for_range(start, stop),
+                fileset=fileset,
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
@@ -752,8 +869,8 @@ class K2ISDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<K2ISDataSet for pattern=%s scan_size=%s>" % (
-            _pattern(self._path), self._scan_size
+        return "<K2ISDataSet for pattern=%s nav_shape=%s>" % (
+            _pattern(self._path), self._nav_shape
         )
 
 

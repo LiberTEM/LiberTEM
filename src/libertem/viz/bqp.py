@@ -109,8 +109,12 @@ class BQLive2DPlot(Live2DPlot):
         dtype = np.result_type(self.data, np.int8)
         # Map on dtype that supports subtraction
         valid_data = self.data[damage].astype(dtype)
-        mmin = valid_data.min()
-        mmax = valid_data.max()
+        if valid_data.size > 0:
+            mmin = valid_data.min()
+            mmax = valid_data.max()
+        else:
+            mmin = 1
+            mmax = 1 + 1e-12
         delta = mmax - mmin
         if delta <= 0:
             delta = 1

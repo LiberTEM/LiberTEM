@@ -403,7 +403,7 @@ def test_udf_pickle(lt_ctx):
     pixelsum.set_backend("numpy")
     pixelsum.set_meta(meta)
     pixelsum.init_result_buffers()
-    pixelsum.allocate_for_part(partition, None)
+    pixelsum.allocate_for_part(partition.slice, None)
     pickle.loads(pickle.dumps(pixelsum))
 
 
@@ -554,7 +554,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         udf = ReshapedViewUDF()
         res = lt_ctx.run_udf(udf=udf, dataset=dataset)
         partition = next(dataset.get_partitions())
-        p_udf = udf.copy_for_partition(partition=partition, roi=None)
+        p_udf = udf.copy_for_partition(partition_slice=partition.slice, roi=None)
         # Enabling debug=True checks for disjoint cache keys
         UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,

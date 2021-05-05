@@ -2,6 +2,7 @@ from typing import Dict, Optional
 import warnings
 import logging
 import uuid
+import time
 
 import cloudpickle
 import numpy as np
@@ -298,13 +299,13 @@ class UDFData:
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition: Shape, roi: np.ndarray, lib=None):
+    def allocate_for_part(self, partition_slice: Slice, roi: np.ndarray, lib=None):
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
         """
         for k, buf in self._get_buffers():
-            buf.set_shape_partition(partition, roi)
+            buf.set_shape_partition(partition_slice, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate(lib=lib)
 
@@ -318,9 +319,9 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_dataset(dataset)
 
-    def set_view_for_partition(self, partition: Partition):
+    def set_view_for_partition(self, partition_slice: Slice):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_partition(partition)
+            self._views[k] = buf.get_view_for_partition(partition_slice)
 
     def set_view_for_tile(self, partition, tile):
         for k, buf in self._get_buffers():
@@ -341,13 +342,13 @@ class UDFData:
         for k, buf in self._get_buffers():
             buf.export()
 
-    def set_view_for_frame(self, partition, tile, frame_idx):
+    def set_view_for_frame(self, partition_slice: Slice, tile, frame_idx):
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
+            self._views[k] = buf.get_view_for_frame(partition_slice, tile, frame_idx)
 
-    def new_for_partition(self, partition, roi: np.ndarray):
+    def new_for_partition(self, partition_slice: Slice, roi: np.ndarray):
         for k, buf in self._get_buffers():
-            self._data[k] = buf.new_for_partition(partition, roi)
+            self._data[k] = buf.new_for_partition(partition_slice, roi)
 
     def clear_views(self):
         self._views = {}
@@ -491,9 +492,9 @@ class UDFBase:
     Base class for UDFs with helper functions.
     '''
 
-    def allocate_for_part(self, partition, roi):
+    def allocate_for_part(self, partition_slice: Slice, roi):
         for ns in [self.results]:
-            ns.allocate_for_part(partition, roi, lib=self.xp)
+            ns.allocate_for_part(partition_slice, roi, lib=self.xp)
 
     def allocate_for_full(self, dataset, roi):
         for ns in [self.params, self.results]:
@@ -503,27 +504,27 @@ class UDFBase:
         for ns in [self.params]:
             ns.set_view_for_dataset(dataset)
 
-    def set_views_for_partition(self, partition):
+    def set_views_for_partition(self, partition_slice: Slice):
         for ns in [self.params, self.results]:
-            ns.set_view_for_partition(partition)
+            ns.set_view_for_partition(partition_slice)
 
-    def set_views_for_tile(self, partition, tile):
+    def set_views_for_tile(self, partition_slice, tile):
         for ns in [self.params, self.results]:
-            ns.set_view_for_tile(partition, tile)
+            ns.set_view_for_tile(partition_slice, tile)
 
-    def set_contiguous_views_for_tile(self, partition, tile):
+    def set_contiguous_views_for_tile(self, partition_slice, tile):
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
-            ns.set_contiguous_view_for_tile(partition, tile)
+            ns.set_contiguous_view_for_tile(partition_slice, tile)
 
     def flush(self, debug=False):
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.flush(debug=debug)
 
-    def set_views_for_frame(self, partition, tile, frame_idx):
+    def set_views_for_frame(self, partition_slice, tile, frame_idx):
         for ns in [self.params, self.results]:
-            ns.set_view_for_frame(partition, tile, frame_idx)
+            ns.set_view_for_frame(partition_slice, tile, frame_idx)
 
     def clear_views(self):
         for ns in [self.params, self.results]:
@@ -684,13 +685,13 @@ class UDF(UDFBase):
     def copy(self):
         return self.__class__(**self._kwargs)
 
-    def copy_for_partition(self, partition: np.ndarray, roi: np.ndarray):
+    def copy_for_partition(self, partition_slice: Slice, roi: np.ndarray):
         """
         create a copy of the UDF, specifically slicing aux data to the
         specified pratition and roi
         """
         new_instance = self.__class__(**self._kwargs)
-        new_instance.params.new_for_partition(partition, roi)
+        new_instance.params.new_for_partition(partition_slice, roi)
         return new_instance
 
     def get_task_data(self):
@@ -1110,7 +1111,7 @@ class UDFTask(Task):
     def __call__(self, env=None):
         return UDFRunner(self._udfs).run_for_partition(
             self.partition, self._roi, self._corrections, env,
-        )
+        ).buffers
 
     def get_resources(self):
         """
@@ -1220,7 +1221,7 @@ class UDFRunner:
             )
         return tmp_dtype
 
-    def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env):
+    def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env, tiling_scheme):
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_shape=partition.slice.adjust_for_roi(roi).shape,
@@ -1246,24 +1247,23 @@ class UDFRunner:
         for udf in udfs:
             udf.set_meta(meta)
             udf.init_result_buffers()
-            udf.allocate_for_part(partition, roi)
+            udf.allocate_for_part(partition.slice, roi)
             udf.init_task_data()
             # TODO: preprocess doesn't have access to the tiling scheme - is this ok?
             if hasattr(udf, 'preprocess'):
                 udf.clear_views()
                 udf.preprocess()
-        neg = Negotiator()
         # FIXME take compute backend into consideration as well
         # Other boundary conditions when moving input data to device
-        tiling_scheme = neg.get_scheme(
-            udfs=udfs,
-            partition=partition,
-            read_dtype=dtype,
-            roi=roi,
-            corrections=corrections,
-        )
-
-        # print(tiling_scheme)
+        if tiling_scheme is None:
+            neg = Negotiator()
+            tiling_scheme = neg.get_scheme(
+                udfs=udfs,
+                partition=partition,
+                read_dtype=dtype,
+                roi=roi,
+                corrections=corrections,
+            )
 
         # FIXME: don't fully re-create?
         meta = UDFMeta(
@@ -1285,7 +1285,7 @@ class UDFRunner:
         for udf in udfs:
             method = udf.get_method()
             if method == 'tile':
-                udf.set_contiguous_views_for_tile(partition, tile)
+                udf.set_contiguous_views_for_tile(partition.slice, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_tile(device_tile)
             elif method == 'frame':
@@ -1297,10 +1297,10 @@ class UDFRunner:
                                     sig_dims=tile_slice.shape.sig.dims),
                     )
                     udf.set_slice(frame_slice)
-                    udf.set_views_for_frame(partition, tile, frame_idx)
+                    udf.set_views_for_frame(partition.slice, tile, frame_idx)
                     udf.process_frame(frame)
             elif method == 'partition':
-                udf.set_views_for_tile(partition, tile)
+                udf.set_views_for_tile(partition.slice, tile)
                 udf.set_slice(partition.slice)
                 udf.process_partition(device_tile)
 
@@ -1317,6 +1317,9 @@ class UDFRunner:
             xp = cupy_udfs[0].xp
 
         for tile in tiles:
+            if self.pdb_port is not None and tile.tile_slice.origin[0] == 100:
+                import remote_pdb
+                remote_pdb.RemotePdb('127.0.0.1', self.pdb_port).set_trace()
             self._run_tile(numpy_udfs, partition, tile, tile)
             if cupy_udfs:
                 # Work-around, should come from dataset later
@@ -1368,9 +1371,12 @@ class UDFRunner:
                 "supported are 'cpu' and 'cuda'")
         return (numpy_udfs, cupy_udfs)
 
-    def run_for_partition(self, partition: Partition, roi, corrections, env):
+    def run_for_partition(self, partition: Partition, roi, corrections, env, tiling_scheme=None, pdb_port=None):
+        timings = []
+        self.pdb_port = pdb_port
         with env.enter():
             try:
+                t0 = time.time()
                 previous_id = None
                 device_class = get_device_class()
                 # numpy_udfs and cupy_udfs contain references to the objects in
@@ -1385,17 +1391,27 @@ class UDFRunner:
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
                 (meta, tiling_scheme, dtype) = self._init_udfs(
-                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
+                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env, tiling_scheme,
                 )
                 # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)
+                t1 = time.time()
+                timings.append(UDFTiming(t0, t1, "UDF initialization"))
                 self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
+                t2 = time.time()
+                timings.append(UDFTiming(t1, t2, "UDF run"))
                 self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
+                t3 = time.time()
+                timings.append(UDFTiming(t2, t3, "UDF wrapup"))
             finally:
                 if previous_id is not None:
                     cupy.cuda.Device(previous_id).use()
             # Make sure results are in the same order as the UDFs
-            return tuple(udf.results for udf in self._udfs)
+            return UDFPartResults(
+                buffers=(udf.results for udf in self._udfs),
+                timings=timings,
+                tiling_scheme=tiling_scheme,
+            )
 
     def _debug_task_pickling(self, tasks):
         if self._debug:
@@ -1471,13 +1487,13 @@ class UDFRunner:
                 if progress:
                     t.update(1)
                 for results, udf in zip(part_results, self._udfs):
-                    udf.set_views_for_partition(task.partition)
+                    udf.set_views_for_partition(task.partition.slice)
                     udf.merge(
                         dest=udf.results.get_proxy(),
                         src=results.get_proxy()
                     )
                     udf.clear_views()
-                v = damage.get_view_for_partition(task.partition)
+                v = damage.get_view_for_partition(task.partition.slice)
                 v[:] = True
                 yield UDFResults(
                     buffers=tuple(
@@ -1529,13 +1545,39 @@ class UDFRunner:
                     # roi is empty for this partition, ignore
                     continue
             udfs = [
-                udf.copy_for_partition(partition, roi)
+                udf.copy_for_partition(partition.slice, roi)
                 for udf in self._udfs
             ]
             yield UDFTask(
                 partition=partition, idx=idx, udfs=udfs, roi=roi, corrections=corrections,
                 backends=backends,
             )
+
+
+class UDFTiming:
+    def __init__(self, t0, t1, desc):
+        self.t0 = t0
+        self.t1 = t1
+        self.desc = desc
+
+    @property
+    def delta(self):
+        return self.t1 - self.t0
+
+    def __str__(self):
+        return "<UDFTiming: %s took %.4f>" % (
+            self.desc, self.delta,
+        )
+
+
+class UDFPartResults:
+    """
+    Container class for per-Partition results
+    """
+    def __init__(self, buffers, tiling_scheme, timings=None):
+        self.buffers = tuple(buffers)
+        self.timings = timings
+        self.tiling_scheme = tiling_scheme
 
 
 class UDFResults:

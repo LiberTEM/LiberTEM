@@ -27,7 +27,7 @@ def test_new_for_partition():
 
     for idx, partition in enumerate(dataset.get_partitions()):
         print("partition number", idx)
-        new_buf = buf.new_for_partition(partition, roi=roi)
+        new_buf = buf.new_for_partition(partition_slice=partition.slice, roi=roi)
         ps = partition.slice.get(nav_only=True)
         roi_part = roi.reshape(-1)[ps]
 
@@ -175,11 +175,11 @@ def test_sig_slicing():
 
     udf.set_meta(meta)
     udf.init_result_buffers()
-    udf.allocate_for_part(partition=partition, roi=None)
+    udf.allocate_for_part(partition_slice=partition.slice, roi=None)
     udf.init_task_data()
 
     udf.set_contiguous_views_for_tile(
-        partition=partition,
+        partition_slice=partition.slice,
         tile=tile,
     )
     udf.process_tile(tile)
@@ -231,9 +231,9 @@ def test_sig_slicing_2():
         where=None,
         use=None,
     )
-    buf.set_shape_partition(partition, roi)
+    buf.set_shape_partition(partition.slice, roi)
     buf.allocate(lib=None)
-    view = buf.get_contiguous_view_for_tile(partition, tile)
+    view = buf.get_contiguous_view_for_tile(partition.slice, tile)
     assert view.size > 0
 
 
@@ -285,7 +285,7 @@ def test_sig_slicing_views_for_partition():
     )
     buf.set_shape_ds(dataset_shape, roi)
     buf.allocate(lib=None)
-    view_p = buf.get_view_for_partition(partition)
+    view_p = buf.get_view_for_partition(partition_slice=partition.slice)
     view_p[:] = 1
 
     # FIXME: this works for now, as the dataset parameter is not used yet. we
@@ -373,7 +373,7 @@ def test_sig_slicing_views_for_partition_2():
         )
     })
     for k, buf in ud_p._get_buffers():
-        buf.set_shape_partition(partition, roi)
+        buf.set_shape_partition(partition_slice=partition.slice, roi=roi)
     for k, buf in ud_p._get_buffers(filter_allocated=True):
         buf.allocate(lib=None)
 
@@ -385,7 +385,7 @@ def test_sig_slicing_views_for_partition_2():
     ud_p.export()
 
     # prepare ds result buffer:
-    ud_ds.set_view_for_partition(partition)
+    ud_ds.set_view_for_partition(partition_slice=partition.slice)
 
     # now, simulate a merge:
     dest = ud_ds.get_proxy()

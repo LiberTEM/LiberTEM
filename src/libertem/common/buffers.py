@@ -434,7 +434,7 @@ class BufferWrapper(object):
         if self.roi_is_zero:
             raise ValueError("cannot get view for tile with zero ROI")
         if self._kind == "sig":
-            return self._data[tile.tile_slice.get(sig_only=True)]
+            view = self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
             tile_slice = tile.tile_slice
@@ -446,11 +446,18 @@ class BufferWrapper(object):
             result_stop = result_start + tile_slice.shape[0]
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) + tile_slice.shape[0] > 1:
-                return self._data[result_start:result_stop]
+                view = self._data[result_start:result_stop]
             else:
-                return self._data[result_start:result_stop, np.newaxis]
+                view = self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
-            return self._data
+            view = self._data
+        if view.size == 0:
+            raise RuntimeError(
+                "view must not be zero! tile %r is out of bounds for partition %r" % (
+                    tile, partition,
+                )
+            )
+        return view
 
     def get_contiguous_view_for_tile(self, partition, tile):
         '''

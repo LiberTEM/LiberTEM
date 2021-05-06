@@ -1317,9 +1317,6 @@ class UDFRunner:
             xp = cupy_udfs[0].xp
 
         for tile in tiles:
-            if self.pdb_port is not None and tile.tile_slice.origin[0] == 100:
-                import remote_pdb
-                remote_pdb.RemotePdb('127.0.0.1', self.pdb_port).set_trace()
             self._run_tile(numpy_udfs, partition, tile, tile)
             if cupy_udfs:
                 # Work-around, should come from dataset later

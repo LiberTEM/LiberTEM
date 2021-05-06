@@ -91,15 +91,18 @@ class BQLive2DPlot(Live2DPlot):
             title=self.title
         )
 
+        color_scale = ColorScale(min=0, max=1)
+
         scales_image = {'x': scale_x,
                         'y': scale_y,
-                        'image': ColorScale(min=0, max=1)}
+                        'image': color_scale}
 
         dtype = np.result_type(self.data, np.int8)
         image = ImageGL(image=self.data.astype(dtype), scales=scales_image)
         figure.marks = (image,)
         self.figure = figure
         self.image = image
+        self.color_scale = color_scale
 
     def display(self):
         from IPython.display import display

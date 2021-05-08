@@ -197,3 +197,6 @@ class ApplyMasksUDF(UDF):
             result = flat_data @ masks
         # '+' is the correct merge for dot product
         self.results.intensity[:] += result
+
+    def merge(self, dest, src):
+        dest.intensity[:] += src.intensity

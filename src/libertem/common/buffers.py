@@ -194,6 +194,7 @@ class BufferWrapper(object):
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
+        self._part_sig_slice = None
         self._ds_shape = None
         self._roi = None
         self._roi_is_zero = None
@@ -205,15 +206,19 @@ class BufferWrapper(object):
             roi = roi.reshape((-1,))
         self._roi = roi
 
-    def set_shape_partition(self, partition, roi=None):
+    def set_shape_partition(self, partition_slice, roi=None):
+        """
+        Set shape and slice information from `partition`.
+        """
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
-            roi_part = self._roi[partition.slice.get(nav_only=True)]
+            roi_part = self._roi[partition_slice.get(nav_only=True)]
             roi_count = np.count_nonzero(roi_part)
-            assert roi_count <= partition.shape[0]
-            assert roi_part.shape[0] == partition.shape[0]
-        self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
+            assert roi_count <= partition_slice.shape[0]
+            assert roi_part.shape[0] == partition_slice.shape[0]
+        self._shape = self._shape_for_kind(self._kind, partition_slice.shape, roi_count)
+        self._part_sig_slice = partition_slice.discard_nav()
         self._update_roi_is_zero()
 
     def set_shape_ds(self, dataset_shape, roi=None):
@@ -361,7 +366,7 @@ class BufferWrapper(object):
     def _update_roi_is_zero(self):
         self._roi_is_zero = np.prod(self._shape) == 0
 
-    def _slice_for_partition(self, partition):
+    def _slice_for_partition(self, partition_slice: Slice):
         """
         Get a Slice into self._data for `partition`, taking the current ROI into account.
 
@@ -369,42 +374,42 @@ class BufferWrapper(object):
         calculate a new slice from the ROI.
         """
         if self._roi is None:
-            return partition.slice
-        return partition.slice.adjust_for_roi(self._roi)
+            return partition_slice
+        return partition_slice.adjust_for_roi(self._roi)
 
     def get_view_for_dataset(self, dataset):
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         return self._data
 
-    def get_view_for_partition(self, partition):
+    def get_view_for_partition(self, partition_slice: Slice):
         """
         get a view for a single partition in a whole-result-sized buffer
         """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "nav":
-            slice_ = self._slice_for_partition(partition)
+            slice_ = self._slice_for_partition(partition_slice)
             return self._data[slice_.get(nav_only=True)]
         elif self._kind == "sig":
-            return self._data[partition.slice.get(sig_only=True)]
+            return self._data[partition_slice.get(sig_only=True)]
         elif self._kind == "single":
             return self._data
 
-    def get_view_for_frame(self, partition, tile, frame_idx):
+    def get_view_for_frame(self, partition_slice, tile, frame_idx):
         """
         get a view for a single frame in a partition- or dataset-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
         """
-        if partition.shape.dims != partition.shape.sig.dims + 1:
-            raise RuntimeError("partition shape should be flat, is %s" % partition.shape)
+        if partition_slice.shape.dims != partition_slice.shape.sig.dims + 1:
+            raise RuntimeError("partition shape should be flat, is %s" % partition_slice.shape)
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "sig":
             return self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
-            partition_slice = self._slice_for_partition(partition)
+            partition_slice = self._slice_for_partition(partition_slice)
             if self._data_coords_global:
                 offset = 0
             else:
@@ -429,7 +434,7 @@ class BufferWrapper(object):
         if self.roi_is_zero:
             raise ValueError("cannot get view for tile with zero ROI")
         if self._kind == "sig":
-            return self._data[tile.tile_slice.get(sig_only=True)]
+            view = self._data[tile.tile_slice.get(sig_only=True)]
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
             tile_slice = tile.tile_slice
@@ -441,11 +446,18 @@ class BufferWrapper(object):
             result_stop = result_start + tile_slice.shape[0]
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) + tile_slice.shape[0] > 1:
-                return self._data[result_start:result_stop]
+                view = self._data[result_start:result_stop]
             else:
-                return self._data[result_start:result_stop, np.newaxis]
+                view = self._data[result_start:result_stop, np.newaxis]
         elif self._kind == "single":
-            return self._data
+            view = self._data
+        if view.size == 0:
+            raise RuntimeError(
+                "view must not be zero! tile %r is out of bounds for partition %r" % (
+                    tile, partition,
+                )
+            )
+        return view
 
     def get_contiguous_view_for_tile(self, partition, tile):
         '''
@@ -470,7 +482,7 @@ class BufferWrapper(object):
 
         '''
         if self._kind == "sig":
-            key = tile.tile_slice.discard_nav()
+            key = tile.tile_slice.discard_nav().shift(self._part_sig_slice)
             if key in self._contiguous_cache:
                 view = self._contiguous_cache[key]
             else:
@@ -565,7 +577,7 @@ class PreallocBufferWrapper(BufferWrapper):
 
 
 class AuxBufferWrapper(BufferWrapper):
-    def new_for_partition(self, partition, roi):
+    def new_for_partition(self, partition_slice: Slice, roi):
         """
         Return a new AuxBufferWrapper for a specific partition,
         slicing the data accordingly and reducing it to the selected roi.
@@ -581,7 +593,7 @@ class AuxBufferWrapper(BufferWrapper):
         # as we would scatter most likely for all partitions (to be flexible in node
         # assignment, for example for availability)
         assert self._data_coords_global
-        ps = partition.slice.get(nav_only=True)
+        ps = partition_slice.get(nav_only=True)
         buf = self.__class__(self._kind, self._extra_shape, self._dtype)
         if roi is not None:
             roi_part = roi.reshape(-1)[ps]

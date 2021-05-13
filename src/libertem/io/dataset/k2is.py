@@ -718,6 +718,15 @@ class K2ISDataSet(DataSet):
         self._set_skip_frames_and_nav_shape()
         if self._sig_shape is None:
             self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+        elif int(np.prod(self._sig_shape)) != int(np.prod(
+                (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+            )):
+            raise DataSetException(
+                "sig_shape must be of size: %s" % int(np.prod(
+                    (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+                ))
+            )
+
         self._image_count = _get_num_frames(self._get_syncer(do_sync=False))
         self._num_frames_w_shutter_active_flag_set = _get_num_frames_w_shutter_active_flag_set(
             self._get_syncer(do_sync=False)
@@ -824,6 +833,7 @@ class K2ISDataSet(DataSet):
             },
             "info": {
                 "image_count": num_frames,
+                "native_sig_shape": (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1]),
             }
         }
 

@@ -12,6 +12,7 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
 from libertem.udf import UDF
 from libertem.udf.raw import PickUDF
+from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.common import Shape
@@ -66,6 +67,9 @@ def test_detect():
     params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH, InlineJobExecutor())["parameters"]
     assert params == {
         "path": K2IS_TESTDATA_PATH,
+        "nav_shape": (34, 35),
+        "sig_shape": (1860, 2048),
+        "sync_offset": 250
     }
 
 
@@ -399,3 +403,176 @@ def test_regression_simple_stride(lt_ctx, default_k2is):
     print(ts)
     p = list(default_k2is.get_partitions())[-1]
     next(p.get_tiles(tiling_scheme=ts))
+
+
+def test_positive_sync_offset_1(default_k2is, lt_ctx):
+    udf = PickUDF()
+    # native_sync_offset is 250
+    sync_offset = 252
+
+    roi = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[2:10] = True
+
+    ref = lt_ctx.run_udf(dataset=default_k2is, udf=udf, roi=roi)
+
+    ds = lt_ctx.load(
+        "k2is", path=K2IS_TESTDATA_PATH, nav_shape=(4, 2), sync_offset=sync_offset,
+    )
+    result = lt_ctx.run_udf(dataset=ds, udf=udf)
+
+    assert np.allclose(
+        result['intensity'].raw_data,
+        ref['intensity'].raw_data
+    )
+
+
+def test_positive_sync_offset_2(default_k2is, lt_ctx):
+    udf = PickUDF()
+    # native_sync_offset is 250
+    sync_offset = 2
+
+    roi_1 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_1 = reshaped_view(roi_1, -1)
+    flat_roi_1[:8] = True
+
+    ref = lt_ctx.run_udf(dataset=default_k2is, udf=udf, roi=roi_1)
+
+    roi_2 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_2 = reshaped_view(roi_2, -1)
+    flat_roi_2[248:256] = True
+
+    ds = lt_ctx.load(
+        "k2is", path=K2IS_TESTDATA_PATH, sync_offset=sync_offset
+    )
+    result = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi_2)
+
+    assert np.allclose(
+        result['intensity'].raw_data,
+        ref['intensity'].raw_data
+    )
+
+
+def test_zero_sync_offset(default_k2is, lt_ctx):
+    udf = PickUDF()
+    # native_sync_offset is 250
+    sync_offset = 0
+
+    roi_1 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_1 = reshaped_view(roi_1, -1)
+    flat_roi_1[:8] = True
+
+    ref = lt_ctx.run_udf(dataset=default_k2is, udf=udf, roi=roi_1)
+
+    roi_2 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_2 = reshaped_view(roi_2, -1)
+    flat_roi_2[250:258] = True
+
+    ds = lt_ctx.load(
+        "k2is", path=K2IS_TESTDATA_PATH, sync_offset=sync_offset
+    )
+    result = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi_2)
+
+    assert np.allclose(
+        result['intensity'].raw_data,
+        ref['intensity'].raw_data
+    )
+
+
+def test_negative_sync_offset_1(default_k2is, lt_ctx):
+    udf = PickUDF()
+    # native_sync_offset is 250
+    sync_offset = -2
+
+    roi_1 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_1 = reshaped_view(roi_1, -1)
+    flat_roi_1[:8] = True
+
+    ref = lt_ctx.run_udf(dataset=default_k2is, udf=udf, roi=roi_1)
+
+    roi_2 = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi_2 = reshaped_view(roi_2, -1)
+    flat_roi_2[252:260] = True
+
+    ds = lt_ctx.load(
+        "k2is", path=K2IS_TESTDATA_PATH, sync_offset=sync_offset
+    )
+    result = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi_2)
+
+    assert np.allclose(
+        result['intensity'].raw_data,
+        ref['intensity'].raw_data
+    )
+
+
+def test_offset_smaller_than_image_count(lt_ctx):
+    sync_offset = -1520
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "k2is",
+            path=K2IS_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-1517, 1517\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_offset_greater_than_image_count(lt_ctx):
+    sync_offset = 1520
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "k2is",
+            path=K2IS_TESTDATA_PATH,
+            sync_offset=sync_offset
+        )
+    assert e.match(
+        r"offset should be in \(-1517, 1517\), which is \(-image_count, image_count\)"
+    )
+
+
+def test_reshape_nav(default_k2is, lt_ctx):
+    udf = PickUDF()
+
+    roi = np.zeros(default_k2is.shape.nav, dtype=bool)
+    flat_roi = reshaped_view(roi, -1)
+    flat_roi[:8] = True
+
+    ref = lt_ctx.run_udf(dataset=default_k2is, udf=udf, roi=roi)
+
+    ds_1 = lt_ctx.load(
+        "k2is",
+        path=K2IS_TESTDATA_PATH,
+        nav_shape=(8,),
+    )
+    result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
+    shape_1 = lt_ctx.run_udf(dataset=ds_1, udf=SumSigUDF())
+
+    assert shape_1['intensity'].data.shape == (8, )
+    assert np.allclose(result_1['intensity'].raw_data, ref['intensity'].raw_data)
+
+    ds_2 = lt_ctx.load(
+        "k2is",
+        path=K2IS_TESTDATA_PATH,
+        nav_shape=(2, 2, 2),
+    )
+    result_2 = lt_ctx.run_udf(dataset=ds_2, udf=udf)
+    shape_2 = lt_ctx.run_udf(dataset=ds_2, udf=SumSigUDF())
+    assert shape_2['intensity'].data.shape == (2, 2, 2)
+    assert np.allclose(result_2['intensity'].raw_data, ref['intensity'].raw_data)
+
+
+def test_incorrect_sig_shape(lt_ctx):
+    sig_shape = (5, 5)
+
+    with pytest.raises(Exception) as e:
+        lt_ctx.load(
+            "k2is",
+            path=K2IS_TESTDATA_PATH,
+            sig_shape=sig_shape
+        )
+    assert e.match(
+        r"sig_shape must be of size: 3809280"
+    )

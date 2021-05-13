@@ -472,7 +472,6 @@ class FRMS6DataSet(DataSet):
         if self._sig_shape is None:
             self._sig_shape = frame_size
         elif int(np.prod(self._sig_shape)) != int(np.prod(frame_size)):
-            print(self._sig_shape, frame_size)
             raise DataSetException(
                 "sig_shape must be of size: %s" % int(np.prod(frame_size))
             )

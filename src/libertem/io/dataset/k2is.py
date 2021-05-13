@@ -278,40 +278,21 @@ def _nav_shape_without_flyback(path):
         return None
 
 
-def _get_num_frames_with_shutter_active_flag_set(syncer):
+def _get_num_frames_w_shutter_active_flag_set(syncer):
     syncer.sync()
     with syncer.sectors[0] as s:
-        first_block = s.first_block()
-        last_block = s.last_block()
-    first_block_count = int(first_block.header['block_count'])
-    last_block_count = int(last_block.header['block_count'])
-    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
-    # print("last_block ", last_block.header['block_count'], last_block.header['frame_id'])
-    # print("first_block ", first_block.header['block_count'], first_block.header['frame_id'])
+        num_frames = (
+            s.last_block_offset - s.first_block_offset + BLOCK_SIZE
+        ) // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
     return num_frames
 
 
-def _get_num_frames_without_shutter_active_flag_set(syncer):
+def _get_num_frames(syncer):
     syncer.sync_sectors()
     with syncer.sectors[0] as s:
-        first_block = s.first_block()
-    if first_block.shutter_active:
-        return 0
-    first_block_w_shutter_flag = s.first_block_with_search(lambda b: b.shutter_active)
-    first_block_count = int(first_block.header['block_count'])
-    last_block_count = int(first_block_w_shutter_flag.header['block_count'])
-    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
-    return num_frames
-
-
-def _get_num_complete_frames(syncer):
-    syncer.sync_sectors()
-    with syncer.sectors[0] as s:
-        first_block = s.first_block()
-        last_block = s.last_block()
-    first_block_count = int(first_block.header['block_count'])
-    last_block_count = int(last_block.header['block_count'])
-    num_frames = (last_block_count - first_block_count) // BLOCKS_PER_SECTOR_PER_FRAME
+        num_frames = (
+            s.last_block_offset - s.first_block_offset + BLOCK_SIZE
+        ) // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
     return num_frames
 
 
@@ -320,12 +301,17 @@ def _get_syncer_for_detect_params(files):
 
 
 class K2Syncer:
-    def __init__(self, paths, start_offsets=None):
+    def __init__(self, paths, start_offsets=None, last_offsets=None):
         self.paths = paths
         if start_offsets is None:
             start_offsets = NUM_SECTORS * [0]
-        self.sectors = [Sector(fname, idx, initial_offset=start_offset)
-                        for ((idx, fname), start_offset) in zip(enumerate(paths), start_offsets)]
+            last_offsets = NUM_SECTORS * [None]
+        self.sectors = [
+            Sector(fname, idx, initial_offset=start_offset, end_offset=last_offset)
+                        for ((idx, fname), start_offset, last_offset) in zip(
+                            enumerate(paths), start_offsets, last_offsets
+                            )
+        ]
 
     def sync_sectors(self):
         for b in self.first_blocks():
@@ -361,19 +347,46 @@ class K2Syncer:
         log.debug("first_block_offsets #2: %r", [s.first_block_offset for s in self.sectors])
         for b in self.first_blocks():
             assert b.is_valid
+        # find last_block_offsets
         for s in self.sectors:
-            offset = s.last_block().offset
+            offset = s.first_block_offset
+            while offset + BLOCK_SIZE <= s.last_block_offset:
+                offset += BLOCK_SIZE
             s.set_last_block_offset(offset)
-        lol = (
+        log.debug("last_block_offsets #1: %r", [s.last_block_offset for s in self.sectors])
+        for b in self.last_blocks():
+            assert b.is_valid, "last block is not valid!"
+        # end all sectors with the same `block_count`
+        block_with_min_idx = sorted(self.last_blocks(), key=lambda b: b.header['block_count'])[0]
+        end_blocks = [
+            s.first_block_from_end_with(
+                lambda b: b.header['block_count'] == block_with_min_idx.header['block_count']
+            )
+            for s in self.sectors
+        ]
+        for b in end_blocks:
+            assert b.is_valid
+            b.sector.set_last_block_offset(b.offset)
+        log.debug("last_block_offsets #2: %r", [s.last_block_offset for s in self.sectors])
+        # skip incomplete frames:
+        # if the next 32 blocks from the end of a sector don't have all the same frame id,
+        # the frame is incomplete
+        have_overlap_at_end = (
             len({
                 b.header['frame_id']
-                for b in itertools.islice(s.get_blocks_from_offset(s.last_block().offset - 32 * BLOCK_SIZE), BLOCKS_PER_SECTOR_PER_FRAME)
+                for b in itertools.islice(s.get_blocks_from_end(), BLOCKS_PER_SECTOR_PER_FRAME)
             }) > 1
             for s in self.sectors
         )
-        if any(lol):
-            for a in lol:
-                print(a)
+        if any(have_overlap_at_end):
+            log.debug("have_overlap, finding previous frame")
+            frame_id = self.last_blocks()[0].header['frame_id']
+            for s in self.sectors:
+                offset = s.first_block_from_end_with(lambda b: b.header['frame_id'] != frame_id).offset
+                s.set_last_block_offset(offset)
+        log.debug("last_block_offsets #3: %r", [s.last_block_offset for s in self.sectors])
+        for b in self.last_blocks():
+            assert b.is_valid
 
     def sync_to_first_frame(self):
         log.debug("synchronizing to shutter_active flag...")
@@ -395,6 +408,19 @@ class K2Syncer:
             blocks = itertools.islice(s.get_blocks(), BLOCKS_PER_SECTOR_PER_FRAME)
             assert all(b.header['frame_id'] == frame_id
                        for b in blocks)
+        
+        # last blocks should be valid:
+        last_blocks = self.last_blocks()
+        frame_id = last_blocks[0].header['frame_id']
+        for b in last_blocks:
+            assert b.is_valid
+            assert b.header['frame_id'] == frame_id
+
+        # at the end of each sector, a whole frame should follow, and frame ids should match:
+        for s in self.sectors:
+            blocks = itertools.islice(s.get_blocks_from_end(), BLOCKS_PER_SECTOR_PER_FRAME)
+            assert all(b.header['frame_id'] == frame_id
+                       for b in blocks)
 
     def sync(self):
         self.sync_sectors()
@@ -404,18 +430,24 @@ class K2Syncer:
     def first_blocks(self):
         return [next(s.get_blocks()) for s in self.sectors]
 
+    def last_blocks(self):
+        return [next(s.get_blocks_from_end()) for s in self.sectors]
+
     def close(self):
         for s in self.sectors:
             s.close()
 
 
 class Sector:
-    def __init__(self, fname, idx, initial_offset=0):
+    def __init__(self, fname, idx, initial_offset=0, end_offset=None):
         self.fname = fname
         self.idx = idx
         self.filesize = os.stat(fname).st_size
         self.first_block_offset = initial_offset
-        self.last_block_offset = initial_offset
+        if end_offset is None:
+            self.last_block_offset = self.filesize + self.first_block_offset - BLOCK_SIZE
+        else:
+            self.last_block_offset = end_offset
         # FIXME: hardcoded sig_dims
         self.sig_dims = 2
 
@@ -445,32 +477,42 @@ class Sector:
 
     def get_blocks(self):
         offset = self.first_block_offset
-        while offset + BLOCK_SIZE < self.filesize:
+        while offset <= self.last_block_offset:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
+    def get_blocks_from_end(self):
+        offset = self.last_block_offset
+        while offset >= self.first_block_offset:
+            yield DataBlock(offset=offset, sector=self)
+            offset -= BLOCK_SIZE
+
+    def get_block_by_offset(self, offset):
+        return DataBlock(offset=offset, sector=self)
+
     def get_blocks_from_offset(self, offset):
-        while offset + BLOCK_SIZE < self.filesize:
+        while offset <= self.last_block_offset:
             yield DataBlock(offset=offset, sector=self)
             offset += BLOCK_SIZE
 
     def set_first_block_offset(self, offset):
         self.first_block_offset = offset
 
-    def first_block(self):
-        return next(self.get_blocks())
-
     def set_last_block_offset(self, offset):
         self.last_block_offset = offset
 
+    def first_block(self):
+        return next(self.get_blocks())
+
     def last_block(self):
-        offset = self.first_block_offset
-        while offset + BLOCK_SIZE < self.filesize:
-            offset += BLOCK_SIZE
-        return DataBlock(offset=offset, sector=self)
+        return next(self.get_blocks_from_end())
 
     def first_block_with(self, predicate=lambda b: True):
         return next(b for b in self.get_blocks()
+                    if predicate(b))
+
+    def first_block_from_end_with(self, predicate=lambda b: True):
+        return next(b for b in self.get_blocks_from_end()
                     if predicate(b))
 
     def first_block_with_search(self, predicate=lambda b: True, step=32 * 8 * 50):
@@ -659,26 +701,48 @@ class K2ISDataSet(DataSet):
         If negative, number of blank frames to insert at start
     """
 
-    def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
+    def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=None, io_backend=None):
         super().__init__(io_backend=io_backend)
         self._path = path
         self._start_offsets = None
+        self._last_offsets = None
         self._files = None
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._is_time_series = None
         self._native_sync_offset = 0
         self._sync_offset = sync_offset
 
     def _do_initialize(self):
         self._files = self._get_files()
-        _get_num_frames_with_shutter_active_flag_set(self._get_syncer(do_sync=False))
         self._set_skip_frames_and_nav_shape()
-        self._get_syncer(do_sync=True)
         if self._sig_shape is None:
             self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-        self._image_count = _get_num_complete_frames(self._get_syncer(do_sync=False))
+        self._image_count = _get_num_frames(self._get_syncer(do_sync=False))
+        self._num_frames_w_shutter_active_flag_set = _get_num_frames_w_shutter_active_flag_set(
+            self._get_syncer(do_sync=False)
+        )
+        self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
+        if self._sync_offset is None:
+            self._sync_offset = self._native_sync_offset
         self._nav_shape_product = int(np.prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
+        if not self._is_time_series:
+            if self._sync_offset == self._native_sync_offset:
+                self._sync_offset = 0
+            elif self._sync_offset > self._native_sync_offset:
+                self._sync_offset -= self._native_sync_offset
+            else:
+                if self._sync_offset > 0:
+                    self._skip_frames = self._sync_offset - self._native_sync_offset - 1
+                    self._sync_offset = 0
+                elif self._sync_offset == 0:
+                    self._skip_frames = -1 * self._native_sync_offset
+                    self._sync_offset = -1
+                else:
+                    self._skip_frames = -1 * self._native_sync_offset
+                    self._sync_offset -= 1
+        self._get_syncer(do_sync=True)
         self._meta = DataSetMeta(
             shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
             raw_dtype=np.dtype("uint16"),
@@ -696,16 +760,18 @@ class K2ISDataSet(DataSet):
             # the sync flag appears to be set one frame too late, so
             # we compensate here by setting a negative _skip_frames value.
             # skip_frames is applied after synchronization.
+            self._is_time_series = False
             self._skip_frames = -1
             if self._nav_shape is None:
                 self._nav_shape = nav_shape
         else:
             # data set is time series and does not have any frames with
             # SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.
+            self._is_time_series = True
             self._skip_frames = 0
             if self._nav_shape is None:
                 self._nav_shape = (
-                    _get_num_frames_with_shutter_active_flag_set(self._get_syncer(do_sync=False)),
+                    _get_num_frames_w_shutter_active_flag_set(self._get_syncer(do_sync=False)),
                 )
 
     @property
@@ -741,13 +807,14 @@ class K2ISDataSet(DataSet):
         except DataSetException:
             return False
         s = executor.run_function(_get_syncer_for_detect_params, files)
-        sync_offset = executor.run_function(_get_num_frames_without_shutter_active_flag_set, s)
-        image_count = executor.run_function(_get_num_complete_frames, s)
+        num_frames = executor.run_function(_get_num_frames, s)
+        num_frames_w_shutter_active_flag_set = executor.run_function(
+            _get_num_frames_w_shutter_active_flag_set, s
+        )
+        sync_offset = num_frames - num_frames_w_shutter_active_flag_set
         nav_shape = executor.run_function(_get_nav_shape, path)
         if nav_shape is None:
-            nav_shape = (
-                executor.run_function(_get_num_frames_with_shutter_active_flag_set, s),
-            )
+            nav_shape = (num_frames_w_shutter_active_flag_set,)
         return {
             "parameters": {
                 "path": path,
@@ -756,7 +823,7 @@ class K2ISDataSet(DataSet):
                 "sync_offset": sync_offset,
             },
             "info": {
-                "image_count": image_count,
+                "image_count": num_frames,
             }
         }
 
@@ -778,27 +845,37 @@ class K2ISDataSet(DataSet):
 
     def get_diagnostics(self):
         with self._get_syncer().sectors[0] as sector:
-            est_num_frames = sector.filesize // BLOCK_SIZE // BLOCKS_PER_SECTOR_PER_FRAME
             first_block = sector.first_block()
+            last_block = sector.last_block()
         fs_nosync = self._get_syncer(do_sync=False)
         sector_nosync = fs_nosync.sectors[0]
         first_block_nosync = next(sector_nosync.get_blocks())
+        last_block_nosync = next(sector_nosync.get_blocks_from_end())
 
         return [
             {"name": "first block offsets for all sectors",
              "value": ", ".join([str(s) for s in self._start_offsets])},
 
+            {"name": "last block offsets for all sectors",
+             "value": ", ".join([str(s) for s in self._last_offsets])},
+
             {"name": "number of frames before sync (from first sector)",
-             "value": str(est_num_frames)},
+             "value": str(self._image_count)},
+
+            {"name": "number of frames after sync (from first sector)",
+             "value": str(self._num_frames_w_shutter_active_flag_set)},
 
             {"name": "first frame id before sync (from first sector)",
              "value": str(first_block_nosync.header['frame_id'])},
 
-            {"name": "number of frames after sync (from first sector)",
-             "value": str(_get_num_complete_frames(self._get_syncer(do_sync=False)))},
-
             {"name": "first frame id after sync (from first sector)",
              "value": str(first_block.header['frame_id'])},
+
+            {"name": "last frame id before sync (from first sector)",
+             "value": str(last_block_nosync.header['frame_id'])},
+
+            {"name": "last frame id after sync (from first sector)",
+             "value": str(last_block.header['frame_id'])},
         ]
 
     def _get_files(self):
@@ -818,8 +895,14 @@ class K2ISDataSet(DataSet):
             for s in fs.sectors
         ]
         # apply skip_frames value to the start_offsets
-        self._start_offsets = [o + BLOCK_SIZE*self._skip_frames*32
+        self._start_offsets = [o + BLOCK_SIZE * self._skip_frames * BLOCKS_PER_SECTOR_PER_FRAME
                                for o in self._start_offsets]
+
+    def _cache_last_block_offsets(self, fs):
+        self._last_offsets = [
+            s.last_block_offset
+            for s in fs.sectors
+        ]
 
     def _get_syncer(self, do_sync=True):
         if not do_sync:
@@ -828,8 +911,11 @@ class K2ISDataSet(DataSet):
             sy = K2Syncer(self._files)
             sy.sync()
             self._cache_first_block_offsets(sy)
+            self._cache_last_block_offsets(sy)
         else:
-            sy = K2Syncer(self._files, start_offsets=self._start_offsets)
+            sy = K2Syncer(
+                self._files, start_offsets=self._start_offsets, last_offsets=self._last_offsets
+            )
         return sy
 
     def _get_fileset(self, with_sync=True):

@@ -308,9 +308,9 @@ class K2Syncer:
             last_offsets = NUM_SECTORS * [None]
         self.sectors = [
             Sector(fname, idx, initial_offset=start_offset, end_offset=last_offset)
-                        for ((idx, fname), start_offset, last_offset) in zip(
-                            enumerate(paths), start_offsets, last_offsets
-                            )
+            for (
+                (idx, fname), start_offset, last_offset
+            ) in zip(enumerate(paths), start_offsets, last_offsets)
         ]
 
     def sync_sectors(self):
@@ -382,7 +382,9 @@ class K2Syncer:
             log.debug("have_overlap, finding previous frame")
             frame_id = self.last_blocks()[0].header['frame_id']
             for s in self.sectors:
-                offset = s.first_block_from_end_with(lambda b: b.header['frame_id'] != frame_id).offset
+                offset = s.first_block_from_end_with(
+                    lambda b: b.header['frame_id'] != frame_id
+                ).offset
                 s.set_last_block_offset(offset)
         log.debug("last_block_offsets #3: %r", [s.last_block_offset for s in self.sectors])
         for b in self.last_blocks():
@@ -408,7 +410,7 @@ class K2Syncer:
             blocks = itertools.islice(s.get_blocks(), BLOCKS_PER_SECTOR_PER_FRAME)
             assert all(b.header['frame_id'] == frame_id
                        for b in blocks)
-        
+
         # last blocks should be valid:
         last_blocks = self.last_blocks()
         frame_id = last_blocks[0].header['frame_id']
@@ -719,8 +721,8 @@ class K2ISDataSet(DataSet):
         if self._sig_shape is None:
             self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
         elif int(np.prod(self._sig_shape)) != int(np.prod(
-                (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-            )):
+                    (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
+                )):
             raise DataSetException(
                 "sig_shape must be of size: %s" % int(np.prod(
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])

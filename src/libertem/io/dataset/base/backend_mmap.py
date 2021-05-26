@@ -158,8 +158,8 @@ class MMapBackendImpl(IOBackendImpl):
         return r_n_d
 
     def _get_tiles_w_copy(
-        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, roi, decoder=None,
-        sync_offset=0, corrections=None,
+        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype,
+        decoder=None, corrections=None,
     ):
         if decoder is None:
             decoder = DtypeConversionDecoder()
@@ -250,8 +250,6 @@ class MMapBackendImpl(IOBackendImpl):
                     read_ranges=read_ranges,
                     read_dtype=read_dtype,
                     native_dtype=native_dtype,
-                    roi=roi,
-                    sync_offset=sync_offset,
                     decoder=decoder,
                     corrections=corrections,
                 )

@@ -248,27 +248,31 @@ dispatcher_registry['custom_cpu'] = MyCPUDispatcher
 def prime_numba_cache(ds):
     dtypes = (np.float32, None)
     for dtype in dtypes:
-        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
-        roi[0] = 1
+        roi = np.ones(ds.shape.nav, dtype=bool).reshape((-1,))
 
         from libertem.udf.sum import SumUDF
         from libertem.corrections.corrset import CorrectionSet
         from libertem.io.dataset.base import Negotiator
 
         udfs = [SumUDF()]  # need to have at least one UDF
-        p = next(ds.get_partitions())
         neg = Negotiator()
         for corr_dtype in (np.float32, None):
             if corr_dtype is not None:
                 corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
             else:
                 corrections = None
-            p.set_corrections(corrections)
-            tiling_scheme = neg.get_scheme(
-                udfs=udfs,
-                partition=p,
-                read_dtype=dtype,
-                roi=roi,
-                corrections=corrections,
-            )
-            next(p.get_tiles(tiling_scheme=tiling_scheme, roi=roi))
+            found_first_tile = False
+            for p in ds.get_partitions():
+                if found_first_tile:
+                    break
+                p.set_corrections(corrections)
+                tiling_scheme = neg.get_scheme(
+                    udfs=udfs,
+                    partition=p,
+                    read_dtype=dtype,
+                    roi=roi,
+                    corrections=corrections,
+                )
+                for t in p.get_tiles(tiling_scheme=tiling_scheme):
+                    found_first_tile = True
+                    break

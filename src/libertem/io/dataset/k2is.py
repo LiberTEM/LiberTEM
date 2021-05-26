@@ -301,6 +301,23 @@ def _get_syncer_for_detect_params(files):
 
 
 class K2Syncer:
+    """
+    Sync the 8 sectors of a K2IS data set. First, find the first complete frame and the
+    last complete frame. Next, sync to the first frame with the shutter_active flag set.
+    Finally, validate the first and last frames.
+
+    Parameters
+    ----------
+    paths: list of str
+        List of paths of the 8 .bin files
+
+    start_offsets: list of int, optional
+        List of first block offsets of the 8 sectors
+
+    last_offsets: list of int, optional
+        List of last block offsets of the 8 sectors
+    """
+
     def __init__(self, paths, start_offsets=None, last_offsets=None):
         self.paths = paths
         if start_offsets is None:

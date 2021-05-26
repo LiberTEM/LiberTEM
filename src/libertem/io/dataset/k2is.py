@@ -730,28 +730,8 @@ class K2ISDataSet(DataSet):
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
                 ))
             )
-
         self._image_count = _get_num_frames(self._get_syncer(do_sync=False))
-        self._num_frames_w_shutter_active_flag_set = _get_num_frames_w_shutter_active_flag_set(
-            self._get_syncer(do_sync=False)
-        )
-        self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
-        if self._user_sync_offset is None:
-            self._user_sync_offset = self._native_sync_offset
-        self._nav_shape_product = int(np.prod(self._nav_shape))
-        self._sync_offset_info = self._get_sync_offset_info()
-        if not self._is_time_series:
-            if self._user_sync_offset == self._native_sync_offset:
-                self._sync_offset = 0
-            elif self._user_sync_offset > self._native_sync_offset:
-                self._sync_offset = self._user_sync_offset - self._native_sync_offset
-            else:
-                if self._user_sync_offset > 0:
-                    self._skip_frames = self._user_sync_offset - self._native_sync_offset - 1
-                    self._sync_offset = 0
-                else:
-                    self._skip_frames = -1 * self._native_sync_offset
-                    self._sync_offset = self._user_sync_offset - 1
+        self._set_sync_offset()
         self._get_syncer(do_sync=True)
         self._meta = DataSetMeta(
             shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
@@ -783,6 +763,30 @@ class K2ISDataSet(DataSet):
                 self._nav_shape = (
                     _get_num_frames_w_shutter_active_flag_set(self._get_syncer(do_sync=False)),
                 )
+
+    def _set_sync_offset(self):
+        self._num_frames_w_shutter_active_flag_set = _get_num_frames_w_shutter_active_flag_set(
+            self._get_syncer(do_sync=False)
+        )
+        self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
+        if self._user_sync_offset is None:
+            self._user_sync_offset = self._native_sync_offset
+        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._sync_offset_info = self._get_sync_offset_info()
+        if not self._is_time_series:
+            if self._user_sync_offset == self._native_sync_offset:
+                self._sync_offset = 0
+            elif self._user_sync_offset > self._native_sync_offset:
+                self._sync_offset = self._user_sync_offset - self._native_sync_offset
+            else:
+                if self._user_sync_offset > 0:
+                    self._skip_frames = self._user_sync_offset - self._native_sync_offset - 1
+                    self._sync_offset = 0
+                else:
+                    self._skip_frames = -1 * self._native_sync_offset
+                    self._sync_offset = self._user_sync_offset - 1
+        else:
+            self._sync_offset = self._user_sync_offset
 
     def _get_sync_offset_info(self):
         """

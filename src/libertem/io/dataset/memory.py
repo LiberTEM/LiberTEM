@@ -89,9 +89,7 @@ class MemBackendImpl(MMapBackendImpl):
                         read_ranges=read_ranges,
                         read_dtype=read_dtype,
                         native_dtype=native_dtype,
-                        roi=roi,
                         decoder=decoder,
-                        sync_offset=sync_offset,
                         corrections=corrections,
                     ):
                         yield tile

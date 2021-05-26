@@ -96,7 +96,7 @@ class IOBackendImpl:
 
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        corrections,
+        sync_offset, corrections,
     ):
         """
         Read tiles from `fileset`, as specified by the parameters.
@@ -125,6 +125,10 @@ class IOBackendImpl:
 
         read_dtype : np.dtype
             The data dtype into which the data is converted when reading
+
+        sync_offset : int
+            if positive, number of frames to skip from the start
+            if negative, number of blank frames to insert at the start
 
         corrections
             A set of corrections to apply in a preprocesing step

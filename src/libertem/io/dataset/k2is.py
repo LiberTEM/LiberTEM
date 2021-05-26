@@ -418,7 +418,7 @@ class K2Syncer:
             assert b.is_valid
             assert b.header['frame_id'] == frame_id
 
-        # at the end of each sector, a whole frame should follow, and frame ids should match:
+        # each sector should end with a whole frame, and frame ids should match:
         for s in self.sectors:
             blocks = itertools.islice(s.get_blocks_from_end(), BLOCKS_PER_SECTOR_PER_FRAME)
             assert all(b.header['frame_id'] == frame_id
@@ -712,8 +712,10 @@ class K2ISDataSet(DataSet):
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
         self._is_time_series = None
+        self._sync_offset = None
         self._native_sync_offset = 0
-        self._sync_offset = sync_offset
+        self._user_sync_offset = sync_offset
+        self._cached_user_sync_offset = None
 
     def _do_initialize(self):
         self._files = self._get_files()
@@ -734,25 +736,22 @@ class K2ISDataSet(DataSet):
             self._get_syncer(do_sync=False)
         )
         self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
-        if self._sync_offset is None:
-            self._sync_offset = self._native_sync_offset
+        if self._user_sync_offset is None:
+            self._user_sync_offset = self._native_sync_offset
         self._nav_shape_product = int(np.prod(self._nav_shape))
-        self._sync_offset_info = self.get_sync_offset_info()
+        self._sync_offset_info = self._get_sync_offset_info()
         if not self._is_time_series:
-            if self._sync_offset == self._native_sync_offset:
+            if self._user_sync_offset == self._native_sync_offset:
                 self._sync_offset = 0
-            elif self._sync_offset > self._native_sync_offset:
-                self._sync_offset -= self._native_sync_offset
+            elif self._user_sync_offset > self._native_sync_offset:
+                self._sync_offset = self._user_sync_offset - self._native_sync_offset
             else:
-                if self._sync_offset > 0:
-                    self._skip_frames = self._sync_offset - self._native_sync_offset - 1
+                if self._user_sync_offset > 0:
+                    self._skip_frames = self._user_sync_offset - self._native_sync_offset - 1
                     self._sync_offset = 0
-                elif self._sync_offset == 0:
-                    self._skip_frames = -1 * self._native_sync_offset
-                    self._sync_offset = -1
                 else:
                     self._skip_frames = -1 * self._native_sync_offset
-                    self._sync_offset -= 1
+                    self._sync_offset = self._user_sync_offset - 1
         self._get_syncer(do_sync=True)
         self._meta = DataSetMeta(
             shape=Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape)),
@@ -784,6 +783,26 @@ class K2ISDataSet(DataSet):
                 self._nav_shape = (
                     _get_num_frames_w_shutter_active_flag_set(self._get_syncer(do_sync=False)),
                 )
+
+    def _get_sync_offset_info(self):
+        """
+        Check sync_offset specified and returns number of frames skipped and inserted
+        """
+        if not -1*self._image_count < self._user_sync_offset < self._image_count:
+            raise DataSetException(
+                "sync_offset should be in (%s, %s), which is (-image_count, image_count)"
+                % (-1*self._image_count, self._image_count)
+            )
+        return {
+            "frames_skipped_start": max(0, self._user_sync_offset),
+            "frames_ignored_end": max(
+                0, self._image_count - self._nav_shape_product - self._user_sync_offset
+            ),
+            "frames_inserted_start": abs(min(0, self._user_sync_offset)),
+            "frames_inserted_end": max(
+                0, self._nav_shape_product - self._image_count + self._user_sync_offset
+            )
+        }
 
     @property
     def dtype(self):
@@ -916,14 +935,18 @@ class K2ISDataSet(DataSet):
             for s in fs.sectors
         ]
 
+    def _cache_user_sync_offset(self, user_sync_offset):
+        self._cached_user_sync_offset = user_sync_offset
+
     def _get_syncer(self, do_sync=True):
         if not do_sync:
             return K2Syncer(self._files)
-        if self._start_offsets is None:
+        if self._start_offsets is None or self._user_sync_offset != self._cached_user_sync_offset:
             sy = K2Syncer(self._files)
             sy.sync()
             self._cache_first_block_offsets(sy)
             self._cache_last_block_offsets(sy)
+            self._cache_user_sync_offset(self._user_sync_offset)
         else:
             sy = K2Syncer(
                 self._files, start_offsets=self._start_offsets, last_offsets=self._last_offsets

@@ -479,7 +479,7 @@ def test_zero_sync_offset(default_k2is, lt_ctx):
     )
 
 
-def test_negative_sync_offset_1(default_k2is, lt_ctx):
+def test_negative_sync_offset(default_k2is, lt_ctx):
     udf = PickUDF()
     # native_sync_offset is 250
     sync_offset = -2

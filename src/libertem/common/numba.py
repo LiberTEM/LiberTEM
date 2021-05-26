@@ -248,7 +248,8 @@ dispatcher_registry['custom_cpu'] = MyCPUDispatcher
 def prime_numba_cache(ds):
     dtypes = (np.float32, None)
     for dtype in dtypes:
-        roi = None
+        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
+        roi[max(-ds._meta.sync_offset, 0)] = True
 
         from libertem.udf.sum import SumUDF
         from libertem.corrections.corrset import CorrectionSet
@@ -270,9 +271,9 @@ def prime_numba_cache(ds):
                     udfs=udfs,
                     partition=p,
                     read_dtype=dtype,
-                    roi=roi,
+                    roi=None,
                     corrections=corrections,
                 )
-                for t in p.get_tiles(tiling_scheme=tiling_scheme):
+                for t in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
                     found_first_tile = True
                     break

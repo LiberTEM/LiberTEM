@@ -87,6 +87,24 @@ See :ref:`auto UDF` for more details. This is most suited for simple functions; 
 parameters or want to re-use some data across function calls, you should create a
 :class:`~libertem.udf.UDF` subclass instead.
 
+:func:`functools.partial` is a higher-order function that allows to create a new
+function by wrapping an existing function and passing additional parameters to
+it. In this case, the resulting call to :func:`numpy.sum` within
+:code:`ctx.map(...)` is :code:`numpy.sum(frame, axis=-1)`. See
+https://docs.python.org/3/library/functools.html#functools.partial for more
+details.
+
+Example notebook
+----------------
+
+See the following notebook for a demonstration of basic UDF functionality. It
+can be downloaded `from our example collection on GitHub
+<https://github.com/LiberTEM/LiberTEM/blob/master/examples/Introduction%20to%20UDFs.ipynb>`_.
+
+.. toctree::
+
+   udf/introduction
+
 .. _`how UDFs work`:
 
 How UDFs works

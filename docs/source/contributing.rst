@@ -44,6 +44,12 @@ keep the number of changes small and reviewable. To keep your changes organized
 and to prevent unrelated changes from disturbing your pull request, create a new
 branch for each pull request.
 
+All pull requests should come from a user's personal fork since we don't push to
+the main repository for development. See the `GitHub documentation on how to
+create and manage forks
+<https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo>`_
+for details.
+
 Before creating a pull request, please make sure all tests still pass. See
 `Running the Tests`_ for more information. You should also update the test suite
 and add test cases for your contribution. See the section `Code coverage`_ below

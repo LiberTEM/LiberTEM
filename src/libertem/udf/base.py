@@ -796,16 +796,18 @@ class UDF(UDFBase):
 
     def get_results(self):
         """
-        Get results, allowing a final postprocessing step on the main node after
-        the results have been merged. See also: :class:`UDFPostprocessMixin`.
+        Get results, allowing a postprocessing step on the main node after
+        a result has been merged. See also: :class:`UDFPostprocessMixin`.
+
+        .. versionadded:: 0.7.0
 
         Note
         ----
         You should return all values as numpy arrays, they will be wrapped
         in `BufferWrapper` instances before they are returned to the user.
 
-        See the :ref:`udf post processing` section in the documentation for details
-        and examples.
+        See the :ref:`udf final post processing` section in the documentation for
+        details and examples.
 
         Returns
         -------
@@ -813,7 +815,6 @@ class UDF(UDFBase):
         results : dict
             A `dict` containing the final post-processed results.
 
-        .. versionadded:: 0.7.0
         """
         for k in self.results.keys():
             buf = self.results.get_buffer(k)

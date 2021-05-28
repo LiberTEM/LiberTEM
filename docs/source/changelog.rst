@@ -11,15 +11,112 @@ Changelog
 
 .. _continuous:
 
-0.7.0.dev0
+0.8.0.dev0
 ##########
 
 .. toctree::
-   :glob:
+  :glob:
 
-   changelog/*/*
+  changelog/*/*
 
 .. _latest:
+.. _`v0-7-0`:
+
+0.7.0
+#####
+
+This release introduces features that are essential for live data processing,
+but can be used for offline processing as well: Live plotting, API for bundled
+execution of several UDFs in one run, iteration over partial UDF results, and
+asynchronous UDF execution. Features and infrastructure that are specific to
+live processing are included in the `LiberTEM-live
+<https://github.com/LiberTEM/LiberTEM-live/>`_ package, which will be released
+soon.
+
+New features
+------------
+
+* Support for postprocessing of results on the main node after merging partial
+  results. This adds :meth:`~libertem.udf.base.UDF.get_results` and the
+  :code:`use` parameter to :meth:`~libertem.udf.base.UDF.buffer`. See :ref:`udf
+  final post processing` for details (:pr:`994`, :pr:`1003`, :issue:`1001`).
+* Obtain partial results from each merge step iteratively as a generator
+  using :meth:`~libertem.api.Context.run_udf_iter`. See :ref:`partial` and an
+  `example
+  <https://github.com/LiberTEM/LiberTEM/blob/master/examples/async.ipynb>`_ for
+  details (:pr:`1011`)!
+* Run multiple UDFs in one pass over a single `DataSet` by passing a
+  list of UDFs instead of one UDF in :meth:`~libertem.api.Context.run_udf` and
+  :meth:`~libertem.api.Context.run_udf_iter` (:pr:`1011`).
+* Allow usage from an asynchronous context with the new :code:`sync=False`
+  argument to :meth:`~libertem.api.Context.run_udf` and
+  :meth:`~libertem.api.Context.run_udf_iter`. See :ref:`partial` and an `example
+  <https://github.com/LiberTEM/LiberTEM/blob/master/examples/async.ipynb>`_ for
+  details (:issue:`216`, :pr:`1011`)!
+* Live plotting using the new :code:`plots` parameter for
+  :meth:`~libertem.api.Context.run_udf` and
+  :meth:`~libertem.api.Context.run_udf_iter`, as well as live plotting classes
+  documented in :ref:`viz reference`. Pass :code:`plots=True` for simple usage.
+  See :ref:`plotting` as well as `an example
+  <https://github.com/LiberTEM/LiberTEM/blob/master/examples/live-plotting.ipynb>`_
+  for the various possibilities for advanced usage (:issue:`980`, :pr:`1011`).
+* Allow some UDF-internal threading. This is mostly
+  interesting for ad-hoc parallelization on top of the
+  :class:`~libertem.executor.inline.InlineJobExecutor` and live processing that
+  currently relies on the :class:`~libertem.executor.inline.InlineJobExecutor`
+  for simplicity, but could also be used for hybrid multiprocess/multithreaded
+  workloads. Threads for numba, pyfftw, OMP/MKL are automatically
+  controlled. The executor makes the number of allowed threads available as
+  :attr:`libertem.udf.base.UDFMeta.threads_per_worker` for other threading
+  mechanisms that are not controlled automatically (:pr:`993`).
+* K2IS: reshaping, sync offset and time series support. Users can now specify a
+  :code:`nav_shape`, :code:`sig_shape` and :code:`sync_offset` for a K2IS data
+  set, and load time series data (:pr:`1019`, :issue:`911`). Many thanks to
+  `@AnandBaburajan <https://github.com/AnandBaburajan>`_ for implementing this
+  feature!
+
+Bugfixes
+--------
+
+* UDF: Consistently use attribute access in :code:`UDF.process_*`, :code:`UDF.merge`,
+  :code:`UDF.get_results` etc. instead of mixing it with :code:`__getitem__`
+  dict-like access. Also allow non-sliced assignment, for example
+  :code:`self.results.res += frame` (:issue:`1000`, :pr:`1003`).
+* Better choice of :code:`kind='nav'` buffer fill value
+  outside ROI.
+   * String: :code:`'n'` -> :code:`''`
+   * bool: :code:`True` -> :code:`False`
+   * integers: smallest possible value -> :code:`0`
+   * objects: :code:`np.nan` -> :code:`None` (:pr:`1011`)
+* Improve performance for chunked HDF5 files, especially compressed HDF5 files
+  which have a chunking in both navigation dimensions. They were causing
+  excessive read amplification (:pr:`984`).
+* Fix plot range if only zero and one other value are present
+  in the result, most notably boolean values (:issue:`944`, :pr:`1011`).
+* Fix axes order in COM template: The components in the field are (x, y)
+  while the template had them as (y, x) before (:pr:`1023`).
+
+Documentation
+-------------
+
+* Update Gatan Digital Micrograph (GMS) examples to work with the current GMS and
+  LiberTEM releases and demonstrate the new features. (:issue:`999`,
+  :pr:`1002,1004,1011`). Many thanks to Winnie from Gatan for helping to work
+  around a number of issues!
+
+Obsolescence
+------------
+
+* Removed deprecated blobfinder and :code:`FeatureVecMakerUDF` as
+  previously announced. Blobfinder is available as a separate package at
+  https://github.com/liberTEM/LiberTEM-blobfinder. Instead of
+  :code:`FeatureVecMakerUDF`, you can use a sparse matrix and
+  :code:`ApplyMasksUDF` (:pr:`979`).
+* Remove deprecated :code:`Job` interface as previously announced.
+  The functionality was ported to the more capable UDF interface :pr:`978`.
+
+
+
 .. _`v0-6-0`:
 
 0.6.0 / 2021-02-16

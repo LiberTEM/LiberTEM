@@ -346,7 +346,12 @@ def raw_data_8x8x8x8_path(tmpdir_factory):
 
 
 @pytest.fixture
-def dist_ctx():
+def scheduler_addr():
+    return os.environ['DASK_SCHEDULER_ADDRESS']
+
+
+@pytest.fixture
+def dist_ctx(scheduler_addr):
     """
     This Context needs to have an external dask cluster running, with the following
     assumptions:
@@ -354,9 +359,7 @@ def dist_ctx():
      - two workers: hostnames worker-1 and worker-2
      - one scheduler node
      - data availability TBD
-     - the address of the dask scheduler is passed in as DASK_SCHEDULER_ADDRESS
     """
-    scheduler_addr = os.environ['DASK_SCHEDULER_ADDRESS']
     executor = DaskJobExecutor.connect(scheduler_addr)
     with lt.Context(executor=executor) as ctx:
         yield ctx

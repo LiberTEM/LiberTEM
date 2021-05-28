@@ -4,7 +4,7 @@ import shutil
 import nbformat
 import pytest
 import numpy as np
-from temp_utils import _get_hdf5_params, create_random_hdf5
+from temp_utils import _get_hdf5_params
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from nbconvert.preprocessors import ExecutePreprocessor
 
@@ -53,26 +53,16 @@ def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     )
 
 
-@pytest.fixture(scope='function')
-def random_hdf5_1():
-    tmp_dir = '/data/temp_data/tmp'
-    os.makedirs(tmp_dir)
-    ds_path = os.path.join(tmp_dir, 'tmp_random_hdf5.h5')
-    ds = create_random_hdf5(ds_path)
-    yield ds
-    shutil.rmtree(tmp_dir, ignore_errors=True)
-
-
 @pytest.mark.dist
 @pytest.mark.asyncio
-def test_ring_tcp_cluster(lt_ctx, random_hdf5_1):
+def test_ring_tcp_cluster(lt_ctx, hdf5_ds_2, scheduler_addr):
 
     conn = {"connection": {
                     "type": "TCP",
-                    "address": "tcp://scheduler:8786"
+                    "address": scheduler_addr
                     }
             }
-    ds = random_hdf5_1
+    ds = hdf5_ds_2
     ds_path = ds.path
     tmp_dir = os.path.dirname(ds_path)
     dataset = _get_hdf5_params(ds_path)

@@ -21,10 +21,11 @@ from libertem import masks
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
-K2IS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Capture52', 'Capture52_.gtg')
+
+K2IS_TESTDATA_DIR = os.path.join(get_testdata_path(), 'Capture52')
+K2IS_TESTDATA_PATH = os.path.join(K2IS_TESTDATA_DIR, 'Capture52_.gtg')
 K2IS_TESTDATA_RAW = os.path.join(
-    get_testdata_path(),
-    'Capture52',
+    K2IS_TESTDATA_DIR,
     'Capture52_.gtg_(34, 35, 1860, 2048)_uint16.raw'
 )
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
@@ -353,8 +354,8 @@ def test_cache_key_json_serializable(default_k2is):
 def test_k2is_dist(dist_ctx):
     ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
     import glob
-    print(dist_ctx.executor.run_function(lambda: os.listdir("/data/Capture52/")))
-    print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob("/data/Capture52/*")))))
+    print(dist_ctx.executor.run_function(lambda: os.listdir(K2IS_TESTDATA_DIR)))
+    print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob(K2IS_TESTDATA_DIR)))))
     ds = ds.initialize(dist_ctx.executor)
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 5] = 1

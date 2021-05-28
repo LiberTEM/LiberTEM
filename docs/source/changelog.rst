@@ -22,8 +22,8 @@ Changelog
 .. _latest:
 .. _`v0-7-0`:
 
-0.7.0
-#####
+0.7.0 / In Preparation
+######################
 
 This release introduces features that are essential for live data processing,
 but can be used for offline processing as well: Live plotting, API for bundled
@@ -78,16 +78,17 @@ New features
 Bugfixes
 --------
 
-* UDF: Consistently use attribute access in :code:`UDF.process_*`, :code:`UDF.merge`,
-  :code:`UDF.get_results` etc. instead of mixing it with :code:`__getitem__`
+* UDF: Consistently use attribute access in :code:`UDF.process_*()`, :code:`UDF.merge()`,
+  :code:`UDF.get_results()` etc. instead of mixing it with :code:`__getitem__()`
   dict-like access. Also allow non-sliced assignment, for example
   :code:`self.results.res += frame` (:issue:`1000`, :pr:`1003`).
-* Better choice of :code:`kind='nav'` buffer fill value
-  outside ROI.
-   * String: :code:`'n'` -> :code:`''`
-   * bool: :code:`True` -> :code:`False`
-   * integers: smallest possible value -> :code:`0`
-   * objects: :code:`np.nan` -> :code:`None` (:pr:`1011`)
+* Better choice of :code:`kind='nav'` buffer fill value outside ROI.
+
+  * String : :code:`'n'` -> :code:`''`
+  * bool : :code:`True` -> :code:`False`
+  * integers : smallest possible value -> :code:`0`
+  * objects : :code:`np.nan` -> :code:`None` (:pr:`1011`)
+
 * Improve performance for chunked HDF5 files, especially compressed HDF5 files
   which have a chunking in both navigation dimensions. They were causing
   excessive read amplification (:pr:`984`).
@@ -152,24 +153,26 @@ New features
 ------------
 
 * I/O overhaul
-   * Implement tiled reading for most file formats
-     (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
-   * Allow UDFs that implement :code:`process_tile` to influence the tile
-     shape by overriding :meth:`libertem.udf.base.UDF.get_tiling_preferences`
-     and make information about the tiling scheme available to the UDF through
-     :attr:`libertem.udf.base.UDFMeta.tiling_scheme`. (:issue:`554`,
-     :issue:`247`, :issue:`635`).
-   * Update :code:`MemoryDataSet` to allow testing with different
-     tile shapes (:issue:`634`).
-   * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
-     backend for their circumstance when loading via the new :code:`io_backend`
-     parameter of :code:`Context.load`. This fixes a K2IS performance regression
-     (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
-     a performance regression (:issue:`838`) on slower media (like HDDs), by
-     adding a buffered reading backend that tries its best to linearize I/O per-worker.
-     GUI integration of backend selection is to be done.
-   * For now, direct I/O is no longer supported, please let us know if this is an
-     important use-case for you (:issue:`716`)!
+
+  * Implement tiled reading for most file formats
+    (:issue:`27`, :issue:`331`, :issue:`373`, :issue:`435`).
+  * Allow UDFs that implement :code:`process_tile` to influence the tile
+    shape by overriding :meth:`libertem.udf.base.UDF.get_tiling_preferences`
+    and make information about the tiling scheme available to the UDF through
+    :attr:`libertem.udf.base.UDFMeta.tiling_scheme`. (:issue:`554`,
+    :issue:`247`, :issue:`635`).
+  * Update :code:`MemoryDataSet` to allow testing with different
+    tile shapes (:issue:`634`).
+  * Added I/O backend selection (:pr:`896`), which allows users to select the best-performing
+    backend for their circumstance when loading via the new :code:`io_backend`
+    parameter of :code:`Context.load`. This fixes a K2IS performance regression
+    (:issue:`814`) by disabling any readahead hints by default. Additionaly, this fixes
+    a performance regression (:issue:`838`) on slower media (like HDDs), by
+    adding a buffered reading backend that tries its best to linearize I/O per-worker.
+    GUI integration of backend selection is to be done.
+  * For now, direct I/O is no longer supported, please let us know if this is an
+    important use-case for you (:issue:`716`)!
+
 * Support for specifying logging level from CLI (:pr:`758`).
 * Support for Norpix SEQ files (:issue:`153`, :pr:`767`).
 * Support for MRC files, as supported by ncempy (:issue:`152`, :pr:`873`).
@@ -360,20 +363,24 @@ Misc
 ----
 
 * Clustering analysis
-   + Use a connectivity matrix to only cluster neighboring pixels,
-     reducing memory footprint while improving speed and quality (:pr:`618`).
-   + Use faster :class:`~libertem.udf.masks.ApplyMasksUDF` to generate feature
-     vector (:pr:`618`).
+
+  + Use a connectivity matrix to only cluster neighboring pixels,
+    reducing memory footprint while improving speed and quality (:pr:`618`).
+  + Use faster :class:`~libertem.udf.masks.ApplyMasksUDF` to generate feature
+    vector (:pr:`618`).
+
 * :class:`~libertem.udf.stddev.StdDevUDF`
-   + About 10x speed-up for large frames (:pr:`625,640`)
-   + Rename result buffers of :class:`~libertem.udf.stddev.StdDevUDF`,
-     :meth:`~libertem.udf.stddev.run_stddev` and
-     :meth:`~libertem.udf.stddev.consolidate_result` from :code:`'sum_frame'` to
-     :code:`'sum'`, :code:`'num_frame'` to :code:`'num_frames'` (:pr:`640`)
-   + Resolve ambiguity between variance and sum of variances in result buffer names of
-     :class:`~libertem.udf.stddev.StdDevUDF`,
-     :meth:`~libertem.udf.stddev.run_stddev` and
-     :meth:`~libertem.udf.stddev.consolidate_result`. (:pr:`640`)
+
+  + About 10x speed-up for large frames (:pr:`625,640`)
+  + Rename result buffers of :class:`~libertem.udf.stddev.StdDevUDF`,
+    :meth:`~libertem.udf.stddev.run_stddev` and
+    :meth:`~libertem.udf.stddev.consolidate_result` from :code:`'sum_frame'` to
+    :code:`'sum'`, :code:`'num_frame'` to :code:`'num_frames'` (:pr:`640`)
+  + Resolve ambiguity between variance and sum of variances in result buffer names of
+    :class:`~libertem.udf.stddev.StdDevUDF`,
+    :meth:`~libertem.udf.stddev.run_stddev` and
+    :meth:`~libertem.udf.stddev.consolidate_result`. (:pr:`640`)
+
 * LiberTEM works with Python 3.8 for experimental use. A context using a remote Dask.Distributed cluster
   can lead to lock-ups or errors with Python 3.8. The default local Dask.Distributed context works.
 * Improve performance with large tiles. (:pr:`649`)
@@ -592,10 +599,12 @@ New features
   from slower storage (NFS, spinning metal) on fast local storage (:pr:`471`)
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
 * :class:`libertem.io.dataset.dm.DMDataSet` implementation based on ncempy (:pr:`497`)
-    * Adds a new :meth:`~libertem.executor.base.JobExecutor.map` executor primitive. Used to concurrently
-      read the metadata for DM3/DM4 files on initialization.
-    * Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
-      changes in the file dialog.
+
+  * Adds a new :meth:`~libertem.executor.base.JobExecutor.map` executor primitive. Used to concurrently
+    read the metadata for DM3/DM4 files on initialization.
+  * Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
+    changes in the file dialog.
+
 * Speed up of up to 150x for correlation-based peak refinement in
   :mod:`libertem.udf.blobfinder.correlation` with a Numba-based pipeline (:pr:`468`)
 * Introduce :class:`~libertem.udf.blobfinder.correlation.FullFrameCorrelationUDF` which

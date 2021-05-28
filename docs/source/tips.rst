@@ -39,13 +39,28 @@ Notebook extension `has to be activated manually
 
     $ jupyter nbextension enable --py widgetsnbextension
 
+Running in a top-level script
+-----------------------------
 
-Running LiberTEM from an embedded interpreter
----------------------------------------------
+Since LiberTEM uses multiprocessing, the `script entry point may have to be
+protected
+<https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods>`_,
+most notably on Windows:
+
+.. testcode::
+
+    if __name__ == '__main__':
+        # Here goes starting a LiberTEM Context etc
+        ...
+
+This is not necessary if LiberTEM is used in a Jupyter notebook or IPython.
+
+Gatan Digital Micrograph and other embedded interpreters
+--------------------------------------------------------
 
 If LiberTEM is run from within an embedded interpreter, the following steps
-should be taken. This is necessary for Python scripting in Digital Micrograph,
-for example.
+should be taken. This is necessary for Python scripting in Gatan Digital
+Micrograph (GMS), for example.
 
 The variable :code:`sys.argv` `may not be set in embedded interpreters
 <https://bugs.python.org/issue32573>`_, but it is expected by the
@@ -76,6 +91,28 @@ has to be set.
 
     multiprocessing.set_executable(
         os.path.join(sys.exec_prefix, 'pythonw.exe'))  # Windows only
+
+In GMS the script may have to run in an additional thread since loading SciPy in
+a GMS background thread doesn't work. See https://www.gatan.com/python-faq for
+more information.
+
+.. testcode::
+
+    import threading
+
+    def main():
+        # Here goes the actual script
+        ...
+
+    if __name__ == '__main__':
+        # Start the workload "main()" in a thread and wait for it to finish
+        th = threading.Thread(target=main)
+        th.start()
+        th.join()
+
+See `our examples folder
+<https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_ for a number of
+scripts that work in GMS!
 
 .. _`show warnings`:
 

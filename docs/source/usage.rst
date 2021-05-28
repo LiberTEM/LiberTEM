@@ -6,7 +6,7 @@ GUI usage
 Starting the LiberTEM server
 ----------------------------
 
-LiberTEM is based on a client-server architecture. To use the LiberTEM GUI, you need to
+The LiberTEM GUI is based on a client-server architecture. To use the LiberTEM GUI, you need to
 have the server running on the machine where your data is available. For using LiberTEM from
 Python scripts, this is not necessary, see :ref:`api documentation`.
 

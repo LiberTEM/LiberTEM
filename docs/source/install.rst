@@ -107,7 +107,7 @@ command (see also :ref:`install on windows` if applicable):
 
 .. code-block:: shell
 
-    $ source activate libertem
+    $ conda activate libertem
 
 Afterwards, your shell prompt should be prefixed with :code:`(libertem)` to
 indicate that the environment is active:
@@ -156,11 +156,11 @@ example from PyPI:
 CuPy
 ~~~~
 
-GPU support is based on `CuPy <https://cupy.chainer.org/>`_.
-
-.. code-block:: shell
-
-    (libertem) $ python -m pip install "libertem[cupy]"
+GPU support is based on `CuPy <https://cupy.chainer.org/>`_. See
+https://docs.cupy.dev/en/stable/install.html#installing-cupy for installation of
+precompiled binary packages (recommended). :code:`python -m pip install
+"libertem[cupy]"` installs CuPy from source, which requires a build chain and
+can be time-consuming.
 
 .. versionadded:: 0.6.0
 
@@ -199,19 +199,13 @@ Windows
 -------
 
 The recommended method to install LiberTEM on Windows is based on `Miniconda 64
-bit with Python version 3.6 or 3.7 <https://www.anaconda.com/distribution/>`_.
+bit with Python version 3.6, 3.7 or 3.8 <https://www.anaconda.com/distribution/>`_.
 This installs a Python distribution.
 
 The installation and running of LiberTEM on Windows with the
 Anaconda Prompt is very similar to `Using conda`_ on Linux or Mac OS X.
 
 Differences:
-
-* The command to activate a conda environment on Windows is
-
-.. code-block:: shell
-
-    > conda activate libertem
 
 * You might have to install pip into your local LiberTEM conda environment to
   make sure that ``pip install`` installs packages into your local environment and
@@ -222,8 +216,6 @@ Differences:
 
     (libertem) > conda install pip
 
-This should install LiberTEM and its dependencies in the environment. Please
-continue by reading the :ref:`usage documentation`.
 
 Troubleshooting
 ---------------

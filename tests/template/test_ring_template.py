@@ -1,6 +1,6 @@
 import io
 import os
-import shutil
+import glob
 
 import nbformat
 import pytest
@@ -74,7 +74,7 @@ def random_hdf5_1():
 
 @pytest.mark.dist
 @pytest.mark.asyncio
-@pytest.mark.skipif(not HAVE_TMP_TESTDATA, reason="need temporary directory for testdata")  # NOQA
+#@pytest.mark.skipif(not HAVE_TMP_TESTDATA, reason="need temporary directory for testdata")  # NOQA
 def test_ring_tcp_cluster(lt_ctx, random_hdf5_1, scheduler_addr):
 
     conn = {"connection": {
@@ -123,3 +123,11 @@ def test_ring_tcp_cluster(lt_ctx, random_hdf5_1, scheduler_addr):
         results,
         expected['intensity'].raw_data,
     )
+
+
+@pytest.mark.dist
+def test_datadir_inspection():
+    print("get_testdata_path():", get_testdata_path())
+    print(list(sorted(glob.glob(get_testdata_path() + '/*'))))
+    print(list(sorted(glob.glob(TMP_TESTDATA_PATH + '/*'))))
+    assert HAVE_TMP_TESTDATA

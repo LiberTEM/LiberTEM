@@ -162,7 +162,7 @@ def test_cache_key_json_serializable(default_blo):
 
 @pytest.mark.dist
 def test_blo_dist(dist_ctx):
-    ds = BloDataSet(path="/data/default.blo")
+    ds = BloDataSet(path=BLO_TESTDATA_PATH)
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)

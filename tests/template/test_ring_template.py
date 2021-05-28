@@ -1,15 +1,23 @@
 import io
 import os
 import shutil
+
 import nbformat
 import pytest
 import numpy as np
-from temp_utils import _get_hdf5_params
-from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from nbconvert.preprocessors import ExecutePreprocessor
+
+from libertem.web.notebook_generator.notebook_generator import notebook_generator
+
+from utils import get_testdata_path
+from temp_utils import _get_hdf5_params, create_random_hdf5
 
 
 pytestmark = [pytest.mark.functional]
+
+
+TMP_TESTDATA_PATH = os.path.join(get_testdata_path(), 'temp_data')
+HAVE_TMP_TESTDATA = os.path.exists(TMP_TESTDATA_PATH)
 
 
 def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
@@ -53,16 +61,28 @@ def test_ring_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     )
 
 
+@pytest.fixture(scope='function')
+def random_hdf5_1():
+    tmp_dir = os.path.join(TMP_TESTDATA_PATH, 'tmp_ring_template')
+    os.mkdir(tmp_dir)
+    ds_path = os.path.join(tmp_dir, 'tmp_random_hdf5.h5')
+    ds = create_random_hdf5(ds_path)
+    yield ds
+    os.remove(ds_path)
+    os.rmdir(tmp_dir)
+
+
 @pytest.mark.dist
 @pytest.mark.asyncio
-def test_ring_tcp_cluster(lt_ctx, hdf5_ds_2, scheduler_addr):
+@pytest.mark.skipif(not HAVE_TMP_TESTDATA, reason="need temporary directory for testdata")  # NOQA
+def test_ring_tcp_cluster(lt_ctx, random_hdf5_1, scheduler_addr):
 
     conn = {"connection": {
                     "type": "TCP",
                     "address": scheduler_addr
                     }
             }
-    ds = hdf5_ds_2
+    ds = random_hdf5_1
     ds_path = ds.path
     tmp_dir = os.path.dirname(ds_path)
     dataset = _get_hdf5_params(ds_path)
@@ -82,9 +102,13 @@ def test_ring_tcp_cluster(lt_ctx, hdf5_ds_2, scheduler_addr):
     notebook = io.StringIO(notebook.getvalue())
     nb = nbformat.read(notebook, as_version=4)
     ep = ExecutePreprocessor(timeout=600)
-    ep.preprocess(nb, {"metadata": {"path": tmp_dir}})
-    data_path = os.path.join(tmp_dir, 'ring_result.npy')
-    results = np.load(data_path)
+    try:
+        ep.preprocess(nb, {"metadata": {"path": tmp_dir}})
+        data_path = os.path.join(tmp_dir, 'ring_result.npy')
+        results = np.load(data_path)
+    finally:
+        if os.path.exists(data_path):
+            os.remove(data_path)
 
     analysis = lt_ctx.create_ring_analysis(
                             dataset=ds,

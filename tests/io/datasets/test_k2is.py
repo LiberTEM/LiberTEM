@@ -355,7 +355,7 @@ def test_k2is_dist(dist_ctx):
     ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
     import glob
     print(dist_ctx.executor.run_function(lambda: os.listdir(K2IS_TESTDATA_DIR)))
-    print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob(K2IS_TESTDATA_DIR)))))
+    print(dist_ctx.executor.run_function(lambda: list(sorted(glob.glob(K2IS_TESTDATA_DIR+'/*')))))
     ds = ds.initialize(dist_ctx.executor)
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 5] = 1

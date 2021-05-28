@@ -94,8 +94,8 @@ be calculated.
 
 .. _`udf post processing`:
 
-Post-processing
----------------
+Post-processing of partition results
+------------------------------------
 
 Post-processing allows to perform additional processing steps once the data of a
 partition is completely processed with
@@ -138,8 +138,15 @@ buffers:
 
 The :meth:`libertem.udf.base.UDFPreprocessMixin.postprocess` method is called
 for each partition on the worker process, before the results from different
-partitions have been merged. If you want to implement a final post-processing
-step that is run on the main node, you can override
+partitions have been merged.
+
+.. _`udf final post processing`:
+
+Post-processing after merging
+-----------------------------
+
+If you want to implement a post-processing step that is run on the main node
+after merging result buffers, you can override
 :meth:`libertem.udf.base.UDF.get_results`:
 
 .. testsetup::
@@ -566,6 +573,8 @@ customized plots. The API reference can be found in :ref:`viz reference`.
 .. toctree::
 
     liveplotting
+
+.. _partial:
 
 Partial results
 ---------------

@@ -15,7 +15,6 @@ from temp_utils import _get_hdf5_params, create_random_hdf5
 
 pytestmark = [pytest.mark.functional]
 
-
 TMP_TESTDATA_PATH = os.path.join(get_testdata_path(), 'temp_data')
 HAVE_TMP_TESTDATA = os.path.exists(TMP_TESTDATA_PATH)
 
@@ -74,7 +73,7 @@ def random_hdf5_1():
 
 @pytest.mark.dist
 @pytest.mark.asyncio
-#@pytest.mark.skipif(not HAVE_TMP_TESTDATA, reason="need temporary directory for testdata")  # NOQA
+@pytest.mark.skipif(not HAVE_TMP_TESTDATA, reason="need temporary directory for testdata")  # NOQA
 def test_ring_tcp_cluster(lt_ctx, random_hdf5_1, scheduler_addr):
 
     conn = {"connection": {

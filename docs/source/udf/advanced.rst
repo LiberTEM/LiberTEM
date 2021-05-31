@@ -53,7 +53,7 @@ of :code:`(16, 930, 16)`, and processing 16 frames from the data set means
 reading 256 individual tiles.
 
 Loading a tile of this size as float32 data still fits comfortably into usual L3
-CPU caches (~1MB), and thus enables efficient processing. As a comparison, a
+CPU caches (~1MB per core), and thus enables efficient processing. As a comparison, a
 whole :code:`(1860, 2048)` frame is about 15MB large, and accessing it
 repeatedly means having to load data from the slower main memory.
 

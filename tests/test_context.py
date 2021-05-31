@@ -196,3 +196,26 @@ def test_display(lt_ctx, default_raw, use_roi):
     udf = SumUDF()
     d = lt_ctx.display(dataset=default_raw, udf=udf, roi=roi)
     print(d._repr_html_())
+
+
+@pytest.mark.parametrize(
+    'dtype', (bool, int, float, None)
+)
+def test_roi_dtype(lt_ctx, default_raw, dtype):
+    roi = np.zeros(default_raw.shape.nav, dtype=dtype)
+    roi[0, 0] = 1
+
+    ref_roi = np.zeros(default_raw.shape.nav, dtype=bool)
+    ref_roi[0, 0] = True
+
+    udf = SumUDF()
+    if roi.dtype is not np.dtype(bool):
+        match = f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool."
+        with pytest.warns(UserWarning, match=match):
+            res = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
+    else:
+        res = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
+
+    ref = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=ref_roi)
+
+    assert np.all(res['intensity'].raw_data == ref['intensity'].raw_data)

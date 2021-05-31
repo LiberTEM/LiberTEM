@@ -768,6 +768,10 @@ class Context:
         if corrections is None:
             corrections = dataset.get_correction_data()
 
+        if (roi is not None) and (roi.dtype is not np.dtype(bool)):
+            warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
+            roi = roi.astype(bool)
+
         def _run_sync_wrap():
             result_iter = UDFRunner(udfs).run_for_dataset_sync(
                 dataset=dataset,

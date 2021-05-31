@@ -45,7 +45,7 @@ New features
   `example
   <https://github.com/LiberTEM/LiberTEM/blob/master/examples/async.ipynb>`_ for
   details (:pr:`1011`)!
-* Run multiple UDFs in one pass over a single `DataSet` by passing a
+* Run multiple UDFs in one pass over a single :code:`DataSet` by passing a
   list of UDFs instead of one UDF in :meth:`~libertem.api.Context.run_udf` and
   :meth:`~libertem.api.Context.run_udf_iter` (:pr:`1011`).
 * Allow usage from an asynchronous context with the new :code:`sync=False`

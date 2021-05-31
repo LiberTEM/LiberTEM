@@ -104,6 +104,8 @@ Documentation
   LiberTEM releases and demonstrate the new features. (:issue:`999`,
   :pr:`1002,1004,1011`). Many thanks to Winnie from Gatan for helping to work
   around a number of issues!
+* Restructure UDF docs (:pr:`1034`).
+* Document coordinate meta information (:issue:`928`, :pr:`1034`).
 
 Obsolescence
 ------------

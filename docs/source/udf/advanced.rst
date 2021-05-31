@@ -1,7 +1,7 @@
 .. _`advanced udf`:
 
 User-defined functions: advanced topics
-=======================================
+---------------------------------------
 
 .. testsetup:: *
 
@@ -15,6 +15,10 @@ User-defined functions: advanced topics
     dataset = ctx.load("memory", data=data, sig_dims=2)
     roi = np.random.choice([True, False], dataset.shape.nav)
 
+The UDF interface offers a wide range of features to help implement advanced
+functionality and to optimize the performance of an UDF. These features are
+optional in order to keep UDFs that don't need them simple.
+
 See :ref:`user-defined functions` for an introduction to basic topics.
 
 .. _tiled:
@@ -23,36 +27,41 @@ Tiled processing
 ----------------
 
 Many operations can be significantly optimized by working on stacks of frames.
-You can often perform `loop nest optimization <https://en.wikipedia.org/wiki/Loop_nest_optimization>`_
-to improve the `locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
-for example using `numba <https://numba.pydata.org/>`_, or using an optimized NumPy function.
+You can often perform `loop nest optimization
+<https://en.wikipedia.org/wiki/Loop_nest_optimization>`_ to improve the
+`locality of reference <https://en.wikipedia.org/wiki/Locality_of_reference>`_,
+for example using `numba <https://numba.pydata.org/>`_, or using an optimized
+NumPy function.
 
-As an example, applying a gain map and subtracting dark frames can be up to an order of magnitude
-faster when properly optimized compared to a naive NumPy implementation.
-These optimizations are only possible if you have access to data
+As an example, applying a gain map and subtracting dark frames can be up to an
+order of magnitude faster when properly optimized compared to a naive NumPy
+implementation. These optimizations are only possible if you have access to data
 from more than one frame.
 
-For very large frames, another problem arises: a stack of frames would be too large to efficiently handle,
-as it would no longer fit into even the L3 cache, which is the largest cache in most CPUs. For these
-cases, we support a tiled reading and processing strategy. Tiled means we slice the frame into
-disjoint rectangular regions. A tile then is the data from a single rectangular region
+For very large frames, another problem arises: a stack of frames would be too
+large to efficiently handle, as it would no longer fit into even the L3 cache,
+which is the largest cache in most CPUs. For these cases, we support a tiled
+reading and processing strategy. Tiled means we slice the frame into disjoint
+rectangular regions. A tile then is the data from a single rectangular region
 for multiple frames.
 
-For example, in case of K2IS data, frames have a shape of :code:`(1860, 2048)`. When reading them
-with the tiled strategy, a single tile will contain data from 16 subsequent frames, and each
-rectangle has a shape of :code:`(930, 16)`, which is the natural block size for K2IS data.
-That means the tiles will have a shape of :code:`(16, 930, 16)`, and processing 16 frames from the data set
-means reading 256 individual tiles.
+For example, in case of K2IS data, frames have a shape of :code:`(1860, 2048)`.
+When reading them with the tiled strategy, a single tile will contain data from
+16 subsequent frames, and each rectangle has a shape of :code:`(930, 16)`, which
+is the natural block size for K2IS data. That means the tiles will have a shape
+of :code:`(16, 930, 16)`, and processing 16 frames from the data set means
+reading 256 individual tiles.
 
-Loading a tile of this size as float32 data
-still fits comfortably into usual L3 CPU caches (~1MB), and thus enables efficient processing.
-As a comparison, a whole :code:`(1860, 2048)` frame is about 15MB large, and accessing it repeatedly
-means having to load data from the slower main memory.
+Loading a tile of this size as float32 data still fits comfortably into usual L3
+CPU caches (~1MB), and thus enables efficient processing. As a comparison, a
+whole :code:`(1860, 2048)` frame is about 15MB large, and accessing it
+repeatedly means having to load data from the slower main memory.
 
 .. note::
-    You may have noticed that we talk about block sizes of 1MB as efficient in the L3 cache,
-    but many CPUs have larger L3 caches. As the L3 cache is shared between cores, and LiberTEM tries
-    to use multiple cores, the effectively available L3 cache has to be divided by number of cores.
+    You may have noticed that we talk about block sizes of 1MB as efficient in
+    the L3 cache, but many CPUs have larger L3 caches. As the L3 cache is shared
+    between cores, and LiberTEM tries to use multiple cores, the effectively
+    available L3 cache has to be divided by number of cores.
 
 .. _`slice example`:
 
@@ -367,6 +376,9 @@ data set, ROI and current data portion being processed. This information is
 available as properties of the :attr:`libertem.udf.base.UDF.meta` attribute of type
 :class:`~libertem.udf.base.UDFMeta`.
 
+Input data shapes and types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Common applications include allocating buffers with a :code:`dtype` or shape
 that matches the dataset or partition via
 :attr:`~libertem.udf.base.UDFMeta.dataset_dtype`,
@@ -374,9 +386,15 @@ that matches the dataset or partition via
 :attr:`~libertem.udf.base.UDFMeta.dataset_shape` and
 :attr:`~libertem.udf.base.UDFMeta.partition_shape`.
 
+Device class
+~~~~~~~~~~~~
+
 The currently used compute device class can be accessed through
 :attr:`libertem.udf.base.UDFMeta.device_class`. It defaults to 'cpu' and can be 'cuda'
 for UDFs that make use of :ref:`udf cuda` support.
+
+ROI and current slice
+~~~~~~~~~~~~~~~~~~~~~
 
 For more advanced applications, the ROI and currently processed data portion are
 available as :attr:`libertem.udf.base.UDFMeta.roi` and
@@ -426,6 +444,56 @@ dimension as it appears in processing:
     res = ctx.run_udf(dataset=dataset, udf=pixelsum, roi=roi)
 
     assert np.allclose(res['pixelsum_nav_raw'].data, dataset.data[roi].sum(axis=(1, 2)))
+
+Coordinates
+~~~~~~~~~~~
+
+The coordinates of the current frame, tile or partition within the true dataset
+navigation dimension, as opposed to the current slice that is given in flattened
+nav dimensions with applied ROI, is available through
+:attr:`~libertem.udf.base.UDFMeta.coordinates`. The following UDF simply
+collects the coordinate info for demonstration purposes. A real-world example
+that uses the coordinates is `the UDF implementation of single side band
+ptychography
+<https://github.com/Ptychography-4-0/ptychography/blob/master/src/ptychography40/reconstruction/ssb/udf.py>`_.
+
+.. testcode::
+
+    import numpy as np
+
+    from libertem.udf import UDF
+
+    class CoordUDF(UDF):
+        def get_result_buffers(self):
+            # Declare a buffer that fits the coordinates,
+            # i.e. one int per nav axis for each nav position
+            nav_dims = len(self.meta.dataset_shape.nav)
+            return {
+                'coords': self.buffer(
+                    kind="nav",
+                    dtype=int,
+                    extra_shape=(nav_dims, ),
+                )
+            }
+
+        def process_tile(self, tile):
+            # Simply copy the coordinates into
+            # the result buffer
+            self.results.coords[:] = self.meta.coordinates
+
+    my_roi = np.zeros(dataset.shape.nav, dtype=bool)
+    my_roi[7, 13] = True
+    my_roi[11, 3] = True
+
+    res = ctx.run_udf(
+        dataset=dataset,
+        udf=CoordUDF(),
+        roi=my_roi
+    )
+
+    assert np.all(
+        res['coords'].raw_data == np.array([(7, 13), (11, 3)])
+    )
 
 .. _`udf dtype`:
 
@@ -546,81 +614,3 @@ Example: Calculate sum over the last signal axis.
 
     udf = AutoUDF(f=functools.partial(np.sum, axis=-1))
     result = ctx.run_udf(dataset=dataset, udf=udf)
-
-.. _plotting:
-
-Live Plotting
--------------
-
-.. versionadded:: 0.7.0
-
-LiberTEM can display a live plot of the UDF results. In the most simple case,
-this can be done by setting :code:`plots=True` in
-:meth:`~libertem.api.Context.run_udf`. 
-
-.. testsetup:: live
-
-    from libertem.udf.sum import SumUDF
-    udf = SumUDF()
-
-.. testcode:: live
-
-    ctx.run_udf(dataset=dataset, udf=udf, plots=True)
-
-See the following items for a full demonstration, including setting up fully
-customized plots. The API reference can be found in :ref:`viz reference`.
-
-.. toctree::
-
-    liveplotting
-
-.. _partial:
-
-Partial results
----------------
-
-.. versionadded:: 0.7.0
-
-Instead of only getting the whole result after the UDF has finished running, you
-can also use :meth:`~libertem.api.Context.run_udf_iter` to get a generator for
-partial results:
-
-.. testsetup:: partial
-
-    from libertem.udf.sum import SumUDF
-    udf = SumUDF()
-
-
-.. testcode:: partial
-
-    for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf):
-        # ... do something interesting with `udf_results`:
-        a = np.sum(udf_results.buffers[0]['intensity'])
-
-    # after the loop, `udf_results` contains the final results as usual
-
-While the UDF execution is running, the UDF object should not be modified since
-that leads to undefined behavior. In particular, nested or concurrent execution
-of the same UDF objects must be avoided since it modifies the buffers that are
-allocated internally while a UDF is running.
-
-It is also possible to integrate LiberTEM into an async script or application by
-passing :code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or
-:meth:`~libertem.api.Context.run_udf`:
-
-.. Not run with docs-check since we can't easily test async code there...
-
-.. code-block:: python
-
-    async for udf_results in ctx.run_udf_iter(dataset=dataset, udf=udf, sync=False):
-        # ... do something interesting with `udf_results`:
-        a = np.sum(udf_results[0]['intensity'])
-
-    # or the version without intermediate results:
-    udf_results = await ctx.run_udf(dataset=dataset, udf=udf, sync=False)
-
-See the items below for a more comprehensive demonstration and documentation:
-
-.. toctree::
-
-    async

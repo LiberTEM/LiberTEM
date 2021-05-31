@@ -28,12 +28,25 @@ scanning transmission electron microscopy (`STEM
 :cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus_2019` and scanning electron
 beam diffraction data.
 
-MapReduce-like processing decouples the implementation of an algorithm from
-details of data source, parallelism, and use of results. That allows to use the
-same implementation in a wide range of modalities, including scaling on
-clusters, embedding in other applications and `processing live data streams
-<https://github.com/LiberTEM/LiberTEM-live>`_. At the same time, improvements in
-the back-end are immediately available to all algorithms.
+MapReduce-like processing allows to specify an algorithm through two functions:
+One function that is mapped on portions of the input data, and another function
+that merges (reduces) a partial result from this mapping step into the complete
+result. A wide range of TEM and 4D STEM processing tasks can be expressed in
+this fashion, see `Applications`_.
+
+The UDF interface of LiberTEM offers a standardized, versatile API to decouple
+the mathematical core of an algorithm from details of data source, parallelism,
+and use of results. Mapping and merging can be performed in any order and with
+different subdivisions of the input data, including running parts of the
+calculation concurrently. That means the same implementation can be used in a
+wide range of modalities, including massive scaling on clusters. Since each
+merge step produces an intermediate result, this style of processing is suitable
+for displaying live results from a running calculation in a GUI application and
+for `processing live data streams <https://github.com/LiberTEM/LiberTEM-live>`_.
+A closed-loop feedback between processing and instrument control can be realized
+as well. See `User-defined functions
+<https://libertem.github.io/LiberTEM/udf.html>`_ for more details on the
+LiberTEM UDF interface.
 
 The LiberTEM back-end offers `high throughput and scalability
 <https://libertem.github.io/LiberTEM/architecture.html>`_ on PCs, single server
@@ -73,8 +86,8 @@ is still experimental as well, see https://github.com/LiberTEM/LiberTEM-live.
 Applications
 ------------
 
-LiberTEM is programmable through `user-defined functions (UDFs)
-<https://libertem.github.io/LiberTEM/udf.html>`_ and can be used for a wide
+Since LiberTEM is programmable through `user-defined functions (UDFs)
+<https://libertem.github.io/LiberTEM/udf.html>`_, it can be used for a wide
 range of processing tasks on array-like data and data streams. The following
 applications have been implemented already:
 
@@ -91,10 +104,10 @@ applications section <https://libertem.github.io/LiberTEM/applications.html>`_
 of our documentation for details!
 
 The Python API and user-defined functions (UDFs) can be used for complex
-operations with arbitrary masks and other features like data export. Example
-Jupyter notebooks are available in the `examples directory
+operations such as arbitrary linear operations and other features like data
+export. Example Jupyter notebooks are available in the `examples directory
 <https://github.com/LiberTEM/LiberTEM/tree/master/examples>`_. If you are having
-trouble running the examples, please let us know, either by filing an issue or
+trouble running the examples, please let us know by filing an issue or
 by `joining our Gitter chat <https://gitter.im/LiberTEM/Lobby>`_.
 
 LiberTEM is suitable as a high-performance processing backend for other

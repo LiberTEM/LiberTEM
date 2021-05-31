@@ -103,6 +103,29 @@ be calculated.
 
 .. _`udf post processing`:
 
+Partition processing
+--------------------
+
+Some algorithms can benefit from processing entire partitions, for example if
+they require several passes over the data. In most cases, :ref:`tiled
+processing<tiled>` will be faster because it uses the L3 cache more efficiently.
+For that reason, per-partition processing should only be used if there are clear
+indications for it. Implementing
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition` activates
+per-partition processing for an UDF.
+
+Precedence
+----------
+
+The UDF interface looks for methods in the order
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile`,
+:meth:`~libertem.udf.base.UDFFrameMixin.process_frame`,
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. For now, the first in
+that order is executed. In the future, composition of UDFs may allow to use
+different methods depending on the circumstances.
+:meth:`~libertem.udf.base.UDFTileMixin.process_tile` is the most general method and
+allows by-frame and by-partition processing as well.
+
 Post-processing of partition results
 ------------------------------------
 
@@ -225,7 +248,6 @@ The detailed rules for buffer declarations, :code:`get_result_buffers` and :code
 .. versionadded:: 0.7.0
    :meth:`UDF.get_results` and the :code:`use` argument for :meth:`UDF.buffer` were added.
 
-
 Pre-processing
 ---------------
 
@@ -244,29 +266,6 @@ by the ROI.
     :meth:`libertem.udf.base.UDFPreprocessMixin.preprocess` is executed on the main
     node, too. Views for aux data are set correctly on the main node. Previously,
     it was only executed on the worker nodes.
-
-Partition processing
---------------------
-
-Some algorithms can benefit from processing entire partitions, for example if
-they require several passes over the data. In most cases, :ref:`tiled
-processing<tiled>` will be faster because it uses the L3 cache more efficiently.
-For that reason, per-partition processing should only be used if there are clear
-indications for it. Implementing
-:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition` activates
-per-partition processing for an UDF.
-
-Precedence
-----------
-
-The UDF interface looks for methods in the order
-:meth:`~libertem.udf.base.UDFTileMixin.process_tile`,
-:meth:`~libertem.udf.base.UDFFrameMixin.process_frame`,
-:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. For now, the first in
-that order is executed. In the future, composition of UDFs may allow to use
-different methods depending on the circumstances.
-:meth:`~libertem.udf.base.UDFTileMixin.process_tile` is the most general method and
-allows by-frame and by-partition processing as well.
 
 AUX data
 --------
@@ -497,8 +496,8 @@ ptychography
 
 .. _`udf dtype`:
 
-dtype support
--------------
+Preferred input dtype
+---------------------
 
 UDFs can override :meth:`~libertem.udf.base.UDF.get_preferred_input_dtype` to
 indicate a "lowest common denominator" compatible dtype. The actual input dtype

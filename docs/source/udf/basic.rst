@@ -356,8 +356,7 @@ to the constructor of the UDF base class.
 
 That means a user-defined constructor has to fulfill two conditions:
 
-1. It has to pass any parameters that should be available on clean copies and/or
-   via :code:`self.params` to the superclass constructor.
+1. It has to pass any parameters to the superclass constructor.
 2. It has to accept exactly the parameters that it passed to the superclass
    constructor whenever a clean copy is created and behave the same way as in the
    original call.

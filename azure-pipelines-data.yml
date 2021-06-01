@@ -8,6 +8,52 @@ variables:
 stages:
   - stage: test
     jobs:
+    - job: check example notebooks
+      pool: DataAccess
+      variables:
+        TESTDATA_BASE_PATH: '/data/'
+      steps:
+      - bash: find /data/
+        displayName: 'list available data'
+
+      - task: UsePythonVersion@0
+        displayName: 'Use Python 3.9'
+        inputs:
+          versionSpec: '3.9'
+
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          restoreKeys: |
+            python | "$(Agent.OS)"
+            python
+          path: $(PIP_CACHE_DIR)
+        displayName: 'cache pip packages'
+
+      - bash: python3.9 -m venv venv
+        displayName: 'create venv'
+    
+      - bash: ./venv/bin/pip install tox
+        displayName: 'install tox'
+
+      - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
+        displayName: 'Run nbval tests $(TOXENV) $(Agent.OS)'
+
+      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+        displayName: 'Submit coverage to codecov.io'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: 'junit.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+
     - job: data_tests
       pool: DataAccess
       strategy:

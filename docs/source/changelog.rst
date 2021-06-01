@@ -74,6 +74,7 @@ New features
   set, and load time series data (:pr:`1019`, :issue:`911`). Many thanks to
   `@AnandBaburajan <https://github.com/AnandBaburajan>`_ for implementing this
   feature!
+* Support for Python >=3.9.3 (:issue:`914`, :pr:`1037`).
 
 Bugfixes
 --------

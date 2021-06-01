@@ -51,7 +51,7 @@ Connecting
 
 .. note::
 
-   The GUI is tested to work on Firefox and Chromium-based browsers for now, if you
+   The GUI is tested to work on Firefox and Chromium-based browsers for now. If you
    cannot use a compatible browser for some reason, please `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_!
 
 After starting the server, you can open the GUI in your browser. If it didn't open
@@ -160,6 +160,7 @@ This analysis shows two views on your data: the two detector dimensions on
 the left, the scanning dimensions on the right, assuming a 4D-STEM dataset.
 For the general case, we also call the detector dimensions the *signal
 dimensions*, and the scanning dimensions the *navigation dimensions*.
+See also :ref:`concepts` for more information on axes and coordinate system.
 
 Directly after
 adding the analysis, LiberTEM starts calculating an average of all the detector

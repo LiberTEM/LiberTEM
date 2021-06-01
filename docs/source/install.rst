@@ -4,7 +4,7 @@ Installation
 ============
 
 .. note::
-    LiberTEM can currently be used on Python 3.6, 3.7, 3.8 and 3.9.
+    LiberTEM can currently be used on Python 3.6, 3.7, 3.8 and >=3.9.3.
 
     If you would like to install the latest development version, please also
     see :ref:`installing from a git clone`.
@@ -16,10 +16,11 @@ The short version
 
     $ virtualenv -p python3 ~/libertem-venv/
     $ source ~/libertem-venv/bin/activate
-    (libertem) $ python -m pip install "libertem[torch]"
+    (libertem-venv) $ python -m pip install "libertem[torch]"
 
     # optional for GPU support
-    (libertem) $ python -m pip install cupy
+    # See also https://docs.cupy.dev/en/stable/install.html
+    (libertem-venv) $ python -m pip install cupy
 
 For details, please read on!
 
@@ -49,7 +50,7 @@ Using virtualenv
 
 You can use `virtualenv <https://virtualenv.pypa.io/>`_ or `venv
 <https://docs.python.org/3/tutorial/venv.html>`_ if you have a system-wide
-Python 3.6, 3.7 or 3.8 installation. For Mac OS X, using `conda`_ is recommended.
+compatible Python installation. For Mac OS X, using `conda`_ is recommended.
 
 To create a new virtualenv for LiberTEM, you can use the following command:
 
@@ -67,12 +68,12 @@ the venv. You can then activate the virtualenv with
 
     $ source ~/libertem-venv/bin/activate
 
-Afterwards, your shell prompt should be prefixed with :code:`(libertem)` to
+Afterwards, your shell prompt should be prefixed with :code:`(libertem-venv)` to
 indicate that the environment is active:
 
 .. code-block:: shell
 
-    (libertem) $
+    (libertem-venv) $
 
 For more information about virtualenv, for example if you are using a shell
 without :code:`source`, please `refer to the virtualenv documentation
@@ -87,8 +88,8 @@ Continue by `installing from PyPI`_.
 Using conda
 ###########
 
-If you are already using conda, or if you don't have a system-wide Python 3.6, 3.7 or
-3.8 installation, you can create a conda environment for LiberTEM.
+If you are already using conda, or if you don't have a system-wide compatible
+Python installation, you can create a conda environment for LiberTEM.
 
 This section assumes that you have `installed anaconda or miniconda
 <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
@@ -99,7 +100,7 @@ command:
 
 .. code-block:: shell
 
-    $ conda create -n libertem python=3.8
+    $ conda create -n libertem python=3.9
 
 To install or later run LiberTEM, activate the environment with the following
 command (see also :ref:`install on windows` if applicable):
@@ -198,7 +199,7 @@ Windows
 -------
 
 The recommended method to install LiberTEM on Windows is based on `Miniconda 64
-bit with Python version 3.6, 3.7 or 3.8 <https://www.anaconda.com/distribution/>`_.
+bit with a compatible Python version <https://www.anaconda.com/distribution/>`_.
 This installs a Python distribution.
 
 The installation and running of LiberTEM on Windows with the

@@ -17,6 +17,11 @@ stages:
       - bash: find /data/
         displayName: 'list available data'
 
+      - task: UsePythonVersion@0
+        displayName: 'Use Python 3.9'
+        inputs:
+          versionSpec: '3.9'
+
       - task: Cache@2
         inputs:
           key: 'python | "$(Agent.OS)" | test_requirements.txt'

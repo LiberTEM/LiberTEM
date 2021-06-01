@@ -10,6 +10,23 @@ stages:
     jobs:
     - job: data_tests
       pool: DataAccess
+      strategy:
+        matrix:
+          # 3.6: oldest version
+          Python36:
+            python.version: '3.6'
+            TOXENV: 'py36'
+          # 3.7: default in current Debian stable
+          Python37:
+            python.version: '3.7'
+            TOXENV: 'py37'
+          # Python38:
+          #   python.version: '3.8'
+          #   TOXENV: 'py38'
+          # Most recent supported version
+          Python39:
+            python.version: '3.9'
+            TOXENV: 'py39'
       variables:
         TOXENV: 'data'
         TESTDATA_BASE_PATH: '/data/'
@@ -18,9 +35,9 @@ stages:
         displayName: 'list available data'
 
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.9'
+        displayName: 'Use Python $(python.version)'
         inputs:
-          versionSpec: '3.9'
+          versionSpec: '$(python.version)'
 
       - task: Cache@2
         inputs:

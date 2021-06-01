@@ -4,7 +4,8 @@ FROM python:3.9-slim AS builder
 RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-pip \
-    git
+    git \
+    libfftw3-dev
 
 RUN python3.9 -m venv /venv/
 # Update requirements.txt with ./update_reqs.sh
@@ -27,7 +28,8 @@ FROM python:3.9-slim
 
 RUN apt-get update && apt-get install -y \
     python3-venv \
-    python3-pip
+    python3-pip \
+    libfftw3-dev
 
 COPY --from=builder /venv/ /venv/
 COPY --from=builder /code/ /code/

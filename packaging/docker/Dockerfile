@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1.0.0-experimental
-FROM debian:stable-slim AS builder
+FROM python:3.9-slim-buster AS builder
 
 RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-pip \
     git
 
-RUN python3.7 -m venv /venv/
+RUN python3.9 -m venv /venv/
 COPY packaging/docker/requirements.txt /requirements.txt
 COPY test_requirements.txt /test_requirements.txt
 RUN /venv/bin/pip install -U pip

@@ -8,7 +8,7 @@ variables:
 stages:
   - stage: test
     jobs:
-    - job: check example notebooks
+    - job: check_example_notebooks
       pool: DataAccess
       variables:
         TESTDATA_BASE_PATH: '/data/'

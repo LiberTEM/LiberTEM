@@ -10,12 +10,33 @@ stages:
     jobs:
     - job: data_tests
       pool: DataAccess
+      strategy:
+        matrix:
+          # 3.6: oldest version
+          Python36:
+            python.version: '3.6'
+            TOXENV: 'py36-data'
+          # 3.7: default in current Debian stable
+          Python37:
+            python.version: '3.7'
+            TOXENV: 'py37-data'
+          # Python38:
+          #   python.version: '3.8'
+          #   TOXENV: 'py38'
+          # Most recent supported version
+          Python39:
+            python.version: '3.9'
+            TOXENV: 'py39-data'
       variables:
-        TOXENV: 'data'
         TESTDATA_BASE_PATH: '/data/'
       steps:
       - bash: find /data/
         displayName: 'list available data'
+
+      - task: UsePythonVersion@0
+        displayName: 'Use Python $(python.version)'
+        inputs:
+          versionSpec: '$(python.version)'
 
       - task: Cache@2
         inputs:
@@ -26,14 +47,14 @@ stages:
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
 
-      - bash: python3.8 -m venv venv
+      - bash: python3.9 -m venv venv
         displayName: 'create venv'
     
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
       - bash: ./venv/bin/tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'

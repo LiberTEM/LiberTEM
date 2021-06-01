@@ -28,6 +28,9 @@ stages:
           Python38:
             python.version: '3.8'
             TOXENV: 'py38'
+          Python39:
+            python.version: '3.9'
+            TOXENV: 'py39'
       variables:
         TOXENV: '$(TOXENV)'
       steps:
@@ -49,7 +52,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -75,7 +78,7 @@ stages:
       - task: UsePythonVersion@0
         displayName: 'Use Python $(python.version)'
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
 
       - task: Cache@2
         inputs:
@@ -90,7 +93,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -122,9 +125,9 @@ stages:
         TOXENV: '$(TOXENV)'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.8'
+        displayName: 'Use Python 3.9'
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
       - task: Cache@2
         inputs:
           key: 'python | "$(Agent.OS)" | test_requirements.txt'
@@ -138,7 +141,7 @@ stages:
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
     - job: lint_allow_failure
       pool:
@@ -153,11 +156,11 @@ stages:
       - task: UsePythonVersion@0
         displayName: 'Use Python $(python.version)'
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox || exit 0
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
     - job: windows_tests
       pool:
@@ -173,6 +176,9 @@ stages:
           Python38:
             python.version: '3.8'
             TOXENV: 'py38'
+          Python39:
+            python.version: '3.9'
+            TOXENV: 'py39'
       variables:
         TOXENV: '$(TOXENV)'
       steps:
@@ -194,7 +200,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -225,6 +231,9 @@ stages:
           Python38:
             python.version: '3.8'
             TOXENV: 'py38'
+          Python39:
+            python.version: '3.9'
+            TOXENV: 'py39'
       variables:
         TOXENV: '$(TOXENV)'
       steps:
@@ -246,7 +255,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -304,7 +313,7 @@ stages:
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.7'
+          versionSpec: '3.9'
 
       - bash: pip install -U tox 'virtualenv>19' pip-tools
         displayName: 'install requirements'
@@ -330,9 +339,9 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.8'
+        displayName: 'Use Python 3.9'
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
       - bash: sudo apt install -y pandoc
         displayName: 'install required debian packages'
 
@@ -371,9 +380,9 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.8'
+        displayName: 'Use Python 3.9'
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
       - task: Cache@2
         inputs:
           key: 'python | "$(Agent.OS)" | test_requirements.txt'

@@ -5,6 +5,8 @@ import signal
 
 from dask import distributed as dd
 
+from libertem.utils.threading import set_num_threads_env
+
 from .base import (
     JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter, TaskProxy,
     Environment,
@@ -45,7 +47,7 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
     cpu_options["resources"] = {"CPU": 1, "compute": 1, "ndarray": 1}
     cpu_base_spec = {
         "cls": dd.Nanny,
-        "options": cpu_options
+        "options": cpu_options,
     }
 
     # Service workers not for computation
@@ -428,10 +430,10 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if cluster_kwargs.get('silence_logs') is None:
             cluster_kwargs['silence_logs'] = logging.WARN
 
-        cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
-        client = dd.Client(cluster, **(client_kwargs or {}))
-
-        client.wait_for_workers(len(spec))
+        with set_num_threads_env(n=1):
+            cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
+            client = dd.Client(cluster, **(client_kwargs or {}))
+            client.wait_for_workers(len(spec))
 
         return cls(client=client, is_local=True, lt_resources=True)
 

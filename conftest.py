@@ -691,3 +691,9 @@ def b():
 def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_info, commit_info):
     machine_info["freeze"] = [(d.key, d.version) for d in pkg_resources.working_set]
     yield
+
+
+def pytest_collectstart(collector):
+    # nbval: ignore some output types
+    if collector.fspath and collector.fspath.ext == '.ipynb':
+        collector.skip_compare += 'text/html', 'application/javascript', 'stderr',

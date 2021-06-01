@@ -25,6 +25,7 @@ from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import BufferedBackend, MMapBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
+from libertem.utils.threading import set_num_threads_env
 from libertem.viz.base import Dummy2DPlot
 
 from libertem.utils.devices import detect
@@ -626,10 +627,14 @@ def local_cluster_url():
         },
     }
 
-    cluster = dd.SpecCluster(
-        workers=spec,
-        **(cluster_kwargs or {})
-    )
+    with set_num_threads_env(1):
+        cluster = dd.SpecCluster(
+            workers=spec,
+            **(cluster_kwargs or {})
+        )
+        client = dd.Client(cluster, set_as_default=False)
+        client.wait_for_workers(len(spec))
+        client.close()
 
     yield 'tcp://localhost:%d' % cluster_port
 

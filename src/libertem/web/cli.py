@@ -19,10 +19,12 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 # @click.option('--host', help='host on which the server should listen on',
 #               default="localhost", type=str)
 def main(port, local_directory, browser, log_level, host="localhost"):
-    from libertem.cli_tweaks import console_tweaks
-    from .server import run
-    console_tweaks()
-    numeric_level = getattr(logging, log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-    run(host, port, browser, local_directory, numeric_level)
+    from libertem.utils.threading import set_num_threads_env
+    with set_num_threads_env(1):
+        from libertem.cli_tweaks import console_tweaks
+        from .server import run
+        console_tweaks()
+        numeric_level = getattr(logging, log_level.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
+        run(host, port, browser, local_directory, numeric_level)

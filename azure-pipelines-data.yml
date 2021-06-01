@@ -37,7 +37,7 @@ stages:
         displayName: 'install tox'
 
       - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
-        displayName: 'Run nbval tests $(TOXENV) $(Agent.OS)'
+        displayName: 'Run nbval tests $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'

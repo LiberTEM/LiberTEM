@@ -52,7 +52,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -93,7 +93,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -141,7 +141,7 @@ stages:
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
     - job: lint_allow_failure
       pool:
@@ -160,7 +160,7 @@ stages:
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox || exit 0
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
     - job: windows_tests
       pool:
@@ -200,7 +200,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -255,7 +255,7 @@ stages:
         displayName: 'install requirements'
 
       - bash: tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'

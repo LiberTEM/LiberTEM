@@ -54,7 +54,7 @@ stages:
         displayName: 'install tox'
 
       - bash: ./venv/bin/tox
-        displayName: 'Run tox tests'
+        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'

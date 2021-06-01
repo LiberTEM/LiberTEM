@@ -132,7 +132,7 @@ setup(
     license='GPL v3',
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.6',
+    python_requires='>=3.6,!=3.9.0,!=3.9.1,!=3.9.2',
     install_requires=[
         "numpy",
         "scipy",

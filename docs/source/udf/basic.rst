@@ -397,8 +397,8 @@ can lead to complications and should be avoided, if possible.
             # class would accept them
             super().__init__(my_param=my_param)
 
-        # The rest of the UDF just mirrors the parameter
-        # back in a result buffer
+        # The rest of this UDF just mirrors the parameter
+        # back in a result buffer for demonstration.
 
         def get_result_buffers(self):
             '''

@@ -242,7 +242,7 @@ Google Summer of Code
     :width: 100px
     :alt: Google Summer of Code logo
 
-We kindly acknowledge funding from `Google Summer of Code 2019
+We kindly acknowledge funding from `Google Summer of Code 2019 and 2020
 <https://summerofcode.withgoogle.com/>`_ under the `umbrella of the Python
 software foundation <https://python-gsoc.org/>`_.
 |itemend|

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.0.0-experimental
-FROM python:3.9-slim-buster AS builder
+FROM python:3.9-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     python3-venv \
@@ -19,7 +19,7 @@ RUN /venv/bin/pip install -e 'git+https://github.com/ipython/ipyparallel.git#egg
 COPY . /code/
 RUN venv/bin/pip install --no-cache /code/
 
-FROM python:3.9-slim-buster
+FROM python:3.9-slim
 
 RUN apt-get update && apt-get install -y \
     python3-venv \

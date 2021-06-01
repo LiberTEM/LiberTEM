@@ -80,14 +80,16 @@ Bugfixes
 
 * UDF: Consistently use attribute access in :code:`UDF.process_*()`, :code:`UDF.merge()`,
   :code:`UDF.get_results()` etc. instead of mixing it with :code:`__getitem__()`
-  dict-like access. Also allow non-sliced assignment, for example
+  dict-like access. The previous method still works, but triggers a :class:`UserWarning`
+  (:issue:`1000`, :pr:`1003`).
+* Also allow non-sliced assignment, for example
   :code:`self.results.res += frame` (:issue:`1000`, :pr:`1003`).
 * Better choice of :code:`kind='nav'` buffer fill value outside ROI.
 
-  * String : :code:`'n'` -> :code:`''`
-  * bool : :code:`True` -> :code:`False`
-  * integers : smallest possible value -> :code:`0`
-  * objects : :code:`np.nan` -> :code:`None` (:pr:`1011`)
+  * String : Was :code:`'n'`, now :code:`''`
+  * bool : Was :code:`True`, now :code:`False`
+  * integers : Was smallest possible value, now :code:`0`
+  * objects : was :code:`np.nan`, now :code:`None` (:pr:`1011`)
 
 * Improve performance for chunked HDF5 files, especially compressed HDF5 files
   which have a chunking in both navigation dimensions. They were causing
@@ -104,7 +106,7 @@ Documentation
   LiberTEM releases and demonstrate the new features. (:issue:`999`,
   :pr:`1002,1004,1011`). Many thanks to Winnie from Gatan for helping to work
   around a number of issues!
-* Restructure UDF docs (:pr:`1034`).
+* Restructure UDF documentation (:pr:`1034`).
 * Document coordinate meta information (:issue:`928`, :pr:`1034`).
 
 Obsolescence

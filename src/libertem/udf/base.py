@@ -2,6 +2,7 @@ from typing import Dict, Optional
 import warnings
 import logging
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 import cloudpickle
 import numpy as np
@@ -1162,6 +1163,7 @@ class UDFRunner:
     def __init__(self, udfs, debug=False):
         self._udfs = udfs
         self._debug = debug
+        self._pool = ThreadPoolExecutor(max_workers=4)
 
     @classmethod
     def inspect_udf(cls, udf, dataset, roi=None):
@@ -1515,7 +1517,7 @@ class UDFRunner:
             dry=dry
         )
 
-        async for res in async_generator_eager(gen):
+        async for res in async_generator_eager(gen, pool=self._pool):
             yield res
 
     def _roi_for_partition(self, roi, partition: Partition):

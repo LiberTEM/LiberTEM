@@ -69,7 +69,7 @@ def set_num_threads(n):
 
 
 @contextmanager
-def set_num_threads_env(n=1):
+def set_num_threads_env(n=1, set_numba=None):
     """Set the maximum number of threads via environment variables.
     Currently sets variables for MKL, OMP, OPENBLAS and NUMBA.
 
@@ -82,12 +82,22 @@ def set_num_threads_env(n=1):
     ----------
     n : int
         The maximum number of threads
+    set_numba : bool, optional
+        Set the :code:`'NUMBA_NUM_THREADS'` environment variable. If None, determine if
+        Numba has been initialized and only set it if not.
+        Numba may throw a :class:`RuntimeError` if the environment is
+        altered after the number of threads has been set already.
     """
+    if set_numba is None:
+        from numba.np.ufunc import parallel
+        set_numba = not parallel._is_initialized
     try:
         env_keys = [
             "MKL_NUM_THREADS", "OMP_NUM_THREADS",
-            "OPENBLAS_NUM_THREADS", "NUMBA_NUM_THREADS"
+            "OPENBLAS_NUM_THREADS"
         ]
+        if set_numba:
+            env_keys.append("NUMBA_NUM_THREADS")
         old_env = {
             k: os.environ[k]
             for k in env_keys

@@ -627,7 +627,7 @@ def local_cluster_url():
         },
     }
 
-    with set_num_threads_env(1):
+    with set_num_threads_env(1, set_numba=False):
         cluster = dd.SpecCluster(
             workers=spec,
             **(cluster_kwargs or {})

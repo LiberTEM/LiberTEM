@@ -90,7 +90,7 @@ def set_num_threads_env(n=1, set_numba=None):
     """
     if set_numba is None:
         from numba.np.ufunc import parallel
-        set_numba = not parallel._is_initialized
+        set_numba = not getattr(parallel, "_is_initialized", True)
     try:
         env_keys = [
             "MKL_NUM_THREADS", "OMP_NUM_THREADS",

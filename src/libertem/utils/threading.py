@@ -1,6 +1,7 @@
 import logging
 from contextlib import contextmanager
 import os
+import warnings
 
 # NOTE: most imports are performed locally in the functions, to
 # make sure these functions are usable as early as possible in the
@@ -52,8 +53,17 @@ def set_torch_threads(n):
 @contextmanager
 def set_numba_threads(n):
     import numba
+    from numba.core.config import NUMBA_NUM_THREADS
     numba_threads = numba.get_num_threads()
     try:
+        if n > NUMBA_NUM_THREADS:
+            warnings.warn(
+                f"Attempting to set threads to {n}, which is larger than "
+                f"NUMBA_NUM_THREADS={NUMBA_NUM_THREADS}. "
+                f"Setting to allowed maximum NUMBA_NUM_THREADS instead."
+            )
+        n = min(n, NUMBA_NUM_THREADS)
+
         numba.set_num_threads(n)
         yield
     finally:

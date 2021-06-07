@@ -4,16 +4,13 @@
 * [ ] I have added [a changelog entry](https://github.com/LiberTEM/LiberTEM/tree/master/docs/source/changelog) for my contribution
 * [ ] I have added/updated documentation for all user-facing changes
 * [ ] I have added/updated test cases
-* [ ] I have included the [rebuilt production build of the client](https://libertem.github.io/LiberTEM/contributing.html?#building-the-client) (only if
-changes were made to the GUI)
+* [ ] I have included the [rebuilt production build of the client](https://libertem.github.io/LiberTEM/contributing.html?#building-the-client) (only if changes were made to the GUI)
 
 ## Reviewer Checklist:
 
 * [ ] `/azp run libertem.libertem-data` passed
 
 <!--
-
-## Please remove this section
 
 Starting by submitting an incomplete pull request (PR) or draft PR is OK. You
 can work on the checklist step by step by pushing additional commits into the

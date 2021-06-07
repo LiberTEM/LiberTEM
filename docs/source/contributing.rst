@@ -188,6 +188,32 @@ suite:
 - `slow`: tests that take much longer than 1 second to run
 - `functional`: tests that spin up a local dask cluster
 
+Example notebooks
+~~~~~~~~~~~~~~~~~
+
+The example notebooks are also run as part of our test suite using `nbval
+<https://nbval.readthedocs.io/en/latest/>`_. The
+output saved in the notebooks is compared to the output of re-running the
+notebook. When writing an example notebook, this sometimes requires some work,
+because certain things will change from run to run. Please check `the nbval
+documentation
+<https://nbviewer.jupyter.org/github/computationalmodelling/nbval/blob/master/docs/source/index.ipynb>`_
+to understand how to ignore such values. See also the :code:`nbval_sanitize.cfg`
+file for our currently ignored patterns.
+
+If your notebook outputs floating point values, you may get spurious failures
+from precision issues. You can set the precision using the :code:`%precision` ipython
+magic, which should be used *after* importing numpy.
+
+You can run the notebook tests as follows:
+
+.. code-block:: shell
+
+    $ TESTDATA_BASE_PATH=/path/to/the/test/data tox -e notebooks
+
+You will need access to certain sample data sets; as most of them are not
+published yet, please contact us to get access!
+
 CUDA
 ~~~~
 

@@ -63,7 +63,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
                             <p>cupy needs to be installed to make use of any CUDA devices on your system. Also,
                                 the matching cuda libraries and graphics drivers need to be installed. Please
                                 refer to{' '}
-                                <a href="https://docs-cupy.chainer.org/en/stable/install.html" target="_blank" rel="noopener noreferrer">
+                                <a href="https://docs.cupy.dev/en/stable/install.html" target="_blank" rel="noopener noreferrer">
                                     the cupy documentation
                                 </a>{' '}
                                 for more information.

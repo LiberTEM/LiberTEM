@@ -38,7 +38,7 @@ Code contributions
 ------------------
 
 We are using `pull requests
-<https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests>`_
+<https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`_
 to accept contributions. Each pull request should focus on a single issue, to
 keep the number of changes small and reviewable. To keep your changes organized
 and to prevent unrelated changes from disturbing your pull request, create a new
@@ -161,7 +161,7 @@ machine with many cores and a lot of RAM:
    (libertem) $ pytest -n auto tests/
 
 See the `pytest documentation
-<https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
+<https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for details on how to select which tests to run. Before submitting a pull
 request, you should always run the whole test suite.
 

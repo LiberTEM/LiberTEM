@@ -69,7 +69,7 @@ by following these steps:
     $ git clone https://github.com/your-user-name/LiberTEM
 
 For more information about `forking a repository
-<https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_.
+<https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo>`_.
 For a beginner-friendly introduction to git and GitHub, consider going through
 the following resources:
 
@@ -110,7 +110,7 @@ update the source code with this command:
     $ git pull
 
 The installation with :code:`python -m pip install -e` has installed LiberTEM in `"editable"
-mode <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>`_.
+mode <https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs>`_.
 That means the changes pulled from git are active immediately. Only if the
 requirements for installed third-party packages have changed, you should re-run
 :code:`python -m pip install -e .` in order to install any missing packages.

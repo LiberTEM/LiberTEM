@@ -156,7 +156,7 @@ example from PyPI:
 CuPy
 ~~~~
 
-GPU support is based on `CuPy <https://cupy.chainer.org/>`_. See
+GPU support is based on `CuPy <https://cupy.dev/>`_. See
 https://docs.cupy.dev/en/stable/install.html#installing-cupy for installation of
 precompiled binary packages (recommended). :code:`python -m pip install
 "libertem[cupy]"` installs CuPy from source, which requires a build chain and

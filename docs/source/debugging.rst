@@ -18,7 +18,7 @@ Debugging the Web GUI
 ---------------------
 
 For debugging the GUI, you can use all standard debugging tools for web development. Most useful
-in this context are the `Chrome DevTools <https://developers.google.com/web/tools/chrome-devtools/>`_
+in this context are the `Chrome DevTools <https://developer.chrome.com/docs/devtools/>`_
 or `Firefox Developer Tools <https://developer.mozilla.org/en-US/docs/Tools>`_, which can be
 accessed by pressing F12. You can extend these with additional panels
 `for React <https://reactjs.org/blog/2019/08/15/new-react-devtools.html>`_

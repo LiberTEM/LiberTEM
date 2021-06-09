@@ -42,6 +42,8 @@ Before (using a release candidate package)
 * Review open issues and pull requests
 * Handle deprecation, search the code base for :code:`DeprecationWarning`
   that are supposed to be removed in that release.
+* GUI dependency update with :code:`npm install`
+* Review https://github.com/LiberTEM/LiberTEM/security/dependabot and update dependencies
 * Full documentation review and update, including link check using
   ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
 * Run complete test suite, including slow tests that are deactivated by default

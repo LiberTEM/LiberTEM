@@ -1,8 +1,9 @@
+from typing import Dict, Optional
 import jsonschema
 
 
 class MessageConverter:
-    SCHEMA = None
+    SCHEMA: Optional[Dict] = None
 
     def validate(self, raw_data):
         if self.SCHEMA is None:

@@ -83,5 +83,13 @@ def test_numba_cache(tmpdir_factory):
     assert len(cache_contents[1].keys()) == 2
 
 
-def test_numba_prime(lt_ctx, default_raw):
+def test_numba_prime(default_raw):
     prime_numba_cache(default_raw)
+
+
+def test_numba_prime_hdf5_1(hdf5_ds_1):
+    prime_numba_cache(hdf5_ds_1)
+
+
+def test_numba_prime_hdf5_2(hdf5_ds_large_sig):
+    prime_numba_cache(hdf5_ds_large_sig)

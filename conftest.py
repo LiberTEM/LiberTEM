@@ -78,6 +78,11 @@ def hdf5_5d(tmpdir_factory):
     yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-5d.h5",
                                   data=np.ones((3, 5, 9, 16, 16)))
 
+@pytest.fixture(scope='session')
+def random_hdf5_large_sig(tmpdir_factory):
+    yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-random.h5",
+                                  data=np.random.randn(16, 16, 512, 512))
+
 
 @pytest.fixture(scope='session')
 def random_hdf5(tmpdir_factory):
@@ -155,6 +160,15 @@ def hdf5_ds_1(hdf5):
 
 @pytest.fixture
 def hdf5_ds_2(random_hdf5):
+    ds = H5DataSet(
+        path=random_hdf5.filename, ds_path="data",
+    )
+    ds = ds.initialize(InlineJobExecutor())
+    return ds
+
+
+@pytest.fixture
+def hdf5_ds_large_sig(random_hdf5):
     ds = H5DataSet(
         path=random_hdf5.filename, ds_path="data",
     )

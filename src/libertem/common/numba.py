@@ -252,28 +252,32 @@ def prime_numba_cache(ds):
         roi[max(-ds._meta.sync_offset, 0)] = True
 
         from libertem.udf.sum import SumUDF
+        from libertem.udf.raw import PickUDF
         from libertem.corrections.corrset import CorrectionSet
         from libertem.io.dataset.base import Negotiator
 
-        udfs = [SumUDF()]  # need to have at least one UDF
+        # need to have at least one UDF; here we run for both sum and pick
+        # to reduce the initial latency when switching to pick mode
+        udfs = [SumUDF(), PickUDF()]
         neg = Negotiator()
-        for corr_dtype in (np.float32, None):
-            if corr_dtype is not None:
-                corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-            else:
-                corrections = None
-            found_first_tile = False
-            for p in ds.get_partitions():
-                if found_first_tile:
-                    break
-                p.set_corrections(corrections)
-                tiling_scheme = neg.get_scheme(
-                    udfs=udfs,
-                    partition=p,
-                    read_dtype=dtype,
-                    roi=None,
-                    corrections=corrections,
-                )
-                for t in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
-                    found_first_tile = True
-                    break
+        for udf in udfs:
+            for corr_dtype in (np.float32, None):
+                if corr_dtype is not None:
+                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
+                else:
+                    corrections = None
+                found_first_tile = False
+                for p in ds.get_partitions():
+                    if found_first_tile:
+                        break
+                    p.set_corrections(corrections)
+                    tiling_scheme = neg.get_scheme(
+                        udfs=[udf],
+                        partition=p,
+                        read_dtype=dtype,
+                        roi=roi,
+                        corrections=corrections,
+                    )
+                    for t in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
+                        found_first_tile = True
+                        break

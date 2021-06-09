@@ -1,4 +1,3 @@
-from typing import Tuple
 import contextlib
 import warnings
 import logging
@@ -498,7 +497,7 @@ class H5Partition(Partition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def _get_read_cache_size(self) -> Tuple[int, int]:
+    def _get_read_cache_size(self) -> int:
         chunks = self._chunks
         if chunks is None:
             return 1*1024*1024
@@ -547,7 +546,7 @@ class H5Partition(Partition):
     def _get_tiles_with_roi(self, roi, dest_dtype, tiling_scheme):
         # we currently don't chop up the frames when reading with a roi, so
         # the tiling scheme also must not contain more than one slice:
-        assert len(tiling_scheme) == 1, "incompatible tiling scheme!"
+        assert len(tiling_scheme) == 1, "incompatible tiling scheme! (%r)" % (tiling_scheme)
 
         flat_roi = roi.reshape((-1,))
         roi = roi.reshape(self.meta.shape.nav)

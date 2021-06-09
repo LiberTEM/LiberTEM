@@ -209,7 +209,7 @@ doctest_test_doctest_blocks = ''
 todo_include_todos = True
 
 intersphinx_mapping = {
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
     'python': ('https://docs.python.org/3.7', None),
     'libertem_blobfinder': ('https://libertem.github.io/LiberTEM-blobfinder/', None),
 }
@@ -222,4 +222,6 @@ linkcheck_ignore = [
     r'^https://pydata.org.*',
     # Freezes the link checker for unknown reasons within CI, hard to reproduce
     r'http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf',
+    # Apparently only for project members
+    r'https://github.com/LiberTEM/LiberTEM/security/dependabot',
 ]

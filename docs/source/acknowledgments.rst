@@ -40,7 +40,7 @@ Notable upstream projects
 `Ncempy`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React
-<https://reactjs.org/>`_, `React Window <https://react-window.now.sh>`_, `Redux
+<https://reactjs.org/>`_, `React Window <https://react-window.vercel.app/>`_, `Redux
 <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic
 UI <https://semantic-ui.com/>`_
 
@@ -212,7 +212,7 @@ moreSTEM
 
 We gratefully acknowledge funding from the `Initiative and Networking Fund of
 the Helmholtz Association
-<https://www.helmholtz.de/en/about_us/the_association/initiating_and_networking/>`_
+<https://www.helmholtz.de/en/about-us/the-association/initiating-and-networking/>`_
 within the `Helmholtz Young Investigator Group moreSTEM
 <https://morestem.fz-juelich.de/>`_ under Contract No. VH-NG-1317 at
 Forschungszentrum Jülich in Germany.

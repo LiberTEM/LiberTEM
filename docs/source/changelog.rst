@@ -22,8 +22,11 @@ Changelog
 .. _latest:
 .. _`v0-7-0`:
 
-0.7.0 / In Preparation
-######################
+0.7.0 / 2021-06-10
+##################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4923277.svg
+   :target: https://doi.org/10.5281/zenodo.4923277
 
 This release introduces features that are essential for live data processing,
 but can be used for offline processing as well: Live plotting, API for bundled

@@ -584,8 +584,12 @@ def bump(new_version, tag, commit, force):
         do_git_tag(tag=version_tag)
     print("version bumped from {} to {}".format(old_version, new_version))
 
+    repo = "git@github.com:LiberTEM/LiberTEM.git"
+
     if tag:
-        print("now, push the new version: $ git push && git push origin {}".format(version_tag))
+        print("now, push the new version: $ git push {} && git push {} {}".format(
+            repo, repo, version_tag)
+        )
     else:
         if commit:
             print("now, tag as needed and push")

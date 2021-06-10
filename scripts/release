@@ -322,7 +322,7 @@ def upload_to_github(verbose, files, token, release):
         release_data.update({
             "tag": tag['full'],
             "name": "Release Candidate %s" % tag['full'],
-            "draft": False,
+            "draft": True,
             "prerelease": True,
         })
         if verbose:
@@ -332,7 +332,7 @@ def upload_to_github(verbose, files, token, release):
         release_data.update({
             "tag": tag['full'],
             "name": "Release %s" % tag['full'],
-            "draft": False,
+            "draft": True,
             "prerelease": False,
         })
         if verbose:

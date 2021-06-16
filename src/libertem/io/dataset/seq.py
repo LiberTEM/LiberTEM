@@ -305,7 +305,7 @@ class SEQDataSet(DataSet):
         return SEQDatasetParams
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def _do_detect_params(cls, path):
         try:
             header = _read_header(path, HEADER_FIELDS)
             if header['magic'] != 0xFEED:
@@ -329,6 +329,13 @@ class SEQDataSet(DataSet):
             }
         except (OSError, UnicodeDecodeError):
             return False
+
+    @classmethod
+    def detect_params(cls, path, executor):
+        try:
+            return executor.run_function(cls._do_detect_params, path)
+        except Exception as e:
+            raise DataSetException(repr(e)) from e
 
     @classmethod
     def get_supported_extensions(cls):

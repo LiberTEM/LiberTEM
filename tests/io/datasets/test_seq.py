@@ -410,9 +410,15 @@ def test_scan_size_deprecation(lt_ctx):
     assert tuple(ds.shape) == (5, 5, 128, 128)
 
 
-def test_detect_unicode_error(raw_with_zeros, lt_ctx):
+def test_detect_non_seq(raw_with_zeros, lt_ctx):
     path = raw_with_zeros._path
-    SEQDataSet.detect_params(path, InlineJobExecutor())
+    # raw_with_zeros is not a SEQ file, caused UnicodeDecodeError before:
+    assert SEQDataSet.detect_params(path, InlineJobExecutor()) is False
+
+
+def test_detect_seq(lt_ctx):
+    path = SEQ_TESTDATA_PATH
+    assert SEQDataSet.detect_params(path, lt_ctx.executor) is not False
 
 
 # from utils import dataset_correction_verification

@@ -1,0 +1,27 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.2.0
+  hooks:
+  - id: trailing-whitespace
+    files: ^src/
+    exclude: ^src/libertem/web/client/
+  - id: end-of-file-fixer
+    files: ^src/
+    exclude: ^src/libertem/web/client/
+  - id: check-yaml
+  - id: check-added-large-files
+- repo: https://github.com/pycqa/flake8
+  rev: 3.9.2
+  hooks:
+  - id: flake8
+    exclude: ^prototypes/
+- repo: https://github.com/regebro/pyroma
+  rev: "3.2"
+  hooks:
+  - id: pyroma
+- repo: https://github.com/miki725/pre-commit-twine-check
+  rev: '47f7fff'
+  hooks:
+  - id: twine-check

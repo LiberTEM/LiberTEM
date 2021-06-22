@@ -17,7 +17,8 @@ if platform.system() == "Windows":
     def drop_cache(flist):
         for fname in flist:
             # See https://stackoverflow.com/a/7113153/13082795
-            # CreateFile:  https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+            # CreateFile:
+            # https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
             # Direct IO: https://docs.microsoft.com/en-us/windows/win32/fileio/file-buffering
             # FILE_FLAG_NO_BUFFERING opens the file for Direct IO.
             # This drops the cache for this file. This behavior is not explicitly documented,
@@ -28,7 +29,9 @@ if platform.system() == "Windows":
             f = win32file.CreateFile(
                 fname,  # fileName
                 win32file.GENERIC_READ,  # desiredAccess
-                win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE | win32file.FILE_SHARE_DELETE,  # shareMode
+                win32file.FILE_SHARE_READ
+                | win32file.FILE_SHARE_WRITE
+                | win32file.FILE_SHARE_DELETE,  # shareMode
                 None,  # attributes
                 win32file.OPEN_EXISTING,  # CreationDisposition
                 win32file.FILE_FLAG_NO_BUFFERING,  # flagsAndAttributes

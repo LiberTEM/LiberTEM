@@ -9,7 +9,7 @@ def test_sum_fft_analysis_defaults(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(1, 8, 8),
                             num_partitions=2, sig_dims=2)
     analysis = SumfftAnalysis(dataset=dataset, parameters={})
-    res = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
 def test_sum_fft_analysis_masked(lt_ctx):
@@ -21,4 +21,4 @@ def test_sum_fft_analysis_masked(lt_ctx):
         'real_centerx': 1,
         'real_centery': 1,
     })
-    res = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)

@@ -78,6 +78,7 @@ def hdf5_5d(tmpdir_factory):
     yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-5d.h5",
                                   data=np.ones((3, 5, 9, 16, 16)))
 
+
 @pytest.fixture(scope='session')
 def random_hdf5_large_sig(tmpdir_factory):
     yield from get_or_create_hdf5(tmpdir_factory, "hdf5-test-random.h5",

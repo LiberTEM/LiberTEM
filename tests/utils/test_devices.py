@@ -32,7 +32,7 @@ def test_detect_error(monkeypatch):
 
     # Self test
     with pytest.raises(ImportError):
-        import cupy
+        import cupy  # NOQA: F401
 
     monkeypatch.delitem(sys.modules, 'libertem.utils.devices', raising=False)
 
@@ -50,7 +50,7 @@ def test_detect_notfound(monkeypatch):
 
     # Self test
     with pytest.raises(ModuleNotFoundError):
-        import cupy
+        import cupy  # NOQA: F401
 
     monkeypatch.delitem(sys.modules, 'libertem.utils.devices', raising=False)
 

@@ -5,8 +5,6 @@ from libertem.analysis.apply_fft_mask import ApplyFFTMask
 
 from libertem.io.dataset.memory import MemoryDataSet
 
-from utils import _mk_random
-
 
 def test_smoke(lt_ctx):
     """

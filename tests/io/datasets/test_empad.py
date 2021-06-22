@@ -10,7 +10,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend, MMapBackend
 from libertem.io.dataset.empad import EMPADDataSet
-from libertem.common import Slice, Shape
+from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF

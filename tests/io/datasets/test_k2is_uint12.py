@@ -65,10 +65,10 @@ def encode_12_little_little(inp, out):
     def char_start_index(block):
         return block*middle_encoded_words*encoded_bytes
 
-    def encode_pair(k, l):
+    def encode_pair(k, m):
         a = np.uint8(k & 0xff)
-        b = np.uint8(((k & 0xf00) >> 8) | ((l & 0xf) << 4))
-        c = np.uint8((l & 0xff0) >> 4)
+        b = np.uint8(((k & 0xf00) >> 8) | ((m & 0xf) << 4))
+        c = np.uint8((m & 0xff0) >> 4)
         return (a, b, c)
 
     loopbuffer_in = np.zeros(middle_decoded_words, dtype=inp.dtype)
@@ -84,22 +84,22 @@ def encode_12_little_little(inp, out):
             decoded_base = decoded_loopbuffer_index(middle)
             encoded_base = encoded_loopbuffer_index(middle)
             loopbuffer_out[encoded_base + 0] = (
-                (loopbuffer_in[decoded_base + 0] & mask) |
-                ((loopbuffer_in[decoded_base + 1] & mask) << 12) |
-                ((loopbuffer_in[decoded_base + 2] & mask) << 24)
+                (loopbuffer_in[decoded_base + 0] & mask)
+                | ((loopbuffer_in[decoded_base + 1] & mask) << 12)
+                | ((loopbuffer_in[decoded_base + 2] & mask) << 24)
             )
 
             loopbuffer_out[encoded_base + 1] = (
-                ((loopbuffer_in[decoded_base + 2] & mask) >> 8) |
-                ((loopbuffer_in[decoded_base + 3] & mask) << 4) |
-                ((loopbuffer_in[decoded_base + 4] & mask) << 16) |
-                ((loopbuffer_in[decoded_base + 5] & mask) << 28)
+                ((loopbuffer_in[decoded_base + 2] & mask) >> 8)
+                | ((loopbuffer_in[decoded_base + 3] & mask) << 4)
+                | ((loopbuffer_in[decoded_base + 4] & mask) << 16)
+                | ((loopbuffer_in[decoded_base + 5] & mask) << 28)
             )
 
             loopbuffer_out[encoded_base + 2] = (
-                ((loopbuffer_in[decoded_base + 5] & mask) >> 4) |
-                ((loopbuffer_in[decoded_base + 6] & mask) << 8) |
-                ((loopbuffer_in[decoded_base + 7] & mask) << 20)
+                ((loopbuffer_in[decoded_base + 5] & mask) >> 4)
+                | ((loopbuffer_in[decoded_base + 6] & mask) << 8)
+                | ((loopbuffer_in[decoded_base + 7] & mask) << 20)
             )
         char_start = char_start_index(block)
         for i in range(middle_encoded_bytes):
@@ -109,16 +109,16 @@ def encode_12_little_little(inp, out):
     if (rest > 1):
         for r in range(0, rest - 1, 2):
             k = inp[decoded_remainder_offset + r]
-            l = inp[decoded_remainder_offset + r + 1]
-            (a, b, c) = encode_pair(k, l)
+            m = inp[decoded_remainder_offset + r + 1]
+            (a, b, c) = encode_pair(k, m)
             out[encoded_remainder_offset] = a
             out[encoded_remainder_offset + 1] = b
             out[encoded_remainder_offset + 2] = c
             encoded_remainder_offset += 3
     if (rest % 2):
         k = inp[decoded_remainder_offset + rest - 1]
-        l = 0
-        (a, b, c) = encode_pair(k, l)
+        m = 0
+        (a, b, c) = encode_pair(k, m)
         out[encoded_remainder_offset] = a
         out[encoded_remainder_offset + 1] = b
 

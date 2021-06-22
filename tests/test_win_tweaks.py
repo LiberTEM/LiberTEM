@@ -31,7 +31,7 @@ def test_import_broken(monkeypatch):
 
     # Self test
     with pytest.raises(ImportError):
-        import win32security
+        import win32security  # NOQA: F401
 
     from libertem.win_tweaks import get_owner_name
 
@@ -47,7 +47,7 @@ def test_import_missing(monkeypatch):
 
     # Self test
     with pytest.raises(ModuleNotFoundError):
-        import win32security
+        import win32security  # NOQA: F401
 
     from libertem.win_tweaks import get_owner_name
 

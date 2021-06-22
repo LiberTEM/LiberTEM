@@ -106,4 +106,4 @@ async def test_copy_notebook(
         cell = nbf.v4.new_code_cell(code)
         nb['cells'].append(cell)
         ep = ExecutePreprocessor(timeout=600)
-        out = ep.preprocess(nb, {"metadata": {"path": datadir}})
+        ep.preprocess(nb, {"metadata": {"path": datadir}})

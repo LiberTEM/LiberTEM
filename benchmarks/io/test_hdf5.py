@@ -11,7 +11,7 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.base import UDF
 from libertem.executor.inline import InlineJobExecutor
 
-from utils import drop_cache, warmup_cache, get_testdata_prefixes, backends_by_name
+from utils import drop_cache, warmup_cache
 
 
 @pytest.fixture(scope='module')
@@ -145,7 +145,8 @@ def test_stress(tmpdir_factory, lt_ctx, hdf5_params):
     (factors, axes, chunking, sig_dims) = hdf5_params
     size = np.prod(factors)
     timer = timeit.default_timer
-    print(f"START axes={axes}, chunking={chunking}, sig_dims={sig_dims}, size={size}, chunk_size={np.prod(chunking)}")
+    print(f"START axes={axes}, chunking={chunking}, sig_dims={sig_dims}, "
+          f"size={size}, chunk_size={np.prod(chunking)}")
 
     rand = np.random.randint(32, size=size, dtype=np.uint16)
 
@@ -194,7 +195,8 @@ def test_stress(tmpdir_factory, lt_ctx, hdf5_params):
     sum_lt_time = timer() - start
     if sum_lt_time > limit:
         timeout = True
-    print(f'Time for reading and summing HDF5 using LiberTEM inline executor: {sum_lt_time}, timeout={timeout}')
+    print(f'Time for reading and summing HDF5 using LiberTEM inline '
+          f'executor: {sum_lt_time}, timeout={timeout}')
 
     if timeout:
         if warned:

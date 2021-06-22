@@ -115,10 +115,6 @@ stages:
         vmImage: 'ubuntu-latest'
       strategy:
         matrix:
-          flake8:
-            TOXENV: 'flake8'
-          qa:
-            TOXENV: 'qa'
           docs-check:
             TOXENV: 'docs-check'
       variables:

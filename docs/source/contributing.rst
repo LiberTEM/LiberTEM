@@ -315,10 +315,12 @@ code.
 
 Before submitting a pull request, please check the code style by running:
 
-.. code-block:: bat
+.. code-block:: shell
 
-   $ tox -e flake8
+   $ pre-commit run
 
+You may need to install `pre-commit <https://pre-commit.com/>`_ into your
+Python environment first.
 We recommend using an editor that can check code style on the fly, such as
 `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
 

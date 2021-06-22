@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-from scipy.ndimage import rotate
 from scipy.ndimage.filters import gaussian_filter
 import libertem.utils as ut
 from libertem.utils.generate import hologram_frame
@@ -124,8 +123,9 @@ def test_hologram_frame(counts, sampling, visibility, f_angle, gauss, poisson, r
     assert np.isclose(holo_test.mean(), counts, rtol=5e-3)
 
     # test if calculated contrast is equals to teh input
-    contrast = lambda a: (a.max(1).mean() - a.min(1).mean()) \
-                         / (a.min(1).mean() + a.max(1).mean())
+    def contrast(a):
+        return (a.max(1).mean() - a.min(1).mean()) \
+                / (a.min(1).mean() + a.max(1).mean())
     assert np.isclose(contrast(holo_test), visibility, rtol=rtol2)
 
     # test if fringe spacing equals to the input

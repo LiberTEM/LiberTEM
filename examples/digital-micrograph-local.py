@@ -4,6 +4,7 @@ import multiprocessing
 import threading
 
 import numpy as np
+import DigitalMicrograph as DM
 
 from libertem import api
 

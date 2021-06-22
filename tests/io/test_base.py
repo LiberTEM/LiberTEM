@@ -83,7 +83,7 @@ def test_filetype_auto(hdf5, lt_ctx):
 
 
 def test_filetype_auto_fail_no_path(lt_ctx):
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         lt_ctx.load("auto")
 
 

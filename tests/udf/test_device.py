@@ -97,7 +97,7 @@ def test_run_cuda(lt_ctx, mask_cupy):
     # The cupy module is set to None in mask_cupy fixture so that
     # any use of it will raise an error
     with pytest.raises(ModuleNotFoundError):
-        import cupy
+        import cupy  # NOQA: F401
     data = _mk_random(size=(16, 16, 16, 16))
     ds = lt_ctx.load("memory", data=data)
 

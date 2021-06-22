@@ -32,7 +32,7 @@ stages:
 
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
-    
+
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
@@ -95,7 +95,7 @@ stages:
 
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
-    
+
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 

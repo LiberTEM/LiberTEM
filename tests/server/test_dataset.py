@@ -7,7 +7,7 @@ from utils import assert_msg
 from aio_utils import create_connection
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.executor.base import AsyncAdapter, sync_to_async
+from libertem.executor.base import AsyncAdapter
 
 pytestmark = [pytest.mark.functional]
 
@@ -95,7 +95,9 @@ async def test_dataset_delete(default_raw, base_url, http_client, server_port, l
 
 
 @pytest.mark.asyncio
-async def test_initial_state_after_reconnect(default_raw, base_url, http_client, server_port, local_cluster_url):
+async def test_initial_state_after_reconnect(
+    default_raw, base_url, http_client, server_port, local_cluster_url
+):
     await create_connection(base_url, http_client, local_cluster_url)
     raw_path = default_raw._path
 
@@ -136,8 +138,10 @@ async def test_initial_state_after_reconnect(default_raw, base_url, http_client,
 
 
 @pytest.mark.asyncio
-async def test_prime_cache(shared_state, default_raw, base_url, http_client, server_port, local_cluster_url):
-    # first, connect to get the state 
+async def test_prime_cache(
+    shared_state, default_raw, base_url, http_client, server_port, local_cluster_url
+):
+    # first, connect to get the state
     await create_connection(base_url, http_client, local_cluster_url)
 
     executor = InlineJobExecutor()

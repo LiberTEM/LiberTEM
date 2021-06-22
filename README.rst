@@ -1,4 +1,4 @@
-|gitter|_ |azure|_ |github|_ |codeclimate|_ |joss|_ |zenodo|_ 
+|gitter|_ |azure|_ |github|_ |codeclimate|_ |joss|_ |zenodo|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
@@ -140,7 +140,7 @@ information!
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files
 - `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
 - Nanomegas .blo block files
-- Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <http://www.directelectron.com/de-series/>`_ detectors 
+- Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <http://www.directelectron.com/de-series/>`_ detectors
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)

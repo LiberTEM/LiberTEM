@@ -1,5 +1,4 @@
 import numpy as np
-import distributed as dd
 
 from libertem.contrib.daskadapter import make_dask_array
 from libertem.api import Context
@@ -39,7 +38,6 @@ def test_dask_array_2(dask_executor):
 
     # Use the Dask.distributed client of LiberTEM, since it may not be
     # the default client:
-    result = ctx.executor.client.compute(
+    ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
-

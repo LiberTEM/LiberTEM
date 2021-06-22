@@ -14,7 +14,7 @@ import libertem.web.cli
 import libertem.api
 import libertem.preload
 import libertem.udf
-import libertem.analysis.gridmatching
+import libertem.analysis.gridmatching   # NOQA: F401
 
 
 def test_stuff():

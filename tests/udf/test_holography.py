@@ -77,8 +77,10 @@ def test_holo_reconstruction(lt_ctx, backend):
 
 def test_sb_pos_invalid(lt_ctx):
     with pytest.raises(ValueError) as e:
-        holo_job = HoloReconstructUDF(out_shape=(128, 128),
-                                      sb_position=(0, 1, 2),
-                                      sb_size=(0, 1, 2))
+        HoloReconstructUDF(
+            out_shape=(128, 128),
+            sb_position=(0, 1, 2),
+            sb_size=(0, 1, 2)
+        )
 
     assert e.match(r"invalid sb_position \(0, 1, 2\), must be tuple of length 2")

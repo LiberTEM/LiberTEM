@@ -9,9 +9,8 @@ import pytest
 
 from libertem.io.dataset.mib import MIBDataSet
 from libertem.udf.raw import PickUDF
-from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.common import Slice, Shape
+from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend

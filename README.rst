@@ -1,4 +1,4 @@
-|gitter|_ |azure|_ |github|_ |codeclimate|_ |joss|_ |zenodo|_
+|gitter|_ |azure|_ |github|_ |codeclimate|_ |precommit|_ |joss|_ |zenodo|_
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
@@ -17,6 +17,9 @@
 
 .. |joss| image:: https://joss.theoj.org/papers/10.21105/joss.02006/status.svg
 .. _joss: https://doi.org/10.21105/joss.02006
+
+.. |precommit| image:: https://results.pre-commit.ci/badge/github/LiberTEM/LiberTEM/master.svg
+.. _precommit: https://results.pre-commit.ci/latest/github/LiberTEM/LiberTEM/master
 
 LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets and live data streams using a modified

@@ -139,25 +139,6 @@ stages:
       - bash: tox
         displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
-    - job: lint_allow_failure
-      pool:
-        vmImage: 'ubuntu-latest'
-      strategy:
-        matrix:
-          mypy:
-            TOXENV: 'mypy'
-      variables:
-        TOXENV: '$(TOXENV)'
-      steps:
-      - task: UsePythonVersion@0
-        displayName: 'Use Python $(python.version)'
-        inputs:
-          versionSpec: '3.9'
-      - bash: pip install -U tox
-        displayName: 'install requirements'
-      - bash: tox || exit 0
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
-
     - job: windows_tests
       pool:
         vmImage: 'windows-latest'

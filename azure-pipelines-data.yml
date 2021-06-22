@@ -48,12 +48,6 @@ stages:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for Python $(python.version)'
 
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
-
     - job: data_tests
       pool: DataAccess
       strategy:
@@ -110,9 +104,3 @@ stages:
         inputs:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for Python $(python.version)'
-
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'

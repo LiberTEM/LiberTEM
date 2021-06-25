@@ -30,7 +30,7 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
                     <Message.Header>No cupy installation found</Message.Header>
                     <p>
                         To make use of the built-in GPU support, make
-                        sure to install <a href="https://cupy.chainer.org/" rel="noreferrer noopener" target="_blank">cupy</a>
+                        sure to install <a href="https://cupy.dev/" rel="noreferrer noopener" target="_blank">cupy</a>
                     </p>
                 </Message> : ''
             }

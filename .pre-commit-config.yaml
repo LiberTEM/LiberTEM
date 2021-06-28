@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v3.2.0
+  rev: v4.0.1
   hooks:
   - id: trailing-whitespace
     files: ^src/
@@ -22,6 +22,6 @@ repos:
   hooks:
   - id: pyroma
 - repo: https://github.com/miki725/pre-commit-twine-check
-  rev: '47f7fff'
+  rev: '47f7fff370d1a0c83e4291aa323a6380b69d7b75'
   hooks:
   - id: twine-check

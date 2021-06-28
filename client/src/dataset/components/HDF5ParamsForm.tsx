@@ -20,12 +20,7 @@ type MergedProps = FormikProps<DatasetParamsHDF5ForForm> & OpenFormProps<Dataset
 const HDF5ParamsForm: React.FC<MergedProps> = ({
     values,
     info,
-    touched,
-    errors,
-    dirty,
     isSubmitting,
-    handleChange,
-    handleBlur,
     handleSubmit,
     handleReset,
     onCancel,
@@ -71,7 +66,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     if (isTimeOut) {
       dsPathInput = <Field name="ds_path" id="id_ds_path" />;
     } else {
-      dsPathInput = <Dropdown name="ds_path" id="id_ds_path" placeholder="Select dataset" fluid={true} search={true} selection={true} defaultValue={values.ds_path} onChange={onDSPathChange} options={dsPathOptions} />;
+        dsPathInput = <Dropdown name="ds_path" id="id_ds_path" placeholder="Select dataset" fluid search selection defaultValue={values.ds_path} onChange={onDSPathChange} options={dsPathOptions} />;
     }
 
     let warning = null;
@@ -95,7 +90,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
                 {dsPathInput}
             </Form.Field>
             {warning}
-            <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
+            <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button onClick={onCancel} >Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>
         </Form>
@@ -110,16 +105,14 @@ export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm, Datas
         sig_shape: getInitial("sig_shape", "", initial).toString(),
         sync_offset: getInitial("sync_offset", 0, initial),
     }),
-    formToJson: (values, path) => {
-        return {
-            path,
-            type: DatasetTypes.HDF5,
-            name: values.name,
-            ds_path: values.ds_path,
-            nav_shape: parseNumList(values.nav_shape),
-            sig_shape: parseNumList(values.sig_shape),
-            sync_offset: values.sync_offset,
-        };
-    },
+    formToJson: (values, path) => ({
+        path,
+        type: DatasetTypes.HDF5,
+        name: values.name,
+        ds_path: values.ds_path,
+        nav_shape: parseNumList(values.nav_shape),
+        sig_shape: parseNumList(values.sig_shape),
+        sync_offset: values.sync_offset,
+    }),
     type: DatasetTypes.HDF5,
 })(HDF5ParamsForm);

@@ -17,7 +17,7 @@ import { useRectROI } from "./roi/RectROI";
 import Toolbar from "./Toolbar";
 
 
-const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
+const ClustAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);
@@ -133,7 +133,7 @@ const ClustAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dat
 
     const [paramsVisible, setParamsVisible] = React.useState(false);
 
-    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const handleClick = () => {
         setParamsVisible(!paramsVisible);
     }
 

@@ -11,13 +11,11 @@ interface DatasetListProps {
     datasets: DatasetsState
 }
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        datasets: state.datasets,
-        formVisible: state.openDataset.formVisible,
-        formPath: state.openDataset.formPath,
-    };
-}
+const mapStateToProps = (state: RootReducer) => ({
+    datasets: state.datasets,
+    formVisible: state.openDataset.formVisible,
+    formPath: state.openDataset.formPath,
+});
 
 type MergedProps = DatasetListProps & ReturnType<typeof mapStateToProps>;
 

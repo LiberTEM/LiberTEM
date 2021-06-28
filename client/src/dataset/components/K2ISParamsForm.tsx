@@ -15,64 +15,52 @@ type DatasetParamsK2ISForForm = Omit<DatasetParamsK2IS,
     | "sig_shape"> & {
         nav_shape: string,
         sig_shape: string,
-};
+    };
 
 type MergedProps = FormikProps<DatasetParamsK2ISForForm> & OpenFormProps<DatasetParamsK2IS, DatasetInfoK2IS>;
 
-const K2ISFileParamsForm: React.SFC<MergedProps> = ({
+const K2ISFileParamsForm: React.FC<MergedProps> = ({
     values,
     info,
-    touched,
-    errors,
-    dirty,
     isSubmitting,
-    handleChange,
-    handleBlur,
     handleSubmit,
     handleReset,
     onCancel,
     setFieldValue,
-}) => {
-
-    return (
-        <Form onSubmit={handleSubmit}>
-            <Form.Field>
-                <label htmlFor="id_name">Name:</label>
-                <ErrorMessage name="name" />
-                <Field name="name" id="id_name" />
-            </Form.Field>
-            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
-            <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
-            <Button type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleReset}>Reset</Button>
-        </Form>
-    )
-}
+}) => (
+    <Form onSubmit={handleSubmit}>
+        <Form.Field>
+            <label htmlFor="id_name">Name:</label>
+            <ErrorMessage name="name" />
+            <Field name="name" id="id_name" />
+        </Form.Field>
+        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
+        <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
+        <Button type="button" onClick={onCancel}>Cancel</Button>
+        <Button type="button" onClick={handleReset}>Reset</Button>
+    </Form>
+)
 
 export default withValidation<DatasetParamsK2IS, DatasetParamsK2ISForForm, DatasetInfoK2IS>({
-    mapPropsToValues: ({path, initial }) => ({
+    mapPropsToValues: ({ path, initial }) => ({
         name: getInitialName("name", path, initial),
         nav_shape: getInitial("nav_shape", "", initial).toString(),
         sig_shape: getInitial("sig_shape", "", initial).toString(),
         sync_offset: getInitial("sync_offset", 0, initial),
     }),
-    formToJson: (values, path) => {
-        return {
-            path,
-            type: DatasetTypes.K2IS,
-            name: values.name,
-            nav_shape: parseNumList(values.nav_shape),
-            sig_shape: parseNumList(values.sig_shape),
-            sync_offset: values.sync_offset,
-        }
-    },
-    customValidation: (values, { info }) => {
-        return validateSyncOffsetAndSigShape(
-            info?.native_sig_shape,
-            values.sig_shape,
-            values.sync_offset,
-            info?.image_count
-        )
-    },
+    formToJson: (values, path) => ({
+        path,
+        type: DatasetTypes.K2IS,
+        name: values.name,
+        nav_shape: parseNumList(values.nav_shape),
+        sig_shape: parseNumList(values.sig_shape),
+        sync_offset: values.sync_offset,
+    }),
+    customValidation: (values, { info }) => validateSyncOffsetAndSigShape(
+        info?.native_sig_shape,
+        values.sig_shape,
+        values.sync_offset,
+        info?.image_count
+    ),
     type: DatasetTypes.K2IS,
 })(K2ISFileParamsForm);

@@ -10,7 +10,7 @@ const initialDatasetState: DatasetsState = {
     ids: [],
 };
 
-export function datasetReducer(state = initialDatasetState, action: AllActions): DatasetsState {
+export const datasetReducer = (state = initialDatasetState, action: AllActions): DatasetsState => {
     switch (action.type) {
         case channelActions.ActionTypes.INITIAL_STATE: {
             const datasets = action.payload.datasets.map(ds => Object.assign({}, ds, { status: DatasetStatus.OPEN }));
@@ -57,7 +57,7 @@ const initialOpenDatasetState: OpenDatasetState = {
     formDetectedInfo: undefined,
 }
 
-export function openDatasetReducer(state = initialOpenDatasetState, action: AllActions): OpenDatasetState {
+export const openDatasetReducer = (state = initialOpenDatasetState, action: AllActions): OpenDatasetState => {
     switch (action.type) {
         case datasetActions.ActionTypes.OPEN: {
             return {

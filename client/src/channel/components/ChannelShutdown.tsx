@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Icon, Message } from "semantic-ui-react";
 
-const ChannelShutdown: React.SFC = () => (
-    <Message negative={true} icon={true}>
+const ChannelShutdown: React.FC = () => (
+    <Message negative icon>
         <Icon name="shutdown" />
         <Message.Content>
             <Message.Header>Connection is closed</Message.Header>

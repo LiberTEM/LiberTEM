@@ -136,15 +136,13 @@ const DatasetOpen = () => {
     // }
     // const FormComponent = formComponentMap[datasetType];
 
-    const renderForm = (form: React.ReactNode) => {
-        return (
-            <Segment>
-                Type: <DatasetTypeSelect onClick={doSetType} currentType={datasetType} />
-                <Header as="h2">Open: {openState.formPath}</Header>
-                {form}
-            </Segment>
-        );
-    }
+    const renderForm = (form: React.ReactNode) => (
+        <Segment>
+            Type: <DatasetTypeSelect onClick={doSetType} currentType={datasetType} />
+            <Header as="h2">Open: {openState.formPath}</Header>
+            {form}
+        </Segment>
+    );
 
     const commonParams = {
         path: openState.formPath,

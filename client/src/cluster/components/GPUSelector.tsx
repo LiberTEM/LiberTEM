@@ -13,9 +13,7 @@ interface GPUSelectorProps {
 export const GPUSelector: React.FC<GPUSelectorProps> = ({
     config, name, value, setFieldValue,
 }) => {
-    const options = config.devices.cudas.map(id => {
-        return { key: id, value: id, text: `GPU ${id}` };
-    });
+    const options = config.devices.cudas.map(id => ({ key: id, value: id, text: `GPU ${id}` }));
     const myHandleChange = (e: React.ChangeEvent<any>, data: DropdownProps) => {
         setFieldValue(name, data.value);
     }
@@ -26,7 +24,7 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
     return (
         <>
             {showWarning ?
-                <Message warning={true} visible={true}>
+                <Message warning visible>
                     <Message.Header>No cupy installation found</Message.Header>
                     <p>
                         To make use of the built-in GPU support, make
@@ -37,7 +35,7 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
             <Dropdown onChange={myHandleChange}
                 disabled={disabled}
                 placeholder='Select CUDA devices'
-                fluid={true} multiple={true} selection={true}
+                fluid multiple selection
                 value={value}
                 options={options} />
         </>

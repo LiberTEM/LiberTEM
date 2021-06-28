@@ -9,23 +9,19 @@ interface DatasetProps {
     dataset: DatasetState,
 }
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: DatasetProps) => {
-    return {
-        handleRemoveDataset: () => {
-            dispatch(datasetActions.Actions.delete(ownProps.dataset.id));
-        }
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: DatasetProps) => ({
+    handleRemoveDataset: () => {
+        dispatch(datasetActions.Actions.delete(ownProps.dataset.id));
     }
-}
+})
 
 type MergedProps = DatasetProps & ReturnType<typeof mapDispatchToProps>;
 
-const DatasetToolbar: React.SFC<MergedProps> = ({ dataset, handleRemoveDataset }) => {
-    return (
-        <>
-            <Button icon="remove" labelPosition="left" onClick={handleRemoveDataset} content='Close Dataset' />
-        </>
-    );
-}
+const DatasetToolbar: React.FC<MergedProps> = ({ handleRemoveDataset }) => (
+    <>
+        <Button icon="remove" labelPosition="left" onClick={handleRemoveDataset} content='Close Dataset' />
+    </>
+);
 
 
 export default connect(null, mapDispatchToProps)(DatasetToolbar);

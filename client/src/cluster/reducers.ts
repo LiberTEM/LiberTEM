@@ -17,7 +17,7 @@ const initialClusterConnectionState: ClusterConnectionState = {
     status: "unknown"
 }
 
-export function clusterConnectionReducer(state = initialClusterConnectionState, action: AllActions): ClusterConnectionState {
+export const clusterConnectionReducer = (state: ClusterConnectionState = initialClusterConnectionState, action: AllActions): ClusterConnectionState => {
     switch (action.type) {
         case clusterActions.ActionTypes.NOT_CONNECTED: {
             return {

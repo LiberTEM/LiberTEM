@@ -20,13 +20,14 @@ const initialErrorState: ErrorState = {
     ids: [],
 };
 
-export function errorReducer(state = initialErrorState, action: AllActions): ErrorState {
+export const errorReducer = (state = initialErrorState, action: AllActions): ErrorState => {
     switch (action.type) {
         case browserActions.ActionTypes.ERROR:
         case datasetActions.ActionTypes.ERROR:
         case channelActions.ActionTypes.ERROR:
         case clusterActions.ActionTypes.ERROR:
         case analysisActions.ActionTypes.ERROR:
+        case errorActions.ActionTypes.GENERIC:
         case channelActions.ActionTypes.JOB_ERROR: {
             return insertById(state, action.payload.id, {
                 id: action.payload.id,

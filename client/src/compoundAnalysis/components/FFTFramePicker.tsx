@@ -38,7 +38,7 @@ const useFFTFramePicker = ({
     }
 
     const renderPickHandle: HandleRenderFunction = (onDragStart, onDrop) => (
-        <DraggableHandle x={cx} y={cy} withCross={true}
+        <DraggableHandle x={cx} y={cy} withCross
             imageWidth={scanWidth}
             onDragMove={onPickChange}
             parentOnDragStart={onDragStart}

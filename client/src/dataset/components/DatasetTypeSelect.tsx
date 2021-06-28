@@ -16,17 +16,15 @@ interface DatasetTypeSelectProps {
     currentType: DatasetTypes,
 }
 
-const DatasetTypeSelect: React.SFC<DatasetTypeSelectProps> = ({ currentType, onClick }) => {
-    return (
-        <>
-            <Dropdown
-                inline={true}
-                options={datasetTypeOptions}
-                value={currentType}
-                onChange={onClick}
-            />
-        </>
-    );
-}
+const DatasetTypeSelect: React.FC<DatasetTypeSelectProps> = ({ currentType, onClick }) => (
+    <>
+        <Dropdown
+            inline
+            options={datasetTypeOptions}
+            value={currentType}
+            onChange={onClick}
+        />
+    </>
+);
 
 export default DatasetTypeSelect;

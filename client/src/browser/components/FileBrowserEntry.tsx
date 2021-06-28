@@ -4,7 +4,7 @@ import { DirectoryListingDetails } from "../../messages";
 
 
 interface FileBrowserEntryProps {
-    style: object,
+    style: Record<string, unknown>,
     details: DirectoryListingDetails,
     onClick?: () => void,
     icon?: SemanticICONS,
@@ -14,7 +14,7 @@ interface TimeStampProps {
     ts: number,
 }
 
-export const TimeStamp: React.SFC<TimeStampProps> = ({ ts }) => {
+export const TimeStamp: React.FC<TimeStampProps> = ({ ts }) => {
     const date = new Date(ts * 1000);
     const fmtDate = date.toLocaleDateString();
     const fmtTime = date.toLocaleTimeString();
@@ -28,7 +28,7 @@ export const TimeStamp: React.SFC<TimeStampProps> = ({ ts }) => {
 }
 
 // adapted from https://stackoverflow.com/a/14919494/540644
-function humanFileSize(bytes: number, si: boolean = false) {
+const humanFileSize = (bytes: number, si = false) => {
     const thresh = si ? 1000 : 1024;
     if (Math.abs(bytes) < thresh) {
         return {
@@ -56,7 +56,7 @@ interface FileSizeProps {
     si?: boolean,
 }
 
-export const FileSize: React.SFC<FileSizeProps> = ({ size, si }) => {
+export const FileSize: React.FC<FileSizeProps> = ({ size, si }) => {
     const fmtSize = humanFileSize(size, si)
     return (
         <div style={{ textAlign: "right" }}>
@@ -65,7 +65,7 @@ export const FileSize: React.SFC<FileSizeProps> = ({ size, si }) => {
     );
 }
 
-export const Cell: React.SFC<{ title?: string }> = ({ children, title }) => {
+export const Cell: React.FC<{ title?: string }> = ({ children, title }) => {
     const styles: React.CSSProperties = {
         whiteSpace: "nowrap",
         overflow: "hidden",
@@ -79,14 +79,14 @@ export const Cell: React.SFC<{ title?: string }> = ({ children, title }) => {
 
 
 class FileBrowserEntry extends React.Component<FileBrowserEntryProps> {
-    public onClick = (e: React.MouseEvent) => {
+    public onClick = (): void => {
         const { onClick } = this.props;
         if (onClick) {
             onClick();
         }
     }
 
-    public render() {
+    public render(): JSX.Element {
         const { details, style, icon } = this.props;
         const myStyle: React.CSSProperties = {
             cursor: "pointer",

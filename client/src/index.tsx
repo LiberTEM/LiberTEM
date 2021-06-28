@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 // tslint:disable:ordered-imports
 import "core-js/fn/symbol/iterator.js";
 import "core-js/es6/symbol.js";
@@ -16,7 +17,11 @@ import { rootReducer } from './store';
 
 const sagaMiddleware = createSagaMiddleware();
 
-const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+declare global {
+    interface Window { __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: typeof compose }
+}
+
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const store = createStore(rootReducer, composeEnhancers(
     applyMiddleware(

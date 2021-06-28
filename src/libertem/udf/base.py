@@ -839,7 +839,7 @@ class UDF(UDFBase):
 
         The back-end uses this preferred input dtype in combination with the
         dataset`s native dtype to determine the input dtype using
-        :meth:`numpy.result_type`. That means :code:`float` data in a dataset
+        :func:`numpy.result_type`. That means :code:`float` data in a dataset
         switches the dtype to :code:`float` even if this method returns an
         :code:`int` dtype. :code:`int32` or wider input data would switch from
         :code:`float32` to :code:`float64`, and complex data in the dataset will

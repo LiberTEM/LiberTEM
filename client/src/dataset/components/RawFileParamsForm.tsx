@@ -19,45 +19,36 @@ type DatasetParamsRawForForm = Omit<DatasetParamsRaw,
 
 type MergedProps = FormikProps<DatasetParamsRawForForm> & OpenFormProps<DatasetParamsRaw, DatasetInfoRAW>;
 
-const RawFileParamsForm: React.SFC<MergedProps> = ({
+const RawFileParamsForm: React.FC<MergedProps> = ({
     values,
-    touched,
-    errors,
-    dirty,
     isSubmitting,
-    handleChange,
-    handleBlur,
     handleSubmit,
     handleReset,
     onCancel,
     setFieldValue,
-}) => {
-
-    return (
-
-        <Form onSubmit={handleSubmit}>
-            <Form.Field>
-                <label htmlFor="id_name">Name:</label>
-                <ErrorMessage name="name" />
-                <Field name="name" id="id_name" />
-            </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://numpy.org/doc/stable/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
-                <ErrorMessage name="dtype" />
-                <Field name="dtype" id="id_dtype" />
-            </Form.Field>
-            <Form.Field>
-                <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
-                <ErrorMessage name="enable_direct" />
-                <Field type="checkbox" name="enable_direct" checked={values.enable_direct} id="id_enable_direct" />
-            </Form.Field>
-            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} hideInfo={true} setFieldValue={setFieldValue} />
-            <Button primary={true} type="submit" disabled={isSubmitting}>Load Dataset</Button>
-            <Button type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleReset}>Reset</Button>
-        </Form>
-    )
-}
+}) => (
+    <Form onSubmit={handleSubmit}>
+        <Form.Field>
+            <label htmlFor="id_name">Name:</label>
+            <ErrorMessage name="name" />
+            <Field name="name" id="id_name" />
+        </Form.Field>
+        <Form.Field>
+            <label htmlFor="id_dtype">Datatype (uint16, uint32, float32, float64, &gt;u2, ..., can be anything that is <a href="https://numpy.org/doc/stable/reference/arrays.dtypes.html">understood by numpy as a dtype</a>):</label>
+            <ErrorMessage name="dtype" />
+            <Field name="dtype" id="id_dtype" />
+        </Form.Field>
+        <Form.Field>
+            <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
+            <ErrorMessage name="enable_direct" />
+            <Field type="checkbox" name="enable_direct" checked={values.enable_direct} id="id_enable_direct" />
+        </Form.Field>
+        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} hideInfo setFieldValue={setFieldValue} />
+        <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
+        <Button type="button" onClick={onCancel}>Cancel</Button>
+        <Button type="button" onClick={handleReset}>Reset</Button>
+    </Form>
+)
 
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm, DatasetInfoRAW>({
     mapPropsToValues: ({ path, initial }) => ({
@@ -68,17 +59,15 @@ export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm, Dataset
         sig_shape: getInitial("sig_shape", "", initial).toString(),
         sync_offset: getInitial("sync_offset", 0, initial),
     }),
-    formToJson: (values, path) => {
-        return {
-            path,
-            type: DatasetTypes.RAW,
-            name: values.name,
-            dtype: values.dtype,
-            enable_direct: values.enable_direct,
-            nav_shape: parseNumList(values.nav_shape),
-            sig_shape: parseNumList(values.sig_shape),
-            sync_offset: values.sync_offset,
-        }
-    },
+    formToJson: (values, path) => ({
+        path,
+        type: DatasetTypes.RAW,
+        name: values.name,
+        dtype: values.dtype,
+        enable_direct: values.enable_direct,
+        nav_shape: parseNumList(values.nav_shape),
+        sig_shape: parseNumList(values.sig_shape),
+        sync_offset: values.sync_offset,
+    }),
     type: DatasetTypes.RAW,
 })(RawFileParamsForm);

@@ -23,7 +23,7 @@ const mapStateToProps = (state: RootReducer, ownProps: DatasetProps) => {
 
 type MergedProps = DatasetProps & ReturnType<typeof mapStateToProps>;
 
-const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
+const DatasetComponent: React.FC<MergedProps> = ({ dataset, analyses }) => {
     const msg = {
         [DatasetStatus.OPENING]: `Opening dataset ${dataset.params.name}`,
         [DatasetStatus.DELETING]: `Closing dataset ${dataset.params.name}`,
@@ -31,9 +31,9 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
     if (dataset.status === DatasetStatus.OPENING || dataset.status === DatasetStatus.DELETING) {
         return (
             <>
-                <Header as="h2" dividing={true}>{dataset.params.name}</Header>
-                <Message icon={true}>
-                    <Icon name='cog' loading={true} />
+                <Header as="h2" dividing>{dataset.params.name}</Header>
+                <Message icon>
+                    <Icon name='cog' loading />
                     <Message.Content>
                         <Message.Header>{msg[dataset.status]}</Message.Header>
                     </Message.Content>
@@ -44,7 +44,7 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
 
     return (
         <Segment.Group style={{ marginTop: "3em", marginBottom: "3em" }}>
-            <Segment.Group horizontal={true}>
+            <Segment.Group horizontal>
                 <Segment>
                     <Header as="h2">
                         <Icon name="database" />
@@ -52,7 +52,7 @@ const DatasetComponent: React.SFC<MergedProps> = ({ dataset, analyses }) => {
                             <Header.Content>
                                 {dataset.params.name}
                                 {' '}
-                                <Icon name="info circle" size="small" link={true} />
+                                <Icon name="info circle" size="small" link />
                             </Header.Content>
                         }>
                             <Popup.Header>{dataset.params.type} Dataset {dataset.params.name}</Popup.Header>

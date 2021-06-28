@@ -3,21 +3,19 @@ import { FormikErrors, FormikValues } from 'formik';
 import { DataSetOpenSchemaResponse } from '../messages';
 import { getSchema } from './api';
 
-export function convertErrors(errors: ErrorObject[]): FormikErrors<FormikValues> {
+export const convertErrors = (errors: ErrorObject[]): FormikErrors<FormikValues> => {
     const res: FormikErrors<FormikValues> = {};
     errors.forEach(err => {
         // flatten field names, convert from array to object
         // FIXME: doesn't support multiple errors per field yet (formik limitation?)
         const expr = /^\.([^[]+)(\[[^]+\])?$/
-        const fieldName = err.dataPath.replace(expr, (match, plainName) => {
-            return plainName;
-        });
+        const fieldName = err.dataPath.replace(expr, (match, plainName) => plainName as string);
         res[fieldName] = err.message;
     });
     return res;
 }
 
-export function throwErrors(validateErrors : ErrorObject[] | null = [], customValidateErrors: FormikErrors<FormikValues> = {}) {
+export const throwErrors = (validateErrors : ErrorObject[] | null = [], customValidateErrors: FormikErrors<FormikValues> = {}): never => {
     if (validateErrors || customValidateErrors) {
         const converted = validateErrors ? { ...convertErrors(validateErrors), customValidateErrors } : customValidateErrors;
         throw converted;
@@ -26,8 +24,8 @@ export function throwErrors(validateErrors : ErrorObject[] | null = [], customVa
     }
 }
 
-export async function validateOpen(type: string, data: object, customValidateErrors?: FormikErrors<FormikValues>) {
-    return getSchema(type).then((schemaResponse: DataSetOpenSchemaResponse) => {
+export const validateOpen = async<T> (type: string, data: T, customValidateErrors?: FormikErrors<FormikValues>): Promise<void> => (
+    getSchema(type).then((schemaResponse: DataSetOpenSchemaResponse) => {
         if (schemaResponse.status === "error") {
             throw new Error(schemaResponse.msg);
         }
@@ -40,4 +38,4 @@ export async function validateOpen(type: string, data: object, customValidateErr
             throwErrors(validate.errors, customValidateErrors);
         }
     })
-}
+);

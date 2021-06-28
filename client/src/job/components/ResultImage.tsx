@@ -9,7 +9,7 @@ interface ResultImageProps {
     height: number,
 }
 
-const ResultImage: React.SFC<ResultImageProps> = ({ job, channel, width, height }) => {
+const ResultImage: React.FC<ResultImageProps> = ({ job, channel, width, height }) => {
     const result = job.results[channel];
     if (result === undefined) {
         return (

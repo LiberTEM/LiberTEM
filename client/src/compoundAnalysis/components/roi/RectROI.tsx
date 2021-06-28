@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useState } from "react";
-
-import { FrameParams } from "../../../messages";
+import { RectRoiParams } from "../../../messages";
 import DraggableHandle from "../../../widgets/DraggableHandle";
 import Rect from "../../../widgets/Rect";
 import { HandleRenderFunction } from "../../../widgets/types";
+
 
 
 const useRectROI = ({ scanWidth, scanHeight }: {
@@ -18,7 +18,7 @@ const useRectROI = ({ scanWidth, scanHeight }: {
     const [height, setheight] = useState(minLength / 8);
 
 
-    const rectRoiParameters: FrameParams = {
+    const rectRoiParameters: {roi: RectRoiParams} = {
         roi: {
             shape: "rect",
             x,

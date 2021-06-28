@@ -2,6 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Button, Header, Icon, Modal } from "semantic-ui-react";
 import * as channelActions from "../../channel/actions";
+import { DispatchProps } from "../../helpers/props";
 import { RootReducer } from "../../store";
 import { doShutdown } from "../api";
 
@@ -10,11 +11,9 @@ const mapDispatchToProps = {
     shutdownAction: channelActions.Actions.shutdown,
 };
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        channel: state.channelStatus.status,
-    };
-};
+const mapStateToProps = (state: RootReducer) => ({
+    channel: state.channelStatus.status,
+})
 
 type MergedProps = DispatchProps<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
@@ -34,7 +33,7 @@ class ShutdownButton extends React.Component<MergedProps> {
 
     public handleShutdown = () => {
         this.setState({ shutdown: true });
-        doShutdown().then((response) => {
+        void doShutdown().then(() => {
             const timestamp = Date.now();
             this.props.closeLoopAction(timestamp);
         });
@@ -74,7 +73,7 @@ class ShutdownButton extends React.Component<MergedProps> {
                     <Button onClick={this.modalClose} disabled={this.state.shutdown}>
                         <Icon name="remove" /> Cancel
                     </Button>
-                    <Button primary={true} loading={this.state.shutdown} disabled={this.state.shutdown} onClick={this.handleShutdown}>
+                    <Button primary loading={this.state.shutdown} disabled={this.state.shutdown} onClick={this.handleShutdown}>
                         <Icon name="checkmark" /> Shutdown
                     </Button>
                 </Modal.Actions>

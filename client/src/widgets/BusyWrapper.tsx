@@ -5,7 +5,7 @@ interface BusyWrapperProps {
     busy: boolean,
 }
 
-const BusyWrapper: React.SFC<BusyWrapperProps> = ({ children, busy }) => {
+const BusyWrapper: React.FC<BusyWrapperProps> = ({ children, busy }) => {
     const styles: React.CSSProperties = {
         position: "relative",
     };

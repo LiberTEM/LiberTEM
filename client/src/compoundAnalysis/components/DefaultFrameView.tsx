@@ -64,14 +64,14 @@ const useDefaultFrameView = ({
 
     const dispatch = useDispatch();
 
-    const updateFrameMode = (newMode: DefaultModes) => {
+    const updateFrameMode = (newMode: string) => {
         dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
-        setMode(newMode);
+        setMode(newMode as DefaultModes);
     }
 
-    const updateRoi = (newRoi: DefaultRois) => {
+    const updateRoi = (newRoi: string) => {
         dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
-        setRoi(newRoi);
+        setRoi(newRoi as DefaultRois);
     }
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={updateFrameMode} label="Mode" />
@@ -96,7 +96,7 @@ const useDefaultFrameView = ({
     const { rectRoiHandles, rectRoiWidgets, rectRoiParameters } = useRectROI({ scanHeight, scanWidth })
     const { diskRoiHandles, diskRoiWidgets, diskRoiParameters } = useDiskROI({ scanHeight, scanWidth })
 
-    const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
+    const nullHandles: HandleRenderFunction = () => null
     let handles = nullHandles;
 
     let widgets;

@@ -20,15 +20,17 @@ function* getConfigOnReconnect() {
  */
 function* getConfigSaga() {
     yield put(configActions.Actions.fetch());
-    const configResponse: GetConfigResponse = yield call(getConfig);
+    const configResponse = (yield call(getConfig)) as GetConfigResponse;
     try {
         const mergedConfig = mergeLocalStorage(configResponse.config);
         yield put(configActions.Actions.fetched(mergedConfig));
     } catch (e) {
         try {
             clearLocalStorage();
-            // tslint:disable-next-line:no-empty
-        } catch (e) { }
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+        } catch (e) {
+            // ignore any errors clearing local storage...
+        }
         const defaultConfig = Object.assign({}, configResponse.config, getDefaultLocalConfig());
         yield put(configActions.Actions.fetched(defaultConfig));
     }
@@ -45,7 +47,7 @@ function* updateLocalStorageConfig() {
             clusterActions.ActionTypes.CONNECTED,
             configActions.ActionTypes.TOGGLE_STAR,
         ]);
-        const config: ConfigState = yield select((state: RootReducer) => state.config);
+        const config = (yield select((state: RootReducer) => state.config)) as ConfigState;
         setLocalStorage(config);
     }
 }
@@ -56,7 +58,7 @@ export function* firstConfigFetch() {
     } catch (e) {
         const timestamp = Date.now();
         const id = uuid();
-        yield put(configActions.Actions.fetchFailed(`failed to fetch config: ${e.toString()}`, timestamp, id));
+        yield put(configActions.Actions.fetchFailed(`failed to fetch config: ${(e as Error).toString()}`, timestamp, id));
     }
 }
 

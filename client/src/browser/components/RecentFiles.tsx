@@ -15,23 +15,19 @@ type DropdownOptions = Array<{
     },
 }>;
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        lastOpened: state.config.lastOpened,
-        fileHistory: state.config.fileHistory,
-        separator: state.config.separator,
-    };
-}
+const mapStateToProps = (state: RootReducer) => ({
+    lastOpened: state.config.lastOpened,
+    fileHistory: state.config.fileHistory,
+    separator: state.config.separator,
+});
 
-const mapDispatchToProps = (dispatch: Dispatch) => {
-    return {
-        select: (path: string) => dispatch(browserActions.Actions.selectFullPath(path)),
-    };
-}
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+    select: (path: string) => dispatch(browserActions.Actions.selectFullPath(path)),
+})
 
 type MergedProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
-const RecentFiles: React.SFC<MergedProps> = ({ lastOpened, fileHistory, select }) => {
+const RecentFiles: React.FC<MergedProps> = ({ lastOpened, fileHistory, select }) => {
 
     const recentFiles: DropdownOptions = fileHistory.filter((path: string) => lastOpened[path]).map((path: string) => {
         const item = lastOpened[path];
@@ -47,7 +43,7 @@ const RecentFiles: React.SFC<MergedProps> = ({ lastOpened, fileHistory, select }
     const onClick = (e: React.MouseEvent<HTMLDivElement>, data: DropdownItemProps) => data.value && select(data.value.toString())
 
     return (
-        <Dropdown item={true} text="Recent" floating={true}>
+        <Dropdown item text="Recent" floating>
             <Dropdown.Menu>
                 <Dropdown.Header content="recent datasets" />
                 {recentFiles.map((option, idx) => (

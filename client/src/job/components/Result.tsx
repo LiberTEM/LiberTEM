@@ -52,6 +52,6 @@ class Result extends React.Component<MergedProps> {
             </BusyWrapper>
         );
     }
-};
+}
 
 export default connect(null, null)(Result);

@@ -16,7 +16,7 @@ import AnalysisLayoutThreeCol from "./layouts/AnalysisLayoutThreeCol";
 import Toolbar from "./Toolbar";
 
 
-const FFTAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
+const FFTAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);

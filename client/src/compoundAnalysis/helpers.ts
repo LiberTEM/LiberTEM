@@ -3,13 +3,16 @@ import { JobReducerState } from "../job/reducers";
 import { JobRunning } from "../job/types";
 import { CompoundAnalysisState } from "./types";
 
-export const getAnalysisStatus = (compoundAnalysis: CompoundAnalysisState, analyses: AnalysisReducerState, jobs: JobReducerState, analysisIdxsToInclude: number[] = []): "idle" | "busy" => {
+export const getAnalysisStatus = (
+    compoundAnalysis: CompoundAnalysisState,
+    analyses: AnalysisReducerState,
+    jobs: JobReducerState,
+    analysisIdxsToInclude: number[] = []
+): "idle" | "busy" => {
     let filteredAnalyses = compoundAnalysis.details.analyses;
 
     if (analysisIdxsToInclude.length > 0) {
-        filteredAnalyses = filteredAnalyses.filter((analysisId: string, idx: number) => {
-            return analysisIdxsToInclude.indexOf(idx) !== -1;
-        })
+        filteredAnalyses = filteredAnalyses.filter((analysisId: string, idx: number) => analysisIdxsToInclude.indexOf(idx) !== -1)
     }
 
     return filteredAnalyses.reduce((prevValue: "idle" | "busy", analysisId: string) => {

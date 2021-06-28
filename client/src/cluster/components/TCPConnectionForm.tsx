@@ -1,4 +1,3 @@
-
 import { FormikProps, withFormik } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
@@ -15,30 +14,26 @@ interface FormProps {
 
 type MergedProps = FormikProps<FormValues> & FormProps;
 
-const TCPConnectionForm: React.SFC<MergedProps> = ({
+const TCPConnectionForm: React.FC<MergedProps> = ({
     values,
     touched,
     errors,
-    dirty,
     isSubmitting,
     handleChange,
     handleBlur,
     handleSubmit,
-    handleReset,
-}) => {
-    return (
-        <Form onSubmit={handleSubmit}>
-            <Form.Field>
-                <label htmlFor="address">Scheduler URI</label>
-                <input type="text" name="address" value={values.address}
-                    onChange={handleChange}
-                    onBlur={handleBlur} />
-                {errors.address && touched.address && errors.address}
-            </Form.Field>
-            <Button primary={true} type="submit" disabled={isSubmitting}>Connect</Button>
-        </Form>
-    )
-}
+}) => (
+    <Form onSubmit={handleSubmit}>
+        <Form.Field>
+            <label htmlFor="address">Scheduler URI</label>
+            <input type="text" name="address" value={values.address}
+                onChange={handleChange}
+                onBlur={handleBlur} />
+            {errors.address && touched.address && errors.address}
+        </Form.Field>
+        <Button primarytype="submit" disabled={isSubmitting}>Connect</Button>
+    </Form>
+)
 
 export default withFormik<FormProps, FormValues>({
     mapPropsToValues: (ownProps: FormProps) => ({

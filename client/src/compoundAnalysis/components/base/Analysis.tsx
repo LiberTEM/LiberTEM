@@ -8,7 +8,7 @@ interface AnalysisDispatcherProps {
     analysis: CompoundAnalysisState,
 }
 
-const AnalysisDispatcherComponent: React.SFC<AnalysisDispatcherProps> = ({ analysis }) => {
+const AnalysisDispatcherComponent: React.FC<AnalysisDispatcherProps> = ({ analysis }) => {
     const dataset = useSelector((state: RootReducer) => state.datasets.byId[analysis.dataset])
 
     if (dataset.status !== DatasetStatus.OPEN) {

@@ -11,7 +11,7 @@ const initialJobState: JobReducerState = {
     ids: [],
 };
 
-export function jobReducer(state = initialJobState, action: AllActions): JobReducerState {
+export const jobReducer = (state = initialJobState, action: AllActions): JobReducerState => {
     switch (action.type) {
         case jobActions.ActionTypes.CREATE: {
             const createResult = insertById(
@@ -75,8 +75,7 @@ export function jobReducer(state = initialJobState, action: AllActions): JobRedu
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
             const jobs = action.payload.jobs;
-            const jobState: JobState[] = jobs.map(job => {
-                return {
+            const jobState: JobState[] = jobs.map(job => ({
                     id: job.id,
                     analysis: job.analysis,
                     // FIXME: right job status!
@@ -87,8 +86,7 @@ export function jobReducer(state = initialJobState, action: AllActions): JobRedu
                     // FIXME: right job running status!
                     running: JobRunning.DONE,
                     endTimestamp: 0,
-                };
-            })
+            }));
 
             return {
                 byId: constructById(jobState, job => job.id),

@@ -1,8 +1,11 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { List, Modal } from "semantic-ui-react";
+import uuid from "uuid/v4";
 import { HostDetails } from "../../messages";
 import { getClusterDetail } from "../api"
+import * as errorActions from "../../errors/actions";
 
 interface LocalStatusProps {
     localCore: number;
@@ -10,7 +13,6 @@ interface LocalStatusProps {
 }
 
 const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas }) => {
-
     let cudaText: string;
 
     const intialDetails: HostDetails[] = [
@@ -24,22 +26,23 @@ const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas }) => {
 
     const [clustDetails, setDetails] = useState<HostDetails[]>(intialDetails)
 
+    const dispatch = useDispatch();
+
     useEffect(() => {
-        const updateDetails = async () => {
-            await getClusterDetail().then(newDetails => {
-                setDetails(newDetails.details);
-            });
-        };
-        updateDetails();
+        getClusterDetail().then(newDetails => {
+            setDetails(newDetails.details);
+        }).catch(() => {
+            const id = uuid();
+            const timestamp = Date.now();
+            dispatch(errorActions.Actions.generic(id, "Could not copy to clipboard", timestamp));
+        })
     }, []);
 
     if (cudas.length === 0) {
         cudaText = "None selected";
     } else {
         const ids = cudas
-            .map(id => {
-                return ` ${id}`;
-            })
+            .map(id => ` ${id}`)
             .join(",");
         cudaText = `GPU ${ids}`;
     }

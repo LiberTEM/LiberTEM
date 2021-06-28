@@ -1,8 +1,12 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
+import uuid from "uuid/v4";
 import { HostDetails } from "../../messages";
 import { getClusterDetail } from "../api";
+import * as errorActions from "../../errors/actions";
+import { writeClipboard } from "../../helpers";
 
 
 const ClusterDetails = (details: HostDetails[]) => {
@@ -38,17 +42,15 @@ const ClusterDetails = (details: HostDetails[]) => {
         setOverview(overview);
     }, [details]);
 
-    const clusterExpanded = details.map((node: HostDetails) => {
-        return (
-            <Segment key={node.host}>
-                <List.Item >
-                    <List.Content>Host : {node.host}</List.Content>
-                    <List.Content>Number of CPU workers : {node.cpu}</List.Content>
-                    <List.Content>Number of CUDA workers : {node.cuda}</List.Content>
-                </List.Item>
-            </Segment>
-        );
-    });
+    const clusterExpanded = details.map((node: HostDetails) => (
+        <Segment key={node.host}>
+            <List.Item >
+                <List.Content>Host : {node.host}</List.Content>
+                <List.Content>Number of CPU workers : {node.cpu}</List.Content>
+                <List.Content>Number of CUDA workers : {node.cuda}</List.Content>
+            </List.Item>
+        </Segment>
+    ));
 
     return (
         <>
@@ -76,7 +78,7 @@ interface TCPStatusProps {
     address: string;
 }
 
-const TCPStatus: React.SFC<TCPStatusProps> = ({ address }) => {
+const TCPStatus: React.FC<TCPStatusProps> = ({ address }) => {
     const template = [
         `import libertem.api as lt`,
         `import distributed as dd`,
@@ -86,21 +88,23 @@ const TCPStatus: React.SFC<TCPStatusProps> = ({ address }) => {
         `ctx = lt.Context(executor=executor)`,
     ];
 
+    const dispatch = useDispatch();
+
     const connectionCode = template.join("\n");
     const code = connectionCode.replace("URI", address);
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(code);
-    };
+    const copyToClipboard = () => writeClipboard(code, dispatch);
 
     const [clustDetails, setDetails] = useState<HostDetails[]>([])
 
     useEffect(() => {
-        const updateDetails = async () => {
-            await getClusterDetail().then(newDetails => {
-                setDetails(newDetails.details)
-            })}
-        updateDetails()
-        }, [])
+        getClusterDetail().then(newDetails => {
+            setDetails(newDetails.details)
+        }).catch((e) => {
+            const id = uuid();
+            const timestamp = Date.now();
+            dispatch(errorActions.Actions.generic(id, `Could not fetch cluster details: ${(e as Error).toString()}`, timestamp));
+        })
+    }, [])
 
     return (
         <Modal.Content>

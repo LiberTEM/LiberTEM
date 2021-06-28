@@ -13,7 +13,7 @@ const initialCompoundAnalysisState: CompoundAnalysisReducerState = {
     ids: [],
 }
 
-export function compoundAnalysisReducer(state = initialCompoundAnalysisState, action: AllActions): CompoundAnalysisReducerState {
+export const compoundAnalysisReducer = (state = initialCompoundAnalysisState, action: AllActions): CompoundAnalysisReducerState => {
     switch (action.type) {
         case compoundAnalysisActions.ActionTypes.CREATED: {
             const newCompoundAnalysis = {

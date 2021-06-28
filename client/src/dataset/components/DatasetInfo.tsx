@@ -15,16 +15,14 @@ const renderValue = (elem: DiagElemMsg) => {
     }
 }
 
-const DiagElem: React.SFC<{ elem: DiagElemMsg }> = ({ elem }) => {
-    return (
-        <Table.Row>
-            <Table.Cell>{elem.name}</Table.Cell>
-            <Table.Cell>{renderValue(elem)}</Table.Cell>
-        </Table.Row>
-    )
-}
+const DiagElem: React.FC<{ elem: DiagElemMsg }> = ({ elem }) => (
+    <Table.Row>
+        <Table.Cell>{elem.name}</Table.Cell>
+        <Table.Cell>{renderValue(elem)}</Table.Cell>
+    </Table.Row>
+);
 
-const DiagElems: React.SFC<{ diagnostics: DiagElemMsg[] }> = ({ diagnostics }) => {
+const DiagElems: React.FC<{ diagnostics: DiagElemMsg[] }> = ({ diagnostics }) => {
     if (diagnostics.length === 0) {
         return null;
     }
@@ -45,13 +43,11 @@ const DiagElems: React.SFC<{ diagnostics: DiagElemMsg[] }> = ({ diagnostics }) =
     );
 }
 
-const DatasetInfo: React.SFC<DatasetInfoProps> = ({ dataset }) => {
-    return (
-        <>
-            <DatasetParams dataset={dataset} />
-            <DiagElems diagnostics={dataset.diagnostics} />
-        </>
-    );
-}
+const DatasetInfo: React.FC<DatasetInfoProps> = ({ dataset }) => (
+    <>
+        <DatasetParams dataset={dataset} />
+        <DiagElems diagnostics={dataset.diagnostics} />
+    </>
+);
 
 export default DatasetInfo;

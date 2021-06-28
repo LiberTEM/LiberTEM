@@ -49,7 +49,7 @@ export const initialConfigState: ConfigState = {
     starred: [],
 }
 
-export function configReducer(state = initialConfigState, action: AllActions): ConfigState {
+export const configReducer = (state = initialConfigState, action: AllActions): ConfigState => {
     switch (action.type) {
         case configActions.ActionTypes.FETCHED: {
             return Object.assign({}, action.payload.config, { haveConfig: true });

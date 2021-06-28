@@ -1,13 +1,11 @@
 import { ActionCreatorsMapObject } from "redux";
-import { AnalysisDetails, CompoundAnalysisDetails, FollowupPart, MsgPartAnalysis, MsgPartCompoundAnalysis, MsgPartInitialDataset, MsgPartJob } from "../messages";
+import { AnalysisDetails, CompoundAnalysisDetails, CreateDatasetMessage, FollowupPart, MsgPartAnalysis, MsgPartCompoundAnalysis, MsgPartInitialDataset, MsgPartJob } from "../messages";
 
 export interface Message<T extends string> {
     messageType: T
 }
 
-export function createMessage<T extends string, O>(messageType: T, attribs: O) {
-    return Object.assign({ messageType }, attribs);
-}
+export const createMessage = <T extends string, O>(messageType: T, attribs: O) => Object.assign({ messageType }, attribs);
 
 export enum MessageTypes {
     INITIAL_STATE = "INITIAL_STATE",
@@ -41,7 +39,7 @@ export const Messages = {
         jobs, datasets, compoundAnalyses, analyses,
     }),
 
-    startJob: (job: string, dataset: string) => createMessage(MessageTypes.JOB_STARTED, { job, dataset }),
+    startJob: (job: string) => createMessage(MessageTypes.JOB_STARTED, { job }),
     finishJob: (job: string, followup: FollowupPart) => createMessage(MessageTypes.FINISH_JOB, { job, followup }),
     taskResult: (job: string, followup: FollowupPart) => createMessage(MessageTypes.TASK_RESULT, { job, followup }),
     jobError: (job: string, msg: string) => createMessage(MessageTypes.JOB_ERROR, { job, msg }),
@@ -50,7 +48,9 @@ export const Messages = {
     close: () => createMessage(MessageTypes.CLOSE, {}),
     error: (msg: string) => createMessage(MessageTypes.ERROR, { msg }),
     deleteDataset: (dataset: string) => createMessage(MessageTypes.DELETE_DATASET, { dataset }),
+    createDataset: (dataset: string, details: CreateDatasetMessage) => createMessage(MessageTypes.CREATE_DATASET, { dataset, details }),
     cancelled: (job: string) => createMessage(MessageTypes.CANCEL_JOB_DONE, { job }),
+    cancelFailed: (job: string) => createMessage(MessageTypes.CANCEL_JOB_FAILED, { job }),
     analysisCreated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_CREATED, { dataset, analysis, details }),
     analysisUpdated: (analysis: string, dataset: string, details: AnalysisDetails) => createMessage(MessageTypes.ANALYSIS_UPDATED, { dataset, analysis, details }),
     analysisRemoved: (analysis: string) => createMessage(MessageTypes.ANALYSIS_REMOVED, { analysis }),

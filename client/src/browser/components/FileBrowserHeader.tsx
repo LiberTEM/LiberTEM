@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Cell } from "./FileBrowserEntry";
 
-const FileBrowserHeader: React.SFC = () => {
+const FileBrowserHeader: React.FC = () => {
     const alignRight: React.CSSProperties = {
         textAlign: "right",
     };

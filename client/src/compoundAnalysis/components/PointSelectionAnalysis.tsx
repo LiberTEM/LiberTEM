@@ -31,7 +31,7 @@ const PointSelectionAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnaly
     });
 
     const frameViewHandles: HandleRenderFunction = (handleDragStart, handleDrop) => (<>
-        <DraggableHandle x={cx} y={cy} withCross={true}
+        <DraggableHandle x={cx} y={cy} withCross
             onDragMove={handleCenterChange}
             imageWidth={imageWidth}
             parentOnDragStart={handleDragStart}

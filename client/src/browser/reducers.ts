@@ -14,7 +14,7 @@ const initialBrowserState: DirectoryBrowserState = {
     dirs: [] as DirectoryListingDetails[],
 }
 
-export function directoryBrowserReducer(state: DirectoryBrowserState = initialBrowserState, action: AllActions): DirectoryBrowserState {
+export const directoryBrowserReducer = (state: DirectoryBrowserState = initialBrowserState, action: AllActions): DirectoryBrowserState => {
     switch (action.type) {
         case configActions.ActionTypes.FETCHED: {
             return Object.assign({}, state, {
@@ -37,11 +37,9 @@ export function directoryBrowserReducer(state: DirectoryBrowserState = initialBr
             })
         }
         case browserActions.ActionTypes.DIRECTORY_LISTING: {
-            const places = action.payload.places.reduce((acc, place: FSPlace) => {
-                return Object.assign({}, acc, {
-                    [place.key]: place,
-                })
-            }, {});
+            const places = action.payload.places.reduce((acc, place: FSPlace) => Object.assign({}, acc, {
+                [place.key]: place,
+            }), {});
             return Object.assign({}, state, {
                 isLoading: false,
                 path: action.payload.path,

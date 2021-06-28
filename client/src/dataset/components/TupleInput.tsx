@@ -4,70 +4,80 @@ import { parseNumListWithPadding } from "../helpers";
 import TupleInputPart from "./TupleInputPart";
 
 interface TupleInputProps {
-    value: string,
-    minLen: number,
-    maxLen: number,
-    fieldName: string,
-    setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void,
+  value: string,
+  minLen: number,
+  maxLen: number,
+  fieldName: string,
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void,
 }
 
 const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldName, setFieldValue }) => {
+  const tupleInputValue = parseNumListWithPadding(value, minLen, maxLen);
 
-    const tupleInputValue = parseNumListWithPadding(value, minLen, maxLen);
+  const tupleInputRefsArray = React.useRef<HTMLInputElement[]>([]);
 
-    const tupleInputRefsArray = React.useRef<HTMLInputElement[]>([]);
+  const tupleInputChangeHandle = (idx: number, val: string) => {
+    const newTupleInputValue = [...tupleInputValue];
+    newTupleInputValue[idx] = val;
+    setFieldValue(fieldName, newTupleInputValue.toString());
+  };
 
-    const tupleInputChangeHandle = (idx: number, val: string) => {
+  const commaPressHandle = (idx: number) => {
+    if (idx === (tupleInputValue.length - 1)) {
+      newTupleDim();
+    } else {
+      tupleInputRefsArray.current[idx + 1].focus();
+    }
+  }
+
+  const newTupleDim = () => {
+    if (tupleInputValue.length < maxLen) {
       const newTupleInputValue = [...tupleInputValue];
-      newTupleInputValue[idx] = val;
+      newTupleInputValue.push("");
       setFieldValue(fieldName, newTupleInputValue.toString());
-    };
-
-    const commaPressHandle = (idx: number) => {
-      if(idx===(tupleInputValue.length-1)) {
-        newTupleDim();
-      } else {
-          tupleInputRefsArray.current[idx+1].focus();
-      }
     }
-
-    const newTupleDim = () => {
-      if(tupleInputValue.length < maxLen) {
-        const newTupleInputValue = [...tupleInputValue];
-        newTupleInputValue.push("");
-        setFieldValue(fieldName, newTupleInputValue.toString());
-      }
+  }
+  /* Fix this auto focus bug when GUI supports n-D visualizations */
+  /* React.useEffect(() => {
+    if(tupleInputValue.length === tupleInputRefsArray.current.length + 1) {
+      tupleInputRefsArray.current[tupleInputValue.length+1].focus();
     }
-    /* Fix this auto focus bug when GUI supports n-D visualizations */
-    /* React.useEffect(() => {
-      if(tupleInputValue.length === tupleInputRefsArray.current.length + 1) {
-        tupleInputRefsArray.current[tupleInputValue.length+1].focus();
-      }
-    }, [tupleInputValue, tupleInputRefsArray]); */
+  }, [tupleInputValue, tupleInputRefsArray]); */
 
-    const delTupleDim = () => {
-      if(tupleInputValue.length > minLen) {
-        const newTupleInputValue = [...tupleInputValue];
-        newTupleInputValue.pop();
-        setFieldValue(fieldName, newTupleInputValue.toString());
-        tupleInputRefsArray.current[tupleInputValue.length-2].focus()
-      }
+  const delTupleDim = () => {
+    if (tupleInputValue.length > minLen) {
+      const newTupleInputValue = [...tupleInputValue];
+      newTupleInputValue.pop();
+      setFieldValue(fieldName, newTupleInputValue.toString());
+      tupleInputRefsArray.current[tupleInputValue.length - 2].focus()
     }
+  }
 
-    return (
-      <>
-        <Form.Group>
-          {tupleInputValue.map((val, idx) => {
-            const tupleRef = (ref:HTMLInputElement) => { tupleInputRefsArray.current[idx] = ref; }
-            return <Form.Field width={2} key={idx}><TupleInputPart tupleKey={idx} name={fieldName + "_" + idx} id={"id_" + fieldName + "_" + idx} value={val} tupleRef={tupleRef} tupleInputChangeHandle={tupleInputChangeHandle} commaPressHandle={commaPressHandle} /></Form.Field>
-          })}
-          <Form.Field hidden={minLen === maxLen}>
-            <Button onClick={newTupleDim} disabled={tupleInputValue.length === maxLen} type="button" icon="add" title="Add dimension" basic={false} />
-            <Button onClick={delTupleDim} disabled={tupleInputValue.length === minLen} type="button" icon="minus" title="Remove dimension" basic={false} />
-          </Form.Field>
-        </Form.Group>
-      </>
-    );
+  return (
+    <>
+      <Form.Group>
+        {tupleInputValue.map((val, idx) => {
+          const tupleRef = (ref: HTMLInputElement) => { tupleInputRefsArray.current[idx] = ref; }
+          return (
+            <Form.Field width={2} key={idx}>
+              <TupleInputPart
+                tupleKey={idx}  
+                name={`${fieldName}_${idx}`}
+                id={`id_${fieldName}_${idx}`}
+                value={+val}
+                tupleRef={tupleRef}
+                tupleInputChangeHandle={tupleInputChangeHandle}
+                commaPressHandle={commaPressHandle} />
+            </Form.Field>
+          );
+        })}
+        <Form.Field hidden={minLen === maxLen}>
+          <Button onClick={newTupleDim} disabled={tupleInputValue.length === maxLen} type="button" icon="add" title="Add dimension" basic={false} />
+          <Button onClick={delTupleDim} disabled={tupleInputValue.length === minLen} type="button" icon="minus" title="Remove dimension" basic={false} />
+        </Form.Field>
+      </Form.Group>
+    </>
+  );
 }
 
 export default TupleInput;

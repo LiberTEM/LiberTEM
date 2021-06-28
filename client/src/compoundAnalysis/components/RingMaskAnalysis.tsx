@@ -14,7 +14,7 @@ import useDefaultFrameView from "./DefaultFrameView";
 import AnalysisLayoutTwoCol from "./layouts/AnalysisLayoutTwoCol";
 import Toolbar from "./Toolbar";
 
-const RingMaskAnalysis: React.SFC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
+const RingMaskAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, dataset }) => {
     const { shape } = dataset.params;
     const [scanHeight, scanWidth, imageHeight, imageWidth] = shape;
     const minLength = Math.min(imageWidth, imageHeight);

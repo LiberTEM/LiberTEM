@@ -11,33 +11,31 @@ interface AnalysisLayoutTwoColProps {
 
 type MergedProps = AnalysisLayoutTwoColProps;
 
-const AnalysisLayoutTwoCol: React.SFC<MergedProps> = ({
+const AnalysisLayoutTwoCol: React.FC<MergedProps> = ({
     title, subtitle,
     left, right,
     toolbar,
-}) => {
-    return (
-        <>
-            <Header as='h3' attached="top">
-                <Icon name="cog" />
-                <Header.Content>{title}</Header.Content>
-            </Header>
-            <Segment attached={true}>
-                <Grid columns={2}>
-                    <Grid.Row>
-                        <Grid.Column>
-                            {left}
-                            <p>{subtitle}</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                            {right}
-                        </Grid.Column>
-                    </Grid.Row>
-                </Grid>
-            </Segment>
-            {toolbar}
-        </>
-    )
-}
+}) => (
+    <>
+        <Header as='h3' attached="top">
+            <Icon name="cog" />
+            <Header.Content>{title}</Header.Content>
+        </Header>
+        <Segment attached>
+            <Grid columns={2}>
+                <Grid.Row>
+                    <Grid.Column>
+                        {left}
+                        <p>{subtitle}</p>
+                    </Grid.Column>
+                    <Grid.Column>
+                        {right}
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+        </Segment>
+        {toolbar}
+    </>
+)
 
 export default AnalysisLayoutTwoCol

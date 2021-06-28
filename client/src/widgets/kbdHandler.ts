@@ -8,7 +8,7 @@ export type ModifyCoords = ((x: number, y: number) => ({ x: number, y: number })
  * @param e keyboard event
  * @param update a callback to handle coordinate updates
  */
-export const handleKeyEvent = (e: React.KeyboardEvent<SVGElement>, update: (fn: ModifyCoords) => void) => {
+export const handleKeyEvent = (e: React.KeyboardEvent<SVGElement>, update: (fn: ModifyCoords) => void): void => {
     let delta = 1;
     if (e.shiftKey) {
         delta = 10;

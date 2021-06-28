@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Icon } from "semantic-ui-react";
 
-const BusySpinner: React.SFC = () => {
+const BusySpinner: React.FC = () => {
     const styles: React.CSSProperties = {
         margin: 0,
         padding: 0,
@@ -12,9 +12,7 @@ const BusySpinner: React.SFC = () => {
         opacity: 0.7,
         filter: "drop-shadow(0 0 3px #000)",
     };
-    return (
-        <Icon name="cog" loading={true} style={styles} />
-    )
+    return <Icon name="cog" loading style={styles} />
 }
 
 export default BusySpinner;

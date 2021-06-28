@@ -3,7 +3,7 @@ import uuid from 'uuid/v4';
 import * as browserActions from '../browser/actions';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';
-import { DetectDatasetResponse, OpenDatasetResponse } from '../messages';
+import { DatasetFormInfo, DatasetFormParams, DetectDatasetResponse, OpenDatasetResponse } from '../messages';
 import { RootReducer } from '../store';
 import * as datasetActions from "./actions";
 import { deleteDataset, detectDataset, openDataset } from './api';
@@ -12,7 +12,7 @@ import { isKnownDatasetType } from './helpers';
 
 export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Actions.create>) {
     try {
-        const resp: OpenDatasetResponse = yield call(openDataset, action.payload.dataset.id, { dataset: action.payload.dataset });
+        const resp = (yield call(openDataset, action.payload.dataset.id, { dataset: action.payload.dataset })) as OpenDatasetResponse;
         if (resp.status === "ok") {
             yield put(datasetActions.Actions.created(resp.details));
         } else if (resp.status === "error") {
@@ -23,7 +23,7 @@ export function* createDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     } catch (e) {
         const timestamp = Date.now();
         const id = uuid();
-        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${e.toString()}`, timestamp, id));
+        yield put(datasetActions.Actions.error(action.payload.dataset.id, `Error loading dataset: ${(e as Error).toString()}`, timestamp, id));
     }
 }
 
@@ -33,13 +33,19 @@ export function* deleteDatasetSaga(action: ReturnType<typeof datasetActions.Acti
     } catch (e) {
         const timestamp = Date.now();
         const id = uuid();
-        yield put(datasetActions.Actions.error(action.payload.dataset, `Error closing dataset: ${e.toString()}`, timestamp, id));
+        yield put(datasetActions.Actions.error(action.payload.dataset, `Error closing dataset: ${(e as Error).toString()}`, timestamp, id));
     }
 }
 
-export function* doDetectDataset(fullPath: string) {
+interface DetectResults {
+    detectedParams?: DatasetFormParams,
+    shouldOpen: boolean,
+    detectedInfo?: DatasetFormInfo,
+}
+
+export function* doDetectDataset(fullPath: string): Generator<unknown, DetectResults, unknown> {
     yield put(datasetActions.Actions.detect(fullPath));
-    const detectResult: DetectDatasetResponse = yield call(detectDataset, fullPath);
+    const detectResult = (yield call(detectDataset, fullPath)) as DetectDatasetResponse;
     let detectedParams;
     let detectedInfo;
     let shouldOpen = true;
@@ -59,25 +65,19 @@ export function* doDetectDataset(fullPath: string) {
     } else {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
-    return [detectedParams, shouldOpen, detectedInfo];
+    return {detectedParams, shouldOpen, detectedInfo};
 }
 
 export function* doOpenDataset(fullPath: string) {
-    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    const config = (yield select((state: RootReducer) => state.config)) as ConfigState;
     const cachedParams = config.lastOpened[fullPath];
-    let detectedParams;
-    let detectedInfo;
-    let shouldOpen = true;
     try {
-      const doDetectDatasetRes = yield call(doDetectDataset, fullPath);
-      detectedParams = doDetectDatasetRes[0];
-      shouldOpen = doDetectDatasetRes[1];
-      detectedInfo = doDetectDatasetRes[2];
+        const { detectedParams, shouldOpen, detectedInfo } = (yield call(doDetectDataset, fullPath)) as DetectResults;
+        if (shouldOpen) {
+            yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams, detectedInfo));
+        }
     } catch (e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
-    }
-    if(shouldOpen) {
-      yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams, detectedInfo));
     }
 }
 
@@ -87,7 +87,7 @@ export function* openDatasetSagaFullPath(action: ReturnType<typeof browserAction
 }
 
 export function* openDatasetSaga(action: ReturnType<typeof browserActions.Actions.select>) {
-    const config: ConfigState = yield select((state: RootReducer) => state.config);
+    const config = (yield select((state: RootReducer) => state.config)) as ConfigState;
     const fullPath = joinPaths(config, action.payload.path, action.payload.name);
     yield call(doOpenDataset, fullPath);
 }

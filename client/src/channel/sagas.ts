@@ -13,63 +13,61 @@ type SocketChannel = EventChannel<channelMessages.Messages>;
  *
  * also creates some synthetic events like open, close, error
  */
-function createWebSocketChannel(/* addr */): SocketChannel {
-    return eventChannel((emit) => {
-        function onMessage(msg: MessageEvent) {
-            if (msg.data instanceof Blob) {
-                // TODO: cleanup createObjectURL results somewhere
-                emit(channelMessages.Messages.binary(URL.createObjectURL(msg.data)));
-            } else {
-                const parsed = JSON.parse(msg.data) as channelMessages.Messages;
-                emit(parsed);
-            }
+const createWebSocketChannel = (/* addr */): SocketChannel => eventChannel((emit) => {
+    const onMessage = (msg: MessageEvent) => {
+        if (msg.data instanceof Blob) {
+            // TODO: cleanup createObjectURL results somewhere
+            emit(channelMessages.Messages.binary(URL.createObjectURL(msg.data)));
+        } else {
+            const parsed = JSON.parse(msg.data) as channelMessages.Messages;
+            emit(parsed);
         }
+    }
 
-        function onOpen() {
-            emit(channelMessages.Messages.open());
-        }
+    const onOpen = () => {
+        emit(channelMessages.Messages.open());
+    }
 
-        function onClose() {
-            emit(channelMessages.Messages.close());
-            emit(END);
-        }
+    const onClose = () => {
+        emit(channelMessages.Messages.close());
+        emit(END);
+    }
 
-        function onError(err: Event) {
-            emit(channelMessages.Messages.error("Error in weboscket connection"));
-        }
+    const onError = () => {
+        emit(channelMessages.Messages.error("Error in weboscket connection"));
+    }
 
-        const ws = new WebSocket(getApiWSURL());
-        ws.addEventListener("message", onMessage);
-        ws.addEventListener("open", onOpen);
-        ws.addEventListener("close", onClose);
-        ws.addEventListener("error", onError);
+    const ws = new WebSocket(getApiWSURL());
+    ws.addEventListener("message", onMessage);
+    ws.addEventListener("open", onOpen);
+    ws.addEventListener("close", onClose);
+    ws.addEventListener("error", onError);
 
-        // return cleanup function:
-        return () => {
-            ws.removeEventListener("message", onMessage);
-            ws.removeEventListener("open", onOpen);
-            ws.removeEventListener("close", onClose);
-            ws.removeEventListener("error", onError);
-            // TODO: close connection if still open
-            // (or is it guaranteed that if an error was thrown, the connection is closed?)
-        };
-    });
-}
+    // return cleanup function:
+    return () => {
+        ws.removeEventListener("message", onMessage);
+        ws.removeEventListener("open", onOpen);
+        ws.removeEventListener("close", onClose);
+        ws.removeEventListener("error", onError);
+        // TODO: close connection if still open
+        // (or is it guaranteed that if an error was thrown, the connection is closed?)
+    };
+})
 
 /**
  * handles the connection lifecycle for our websocket
  */
 export function* webSocketSaga() {
     while (true) {
-        const socketChannel = yield call(createWebSocketChannel);
+        const socketChannel = (yield call(createWebSocketChannel)) as SocketChannel;
         yield fork(actionsFromChannel, socketChannel);
-        const action: channelActions.Actions = yield take([channelActions.ActionTypes.OPEN, channelActions.ActionTypes.CLOSE]);
+        const action = (yield take([channelActions.ActionTypes.OPEN, channelActions.ActionTypes.CLOSE])) as channelActions.Actions;
         if (action.type === channelActions.ActionTypes.OPEN) {
-            const isShutdown: channelActions.Actions = yield take([
+            const isShutdown = (yield take([
                 channelActions.ActionTypes.CLOSE,
                 channelActions.ActionTypes.ERROR,
                 channelActions.ActionTypes.CLOSE_LOOP,
-            ]);
+            ])) as channelActions.Actions;
             if (isShutdown.type === channelActions.ActionTypes.CLOSE_LOOP) {
                 break;
             }
@@ -84,7 +82,7 @@ export function* webSocketSaga() {
 export function* actionsFromChannel(socketChannel: SocketChannel) {
     try {
         while (true) {
-            const msg = yield take(socketChannel);
+            const msg = (yield take(socketChannel)) as channelMessages.Messages;
             const timestamp = Date.now();
             switch (msg.messageType) {
                 case channelMessages.MessageTypes.OPEN: {
@@ -105,7 +103,7 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     break;
                 }
                 case channelMessages.MessageTypes.JOB_STARTED: {
-                    yield put(channelActions.Actions.jobStarted(msg.job, msg.details.dataset, timestamp));
+                    yield put(channelActions.Actions.jobStarted(msg.job, timestamp));
                     break;
                 }
                 case channelMessages.MessageTypes.FINISH_JOB: {
@@ -171,20 +169,20 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
 export function* handleBinaryParts(numParts: number, socketChannel: SocketChannel) {
     const parts: channelMessages.BinaryMessage[] = [];
     while (parts.length < numParts) {
-        const binMsg = yield take(socketChannel);
+        const binMsg = (yield take(socketChannel)) as channelMessages.BinaryMessage;
         parts.push(binMsg);
     }
     return parts;
 }
 
 export function* handleTaskResult(msg: ReturnType<typeof channelMessages.Messages.taskResult>, socketChannel: SocketChannel, timestamp: number) {
-    const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+    const parts = (yield call(handleBinaryParts, msg.followup.numMessages, socketChannel)) as channelMessages.BinaryMessage[];
     const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.taskResult(msg.job, images, timestamp));
 }
 
 export function* handleFinishJob(msg: ReturnType<typeof channelMessages.Messages.finishJob>, socketChannel: SocketChannel, timestamp: number) {
-    const parts: channelMessages.BinaryMessage[] = yield call(handleBinaryParts, msg.followup.numMessages, socketChannel);
+    const parts = (yield call(handleBinaryParts, msg.followup.numMessages, socketChannel)) as channelMessages.BinaryMessage[];
     const images = parts.map((part, idx) => ({ imageURL: part.objectURL, description: msg.followup.descriptions[idx] }));
     yield put(channelActions.Actions.finishJob(msg.job, images, timestamp));
 }

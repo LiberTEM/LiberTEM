@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from 'styled-components';
+import { Point2D } from "../basicTypes";
 import { handleKeyEvent, ModifyCoords } from "./kbdHandler";
 
 export type HandleProps = {
@@ -62,7 +63,7 @@ export interface DraggableHandleProps {
     constraint?: (p: Point2D) => Point2D,
 }
 
-export function getScalingFactor(elem: SVGElement): number {
+export const getScalingFactor = (elem: SVGElement): number => {
     const svg = elem.ownerSVGElement;
     if (svg === null) {
         throw new Error("no owner SVG element?");
@@ -74,9 +75,9 @@ export function getScalingFactor(elem: SVGElement): number {
     const inWidth = +inWidthAttr;
     const svgMeasurements = svg.getBoundingClientRect();
     return svgMeasurements.width / inWidth;
-}
+};
 
-function relativeCoords(e: React.MouseEvent, parent: SVGElement) {
+const relativeCoords = (e: React.MouseEvent, parent: SVGElement) => {
     const f = getScalingFactor(parent);
     const parentPos = parent.getBoundingClientRect();
     const res = {
@@ -98,7 +99,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         drag: { x: 0, y: 0 },
     }
 
-    constructor(props: DraggableHandleProps) {
+    public constructor(props: DraggableHandleProps) {
         super(props);
         this.posRef = React.createRef<SVGRectElement>();
         this.focusRef = React.createRef<SVGGElement>();
@@ -110,16 +111,16 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
     }
 
     // mouseleave event from outside (delegated from surrounding element)
-    public externalLeave = (e: React.MouseEvent<SVGElement>): void => {
-        this.stopDrag(e);
+    public externalLeave = (): void => {
+        this.stopDrag();
     }
 
     // mouseup event from outside (delegated from surrounding element)
-    public externalMouseUp = (e: React.MouseEvent<SVGElement>): void => {
-        this.stopDrag(e);
+    public externalMouseUp = (): void => {
+        this.stopDrag();
     }
 
-    public applyConstraint = (p: Point2D) => {
+    public applyConstraint = (p: Point2D): Point2D => {
         const { constraint } = this.props;
         if (constraint) {
             return constraint(p);
@@ -166,7 +167,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         }
     }
 
-    public stopDrag = (e: React.MouseEvent<SVGElement>): void => {
+    public stopDrag = (): void => {
         const { parentOnDrop } = this.props;
         const { dragging, drag } = this.state;
         if (!dragging) {
@@ -180,7 +181,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         }
     }
 
-    public handleKeyDown = (e: React.KeyboardEvent<SVGElement>) => {
+    public handleKeyDown = (e: React.KeyboardEvent<SVGElement>): void => {
         const update = (fn: ModifyCoords) => {
             const { x, y, onDragMove } = this.props;
             const newCoords = fn(x, y);
@@ -192,7 +193,7 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         handleKeyEvent(e, update);
     }
 
-    public renderCommon(x: number, y: number) {
+    public renderCommon(x: number, y: number): JSX.Element {
         const { imageWidth } = this.props;
         const scale = imageWidth === undefined ? 1 : imageWidth / 128;
         // empty zero-size <rect> as relative position reference
@@ -215,12 +216,12 @@ export class DraggableHandle extends React.Component<DraggableHandleProps> {
         );
     }
 
-    public renderDragging() {
+    public renderDragging(): JSX.Element {
         const { x, y } = this.state.drag;
         return this.renderCommon(x, y);
     }
 
-    public render() {
+    public render(): JSX.Element {
         const { x, y } = this.props;
         // either render from state (when dragging) or from props
         if (this.state.dragging) {

@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { Dropdown, DropdownProps, Segment } from "semantic-ui-react";
 import * as clusterActions from "../../cluster/actions";
 import { getEnumValues } from "../../helpers";
+import { DispatchProps } from "../../helpers/props";
 import { ClusterTypeMetadata, ClusterTypes, ConnectRequestParams } from "../../messages";
 import { RootReducer } from "../../store";
 import LocalConnectionForm from "./LocalConnectionForm";
@@ -14,12 +15,10 @@ const mapDispatchToProps = {
     connectToCluster: clusterActions.Actions.connect,
 };
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        config: state.config,
-        lastConnectionType: state.config.lastConnection.type
-    }
-}
+const mapStateToProps = (state: RootReducer) => ({
+    config: state.config,
+    lastConnectionType: state.config.lastConnection.type
+})
 
 type MergedProps = DispatchProps<typeof mapDispatchToProps> & ReturnType<typeof mapStateToProps>;
 
@@ -72,7 +71,7 @@ class ClusterConnectionForm extends React.Component<MergedProps, ConnectionParam
             <>
                 <div>
                     <Dropdown
-                        inline={true}
+                        inline
                         options={clusterTypeOptions}
                         value={this.state.clusterType}
                         onChange={this.handleChange}

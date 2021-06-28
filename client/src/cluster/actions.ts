@@ -16,7 +16,6 @@ export const Actions = {
     connecting: () => createAction(ActionTypes.CONNECTING),
     connected: (params: ConnectRequestParams ) => createAction(ActionTypes.CONNECTED, { params }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
-
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

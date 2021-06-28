@@ -7,15 +7,13 @@ import FileBrowserEntry from "./FileBrowserEntry";
 
 interface FileEntryProps {
     path: string,
-    style: object,
+    style: Record<string, unknown>,
     details: DirectoryListingDetails,
 }
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: FileEntryProps) => {
-    return {
-        select: () => dispatch(browserActions.Actions.select(ownProps.path, ownProps.details.name)),
-    };
-}
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: FileEntryProps) => ({
+    select: () => dispatch(browserActions.Actions.select(ownProps.path, ownProps.details.name)),
+})
 
 type MergedProps = FileEntryProps & ReturnType<typeof mapDispatchToProps>;
 

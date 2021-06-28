@@ -16,7 +16,7 @@ interface ToolbarProps {
 
 type MergedProps = ToolbarProps;
 
-const Toolbar: React.SFC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis }) => {
+const Toolbar: React.FC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis }) => {
     const dispatch = useDispatch();
     const handleRemove = () => dispatch(analysisActions.Actions.remove(compoundAnalysis.compoundAnalysis));
     const analyses = useSelector((state: RootReducer) => state.analyses);
@@ -31,12 +31,12 @@ const Toolbar: React.SFC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis }
     return (
         <Segment attached="bottom">
             <Button.Group>
-                <Button primary={true} onClick={onApply} icon={true}>
+                <Button primary onClick={onApply} icon>
                     <Icon {...applyIconProps} />
                     Apply
                 </Button>
                 <Download compoundAnalysis={compoundAnalysis} />
-                <Button onClick={handleRemove} icon={true}>
+                <Button onClick={handleRemove} icon>
                     <Icon name='remove' />
                     Remove
                 </Button>

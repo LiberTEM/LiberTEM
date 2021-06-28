@@ -4,22 +4,22 @@ import { Dispatch } from 'redux';
 import { Dropdown, DropdownItemProps } from "semantic-ui-react";
 import * as browserActions from '../actions';
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: DropdownItemProps) => {
-    return {
-        list: () => {
-            if (ownProps.value !== undefined) {
-                dispatch(browserActions.Actions.list(ownProps.value.toString()));
-                window.setTimeout(() => ownProps.onChange(), 0);
-            }
-        },
-    };
+type PathDropdownItemProps = DropdownItemProps & {
+    onChange: () => void,
 }
 
-type MergedProps = ReturnType<typeof mapDispatchToProps> & DropdownItemProps & {
-    onChange: () => void,
-};
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathDropdownItemProps) => ({
+    list: () => {
+        if (ownProps.value !== undefined) {
+            dispatch(browserActions.Actions.list(ownProps.value.toString()));
+            window.setTimeout(() => ownProps.onChange(), 0);
+        }
+    },
+})
 
-const PathDropDownItem: React.SFC<MergedProps> = ({ list, ...props }) => {
+type MergedProps = ReturnType<typeof mapDispatchToProps> & PathDropdownItemProps;
+
+const PathDropDownItem: React.FC<MergedProps> = ({ list, ...props }) => {
     const newProps = {
         onClick: list,
         ...props,

@@ -13,7 +13,7 @@ const initialAnalysisState: AnalysisReducerState = {
     ids: [],
 }
 
-export function analysisReducer(state = initialAnalysisState, action: AllActions): AnalysisReducerState {
+export const analysisReducer = (state = initialAnalysisState, action: AllActions): AnalysisReducerState => {
     switch (action.type) {
         case analysisActions.ActionTypes.CREATED: {
             return insertById(state, action.payload.analysis.id, action.payload.analysis);
@@ -36,24 +36,20 @@ export function analysisReducer(state = initialAnalysisState, action: AllActions
         case channelActions.ActionTypes.CANCEL_JOB_FAILED:
         case channelActions.ActionTypes.CANCELLED: {
             // remove job from the matching analysis
-            return updateWithMap(state, (analysis) => {
-                return {
-                    ...analysis,
-                    jobs: analysis.jobs.filter((job) => job !== action.payload.job),
-                }
-            });
+            return updateWithMap(state, (analysis) => ({
+                ...analysis,
+                jobs: analysis.jobs.filter((job) => job !== action.payload.job),
+            }));
         }
         case channelActions.ActionTypes.INITIAL_STATE: {
-            const analysisState: AnalysisState[] = action.payload.analyses.map(item => {
-                return {
-                    doAutoStart: false,
-                    id: item.analysis,
-                    dataset: item.dataset,
-                    details: item.details,
-                    // FIXME: add jobs!
-                    jobs: item.jobs,
-                };
-            });
+            const analysisState: AnalysisState[] = action.payload.analyses.map(item => ({
+                doAutoStart: false,
+                id: item.analysis,
+                dataset: item.dataset,
+                details: item.details,
+                // FIXME: add jobs!
+                jobs: item.jobs,
+            }));
             return {
                 byId: constructById(analysisState, analysis => analysis.id),
                 ids: action.payload.analyses.map(analysis => analysis.analysis),

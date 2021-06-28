@@ -1,22 +1,18 @@
 import { genericDelete, genericPut, getApiBasePath } from "../helpers/apiHelpers";
 import { DataSetOpenSchemaResponse, DeleteDatasetResponse, DetectDatasetResponse, OpenDatasetRequest, OpenDatasetResponse } from "../messages";
 
-export async function openDataset(id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> {
-    return await genericPut(`datasets/${id}/`, dataset);
-}
+export const openDataset = async (id: string, dataset: OpenDatasetRequest): Promise<OpenDatasetResponse> => await genericPut<OpenDatasetResponse, OpenDatasetRequest>(`datasets/${id}/`, dataset)
 
-export async function deleteDataset(id: string): Promise<DeleteDatasetResponse> {
-    return await genericDelete(`datasets/${id}/`);
-}
+export const deleteDataset = async (id: string): Promise<DeleteDatasetResponse> => await genericDelete<DeleteDatasetResponse>(`datasets/${id}/`)
 
 
-export async function detectDataset(path: string): Promise<DetectDatasetResponse> {
+export const detectDataset = async (path: string): Promise<DetectDatasetResponse> => {
     const basePath = getApiBasePath();
     const r = await fetch(`${basePath}datasets/detect/?path=${encodeURIComponent(path)}`, {
         credentials: "same-origin",
         method: "GET",
     });
-    return await r.json();
+    return await (r.json() as Promise<DetectDatasetResponse>);
 }
 
 interface SchemaCache {
@@ -25,7 +21,7 @@ interface SchemaCache {
 
 const schemaCache: SchemaCache = {};
 
-export async function getSchema(type: string): Promise<DataSetOpenSchemaResponse> {
+export const getSchema = async (type: string): Promise<DataSetOpenSchemaResponse> => {
     const basePath = getApiBasePath();
     const cached = schemaCache[type];
     if (cached) {
@@ -35,7 +31,7 @@ export async function getSchema(type: string): Promise<DataSetOpenSchemaResponse
             credentials: "same-origin",
             method: "GET",
         });
-        const schemaResponse = await r.json();
+        const schemaResponse = await (r.json() as Promise<DataSetOpenSchemaResponse>);
         schemaCache[type] = schemaResponse;
         return schemaResponse;
     }

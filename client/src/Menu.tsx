@@ -4,27 +4,26 @@ import About from "./About";
 import ClusterStatus from "./clusterStatus/components/Cluster"
 import QuitButton from "./shutdown/components/ShutdownButton";
 
-const HeaderMenu: React.SFC = () => {
-    return (
-        <Menu fixed="top">
+const HeaderMenu: React.FC = () => (
+
+    <Menu fixed="top">
+        <Menu.Item>
+            <Modal trigger={<Button content="About" />}>
+                <Popup.Header>About LiberTEM</Popup.Header>
+                <Popup.Content>
+                    <About />
+                </Popup.Content>
+            </Modal>
+        </Menu.Item>
+        <Menu.Menu position="right">
             <Menu.Item>
-                <Modal trigger={<Button content="About" />}>
-                    <Popup.Header>About LiberTEM</Popup.Header>
-                    <Popup.Content>
-                        <About />
-                    </Popup.Content>
-                </Modal>
+                <ClusterStatus />
             </Menu.Item>
-            <Menu.Menu position="right">
-                <Menu.Item>
-                    <ClusterStatus />
-                </Menu.Item>
-                <Menu.Item>
-                    <QuitButton />
-                </Menu.Item>
-            </Menu.Menu>
-        </Menu>
-    );
-};
+            <Menu.Item>
+                <QuitButton />
+            </Menu.Item>
+        </Menu.Menu>
+    </Menu>
+);
 
 export default HeaderMenu;

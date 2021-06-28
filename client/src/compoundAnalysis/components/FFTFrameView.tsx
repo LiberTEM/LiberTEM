@@ -33,9 +33,9 @@ const useFFTFrameView = ({
 
     const dispatch = useDispatch();
 
-    const updateMode = (newMode: AnalysisTypes) => {
+    const updateMode = (newMode: string) => {
         dispatch(compoundAnalysisActions.Actions.enableAutoStart(compoundAnalysisId));
-        setMode(newMode);
+        setMode(newMode as AnalysisTypes);
     }
 
     const frameModeSelector = <ModeSelector modes={availableModes} currentMode={frameMode} onModeChange={updateMode} label="Mode" />

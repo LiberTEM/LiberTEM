@@ -24,17 +24,15 @@ const mapStateToProps = (state: RootReducer) => {
     };
 }
 
-const mapDispatchToProps = (dispatch: Dispatch) => {
-    return {
-        cancel: () => dispatch(browserActions.Actions.cancel()),
-    };
-}
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+    cancel: () => dispatch(browserActions.Actions.cancel()),
+});
 
 type MergedProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface EntryFnArgs {
     index: number,
-    style: object
+    style: Record<string, unknown>,
 }
 type EntryFn = (arg: EntryFnArgs) => void
 
@@ -47,23 +45,21 @@ const scrollToTop = () => {
     listRef.current.scrollToItem(0);
 }
 
-function sortByKey<T extends object>(array: T[], getKey: (item: T) => any) {
-    return array.sort((a, b) => {
+const sortByKey = <K, T>(array: T[], getKey: (item: T) => K) => (
+    array.sort((a, b) => {
         const x = getKey(a);
         const y = getKey(b);
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-    });
-}
+    })
+);
 
-const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places, starred, cancel, isLoading }) => {
+const FileBrowser: React.FC<MergedProps> = ({ files, dirs, path, drives, places, starred, cancel, isLoading }) => {
     const getSortKey = (item: DirectoryListingDetails) => item.name.toLowerCase();
-    const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: object) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
-    const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: object) => <FileEntry style={style} path={path} details={f} />));
+    const dirEntries = sortByKey(dirs, getSortKey).map((dir) => (style: Record<string, unknown>) => <FolderEntry style={style} onChange={scrollToTop} path={path} details={dir} />);
+    const fileEntries = sortByKey(files, getSortKey).map((f) => ((style: Record<string, unknown>) => <FileEntry style={style} path={path} details={f} />));
     const entries = dirEntries.concat(fileEntries);
 
-    const cellFn: EntryFn = ({ index, style }) => {
-        return entries[index](style)
-    }
+    const cellFn: EntryFn = ({ index, style }) => entries[index](style);
 
     let list = (
         <List style={{ overflowY: "scroll" }} ref={listRef} height={300} width="100%" itemCount={entries.length} itemSize={35}>
@@ -74,7 +70,7 @@ const FileBrowser: React.SFC<MergedProps> = ({ files, dirs, path, drives, places
     if (isLoading) {
         // FIXME: hardcoded height
         list = (
-            <Segment loading={true} style={{ height: "300px" }} />
+            <Segment loading style={{ height: "300px" }} />
         )
     }
 

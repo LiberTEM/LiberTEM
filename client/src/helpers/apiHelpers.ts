@@ -1,4 +1,4 @@
-export function getApiBasePath() {
+export const getApiBasePath = () : string => {
     const loc = window.location.pathname;
 
     if(loc.endsWith('/')) {
@@ -8,26 +8,27 @@ export function getApiBasePath() {
     }
 }
 
-export function getApiWSURL() {
+export const getApiWSURL = () : string => {
     const basePath = getApiBasePath();
     return `ws://${window.location.hostname}:${window.location.port}${basePath}events/`;
 }
 
-export async function genericDelete(path: string) {
+export const genericDelete = async <T>(path: string): Promise<T> => {
     const basePath = getApiBasePath();
     const r = await fetch(`${basePath}${path}`, {
         credentials: "same-origin",
         method: "DELETE",
     });
-    return await r.json();
+    return await (r.json() as Promise<T>);
 }
 
-export async function genericPut(path: string, payload: object) {
+
+export const genericPut = async <Resp, Payload>(path: string, payload: Payload): Promise<Resp> => {
     const basePath = getApiBasePath();
     const r = await fetch(`${basePath}${path}`, {
         body: JSON.stringify(payload),
         credentials: "same-origin",
         method: "PUT",
     });
-    return await r.json();
+    return await (r.json() as Promise<Resp>);
 }

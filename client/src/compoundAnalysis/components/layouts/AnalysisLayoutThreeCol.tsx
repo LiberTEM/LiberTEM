@@ -15,60 +15,58 @@ interface AnalysisLayoutThreeColProps {
 
 type MergedProps = AnalysisLayoutThreeColProps;
 
-const AnalysisLayoutThreeCol: React.SFC<MergedProps> = ({
+const AnalysisLayoutThreeCol: React.FC<MergedProps> = ({
     title, subtitle,
     left, mid, right,
     toolbar, title1, title2, title3
-}) => {
-    return (
-        <>
-            <Header as='h3' attached="top">
-                <Icon name="cog" />
-                <Header.Content>{title}</Header.Content>
-            </Header>
-            <Segment attached={true}>
-                <Grid columns={3}>
-                    <Grid.Row>
-                        <Grid.Column width={5}>
-                            <p>{title1}</p>
-                        </Grid.Column>
+}) => (
+    <>
+        <Header as='h3' attached="top">
+            <Icon name="cog" />
+            <Header.Content>{title}</Header.Content>
+        </Header>
+        <Segment attached>
+            <Grid columns={3}>
+                <Grid.Row>
+                    <Grid.Column width={5}>
+                        <p>{title1}</p>
+                    </Grid.Column>
 
-                        <Grid.Column width={5}>
-                            <p>{title2}</p>
-                        </Grid.Column>
+                    <Grid.Column width={5}>
+                        <p>{title2}</p>
+                    </Grid.Column>
 
-                        <Grid.Column width={6}>
-                            <p>{title3}</p>
-                        </Grid.Column>
-                    </Grid.Row>
+                    <Grid.Column width={6}>
+                        <p>{title3}</p>
+                    </Grid.Column>
+                </Grid.Row>
 
-                    <Grid.Row>
-                        <Grid.Column width={5}>
-                            {left}
-                        </Grid.Column>
+                <Grid.Row>
+                    <Grid.Column width={5}>
+                        {left}
+                    </Grid.Column>
 
-                        <Grid.Column width={5}>
-                            {mid}
-                        </Grid.Column>
+                    <Grid.Column width={5}>
+                        {mid}
+                    </Grid.Column>
 
-                        <Grid.Column width={6}>
-                            {right}
-                        </Grid.Column>
+                    <Grid.Column width={6}>
+                        {right}
+                    </Grid.Column>
 
-                    </Grid.Row>
+                </Grid.Row>
 
-                    <Grid.Row>
-                        <Grid.Column width={10}>
-                            <p>{subtitle}</p>
-                        </Grid.Column>
+                <Grid.Row>
+                    <Grid.Column width={10}>
+                        <p>{subtitle}</p>
+                    </Grid.Column>
 
-                        <Grid.Column width={6} />
-                    </Grid.Row>
-                </Grid>
-            </Segment>
-            {toolbar}
-        </>
-    )
-}
+                    <Grid.Column width={6} />
+                </Grid.Row>
+            </Grid>
+        </Segment>
+        {toolbar}
+    </>
+);
 
 export default AnalysisLayoutThreeCol

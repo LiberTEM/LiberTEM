@@ -12,12 +12,12 @@ interface AspectPaddingProps {
 }
 
 const AspectPadding = styled.div`
-    padding-bottom: ${(props: AspectPaddingProps) => `${props.aspect}%`},
+    padding-bottom: ${(props: AspectPaddingProps) => `${props.aspect}%`};
     width: 100%;
     position: relative;
 `;
 
-const PlaceholderImage: React.SFC<PlaceholderProps> = ({ children, width, height }) => {
+const PlaceholderImage: React.FC<PlaceholderProps> = ({ children, width, height }) => {
     const aspect = 100 * (height / width);
     return (
         <AspectPadding aspect={aspect}>
@@ -26,12 +26,17 @@ const PlaceholderImage: React.SFC<PlaceholderProps> = ({ children, width, height
                     if (!React.isValidElement(child)) {
                         return child;
                     }
+                    let childStyles: Record<string, unknown> = {};
+                    if ("props" in child && "style" in child.props) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                        childStyles = child.props.style as Record<string, unknown>;
+                    }
                     return React.cloneElement(child as ReactElement<any>, {
                         style: {
                             position: "absolute",
                             left: 0,
                             top: 0,
-                            ...(child.props as any).style,
+                            ...childStyles,
                         },
                     });
                 })

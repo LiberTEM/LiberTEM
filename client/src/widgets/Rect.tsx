@@ -10,7 +10,7 @@ export interface RectProps {
     height: number,
 }
 
-const Rect: React.SFC<RectProps> = ({ imageWidth, imageHeight, x, y, width, height }) => {
+const Rect: React.FC<RectProps> = ({ imageWidth, x, y, width, height }) => {
     let ymin: number;
     let xmin: number;
     if (height*width > 0) {

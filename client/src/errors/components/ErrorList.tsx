@@ -6,17 +6,15 @@ import { RootReducer } from "../../store";
 import { Actions } from "../actions";
 import Error from "./Error";
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        errors: state.errors,
-        channelConnected: (state.channelStatus.status === "connected" ||
-            state.channelStatus.status === "ready"),
-    }
-}
+const mapStateToProps = (state: RootReducer) => ({
+    errors: state.errors,
+    channelConnected: (state.channelStatus.status === "connected" ||
+        state.channelStatus.status === "ready"),
+});
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const ErrorList: React.SFC<MergedProps> = ({ errors, channelConnected }) => {
+const ErrorList: React.FC<MergedProps> = ({ errors, channelConnected }) => {
     const numShown = 3;
     const latestErrors = errors.ids.slice(Math.max(0, errors.ids.length - numShown));
     const showModal = errors.ids.length > 0 && channelConnected;

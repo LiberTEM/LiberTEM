@@ -17,7 +17,7 @@ const initialChannelState: ChannelStatusReducer = {
     status: ChannelStatusCodes.WAITING,
 }
 
-export function channelStatusReducer(state = initialChannelState, action: AllActions): ChannelStatusReducer {
+export const channelStatusReducer = (state = initialChannelState, action: AllActions): ChannelStatusReducer => {
     switch (action.type) {
         case channelActions.ActionTypes.OPEN: {
             return { status: ChannelStatusCodes.CONNECTED };

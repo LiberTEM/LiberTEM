@@ -17,18 +17,16 @@ interface FormProps {
 
 type MergedProps = FormikProps<FormValues> & FormProps;
 
-const LocalConnectionForm: React.SFC<MergedProps> = ({
+const LocalConnectionForm: React.FC<MergedProps> = ({
     config,
     values,
     touched,
     errors,
-    dirty,
     isSubmitting,
     handleChange,
     handleBlur,
     handleSubmit,
     setFieldValue,
-    handleReset,
 }) => {
     // default value:
     React.useEffect(() => {
@@ -47,7 +45,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
             <Form.Field>
                 <label htmlFor="cudas">
                     CUDA devices to use{' '}
-                    <Modal trigger={<Icon name="info circle" link={true}/>}>
+                    <Modal trigger={<Icon name="info circle" link/>}>
                         <Modal.Header>
                             CUDA information
                         </Modal.Header>
@@ -73,7 +71,7 @@ const LocalConnectionForm: React.SFC<MergedProps> = ({
                 </label>
                 <GPUSelector name="cudas" value={values.cudas} config={config} setFieldValue={setFieldValue} />
             </Form.Field>
-            <Button primary={true} type="submit" disabled={isSubmitting}>Connect</Button>
+            <Button primary type="submit" disabled={isSubmitting}>Connect</Button>
         </Form>
     )
 }

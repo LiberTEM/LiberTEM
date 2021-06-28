@@ -30,7 +30,7 @@ export const Actions = {
         analyses: MsgPartAnalysis[],
         timestamp: number
     ) => createAction(ActionTypes.INITIAL_STATE, { jobs, datasets, timestamp, compoundAnalyses, analyses }),
-    jobStarted: (job: string, dataset: string, timestamp: number) => createAction(ActionTypes.JOB_STARTED, { job, timestamp, dataset }),
+    jobStarted: (job: string, timestamp: number) => createAction(ActionTypes.JOB_STARTED, { job, timestamp }),
     finishJob: (job: string, results: JobResultType[], timestamp: number) => createAction(ActionTypes.FINISH_JOB, { job, results, timestamp }),
     taskResult: (job: string, results: PartialResultType[], timestamp: number) => createAction(ActionTypes.TASK_RESULT, { job, results, timestamp }),
     jobError: (job: string, msg: string, id: string, timestamp: number) => createAction(ActionTypes.JOB_ERROR, { job, msg, id, timestamp }),

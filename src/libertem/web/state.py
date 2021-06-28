@@ -174,7 +174,6 @@ class DatasetState:
             "dataset": dataset,
             "params": params,
             "converted": converted,
-
         }
         self.dataset_to_id[dataset] = uuid
         return self

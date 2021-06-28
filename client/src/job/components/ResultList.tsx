@@ -39,19 +39,17 @@ interface ResultListState {
     selectedChannel: number,
 }
 
-const ResultListPlaceholder: React.SFC<{ width: number, height: number }> = ({ width, height }) => {
-    return (
-        <svg
-            style={{
-                display: "block",
-                border: "1px solid black",
-                width: "100%",
-                height: "auto"
-            }}
-            width={width} height={height}
-            viewBox={`0 0 ${width} ${height}`} key={-1} />
-    );
-}
+const ResultListPlaceholder: React.FC<{ width: number, height: number }> = ({ width, height }) => (
+    <svg
+        style={{
+            display: "block",
+            border: "1px solid black",
+            width: "100%",
+            height: "auto"
+        }}
+        width={width} height={height}
+        viewBox={`0 0 ${width} ${height}`} key={-1} />
+);
 
 
 class ResultList extends React.Component<MergedProps, ResultListState> {
@@ -129,7 +127,7 @@ interface ImageSelectorProps {
     selectedImg: number,
 }
 
-const ResultImageSelector: React.SFC<ImageSelectorProps> = ({ job, handleChange, selectedImg }) => {
+const ResultImageSelector: React.FC<ImageSelectorProps> = ({ job, handleChange, selectedImg }) => {
     if (!job) {
         return null;
     }
@@ -139,7 +137,7 @@ const ResultImageSelector: React.SFC<ImageSelectorProps> = ({ job, handleChange,
             <div>
                 Channel:{' '}
                 <Dropdown
-                    inline={true}
+                    inline
                     options={availableImages}
                     value={selectedImg}
                     onChange={handleChange}

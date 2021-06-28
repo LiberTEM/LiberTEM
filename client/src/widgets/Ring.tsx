@@ -10,7 +10,7 @@ export interface RingProps {
     ro: number,
 }
 
-const Ring: React.SFC<RingProps> = ({ imageWidth, cx, cy, ri, ro }) => {
+const Ring: React.FC<RingProps> = ({ imageWidth, cx, cy, ri, ro }) => {
     // see also: https://stackoverflow.com/a/37883328/540644
     const pathSpecs = [
         getPathArc({ x: cx + .5, y: cy + .5 }, 90, 90, ro),

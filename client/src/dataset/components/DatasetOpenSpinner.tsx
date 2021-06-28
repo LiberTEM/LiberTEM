@@ -3,24 +3,22 @@ import { connect } from "react-redux";
 import { Header, Icon, Message } from "semantic-ui-react";
 import { RootReducer } from "../../store";
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        busy: state.openDataset.busy,
-        path: state.openDataset.busyPath,
-    };
-}
+const mapStateToProps = (state: RootReducer) => ({
+    busy: state.openDataset.busy,
+    path: state.openDataset.busyPath,
+})
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const DatasetOpenSpinner: React.SFC<MergedProps> = ({ busy, path }) => {
+const DatasetOpenSpinner: React.FC<MergedProps> = ({ busy, path }) => {
     if (!busy) {
         return null;
     }
     return (
         <>
-            <Header as="h2" dividing={true}>Loading...</Header>
-            <Message icon={true}>
-                <Icon name='cog' loading={true} />
+            <Header as="h2" dividing>Loading...</Header>
+            <Message icon>
+                <Icon name='cog' loading />
                 <Message.Content>
                     <Message.Header>Detecting parameters for {path}</Message.Header>
                 </Message.Content>

@@ -12,9 +12,10 @@ export interface ActionWithMeta<T extends string, P, M> extends ActionWithPayloa
     meta: M
 }
 
-export function createAction<T extends string>(type: T): Action<T>
-export function createAction<T extends string, P, M>(type: T, payload?: P): ActionWithPayload<T, P>
-export function createAction<T extends string, P, M>(type: T, payload?: P, meta?: M): ActionWithMeta<T, P, M>
+export function createAction<T extends string>(type: T): Action<T>;
+export function createAction<T extends string, P>(type: T, payload: P): ActionWithPayload<T, P>;
+export function createAction<T extends string, P, M>(type: T, payload: P, meta: M): ActionWithMeta<T, P, M>;
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function createAction<T extends string, P, M>(type: T, payload?: P, meta?: M) {
     if (meta === undefined && payload === undefined) {
         return { type };

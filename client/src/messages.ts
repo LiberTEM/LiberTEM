@@ -9,6 +9,11 @@ export interface FollowupPart {
     descriptions: Array<{ title: string, desc: string, includeInDownload: boolean }>,
 }
 
+export interface ResultFileFormat {
+    identifier: string,
+    description: string,
+}
+
 export interface MsgPartConfig {
     version: string,
     revision: string,
@@ -21,10 +26,7 @@ export interface MsgPartConfig {
     cwd: string,
     separator: string,
     resultFileFormats: {
-        [id: string]: {
-            identifier: string,
-            description: string,
-        }
+        [id: string]: ResultFileFormat,
     },
 }
 
@@ -74,7 +76,7 @@ export type ConnectResponse = {
     connection: ConnectRequest,
 } | {
     status: "disconnected",
-    connection: {},
+    connection: Record<string, never>,
 } | {
     status: "error",
     messageType: string,
@@ -136,7 +138,7 @@ export interface DatasetInfoHDF5Item {
     shape: number[],
     compression: null | string,
     chunks: null | number[],
-};
+}
 
 export type DatasetInfoHDF5 = {
     type: DatasetTypes.HDF5,
@@ -267,6 +269,8 @@ export type DatasetOpen = DatasetCommon & {
     diagnostics: DiagElemMsg[],
 }
 
+export type CreateDatasetMessage = Omit<DatasetOpen, "status">;
+
 export type Dataset = DatasetOpening | DatasetOpen | DatasetDeleting;
 
 export interface OpenDatasetRequest {
@@ -276,7 +280,7 @@ export interface OpenDatasetRequest {
 export interface OpenDatasetResponseOk {
     status: "ok",
     dataset: string,  // TODO: uuid type?
-    details: Dataset,
+    details: DatasetOpen,
 }
 
 export interface OpenDatasetResponseError {
@@ -309,7 +313,7 @@ export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDataset
 export interface DataSetOpenSchemaSuccessResponse {
     status: "ok",
     ds_type: string,
-    schema: object,
+    schema: Record<string, unknown>,
 }
 
 export interface DataSetOpenSchemaErrorResponse {
@@ -322,8 +326,8 @@ export type DataSetOpenSchemaResponse = DataSetOpenSchemaSuccessResponse | DataS
 
 export type MsgPartInitialDataset = DatasetOpen
 
-// type alias to add client-side state to datasets
-export type DatasetState = Dataset & {}
+// type alias to add client-side state to datasets (currently empty)
+export type DatasetState = Dataset
 
 /*
  * Job
@@ -399,31 +403,27 @@ export interface FFTParams {
     real_centery: number | null,
 }
 
+export interface RectRoiParams {
+    shape: "rect",
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+}
+
+export interface DiskRoiParams {
+    shape: "disk",
+    cx: number,
+    cy: number,
+    r: number,
+}
 
 export interface FrameParams {
-    roi: {
-        shape: "rect",
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-    } | {
-        shape: "disk",
-        cx: number,
-        cy: number,
-        r: number,
-    } |
-    {}
+    roi: RectRoiParams | DiskRoiParams | Record<string, never>
 }
 
 export interface ClustParams {
-    roi: {
-        shape: "rect",
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-    } | {}
+    roi: RectRoiParams | Record<string, never>,
     cx: number,
     cy: number,
     ri: number,
@@ -492,7 +492,7 @@ export interface SDFramesDetails {
 
 export interface SumSigDetails {
     analysisType: AnalysisTypes.SUM_SIG,
-    parameters: {}
+    parameters: Record<string, never>
 }
 
 export interface FFTSumFramesDetails {

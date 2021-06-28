@@ -13,25 +13,18 @@ interface PathInputProps {
 
 type MergedProps = FormikProps<FormValues> & PathInputProps;
 
-const PathInput: React.SFC<MergedProps> = ({
+const PathInput: React.FC<MergedProps> = ({
     values,
-    touched,
-    errors,
-    dirty,
-    isSubmitting,
     handleChange,
     handleBlur,
     handleSubmit,
-    handleReset,
-}) => {
-    return (
-        <Form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
-            <Form.Field>
-                <Input autoComplete="off" onBlur={handleBlur} onChange={handleChange} value={values.path} name="path" />
-            </Form.Field>
-        </Form>
-    )
-}
+}) => (
+    <Form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
+        <Form.Field>
+            <Input autoComplete="off" onBlur={handleBlur} onChange={handleChange} value={values.path} name="path" />
+        </Form.Field>
+    </Form>
+);
 
 export default withFormik<PathInputProps, FormValues>({
     mapPropsToValues: ({ initialPath }) => ({

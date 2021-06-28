@@ -17,7 +17,7 @@ const clusterMessages = {
     connecting: "Connecting to cluster"
 }
 
-const ConnectedNotReady: React.SFC = () => {
+const ConnectedNotReady: React.FC = () => {
     const haveConfig = useSelector((state: RootReducer) => state.config.haveConfig);
     const clusterConnection = useSelector((state: RootReducer) => state.clusterConnection);
 
@@ -34,9 +34,10 @@ const ConnectedNotReady: React.SFC = () => {
         return <ChannelConnecting msg={clusterMessages.connecting} />
     }
     assertNotReached("should not happen");
+    return null;
 }
 
-const ChannelStatus: React.SFC = ({ children }) => {
+const ChannelStatus: React.FC = ({ children }) => {
     const channelStatus = useSelector((state: RootReducer) => state.channelStatus);
 
     switch (channelStatus.status) {
@@ -53,6 +54,7 @@ const ChannelStatus: React.SFC = ({ children }) => {
             return <ChannelShutdown />
         default:
             assertNotReached("should not happen");
+            return null;
     }
 }
 

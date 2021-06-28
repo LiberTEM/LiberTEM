@@ -4,13 +4,13 @@ import { Dropdown, DropdownProps } from "semantic-ui-react";
 
 type ModeOptions = Array<{
     text: string;
-    value: any;
+    value: string;
 }>;
 
 interface ModeSelectorProps {
     modes: ModeOptions,
-    currentMode: any,
-    onModeChange: (mode: any) => void,
+    currentMode: string,
+    onModeChange: (mode: string) => void,
     label: string,
 }
 
@@ -19,7 +19,9 @@ const ModeSelector: React.FunctionComponent<ModeSelectorProps> = ({
 }) => {
 
     const onChange = (e: React.SyntheticEvent, data: DropdownProps) => {
-        onModeChange(data.value)
+        if(data.value !== undefined && typeof data.value === "string") {
+            onModeChange(data.value);
+        }
     }
 
     return (
@@ -27,7 +29,7 @@ const ModeSelector: React.FunctionComponent<ModeSelectorProps> = ({
             <div>
                 {label}:{' '}
                 <Dropdown
-                    inline={true}
+                    inline
                     options={modes}
                     value={currentMode}
                     onChange={onChange}

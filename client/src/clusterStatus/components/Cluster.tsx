@@ -3,31 +3,28 @@ import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { Button, Modal, Popup } from "semantic-ui-react";
 import { RootReducer } from "../../store";
-import LocalStatus from "./localStatus";
+import LocalStatus from "./LocalStatus";
 import NotConnected from "./NotConnected";
 import TCPStatus from "./TCPStatus";
 
-const mapStateToProps = (state: RootReducer) => {
-    return {
-        clusterConnection: state.clusterConnection,
-        channelStatus: state.channelStatus.status,
-        type: state.config.lastConnection.type,
-        localcore: state.config.localCores,
-        cudas: state.config.lastConnection.cudas,
-        address: state.config.lastConnection.address,
-    };
-};
+const mapStateToProps = (state: RootReducer) => ({
+    clusterConnection: state.clusterConnection,
+    channelStatus: state.channelStatus.status,
+    type: state.config.lastConnection.type,
+    localcore: state.config.localCores,
+    cudas: state.config.lastConnection.cudas,
+    address: state.config.lastConnection.address,
+})
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const ClusterStatus: React.SFC<MergedProps> = ({ clusterConnection, channelStatus, type, localcore, cudas, address }) => {
-
-    enum colorType  {
+const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus, type, localcore, cudas, address }) => {
+    enum ColorType  {
         blue= "blue",
         grey= "grey"
     }
 
-    const [color , setColor] = useState<colorType>(colorType.grey)
+    const [color , setColor] = useState<ColorType>(ColorType.grey)
     const [status, setStatus] =  useState(clusterConnection.status)
     const [disable, setDisable] = useState(true)
 
@@ -36,17 +33,17 @@ const ClusterStatus: React.SFC<MergedProps> = ({ clusterConnection, channelStatu
             setStatus(clusterConnection.status)
             setDisable(false)
             if (clusterConnection.status === "connected"){
-                setColor(colorType.blue)
+                setColor(ColorType.blue)
             }else{
-                setColor(colorType.grey)
+                setColor(ColorType.grey)
             }
         }else{
             setDisable(true)
             setStatus("unknown")
-            setColor(colorType.grey)
+            setColor(ColorType.grey)
         }
 
-    }, [clusterConnection, channelStatus, colorType])
+    }, [clusterConnection, channelStatus, ColorType])
 
 
     const clusterDetails = () => {

@@ -9,25 +9,23 @@ import PathDropDownItem from "./PathDropDownItem";
 import PathInput from "./PathInput";
 import RecentFiles from "./RecentFiles";
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathBarProps) => {
-    return {
-        refresh: () => {
-            dispatch(browserActions.Actions.list(ownProps.currentPath));
-            window.setTimeout(() => ownProps.onChange(), 0);
-        },
-        handleInputChange: (path: string) => {
-            dispatch(browserActions.Actions.list(path));
-            window.setTimeout(() => ownProps.onChange(), 0);
-        },
-        goUp: () => {
-            dispatch(browserActions.Actions.list(ownProps.currentPath, '..'));
-            window.setTimeout(() => ownProps.onChange(), 0);
-        },
-        toggleStar: () => {
-            dispatch(configActions.Actions.toggleStar(ownProps.currentPath));
-        }
-    };
-}
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: PathBarProps) => ({
+    refresh: () => {
+        dispatch(browserActions.Actions.list(ownProps.currentPath));
+        window.setTimeout(() => ownProps.onChange(), 0);
+    },
+    handleInputChange: (path: string) => {
+        dispatch(browserActions.Actions.list(path));
+        window.setTimeout(() => ownProps.onChange(), 0);
+    },
+    goUp: () => {
+        dispatch(browserActions.Actions.list(ownProps.currentPath, '..'));
+        window.setTimeout(() => ownProps.onChange(), 0);
+    },
+    toggleStar: () => {
+        dispatch(configActions.Actions.toggleStar(ownProps.currentPath));
+    }
+});
 
 interface PathBarProps {
     currentPath: string,
@@ -39,7 +37,7 @@ interface PathBarProps {
 
 type MergedProps = ReturnType<typeof mapDispatchToProps> & PathBarProps;
 
-const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, starred, onChange, refresh, goUp, handleInputChange, toggleStar }) => {
+const PathBar: React.FC<MergedProps> = ({ currentPath, drives, places, starred, onChange, refresh, goUp, handleInputChange, toggleStar }) => {
     const driveOptions = drives.map((path) => ({ key: path, text: path }));
     const placeOptions = Object.keys(places).map((key) => ({ key: places[key].path, text: places[key].title }));
     const starOptions = starred.map((path) => ({ key: path, text: path }));
@@ -50,23 +48,23 @@ const PathBar: React.SFC<MergedProps> = ({ currentPath, drives, places, starred,
     return (
         <Menu>
             <RecentFiles />
-            <Dropdown text="Go to..." floating={true} item={true}>
+            <Dropdown text="Go to..." floating item>
                 <Dropdown.Menu>
                     <Dropdown.Header content="Drives" />
-                    {driveOptions.map((option) => {
-                        return <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
-                    })}
+                    {driveOptions.map((option) =>
+                        <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
+                    )}
                     <Dropdown.Header content="Places" />
-                    {placeOptions.map((option) => {
-                        return <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
-                    })}
+                    {placeOptions.map((option) =>
+                        <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
+                    )}
                     <Dropdown.Header content="Starred" />
                     {starOptions.length === 0 && 
                         <Dropdown.Item key="empty" value="empty" content="No bookmarks yet" />
                     }
-                    {starOptions.map((option) => {
-                        return <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
-                    })}
+                    {starOptions.map((option) =>
+                        <PathDropDownItem key={option.key} value={option.key} content={option.text} onChange={onChange} />
+                    )}
                 </Dropdown.Menu>
             </Dropdown>
             <Menu.Item title={bookmarkTitle} icon={starredIcon} onClick={toggleStar} />

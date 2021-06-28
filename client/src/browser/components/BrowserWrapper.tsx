@@ -1,17 +1,16 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Button, Icon } from "semantic-ui-react";
+import { DispatchProps } from "../../helpers/props";
 import { RootReducer } from "../../store";
 import * as browserActions from '../actions';
 import FileBrowser from "./FileBrowser";
 
-export const mapStateToProps = (state: RootReducer) => {
-    return {
-        isOpen: state.browser.isOpen,
-        busy: state.openDataset.busy,
-        formVisible: state.openDataset.formVisible,
-    }
-}
+const mapStateToProps = (state: RootReducer) => ({
+    isOpen: state.browser.isOpen,
+    busy: state.openDataset.busy,
+    formVisible: state.openDataset.formVisible,
+});
 
 export const mapDispatchToProps = {
     open: browserActions.Actions.open,
@@ -19,12 +18,12 @@ export const mapDispatchToProps = {
 
 type MergedProps = ReturnType<typeof mapStateToProps> & DispatchProps<typeof mapDispatchToProps>;
 
-const BrowserWrapper: React.SFC<MergedProps> = ({ formVisible, isOpen, open, busy }) => {
+const BrowserWrapper: React.FC<MergedProps> = ({ formVisible, isOpen, open, busy }) => {
     if(formVisible || busy) {
         return null;
     } else if (!isOpen) {
         return (
-            <Button icon={true} labelPosition="left" onClick={open}>
+            <Button icon labelPosition="left" onClick={open}>
                 <Icon name='add' />
                 Browse
             </Button>

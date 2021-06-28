@@ -385,12 +385,8 @@ def dist_ctx(scheduler_addr):
 def ipy_ctx():
     import ipyparallel
     client = ipyparallel.Client()
-    retries = 10
-    while retries > 0:
-        retries -= 1
-        if len(client.ids) > 0:
-            break
-        time.sleep(1)
+    # wait for two engines: see also docker-compose.yml where the engines are started
+    client.wait_for_engines(2)
     dask_client = client.become_dask()
     executor = DaskJobExecutor(client=dask_client, is_local=False)
     with lt.Context(executor=executor) as ctx:

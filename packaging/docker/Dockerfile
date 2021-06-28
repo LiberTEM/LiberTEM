@@ -19,7 +19,7 @@ RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -
 RUN /venv/bin/pip install -e 'git+https://github.com/pyFFTW/pyFFTW.git#egg=pyfftw'
 # Include https://github.com/ipython/ipyparallel/pull/415
 # FIXME switch to release version as soon as included
-RUN /venv/bin/pip install -e 'git+https://github.com/ipython/ipyparallel.git@3638a89d7eb6b4969ed0a6f44a4e8b234d574005#egg=ipyparallel'
+RUN /venv/bin/pip install -e 'git+https://github.com/ipython/ipyparallel.git@7.0.0a3#egg=ipyparallel'
 
 COPY . /code/
 RUN venv/bin/pip install --no-cache /code/

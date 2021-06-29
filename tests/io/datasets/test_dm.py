@@ -10,7 +10,7 @@ from libertem.udf.sum import SumUDF
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DataSetException
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
@@ -393,7 +393,7 @@ def test_compare_backends_sparse(lt_ctx, default_dm, buffered_dm):
 def test_nonstack_files(lt_ctx):
     files = '/path/to/dm/file.dm3'
 
-    with pytest.raises(AssertionError) as e:
+    with pytest.raises(DataSetException):
         lt_ctx.load(
             "dm",
             files=files,

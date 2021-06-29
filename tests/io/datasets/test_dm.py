@@ -388,3 +388,13 @@ def test_compare_backends_sparse(lt_ctx, default_dm, buffered_dm):
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_dm, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_nonstack_files(lt_ctx):
+    files = '/path/to/dm/file.dm3'
+
+    with pytest.raises(AssertionError) as e:
+        lt_ctx.load(
+            "dm",
+            files=files,
+        )

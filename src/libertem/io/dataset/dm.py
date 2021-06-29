@@ -125,8 +125,9 @@ class DMDataSet(DataSet):
             self._nav_shape = tuple(scan_size)
         self._filesize = None
         self._files = files
-        assert isinstance(files, (list, tuple)),\
-               f"files argument must be an iterable of file paths recieved {type(files)}"
+        if not isinstance(files, (list, tuple)):
+            raise DataSetException("files argument must be an iterable\
+                                    of file paths, recieved {type(files)}")
         if len(files) == 0:
             raise DataSetException("need at least one file as input!")
         self._fileset = None

@@ -186,6 +186,23 @@ class H5DataSet(DataSet):
     min_num_partitions: int
         Minimum number of partitions, set to number of cores if not specified. Usually
         doesn't need to be specified.
+
+    Note
+    ----
+    If the HDF5 file to be loaded contains compressed data
+    using a custom compression filter (other than GZIP, LZF or SZIP)
+    the user must import the associated HDF5 filter library before
+    importing LiberTEM in their main script, for example the library
+    `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_.
+
+    If running LiberTEM in a cluster with existing workers (e.g. by running
+    `libertem-worker` or `dask-worker` on nodes), it is recommended to add the
+    necessary imports as `--preload` arguments to the worker launch command,
+    for example with "`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`".
+
+    See the following `h5py documentation
+    <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_ for
+    more information on filter pipelines.
     """
     def __init__(self, path, ds_path=None, tileshape=None,
                  target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):

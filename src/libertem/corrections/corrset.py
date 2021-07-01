@@ -79,7 +79,7 @@ class CorrectionSet:
         is left uncorrected in that case.
     """
     def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
-
+        self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
             excluded_pixels = sparse.COO(excluded_pixels, prune=True)

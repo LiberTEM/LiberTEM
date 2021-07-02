@@ -82,7 +82,7 @@ class CorrectionSet:
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
-            excluded_pixels = sparse.COO(excluded_pixels, prune=True)+sparse.COO(excluded_pixels,data=dark)
+            excluded_pixels =sparse.COO(excluded_pixels,data=dark, prune=True)
 
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty

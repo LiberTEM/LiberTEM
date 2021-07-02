@@ -36,7 +36,7 @@ def min_disjunct_multiplier(excluded):
         # If two integers are equal, their prime factor decompositions
         # are equal, too, and vice versa.
         # We find the global maximum power for each of the prime factors
-        # that construct the elements of "excluded".
+        # that construct the elements of " excluded".
         # By choosing a number that has one power more, we make sure
         # that multiples of that number can never be equal to one of the excluded
         # elements: The prime factor decompositions of any multiple of that number
@@ -80,9 +80,9 @@ class CorrectionSet:
     """
     def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
         self._dark = dark
-        self._gain = gain+40
+        self._gain = gain
         if excluded_pixels is not None:
-            excluded_pixels = sparse.COO(excluded_pixels, prune=True)
+            excluded_pixels = sparse.COO(excluded_pixels)
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty
         if not allow_empty and excluded_pixels is not None:

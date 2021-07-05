@@ -129,7 +129,7 @@ class CorrectionSet:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:
             gain_map = gain_map[sig_slice]
-
+        print(self.get_excluded_pixels())
         correct(
             buffer=data,
             dark_image=dark_frame,

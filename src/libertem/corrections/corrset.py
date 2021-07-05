@@ -124,12 +124,12 @@ class CorrectionSet:
             return
 
         sig_slice = tile_slice.get(sig_only=True)
-
+        print(self.get_excluded_pixels())
         if dark_frame is not None:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:
             gain_map = gain_map[sig_slice]
-        print(self.get_excluded_pixels())
+
         correct(
             buffer=data,
             dark_image=dark_frame,

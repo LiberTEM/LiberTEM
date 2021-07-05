@@ -89,6 +89,7 @@ class CorrectionSet:
         if not allow_empty and excluded_pixels is not None:
             # Construct the environment for checking so that an exception is thrown
             # when the CorrectionSet is instantiated and not when workers try to apply it.
+            self.apply(sparse.COO(excluded_pixels, data=10))
             _ = RepairDescriptor(
                 sig_shape=excluded_pixels.shape,
                 excluded_pixels=excluded_pixels.coords,

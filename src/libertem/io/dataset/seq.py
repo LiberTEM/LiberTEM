@@ -33,6 +33,8 @@ from typing import Tuple
 
 import numpy as np
 from ncempy.io.mrc import mrcReader
+from xml.etree import ElementTree as ET
+import xml.dom.minidom
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -272,11 +274,17 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
+    def _maybe_load_XML(self, path):
+        if not os.path.exists(path):
+            return None
+
+        return
 
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
+            #excluded_pixels=self._
         )
 
     def initialize(self, executor):

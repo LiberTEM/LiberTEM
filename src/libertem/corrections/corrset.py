@@ -8,6 +8,7 @@ from libertem.common import Slice
 from libertem.corrections.detector import correct, RepairDescriptor
 
 
+
 def factorizations(n, primes):
     n = np.array(n)
     factorization = np.zeros((len(n), len(primes)), dtype=n.dtype)
@@ -124,7 +125,9 @@ class CorrectionSet:
             return
 
         sig_slice = tile_slice.get(sig_only=True)
-        print(self.get_excluded_pixels())
+        f = open("debug.txt", "a")
+        f.write("Now the file has more content!")
+        f.close()
         if dark_frame is not None:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:

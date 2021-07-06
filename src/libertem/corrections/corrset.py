@@ -8,7 +8,6 @@ from libertem.common import Slice
 from libertem.corrections.detector import correct, RepairDescriptor
 
 
-
 def factorizations(n, primes):
     n = np.array(n)
     factorization = np.zeros((len(n), len(primes)), dtype=n.dtype)
@@ -19,7 +18,7 @@ def factorizations(n, primes):
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
-        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
+        f = np.prod(primes[np.newaxis, :] ** zero_modulos, axis=1)
         n = n // f
 
     return factorization
@@ -79,11 +78,12 @@ class CorrectionSet:
         Do not throw an exception if a repair environment is empty. The pixel
         is left uncorrected in that case.
     """
+
     def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
-            excluded_pixels =sparse.COO(excluded_pixels, prune=True)
+            excluded_pixels = sparse.COO(excluded_pixels, prune=True)
 
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty
@@ -125,7 +125,7 @@ class CorrectionSet:
             return
 
         sig_slice = tile_slice.get(sig_only=True)
-        f = open("debug.txt", "a")
+        f = open("D:/gitMine/LiberTEM/data/DE16_20-04-30_scan_64-64_8fps/debug.txt", "a")
         f.write("Now the file has more content!")
         f.close()
         if dark_frame is not None:
@@ -242,13 +242,13 @@ def adjust_direct(clean, adjusted_shape_inout, sig_shape, dim, excluded_list):
 
 
 def adjust_heuristic(clean, adjusted_shape_inout, base_shape, sig_shape, shrink, dim,
-        excluded_list):
+                     excluded_list):
     start = adjusted_shape_inout[dim]
     stop = sig_shape[dim]
     step = adjusted_shape_inout[dim]
     excluded_set = frozenset(excluded_list)
     right_boundary_set = frozenset(range(start, stop, step))
-    left_boundary_set = frozenset(range(start-1, stop-1, step))
+    left_boundary_set = frozenset(range(start - 1, stop - 1, step))
 
     right_of = not right_boundary_set.isdisjoint(excluded_set)
     left_of = not left_boundary_set.isdisjoint(excluded_set)

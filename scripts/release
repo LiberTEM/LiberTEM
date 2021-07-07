@@ -392,6 +392,15 @@ def prepare_upload(verbose):
         print(out.decode("utf-8"))
 
 
+def run_twine_check(verbose):
+    cmd = ["twine", "check"]
+    cmd.extend(get_py_release_files())
+    out = subprocess.check_output(cmd)
+
+    if verbose:
+        print(out)
+
+
 def upload_to_pypi(verbose, user, password):
     files = get_py_release_files()
     cmd = ["twine", "upload"]
@@ -484,6 +493,8 @@ def upload(ctx, dry_run, pypi_user, pypi_password, pypi_test_user, pypi_test_pas
     # validate zenodo-upload.json:
     with open(join(BASE_DIR, 'packaging/zenodo-upload.json')) as f:
         json.load(f)
+
+    run_twine_check(ctx.obj['verbose'])
 
     if not dry_run:
         if is_release:

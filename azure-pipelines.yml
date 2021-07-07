@@ -184,7 +184,7 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt | setup.py'
+          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py'
           path: $(tox_dir)
         displayName: 'cache tox environment'
 
@@ -249,7 +249,7 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt | setup.py'
+          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py'
           path: $(tox_dir)
         displayName: 'cache tox environment'
 

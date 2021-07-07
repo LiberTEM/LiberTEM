@@ -86,11 +86,6 @@ stages:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for Python $(python.version)'
 
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-
     - job: numba_coverage
       pool:
         vmImage: 'ubuntu-latest'
@@ -132,11 +127,6 @@ stages:
         inputs:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for numba coverage on Python 3.9'
-
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
 
     - job: lint
       pool:
@@ -240,11 +230,6 @@ stages:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for Python $(python.version)'
 
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-
     - job: macos_tests
       pool:
         vmImage: 'macOS-latest'
@@ -309,11 +294,6 @@ stages:
         inputs:
           testResultsFiles: 'junit.xml'
           testRunTitle: 'Publish test results for Python $(python.version)'
-
-      - task: PublishCodeCoverageResults@1
-        inputs:
-          codeCoverageTool: Cobertura
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
 
     - job: node_tests
       pool:

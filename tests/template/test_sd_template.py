@@ -1,6 +1,8 @@
 import io
 import os
+
 import numpy as np
+import pytest
 import nbformat
 from temp_utils import _get_hdf5_params
 from libertem.udf.stddev import StdDevUDF
@@ -9,6 +11,7 @@ from libertem.web.notebook_generator.notebook_generator import notebook_generato
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
+@pytest.mark.slow
 def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
@@ -36,6 +39,7 @@ def test_sd_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     )
 
 
+@pytest.mark.slow
 def test_sd_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 

@@ -16,6 +16,7 @@ class ResultContainer:
         self.finished = finished
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_clust_default(
     hdf5_ds_2, tmpdir_factory, inline_executor, local_cluster_url,

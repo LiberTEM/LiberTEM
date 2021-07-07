@@ -194,6 +194,7 @@ def test_detector_patch():
         )
 
 
+@pytest.mark.slow
 def test_detector_patch_large():
     for i in range(10):
         print(f"Loop number {i}")
@@ -227,6 +228,7 @@ def test_detector_patch_large():
         )
 
 
+@pytest.mark.slow
 def test_detector_patch_too_large():
     for i in range(10):
         print(f"Loop number {i}")

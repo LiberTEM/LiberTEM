@@ -67,6 +67,7 @@ def test_simple(default_cached_ds):
             pass
 
 
+@pytest.mark.slow
 def test_with_roi(default_cached_ds):
     roi = np.random.choice(a=[0, 1], size=tuple(default_cached_ds.shape.nav))
 

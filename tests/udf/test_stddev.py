@@ -101,6 +101,7 @@ def _stability_workhorse(data):
 # This shouldn't be @pytest.mark.numba
 # since the calculation will take forever
 # with JIT disabled
+@pytest.mark.slow
 def test_stability(lt_ctx):
     data = _mk_random(size=(1024, 1024, 8, 1), dtype="float32")
 

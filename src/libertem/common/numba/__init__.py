@@ -1,14 +1,10 @@
-import time
-import hashlib
 import logging
 
 import numba
-from numba.core.registry import dispatcher_registry, CPUDispatcher
-from numba.core.caching import FunctionCache
-from numba.core.serialize import dumps
-import numpy as np
 import scipy.sparse
+import numpy as np
 
+from .cache import prime_numba_cache, cached_njit  # NOQA: F401
 
 logger = logging.getLogger(__name__)
 
@@ -163,121 +159,3 @@ def _rmatmul_csr(left_dense, right_data, right_indices, right_indptr, res_inout_
                 for left_row in range(left_rows):
                     tmp = rowbuf[left_row] * right_value
                     res_inout_t[right_column, left_row] += tmp
-
-
-_cached_njit_reg = []
-
-
-def cached_njit(*args, **kwargs):
-    """
-    Replacement for numba.njit with custom caching. Only supports usage
-    with parameters, i.e.
-
-    @cached_njit()
-    def fn():
-        ...
-    """
-    def wrapper(fn):
-        kwargs.update({'_target': 'custom_cpu', 'cache': True})
-        _cached_njit_reg.append(fn)
-        return numba.njit(fn, *args, **kwargs)
-    return wrapper
-
-
-def hasher(x):
-    return hashlib.sha256(x).hexdigest()
-
-
-class MyFunctionCache(FunctionCache):
-    def _get_dependencies(self, cvar):
-        deps = [cvar]
-        if hasattr(cvar, 'py_func'):
-            # TODO: does the cache key need to depend on any other
-            # attributes of the Dispatcher?
-            closure = cvar.py_func.__closure__
-            deps = [cvar.py_func.__code__.co_code]
-        elif hasattr(cvar, '__closure__'):
-            closure = cvar.__closure__
-            # if cvar is a function and closes over a Dispatcher, the
-            # cache will be busted because of the uuid that is regenerated
-            deps = [cvar.__code__.co_code]
-        else:
-            closure = None
-        if closure is not None:
-            for x in closure:
-                deps.extend(self._get_dependencies(x.cell_contents))
-        return deps
-
-    def _index_key(self, sig, codegen):
-        """
-        Compute index key for the given signature and codegen.
-        It includes a description of the OS, target architecture and hashes of
-        the bytecode for the function and, if the function has a __closure__,
-        a hash of the cell_contents.
-        """
-        codebytes = self._py_func.__code__.co_code
-        cvars = self._get_dependencies(self._py_func)
-        if len(cvars) > 0:
-            cvarbytes = dumps(cvars)
-        else:
-            cvarbytes = b''
-
-        return (sig, "libertem-numba-cache", codegen.magic_tuple(), (hasher(codebytes),
-                                             hasher(cvarbytes),))
-
-    def load_overload(self, *args, **kwargs):
-        t0 = time.time()
-        data = super().load_overload(*args, **kwargs)
-        t1 = time.time()
-        if data is None:
-            logger.info("numba cache miss %s %s" % (self._name, self._py_func))
-        else:
-            logger.info("cache hit for %s, load took %.3fs" % (self._name, (t1 - t0)))
-        return data
-
-
-class MyCPUDispatcher(CPUDispatcher):
-    def enable_caching(self):
-        self._cache = MyFunctionCache(self.py_func)
-
-
-dispatcher_registry['custom_cpu'] = MyCPUDispatcher
-# dispatcher_registry['custom_cpu'] = CPUDispatcher
-
-
-def prime_numba_cache(ds):
-    dtypes = (np.float32, None)
-    for dtype in dtypes:
-        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
-        roi[max(-ds._meta.sync_offset, 0)] = True
-
-        from libertem.udf.sum import SumUDF
-        from libertem.udf.raw import PickUDF
-        from libertem.corrections.corrset import CorrectionSet
-        from libertem.io.dataset.base import Negotiator
-
-        # need to have at least one UDF; here we run for both sum and pick
-        # to reduce the initial latency when switching to pick mode
-        udfs = [SumUDF(), PickUDF()]
-        neg = Negotiator()
-        for udf in udfs:
-            for corr_dtype in (np.float32, None):
-                if corr_dtype is not None:
-                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-                else:
-                    corrections = None
-                found_first_tile = False
-                for p in ds.get_partitions():
-                    if found_first_tile:
-                        break
-                    p.set_corrections(corrections)
-                    tiling_scheme = neg.get_scheme(
-                        udfs=[udf],
-                        partition=p,
-                        read_dtype=dtype,
-                        roi=roi,
-                        corrections=corrections,
-                    )
-                    for t in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
-                        found_first_tile = True
-                        break

@@ -30,11 +30,12 @@ import os
 import struct
 import warnings
 from typing import Tuple
+import sparse
 
 import numpy as np
 from ncempy.io.mrc import mrcReader
-from xml.etree import ElementTree as ET
-import xml.dom.minidom
+import xml.etree.ElementTree as ET
+from scipy.sparse import coo_matrix
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -274,17 +275,110 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-    def _maybe_load_XML(self, path):
-        if not os.path.exists(path):
+
+    def _maybe_load_xml(self): #still need: required size
+        if not os.path.exists(self._path):
             return None
+        tree = ET.parse(self._path+'.Config.Metadata.xml')
+        root = tree.getroot()
+        num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
+        num_of_Rowz = []  # the num of rows in different category
+        num_of_Colz = []  # the number of cols in different category
+        num_of_Pixels = []  # sort the number of pixels in different categories
+        mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
+        for z in root[2]:
+            mop[z] = z.attrib
+        Rowz = []
+        Colz = []
+        Pixels = []  # store the elements in [row, col] format
+        row_counter = 0
+        col_counter = 0
+        pix_counter = 0
+        coo_shape_x = []  # the list that contains information regarding the shape of the sparse.COO array, if u pick e.g. the 0. index element and it has the value of 4096
+        # that means u will also pick the 0. index of the rows, cols and pixels list
+        coo_shape_y = []
+        '''
+        the program can search for the appropriate data based on the position of the sig_shape's value
+        in this matrix, later it will use it's index to get the rows, cols and pixels's values
+         '''
 
-        return
+        for b in mop:
+            coo_shape_x.append(b.attrib['Rows'])
+            coo_shape_y.append(b.attrib['Columns'])
 
+            for c in b:
+
+                tmp_cnt = 0  # to determine if we are dealing with a single pixel
+                tmp_dict = {}
+                tmp_dict.update(c.attrib)  # still unsplitted dictionary
+                tmp_block = []
+                for i in tmp_dict:
+                    # just to convert, but sometimes (in case of pixels) it can be used to iterate throught that dict too meaning we shuold use a counter to determine whether
+                    # the current inspected element is a pixel or just simply a row or col
+                    tmp = ''
+
+                    if (len(tmp_dict) == 2):
+                        tmp = tmp_dict[i]
+                        tmp_block.append(tmp)
+
+                        tmp_cnt += 1
+                        if tmp_cnt == 2:
+                            Pixels.append(tmp_block)
+                            pix_counter += 1
+                            tmp_cnt = 0
+                            break
+                    else:
+                        if (i == 'Rows') or (i == 'Row'):
+                            tmp = tmp_dict[i]
+                            Rowz.append(tmp.split('-'))
+                            row_counter += 1
+
+                        if (i == 'Columns') or (i == 'Column'):
+                            tmp = tmp_dict[i]
+                            Colz.append(tmp.split('-'))
+                            col_counter += 1
+            num_of_Rowz.append(row_counter)
+            num_of_Colz.append(col_counter)
+            num_of_Pixels.append(pix_counter)
+            row_counter = 0
+            col_counter = 0
+            pix_counter = 0
+
+        # splitting the results by category
+        rows_by_category = {}
+        cols_by_category = {}
+        pixels_by_category = {}
+        for x in range(0, num_of_cat):
+            if (x == 0):
+                rows_by_category[x] = Rowz[0:num_of_Rowz[x]]
+                cols_by_category[x] = Colz[0:num_of_Colz[x]]
+                pixels_by_category[x] = Pixels[0:num_of_Pixels[x]]
+            else:
+
+                rows_by_category[x] = Rowz[num_of_Rowz[x - 1]:(num_of_Rowz[x] + num_of_Rowz[x - 1])]
+
+                cols_by_category[x] = Colz[num_of_Colz[x - 1]:(num_of_Colz[x] + num_of_Colz[x - 1])]
+
+                pixels_by_category[x] = Pixels[num_of_Pixels[x - 1]:(num_of_Pixels[x] + num_of_Pixels[x - 1])]
+
+        Defect_ID = 0 #determine wich index should be used for further calculations
+        for index in coo_shape_x:
+            Defect_ID += 1
+            if int(index) == self._sig_shape:
+                break
+        #still need to make a coord array and then convert it to a sparse.COO() one
+        size = int(coo_shape_x[Defect_ID - 1])# the size of array
+        row=np.array([2311,2312]) #extracted from the xml file
+        test_tmp=[range(0,(size),1)]
+        col=np.array(test_tmp)
+        coords=coo_matrix((row,col), shape=(size,size))
+        d=sparse.COO(coords=coords,data=None,Shape=self._sig_shape)
+        return d
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            #excluded_pixels=self._
+            excluded_pixels=self._maybe_load_xml(),
         )
 
     def initialize(self, executor):

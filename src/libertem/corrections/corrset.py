@@ -120,9 +120,6 @@ class CorrectionSet:
         """
         dark_frame = self.get_dark_frame()
         gain_map = self.get_gain_map()
-        f = open("D:/gitMine/LiberTEM/data/DE16_20-04-30_scan_64-64_8fps/debug.txt", "w")
-        f.write("plz work")
-        f.close()
         if not self.have_corrections():
             return
 

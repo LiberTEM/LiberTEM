@@ -21,7 +21,3 @@ repos:
   rev: "3.2"
   hooks:
   - id: pyroma
-- repo: https://github.com/miki725/pre-commit-twine-check
-  rev: '47f7fff370d1a0c83e4291aa323a6380b69d7b75'
-  hooks:
-  - id: twine-check

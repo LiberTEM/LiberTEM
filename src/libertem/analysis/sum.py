@@ -31,15 +31,17 @@ class SumTemplate(GeneratorHelper):
         temp_analysis = [
                 f"{roi}",
                 "sum_udf = SumUDF()",
-                "sum_result = ctx.run_udf(dataset=ds, udf=sum_udf, roi=roi)"
+                "sum_result = ctx.run_udf(dataset=ds, udf=sum_udf, roi=roi, progress=True)"
                 ]
         return '\n'.join(temp_analysis)
 
     def get_plot(self):
         plot = [
             "plt.figure()",
+            "plt.title('Sum analysis result')",
             "plt.imshow(sum_result['intensity'], norm=colors.LogNorm())",
             "plt.colorbar()",
+            "plt.show()"
          ]
         return ['\n'.join(plot)]
 

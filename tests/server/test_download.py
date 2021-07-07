@@ -264,7 +264,7 @@ async def test_download_notebook(
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/download/notebook/".format(
+        download_url = "{}/api/compoundAnalyses/{}/download/ipynb/".format(
             base_url, ca_uuid,
         )
         async with http_client.get(download_url) as resp:

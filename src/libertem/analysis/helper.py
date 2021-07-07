@@ -98,3 +98,9 @@ class GeneratorHelper(TemplateBase):
         analy_ = self.format_template(self.temp_analysis, data)
 
         return analy_
+
+    def get_log(self):
+        '''
+        Log the analysis being executing
+        '''
+        return f"print(\"running {self.short_name} analysis\")"

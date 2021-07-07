@@ -14,10 +14,11 @@ class CodeTemplate(TemplateBase):
     specific code are handled in `libertem.analysis.helper`.
     """
 
-    def __init__(self, connection, dataset, compound_analysis):
+    def __init__(self, connection, dataset, compound_analysis, type="notebook"):
         self.conn = connection['connection']
         self.ds = dataset
         self.compound_analysis = compound_analysis
+        self.type = type
 
         self.analysis_helper = {}
         for analysis in self.compound_analysis:
@@ -53,10 +54,15 @@ class CodeTemplate(TemplateBase):
             if analysis_dep is not None:
                 extra_dep.extend(analysis_dep)
         dep = self.temp_dep + extra_dep
+        if self.type == 'script':
+            dep.append("import logging")
         return self.code_formatter('\n'.join(dep))
 
     def initial_setup(self):
-        return "%matplotlib nbagg"
+        if self.type == 'notebook':
+            return "%matplotlib nbagg"
+        else:
+            return "logging.basicConfig(level=logging.WARNING)"
 
     def connection(self):
         docs = ["# Connection"]
@@ -65,13 +71,13 @@ class CodeTemplate(TemplateBase):
             more_info = f"[For more info]({link})"
             docs.append(f"Connecting to dask cluster, {more_info}")
             data = {'conn_url': self.conn['address']}
-            ctx = self.format_template(self.temp_conn, data)
+            ctx = self.format_template(self.temp_conn_tcp(), data)
             docs = '\n'.join(docs)
             return ctx, docs
         elif self.conn['type'].lower() == "local":
             docs.append("This starts a local cluster that is accessible through ctx.")
-            ctx = "ctx = lt.Context()"
             docs = '\n'.join(docs)
+            ctx = '\n'.join(self.temp_conn_local())
             return ctx, docs
         else:
             raise ValueError("unknown connection type")
@@ -80,12 +86,13 @@ class CodeTemplate(TemplateBase):
         form_analysis = []
 
         for helper in self.analysis_helper.values():
-
-            plot_ = list(map(self.code_formatter, helper.get_plot()))
-            analy_ = self.code_formatter(helper.get_analysis())
-            docs_ = self.code_formatter(helper.get_docs())
-            save_ = self.code_formatter(helper.get_save())
-
-            form_analysis.append((docs_, analy_, plot_, save_))
-
+            form_analysis.append(
+                {
+                    "plots": list(map(self.code_formatter, helper.get_plot())),
+                    "code": self.code_formatter(helper.get_analysis()),
+                    "docs": self.code_formatter(helper.get_docs()),
+                    "save": self.code_formatter(helper.get_save()),
+                    "log": helper.get_log()
+                }
+            )
         return form_analysis

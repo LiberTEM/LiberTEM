@@ -150,17 +150,44 @@ const CopyScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
     );
 }; 
 
+type FormatOptions = Array<{
+    text: string;
+    value: any;
+}>;
 
 const DownloadScripts: React.SFC<DownloadItemsProps> = ({ compoundAnalysis }) => {
+    const formatOptions: FormatOptions = [
+        {
+            value: "ipynb",
+            text: "Jupyter Notebook (.ipynb)",
+        },
+        {
+            value: "py",
+            text: "Python script (.py)",
+        },
+    ];
+
+    const [currentFormat, setFormat] = useState(formatOptions[0]?.value);
+
+    const onFormatChange = (e: React.SyntheticEvent, data: DropdownProps) => {
+        setFormat(data.value);
+    };
+
     const basePath = getApiBasePath();
-    const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/notebook/`;
+    const downloadUrl = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/download/${currentFormat}/`;
 
     return (
-        <ul>
-            <li>
-                <a href={downloadUrl}>notebook corresponding to analysis</a>
-            </li>
-        </ul>
+        <>
+            <Header>
+                Download Scripts, format: <Dropdown inline={true} options={formatOptions} onChange={onFormatChange} value={currentFormat} />
+            </Header>
+            <Header as="h3">Available scripts: </Header>
+            <ul>
+                <li>
+                    <a href={downloadUrl}>Script corresponding to analysis</a>
+                </li>
+            </ul>
+        </>
     );
 };
 
@@ -168,10 +195,6 @@ interface DownloadProps {
     compoundAnalysis: CompoundAnalysisState,
 }
 
-type FormatOptions = Array<{
-    text: string;
-    value: any;
-}>;
 
 const Download: React.SFC<DownloadProps> = ({ compoundAnalysis }) => {
     const formats = useSelector((state: RootReducer) => state.config.resultFileFormats);
@@ -210,10 +233,9 @@ const Download: React.SFC<DownloadProps> = ({ compoundAnalysis }) => {
             ),
         },
         {
-            menuItem: "Download notebook",
+            menuItem: "Download Script",
             render: () => (
                 <Tab.Pane>
-                    <Header as="h3">Available scripts: </Header>
                     <DownloadScripts compoundAnalysis={compoundAnalysis} />
                 </Tab.Pane>
             ),

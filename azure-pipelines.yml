@@ -52,8 +52,9 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
           restoreKeys: |
+            python | "$(Agent.OS)" | "$(python.version)"
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
@@ -92,8 +93,9 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
           restoreKeys: |
+            python | "$(Agent.OS)" | "$(python.version)"
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
@@ -133,20 +135,22 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
+
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'lint | "$(Agent.OS)"'
           restoreKeys: |
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
+
       - bash: sudo apt install -y pandoc
         displayName: install required debian packages
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+        displayName: 'Run tox lint $(TOXENV) $(Agent.OS)'
 
     - job: windows_tests
       pool:
@@ -175,8 +179,9 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
           restoreKeys: |
+            python | "$(Agent.OS)" | "$(python.version)"
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
@@ -184,7 +189,7 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py'
+          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py | $(python.version)'
           path: $(tox_dir)
         displayName: 'cache tox environment'
 
@@ -240,8 +245,9 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
           restoreKeys: |
+            python | "$(Agent.OS)" | "$(python.version)"
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
@@ -249,7 +255,7 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py'
+          key: 'tox | "$(Agent.OS)" | test_requirements.txt | setup.py | $(python.version)'
           path: $(tox_dir)
         displayName: 'cache tox environment'
 
@@ -353,10 +359,10 @@ stages:
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'deploy_docs | "$(Agent.OS)" | setup.py | docs_requirements.txt'
           restoreKeys: |
-            python | "$(Agent.OS)"
-            python
+            deploy_docs | "$(Agent.OS)"
+            deploy_docs
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
 
@@ -391,10 +397,10 @@ stages:
           versionSpec: '3.9'
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+          key: 'deploy | "$(Agent.OS)" | scripts/requirements.txt'
           restoreKeys: |
-            python | "$(Agent.OS)"
-            python
+            deploy | "$(Agent.OS)"
+            deploy
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt

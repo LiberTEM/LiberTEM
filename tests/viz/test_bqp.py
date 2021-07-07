@@ -1,3 +1,4 @@
+import pytest
 from unittest import mock
 
 import IPython
@@ -7,6 +8,7 @@ from libertem.udf.sum import SumUDF
 
 
 def test_bqp_smoke(monkeypatch, lt_ctx, default_raw):
+    pytest.importorskip("bqplot")
     udf = SumUDF()
     monkeypatch.setattr(IPython.display, 'display', mock.MagicMock())
     monkeypatch.setattr(lt_ctx, 'plot_class', BQLive2DPlot)

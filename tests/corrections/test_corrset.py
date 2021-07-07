@@ -76,6 +76,7 @@ def test_patch_pixels(lt_ctx, default_raw, default_raw_data):
     assert np.allclose(res['intensity'], np.sum(default_raw_data, axis=(0, 1)))
 
 
+@pytest.mark.slow
 def test_patch_corr_odd(lt_ctx):
     data = np.ones((13, 17, 19, 23, 29, 31))
     excluded_coords = np.array([

@@ -16,9 +16,16 @@ variables:
 parameters:
   # On windows and mac os x, creating tox environments is costly,
   # so we disable it by default, caching the tox environments for the
-  # next run. They are rebuilt when setup.py or test_requirements.txt change
+  # next run. They are also rebuilt when setup.py or test_requirements.txt change
   - name: recreate_tox
     displayName: Recreate tox environments? (Win/Mac)
+    type: boolean
+    default: false
+
+  # This parameter allows to run slower tests, this is useful for running more
+  # comprehensive tests, for example before doing a release.
+  - name: run_slow
+    displayName: Also run slow tests
     type: boolean
     default: false
 
@@ -66,6 +73,10 @@ stages:
       - bash: tox
         displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
+      - ${{ if eq(parameters.run_slow, true) }}:
+        - bash: tox -- -m slow tests/
+          displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
+
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
 
@@ -87,19 +98,25 @@ stages:
         TOXENV: 'numba_coverage'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python $(python.version)'
+        displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
 
       - task: Cache@2
         inputs:
-          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
+          key: 'python | "$(Agent.OS)" | "3.9" | setup.py | test_requirements.txt'
           restoreKeys: |
-            python | "$(Agent.OS)" | "$(python.version)"
+            python | "$(Agent.OS)" | "3.9"
             python | "$(Agent.OS)"
             python
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
+
+      - task: Cache@2
+        inputs:
+          key: 'tox_numba_coverage | "$(Agent.OS)" | test_requirements.txt | setup.py'
+          path: $(tox_dir)
+        displayName: 'cache tox environment'
 
       - bash: pip install -U tox
         displayName: 'install requirements'
@@ -114,7 +131,7 @@ stages:
         condition: succeededOrFailed()
         inputs:
           testResultsFiles: 'junit.xml'
-          testRunTitle: 'Publish test results for Python $(python.version)'
+          testRunTitle: 'Publish test results for numba coverage on Python 3.9'
 
       - task: PublishCodeCoverageResults@1
         inputs:
@@ -144,6 +161,12 @@ stages:
             python
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
+
+      - task: Cache@2
+        inputs:
+          key: 'tox_lint | "$(Agent.OS)" | docs_requirements.txt | test_requirements.txt | setup.py | "$(TOXENV)"'
+          path: $(tox_dir)
+        displayName: 'cache tox environment'
 
       - bash: sudo apt install -y pandoc
         displayName: install required debian packages
@@ -203,6 +226,10 @@ stages:
       - ${{ if eq(parameters.recreate_tox, false) }}:
         - bash: tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+
+      - ${{ if eq(parameters.run_slow, true) }}:
+        - bash: tox -- -m slow tests/
+          displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -269,6 +296,10 @@ stages:
       - ${{ if eq(parameters.recreate_tox, false) }}:
         - bash: tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+
+      - ${{ if eq(parameters.run_slow, true) }}:
+        - bash: tox -- -m slow tests/
+          displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -387,6 +418,7 @@ stages:
         condition: |
             and(not(eq(variables['Build.Reason'], 'PullRequest')),
                 eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
     - job: make_upload_packages
       pool:
         vmImage: 'ubuntu-latest'

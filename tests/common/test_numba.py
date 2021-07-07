@@ -85,6 +85,7 @@ def test_numba_cache(tmpdir_factory):
     assert len(cache_contents[1].keys()) == 2
 
 
+@pytest.mark.slow
 def test_numba_prime(default_raw):
     prime_numba_cache(default_raw)
 

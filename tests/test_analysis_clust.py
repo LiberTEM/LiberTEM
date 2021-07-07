@@ -8,6 +8,7 @@ from libertem.executor.base import AsyncAdapter
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 async def test_cluster_analysis(inline_executor):
     data = np.zeros([16, 16, 8, 8]).astype(np.float32)
     data[:, 2, 2] = 7

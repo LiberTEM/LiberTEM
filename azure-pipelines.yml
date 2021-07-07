@@ -10,6 +10,17 @@ variables:
     value: $(Pipeline.Workspace)/.pip
   - name: npm_config_cache
     value: $(Pipeline.Workspace)/.npm
+  - name: tox_dir
+    value: $(Build.Repository.LocalPath)/.tox
+
+parameters:
+  # On windows and mac os x, creating tox environments is costly,
+  # so we disable it by default, caching the tox environments for the
+  # next run. They are rebuilt when setup.py or test_requirements.txt change
+  - name: recreate_tox
+    displayName: Recreate tox environments? (Win/Mac)
+    type: boolean
+    default: false
 
 stages:
   - stage: test
@@ -67,7 +78,6 @@ stages:
         inputs:
           codeCoverageTool: Cobertura
           summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
     - job: numba_coverage
       pool:
@@ -108,7 +118,6 @@ stages:
         inputs:
           codeCoverageTool: Cobertura
           summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
     - job: lint
       pool:
@@ -173,11 +182,22 @@ stages:
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt | setup.py'
+        path: $(tox_dir)
+        displayName: 'cache tox environment'
+
       - bash: pip install -U tox
         displayName: 'install requirements'
 
-      - bash: tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -192,7 +212,6 @@ stages:
         inputs:
           codeCoverageTool: Cobertura
           summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
     - job: macos_tests
       pool:
@@ -228,11 +247,22 @@ stages:
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
 
+      - task: Cache@2
+        inputs:
+          key: 'python | "$(Agent.OS)" | test_requirements.txt | setup.py'
+        path: $(tox_dir)
+        displayName: 'cache tox environment'
+
       - bash: pip install -U tox
         displayName: 'install requirements'
 
-      - bash: tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -247,7 +277,6 @@ stages:
         inputs:
           codeCoverageTool: Cobertura
           summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
     - job: node_tests
       pool:

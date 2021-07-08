@@ -276,7 +276,7 @@ class SEQDataSet(DataSet):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
 
-    def _maybe_load_xml(self): #still need: required size
+    def _maybe_load_xml(self):
         if not os.path.exists(self._path):
             return None
         tree = ET.parse(self._path+'.Config.Metadata.xml')
@@ -364,7 +364,7 @@ class SEQDataSet(DataSet):
         Defect_ID = 0 #determine wich index should be used for further calculations
         for index in coo_shape_x:
             Defect_ID += 1
-            if int(index) == self._sig_shape:
+            if int(index) == int(self._sig_shape[0]):
                 break
 
         size = int(coo_shape_x[Defect_ID - 1])

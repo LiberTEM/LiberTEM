@@ -45,12 +45,10 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 
-
 DWORD = 'L'
 LONG = 'l'
 DOUBLE = 'd'
 USHORT = 'H'
-
 
 HEADER_FIELDS = [
     ('magic', DWORD),
@@ -201,6 +199,7 @@ class SEQDataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
     """
+
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
                  sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
         super().__init__(io_backend=io_backend)
@@ -275,12 +274,12 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
+        self._exluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
-    def _maybe_load_xml(self):
-        print("where will it be displayed?")
+    def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
             return None
-        tree = ET.parse(self._path+'.Metadata.xml')
+        tree = ET.parse(path)
         root = tree.getroot()
         num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
         num_of_Rowz = []  # the num of rows in different category
@@ -362,7 +361,7 @@ class SEQDataSet(DataSet):
 
                 pixels_by_category[x] = Pixels[num_of_Pixels[x - 1]:(num_of_Pixels[x] + num_of_Pixels[x - 1])]
 
-        Defect_ID = 0 #determine wich index should be used for further calculations
+        Defect_ID = 0  # determine wich index should be used for further calculations
         for index in coo_shape_x:
             Defect_ID += 1
             if int(index) == int(self._sig_shape[0]):
@@ -424,7 +423,7 @@ class SEQDataSet(DataSet):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=self._maybe_load_xml(),
+            excluded_pixels=self._exluded_pixels
         )
 
     def initialize(self, executor):
@@ -433,16 +432,16 @@ class SEQDataSet(DataSet):
     def get_diagnostics(self):
         header = self._header
         return [
-            {"name": k, "value": str(v)}
-            for k, v in header.items()
-        ] + [
-            {"name": "Footer size",
-             "value": str(self._footer_size)},
-            {"name": "Dark frame included",
-             "value": str(self._dark is not None)},
-            {"name": "Gain map included",
-             "value": str(self._gain is not None)},
-        ]
+                   {"name": k, "value": str(v)}
+                   for k, v in header.items()
+               ] + [
+                   {"name": "Footer size",
+                    "value": str(self._footer_size)},
+                   {"name": "Dark frame included",
+                    "value": str(self._dark is not None)},
+                   {"name": "Gain map included",
+                    "value": str(self._gain is not None)},
+               ]
 
     @property
     def meta(self):
@@ -487,7 +486,7 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["seq",["xml"]])
+        return set(["seq", ["xml"]])
 
     @property
     def dtype(self):
@@ -530,7 +529,7 @@ class SEQDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        res = max(self._cores, self._filesize // (512*1024*1024))
+        res = max(self._cores, self._filesize // (512 * 1024 * 1024))
         return res
 
     def get_partitions(self):

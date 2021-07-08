@@ -486,7 +486,7 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["seq", ["xml"]])
+        return set(["seq", "xml"])
 
     @property
     def dtype(self):

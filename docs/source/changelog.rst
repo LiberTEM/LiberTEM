@@ -20,6 +20,19 @@ Changelog
   changelog/*/*
 
 .. _latest:
+
+.. _`v0-7-1`:
+
+0.7.1 / 2021-07-08
+##################
+
+This is a bugfix release that fixes compatability with the upcoming numba 0.54
+release.
+
+Our custom numba caching makes some assumptions about numba internals, which
+have changed in numba 0.54. This fixes compatibility with numba 0.54, and also
+makes sure we fail gracefully for future changes (:issue:`1060`).
+
 .. _`v0-7-0`:
 
 0.7.0 / 2021-06-10

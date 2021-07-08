@@ -364,7 +364,7 @@ class SEQDataSet(DataSet):
         Defect_ID = 0 #determine wich index should be used for further calculations
         for index in coo_shape_x:
             Defect_ID += 1
-            if int(index) == int(self._sig_shape[0]):
+            if int(index) == int(self._sig_shape[0]*2):
                 break
 
         size = int(coo_shape_x[Defect_ID - 1])

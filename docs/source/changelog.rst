@@ -26,12 +26,15 @@ Changelog
 0.7.1 / 2021-07-08
 ##################
 
-This is a bugfix release that fixes compatability with the upcoming numba 0.54
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5083032.svg
+   :target: https://doi.org/10.5281/zenodo.5083032
+
+This is a bugfix release that ensures compatability with the upcoming numba 0.54
 release.
 
 Our custom numba caching makes some assumptions about numba internals, which
 have changed in numba 0.54. This fixes compatibility with numba 0.54, and also
-makes sure we fail gracefully for future changes (:issue:`1060`).
+makes sure we fail gracefully for future changes (:issue:`1060`, :pr:`1061`).
 
 .. _`v0-7-0`:
 

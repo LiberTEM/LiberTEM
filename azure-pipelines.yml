@@ -147,8 +147,8 @@ stages:
         inputs:
           key: 'lint | "$(Agent.OS)"'
           restoreKeys: |
-            python | "$(Agent.OS)"
-            python
+            lint | "$(Agent.OS)"
+            lint
           path: $(PIP_CACHE_DIR)
         displayName: 'cache pip packages'
 

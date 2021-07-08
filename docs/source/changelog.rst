@@ -29,7 +29,7 @@ Changelog
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5083032.svg
    :target: https://doi.org/10.5281/zenodo.5083032
 
-This is a bugfix release that ensures compatability with the upcoming numba 0.54
+This is a bugfix release that ensures compatibility with the upcoming numba 0.54
 release.
 
 Our custom numba caching makes some assumptions about numba internals, which

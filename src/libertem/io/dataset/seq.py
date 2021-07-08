@@ -366,14 +366,59 @@ class SEQDataSet(DataSet):
             Defect_ID += 1
             if int(index) == self._sig_shape:
                 break
-        #still need to make a coord array and then convert it to a sparse.COO() one
-        size = int(coo_shape_x[Defect_ID - 1])# the size of array
-        row=np.array([2311,2312]) #extracted from the xml file
-        test_tmp=[range(0,(size),1)]
-        col=np.array(test_tmp)
-        coords=coo_matrix((row,col), shape=(size,size))
-        d=sparse.COO(coords=coords,data=None,Shape=self._sig_shape)
-        return d
+
+        size = int(coo_shape_x[Defect_ID - 1])
+        col_indices = range(0, size)  # for the row param
+        row_indices = range(0, size)  # for the col param
+        same_pixel = [int(0)] * size
+        coords = sparse.COO([same_pixel, col_indices], shape=(size, size), data=0)
+
+        for i1 in rows_by_category:
+            if (len(rows_by_category[i1]) != 0):
+                if i1 == Defect_ID - 1:
+
+                    for i2 in rows_by_category[i1]:
+                        if (len(i2) == 2):  # if its a list of rows in a [from,to] form
+                            row_indices_curent = range(int(i2[0]), ((int(i2[1]) + 1)))
+
+                            for row in row_indices_curent:
+                                coords += sparse.COO([[int(row)] * size, col_indices], shape=(size, size), data=1)
+                                print(coords)
+
+                        if (len(i2) == 1):  # if its just a single row
+
+                            tmp = [int(i2[0])] * size
+                            coords += sparse.COO([tmp, col_indices], shape=(size, size), data=1)
+
+                    break
+
+        for i1 in cols_by_category:
+            if (len(cols_by_category[i1]) != 0):
+
+                if i1 == Defect_ID - 1:
+                    for i2 in cols_by_category[i1]:
+                        if (len(i2) == 2):  # if its a list of cols in a [from,to] form
+                            col_indices_current = range(int(i2[0]), ((int(i2[1]) + 1)))
+
+                            for col in col_indices_current:
+                                coords += sparse.COO([[row_indices, [int(col)] * size]], shape=(size, size), data=1)
+
+                        if (len(i2) == 1):  # if its just a single col
+
+                            tmp = [int(i2[0])] * size
+                            coords += sparse.COO([row_indices, tmp], shape=(size, size), data=1)
+                    break
+
+        for i1 in cols_by_category:
+            if (len(pixels_by_category[i1]) != 0):
+
+                if i1 == Defect_ID - 1:
+                    for i2 in pixels_by_category[i1]:
+                        coords += sparse.COO([[int(i2[0])], [int(i2[1])]], shape=(size, size), data=1)
+
+                    break
+        return coords
+
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,

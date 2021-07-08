@@ -279,7 +279,7 @@ class SEQDataSet(DataSet):
     def _maybe_load_xml(self):
         if not os.path.exists(self._path):
             return None
-        tree = ET.parse(self._path+'.Config.Metadata.xml')
+        tree = ET.parse(self._path+'.Config.Metadata')
         root = tree.getroot()
         num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
         num_of_Rowz = []  # the num of rows in different category
@@ -364,7 +364,7 @@ class SEQDataSet(DataSet):
         Defect_ID = 0 #determine wich index should be used for further calculations
         for index in coo_shape_x:
             Defect_ID += 1
-            if int(index) == int(self._sig_shape[0]*2):
+            if int(index) == int(self._sig_shape[0]):
                 break
 
         size = int(coo_shape_x[Defect_ID - 1])

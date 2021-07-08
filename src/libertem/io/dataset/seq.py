@@ -420,11 +420,13 @@ class SEQDataSet(DataSet):
         return coords
 
     def get_correction_data(self):
-        i=range(769,781)
-        j=range(0,1024)
-        coco=sparse.COO([0][0],data=1, shape=(1024,1024))
+        i = range(769, 781)
+        j = range(0, 1024)
+        coco = sparse.COO([[0] * 1024, j], data=1, shape=(1024, 1024))
         for a in i:
-            coco+=sparse.COO([[i],[j]],data=1, shape=self._sig_shape)
+            print(len(j))
+            print(len([a] * 1024), "here")
+            coco += sparse.COO([[int(a)] * 1024, j], data=1, shape=(1024, 1024))
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,

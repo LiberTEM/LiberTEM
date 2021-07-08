@@ -426,7 +426,7 @@ class SEQDataSet(DataSet):
         for a in i:
             print(len(j))
             print(len([a] * 1024), "here")
-            coco += sparse.COO([[int(a)] * 1024, j], data=1, shape=(1024, 1024))
+            coco += sparse.COO([[int(a)] * 1024, j], data=[], shape=(1024, 1024))
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
@@ -493,7 +493,7 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["seq", "xml"])
+        return set(["seq"])
 
     @property
     def dtype(self):

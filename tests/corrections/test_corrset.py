@@ -76,15 +76,14 @@ def test_patch_pixels(lt_ctx, default_raw, default_raw_data):
     assert np.allclose(res['intensity'], np.sum(default_raw_data, axis=(0, 1)))
 
 
-@pytest.mark.slow
-def test_patch_corr_odd(lt_ctx):
+def test_patch_corr_odd(lt_ctx_fast):
     data = np.ones((13, 17, 19, 23, 29, 31))
     excluded_coords = np.array([
             (2, 5), (2, 5), (2, 5)
     ]).astype(np.int64)
     excluded_pixels = sparse.COO(coords=excluded_coords, shape=(23, 29, 31), data=True)
 
-    ds = lt_ctx.load("memory", data=data, sig_dims=3)
+    ds = lt_ctx_fast.load("memory", data=data, sig_dims=3)
 
     udf = SumUDF()
 
@@ -93,7 +92,7 @@ def test_patch_corr_odd(lt_ctx):
         gain=np.ones((23, 29, 31)),
         dark=np.ones((23, 29, 31))
     )
-    res = lt_ctx.run_udf(
+    res = lt_ctx_fast.run_udf(
         dataset=ds,
         udf=udf,
         corrections=corr

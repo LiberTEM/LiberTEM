@@ -277,9 +277,10 @@ class SEQDataSet(DataSet):
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
 
     def _maybe_load_xml(self):
+        print("where will it be displayed?")
         if not os.path.exists(self._path):
             return None
-        tree = ET.parse(self._path+'.Config.Metadata')
+        tree = ET.parse(self._path+'.Config.Metadata.xml')
         root = tree.getroot()
         num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
         num_of_Rowz = []  # the num of rows in different category
@@ -486,7 +487,7 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["seq"])
+        return set(["seq",["xml"]])
 
     @property
     def dtype(self):

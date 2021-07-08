@@ -280,7 +280,7 @@ class SEQDataSet(DataSet):
         print("where will it be displayed?")
         if not os.path.exists(self._path):
             return None
-        tree = ET.parse(self._path+'.Config.Metadata.xml')
+        tree = ET.parse(self._path+'.Metadata.xml')
         root = tree.getroot()
         num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
         num_of_Rowz = []  # the num of rows in different category

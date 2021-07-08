@@ -74,7 +74,7 @@ stages:
         displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - ${{ if eq(parameters.run_slow, true) }}:
-        - bash: tox -- -m slow tests/
+        - bash: tox -- -m slow --cov-append tests/
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
@@ -218,7 +218,7 @@ stages:
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - ${{ if eq(parameters.run_slow, true) }}:
-        - bash: tox -- -m slow tests/
+        - bash: tox -- -m slow --cov-append tests/
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
@@ -283,7 +283,7 @@ stages:
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - ${{ if eq(parameters.run_slow, true) }}:
-        - bash: tox -- -m slow tests/
+        - bash: tox -- -m slow --cov-append tests/
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml

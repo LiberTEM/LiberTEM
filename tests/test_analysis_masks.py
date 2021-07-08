@@ -5,7 +5,6 @@ import sparse
 
 from utils import _naive_mask_apply, _mk_random
 
-import libertem.api as api
 from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common import Shape, Slice
@@ -558,18 +557,17 @@ def test_multi_mask_force_dtype(lt_ctx):
 
 
 @pytest.mark.functional
-def test_avoid_calculating_masks_on_client(hdf5_ds_1):
+def test_avoid_calculating_masks_on_client(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
     # We have to start a local cluster so that the masks are
     # computed in a different process
-    with api.Context() as ctx:
-        analysis = ctx.create_mask_analysis(
-            dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
-        )
-        udf = analysis.get_udf()
-        ctx.run_udf(dataset=hdf5_ds_1, udf=udf)
+    analysis = local_cluster_ctx.create_mask_analysis(
+        dataset=hdf5_ds_1, factories=[lambda: mask], mask_count=1, mask_dtype=np.float32
+    )
+    udf = analysis.get_udf()
+    local_cluster_ctx.run_udf(dataset=hdf5_ds_1, udf=udf)
 
-        assert udf.masks._computed_masks is None
+    assert udf.masks._computed_masks is None
 
 
 @pytest.mark.functional

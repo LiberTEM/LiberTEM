@@ -55,7 +55,7 @@ def test_stddev(lt_ctx, use_roi):
     assert np.allclose(std, res['std'])  # check standard deviation
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, cache=True)
 def _stability_workhorse(data):
     # This function imitates the calculation flow of a single pixel for a very big dataset.
     # The partition and tile structure is given by the shape of data

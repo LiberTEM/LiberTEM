@@ -101,7 +101,7 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
     return buffer
 
 
-@numba.njit
+@numba.njit(cache=True)
 def environments(excluded_pixels, sigshape):
     '''
     Calculate a hypercube surface around a pixel, excluding frame boundaries
@@ -150,7 +150,7 @@ class RepairValueError(ValueError):
     pass
 
 
-@numba.njit
+@numba.njit(cache=True)
 def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
     '''
     Flatten excluded pixels and repair environments and filter for collisions

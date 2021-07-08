@@ -7,6 +7,9 @@ from libertem.corrections import detector
 from libertem.masks import is_sparse
 
 
+REPEATS = 1
+
+
 def _check_result(data, corrected, atol=1e-8, rtol=1e-5):
     m1 = np.unravel_index(np.argmax(np.abs(data - corrected)), data.shape)
     relative_error = np.zeros_like(data, dtype=np.result_type(data, np.float32))
@@ -36,7 +39,7 @@ def _check_result(data, corrected, atol=1e-8, rtol=1e-5):
 
 @pytest.mark.with_numba
 def test_detector_correction():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([1, 2, 3])
@@ -93,7 +96,7 @@ def test_detector_correction():
 
 @pytest.mark.with_numba
 def test_detector_uint8():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([1, 2, 3])
@@ -156,7 +159,7 @@ def test_detector_uint8():
 
 @pytest.mark.with_numba
 def test_detector_patch():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -194,9 +197,8 @@ def test_detector_patch():
         )
 
 
-@pytest.mark.slow
 def test_detector_patch_large():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([2, 3])
         num_sig_dims = 2
@@ -228,9 +230,8 @@ def test_detector_patch_large():
         )
 
 
-@pytest.mark.slow
 def test_detector_patch_too_large():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([2, 3])
         num_sig_dims = 2
@@ -264,7 +265,7 @@ def test_detector_patch_too_large():
 
 @pytest.mark.with_numba
 def test_detector_patch_overlapping():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -308,7 +309,7 @@ def test_detector_patch_overlapping():
 
 @pytest.mark.with_numba
 def test_mask_correction():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -356,7 +357,7 @@ def test_mask_correction():
 
 @pytest.mark.with_numba
 def test_mask_correction_sparse():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -406,7 +407,7 @@ def test_mask_correction_sparse():
 
 @pytest.mark.with_numba
 def test_mask_patch():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -453,7 +454,7 @@ def test_mask_patch():
 
 @pytest.mark.with_numba
 def test_mask_patch_sparse():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([2, 3])
@@ -504,7 +505,7 @@ def test_mask_patch_sparse():
 
 @pytest.mark.with_numba
 def test_mask_patch_overlapping():
-    for i in range(10):
+    for i in range(REPEATS):
         print(f"Loop number {i}")
         num_nav_dims = np.random.choice([1, 2, 3])
         num_sig_dims = np.random.choice([2, 3])

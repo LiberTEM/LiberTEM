@@ -26,7 +26,7 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster
                     'ri': 0,
                     'ro': 2,
                     'n_bins': 2,
-                    'max_order': 23,
+                    'max_order': 7,
                     }
     }]
 
@@ -51,7 +51,7 @@ def test_radial_fourier_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster
                                         ri=0,
                                         ro=2,
                                         n_bins=2,
-                                        max_order=23
+                                        max_order=7
                                 )
     expected = lt_ctx.run(analysis)
 

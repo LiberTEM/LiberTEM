@@ -25,7 +25,7 @@ async def test_cluster_analysis(inline_executor):
     executor = AsyncAdapter(wrapped=inline_executor)
 
     analysis = ClusterAnalysis(dataset=dataset, parameters={
-        'n_peaks': 42,
+        'n_peaks': 23,
         'n_clust': 7,
         'cy': 3,
         'cx': 3,

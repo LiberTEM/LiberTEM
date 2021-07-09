@@ -224,6 +224,7 @@ class SEQDataSet(DataSet):
         self._filesize = None
         self._dark = None
         self._gain = None
+        self._excluded_pixels=None
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -274,7 +275,7 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._exluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
+        self._excluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
     def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
@@ -421,16 +422,14 @@ class SEQDataSet(DataSet):
 
     def get_correction_data(self):
         i = range(769, 781)
-        j = range(0, 1024)
-        coco = sparse.COO([[0] * 1024, j], data=1, shape=(1024, 1024))
+        j = range(0, self._sig_shape[0])
+        coco = sparse.COO([[0] * self._sig_shape[0], j], data=[], shape=self._sig_shape)
         for a in i:
-            print(len(j))
-            print(len([a] * 1024), "here")
-            coco += sparse.COO([[int(a)] * 1024, j], data=[], shape=(1024, 1024))
+            coco += sparse.COO([[int(a)] * self._sig_shape[0], j], data=[], shape=self._sig_shape)
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=coco
+            excluded_pixels=self._excluded_pixels
         )
 
     def initialize(self, executor):

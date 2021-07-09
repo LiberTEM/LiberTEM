@@ -35,8 +35,6 @@ import sparse
 import numpy as np
 from ncempy.io.mrc import mrcReader
 import xml.etree.ElementTree as ET
-from scipy.sparse import coo_matrix
-import libertem.api
 
 from libertem.corrections import CorrectionSet
 
@@ -430,12 +428,7 @@ class SEQDataSet(DataSet):
         dummy_coo = sparse.COO([[0] * self._sig_shape[0], j], data=1, shape=self._sig_shape)
         for a in i:
             dummy_coo += sparse.COO([[int(a)] * self._sig_shape[0], j], data=1, shape=self._sig_shape)
-        ctx = libertem.api.Context()
-        ctx.run_udf(corrections=CorrectionSet(
-            dark=self._dark,
-            gain=self._gain,
-            excluded_pixels=dummy_coo
-        ))
+
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,

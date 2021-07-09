@@ -423,7 +423,7 @@ class SEQDataSet(DataSet):
         return coords
 
     def get_correction_data(self):
-        excl = np.zeros(self._sig_shape, dtype=bool)
+        excl = np.zeros(self._sig_shape)
         for i in range(0, self._sig_shape[0]):
             excl[i][i] = 1
             excl[769][i] = 1

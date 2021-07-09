@@ -423,6 +423,22 @@ class SEQDataSet(DataSet):
         return coords
 
     def get_correction_data(self):
+        excl = np.zeros(self._sig_shape, dtype=bool)
+        for i in range(0, self._sig_shape[0]):
+            excl[i][i] = 1
+            excl[769][i] = 1
+            excl[770][i] = 1
+            excl[771][i] = 1
+            excl[772][i] = 1
+            excl[773][i] = 1
+            excl[774][i] = 1
+            excl[775][i] = 1
+            excl[776][i] = 1
+            excl[777][i] = 1
+            excl[778][i] = 1
+            excl[779][i] = 1
+            excl[780][i] = 1
+        asd = sparse.COO(excl)
         i = range(769, 781)
         j = range(0, self._sig_shape[0])
         dummy_coo = sparse.COO([[0] * self._sig_shape[0], j], data=1, shape=self._sig_shape)
@@ -432,7 +448,7 @@ class SEQDataSet(DataSet):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=dummy_coo
+            excluded_pixels=asd
         )
 
     def initialize(self, executor):

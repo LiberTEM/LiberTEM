@@ -423,13 +423,13 @@ class SEQDataSet(DataSet):
     def get_correction_data(self):
         i = range(769, 781)
         j = range(0, self._sig_shape[0])
-        coco = sparse.COO([[0] * self._sig_shape[0], j], data=[], shape=self._sig_shape)
+        coco = sparse.COO([[0] * self._sig_shape[0], j], data=1, shape=self._sig_shape)
         for a in i:
-            coco += sparse.COO([[int(a)] * self._sig_shape[0], j], data=[], shape=self._sig_shape)
+            coco += sparse.COO([[int(a)] * self._sig_shape[0], j], data=1, shape=self._sig_shape)
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=self._excluded_pixels
+            excluded_pixels=coco
         )
 
     def initialize(self, executor):

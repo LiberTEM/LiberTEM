@@ -277,7 +277,7 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
+      #  self._excluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
     def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
@@ -448,7 +448,7 @@ class SEQDataSet(DataSet):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=None
+            excluded_pixels=excl
         )
 
     def initialize(self, executor):

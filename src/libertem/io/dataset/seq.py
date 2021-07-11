@@ -448,7 +448,7 @@ class SEQDataSet(DataSet):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=excl
+            excluded_pixels=asd
         )
 
     def initialize(self, executor):

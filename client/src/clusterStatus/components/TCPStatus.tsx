@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
-import uuid from "uuid/v4";
+import { v4 as uuid } from 'uuid';
 import { HostDetails } from "../../messages";
 import { getClusterDetail } from "../api";
 import * as errorActions from "../../errors/actions";

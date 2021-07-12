@@ -216,6 +216,8 @@ module.exports = {
         "quote-props": "off",
         "quotes": "off",
         "radix": "error",
+        // disabled because of `jsx: react-jsx` in tsconfig
+        "react/react-in-jsx-scope": "off",
         "react/jsx-boolean-value": "error",
         "react/jsx-curly-spacing": "off",
         "react/jsx-equals-spacing": "off",

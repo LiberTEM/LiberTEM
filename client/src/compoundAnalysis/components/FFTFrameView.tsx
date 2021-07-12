@@ -80,7 +80,7 @@ const useFFTFrameView = ({
         frameMode !== AnalysisTypes.PICK_FRAME ? null : <>Pick: x={pickCoords.cx}, y={pickCoords.cy} &emsp;</>
     )
 
-    const nullHandles: HandleRenderFunction = (onDragStart, onDrop) => null
+    const nullHandles: HandleRenderFunction = () => null
 
     return {
         frameViewTitle,

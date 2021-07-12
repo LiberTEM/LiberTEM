@@ -49,7 +49,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
             compoundAnalysis.details,
         );
 
-        const sidecarTask = (yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis, { doAutoStart: true })) as Task;
+        const sidecarTask = (yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis /* , { doAutoStart: true } */)) as Task;
 
         yield put(compoundAnalysisActions.Actions.created(compoundAnalysis, true));
         yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
@@ -63,7 +63,7 @@ export function* createCompoundAnalysisSaga(action: ReturnType<typeof compoundAn
 export function* createFromServerState(action: ReturnType<typeof channelActions.Actions.initialState>) {
     for (const msgPart of action.payload.compoundAnalyses) {
         const compoundAnalysis = (yield select(selectCompoundAnalysis, msgPart.compoundAnalysis)) as CompoundAnalysisState;
-        const sidecarTask = (yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis, { doAutoStart: false })) as Task;
+        const sidecarTask = (yield fork(analysisSidecar, compoundAnalysis.compoundAnalysis /* , { doAutoStart: false } */)) as Task;
         yield fork(cleanupOnRemove, compoundAnalysis, sidecarTask);
     }
 }
@@ -129,7 +129,7 @@ export function* createOrUpdate(
     }
 }
 
-export function* analysisSidecar(compoundAnalysisId: string, options: { doAutoStart: boolean }) {
+export function* analysisSidecar(compoundAnalysisId: string /* , options: { doAutoStart: boolean } */) {
     // channel for incoming actions:
     // all actions that arrive while we block in `call` will be buffered here.
     // because the buffer is sliding of size 2, we only keep the latest two actions!

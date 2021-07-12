@@ -7,7 +7,7 @@ export const assertNotReached = (message: string): never => {
     throw new Error(message);
 }
 
-export const defaultDebounce = <T extends (...args: any[]) => any>(fn: T, delay = 50): T => (
+export const defaultDebounce = <T extends (...args: any[]) => any>(fn: T, delay = 50) => (
     _.debounce(fn, delay, { maxWait: delay })
 );
 

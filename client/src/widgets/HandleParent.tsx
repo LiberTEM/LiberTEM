@@ -26,13 +26,13 @@ export class HandleParent extends React.Component<HandleParentProps> {
         }
     }
 
-    public handleMouseLeave = (e: React.MouseEvent<SVGElement>): void => {
+    public handleMouseLeave = (): void => {
         if (this.currentHandle) {
             this.currentHandle.externalLeave();
         }
     }
 
-    public handleMouseUp = (e: React.MouseEvent<SVGElement>): void => {
+    public handleMouseUp = (): void => {
         if (this.currentHandle) {
             this.currentHandle.externalMouseUp();
         }

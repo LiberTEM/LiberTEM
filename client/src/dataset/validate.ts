@@ -9,7 +9,7 @@ export const convertErrors = (errors: ErrorObject[]): FormikErrors<FormikValues>
         // flatten field names, convert from array to object
         // FIXME: doesn't support multiple errors per field yet (formik limitation?)
         const expr = /^\.([^[]+)(\[[^]+\])?$/
-        const fieldName = err.dataPath.replace(expr, (match, plainName) => plainName as string);
+        const fieldName = err.instancePath.replace(expr, (match, plainName) => plainName as string);
         res[fieldName] = err.message;
     });
     return res;

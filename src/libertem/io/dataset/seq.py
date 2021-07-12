@@ -269,7 +269,7 @@ class SEQDataSet(DataSet):
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
 
     def get_correction_data(self):
-        exclu=np.zeros(int(self._sig_shape[0]))
+        exclu=np.zeros((self._sig_shape[0],self._sig_shape[1]))
         exclu[140][773]=1
         return CorrectionSet(
             dark=self._dark,

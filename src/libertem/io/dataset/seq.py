@@ -283,7 +283,7 @@ class SEQDataSet(DataSet):
     def get_correction_data(self):
         excl = np.zeros(self._sig_shape)
 
-        excl[10][10] = 1
+        excl[10][10] = 1.0
         asd = sparse.COO(excl)
         return CorrectionSet(
             dark=self._dark,

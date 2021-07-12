@@ -30,14 +30,9 @@ import os
 import struct
 import warnings
 from typing import Tuple
-import sparse
 
 import numpy as np
 from ncempy.io.mrc import mrcReader
-import xml.etree.ElementTree as ET
-
-from libertem.corrections import CorrectionSet
-
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -47,10 +42,12 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 
+
 DWORD = 'L'
 LONG = 'l'
 DOUBLE = 'd'
 USHORT = 'H'
+
 
 HEADER_FIELDS = [
     ('magic', DWORD),
@@ -178,30 +175,23 @@ class SEQFileSet(FileSet):
 class SEQDataSet(DataSet):
     """
     Read data from Norpix SEQ files.
-
     Examples
     --------
-
     >>> ds = ctx.load("seq", path="/path/to/file.seq", nav_shape=(1024, 1024))  # doctest: +SKIP
-
     Parameters
     ----------
     path
         Path to the .seq file
-
     nav_shape: tuple of int
         A n-tuple that specifies the size of the navigation region ((y, x), but
         can also be of length 1 for example for a line scan, or length 3 for
         a data cube, for example)
-
     sig_shape: tuple of int, optional
         Signal/detector size (height, width)
-
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
     """
-
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
                  sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
         super().__init__(io_backend=io_backend)
@@ -226,7 +216,6 @@ class SEQDataSet(DataSet):
         self._filesize = None
         self._dark = None
         self._gain = None
-        self._excluded_pixels=None
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -277,18 +266,11 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-      #  self._excluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
-
 
     def get_correction_data(self):
-        excl = np.zeros(self._sig_shape)
-
-        excl[10][10] = 1.0
-        asd = sparse.COO(excl)
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=asd
         )
 
     def initialize(self, executor):
@@ -297,16 +279,16 @@ class SEQDataSet(DataSet):
     def get_diagnostics(self):
         header = self._header
         return [
-                   {"name": k, "value": str(v)}
-                   for k, v in header.items()
-               ] + [
-                   {"name": "Footer size",
-                    "value": str(self._footer_size)},
-                   {"name": "Dark frame included",
-                    "value": str(self._dark is not None)},
-                   {"name": "Gain map included",
-                    "value": str(self._gain is not None)},
-               ]
+            {"name": k, "value": str(v)}
+            for k, v in header.items()
+        ] + [
+            {"name": "Footer size",
+             "value": str(self._footer_size)},
+            {"name": "Dark frame included",
+             "value": str(self._dark is not None)},
+            {"name": "Gain map included",
+             "value": str(self._gain is not None)},
+        ]
 
     @property
     def meta(self):
@@ -394,7 +376,7 @@ class SEQDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        res = max(self._cores, self._filesize // (512 * 1024 * 1024))
+        res = max(self._cores, self._filesize // (512*1024*1024))
         return res
 
     def get_partitions(self):

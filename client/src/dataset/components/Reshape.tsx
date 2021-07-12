@@ -26,7 +26,7 @@ const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, image
         setOffset(syncOffset.toString());
       }, [syncOffset]);
 
-    const {framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd} = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
+    const { framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd } = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
     
     const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -37,10 +37,10 @@ const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, image
     return (
         <div style={{paddingBottom: 5}}>
             <Form.Field>
-                <label htmlFor="id_nav_shape_0">Nav Shape:</label>
+                <label htmlFor="id_nav_shape_0">Navigation shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="nav_shape" /></div>
                 <TupleInput value={reshapedNavShape} minLen={2} maxLen={2} fieldName="nav_shape" setFieldValue={setFieldValue} />
-                <label htmlFor="id_sig_shape_0">Sig Shape:</label>
+                <label htmlFor="id_sig_shape_0">Signal shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="sig_shape" /></div>
                 <TupleInput value={reshapedSigShape} minLen={2} maxLen={2} fieldName="sig_shape" setFieldValue={setFieldValue} />
             </Form.Field>

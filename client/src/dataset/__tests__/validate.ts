@@ -7,7 +7,7 @@ describe('convertErrors', () => {
         const inputErrors: ErrorObject[] = [
             {
                 "keyword": "minimum",
-                "dataPath": ".nav_shape[1]",
+                "instancePath": ".nav_shape[1]",
                 "schemaPath": "#/properties/nav_shape/items/minimum",
                 "params": { "comparison": ">=", "limit": 1, "exclusive": false },
                 "message": "should be >= 1"
@@ -21,7 +21,7 @@ describe('convertErrors', () => {
         const inputErrors: ErrorObject[] = [
             {
                 "keyword": "minimum",
-                "dataPath": ".nav_shape",
+                "instancePath": ".nav_shape",
                 "schemaPath": "#/properties/nav_shape/items/minimum",
                 "params": { "comparison": ">=", "limit": 1, "exclusive": false },
                 "message": "should be >= 1"

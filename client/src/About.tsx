@@ -1,4 +1,3 @@
-import * as React from "react";
 import { connect } from "react-redux";
 import { Header, List } from "semantic-ui-react";
 import { RootReducer } from "./store";

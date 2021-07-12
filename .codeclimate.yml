@@ -10,9 +10,10 @@ checks:
     config:
       threshold: 8
 plugins:
-  tslint:
+  eslint:
     enabled: true
-    config: client/tslint.json
+    config:
+      config: client/.eslintrc.js
   sonar-python:
     enabled: true
     config:

@@ -270,7 +270,11 @@ class SEQDataSet(DataSet):
 
     def get_correction_data(self):
         exclu=np.zeros((self._sig_shape[0],self._sig_shape[1]))
-        exclu[140][773]=1
+        for i in range (0,self._sig_shape[0]):
+            exclu[i][773] = 1
+            exclu[i][772] = 1
+            exclu[i][771] = 1
+
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,

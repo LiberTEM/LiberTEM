@@ -32,6 +32,7 @@ import warnings
 from typing import Tuple
 
 import numpy as np
+import sparse
 from ncempy.io.mrc import mrcReader
 
 from libertem.common import Shape
@@ -268,9 +269,12 @@ class SEQDataSet(DataSet):
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
 
     def get_correction_data(self):
+        exclu=np.eye(int(self._sig_shape[0]), dtype=bool)
+        exclu[140][773]=1
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
+            excluded_pixels=sparse.COO(exclu),
         )
 
     def initialize(self, executor):

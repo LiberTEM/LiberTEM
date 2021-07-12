@@ -1,5 +1,5 @@
 import { Dispatch } from "redux";
-import uuid from "uuid/v4";
+import { v4 as uuid } from 'uuid';
 import { AllActions } from "../actions";
 import * as errorActions from "./actions"
 

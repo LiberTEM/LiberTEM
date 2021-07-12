@@ -1,5 +1,5 @@
 import { call, put, select, takeEvery } from 'redux-saga/effects';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import * as browserActions from '../browser/actions';
 import { joinPaths } from '../config/helpers';
 import { ConfigState } from '../config/reducers';

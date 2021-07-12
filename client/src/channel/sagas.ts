@@ -1,6 +1,6 @@
 import { END, eventChannel, EventChannel } from "redux-saga";
 import { call, delay, fork, put, take } from "redux-saga/effects";
-import uuid from "uuid/v4";
+import { v4 as uuid } from 'uuid';
 import * as datasetActions from "../dataset/actions";
 import { getApiWSURL } from "../helpers/apiHelpers";
 import * as channelActions from "./actions";

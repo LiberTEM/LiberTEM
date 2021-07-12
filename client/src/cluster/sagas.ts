@@ -1,5 +1,5 @@
 import { all, call, put, take, takeEvery } from "redux-saga/effects";
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import * as channelActions from '../channel/actions';
 import { ConnectResponse } from "../messages";
 import * as clusterActions from './actions';

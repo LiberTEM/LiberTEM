@@ -1,6 +1,6 @@
 import { buffers, TakeableChannel, Task } from 'redux-saga';
 import { actionChannel, call, cancel, fork, put, select, take, takeEvery } from 'redux-saga/effects';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import * as analysisActions from '../analysis/actions';
 import { AnalysisState } from '../analysis/types';
 import * as channelActions from '../channel/actions';

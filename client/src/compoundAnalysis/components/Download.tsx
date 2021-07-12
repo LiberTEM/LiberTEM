@@ -213,7 +213,7 @@ const Download: React.FC<DownloadProps> = ({ compoundAnalysis }) => {
         text: formats[identifier].description,
     }));
 
-    const [currentFormat, setFormat] = useState(formatOptions[0].value);
+    const [currentFormat, setFormat] = useState(formatOptions[0]?.value);
 
     // we may be called before the config is completely loaded, so we
     // need to set the format after the list of formats is available

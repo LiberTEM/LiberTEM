@@ -12,6 +12,7 @@ repos:
     exclude: ^src/libertem/web/client/
   - id: check-yaml
   - id: check-added-large-files
+    exclude: ^src/libertem/web/client/static
 - repo: https://github.com/pycqa/flake8
   rev: 3.9.2
   hooks:

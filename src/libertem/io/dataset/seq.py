@@ -383,10 +383,7 @@ class SEQDataSet(DataSet):
         else:
             return None
         size = int(coo_shape_x[Defect_ID - 1])
-        col_indices = range(0, size)  # for the row param
-        row_indices = range(0, size)  # for the col param
-        same_pixel = [int(0)] * size
-        coords = sparse.COO([same_pixel, col_indices], shape=(size, size), data=0)
+        coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
 
         for i1 in rows_by_category:
             if (len(rows_by_category[i1]) != 0):
@@ -394,17 +391,14 @@ class SEQDataSet(DataSet):
 
                     for i2 in rows_by_category[i1]:
                         if (len(i2) == 2):  # if its a list of rows in a [from,to] form
-                            row_indices_curent = range(int(i2[0]), ((int(i2[1]) + 1)))
-
-                            for row in row_indices_curent:
-                                print("test1")
-                                coords += sparse.COO([[int(row)] * size, col_indices], shape=(size, size), data=1)
+                            start_in = int(i2[0])
+                            end_in = (int(i2[1]) + 1)
+                            coords[start_in:end_in] = 1
 
                         if (len(i2) == 1):  # if its just a single row
 
-                            tmp = [int(i2[0])] * size
-                            coords += sparse.COO([tmp, col_indices], shape=(size, size), data=1)
-
+                            tmp = [int(i2[0])]
+                            coords[tmp] = 1
                     break
 
         for i1 in cols_by_category:
@@ -412,16 +406,17 @@ class SEQDataSet(DataSet):
 
                 if i1 == Defect_ID - 1:
                     for i2 in cols_by_category[i1]:
-                        if (len(i2) == 2):  # if its a list of cols in a [from,to] form
-                            col_indices_current = range(int(i2[0]), ((int(i2[1]) + 1)))
 
-                            for col in col_indices_current:
-                                coords += sparse.COO([[row_indices, [int(col)] * size]], shape=(size, size), data=1)
+                        if (len(i2) == 2):  # if its a list of cols in a [from,to] form
+                            start_in = int(i2[0])
+                            end_in = (int(i2[1]) + 1)
+
+                            coords[:, start_in:end_in] = 1
 
                         if (len(i2) == 1):  # if its just a single col
 
-                            tmp = [int(i2[0])] * size
-                            coords += sparse.COO([row_indices, tmp], shape=(size, size), data=1)
+                            tmp = [int(i2[0])]
+                            coords[:, tmp] = 1
                     break
 
         for i1 in cols_by_category:
@@ -429,10 +424,10 @@ class SEQDataSet(DataSet):
 
                 if i1 == Defect_ID - 1:
                     for i2 in pixels_by_category[i1]:
-                        coords += sparse.COO([[int(i2[0])], [int(i2[1])]], shape=(size, size), data=1)
+                        coords[int(i2[0]), int(i2[1])] = 1
 
                     break
-        return coords
+        return sparse.COO(coords)
 
 
     def get_correction_data(self):

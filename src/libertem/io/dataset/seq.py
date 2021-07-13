@@ -298,8 +298,8 @@ class SEQDataSet(DataSet):
          '''
 
         for b in mop:
-            coo_shape_x.append(b.attrib['Rows'])
-            coo_shape_y.append(b.attrib['Columns'])
+            coo_shape_x.append(int(b.attrib['Rows']))
+            coo_shape_y.append(int(b.attrib['Columns']))
 
             for c in b:
 
@@ -343,25 +343,45 @@ class SEQDataSet(DataSet):
         rows_by_category = {}
         cols_by_category = {}
         pixels_by_category = {}
+        end_id = 0
+        str_ind = 0
+        end_id_col = 0
+        str_id_col = 0
+        end_id_pixel = 0
+        str_id_pixel = 0
         for x in range(0, num_of_cat):
             if (x == 0):
                 rows_by_category[x] = Rowz[0:num_of_Rowz[x]]
                 cols_by_category[x] = Colz[0:num_of_Colz[x]]
                 pixels_by_category[x] = Pixels[0:num_of_Pixels[x]]
+
+                end_id = num_of_Rowz[x]
+                str_ind = num_of_Rowz[x]
+                end_id_col = num_of_Colz[x]
+                str_id_col = num_of_Colz[x]
+                end_id_pixel = num_of_Pixels[x]
+                str_id_pixel = num_of_Pixels[x]
             else:
+                end_id += num_of_Rowz[x]
+                end_id_col += num_of_Colz[x]
+                end_id_pixel += num_of_Pixels[x]
 
-                rows_by_category[x] = Rowz[num_of_Rowz[x - 1]:(num_of_Rowz[x] + num_of_Rowz[x - 1])]
+                rows_by_category[x] = Rowz[str_ind:end_id]
+                cols_by_category[x] = Colz[str_id_col:end_id_col]
+                pixels_by_category[x] = Pixels[str_id_pixel:end_id_pixel]
 
-                cols_by_category[x] = Colz[num_of_Colz[x - 1]:(num_of_Colz[x] + num_of_Colz[x - 1])]
-
-                pixels_by_category[x] = Pixels[num_of_Pixels[x - 1]:(num_of_Pixels[x] + num_of_Pixels[x - 1])]
+                str_ind += num_of_Rowz[x]
+                str_id_col += num_of_Colz[x]
+                str_id_pixel += num_of_Pixels[x]
 
         Defect_ID = 0  # determine wich index should be used for further calculations
-        for index in coo_shape_x:
-            Defect_ID += 1
-            if int(index) == int(self._sig_shape[0]):
-                break
-
+        if (self._sig_shape[0] in coo_shape_x):
+            for index in coo_shape_x:
+                Defect_ID += 1
+                if int(index) == int(self._sig_shape[0]):
+                    break
+        else:
+            return None
         size = int(coo_shape_x[Defect_ID - 1])
         col_indices = range(0, size)  # for the row param
         row_indices = range(0, size)  # for the col param
@@ -377,8 +397,8 @@ class SEQDataSet(DataSet):
                             row_indices_curent = range(int(i2[0]), ((int(i2[1]) + 1)))
 
                             for row in row_indices_curent:
+                                print("test1")
                                 coords += sparse.COO([[int(row)] * size, col_indices], shape=(size, size), data=1)
-                                print(coords)
 
                         if (len(i2) == 1):  # if its just a single row
 

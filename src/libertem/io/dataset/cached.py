@@ -344,7 +344,7 @@ class Cache:
         """
         # the structure here is: {base_path}/{dataset_cache_key}/parts/*
         orphans = []
-        for path in glob.glob(os.path.join(base_path, "*", "parts", "*")):
+        for path in glob.glob(os.path.join(glob.escape(base_path), "*", "parts", "*")):
             size = os.stat(path).st_size
             res = self._stats.maybe_orphan(OrphanItem(path=path, size=size))
             if res is not None:

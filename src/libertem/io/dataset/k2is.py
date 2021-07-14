@@ -235,14 +235,21 @@ def _pattern(path):
     path, ext = os.path.splitext(path)
     ext = ext.lower()
     if ext == ".gtg":
-        pattern = "%s*.bin" % path
+        pattern = "%s*.bin" % glob.escape(path)
     elif ext == ".bin":
         pattern = "%s*.bin" % (
-            re.sub(r'[0-9]+$', '', path)
+            glob.escape(re.sub(r'[0-9]+$', '', path))
         )
     else:
         raise DataSetException("unknown extension: %s" % ext)
     return pattern
+
+
+def get_filenames(path, disable_glob=False):
+    if disable_glob:
+        return [path]
+    else:
+        return glob.glob(_pattern(path))
 
 
 def _get_gtg_path(full_path):
@@ -851,8 +858,7 @@ class K2ISDataSet(DataSet):
         in a directory.
         """
         try:
-            pattern = _pattern(path)
-            files = executor.run_function(glob.glob, pattern)
+            files = executor.run_function(get_filenames, path)
             if len(files) != NUM_SECTORS:
                 return False
         except DataSetException:
@@ -931,12 +937,11 @@ class K2ISDataSet(DataSet):
         ]
 
     def _get_files(self):
-        pattern = _pattern(self._path)
-        files = glob.glob(pattern)
+        files = get_filenames(self._path)
         if len(files) != NUM_SECTORS:
             raise DataSetException("expected %d files at %s, found %d" % (
                 NUM_SECTORS,
-                pattern,
+                _pattern(self._path),
                 len(files)
             ))
         return list(sorted(files))

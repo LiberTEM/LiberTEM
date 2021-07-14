@@ -1,7 +1,7 @@
 import re
 import io
 import os
-from glob import glob
+from glob import glob, escape
 import typing
 import logging
 import warnings
@@ -91,20 +91,25 @@ def nav_shape_from_hdr(hdr):
     return nav_shape
 
 
-def get_filenames(path, disable_glob=False):
-    if disable_glob:
-        return [path]
+def _pattern(path):
     path, ext = os.path.splitext(path)
     ext = ext.lower()
     if ext == '.mib':
         pattern = "%s*.mib" % (
-            re.sub(r'[0-9]+$', '', path)
+            re.sub(r'[0-9]+$', '', escape(path))
         )
     elif ext == '.hdr':
-        pattern = "%s*.mib" % path
+        pattern = "%s*.mib" % escape(path)
     else:
         raise DataSetException("unknown extension")
-    return glob(pattern)
+    return pattern
+
+
+def get_filenames(path, disable_glob=False):
+    if disable_glob:
+        return [path]
+    else:
+        return glob(_pattern(path))
 
 
 def get_image_count_and_sig_shape(path):

@@ -1,0 +1,555 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Distributed caching layer &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Corrections" href="corrections.html" />
+    <link rel="prev" title="Cluster data set" href="cluster-ds.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cluster-ds.html">Cluster data set</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Distributed caching layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Python API reference</a> &raquo;</li>
+        
+      <li>Distributed caching layer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/caching.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="distributed-caching-layer">
+<h1>Distributed caching layer<a class="headerlink" href="#distributed-caching-layer" title="Permalink to this headline">¶</a></h1>
+<p><code class="code docutils literal notranslate"><span class="pre">CachedDataSet</span></code> can be used to temporarily store your data on a
+local fast storage device (i.e. SSD), if your source data is stored on a slower
+device (i.e. NFS or a slower spinning disk).</p>
+<span class="target" id="module-libertem.io.dataset.cached"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.Cache">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">Cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStrategy" title="libertem.io.dataset.cached.CacheStrategy"><span class="pre">libertem.io.dataset.cached.CacheStrategy</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.Cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cache object, to be used on a worker node. The interface used by <cite>Partition</cite>s
+to manage the cache. May directly remove files, directories, etc.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.Cache.collect_orphans">
+<span class="sig-name descname"><span class="pre">collect_orphans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#Cache.collect_orphans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.Cache.collect_orphans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the filesystem structure and record all partitions
+that are missing in the db as orphans, to be deleted on demand.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.Cache.evict">
+<span class="sig-name descname"><span class="pre">evict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#Cache.evict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.Cache.evict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make place for <cite>size</cite> bytes which will be used
+by the dataset identified by the <cite>cache_key</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.Cache.record_hit">
+<span class="sig-name descname"><span class="pre">record_hit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_item</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheItem" title="libertem.io.dataset.cached.CacheItem"><span class="pre">libertem.io.dataset.cached.CacheItem</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#Cache.record_hit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.Cache.record_hit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.Cache.record_miss">
+<span class="sig-name descname"><span class="pre">record_miss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_item</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheItem" title="libertem.io.dataset.cached.CacheItem"><span class="pre">libertem.io.dataset.cached.CacheItem</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#Cache.record_miss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.Cache.record_miss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheItem">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">CacheItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>A CacheItem describes a single unit of data that is cached, in this case
+a partition of the CachedDataSet.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheItem.from_row">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheItem.from_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheItem.from_row" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">CacheStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.get_orphans">
+<span class="sig-name descname"><span class="pre">get_orphans</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.get_orphans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.get_orphans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.get_stats_for_dataset">
+<span class="sig-name descname"><span class="pre">get_stats_for_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.get_stats_for_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.get_stats_for_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return dataset cache stats as dict mapping partition ids to dicts of their
+properties (keys: size, last_access, hits)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.get_used_capacity">
+<span class="sig-name descname"><span class="pre">get_used_capacity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.get_used_capacity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.get_used_capacity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.initialize_schema">
+<span class="sig-name descname"><span class="pre">initialize_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.initialize_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.initialize_schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.maybe_orphan">
+<span class="sig-name descname"><span class="pre">maybe_orphan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orphan</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.OrphanItem" title="libertem.io.dataset.cached.OrphanItem"><span class="pre">libertem.io.dataset.cached.OrphanItem</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.maybe_orphan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.maybe_orphan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an entry for a file we don’t have any statistics about, after checking
+the stats table for the given path.
+Getting a conflict here means concurrently running maybe_orphan processes,
+so we can safely ignore it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom sqlite query, returns a sqlite3 Cursor object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.record_eviction">
+<span class="sig-name descname"><span class="pre">record_eviction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_item</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.io.dataset.cached.CacheItem" title="libertem.io.dataset.cached.CacheItem"><span class="pre">libertem.io.dataset.cached.CacheItem</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#libertem.io.dataset.cached.OrphanItem" title="libertem.io.dataset.cached.OrphanItem"><span class="pre">libertem.io.dataset.cached.OrphanItem</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.record_eviction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.record_eviction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.record_hit">
+<span class="sig-name descname"><span class="pre">record_hit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_item</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheItem" title="libertem.io.dataset.cached.CacheItem"><span class="pre">libertem.io.dataset.cached.CacheItem</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.record_hit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.record_hit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.record_miss">
+<span class="sig-name descname"><span class="pre">record_miss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_item</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheItem" title="libertem.io.dataset.cached.CacheItem"><span class="pre">libertem.io.dataset.cached.CacheItem</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.record_miss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.record_miss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStats.remove_orphan">
+<span class="sig-name descname"><span class="pre">remove_orphan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStats.remove_orphan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStats.remove_orphan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStrategy">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">CacheStrategy</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStrategy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CacheStrategy.get_victim_list">
+<span class="sig-name descname"><span class="pre">get_victim_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CacheStrategy.get_victim_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CacheStrategy.get_victim_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of <cite>CacheItem`s that should be deleted to make a new item
+with size in bytes `size</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">CachedDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cached DataSet.</p>
+<p>Assumes the source DataSet is significantly slower than the cache location
+(otherwise, it may result in memory pressure, as we don’t use direct I/O
+to write to the cache.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_ds</strong> (<a class="reference internal" href="dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><em>DataSet</em></a>) – DataSet on slower file system</p></li>
+<li><p><strong>cache_path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Where should the cache be written to? Should be a directory on a fast
+local device (i.e. NVMe SSD if possible, local hard drive if it is faster than network)
+A subdirectory will be created for each dataset.</p></li>
+<li><p><strong>strategy</strong> (<a class="reference internal" href="#libertem.io.dataset.cached.CacheStrategy" title="libertem.io.dataset.cached.CacheStrategy"><em>CacheStrategy</em></a>) – A class implementing a cache eviction strategy, for example LRUCacheStrategy</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.check_valid">
+<span class="sig-name descname"><span class="pre">check_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet.check_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.check_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>check validity of the DataSet. this will be executed (after initialize) on a worker node.
+should raise DataSetException in case of errors, return True otherwise.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.dtype">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>the destination data type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.evict">
+<span class="sig-name descname"><span class="pre">evict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet.evict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.evict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.get_msg_converter">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">get_msg_converter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet.get_msg_converter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.get_msg_converter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.get_partitions">
+<span class="sig-name descname"><span class="pre">get_partitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet.get_partitions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.get_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generator over all Partitions in this DataSet. Should only
+be called on the master node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedDataSet.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform possibly expensive initialization, like pre-loading metadata.</p>
+<p>This is run on the master node, but can execute parts on workers, for example
+if they need to access the data stored on worker nodes, using the passed executor
+instance.</p>
+<p>If you need the executor around for later operations, for example when creating
+the partitioning, save a reference here!</p>
+<p>Should return the possibly modified <cite>DataSet</cite> instance (if a method running
+on a worker is changing <cite>self</cite>, these changes won’t automatically be transferred back
+to the master node)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedDataSet.shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#libertem.io.dataset.cached.CachedDataSet.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shape of the DataSet, as it makes sense for the application domain
+(for example, 4D for pixelated STEM)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedPartition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">CachedPartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedPartition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedPartition.evict">
+<span class="sig-name descname"><span class="pre">evict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedPartition.evict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedPartition.evict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedPartition.get_locations">
+<span class="sig-name descname"><span class="pre">get_locations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedPartition.get_locations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedPartition.get_locations" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns locations where this partition is cached</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.CachedPartition.get_tiles">
+<span class="sig-name descname"><span class="pre">get_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#CachedPartition.get_tiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.CachedPartition.get_tiles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.LRUCacheStrategy">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">LRUCacheStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capacity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#LRUCacheStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.LRUCacheStrategy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.LRUCacheStrategy.get_available">
+<span class="sig-name descname"><span class="pre">get_available</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#LRUCacheStrategy.get_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.LRUCacheStrategy.get_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>available cache capacity in bytes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.LRUCacheStrategy.get_used">
+<span class="sig-name descname"><span class="pre">get_used</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#LRUCacheStrategy.get_used"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.LRUCacheStrategy.get_used" title="Permalink to this definition">¶</a></dt>
+<dd><p>used cache capacity in bytes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.LRUCacheStrategy.get_victim_list">
+<span class="sig-name descname"><span class="pre">get_victim_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#LRUCacheStrategy.get_victim_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.LRUCacheStrategy.get_victim_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of <cite>CacheItem`s that should be deleted to make
+place for `partition</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.LRUCacheStrategy.sufficient_space_for">
+<span class="sig-name descname"><span class="pre">sufficient_space_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.cached.CacheStats" title="libertem.io.dataset.cached.CacheStats"><span class="pre">libertem.io.dataset.cached.CacheStats</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#LRUCacheStrategy.sufficient_space_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.LRUCacheStrategy.sufficient_space_for" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.OrphanItem">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">OrphanItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#OrphanItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.OrphanItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>An orphan, a file in the cache structure, which we don’t know much about
+(only path and size)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.OrphanItem.from_row">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#OrphanItem.from_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.OrphanItem.from_row" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.cached.VerboseRow">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.cached.</span></span><span class="sig-name descname"><span class="pre">VerboseRow</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/cached.html#VerboseRow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.cached.VerboseRow" title="Permalink to this definition">¶</a></dt>
+<dd><p>sqlite3.Row with a __repr__</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="corrections.html" class="btn btn-neutral float-right" title="Corrections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cluster-ds.html" class="btn btn-neutral float-left" title="Cluster data set" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

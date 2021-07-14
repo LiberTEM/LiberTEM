@@ -1,0 +1,1149 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Synchronous and asynchronous UDF execution &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "document", "processHtmlClass": "math|output_area"}}</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User-defined functions: advanced topics" href="advanced.html" />
+    <link rel="prev" title="Live plotting for LiberTEM UDFs" href="liveplotting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#example-notebook">Example notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../udf.html#more-about-udfs">More about UDFs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic.html">Implementing a UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#running-udfs">Running UDFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#live-plotting">Live Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#partial-results">Partial results</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="basic.html#asynchronous-execution">Asynchronous execution</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Synchronous and asynchronous UDF execution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#tiled-processing">Tiled processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#task-data">Task data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#meta-information">Meta information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="profiling.html">Profiling UDFs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../udf.html">User-defined functions (UDFs)</a> &raquo;</li>
+        
+          <li><a href="basic.html">Implementing a UDF</a> &raquo;</li>
+        
+      <li>Synchronous and asynchronous UDF execution</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/udf/async.nblink.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Synchronous-and-asynchronous-UDF-execution">
+<h1>Synchronous and asynchronous UDF execution<a class="headerlink" href="#Synchronous-and-asynchronous-UDF-execution" title="Permalink to this headline">¶</a></h1>
+<p>This notebook demonstrates the following features that were introduced in release 0.7.0:</p>
+<ul class="simple">
+<li><p>Execute several UDFs in one pass</p></li>
+<li><p>Obtain intermediate results from each merge step by executing UDFs as an iterator</p></li>
+<li><p>Execute UDFs asynchronously</p></li>
+</ul>
+<p>Please see example live-plotting.ipynb for the related live plotting feature!</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">libertem.api</span> <span class="k">as</span> <span class="nn">lt</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sum</span> <span class="kn">import</span> <span class="n">SumUDF</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sumsigudf</span> <span class="kn">import</span> <span class="n">SumSigUDF</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">data_base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTDATA_BASE_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/alex/Data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_base_path</span><span class="p">,</span> <span class="s2">&quot;20200518 165148/default.hdr&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">udfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">SumUDF</span><span class="p">(),</span> <span class="n">SumSigUDF</span><span class="p">()]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Synchronous-execution,-only-result">
+<h2>Synchronous execution, only result<a class="headerlink" href="#Synchronous-execution,-only-result" title="Permalink to this headline">¶</a></h2>
+<p>Note that both UDFs are executed in a single pass!</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The result is a tuple with one entry per UDF:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+<p>The previous API when passing a single UDF is not changed, i.e. it doesn’t return a tuple but a single UDF result</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;}
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Asynchronous-execution,-only-result">
+<h2>Asynchronous execution, only result<a class="headerlink" href="#Asynchronous-execution,-only-result" title="Permalink to this headline">¶</a></h2>
+<p>By setting <code class="docutils literal notranslate"><span class="pre">sync=False</span></code>, the result is awaitable:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">async_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDFs are running in the background&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">async_res</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDFs are running in the background
+Finished
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+<p>Just like in the synchronous case, running a single UDF returns the UDF result directly, not a tuple:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">async_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDF is running in the background&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">async_res</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDF is running in the background
+Finished
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;}
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Synchronous-execution-as-an-iterator">
+<h2>Synchronous execution as an iterator<a class="headerlink" href="#Synchronous-execution-as-an-iterator" title="Permalink to this headline">¶</a></h2>
+<p>This returns <code class="docutils literal notranslate"><span class="pre">UDFResults</span></code> objects with attributes <code class="docutils literal notranslate"><span class="pre">buffers</span></code> and <code class="docutils literal notranslate"><span class="pre">damage</span></code>. <code class="docutils literal notranslate"><span class="pre">buffers</span></code> is a tuple with the results per UDF, and <code class="docutils literal notranslate"><span class="pre">damage</span></code> is a <code class="docutils literal notranslate"><span class="pre">BufferWrapper</span></code> with <code class="docutils literal notranslate"><span class="pre">kind='nav'</span></code> and <code class="docutils literal notranslate"><span class="pre">dtype=bool</span></code> that indicates which parts of the navigation space have been merged already.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># (output is ignored in nbval run because the number of nav positions can be different)</span>
+<span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;nav positions processed&quot;</span><span class="p">)</span>
+    <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">buffers</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+630 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+1260 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+1890 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+2520 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+3150 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+3780 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+4410 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+5040 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+5670 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+6300 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+6930 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+7560 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+7564 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+8194 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+8824 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+9454 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+10084 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+10714 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+11344 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+11974 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+12604 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+13234 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+13864 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+14494 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+15124 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+15754 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+16384 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Asynchronous-execution-as-an-iterator">
+<h2>Asynchronous execution as an iterator<a class="headerlink" href="#Asynchronous-execution-as-an-iterator" title="Permalink to this headline">¶</a></h2>
+<p>This allows several iterators to proceed asynchronously in parallel. This approach is used in the backend for the web GUI of LiberTEM to run several analyses concurrently. It could also be useful to implement live feedback to instrument control from UDF results if the control solution works asynchronously.</p>
+<p>Note that the UDFs are copied here so that different instances are executed in parallel. Executing the same UDF instances concurrently can lead to undefined behavior.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># (output is ignored in nbval run because the number of nav positions can be different)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">udfs</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;nav positions processed&quot;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">buffers</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">doit</span><span class="p">(</span><span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">udfs</span><span class="p">))</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">doit</span><span class="p">(</span><span class="s2">&quot;two&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">udfs</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDFs are running in the background&quot;</span><span class="p">)</span>
+<span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDFs are running in the background
+two 630 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 630 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 1260 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 1260 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 1890 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 1890 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 2520 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 2520 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 3150 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 3150 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 3780 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 3780 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 4410 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 4410 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 5040 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 5670 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 5040 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 5670 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 6300 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 6300 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 6930 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 6930 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 7560 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 8190 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 8820 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 9450 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 7560 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 10080 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 8190 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 10710 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 8820 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 11340 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 9450 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 10080 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 11970 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 12600 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 10710 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 13230 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 11340 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 11970 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 12600 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 13860 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 14490 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 13230 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 15120 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 13860 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 15750 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 14490 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 15754 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 14494 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 16384 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 15124 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 15754 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 16384 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;libertem.udf.base.UDFResults at 0x7fda300af820&gt;,
+ &lt;libertem.udf.base.UDFResults at 0x7fdab0058be0&gt;]
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="advanced.html" class="btn btn-neutral float-right" title="User-defined functions: advanced topics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="liveplotting.html" class="btn btn-neutral float-left" title="Live plotting for LiberTEM UDFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

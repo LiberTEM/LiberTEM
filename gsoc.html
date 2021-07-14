@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>GSoC 2020 ideas &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Authorship policy" href="authorship.html" />
+    <link rel="prev" title="How does I/O work in LiberTEM?" href="dev/how-io-works.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GSoC 2020 ideas</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-libertem">Why LiberTEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#about-us">About us</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-reach-us">How to reach us</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-to-work-on">What to work on</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-your-gsoc-application">Writing your GSoC application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#project-ideas">Project ideas</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>GSoC 2020 ideas</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/gsoc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="gsoc-2020-ideas">
+<h1>GSoC 2020 ideas<a class="headerlink" href="#gsoc-2020-ideas" title="Permalink to this headline">¶</a></h1>
+<p>LiberTEM is participating in the <a class="reference external" href="https://summerofcode.withgoogle.com/">Google Summer of Code</a> as a sub-organization of the <a class="reference external" href="https://python-gsoc.org/">Python
+Software Foundation</a>. As a student, you can get paid
+by Google for three months, have fun working on an interesting open source
+software project, gain real-world development experience, and do something that
+looks nice on your CV!</p>
+<ul class="simple">
+<li><p>Check out our description and project ideas below</p></li>
+<li><p>Contact us if you’d like to work on LiberTEM</p></li>
+<li><p>Prepare a <a class="reference external" href="https://python-gsoc.org/index.html#apply">proposal</a> together with us</p></li>
+<li><p>You submit your application at the Google Summer of Code homepage to the Python
+Software Foundation organization, naming LiberTEM as the sub-organization.</p></li>
+</ul>
+<div class="section" id="why-libertem">
+<h2>Why LiberTEM<a class="headerlink" href="#why-libertem" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href=".">LiberTEM</a> is an open source platform for high-throughput distributed
+processing of pixelated scanning transmission electron microscopy (STEM) data.
+It is created to deal with the terabytes of data that modern high-speed
+high-resolution detectors for electron microscopy can produce. Our
+<a class="reference internal" href="architecture.html"><span class="doc">Architecture</span></a> page describes in more detail how exactly it works.</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="_images/Principle.png"><img alt="In pixelated STEM, a full diffraction image is recorded for each scan position." src="_images/Principle.png" style="width: 280.0px; height: 290.5px;" /></a>
+<p class="caption"><span class="caption-text"><em>In pixelated STEM, a sample is scanned with a focused electron beam, and a
+full image of the transmitted beam is recorded for each scan position. The
+result is a four-dimensional data hypercube. This application can generate
+tremendous amounts of data from high-resolution scans with a high-speed
+high-resolution detector.</em></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>The project started in the beginning of 2018 and is currently attracting more
+and more users because it is orders of magnitude faster and more scalable than
+established solutions.</p>
+<p>Working on LiberTEM will give you experience in developing distributed systems
+for high-performance data processing with Python. You can learn how to profile
+an application and optimize performance in a targeted way. See
+<a class="reference internal" href="performance.html#performance"><span class="std std-ref">Performance</span></a> for benchmarking results. LiberTEM has its roots in electron
+microscopy, but can be adopted for other tasks that involve high-throughput
+data-parallel processing of very large binary data sets.</p>
+<div class="figure align-default" id="id2">
+<img alt="Envisioned future architecture of LiberTEM" src="_images/Future.png" />
+<p class="caption"><span class="caption-text"><em>LiberTEM currently implements distributed offline data processing as shown
+on the right of this figure, and is designed to be extended to
+high-throughput distributed live data processing as illustrated on the
+left.</em></span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>If you work on our GUI, you’ll learn how a responsive web application for big
+data analytics can be built with a front-end based on TypeScript, React and
+Redux, and an asynchronous Python back-end based on Tornado and
+dask.distributed.</p>
+<p>Working on the application side will give you experience in Python-based big
+data analytics of large-scale binary data sets with a focus on imaging, physics
+and materials science with industry-leading throughput and efficiency.</p>
+</div>
+<div class="section" id="about-us">
+<h2>About us<a class="headerlink" href="#about-us" title="Permalink to this headline">¶</a></h2>
+<p>Alex is an experienced software engineer, systems administrator, Python
+programmer, web developer, and expert on profiling and performance optimization.
+He focuses on the implementation side of LiberTEM.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/sk1p">https://github.com/sk1p</a></p></li>
+</ul>
+<p>Dieter has an interdisciplinary background in materials science, computer
+science, product development, product management and business administration. He
+is taking care of the application and business side of LiberTEM.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/uellue">https://github.com/uellue</a></p></li>
+<li><p><a class="reference external" href="https://www.facebook.com/uellue">https://www.facebook.com/uellue</a></p></li>
+<li><p><a class="reference external" href="https://www.linkedin.com/in/uellue/">https://www.linkedin.com/in/uellue/</a></p></li>
+</ul>
+<p>We’d be happy to share our experience with you!</p>
+</div>
+<div class="section" id="how-to-reach-us">
+<h2>How to reach us<a class="headerlink" href="#how-to-reach-us" title="Permalink to this headline">¶</a></h2>
+<p>The easiest path is our Gitter channel: <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">https://gitter.im/LiberTEM/Lobby</a></p>
+<p>E-Mail: <a class="reference external" href="mailto:d&#46;weber&#37;&#52;&#48;fz-juelich&#46;de">Dieter Weber</a> <a class="reference external" href="mailto:a&#46;clausen&#37;&#52;&#48;fz-juelich&#46;de">Alexander Clausen</a></p>
+<p>Just drop a message! We are based in Germany (UTC+1 / UTC+2) and are generally
+active during normal working hours.</p>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>If you have questions, please ask freely: Supporting users and contributors has
+a high priority for us and your questions help us improve our documentation.</p>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>Please see our <a class="reference internal" href="install.html#installation"><span class="std std-ref">Installation</span></a> instructions for details! Forking our
+repository, cloning the fork and <a class="reference internal" href="dev/setup.html#installing-from-a-git-clone"><span class="std std-ref">Installing from a git clone</span></a> are the
+recommended setup if you will be contributing significant amounts of code. Our
+<a class="reference internal" href="contributing.html#contributing"><span class="std std-ref">Contributing</span></a> page has some information that can
+help you get started with development.</p>
+<p>Currently, we are still working on getting suitable sample files online. Please
+contact us to get interesting sample data to work on!</p>
+</div>
+<div class="section" id="what-to-work-on">
+<h3>What to work on<a class="headerlink" href="#what-to-work-on" title="Permalink to this headline">¶</a></h3>
+<p>Our <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues">issue tracker can give you a broad overview</a> of what we have on our plate.
+We’ve marked a number of <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">Good first issues</a>
+that might be relatively easy to solve and can help you get introduced to our
+code base. Further below we list a few specific ideas.</p>
+</div>
+</div>
+<div class="section" id="writing-your-gsoc-application">
+<h2>Writing your GSoC application<a class="headerlink" href="#writing-your-gsoc-application" title="Permalink to this headline">¶</a></h2>
+<p>The PYTHON GSOC website has a good overview for the application process:
+<a class="reference external" href="https://python-gsoc.org/index.html#apply">https://python-gsoc.org/index.html#apply</a> <a class="reference external" href="https://python-gsoc.org/students.html">https://python-gsoc.org/students.html</a>
+with links to additional resources. Please remember to name the sub-organization
+<em>LiberTEM</em> in your proposal!</p>
+<p>To get an inspiration on how to write your application, <a class="reference external" href="https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt">Mailman</a> gives a few general ideas.
+For us it is most important to know why you’d like to contribute to LiberTEM,
+what your experience level is and what you’d like to learn in order to find a
+good match for a project. Generally, we like targeted applications and
+applicants who contact us directly early-on. We are happy to work with you for
+writing up a project idea!</p>
+<p>For Python GSoC it is a general requirement to already contribute a pull request
+to a sub-organization before submitting a project idea. Please contact us if
+you’d like some help with that! <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/tree/master/examples">Improving our examples</a> in code,
+description and presentation would be both relatively easy and quite useful for
+us. You could perform the update with our help, hunt
+down discrepancies and suggest improvements. Please contact us for the
+corresponding data to run the examples!</p>
+<p>Other small and relatively straightforward issues include <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/81">#81</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/267">#267</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/506">#506</a></p>
+</div>
+<div class="section" id="project-ideas">
+<h2>Project ideas<a class="headerlink" href="#project-ideas" title="Permalink to this headline">¶</a></h2>
+<p>These are somewhat larger work items. Some of them can keep you busy for the
+entire time. Please feel free to suggest your own ideas as well! Just working on
+a number of smaller features and getting a good cross-sectional experience of
+LiberTEM can work as well.</p>
+<ol class="arabic">
+<li><dl>
+<dt><strong>Beginner</strong>: Implement rotation in GUI and back-end for center of mass analysis <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/31">#31</a>.</dt><dd><p>Currently, the implementation assumes that the detector edges are parallel
+to the sample X and Y coordinate directions. This is mostly, but not always
+the case. In this project you implement an additional parameter for rotation
+both in the back-end and GUI. That includes a discussion with users of the
+center of mask analysis on how to determine and verify this parameter and
+what the interface should be like.</p>
+<p><em>Skills:</em> Communication, Python, NumPy and TypeScript programming, simple
+web GUI development.</p>
+<p><em>Domain knowledge:</em> simple linear algebra, basic optics.</p>
+<p><em>Primary contact:</em> Dieter (&#64;uellue)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Beginner</strong>: Code snippet for analysis in GUI <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/158">#158</a>.</dt><dd><p>Currently, our GUI only offers limited capabilities. Most notably, color
+scale, scale bars and exporting results are not implemented. In this
+project, you implement functions that generate a code snippet in the GUI
+ready for copy &amp; paste. Pasting this snippet in, for example, a Jupyter
+notebook allows to use the analysis with the same parameters as in the GUI
+in a scripting environment that gives users more flexibility.</p>
+<p><em>Skills:</em> Python</p>
+<p><em>Domain knowledge:</em> Learning some LiberTEM basics</p>
+<p><em>Primary contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate</strong>: Implement an analysis workflow for <a class="reference external" href="https://publikationen.bibliothek.kit.edu/1000056485/5249497">RDF mapping</a>.</dt><dd><p>This can give you experience with the product development, design and
+application side of software engineering, and applied data science. A major
+part of the work is first figuring out <em>what</em> to implement together with our
+users and domain experts, and then <em>how</em> to implement it. You can decide how
+far you take it: A detailed requirements document, a technical
+specification, a prototype, or a full production-grade implementation? All
+of that is useful for us.</p>
+<p><em>Skills:</em> Communication, software development methodology, Python and NumPy programming.</p>
+<p><em>Domain knowledge:</em> Math, statistics, image processing and physics are of advantage.</p>
+<p><em>Primary contact:</em> Dieter (&#64;uellue)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate</strong>: Allow reshaping datasets into a custom shape <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/441">#441</a>.</dt><dd><p>Data in files is not always stored in the native shape, or different
+representations may be possible depending on the application. The dataset
+implementation and GUI should allow specifying a different shape than the
+layout in the dataset.</p>
+<p><em>Skills:</em> Python, NumPy and TypeScript programming.</p>
+<p><em>Domain knowledge:</em> None</p>
+<p><em>Primary contact:</em> Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><p>(<em>Removed since being implemented</em>: Set number of threads and workers dynamically for UDFs <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/546">#546</a>.)</p></li>
+<li><dl>
+<dt><strong>Beginner/Intermediate/Advanced</strong>: Compression survey <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/387">#387</a>.</dt><dd><p>Analyze high-throughput compression techniques, dive into lz4/zstd, blosc
+etc., compare against existing file formats.</p>
+<p><em>Beginner level</em>: Test a number of established compression algorithms on typical
+data sets in terms of compression ratio, compression speed and decompression speed.</p>
+<p><em>Intermediate level</em>: Implement the compression in the LiberTEM caching layer.</p>
+<p><em>Advanced</em>: Explore your own ideas regarding compression.</p>
+<p>With this project you can improve your understanding of compression
+techniques for the easier levels, and low-level optimization and programming
+for the advanced level.</p>
+<p><em>Skills:</em> Programming in Python, profiling. C or Numba programming for advanced level.</p>
+<p><em>Domain knowledge:</em> Good understanding of computer architecture for the advanced level.</p>
+<p><em>Contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate</strong>: Explore automated benchmarks in detail <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/198">#198</a>.</dt><dd><p>This will help us to catch performance regressions. In our experience,
+running a benchmark requires a reproducible, undisturbed environment and
+comparison to good reference data. For that reason we see it as more
+challenging than automated tests for functionality and correctness. You
+could run benchmarks in CI and observe variance, and record and present
+benchmark results over time.</p>
+<p><em>Skills:</em> Programming, profiling, visualization.</p>
+<p><em>Domain knowledge:</em> Continuous integration and automation tools.</p>
+<p><em>Primary contact:</em> Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate</strong>: Editor for masks <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/47">#47</a>.</dt><dd><p>Currently, the masks in the GUI are limited to a few simple shapes, while
+the back-end allows arbitrary masks. You could implement an online mask
+editor to give users more flexibility on designing masks. Part of the task
+would be a requirements analysis with experts for the scientific
+application, and an analysis if any existing code like
+<a class="reference external" href="https://react-designer.github.io/react-designer/">https://react-designer.github.io/react-designer/</a>
+<a class="reference external" href="https://two.js.org/examples/">https://two.js.org/examples/</a> or <a class="reference external" href="http://fabricjs.com/controls-customization">http://fabricjs.com/controls-customization</a>
+can possibly be used. This project would be mostly implemented in
+TypeScript.</p>
+<p><em>Skills:</em> Programming in TypeScript, GUI development, basic computer graphics knowledge.</p>
+<p><em>Domain knowledge:</em> –</p>
+<p><em>Contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate</strong>: Deploy LiberTEM with kubernetes <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/105">#105</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/484">#484</a>.</dt><dd><p>Help us set up a helm chart and documentation to deploy a LiberTEM cluster
+with kubernetes. The subject is fairly new to us and we’d appreciate your
+help, in particular if you already have experience with kubernetes.</p>
+<p><em>Skills:</em> Systems administration and automation.</p>
+<p><em>Domain knowledge:</em> kubernetes</p>
+<p><em>Primary contact:</em> Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate/Advanced</strong>: Proper schemas, validation and automatic form generation for analysis parameters <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/316">#316</a>.</dt><dd><p>This feature will make it easier to implement new types of analysis in the
+GUI. This is a cross-section through Python and TypeScript, though we could
+also split off the more react-y part. Does not require NumPy knowledge, or
+domain knowledge. Python/TypeScript required. General WebDev experience
+could help.</p>
+<p><em>Skills:</em> Systematic thinking and abstraction, Python and TypeScript programming, web development.</p>
+<p><em>Domain knowledge:</em> –</p>
+<p><em>Primary contact:</em> Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Intermediate/Advanced</strong>: Custom math kernel for bit masks <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/26">#26</a>.</dt><dd><p>Currently, binary masks are first converted to floating point and then used
+in a dot product. NumPy uses GEMM from a third-party BLAS implementation for
+this. This could be accelerated significantly with a Numba-based custom GEMM
+implementation that can work on bit masks directly. Furthermore, such a
+custom Numba-based GEMM kernel has potential other uses in LiberTEM:
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/555">#555</a>.</p>
+<p><em>Skills:</em> Python, Numba</p>
+<p><em>Domain knowledge:</em> Optimization, efficient matrix product implementations.</p>
+<p><em>Contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Advanced</strong>: Live visualization of large binary data <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/134">#134</a>.</dt><dd><p>Basically an efficient/zoomable/user-friendly/fully-featured replacement for
+our visualization. Requires a cross-section of different technologies from
+Python/numpy/threading over HTTP/websockets to Canvas/WebGL. Could be spun
+off into its own project if it is successful! This is a larger project that
+can be split into smaller individual parts. If you are interested, we should
+discuss about setting a scope that suits your interests.</p>
+<p><em>Skills:</em> Python and TypeScript programming, web development, asynchronous
+and parallel programming, numerical processing, visualization.</p>
+<p><em>Domain knowledge:</em> Experience with similar projects and frameworks like for
+example <a class="reference external" href="https://gr-framework.org/">GR</a> desirable. Knowledge of <a class="reference external" href="https://en.wikipedia.org/wiki/Geographic_information_system">GIS</a> could
+potentially be useful.</p>
+<p><em>Contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Advanced</strong>: Enable user-defined functions based on WebAssembly <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/199">#199</a>.</dt><dd><p>This would allow users to write user-defined functions in their favorite
+compiled language and is a step towards using LiberTEM independent of
+Python.</p>
+<p><em>Skills:</em> Python and compiled languages.</p>
+<p><em>Domain knowledge:</em> Experience with WebAssembly would be useful.</p>
+<p><em>Contact:</em> Dieter (&#64;uellue), Alex (&#64;sk1p)</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="authorship.html" class="btn btn-neutral float-right" title="Authorship policy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dev/how-io-works.html" class="btn btn-neutral float-left" title="How does I/O work in LiberTEM?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

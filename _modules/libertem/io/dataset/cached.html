@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libertem.io.dataset.cached &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../../../../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libertem.io.dataset.cached</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libertem.io.dataset.cached</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">Partition</span><span class="p">,</span> <span class="n">PartitionStructure</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.cluster</span> <span class="kn">import</span> <span class="n">ClusterDataSet</span>
+
+
+<div class="viewcode-block" id="VerboseRow"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.VerboseRow">[docs]</a><span class="k">class</span> <span class="nc">VerboseRow</span><span class="p">(</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;sqlite3.Row with a __repr__&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;VerboseRow </span><span class="si">%r</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CacheItem"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheItem">[docs]</a><span class="k">class</span> <span class="nc">CacheItem</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A CacheItem describes a single unit of data that is cached, in this case</span>
+<span class="sd">    a partition of the CachedDataSet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>  <span class="c1"># dataset id string, for example the cache key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partition</span> <span class="o">=</span> <span class="n">partition</span>  <span class="c1"># partition index as integer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>  <span class="c1"># partition size in bytes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>  <span class="c1"># full absolute path to the file for the partition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_orphan</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># quack</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># dataset and partition are composite pk</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dataset</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">partition</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;CacheItem: </span><span class="si">%s</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CacheItem.from_row"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheItem.from_row">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_row</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">],</span>
+            <span class="n">partition</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">],</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OrphanItem"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.OrphanItem">[docs]</a><span class="k">class</span> <span class="nc">OrphanItem</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An orphan, a file in the cache structure, which we don&#39;t know much about</span>
+<span class="sd">    (only path and size)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_orphan</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;OrphanItem: </span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="OrphanItem.from_row"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.OrphanItem.from_row">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_row</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CacheStats"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats">[docs]</a><span class="k">class</span> <span class="nc">CacheStats</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_db_path</span> <span class="o">=</span> <span class="n">db_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_db_path</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">VerboseRow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">conn</span>
+
+<div class="viewcode-block" id="CacheStats.close"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CacheStats.initialize_schema"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.initialize_schema">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        CREATE TABLE IF NOT EXISTS stats (</span>
+<span class="s2">            dataset VARCHAR NOT NULL,           -- dataset id, for example the cache key</span>
+<span class="s2">            partition INTEGER NOT NULL,         -- partition index as integer</span>
+<span class="s2">            hits INTEGER NOT NULL,              -- access counter</span>
+<span class="s2">            size INTEGER NOT NULL,              -- in bytes</span>
+<span class="s2">            last_access REAL NOT NULL,          -- float timestamp, like time.time()</span>
+<span class="s2">            path VARCHAR NOT NULL,              -- full path to the file for this partition</span>
+<span class="s2">            PRIMARY KEY (dataset, partition)</span>
+<span class="s2">        );&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        CREATE TABLE IF NOT EXISTS orphans (</span>
+<span class="s2">            path VARCHAR NOT NULL,              -- full path to the orphaned file</span>
+<span class="s2">            size INTEGER NOT NULL,              -- in bytes</span>
+<span class="s2">            PRIMARY KEY (path)</span>
+<span class="s2">        );&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;PRAGMA user_version = 1;&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_have_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">CacheItem</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT hits FROM stats</span>
+<span class="s2">        WHERE dataset = ? AND partition = ?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">])</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CacheStats.record_hit"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.record_hit">[docs]</a>    <span class="k">def</span> <span class="nf">record_hit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">CacheItem</span><span class="p">):</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;BEGIN&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_have_item</span><span class="p">(</span><span class="n">cache_item</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            INSERT INTO stats (partition, dataset, hits, size, last_access, path)</span>
+<span class="s2">            VALUES (?, ?, 1, ?, ?, ?)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+                  <span class="n">cache_item</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">now</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            UPDATE stats</span>
+<span class="s2">            SET hits = MAX(hits + 1, 1), last_access = ?</span>
+<span class="s2">            WHERE dataset = ? AND partition = ?</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">now</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DELETE FROM orphans WHERE path = ?&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CacheStats.record_miss"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.record_miss">[docs]</a>    <span class="k">def</span> <span class="nf">record_miss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">CacheItem</span><span class="p">):</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;BEGIN&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_have_item</span><span class="p">(</span><span class="n">cache_item</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            INSERT INTO stats (partition, dataset, hits, size, last_access, path)</span>
+<span class="s2">            VALUES (?, ?, 0, ?, ?, ?)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+                  <span class="n">now</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            UPDATE stats</span>
+<span class="s2">            SET hits = 0, last_access = ?</span>
+<span class="s2">            WHERE dataset = ? AND partition = ?</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">now</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DELETE FROM orphans WHERE path = ?&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CacheStats.record_eviction"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.record_eviction">[docs]</a>    <span class="k">def</span> <span class="nf">record_eviction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CacheItem</span><span class="p">,</span> <span class="n">OrphanItem</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">is_orphan</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_orphan</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            DELETE FROM stats</span>
+<span class="s2">            WHERE partition = ? AND dataset = ?</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_item</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">cache_item</span><span class="o">.</span><span class="n">dataset</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CacheStats.maybe_orphan"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.maybe_orphan">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_orphan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orphan</span><span class="p">:</span> <span class="n">OrphanItem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an entry for a file we don&#39;t have any statistics about, after checking</span>
+<span class="sd">        the stats table for the given path.</span>
+<span class="sd">        Getting a conflict here means concurrently running maybe_orphan processes,</span>
+<span class="sd">        so we can safely ignore it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exists</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT 1 FROM stats WHERE path = ?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">orphan</span><span class="o">.</span><span class="n">path</span><span class="p">])</span><span class="o">.</span><span class="n">fetchall</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            INSERT OR IGNORE INTO orphans (path, size)</span>
+<span class="s2">            VALUES (?, ?)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">orphan</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">orphan</span><span class="o">.</span><span class="n">size</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">orphan</span></div>
+
+<div class="viewcode-block" id="CacheStats.get_orphans"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.get_orphans">[docs]</a>    <span class="k">def</span> <span class="nf">get_orphans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT path, size FROM orphans ORDER BY size DESC&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">OrphanItem</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="CacheStats.remove_orphan"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.remove_orphan">[docs]</a>    <span class="k">def</span> <span class="nf">remove_orphan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        DELETE FROM orphans WHERE path = ?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CacheStats.get_stats_for_dataset"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.get_stats_for_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">get_stats_for_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return dataset cache stats as dict mapping partition ids to dicts of their</span>
+<span class="sd">        properties (keys: size, last_access, hits)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT partition, path, size, hits, last_access</span>
+<span class="s2">        FROM stats</span>
+<span class="s2">        WHERE dataset = ?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_key</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;partition&quot;</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="CacheStats.query"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom sqlite query, returns a sqlite3 Cursor object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_format_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;last_access&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;last_access&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;hits&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;hits&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="CacheStats.get_used_capacity"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStats.get_used_capacity">[docs]</a>    <span class="k">def</span> <span class="nf">get_used_capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT SUM(size) AS &quot;total_size&quot; FROM stats;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;total_size&quot;</span><span class="p">]</span>
+        <span class="n">size_orphans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT SUM(size) AS &quot;total_size&quot; FROM orphans;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;total_size&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">size</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">size_orphans</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CacheStrategy"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStrategy">[docs]</a><span class="k">class</span> <span class="nc">CacheStrategy</span><span class="p">:</span>
+<div class="viewcode-block" id="CacheStrategy.get_victim_list"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CacheStrategy.get_victim_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_victim_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of `CacheItem`s that should be deleted to make a new item</span>
+<span class="sd">        with size in bytes `size`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="LRUCacheStrategy"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.LRUCacheStrategy">[docs]</a><span class="k">class</span> <span class="nc">LRUCacheStrategy</span><span class="p">(</span><span class="n">CacheStrategy</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LRUCacheStrategy.get_victim_list"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.LRUCacheStrategy.get_victim_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_victim_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of `CacheItem`s that should be deleted to make</span>
+<span class="sd">        place for `partition`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># LRU with the following modifications:</span>
+        <span class="c1"># 1) Don&#39;t evict from the same dataset, as our accesses</span>
+        <span class="c1">#    are highly correlated in a single dataset</span>
+        <span class="c1"># 2) Include orphaned files as preferred victims</span>
+        <span class="c1"># 3) TODO: work in an estimated miss cost (challenge: estimate I/O cost</span>
+        <span class="c1">#    independently from whatever calculation the user decides to run!)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sufficient_space_for</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">stats</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">victims</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">space_to_free</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
+
+        <span class="n">orphans</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">get_orphans</span><span class="p">()</span>
+
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT dataset, partition, size, path</span>
+<span class="s2">        FROM stats</span>
+<span class="s2">        WHERE dataset != ?</span>
+<span class="s2">        ORDER BY last_access ASC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">cache_key</span><span class="p">])</span>
+
+        <span class="n">to_check</span> <span class="o">=</span> <span class="n">orphans</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">CacheItem</span><span class="o">.</span><span class="n">from_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">candidates</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">to_check</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">space_to_free</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">victims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">space_to_free</span> <span class="o">-=</span> <span class="n">item</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="n">space_to_free</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;not enough cache capacity for the requested operation&quot;</span>
+            <span class="p">)</span>  <span class="c1"># FIXME: exception class</span>
+        <span class="k">return</span> <span class="n">victims</span></div>
+
+<div class="viewcode-block" id="LRUCacheStrategy.sufficient_space_for"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.LRUCacheStrategy.sufficient_space_for">[docs]</a>    <span class="k">def</span> <span class="nf">sufficient_space_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LRUCacheStrategy.get_available"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.LRUCacheStrategy.get_available">[docs]</a>    <span class="k">def</span> <span class="nf">get_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        available cache capacity in bytes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacity</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_used</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LRUCacheStrategy.get_used"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.LRUCacheStrategy.get_used">[docs]</a>    <span class="k">def</span> <span class="nf">get_used</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        used cache capacity in bytes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">get_used_capacity</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="Cache"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.Cache">[docs]</a><span class="k">class</span> <span class="nc">Cache</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cache object, to be used on a worker node. The interface used by `Partition`\\ s</span>
+<span class="sd">    to manage the cache. May directly remove files, directories, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">CacheStats</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">CacheStrategy</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span> <span class="o">=</span> <span class="n">stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+
+<div class="viewcode-block" id="Cache.record_hit"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.Cache.record_hit">[docs]</a>    <span class="k">def</span> <span class="nf">record_hit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">CacheItem</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">record_hit</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cache.record_miss"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.Cache.record_miss">[docs]</a>    <span class="k">def</span> <span class="nf">record_miss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_item</span><span class="p">:</span> <span class="n">CacheItem</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">record_miss</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cache.evict"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.Cache.evict">[docs]</a>    <span class="k">def</span> <span class="nf">evict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make place for `size` bytes which will be used</span>
+<span class="sd">        by the dataset identified by the `cache_key`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">victims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">get_victim_list</span><span class="p">(</span><span class="n">cache_key</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cache_item</span> <span class="ow">in</span> <span class="n">victims</span><span class="p">:</span>
+            <span class="c1"># if it has been deleted by the user, we don&#39;t care and just remove</span>
+            <span class="c1"># the record from the database:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">cache_item</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">record_eviction</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cache.collect_orphans"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.Cache.collect_orphans">[docs]</a>    <span class="k">def</span> <span class="nf">collect_orphans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the filesystem structure and record all partitions</span>
+<span class="sd">        that are missing in the db as orphans, to be deleted on demand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># the structure here is: {base_path}/{dataset_cache_key}/parts/*</span>
+        <span class="n">orphans</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">base_path</span><span class="p">),</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;parts&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)):</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">maybe_orphan</span><span class="p">(</span><span class="n">OrphanItem</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">orphans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">orphans</span></div></div>
+
+
+<div class="viewcode-block" id="CachedDataSet"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet">[docs]</a><span class="k">class</span> <span class="nc">CachedDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cached DataSet.</span>
+
+<span class="sd">    Assumes the source DataSet is significantly slower than the cache location</span>
+<span class="sd">    (otherwise, it may result in memory pressure, as we don&#39;t use direct I/O</span>
+<span class="sd">    to write to the cache.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source_ds : DataSet</span>
+<span class="sd">        DataSet on slower file system</span>
+
+<span class="sd">    cache_path : str</span>
+<span class="sd">        Where should the cache be written to? Should be a directory on a fast</span>
+<span class="sd">        local device (i.e. NVMe SSD if possible, local hard drive if it is faster than network)</span>
+<span class="sd">        A subdirectory will be created for each dataset.</span>
+
+<span class="sd">    strategy : CacheStrategy</span>
+<span class="sd">        A class implementing a cache eviction strategy, for example LRUCacheStrategy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_ds</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">strategy</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_ds</span> <span class="o">=</span> <span class="n">source_ds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_path</span> <span class="o">=</span> <span class="n">cache_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_cache_key</span><span class="p">(</span><span class="n">source_ds</span><span class="o">.</span><span class="n">get_cache_key</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_ds</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+
+    <span class="k">def</span> <span class="nf">_make_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+        <span class="n">inp_as_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">inp_as_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CachedDataSet.initialize"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="n">source_structure</span> <span class="o">=</span> <span class="n">PartitionStructure</span><span class="o">.</span><span class="n">from_ds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_ds</span><span class="p">)</span>
+        <span class="n">executor</span><span class="o">.</span><span class="n">run_each_host</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ensure_cache_structure</span><span class="p">)</span>
+        <span class="n">cluster_ds</span> <span class="o">=</span> <span class="n">ClusterDataSet</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+            <span class="n">structure</span><span class="o">=</span><span class="n">source_structure</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">cluster_ds</span><span class="o">.</span><span class="n">check_valid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_ds</span> <span class="o">=</span> <span class="n">cluster_ds</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">executor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span> <span class="o">=</span> <span class="n">executor</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_db_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_path</span><span class="p">,</span> <span class="s2">&quot;cache.db&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ensure_cache_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">cache_stats</span> <span class="o">=</span> <span class="n">CacheStats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_path</span><span class="p">())</span>
+        <span class="n">cache_stats</span><span class="o">.</span><span class="n">initialize_schema</span><span class="p">()</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="n">Cache</span><span class="p">(</span><span class="n">stats</span><span class="o">=</span><span class="n">cache_stats</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_strategy</span><span class="p">)</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">collect_orphans</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_path</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_ds</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_ds</span><span class="o">.</span><span class="n">shape</span>
+
+<div class="viewcode-block" id="CachedDataSet.get_msg_converter"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet.get_msg_converter">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;not directly usable from web API&quot;</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CachedDataSet.check_valid"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet.check_valid">[docs]</a>    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: validate self._cache_path, what else?</span>
+        <span class="c1"># - ask cache backend if things look valid (i.e. sidecar cache info is OK)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="CachedDataSet.get_partitions"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet.get_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">source_part</span><span class="p">,</span> <span class="n">cluster_part</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_ds</span><span class="o">.</span><span class="n">get_partitions</span><span class="p">(),</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_ds</span><span class="o">.</span><span class="n">get_partitions</span><span class="p">())):</span>
+            <span class="k">yield</span> <span class="n">CachedPartition</span><span class="p">(</span>
+                <span class="n">source_part</span><span class="o">=</span><span class="n">source_part</span><span class="p">,</span>
+                <span class="n">cluster_part</span><span class="o">=</span><span class="n">cluster_part</span><span class="p">,</span>
+                <span class="n">meta</span><span class="o">=</span><span class="n">cluster_part</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">cluster_part</span><span class="o">.</span><span class="n">slice</span><span class="p">,</span>
+                <span class="n">cache_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span><span class="p">,</span>
+                <span class="n">cache_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_strategy</span><span class="p">,</span>
+                <span class="n">db_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_path</span><span class="p">(),</span>
+                <span class="n">idx</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CachedDataSet.evict"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedDataSet.evict">[docs]</a>    <span class="k">def</span> <span class="nf">evict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_each_partition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_partitions</span><span class="p">(),</span>
+                                             <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">evict</span><span class="p">(),</span> <span class="n">all_nodes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;CachedDataSet dtype=</span><span class="si">%s</span><span class="s2"> shape=</span><span class="si">%s</span><span class="s2"> source_ds=</span><span class="si">%s</span><span class="s2"> cache_path=</span><span class="si">%s</span><span class="s2"> path=</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_ds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CachedPartition"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedPartition">[docs]</a><span class="k">class</span> <span class="nc">CachedPartition</span><span class="p">(</span><span class="n">Partition</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_part</span><span class="p">,</span> <span class="n">cluster_part</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">partition_slice</span><span class="p">,</span>
+                 <span class="n">cache_key</span><span class="p">,</span> <span class="n">cache_strategy</span><span class="p">,</span> <span class="n">db_path</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">io_backend</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">partition_slice</span><span class="o">=</span><span class="n">partition_slice</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_part</span> <span class="o">=</span> <span class="n">source_part</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span> <span class="o">=</span> <span class="n">cluster_part</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span> <span class="o">=</span> <span class="n">cache_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_strategy</span> <span class="o">=</span> <span class="n">cache_strategy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_db_path</span> <span class="o">=</span> <span class="n">db_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_idx</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="k">def</span> <span class="nf">_get_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cache_stats</span> <span class="o">=</span> <span class="n">CacheStats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_db_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Cache</span><span class="p">(</span><span class="n">stats</span><span class="o">=</span><span class="n">cache_stats</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_strategy</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sizeof</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+
+    <span class="k">def</span> <span class="nf">_write_tiles_noroi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wh</span><span class="p">,</span> <span class="n">source_tiles</span><span class="p">,</span> <span class="n">dest_dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write tiles from source_tiles to the cache. After each tile is written, yield</span>
+<span class="sd">        it for further processing, potentially doing dtype conversion on the fly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">wh</span><span class="p">:</span>
+            <span class="n">miss_tiles</span> <span class="o">=</span> <span class="n">wh</span><span class="o">.</span><span class="n">write_tiles</span><span class="p">(</span><span class="n">source_tiles</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dest_dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">tile</span> <span class="ow">in</span> <span class="n">miss_tiles</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">tile</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dest_dtype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="n">miss_tiles</span>
+
+    <span class="k">def</span> <span class="nf">_write_tiles_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wh</span><span class="p">,</span> <span class="n">source_tiles</span><span class="p">,</span> <span class="n">cached_tiles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get source tiles without roi, read and cache whole partition, then</span>
+<span class="sd">        read all tiles selected via roi from the cache (_cluster_part aka cached_tiles).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">wh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">tile</span> <span class="ow">in</span> <span class="n">wh</span><span class="o">.</span><span class="n">write_tiles</span><span class="p">(</span><span class="n">source_tiles</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">yield from</span> <span class="n">cached_tiles</span>
+
+<div class="viewcode-block" id="CachedPartition.get_tiles"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedPartition.get_tiles">[docs]</a>    <span class="k">def</span> <span class="nf">get_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">dest_dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cache</span><span class="p">()</span>
+        <span class="n">cached_tiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span>
+            <span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span>
+            <span class="n">dest_dtype</span><span class="o">=</span><span class="n">dest_dtype</span><span class="p">,</span>
+            <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">cache_item</span> <span class="o">=</span> <span class="n">CacheItem</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span><span class="p">,</span>
+            <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_idx</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">get_canonical_path</span><span class="p">(),</span>
+            <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sizeof</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">_have_data</span><span class="p">():</span>
+            <span class="k">yield from</span> <span class="n">cached_tiles</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">record_hit</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">evict</span><span class="p">(</span><span class="n">cache_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache_key</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sizeof</span><span class="p">())</span>
+            <span class="c1"># NOTE: source_tiles are in native dtype!</span>
+            <span class="n">source_tiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_part</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span>
+                <span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span>
+                <span class="n">dest_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># NOTE: want to always cache the whole dataset, thus roi=None</span>
+            <span class="p">)</span>
+            <span class="n">wh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">get_write_handle</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_tiles_noroi</span><span class="p">(</span><span class="n">wh</span><span class="p">,</span> <span class="n">source_tiles</span><span class="p">,</span> <span class="n">dest_dtype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_tiles_roi</span><span class="p">(</span><span class="n">wh</span><span class="p">,</span> <span class="n">source_tiles</span><span class="p">,</span> <span class="n">cached_tiles</span><span class="p">)</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">record_miss</span><span class="p">(</span><span class="n">cache_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CachedPartition.get_locations"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedPartition.get_locations">[docs]</a>    <span class="k">def</span> <span class="nf">get_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns locations where this partition is cached</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">get_locations</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CachedPartition.evict"><a class="viewcode-back" href="../../../../reference/caching.html#libertem.io.dataset.cached.CachedPartition.evict">[docs]</a>    <span class="k">def</span> <span class="nf">evict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_part</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

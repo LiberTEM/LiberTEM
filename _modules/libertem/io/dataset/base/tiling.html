@@ -1,0 +1,938 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libertem.io.dataset.base.tiling &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../../../../../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libertem.io.dataset.base.tiling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libertem.io.dataset.base.tiling</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">NumbaList</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.common.numba</span> <span class="kn">import</span> <span class="n">numba_ravel_multi_index_single</span> <span class="k">as</span> <span class="n">_ravel_multi_index</span><span class="p">,</span> <span class="n">cached_njit</span>
+<span class="kn">from</span> <span class="nn">libertem.corrections</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+<span class="kn">from</span> <span class="nn">.roi</span> <span class="kn">import</span> <span class="n">_roi_to_indices</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TilingScheme"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.TilingScheme">[docs]</a><span class="k">class</span> <span class="nc">TilingScheme</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Slice</span><span class="p">],</span>
+                 <span class="n">tileshape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">dataset_shape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_slices</span> <span class="o">=</span> <span class="n">slices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tileshape</span> <span class="o">=</span> <span class="n">tileshape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_shape</span> <span class="o">=</span> <span class="n">dataset_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="n">debug</span>
+
+        <span class="k">if</span> <span class="n">tileshape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tileshape should have flat navigation dimensions&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TilingScheme.make_for_shape"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.TilingScheme.make_for_shape">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_for_shape</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tileshape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">dataset_shape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a TilingScheme from `tileshape` and `dataset_shape`.</span>
+
+<span class="sd">        Note that both in signal and navigation direction there are border</span>
+<span class="sd">        effects, i.e. if the depth doesn&#39;t evenly divide the number of</span>
+<span class="sd">        frames in the partition (simplified, ROI also applies...), or if</span>
+<span class="sd">        the signal dimensions of `tileshape` doesn&#39;t evenly divide the signal</span>
+<span class="sd">        dimensions of the `dataset_shape`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tileshape</span>
+<span class="sd">            Uniform shape of all tiles. Should have flat navigation axis</span>
+<span class="sd">            (meaning tileshape.nav.dims == 1) and be contiguous in signal</span>
+<span class="sd">            dimensions.</span>
+
+<span class="sd">        dataset_shape</span>
+<span class="sd">            Shape of the whole data set. Only the signal part is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># FIXME: validate navigation part of the tileshape to be contiguous</span>
+        <span class="c1"># (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))</span>
+        <span class="c1"># where X1 is &lt;= the dataset shape at that index, and X2, ..., XN are</span>
+        <span class="c1"># equal to the dataset shape at that index</span>
+
+        <span class="n">sig_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span>
+        <span class="p">)</span>
+        <span class="n">subslices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig_slice</span><span class="o">.</span><span class="n">subslices</span><span class="p">(</span><span class="n">tileshape</span><span class="o">.</span><span class="n">sig</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">slices</span><span class="o">=</span><span class="n">subslices</span><span class="p">,</span>
+            <span class="n">tileshape</span><span class="o">=</span><span class="n">tileshape</span><span class="p">,</span>
+            <span class="n">dataset_shape</span><span class="o">=</span><span class="n">dataset_shape</span><span class="p">,</span>
+            <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slices</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">unique_shapes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slice_</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">slice_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slices</span><span class="p">})</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;TilingScheme (depth=</span><span class="si">%d</span><span class="s2">) shapes=</span><span class="si">%r</span><span class="s2"> len=</span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">unique_shapes</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slices</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">slices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        signal-only slices for all possible positions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slices</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">slices_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the slices from the schema as a numpy ndarray</span>
+<span class="sd">        `a` of shape `(n, 2, sig_dims)` with:</span>
+<span class="sd">        `a[i, 0]` are origins for slice `i`</span>
+<span class="sd">        `a[i, 1]` are shapes for slice `i`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tileshape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">slice_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">slices</span><span class="p">:</span>
+            <span class="n">slices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slice_</span><span class="o">.</span><span class="n">origin</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slice_</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">slices</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        tileshape. note that some border tiles can be smaller!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tileshape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataset_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tileshape</span><span class="o">.</span><span class="n">nav</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_default_px_to_bytes</span><span class="p">(</span>
+    <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_in_file_idx</span><span class="p">,</span> <span class="n">slice_sig_size</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span> <span class="n">sig_origin</span><span class="p">,</span>
+    <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span>
+    <span class="n">file_idx</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># we are reading a part of a single frame, so we first need to find</span>
+    <span class="c1"># the offset caused by headers and footers:</span>
+    <span class="n">footer_offset</span> <span class="o">=</span> <span class="n">frame_footer_bytes</span> <span class="o">*</span> <span class="n">frame_in_file_idx</span>
+    <span class="n">header_offset</span> <span class="o">=</span> <span class="n">frame_header_bytes</span> <span class="o">*</span> <span class="p">(</span><span class="n">frame_in_file_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">byte_offset</span> <span class="o">=</span> <span class="n">footer_offset</span> <span class="o">+</span> <span class="n">header_offset</span>
+
+    <span class="c1"># now let&#39;s figure in the current frame index:</span>
+    <span class="c1"># (go down into the file by full frames; `sig_size`)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">byte_offset</span> <span class="o">+</span> <span class="n">frame_in_file_idx</span> <span class="o">*</span> <span class="n">sig_size</span> <span class="o">*</span> <span class="n">bpp</span>
+
+    <span class="c1"># offset in px in the current frame:</span>
+    <span class="n">sig_origin_bytes</span> <span class="o">=</span> <span class="n">sig_origin</span> <span class="o">*</span> <span class="n">bpp</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">sig_origin_bytes</span>
+
+    <span class="c1"># size of the sig part of the slice:</span>
+    <span class="n">sig_size_bytes</span> <span class="o">=</span> <span class="n">slice_sig_size</span> <span class="o">*</span> <span class="n">bpp</span>
+
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">sig_size_bytes</span>
+
+    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">file_idx</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">boundscheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_find_file_for_frame_idx</span><span class="p">(</span><span class="n">fileset_arr</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the file in `fileset_arr` that contains</span>
+<span class="sd">    `frame_idx` and return its index using binary search.</span>
+
+<span class="sd">    Worst case: something like 2**20 files, each containing</span>
+<span class="sd">    a single frame.</span>
+
+<span class="sd">    `fileset_arr` is an array of shape (number_files, 4)</span>
+<span class="sd">    where `fileset_arr[i]` is:</span>
+
+<span class="sd">        (start_idx, end_idx, file_header_size, file_idx)</span>
+
+<span class="sd">    It must be sorted by `start_idx` and the defined intervals must not overlap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">num_files</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mid</span> <span class="o">=</span> <span class="n">num_files</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">mid_file</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mid_file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">frame_idx</span> <span class="ow">and</span> <span class="n">mid_file</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">frame_idx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mid_file</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">mid_file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">frame_idx</span><span class="p">:</span>
+            <span class="n">fileset_arr</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[:</span><span class="n">mid</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fileset_arr</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_default_read_ranges_tile_block</span><span class="p">(</span>
+    <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">slice_sig_sizes</span><span class="p">,</span> <span class="n">sig_origins</span><span class="p">,</span>
+    <span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span>
+    <span class="n">px_to_bytes</span><span class="p">,</span> <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">file_idxs</span><span class="p">,</span>
+    <span class="n">slice_offset</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">NumbaList</span><span class="p">()</span>
+
+    <span class="c1"># positions in the signal dimensions:</span>
+    <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># (offset, size) arrays defining what data to read (in pixels)</span>
+        <span class="c1"># NOTE: assumes contiguous tiling scheme</span>
+        <span class="c1"># (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))</span>
+        <span class="c1"># where X1 is &lt;= the dataset shape at that index, and X2, ..., XN are</span>
+        <span class="c1"># equal to the dataset shape at that index</span>
+        <span class="n">slice_origin</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">slice_shape</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">slice_sig_size</span> <span class="o">=</span> <span class="n">slice_sig_sizes</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">]</span>
+        <span class="n">sig_origin</span> <span class="o">=</span> <span class="n">sig_origins</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">]</span>
+
+        <span class="n">read_ranges</span> <span class="o">=</span> <span class="n">NumbaList</span><span class="p">()</span>
+
+        <span class="c1"># inner &quot;depth&quot; loop along the (flat) navigation axis of a tile:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inner_frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">)):</span>
+            <span class="n">inner_frame</span> <span class="o">=</span> <span class="n">frame_indices</span><span class="p">[</span><span class="n">inner_frame_idx</span><span class="p">]</span>
+
+            <span class="n">file_idx</span> <span class="o">=</span> <span class="n">file_idxs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">file_idx</span><span class="p">]</span>
+
+            <span class="n">frame_in_file_idx</span> <span class="o">=</span> <span class="n">inner_frame</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">px_to_bytes</span><span class="p">(</span>
+                <span class="n">bpp</span><span class="o">=</span><span class="n">bpp</span><span class="p">,</span>
+                <span class="n">frame_in_file_idx</span><span class="o">=</span><span class="n">frame_in_file_idx</span><span class="p">,</span>
+                <span class="n">slice_sig_size</span><span class="o">=</span><span class="n">slice_sig_size</span><span class="p">,</span>
+                <span class="n">sig_size</span><span class="o">=</span><span class="n">sig_size</span><span class="p">,</span>
+                <span class="n">sig_origin</span><span class="o">=</span><span class="n">sig_origin</span><span class="p">,</span>
+                <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="n">frame_footer_bytes</span><span class="p">,</span>
+                <span class="n">frame_header_bytes</span><span class="o">=</span><span class="n">frame_header_bytes</span><span class="p">,</span>
+                <span class="n">file_idx</span><span class="o">=</span><span class="n">file_idx</span><span class="p">,</span>
+                <span class="n">read_ranges</span><span class="o">=</span><span class="n">read_ranges</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># the indices are compressed to the selected frames</span>
+        <span class="n">compressed_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">slice_offset</span> <span class="o">+</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_origin</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">inner_indices_stop</span> <span class="o">-</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_shape</span><span class="p">],</span>
+        <span class="p">])</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slice_idx</span><span class="p">,</span> <span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="make_get_read_ranges"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.make_get_read_ranges">[docs]</a><span class="k">def</span> <span class="nf">make_get_read_ranges</span><span class="p">(</span>
+    <span class="n">px_to_bytes</span><span class="o">=</span><span class="n">_default_px_to_bytes</span><span class="p">,</span>
+    <span class="n">read_ranges_tile_block</span><span class="o">=</span><span class="n">_default_read_ranges_tile_block</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate the `TilingScheme` combined with the `roi` into (pixel)-read-ranges,</span>
+<span class="sd">    together with their tile slices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    start_at_frame</span>
+<span class="sd">        Dataset-global first frame index to read</span>
+
+<span class="sd">    stop_before_frame</span>
+<span class="sd">        Stop before this frame index</span>
+
+<span class="sd">    tiling_scheme</span>
+<span class="sd">        Description on how the data should be tiled</span>
+
+<span class="sd">    fileset_arr</span>
+<span class="sd">        Array of shape (number_of_files, 3) where the last dimension contains</span>
+<span class="sd">        the following values: `(start_idx, end_idx, file_idx)`, where</span>
+<span class="sd">        `[start_idx, end_idx)` defines which frame indices are contained</span>
+<span class="sd">        in the file.</span>
+
+<span class="sd">    roi</span>
+<span class="sd">        Region of interest (for the full dataset)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    (tile_slice, read_ranges)</span>
+<span class="sd">        read_ranges is an ndarray with shape (number_of_tiles, depth, 3)</span>
+<span class="sd">        where the last dimension contains: file index, start_byte, stop_byte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@cached_njit</span><span class="p">(</span><span class="n">boundscheck</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_read_ranges_inner</span><span class="p">(</span>
+        <span class="n">start_at_frame</span><span class="p">,</span> <span class="n">stop_before_frame</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span>
+        <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+        <span class="n">bpp</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">NumbaList</span><span class="p">()</span>
+
+        <span class="n">sig_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frame_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">start_at_frame</span><span class="p">),</span> <span class="n">stop_before_frame</span><span class="p">)</span>
+            <span class="c1"># in case of a negative sync_offset, start_at_frame can be negative</span>
+            <span class="k">if</span> <span class="n">start_at_frame</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">slice_offset</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sync_offset</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">slice_offset</span> <span class="o">=</span> <span class="n">start_at_frame</span> <span class="o">-</span> <span class="n">sync_offset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame_indices</span> <span class="o">=</span> <span class="n">_roi_to_indices</span><span class="p">(</span>
+                <span class="n">roi</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">start_at_frame</span><span class="p">),</span> <span class="n">stop_before_frame</span><span class="p">,</span> <span class="n">sync_offset</span>
+            <span class="p">)</span>
+            <span class="c1"># in case of a negative sync_offset, start_at_frame can be negative</span>
+            <span class="k">if</span> <span class="n">start_at_frame</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">slice_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))[:</span><span class="nb">abs</span><span class="p">(</span><span class="n">sync_offset</span><span class="p">)])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">slice_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))[:</span><span class="n">start_at_frame</span> <span class="o">-</span> <span class="n">sync_offset</span><span class="p">])</span>
+
+        <span class="n">num_indices</span> <span class="o">=</span> <span class="n">frame_indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># indices into `frame_indices`:</span>
+        <span class="n">inner_indices_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">inner_indices_stop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">num_indices</span><span class="p">)</span>
+
+        <span class="c1"># this should be `np.prod(..., axis=-1)``, which is not supported by numba yet:</span>
+        <span class="c1"># slices that divide the signal dimensions:</span>
+        <span class="n">slice_sig_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">])</span>
+
+        <span class="n">sig_origins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">_ravel_multi_index</span><span class="p">(</span><span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">sig_shape</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">])</span>
+
+        <span class="c1"># outer &quot;depth&quot; loop skipping over `depth` frames at a time:</span>
+        <span class="k">while</span> <span class="n">inner_indices_start</span> <span class="o">&lt;</span> <span class="n">num_indices</span><span class="p">:</span>
+            <span class="n">file_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                <span class="n">_find_file_for_frame_idx</span><span class="p">(</span><span class="n">fileset_arr</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">[</span><span class="n">inner_frame_idx</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">inner_frame_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">)</span>
+            <span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">slice_idx</span><span class="p">,</span> <span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span> <span class="ow">in</span> <span class="n">read_ranges_tile_block</span><span class="p">(</span>
+                <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">slice_sig_sizes</span><span class="p">,</span> <span class="n">sig_origins</span><span class="p">,</span>
+                <span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span>
+                <span class="n">px_to_bytes</span><span class="p">,</span> <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">file_idxs</span><span class="p">,</span>
+                <span class="n">slice_offset</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span> <span class="n">sig_shape</span><span class="o">=</span><span class="n">sig_shape</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span> <span class="n">slice_idx</span><span class="p">))</span>
+
+            <span class="n">inner_indices_start</span> <span class="o">=</span> <span class="n">inner_indices_start</span> <span class="o">+</span> <span class="n">depth</span>
+            <span class="n">inner_indices_stop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">inner_indices_stop</span> <span class="o">+</span> <span class="n">depth</span><span class="p">,</span> <span class="n">num_indices</span><span class="p">)</span>
+
+        <span class="n">result_slices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tile_idx</span><span class="p">,</span> <span class="n">res</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="n">result_slices</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">result_slices</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">depth</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="n">max_rr_per_tile</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                               <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+
+        <span class="n">slice_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="c1"># read_ranges_tile_block can decide how many entries there are per read range,</span>
+        <span class="c1"># so we need to generate a result array with the correct size:</span>
+        <span class="n">rr_num_entries</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">result_ranges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">max_rr_per_tile</span><span class="p">,</span> <span class="n">rr_num_entries</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tile_idx</span><span class="p">,</span> <span class="n">res</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">depth_idx</span><span class="p">,</span> <span class="n">read_range</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">result_ranges</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">][</span><span class="n">depth_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_range</span>
+            <span class="n">slice_indices</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">result_slices</span><span class="p">,</span> <span class="n">result_ranges</span><span class="p">,</span> <span class="n">slice_indices</span>
+    <span class="k">return</span> <span class="n">_get_read_ranges_inner</span></div>
+
+
+<span class="n">default_get_read_ranges</span> <span class="o">=</span> <span class="n">make_get_read_ranges</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="DataTile"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataTile">[docs]</a><span class="k">class</span> <span class="nc">DataTile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_array</span><span class="p">,</span> <span class="n">tile_slice</span><span class="p">,</span> <span class="n">scheme_idx</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">input_array</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">tile_slice</span> <span class="o">=</span> <span class="n">tile_slice</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">scheme_idx</span> <span class="o">=</span> <span class="n">scheme_idx</span>
+
+        <span class="k">if</span> <span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;DataTile should be flat in navigation axis&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;shape mismatch: data=</span><span class="si">%s</span><span class="s2">, tile_slice=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__array_finalize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;tile_slice&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme_idx</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;scheme_idx&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># invalidate `tile_slice` in case `obj` is modified/reshaped</span>
+        <span class="c1"># such that it doesn&#39;t match the `tile_slice` anymore</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DataTile.reshape"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataTile.reshape">[docs]</a>    <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># NOTE: &quot;shedding&quot; our DataTile class on reshape, as we can&#39;t properly update</span>
+        <span class="c1"># the slice to keep it aligned with the reshape process.</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flat_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flatten the data.</span>
+
+<span class="sd">        The result is a 2D array where each row contains pixel data</span>
+<span class="sd">        from a single frame. It is just a reshape, so it is a view into</span>
+<span class="sd">        the original data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">tileshape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>    <span class="c1"># stackheight, number of frames we process at once</span>
+            <span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>    <span class="c1"># framesize, number of pixels per tile</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tileshape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;DataTile </span><span class="si">%r</span><span class="s2"> scheme_idx=</span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_slice</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme_idx</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Negotiator"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Negotiator">[docs]</a><span class="k">class</span> <span class="nc">Negotiator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tile shape negotiator. The main functionality is in `get_scheme`,</span>
+<span class="sd">    which, given a `udf`, `partition` and `read_dtype` will generate</span>
+<span class="sd">    a `TilingScheme` that is compatible with both the `UDF` and the</span>
+<span class="sd">    `DataSet`, possibly even optimal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Negotiator.validate"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Negotiator.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">io_max_size</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">,</span> <span class="n">corrections</span><span class="p">):</span>
+        <span class="n">partition_shape</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># we need some wiggle room with the size, because there may be a harder</span>
+        <span class="c1"># lower size value for some cases (for example HDF5, which overrides</span>
+        <span class="c1"># some of the sizing negotiation we are doing here)</span>
+        <span class="n">size_px</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">io_max_size</span><span class="p">)</span> <span class="o">//</span> <span class="n">itemsize</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="n">ps</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">ps</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">partition_shape</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;generated tileshape does not fit the partition&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">size_px</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;shape </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) does not fit into size </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="n">size_px</span>
+            <span class="p">)</span>
+            <span class="c1"># The shape might be exceeded if dead pixel correction didn&#39;t find a</span>
+            <span class="c1"># valid tiling scheme. In that case it falls back to by-frame processing.</span>
+            <span class="k">if</span> <span class="n">corrections</span><span class="o">.</span><span class="n">get_excluded_pixels</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">base_shape</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">%</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The tileshape </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2"> is incompatible with base &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;shape </span><span class="si">{</span><span class="n">base_shape</span><span class="si">}</span><span class="s2"> in dimension </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Negotiator.get_scheme"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Negotiator.get_scheme">[docs]</a>    <span class="k">def</span> <span class="nf">get_scheme</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="p">:</span> <span class="n">CorrectionSet</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a :class:`TilingScheme` instance that is</span>
+<span class="sd">        compatible with both the given `udf` and the</span>
+<span class="sd">        :class:~`libertem.io.dataset.base.DataSet`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        udfs : List[UDF]</span>
+<span class="sd">            The concrete UDF to optimize the tiling scheme for.</span>
+<span class="sd">            Depending on the method (tile, frame, partition)</span>
+<span class="sd">            and preferred total input size and depth.</span>
+
+<span class="sd">        partition : Partition</span>
+<span class="sd">            The `TilingScheme` is created specifically</span>
+<span class="sd">            for the given `Partition`, so it can adjust</span>
+<span class="sd">            even in the face of different partition sizes/shapes.</span>
+
+<span class="sd">        read_dtype</span>
+<span class="sd">            The dtype in which the data will be fed into the UDF</span>
+
+<span class="sd">        roi : np.ndarray</span>
+<span class="sd">            Region of interest</span>
+
+<span class="sd">        corrections : CorrectionSet</span>
+<span class="sd">            Correction set to consider in negotiation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">itemsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">read_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+
+        <span class="c1"># FIXME: let the UDF define upper bound for signal size (lower bound, too?)</span>
+        <span class="c1"># (signal buffers should fit into the L2 cache)</span>
+        <span class="c1"># try not to waste page faults:</span>
+        <span class="n">min_sig_size</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">get_min_sig_size</span><span class="p">()</span>
+
+        <span class="c1"># This already takes corrections into account through a different pathway</span>
+        <span class="n">need_decode</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">need_decode</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span> <span class="n">read_dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">,</span> <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">)</span>
+
+        <span class="n">io_max_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_io_max_size</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">need_decode</span><span class="p">)</span>
+
+        <span class="n">depths</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_min_depth</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span>
+        <span class="p">]</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">depths</span><span class="p">)</span>  <span class="c1"># take the largest min-depth</span>
+        <span class="n">base_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_base_shape</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_size</span><span class="p">(</span>
+                <span class="n">io_max_size</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">udf</span><span class="o">.</span><span class="n">get_method</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;partition&quot;</span>
+            <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span>
+        <span class="p">):</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>  <span class="c1"># by partition wants to be big, ...</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+        <span class="n">size_px</span> <span class="o">=</span> <span class="n">size</span> <span class="o">//</span> <span class="n">itemsize</span>
+
+        <span class="k">if</span> <span class="n">corrections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">corrections</span><span class="o">.</span><span class="n">have_corrections</span><span class="p">():</span>
+            <span class="c1"># The correction has to make sure that there are no excluded pixels</span>
+            <span class="c1"># at tile boundaries</span>
+            <span class="n">base_shape</span> <span class="o">=</span> <span class="n">corrections</span><span class="o">.</span><span class="n">adjust_tileshape</span><span class="p">(</span>
+                <span class="n">tile_shape</span><span class="o">=</span><span class="n">base_shape</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+                <span class="n">base_shape</span><span class="o">=</span><span class="n">base_shape</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># first, scale `base_shape` up to contain at least `min_sig_size` items:</span>
+        <span class="n">min_factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scale_factors</span><span class="p">(</span>
+            <span class="n">base_shape</span><span class="p">,</span>
+            <span class="n">containing_shape</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">min_sig_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">min_base_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_base_shape</span><span class="p">(</span><span class="n">base_shape</span><span class="p">,</span> <span class="n">min_factors</span><span class="p">)</span>
+
+        <span class="c1"># considering the min size, calculate the max depth:</span>
+        <span class="n">max_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">size_px</span> <span class="o">//</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">min_base_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="n">max_depth</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+
+        <span class="n">full_base_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_shape</span><span class="p">)</span>
+        <span class="n">min_factors</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">min_factors</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">containing_shape</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">containing_shape</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">adjust_for_roi</span><span class="p">(</span><span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scale_factors</span><span class="p">(</span>
+            <span class="n">full_base_shape</span><span class="p">,</span>
+            <span class="n">containing_shape</span><span class="o">=</span><span class="n">containing_shape</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">size_px</span><span class="p">,</span>
+            <span class="n">min_factors</span><span class="o">=</span><span class="n">min_factors</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tileshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_base_shape</span><span class="p">(</span><span class="n">full_base_shape</span><span class="p">,</span> <span class="n">factors</span><span class="p">)</span>
+
+        <span class="c1"># the partition has a &quot;veto&quot; on the tileshape:</span>
+        <span class="c1"># FIXME: this veto may break if the base shape was adjusted</span>
+        <span class="c1"># above, and we need to be careful not to break corrections with this,</span>
+        <span class="c1"># and also fulfill requests of per-frame reading</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;tileshape before adjustment: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">tileshape</span><span class="p">,))</span>
+        <span class="n">tileshape</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">adjust_tileshape</span><span class="p">(</span><span class="n">tileshape</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;tileshape after adjustment: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">tileshape</span><span class="p">,))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span>
+            <span class="n">tileshape</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">io_max_size</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">full_base_shape</span><span class="p">,</span> <span class="n">corrections</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">TilingScheme</span><span class="o">.</span><span class="n">make_for_shape</span><span class="p">(</span>
+            <span class="n">tileshape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">tileshape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span>
+            <span class="n">dataset_shape</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">debug</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;min_factors&quot;</span><span class="p">:</span> <span class="n">min_factors</span><span class="p">,</span>
+                <span class="s2">&quot;factors&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
+                <span class="s2">&quot;tileshape&quot;</span><span class="p">:</span> <span class="n">tileshape</span><span class="p">,</span>
+                <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span>
+                <span class="s2">&quot;size_px&quot;</span><span class="p">:</span> <span class="n">size_px</span><span class="p">,</span>
+                <span class="s2">&quot;full_base_shape&quot;</span><span class="p">:</span> <span class="n">full_base_shape</span><span class="p">,</span>
+                <span class="s2">&quot;need_decode&quot;</span><span class="p">:</span> <span class="n">need_decode</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_io_max_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">need_decode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">need_decode</span><span class="p">:</span>
+            <span class="n">io_max_size</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">get_max_io_size</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">io_max_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">io_max_size</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io_max_size</span> <span class="o">=</span> <span class="n">itemsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">io_max_size</span>
+
+    <span class="k">def</span> <span class="nf">_get_scale_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">containing_shape</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">min_factors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate scaling factors to scale `shape` up to `size` elements,</span>
+<span class="sd">        while being constrained to `containing_shape`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;_get_scale_factors in: shape=</span><span class="si">%r</span><span class="s2">, containing_shape=</span><span class="si">%r</span><span class="s2">, size=</span><span class="si">%r</span><span class="s2">, min_factors=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="n">containing_shape</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">min_factors</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">containing_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_factors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">factors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">min_factors</span><span class="p">)</span>
+        <span class="n">max_factors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">cs</span> <span class="o">//</span> <span class="n">s</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">cs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">containing_shape</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">prelim_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_base_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">factors</span><span class="p">)</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="n">size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">prelim_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rest</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)):</span>
+            <span class="n">max_factor</span> <span class="o">=</span> <span class="n">max_factors</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">rest</span> <span class="o">*</span> <span class="n">factors</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">factor</span> <span class="o">&lt;</span> <span class="n">factors</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">factor</span> <span class="o">=</span> <span class="n">factors</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">factor</span> <span class="o">&gt;</span> <span class="n">max_factor</span><span class="p">:</span>
+                <span class="n">factor</span> <span class="o">=</span> <span class="n">max_factor</span>
+            <span class="n">factors</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span>
+            <span class="n">prelim_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_base_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">factors</span><span class="p">)</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">prelim_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;_get_scale_factors out: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">factors</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">factors</span>
+
+    <span class="k">def</span> <span class="nf">_scale_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">,</span> <span class="n">factors</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">f</span> <span class="o">*</span> <span class="n">bs</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_default_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># FIXME: adjust size to L3 // number of workers per node</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="mi">20</span>
+
+    <span class="k">def</span> <span class="nf">_get_udf_size_pref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+        <span class="n">udf_prefs</span> <span class="o">=</span> <span class="n">udf</span><span class="o">.</span><span class="n">get_tiling_preferences</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">udf_prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_size&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="n">UDF</span><span class="o">.</span><span class="n">TILE_SIZE_BEST_FIT</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_default_size</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">size</span>
+
+    <span class="k">def</span> <span class="nf">_get_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_max_size</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">itemsize</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the maximum tile size in bytes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">udf_method</span> <span class="o">=</span> <span class="n">udf</span><span class="o">.</span><span class="n">get_method</span><span class="p">()</span>
+        <span class="n">partition_size</span> <span class="o">=</span> <span class="n">itemsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">partition_size_sig</span> <span class="o">=</span> <span class="n">itemsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">udf_method</span> <span class="o">==</span> <span class="s2">&quot;frame&quot;</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_default_size</span><span class="p">(),</span> <span class="n">partition_size_sig</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">udf_method</span> <span class="o">==</span> <span class="s2">&quot;partition&quot;</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">partition_size</span>
+        <span class="k">elif</span> <span class="n">udf_method</span> <span class="o">==</span> <span class="s2">&quot;tile&quot;</span><span class="p">:</span>
+            <span class="c1"># start with the UDF size preference:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_udf_size_pref</span><span class="p">(</span><span class="n">udf</span><span class="p">)</span>
+
+            <span class="c1"># constrain to maximum read size</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">io_max_size</span><span class="p">)</span>
+
+            <span class="c1"># if the base_shape is larger than the current maximum size,</span>
+            <span class="c1"># we need to increase the size:</span>
+            <span class="n">base_size</span> <span class="o">=</span> <span class="n">itemsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">base_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">base_size</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">size</span>
+
+    <span class="k">def</span> <span class="nf">_get_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">udf</span><span class="o">.</span><span class="n">get_method</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;frame&quot;</span> <span class="ow">or</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;partition&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">):</span>
+            <span class="n">base_shape</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># only by tile:</span>
+            <span class="n">base_shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span>
+                <span class="n">partition</span><span class="o">.</span><span class="n">get_base_shape</span><span class="p">(</span><span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">),</span>
+                <span class="n">sig_dims</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">sig</span>
+        <span class="k">return</span> <span class="n">base_shape</span>
+
+    <span class="k">def</span> <span class="nf">_get_udf_depth_pref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+        <span class="n">udf_prefs</span> <span class="o">=</span> <span class="n">udf</span><span class="o">.</span><span class="n">get_tiling_preferences</span><span class="p">()</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">udf_prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="n">UDF</span><span class="o">.</span><span class="n">TILE_DEPTH_DEFAULT</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="ow">is</span> <span class="n">UDF</span><span class="o">.</span><span class="n">TILE_DEPTH_DEFAULT</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="mi">32</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">depth</span>
+
+    <span class="k">def</span> <span class="nf">_get_min_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+        <span class="n">udf_method</span> <span class="o">=</span> <span class="n">udf</span><span class="o">.</span><span class="n">get_method</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">udf_method</span> <span class="o">==</span> <span class="s2">&quot;partition&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">udf_method</span> <span class="o">==</span> <span class="s2">&quot;tile&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_udf_depth_pref</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

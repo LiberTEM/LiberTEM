@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Loading data &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sample Datasets" href="sample_datasets.html" />
+    <link rel="prev" title="Off-axis electron holography" href="app/holography.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Loading data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#loading-through-the-api">Loading through the API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-using-the-gui">Loading using the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-formats">Supported formats</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Loading data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/formats.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="loading-data">
+<span id="id1"></span><h1>Loading data<a class="headerlink" href="#loading-data" title="Permalink to this headline">¶</a></h1>
+<p>To efficiently handle files larger than main memory, LiberTEM never loads the
+whole data set into memory. Calling the <a class="reference internal" href="reference/api.html#libertem.api.Context.load" title="libertem.api.Context.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load()</span></code></a>
+function only opens the data set and gives back a handle; running an analysis
+with <a class="reference internal" href="reference/api.html#libertem.api.Context.run" title="libertem.api.Context.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> or a UDF with
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> then streams the data from mass storage.</p>
+<p>See <a class="reference internal" href="sample_datasets.html#sample-data"><span class="std std-ref">Sample Datasets</span></a> for publicly available datasets for testing.</p>
+<p>There are two main ways of opening a data set in LiberTEM: using the GUI, or the
+Python API.</p>
+<div class="section" id="loading-through-the-api">
+<h2>Loading through the API<a class="headerlink" href="#loading-through-the-api" title="Permalink to this headline">¶</a></h2>
+<p>In the API, you can use <a class="reference internal" href="reference/api.html#libertem.api.Context.load" title="libertem.api.Context.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.load()</span></code></a>. The general
+pattern is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">()</span>
+<span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;typename&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/some/file&quot;</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="s2">&quot;val1&quot;</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So, you need to specify the data set type, the path, and dataset-specific
+arguments. These arguments are documented below.</p>
+<p>For most file types, it is possible to automatically detect the type and
+parameters, which you can trigger by using <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> as file type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/some/file&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For the full list of supported file formats with links to their reference
+documentation, see <a class="reference internal" href="#supported-formats"><span class="std std-ref">Supported formats</span></a> below.</p>
+</div>
+<div class="section" id="loading-using-the-gui">
+<span id="id2"></span><h2>Loading using the GUI<a class="headerlink" href="#loading-using-the-gui" title="Permalink to this headline">¶</a></h2>
+<p>Using the GUI, mostly the same parameters need to be specified, although some
+are only available in the Python API. Tuples (for example for <code class="code docutils literal notranslate"><span class="pre">nav_shape</span></code>)
+have to be entered as separated values into the fields. You can hit a comma to jump to
+the next field. We follow the NumPy convention here and specify the “fast-access” dimension
+last, so a value of <code class="code docutils literal notranslate"><span class="pre">42</span></code>, <code class="code docutils literal notranslate"><span class="pre">21</span></code> would mean the same as specifying
+<code class="code docutils literal notranslate"><span class="pre">(42,</span> <span class="pre">21)</span></code> in the Python API, setting <code class="code docutils literal notranslate"><span class="pre">y=42</span></code> and <code class="code docutils literal notranslate"><span class="pre">x=21</span></code>. Note that the GUI
+is currently limited to 2D visualizations, while the scripting API can handle more
+general cases.</p>
+<p>See also <a class="reference internal" href="concepts.html#concepts"><span class="std std-ref">the concepts section</span></a>.</p>
+</div>
+<div class="section" id="common-parameters">
+<h2>Common parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline">¶</a></h2>
+<p>There are some common parameters across data set types:</p>
+<dl class="simple">
+<dt><cite>name</cite></dt><dd><p>The name of the data set, for display purposes. Only used in the GUI.</p>
+</dd>
+<dt><cite>nav_shape</cite></dt><dd><p>In the GUI, we generally support visualizing data containing rectangular 2D scans. For
+all the dataset types, you can specify a nav_shape as a tuple <cite>(y, x)</cite>. If the dataset
+isn’t 4D, the GUI can reshape it to 4D. When using the Python API, you are free to
+use n-dimensional <cite>nav_shape</cite>, if the data set and chosen analysis supports it.</p>
+</dd>
+<dt><cite>sig_shape</cite></dt><dd><p>In the GUI, you can specify shape of the detector as <code class="code docutils literal notranslate"><span class="pre">height</span></code>, <code class="code docutils literal notranslate"><span class="pre">width</span></code>, but
+when using the Python API, it can be of any dimensionality.</p>
+</dd>
+<dt><cite>sync_offset</cite></dt><dd><p>You can specify a <cite>sync_offset</cite> to handle synchronization or acquisition problems.
+If it’s positive, <cite>sync_offset</cite> number of frames will be skipped from start.
+If it’s negative, <cite>abs(sync_offset)</cite> number of blank frames will be inserted at start.</p>
+</dd>
+<dt><cite>io_backend</cite></dt><dd><p>Different methods for I/O are available in LiberTEM, which can influence performance.
+See <a class="reference internal" href="reference/io_backends.html#io-backends"><span class="std std-ref">I/O Backends</span></a> for details.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="supported-formats">
+<span id="id3"></span><h2>Supported formats<a class="headerlink" href="#supported-formats" title="Permalink to this headline">¶</a></h2>
+<p>LiberTEM supports the following file formats out of the box, see links for details:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="reference/dataset.html#mib"><span class="std std-ref">Merlin Medipix (MIB)</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#raw-binary"><span class="std std-ref">Raw binary files</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#dm-format"><span class="std std-ref">Digital Micrograph (DM3, DM4) files</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#empad"><span class="std std-ref">EMPAD</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#k2is"><span class="std std-ref">K2IS</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#frms6"><span class="std std-ref">FRMS6</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#blo"><span class="std std-ref">BLO</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#ser"><span class="std std-ref">SER</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#hdf5"><span class="std std-ref">HDF5</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#seq"><span class="std std-ref">Norpix SEQ</span></a></p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#mrc"><span class="std std-ref">MRC</span></a></p></li>
+</ul>
+<p>Furthermore, a memory data set can be constructed from a NumPy array for testing
+purposes. See <a class="reference internal" href="reference/dataset.html#memory"><span class="std std-ref">Memory data set</span></a> for details.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="sample_datasets.html" class="btn btn-neutral float-right" title="Sample Datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="app/holography.html" class="btn btn-neutral float-left" title="Off-axis electron holography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,1587 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Data Set API &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="I/O Backends" href="io_backends.html" />
+    <link rel="prev" title="UDF API reference" href="udf.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html">UDF API reference</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data Set API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#formats">Formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#merlin-medipix-mib">Merlin Medipix (MIB)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#raw-binary-files">Raw binary files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#digital-micrograph-dm3-dm4-files">Digital Micrograph (DM3, DM4) files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#empad">EMPAD</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#k2is">K2IS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#frms6">FRMS6</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blo">BLO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ser">SER</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hdf5">HDF5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#norpix-seq">Norpix SEQ</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mrc">MRC</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#memory-data-set">Memory data set</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.io.dataset.base">Internal DataSet API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cluster-ds.html">Cluster data set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="caching.html">Distributed caching layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Python API reference</a> &raquo;</li>
+        
+      <li>Data Set API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/dataset.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="data-set-api">
+<span id="dataset-api"></span><h1>Data Set API<a class="headerlink" href="#data-set-api" title="Permalink to this headline">¶</a></h1>
+<p>This API allows to load and handle data on a distributed system efficiently. Note that you should
+not directly use most dataset methods, but rather use the more high-level tools available, for
+example user-defined functions.</p>
+<p>See <a class="reference internal" href="../formats.html#loading-data"><span class="std std-ref">our documentation on loading data</span></a> for a high-level introduction.</p>
+<div class="section" id="formats">
+<span id="id1"></span><h2>Formats<a class="headerlink" href="#formats" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="merlin-medipix-mib">
+<span id="mib"></span><h3>Merlin Medipix (MIB)<a class="headerlink" href="#merlin-medipix-mib" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.mib.MIBDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.mib.</span></span><span class="sig-name descname"><span class="pre">MIBDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_glob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/mib.html#MIBDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.mib.MIBDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>MIB data sets consist of one or more <cite>.mib</cite> files, and optionally
+a <cite>.hdr</cite> file. The HDR file is used to automatically set the
+<cite>nav_shape</cite> parameter from the fields “Frames per Trigger” and “Frames
+in Acquisition.” When loading a MIB data set, you can either specify
+the path to the HDR file, or choose one of the MIB files. The MIB files
+are assumed to follow a naming pattern of some non-numerical prefix,
+and a sequential numerical suffix.</p>
+<p>Note that if you are using a per-pixel trigger setup, LiberTEM won’t
+be able to deduce the x scanning dimension - in that case, you will
+need to specify the <cite>nav_shape</cite> yourself.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># both examples look for files matching /path/to/default*.mib:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds1</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;mib&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/default.hdr&quot;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds2</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;mib&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/default64.mib&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to either the .hdr file or one of the .mib files</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Common case: (height, width); but can be any dimensionality</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="raw-binary-files">
+<span id="raw-binary"></span><h3>Raw binary files<a class="headerlink" href="#raw-binary-files" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.raw.RawFileDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.raw.</span></span><span class="sig-name descname"><span class="pre">RawFileDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_size_raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_detector_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/raw.html#RawFileDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.raw.RawFileDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read raw data from a single file of raw binary data. This reader assumes the following
+format:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>only raw data (no file header)</p></li>
+<li><p>frames are stored in C-order without additional frame headers</p></li>
+<li><p>dtype supported by numpy</p></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path_to_raw</span><span class="p">,</span> <span class="n">nav_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span>
+<span class="gp">... </span>              <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the file</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em>) – Common case: (height, width); but can be any dimensionality</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+<li><p><strong>dtype</strong> (<em>numpy dtype</em>) – The dtype of the data as it is on disk. Can contain endian indicator, for
+example &gt;u2 for big-endian 16bit data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="digital-micrograph-dm3-dm4-files">
+<span id="dm-format"></span><h3>Digital Micrograph (DM3, DM4) files<a class="headerlink" href="#digital-micrograph-dm3-dm4-files" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.dm.DMDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.dm.</span></span><span class="sig-name descname"><span class="pre">DMDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">same_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/dm.html#DMDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.dm.DMDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reader for stacks of DM3/DM4 files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This DataSet is not supported in the GUI yet, as the file dialog needs to be
+updated to <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/498">properly handle opening series</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Single-file 4D DM files are not yet supported. The use-case would be
+to read DM4 files from the conversion of K2 STEMx data, but those data sets
+are actually transposed (nav/sig are swapped).</p>
+<p>That means the data would have to be transposed back into the usual shape,
+which is slow, or algorithms would have to be adapted to work directly on
+transposed data. As an example, applying a mask in the conventional layout
+corresponds to calculating a weighted sum frame along the navigation
+dimension in the transposed layout.</p>
+<p>Since the transposed layout corresponds to a TEM tilt series, support for
+transposed 4D STEM data could have more general applications beyond
+supporting 4D DM4 files. Please contact us if you have a use-case for
+single-file 4D DM files or other applications that process stacks of TEM
+files, and we may add support!</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can use the PyPi package <a class="reference external" href="https://pypi.org/project/natsort/">natsort</a>
+to sort the filenames by their numerical components, this is especially useful
+for filenames without leading zeros.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>]</em>) – List of paths to the files that should be loaded. The order is important,
+as it determines the order in the navigation axis.</p></li>
+<li><p><strong>nav_shape</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>] or </em><a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – By default, the files are loaded as a 3D stack. You can change this
+by specifying the nav_shape, which reshapes the navigation dimensions.
+Raises a <cite>DataSetException</cite> if the shape is incompatible with the data
+that is loaded.</p></li>
+<li><p><strong>sig_shape</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+<li><p><strong>same_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – When reading a stack of dm3/dm4 files, it can be expensive to read in
+all the metadata from all files, which we currently only use for
+getting the offsets and sizes of the main data in each file. If you
+absolutely know that the offsets and sizes are the same for all files,
+you can set this parameter and we will skip reading all metadata but
+the one from the first file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="empad">
+<span id="id2"></span><h3>EMPAD<a class="headerlink" href="#empad" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.empad.EMPADDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.empad.</span></span><span class="sig-name descname"><span class="pre">EMPADDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/empad.html#EMPADDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.empad.EMPADDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from EMPAD detector. EMPAD data sets consist of two files,
+one .raw and one .xml file. Note that the .xml file contains the file name
+of the .raw file, so if the raw file was renamed at some point, opening using
+the .xml file will fail.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to either the .xml or the .raw file. If the .xml file given,
+the <cite>nav_shape</cite> parameter can be left out</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A tuple (y, x) that specifies the size of the scanned region. It is
+automatically read from the .xml file if you specify one as <cite>path</cite>.</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="k2is">
+<span id="id3"></span><h3>K2IS<a class="headerlink" href="#k2is" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.k2is.K2ISDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.k2is.</span></span><span class="sig-name descname"><span class="pre">K2ISDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/k2is.html#K2ISDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.k2is.K2ISDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.
+Currently, data acquired using the STEMx unit is supported, metadata
+about the nav_shape is read from the .gtg file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to one of the files of the data set (either one of the .bin files or the .gtg file)</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="frms6">
+<span id="id4"></span><h3>FRMS6<a class="headerlink" href="#frms6" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.frms6.FRMS6DataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.frms6.</span></span><span class="sig-name descname"><span class="pre">FRMS6DataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_offset_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_map_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/frms6.html#FRMS6DataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.frms6.FRMS6DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and
+a .hdr file. The first .frms6 file (matching *_000.frms6) contains dark frames, which
+are subtracted if <cite>enable_offset_correction</cite> is true.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em>) – Path to one of the files of the FRMS6 dataset (either .hdr or .frms6)</p></li>
+<li><p><strong>enable_offset_correction</strong> (<em>boolean</em>) – Subtract dark frames when reading data</p></li>
+<li><p><strong>gain_map_path</strong> (<em>string</em>) – Path to a gain map to apply (.mat format)</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="blo">
+<span id="id5"></span><h3>BLO<a class="headerlink" href="#blo" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.blo.BloDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.blo.</span></span><span class="sig-name descname"><span class="pre">BloDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endianess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/blo.html#BloDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.blo.BloDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read Nanomegas .blo files</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;blo&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/file.blo&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the file</p></li>
+<li><p><strong>endianess</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – either ‘&lt;’ or ‘&gt;’ for little or big endian</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="ser">
+<span id="id6"></span><h3>SER<a class="headerlink" href="#ser" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.ser.SERDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.ser.</span></span><span class="sig-name descname"><span class="pre">SERDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emipath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/ser.html#SERDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.ser.SERDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read TIA SER files.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;ser&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/file.ser&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the .ser file</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="hdf5">
+<span id="id7"></span><h3>HDF5<a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.hdf5.H5DataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.hdf5.</span></span><span class="sig-name descname"><span class="pre">H5DataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_partitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/hdf5.html#H5DataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.hdf5.H5DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from a HDF5 data set.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path_to_hdf5</span><span class="p">,</span> <span class="n">ds_path</span><span class="o">=</span><span class="s2">&quot;/data&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the file</p></li>
+<li><p><strong>ds_path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the HDF5 data set inside the file</p></li>
+<li><p><strong>sig_dims</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of dimensions that should be considered part of the signal (for example
+2 when dealing with 2D image data)</p></li>
+<li><p><strong>target_size</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Target partition size, in bytes. Usually doesn’t need to be changed.</p></li>
+<li><p><strong>min_num_partitions</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Minimum number of partitions, set to number of cores if not specified. Usually
+doesn’t need to be specified.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the HDF5 file to be loaded contains compressed data
+using a custom compression filter (other than GZIP, LZF or SZIP)
+the user must import the associated HDF5 filter library before
+importing LiberTEM in their main script, for example the library
+<a class="reference external" href="https://github.com/silx-kit/hdf5plugin">hdf5plugin</a>.</p>
+<p>If running LiberTEM in a cluster with existing workers (e.g. by running
+<cite>libertem-worker</cite> or <cite>dask-worker</cite> on nodes), it is recommended to add the
+necessary imports as <cite>–preload</cite> arguments to the worker launch command,
+for example with “<cite>libertem-worker –preload hdf5plugin tcp://scheduler_ip:port</cite>”.</p>
+<p>See the following <a class="reference external" href="https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline">h5py documentation</a> for
+more information on filter pipelines.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="norpix-seq">
+<span id="seq"></span><h3>Norpix SEQ<a class="headerlink" href="#norpix-seq" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.seq.SEQDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.seq.</span></span><span class="sig-name descname"><span class="pre">SEQDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/seq.html#SEQDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.seq.SEQDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from Norpix SEQ files.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;seq&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/file.seq&quot;</span><span class="p">,</span> <span class="n">nav_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">))</span>  
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – Path to the .seq file</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="mrc">
+<span id="id8"></span><h3>MRC<a class="headerlink" href="#mrc" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.mrc.MRCDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.mrc.</span></span><span class="sig-name descname"><span class="pre">MRCDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/mrc.html#MRCDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.mrc.MRCDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read MRC files.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;mrc&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/file.mrc&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path to the .mrc file</p></li>
+<li><p><strong>nav_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – A n-tuple that specifies the size of the navigation region ((y, x), but
+can also be of length 1 for example for a line scan, or length 3 for
+a data cube, for example)</p></li>
+<li><p><strong>sig_shape</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – Signal/detector size (height, width)</p></li>
+<li><p><strong>sync_offset</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="memory-data-set">
+<span id="memory"></span><h3>Memory data set<a class="headerlink" href="#memory-data-set" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.memory.MemoryDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.memory.</span></span><span class="sig-name descname"><span class="pre">MemoryDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_partitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_cast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiledelay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datashape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_need_decode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/memory.html#MemoryDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.memory.MemoryDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>This dataset is constructed from a NumPy array in memory for testing
+purposes. It is not recommended for production use since it performs poorly with a
+distributed executor.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.io.dataset.memory</span> <span class="kn">import</span> <span class="n">MemoryDataSet</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">MemoryDataSet</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-libertem.io.dataset.base">
+<span id="internal-dataset-api"></span><h2>Internal DataSet API<a class="headerlink" href="#module-libertem.io.dataset.base" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">BasePartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.DataSetMeta" title="libertem.io.dataset.base.meta.DataSetMeta"><span class="pre">libertem.io.dataset.base.meta.DataSetMeta</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_slice</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">libertem.common.slice.Slice</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.FileSet" title="libertem.io.dataset.base.fileset.FileSet"><span class="pre">libertem.io.dataset.base.fileset.FileSet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_frame</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.IOBackend" title="libertem.io.dataset.base.backend.IOBackend"><span class="pre">libertem.io.dataset.base.backend.IOBackend</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class with default implementations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta</strong> – The <cite>DataSet</cite>’s <cite>DataSetMeta</cite> instance</p></li>
+<li><p><strong>partition_slice</strong> – The partition slice in non-flattened form</p></li>
+<li><p><strong>fileset</strong> – The files that are part of this partition (the FileSet may also contain files
+from the dataset which are not part of this partition, but that may harm performance)</p></li>
+<li><p><strong>start_frame</strong> – The index of the first frame of this partition (global coords)</p></li>
+<li><p><strong>num_frames</strong> – How many frames this partition should contain</p></li>
+<li><p><strong>io_backend</strong> – The I/O backend to use for accessing this partition</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.adjust_tileshape">
+<span class="sig-name descname"><span class="pre">adjust_tileshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tileshape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.adjust_tileshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.adjust_tileshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final veto of the Partition in the tileshape negotiation process,
+make sure that corrections are taken into account!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_base_shape">
+<span class="sig-name descname"><span class="pre">get_base_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_base_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_base_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_io_backend">
+<span class="sig-name descname"><span class="pre">get_io_backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_io_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_io_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_locations">
+<span class="sig-name descname"><span class="pre">get_locations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_locations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_locations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_macrotile">
+<span class="sig-name descname"><span class="pre">get_macrotile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_macrotile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_macrotile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a single tile for the entire partition.</p>
+<p>This is useful to support process_partiton() in UDFs and to construct dask arrays
+from datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_max_io_size">
+<span class="sig-name descname"><span class="pre">get_max_io_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_max_io_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_max_io_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to implement a custom maximum I/O size</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.get_tiles">
+<span class="sig-name descname"><span class="pre">get_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.get_tiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.get_tiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generator over all DataTiles contained in this Partition.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The DataSet may reuse the internal buffer of a tile, so you should
+directly process the tile and not accumulate a number of tiles and then work
+on them.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiling_scheme</strong> – According to this scheme the data will be tiled</p></li>
+<li><p><strong>dest_dtype</strong> (<em>numpy dtype</em>) – convert data to this dtype when reading</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Boolean array that matches the dataset navigation shape to limit the region to work on.
+With a ROI, we yield tiles from a “compressed” navigation axis, relative to
+the beginning of the dataset. Compressed means, only frames that have a 1
+in the ROI are considered, and the resulting tile slices are from a coordinate
+system that has the shape <cite>(np.count_nonzero(roi),)</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.need_decode">
+<span class="sig-name descname"><span class="pre">need_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrections</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.need_decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.need_decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BasePartition.set_corrections">
+<span class="sig-name descname"><span class="pre">set_corrections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corrections</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="corrections.html#libertem.corrections.corrset.CorrectionSet" title="libertem.corrections.corrset.CorrectionSet"><span class="pre">libertem.corrections.corrset.CorrectionSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#BasePartition.set_corrections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BasePartition.set_corrections" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BufferedBackend">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">BufferedBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_buffer_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16777216</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_buffered.html#BufferedBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BufferedBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>I/O backend using a buffered reading strategy. Useful for slower media
+like HDDs, where seeks cause performance drops. Used by default
+on Windows.</p>
+<p>This does not perform optimally on SSDs under all circumstances, for
+better best-case performance, try using
+<a class="reference internal" href="#libertem.io.dataset.base.MMapBackend" title="libertem.io.dataset.base.MMapBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">MMapBackend</span></code></a> instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_buffer_size</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Maximum buffer size, in bytes. This is passed to the tileshape
+negotiation to select the right depth.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BufferedBackend.from_json">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_buffered.html#BufferedBackend.from_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BufferedBackend.from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct an instance from the already-decoded <cite>msg</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.BufferedBackend.get_impl">
+<span class="sig-name descname"><span class="pre">get_impl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_buffered.html#BufferedBackend.get_impl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.BufferedBackend.get_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">DataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.check_valid">
+<span class="sig-name descname"><span class="pre">check_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.check_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.check_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>check validity of the DataSet. this will be executed (after initialize) on a worker node.
+should raise DataSetException in case of errors, return True otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.detect_params">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">detect_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">executor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.detect_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.detect_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guess if path can be opened using this DataSet implementation and
+detect parameters.</p>
+<p>returns dict of detected parameters if path matches this dataset type,
+returns False if path is most likely not of a matching type.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.diagnostics">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">diagnostics</span></span><a class="headerlink" href="#libertem.io.dataset.base.DataSet.diagnostics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diagnostics common for all DataSet implementations</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.dtype">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#libertem.io.dataset.base.DataSet.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>the destination data type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_cache_key">
+<span class="sig-name descname"><span class="pre">get_cache_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_cache_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_cache_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_correction_data">
+<span class="sig-name descname"><span class="pre">get_correction_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_correction_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_correction_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Correction parameters that are part of this DataSet.
+This should only be called after the DataSet is initialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>correction parameters that are part of this DataSet</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="corrections.html#libertem.corrections.corrset.CorrectionSet" title="libertem.corrections.corrset.CorrectionSet">CorrectionSet</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_diagnostics">
+<span class="sig-name descname"><span class="pre">get_diagnostics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_diagnostics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_diagnostics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get relevant diagnostics for this dataset, as a list of
+dicts with keys name, value, where value may be string or
+a list of dicts itself. Subclasses should override this method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_io_backend">
+<span class="sig-name descname"><span class="pre">get_io_backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_io_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_io_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_msg_converter">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">get_msg_converter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">libertem.web.messageconverter.MessageConverter</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_msg_converter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_msg_converter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_num_partitions">
+<span class="sig-name descname"><span class="pre">get_num_partitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_num_partitions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_num_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of partitions the dataset should be split into</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_partitions">
+<span class="sig-name descname"><span class="pre">get_partitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_partitions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generator over all Partitions in this DataSet. Should only
+be called on the master node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_slices">
+<span class="sig-name descname"><span class="pre">get_slices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the partition slices for the dataset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_supported_extensions">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">get_supported_extensions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_supported_extensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_supported_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return supported extensions as a set of strings.</p>
+<p>Plain extensions only, no pattern!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.get_sync_offset_info">
+<span class="sig-name descname"><span class="pre">get_sync_offset_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.get_sync_offset_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.get_sync_offset_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check sync_offset specified and returns number of frames skipped and inserted</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform possibly expensive initialization, like pre-loading metadata.</p>
+<p>This is run on the master node, but can execute parts on workers, for example
+if they need to access the data stored on worker nodes, using the passed executor
+instance.</p>
+<p>If you need the executor around for later operations, for example when creating
+the partitioning, save a reference here!</p>
+<p>Should return the possibly modified <cite>DataSet</cite> instance (if a method running
+on a worker is changing <cite>self</cite>, these changes won’t automatically be transferred back
+to the master node)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.partition_shape">
+<span class="sig-name descname"><span class="pre">partition_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_partitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.partition_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.partition_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate partition shape for the given <code class="docutils literal notranslate"><span class="pre">target_size</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.21)"><em>numpy.dtype</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – data type of the dataset</p></li>
+<li><p><strong>target_size</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – target size in bytes - how large should each partition be?</p></li>
+<li><p><strong>min_num_partitions</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minimum number of partitions desired. Defaults to the number of workers in the cluster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the shape calculated from the given parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.raw_dtype">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">raw_dtype</span></span><a class="headerlink" href="#libertem.io.dataset.base.DataSet.raw_dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>the underlying data type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.set_num_cores">
+<span class="sig-name descname"><span class="pre">set_num_cores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#DataSet.set_num_cores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSet.set_num_cores" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSet.shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#libertem.io.dataset.base.DataSet.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shape of the DataSet, as it makes sense for the application domain
+(for example, 4D for pixelated STEM)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSetException">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">DataSetException</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/exceptions.html#DataSetException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSetException" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataSetMeta">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">DataSetMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">libertem.common.shape.Shape</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/meta.html#DataSetMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataSetMeta" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>shape</dt><dd><p>“native” dataset shape, can have any dimensionality</p>
+</dd>
+<dt>raw_dtype<span class="classifier">np.dtype</span></dt><dd><p>dtype used internally in the data set for reading</p>
+</dd>
+<dt>dtype<span class="classifier">np.dtype</span></dt><dd><p>Best-fitting output dtype. This can be different from raw_dtype, for example
+if there are post-processing steps done as part of reading, which need a different
+dtype. Assumed equal to raw_dtype if not given</p>
+</dd>
+<dt>sync_offset: int, optional</dt><dd><p>If positive, number of frames to skip from start
+If negative, number of blank frames to insert at start</p>
+</dd>
+<dt>image_count</dt><dd><p>Total number of frames in the dataset</p>
+</dd>
+<dt>metadata</dt><dd><p>Any metadata offered by the DataSet, not specified yet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataTile">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">DataTile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#DataTile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataTile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataTile.flat_data">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">flat_data</span></span><a class="headerlink" href="#libertem.io.dataset.base.DataTile.flat_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten the data.</p>
+<p>The result is a 2D array where each row contains pixel data
+from a single frame. It is just a reshape, so it is a view into
+the original data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DataTile.reshape">
+<span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#DataTile.reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DataTile.reshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array containing the same data with a new shape.</p>
+<p>Refer to <cite>numpy.reshape</cite> for full documentation.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v1.21)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.reshape</span></code></a></dt><dd><p>equivalent function</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Unlike the free function <cite>numpy.reshape</cite>, this method on <cite>ndarray</cite> allows
+the elements of the shape parameter to be passed in as separate arguments.
+For example, <code class="docutils literal notranslate"><span class="pre">a.reshape(10,</span> <span class="pre">11)</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">a.reshape((10,</span> <span class="pre">11))</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Decoder">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">Decoder</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#Decoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Decoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Decoder.do_clear">
+<span class="sig-name descname"><span class="pre">do_clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#Decoder.do_clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Decoder.do_clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Decoder.get_decode">
+<span class="sig-name descname"><span class="pre">get_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#Decoder.get_decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Decoder.get_decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Decoder.get_native_dtype">
+<span class="sig-name descname"><span class="pre">get_native_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp_native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#Decoder.get_native_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Decoder.get_native_dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DtypeConversionDecoder">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">DtypeConversionDecoder</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#DtypeConversionDecoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DtypeConversionDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DtypeConversionDecoder.get_decode">
+<span class="sig-name descname"><span class="pre">get_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#DtypeConversionDecoder.get_decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DtypeConversionDecoder.get_decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.DtypeConversionDecoder.get_native_dtype">
+<span class="sig-name descname"><span class="pre">get_native_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp_native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#DtypeConversionDecoder.get_native_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.DtypeConversionDecoder.get_native_dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">File</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_footer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/file.html#File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.File" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_header</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of bytes to ignore at the beginning of the file</p></li>
+<li><p><strong>frame_header</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of bytes to ignore before each frame</p></li>
+<li><p><strong>frame_footer</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of bytes to ignore after each frame</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/file.html#File.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.File.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.end_idx">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">end_idx</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.end_idx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.file_header_bytes">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">file_header_bytes</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.file_header_bytes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.fileno">
+<span class="sig-name descname"><span class="pre">fileno</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/file.html#File.fileno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.File.fileno" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.native_dtype">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">native_dtype</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.native_dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.num_frames">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">num_frames</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.num_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/file.html#File.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.File.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.sig_shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">sig_shape</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.sig_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.File.start_idx">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">start_idx</span></span><a class="headerlink" href="#libertem.io.dataset.base.File.start_idx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">FileSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.io.dataset.base.File" title="libertem.io.dataset.base.file.File"><span class="pre">libertem.io.dataset.base.file.File</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_header_bytes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_footer_bytes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/fileset.html#FileSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileSet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>files</strong> – files that are part of a partition or dataset</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileSet.files_from">
+<span class="sig-name descname"><span class="pre">files_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/fileset.html#FileSet.files_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileSet.files_from" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileSet.get_as_arr">
+<span class="sig-name descname"><span class="pre">get_as_arr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/fileset.html#FileSet.get_as_arr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileSet.get_as_arr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileSet.get_for_range">
+<span class="sig-name descname"><span class="pre">get_for_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/fileset.html#FileSet.get_for_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileSet.get_for_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>return new FileSet filtered for files having frames in the [start, stop) range</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileSet.get_read_ranges">
+<span class="sig-name descname"><span class="pre">get_read_ranges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_at_frame</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_before_frame</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiling_scheme</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.TilingScheme" title="libertem.io.dataset.base.tiling.TilingScheme"><span class="pre">libertem.io.dataset.base.tiling.TilingScheme</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/fileset.html#FileSet.get_read_ranges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileSet.get_read_ranges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileTree">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">FileTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#libertem.io.dataset.base.FileTree" title="libertem.io.dataset.base.utils.FileTree"><span class="pre">libertem.io.dataset.base.utils.FileTree</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#libertem.io.dataset.base.FileTree" title="libertem.io.dataset.base.utils.FileTree"><span class="pre">libertem.io.dataset.base.utils.FileTree</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/utils.html#FileTree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a FileTree node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low</strong> – First frame contained in this file</p></li>
+<li><p><strong>high</strong> – First index of the next file</p></li>
+<li><p><strong>value</strong> – The corresponding file object</p></li>
+<li><p><strong>idx</strong> – The index of the file object in the fileset</p></li>
+<li><p><strong>left</strong> – Nodes with a lower low</p></li>
+<li><p><strong>right</strong> – Nodes with a higher low</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileTree.make">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">make</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/utils.html#FileTree.make"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileTree.make" title="Permalink to this definition">¶</a></dt>
+<dd><p>build a balanced binary tree by bisecting the files list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileTree.search_start">
+<span class="sig-name descname"><span class="pre">search_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/utils.html#FileTree.search_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileTree.search_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>search a node that has start_idx &lt;= value &amp;&amp; end_idx &gt; value</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.FileTree.to_string">
+<span class="sig-name descname"><span class="pre">to_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/utils.html#FileTree.to_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.FileTree.to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.IOBackend">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">IOBackend</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#IOBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.IOBackend" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.IOBackend.from_json">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#IOBackend.from_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.IOBackend.from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct an instance from the already-decoded <cite>msg</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.IOBackend.get_impl">
+<span class="sig-name descname"><span class="pre">get_impl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">libertem.io.dataset.base.backend.IOBackendImpl</span></span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#IOBackend.get_impl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.IOBackend.get_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.IOBackend.registry">
+<span class="sig-name descname"><span class="pre">registry</span></span><em class="property"> <span class="pre">=</span> <span class="pre">{'buffered':</span> <span class="pre">&lt;class</span> <span class="pre">'libertem.io.dataset.base.backend_buffered.BufferedBackend'&gt;,</span> <span class="pre">'mmap':</span> <span class="pre">&lt;class</span> <span class="pre">'libertem.io.dataset.base.backend_mmap.MMapBackend'&gt;}</span></em><a class="headerlink" href="#libertem.io.dataset.base.IOBackend.registry" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">LocalFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_footer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.fileno">
+<span class="sig-name descname"><span class="pre">fileno</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.fileno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.fileno" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.mmap">
+<span class="sig-name descname"><span class="pre">mmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.mmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.mmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memory map for this file, with file header, frame header and frame footer cut off</p>
+<p>Used for reading tiles straight from the filesystem cache</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.raw_mmap">
+<span class="sig-name descname"><span class="pre">raw_mmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.raw_mmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.raw_mmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memory map for this file, with only the file header cut off</p>
+<p>Used for reading tiles with a decoding step, using the read ranges</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.readinto">
+<span class="sig-name descname"><span class="pre">readinto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.readinto"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.readinto" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill <cite>out</cite> by reading from the current file position</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.seek">
+<span class="sig-name descname"><span class="pre">seek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.seek"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.seek" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.LocalFile.tell">
+<span class="sig-name descname"><span class="pre">tell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend.html#LocalFile.tell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.LocalFile.tell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.MMapBackend">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">MMapBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable_readahead_hints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_mmap.html#MMapBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.MMapBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>I/O backend using memory mapped files. Used by default on non-Windows
+systems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>enable_readahead_hints</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Linux only. Try to influence readahead behavior (experimental).</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.MMapBackend.from_json">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_mmap.html#MMapBackend.from_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.MMapBackend.from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct an instance from the already-decoded <cite>msg</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.MMapBackend.get_impl">
+<span class="sig-name descname"><span class="pre">get_impl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/backend_mmap.html#MMapBackend.get_impl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.MMapBackend.get_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Negotiator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">Negotiator</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#Negotiator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Negotiator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tile shape negotiator. The main functionality is in <cite>get_scheme</cite>,
+which, given a <cite>udf</cite>, <cite>partition</cite> and <cite>read_dtype</cite> will generate
+a <cite>TilingScheme</cite> that is compatible with both the <cite>UDF</cite> and the
+<cite>DataSet</cite>, possibly even optimal.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Negotiator.get_scheme">
+<span class="sig-name descname"><span class="pre">get_scheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">udfs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.21)"><span class="pre">numpy.dtype</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrections</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="corrections.html#libertem.corrections.corrset.CorrectionSet" title="libertem.corrections.corrset.CorrectionSet"><span class="pre">libertem.corrections.corrset.CorrectionSet</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#Negotiator.get_scheme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Negotiator.get_scheme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a <a class="reference internal" href="#libertem.io.dataset.base.TilingScheme" title="libertem.io.dataset.base.TilingScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">TilingScheme</span></code></a> instance that is
+compatible with both the given <cite>udf</cite> and the
+:class:~`libertem.io.dataset.base.DataSet`.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>udfs</strong> (<em>List</em><em>[</em><a class="reference internal" href="udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><em>UDF</em></a><em>]</em>) – The concrete UDF to optimize the tiling scheme for.
+Depending on the method (tile, frame, partition)
+and preferred total input size and depth.</p></li>
+<li><p><strong>partition</strong> (<a class="reference internal" href="#libertem.io.dataset.base.Partition" title="libertem.io.dataset.base.Partition"><em>Partition</em></a>) – The <cite>TilingScheme</cite> is created specifically
+for the given <cite>Partition</cite>, so it can adjust
+even in the face of different partition sizes/shapes.</p></li>
+<li><p><strong>read_dtype</strong> – The dtype in which the data will be fed into the UDF</p></li>
+<li><p><strong>roi</strong> (<em>np.ndarray</em>) – Region of interest</p></li>
+<li><p><strong>corrections</strong> (<a class="reference internal" href="corrections.html#libertem.corrections.corrset.CorrectionSet" title="libertem.corrections.corrset.CorrectionSet"><em>CorrectionSet</em></a>) – Correction set to consider in negotiation</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Negotiator.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_max_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itemsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrections</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#Negotiator.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Negotiator.validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">Partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.DataSetMeta" title="libertem.io.dataset.base.meta.DataSetMeta"><span class="pre">libertem.io.dataset.base.meta.DataSetMeta</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_slice</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">libertem.common.slice.Slice</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_backend</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#libertem.io.dataset.base.IOBackend" title="libertem.io.dataset.base.backend.IOBackend"><span class="pre">libertem.io.dataset.base.backend.IOBackend</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta</strong> – The <cite>DataSet</cite>’s <cite>DataSetMeta</cite> instance</p></li>
+<li><p><strong>partition_slice</strong> – The partition slice in non-flattened form</p></li>
+<li><p><strong>fileset</strong> – The files that are part of this partition (the FileSet may also contain files
+from the dataset which are not part of this partition, but that may harm performance)</p></li>
+<li><p><strong>io_backend</strong> – The I/O backend to use for accessing this partition</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.adjust_tileshape">
+<span class="sig-name descname"><span class="pre">adjust_tileshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tileshape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.adjust_tileshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.adjust_tileshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final veto of the Partition in the tileshape negotiation process,
+make sure that corrections are taken into account!</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.dtype">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#libertem.io.dataset.base.Partition.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_base_shape">
+<span class="sig-name descname"><span class="pre">get_base_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_base_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_base_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_io_backend">
+<span class="sig-name descname"><span class="pre">get_io_backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_io_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_io_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_locations">
+<span class="sig-name descname"><span class="pre">get_locations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_locations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_locations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_macrotile">
+<span class="sig-name descname"><span class="pre">get_macrotile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_macrotile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_macrotile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_max_io_size">
+<span class="sig-name descname"><span class="pre">get_max_io_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_max_io_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_max_io_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to implement a custom maximum I/O size</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_min_sig_size">
+<span class="sig-name descname"><span class="pre">get_min_sig_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_min_sig_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_min_sig_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>minimum signal size, in number of elements</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.get_tiles">
+<span class="sig-name descname"><span class="pre">get_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.get_tiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.get_tiles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.make_slices">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">make_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_partitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.make_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.make_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>partition a 3D dataset (“list of frames”) along the first axis,
+yielding the partition slice, and additionally start and stop frame
+indices for each partition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.need_decode">
+<span class="sig-name descname"><span class="pre">need_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">read_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corrections</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.need_decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.need_decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.set_corrections">
+<span class="sig-name descname"><span class="pre">set_corrections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corrections</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="corrections.html#libertem.corrections.corrset.CorrectionSet" title="libertem.corrections.corrset.CorrectionSet"><span class="pre">libertem.corrections.corrset.CorrectionSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.set_corrections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.set_corrections" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.set_io_backend">
+<span class="sig-name descname"><span class="pre">set_io_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.set_io_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.set_io_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#libertem.io.dataset.base.Partition.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>the shape of the partition; dimensionality depends on format</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.Partition.validate_tiling_scheme">
+<span class="sig-name descname"><span class="pre">validate_tiling_scheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_scheme</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#Partition.validate_tiling_scheme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.Partition.validate_tiling_scheme" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.PartitionStructure">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">PartitionStructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/meta.html#PartitionStructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.PartitionStructure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Structure of the dataset.</p>
+<p>Assumed to be contiguous on the flattened navigation axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slices</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>Int</em><em>]</em><em>]</em>) – List of tuples [start_idx, end_idx) that partition the data set by the flattened
+navigation axis</p></li>
+<li><p><strong>shape</strong> (<a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><em>Shape</em></a>) – shape of the whole dataset</p></li>
+<li><p><strong>dtype</strong> (<em>numpy dtype</em>) – The dtype of the data as it is on disk. Can contain endian indicator, for
+example &gt;u2 for big-endian 16bit data.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.PartitionStructure.SCHEMA">
+<span class="sig-name descname"><span class="pre">SCHEMA</span></span><em class="property"> <span class="pre">=</span> <span class="pre">{'$id':</span> <span class="pre">'http://libertem.org/PartitionStructure.schema.json',</span> <span class="pre">'$schema':</span> <span class="pre">'http://json-schema.org/draft-07/schema#',</span> <span class="pre">'properties':</span> <span class="pre">{'dtype':</span> <span class="pre">{'type':</span> <span class="pre">'string'},</span> <span class="pre">'shape':</span> <span class="pre">{'items':</span> <span class="pre">{'minimum':</span> <span class="pre">1,</span> <span class="pre">'type':</span> <span class="pre">'number'},</span> <span class="pre">'minItems':</span> <span class="pre">2,</span> <span class="pre">'type':</span> <span class="pre">'array'},</span> <span class="pre">'sig_dims':</span> <span class="pre">{'type':</span> <span class="pre">'number'},</span> <span class="pre">'slices':</span> <span class="pre">{'items':</span> <span class="pre">{'items':</span> <span class="pre">{'maxItems':</span> <span class="pre">2,</span> <span class="pre">'minItems':</span> <span class="pre">2,</span> <span class="pre">'type':</span> <span class="pre">'number'},</span> <span class="pre">'type':</span> <span class="pre">'array'},</span> <span class="pre">'minItems':</span> <span class="pre">1,</span> <span class="pre">'type':</span> <span class="pre">'array'},</span> <span class="pre">'version':</span> <span class="pre">{'const':</span> <span class="pre">1}},</span> <span class="pre">'required':</span> <span class="pre">['version',</span> <span class="pre">'slices',</span> <span class="pre">'shape',</span> <span class="pre">'sig_dims',</span> <span class="pre">'dtype'],</span> <span class="pre">'title':</span> <span class="pre">'PartitionStructure',</span> <span class="pre">'type':</span> <span class="pre">'object'}</span></em><a class="headerlink" href="#libertem.io.dataset.base.PartitionStructure.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.PartitionStructure.from_ds">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_ds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/meta.html#PartitionStructure.from_ds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.PartitionStructure.from_ds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.PartitionStructure.from_json">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/meta.html#PartitionStructure.from_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.PartitionStructure.from_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.PartitionStructure.serialize">
+<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/meta.html#PartitionStructure.serialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.PartitionStructure.serialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">TilingScheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="internals.html#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">libertem.common.slice.Slice</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">libertem.common.shape.Shape</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">libertem.common.shape.Shape</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#TilingScheme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.dataset_shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">dataset_shape</span></span><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.dataset_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.depth">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">depth</span></span><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.make_for_shape">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">make_for_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tileshape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">libertem.common.shape.Shape</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">libertem.common.shape.Shape</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#TilingScheme.make_for_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.make_for_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a TilingScheme from <cite>tileshape</cite> and <cite>dataset_shape</cite>.</p>
+<p>Note that both in signal and navigation direction there are border
+effects, i.e. if the depth doesn’t evenly divide the number of
+frames in the partition (simplified, ROI also applies…), or if
+the signal dimensions of <cite>tileshape</cite> doesn’t evenly divide the signal
+dimensions of the <cite>dataset_shape</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tileshape</strong> – Uniform shape of all tiles. Should have flat navigation axis
+(meaning tileshape.nav.dims == 1) and be contiguous in signal
+dimensions.</p></li>
+<li><p><strong>dataset_shape</strong> – Shape of the whole data set. Only the signal part is used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>tileshape. note that some border tiles can be smaller!</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.slices">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">slices</span></span><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>signal-only slices for all possible positions</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.TilingScheme.slices_array">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">slices_array</span></span><a class="headerlink" href="#libertem.io.dataset.base.TilingScheme.slices_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the slices from the schema as a numpy ndarray
+<cite>a</cite> of shape <cite>(n, 2, sig_dims)</cite> with:
+<cite>a[i, 0]</cite> are origins for slice <cite>i</cite>
+<cite>a[i, 1]</cite> are shapes for slice <cite>i</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.WritableDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">WritableDataSet</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/dataset.html#WritableDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.WritableDataSet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.WritablePartition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">WritablePartition</span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#WritablePartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.WritablePartition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.WritablePartition.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#WritablePartition.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.WritablePartition.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.WritablePartition.get_write_handle">
+<span class="sig-name descname"><span class="pre">get_write_handle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/partition.html#WritablePartition.get_write_handle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.WritablePartition.get_write_handle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.decode_swap_2">
+<span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">decode_swap_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#decode_swap_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.decode_swap_2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.decode_swap_4">
+<span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">decode_swap_4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/decode.html#decode_swap_4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.decode_swap_4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.default_get_read_ranges">
+<span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">default_get_read_ranges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_at_frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_before_frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileset_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bpp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_header_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_footer_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#libertem.io.dataset.base.default_get_read_ranges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.get_coordinates">
+<span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">get_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slice_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/io/dataset/base/coordinates.html#get_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.get_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>numpy.ndarray</cite> of coordinates that correspond to the frames in the actual
+navigation space which are part of the current tile or partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slice</strong> (<a class="reference internal" href="internals.html#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><em>Slice</em></a>) – Describes the location within the dataset with navigation
+dimension flattened and reduced to the ROI.</p></li>
+<li><p><strong>ds_shape</strong> (<a class="reference internal" href="internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><em>Shape</em></a>) – The original shape of the whole dataset, not influenced by the ROI</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em>, </em><em>optional</em>) – Array of type bool, matching the navigation shape of the dataset</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.io.dataset.base.make_get_read_ranges">
+<span class="sig-prename descclassname"><span class="pre">libertem.io.dataset.base.</span></span><span class="sig-name descname"><span class="pre">make_get_read_ranges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">px_to_bytes=CPUDispatcher(&lt;function</span> <span class="pre">_default_px_to_bytes&gt;)</span></em>, <em class="sig-param"><span class="pre">read_ranges_tile_block=CPUDispatcher(&lt;function</span> <span class="pre">_default_read_ranges_tile_block&gt;)</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/io/dataset/base/tiling.html#make_get_read_ranges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.io.dataset.base.make_get_read_ranges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate the <cite>TilingScheme</cite> combined with the <cite>roi</cite> into (pixel)-read-ranges,
+together with their tile slices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_at_frame</strong> – Dataset-global first frame index to read</p></li>
+<li><p><strong>stop_before_frame</strong> – Stop before this frame index</p></li>
+<li><p><strong>tiling_scheme</strong> – Description on how the data should be tiled</p></li>
+<li><p><strong>fileset_arr</strong> – Array of shape (number_of_files, 3) where the last dimension contains
+the following values: <cite>(start_idx, end_idx, file_idx)</cite>, where
+<cite>[start_idx, end_idx)</cite> defines which frame indices are contained
+in the file.</p></li>
+<li><p><strong>roi</strong> – Region of interest (for the full dataset)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>read_ranges is an ndarray with shape (number_of_tiles, depth, 3)
+where the last dimension contains: file index, start_byte, stop_byte</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(tile_slice, read_ranges)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="io_backends.html" class="btn btn-neutral float-right" title="I/O Backends" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="udf.html" class="btn btn-neutral float-left" title="UDF API reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

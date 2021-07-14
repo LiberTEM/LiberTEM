@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libertem.corrections.corrset &mdash; LiberTEM 0.8.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/../../corporatedesign/logo/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> LiberTEM
+          
+
+          
+            
+            <img src="../../../_static/_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gsoc.html">GSoC 2020 ideas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libertem.corrections.corrset</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libertem.corrections.corrset</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sparse</span>
+<span class="kn">import</span> <span class="nn">primesieve.numpy</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">libertem.corrections.detector</span> <span class="kn">import</span> <span class="n">correct</span><span class="p">,</span> <span class="n">RepairDescriptor</span>
+
+
+<span class="k">def</span> <span class="nf">factorizations</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">primes</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">factorization</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">primes</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">n</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">primes</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;np.max(n) &gt; np.max(primes) * 2, probably not enough primes.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">zero_modulos</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">%</span> <span class="n">primes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">factorization</span><span class="p">[</span><span class="n">zero_modulos</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">primes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span><span class="o">**</span><span class="n">zero_modulos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">//</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="n">factorization</span>
+
+
+<span class="k">def</span> <span class="nf">min_disjunct_multiplier</span><span class="p">(</span><span class="n">excluded</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate a small integer i for which i * n not in &quot;excluded&quot; for any n &gt; 0</span>
+
+<span class="sd">    To make sure that the tile shape negotiation retains as much flexibility as possible,</span>
+<span class="sd">    it is important to find a small integer and not just any integer that fulfills</span>
+<span class="sd">    this condition.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">excluded</span><span class="p">):</span>
+        <span class="c1"># If two integers are equal, their prime factor decompositions</span>
+        <span class="c1"># are equal, too, and vice versa.</span>
+        <span class="c1"># We find the global maximum power for each of the prime factors</span>
+        <span class="c1"># that construct the elements of &quot;excluded&quot;.</span>
+        <span class="c1"># By choosing a number that has one power more, we make sure</span>
+        <span class="c1"># that multiples of that number can never be equal to one of the excluded</span>
+        <span class="c1"># elements: The prime factor decompositions of any multiple of that number</span>
+        <span class="c1"># will always contain that additional power and thus never be equal the prime</span>
+        <span class="c1"># factor decomposition of an excluded pixel.</span>
+        <span class="n">primes</span> <span class="o">=</span> <span class="n">primesieve</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">primes</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">excluded</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">fac</span> <span class="o">=</span> <span class="n">factorizations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">excluded</span><span class="p">),</span> <span class="n">primes</span><span class="p">)</span>
+        <span class="n">ceiling</span> <span class="o">=</span> <span class="n">primes</span> <span class="o">**</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">fac</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ceiling</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="CorrectionSet"><a class="viewcode-back" href="../../../reference/corrections.html#libertem.corrections.corrset.CorrectionSet">[docs]</a><span class="k">class</span> <span class="nc">CorrectionSet</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A set of corrections to apply.</span>
+
+<span class="sd">    .. versionadded:: 0.6.0</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dark : np.ndarray</span>
+<span class="sd">        A ND array containing a dark frame to substract from all frames,</span>
+<span class="sd">        its shape needs to match the signal shape of the dataset.</span>
+
+<span class="sd">    gain : np.ndarray</span>
+<span class="sd">        A ND array containing a gain map to multiply with each frame,</span>
+<span class="sd">        its shape needs to match the signal shape of the dataset.</span>
+
+<span class="sd">    excluded_pixels : sparse.COO</span>
+<span class="sd">        A &quot;sparse pydata&quot; COO array containing only entries for pixels</span>
+<span class="sd">        that should be excluded. The shape needs to match the signal</span>
+<span class="sd">        shape of the dataset. Can also be anything that is directly</span>
+<span class="sd">        compatible with the :code:`sparse.COO` constructor, for example a</span>
+<span class="sd">        &quot;roi-like&quot; numpy array. A :code:`sparse.COO` array can be</span>
+<span class="sd">        directly constructed from a coordinate array, using</span>
+<span class="sd">        :code:`sparse.COO(coords=coords, data=1, shape=ds.shape.sig)`</span>
+<span class="sd">    allow_empty : bool</span>
+<span class="sd">        Do not throw an exception if a repair environment is empty. The pixel</span>
+<span class="sd">        is left uncorrected in that case.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dark</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excluded_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dark</span> <span class="o">=</span> <span class="n">dark</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span> <span class="o">=</span> <span class="n">gain</span>
+        <span class="k">if</span> <span class="n">excluded_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span><span class="n">excluded_pixels</span><span class="p">,</span> <span class="n">prune</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excluded_pixels</span> <span class="o">=</span> <span class="n">excluded_pixels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allow_empty</span> <span class="o">=</span> <span class="n">allow_empty</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_empty</span> <span class="ow">and</span> <span class="n">excluded_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Construct the environment for checking so that an exception is thrown</span>
+            <span class="c1"># when the CorrectionSet is instantiated and not when workers try to apply it.</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">RepairDescriptor</span><span class="p">(</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="n">excluded_pixels</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="n">excluded_pixels</span><span class="o">=</span><span class="n">excluded_pixels</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span>
+                <span class="n">allow_empty</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_dark_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dark</span>
+
+    <span class="k">def</span> <span class="nf">get_gain_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span>
+
+    <span class="k">def</span> <span class="nf">get_excluded_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excluded_pixels</span>
+
+    <span class="k">def</span> <span class="nf">have_corrections</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">corrs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_dark_frame</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_gain_map</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_excluded_pixels</span><span class="p">(),</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">corrs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tile_slice</span><span class="p">:</span> <span class="n">Slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply corrections in-place to `data`, cropping the</span>
+<span class="sd">        correction data to the `tile_slice`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dark_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dark_frame</span><span class="p">()</span>
+        <span class="n">gain_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_gain_map</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">have_corrections</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="n">sig_slice</span> <span class="o">=</span> <span class="n">tile_slice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sig_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dark_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dark_frame</span> <span class="o">=</span> <span class="n">dark_frame</span><span class="p">[</span><span class="n">sig_slice</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gain_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gain_map</span> <span class="o">=</span> <span class="n">gain_map</span><span class="p">[</span><span class="n">sig_slice</span><span class="p">]</span>
+
+        <span class="n">correct</span><span class="p">(</span>
+            <span class="n">buffer</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">dark_image</span><span class="o">=</span><span class="n">dark_frame</span><span class="p">,</span>
+            <span class="n">gain_map</span><span class="o">=</span><span class="n">gain_map</span><span class="p">,</span>
+            <span class="n">repair_descriptor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">repair_descriptor</span><span class="p">(</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">discard_nav</span><span class="p">()),</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+            <span class="n">allow_empty</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_allow_empty</span>
+        <span class="p">)</span>
+
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">repair_descriptor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig_slice</span><span class="p">):</span>
+        <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_excluded_pixels</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">excluded_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="n">excluded_pixels</span><span class="p">[</span><span class="n">sig_slice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sig_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+            <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="n">excluded_pixels</span><span class="o">.</span><span class="n">coords</span>
+        <span class="k">return</span> <span class="n">RepairDescriptor</span><span class="p">(</span>
+            <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">sig_slice</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+            <span class="n">excluded_pixels</span><span class="o">=</span><span class="n">excluded_pixels</span><span class="p">,</span>
+            <span class="n">allow_empty</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_allow_empty</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adjust_tileshape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_shape</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">):</span>
+        <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_excluded_pixels</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">excluded_pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tile_shape</span>
+        <span class="k">if</span> <span class="n">excluded_pixels</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tile_shape</span>
+        <span class="n">excluded_list</span> <span class="o">=</span> <span class="n">excluded_pixels</span><span class="o">.</span><span class="n">coords</span>
+        <span class="n">adjusted_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tile_shape</span><span class="p">)</span>
+        <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span>
+        <span class="n">base_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">base_shape</span><span class="p">)</span>
+        <span class="c1"># Map of dimensions that should be shrunk</span>
+        <span class="c1"># We have to grow or shrink monotonously to not cycle</span>
+        <span class="n">shrink</span> <span class="o">=</span> <span class="p">(</span><span class="n">adjusted_shape</span> <span class="o">&gt;=</span> <span class="n">base_shape</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="c1"># Try to iteratively reduce or increase tile size</span>
+        <span class="c1"># per signal dimension in case of intersections of tile boundaries</span>
+        <span class="c1"># with the patching environment</span>
+        <span class="c1"># until we avoid all excluded pixels.</span>
+        <span class="c1"># This may fail in case of many excluded pixels or full excluded rows/columns,</span>
+        <span class="c1"># depending on the tiling scheme. In that case,</span>
+        <span class="c1"># swith to full frames while preserving tile size if possible.</span>
+        <span class="k">for</span> <span class="n">repeat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+            <span class="n">clean</span> <span class="o">=</span> <span class="n">adjust_iteration</span><span class="p">(</span>
+                <span class="n">adjusted_shape_inout</span><span class="o">=</span><span class="n">adjusted_shape</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="n">sig_shape</span><span class="p">,</span>
+                <span class="n">base_shape</span><span class="o">=</span><span class="n">base_shape</span><span class="p">,</span>
+                <span class="n">shrink</span><span class="o">=</span><span class="n">shrink</span><span class="p">,</span>
+                <span class="n">excluded_list</span><span class="o">=</span><span class="n">excluded_list</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">clean</span><span class="p">):</span>
+                <span class="k">break</span>
+        <span class="n">invalid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">clean</span><span class="p">),</span>
+            <span class="n">adjusted_shape</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">adjusted_shape</span> <span class="o">&gt;</span> <span class="n">sig_shape</span>
+        <span class="p">)</span>
+        <span class="n">adjusted_shape</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">adjusted_shape</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">adjust_iteration</span><span class="p">(</span><span class="n">adjusted_shape_inout</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">,</span> <span class="n">shrink</span><span class="p">,</span> <span class="n">excluded_list</span><span class="p">):</span>
+    <span class="n">clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adjusted_shape_inout</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">adjusted_shape_inout</span><span class="p">)):</span>
+        <span class="c1"># Nothing to adjust, could trip downstream logic</span>
+        <span class="k">if</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">excluded_list</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+        <span class="c1"># Very many pixels in the way, low chances of a solution</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">/</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">clean</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">clean</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">adjust_direct</span><span class="p">(</span>
+                <span class="n">clean</span><span class="o">=</span><span class="n">clean</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span>
+                <span class="n">adjusted_shape_inout</span><span class="o">=</span><span class="n">adjusted_shape_inout</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="n">sig_shape</span><span class="p">,</span>
+                <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+                <span class="n">excluded_list</span><span class="o">=</span><span class="n">unique</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clean</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">adjust_heuristic</span><span class="p">(</span>
+                <span class="n">clean</span><span class="o">=</span><span class="n">clean</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span>
+                <span class="n">adjusted_shape_inout</span><span class="o">=</span><span class="n">adjusted_shape_inout</span><span class="p">,</span>
+                <span class="n">base_shape</span><span class="o">=</span><span class="n">base_shape</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="n">sig_shape</span><span class="p">,</span>
+                <span class="n">shrink</span><span class="o">=</span><span class="n">shrink</span><span class="p">,</span>
+                <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+                <span class="n">excluded_list</span><span class="o">=</span><span class="n">unique</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">clean</span>
+
+
+<span class="k">def</span> <span class="nf">adjust_direct</span><span class="p">(</span><span class="n">clean</span><span class="p">,</span> <span class="n">adjusted_shape_inout</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">excluded_list</span><span class="p">):</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">excluded_list</span><span class="p">,</span> <span class="n">excluded_list</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="n">forbidden</span><span class="p">[</span><span class="n">forbidden</span> <span class="o">&lt;</span> <span class="n">stop</span><span class="p">]</span>
+    <span class="n">nonzero_filter</span> <span class="o">=</span> <span class="n">forbidden</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">stop</span><span class="p">,</span> <span class="n">min_disjunct_multiplier</span><span class="p">(</span><span class="n">forbidden</span><span class="p">[</span><span class="n">nonzero_filter</span><span class="p">]))</span>
+    <span class="c1"># In case we have a zero where the existing logic doesn&#39;t work</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">nonzero_filter</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">clean</span>
+
+
+<span class="k">def</span> <span class="nf">adjust_heuristic</span><span class="p">(</span><span class="n">clean</span><span class="p">,</span> <span class="n">adjusted_shape_inout</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span> <span class="n">shrink</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span>
+        <span class="n">excluded_list</span><span class="p">):</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+    <span class="n">excluded_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">excluded_list</span><span class="p">)</span>
+    <span class="n">right_boundary_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+    <span class="n">left_boundary_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">stop</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+
+    <span class="n">right_of</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">right_boundary_set</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">excluded_set</span><span class="p">)</span>
+    <span class="n">left_of</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">left_boundary_set</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">excluded_set</span><span class="p">)</span>
+
+    <span class="c1"># Pixel on the left side of boundary</span>
+    <span class="k">if</span> <span class="n">left_of</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shrink</span><span class="p">[</span><span class="n">dim</span><span class="p">]:</span>
+            <span class="c1"># If base_shape[dim] is 1, 2 is valid as well</span>
+            <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">-=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Pixel on the right side of boundary</span>
+    <span class="k">if</span> <span class="n">right_of</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shrink</span><span class="p">[</span><span class="n">dim</span><span class="p">]:</span>
+            <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If base_shape[dim] is 1, 2 is valid as well</span>
+            <span class="n">adjusted_shape_inout</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">base_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">clean</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, LiberTEM Authors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

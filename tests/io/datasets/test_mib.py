@@ -7,7 +7,7 @@ import random
 import numpy as np
 import pytest
 
-from libertem.io.dataset.mib import MIBDataSet
+from libertem.io.dataset.mib import MIBDataSet, get_filenames
 from libertem.udf.raw import PickUDF
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Shape
@@ -26,7 +26,7 @@ except ModuleNotFoundError:
 MIB_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.mib')
 HAVE_MIB_TESTDATA = os.path.exists(MIB_TESTDATA_PATH)
 
-pytestmark = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdata")  # NOQA
+needsdata = pytest.mark.skipif(not HAVE_MIB_TESTDATA, reason="need .mib testdata")  # NOQA
 
 
 @pytest.fixture
@@ -62,6 +62,28 @@ def default_mib_raw():
     return data.data.reshape(shape).compute()
 
 
+def test_glob(tmp_path, naughty_filename):
+    naughty_dir = tmp_path / naughty_filename
+    naughty_dir.mkdir()
+
+    naughty_hdr = naughty_dir / (naughty_filename + '.hdr')
+    naughty_hdr.touch()
+
+    naughty_mib_0 = naughty_dir / (naughty_filename + '1.mib')
+    naughty_mib_1 = naughty_dir / (naughty_filename + '2.mib')
+    naughty_mib_0.touch()
+    naughty_mib_1.touch()
+
+    filenames_1 = set(get_filenames(naughty_hdr))
+    filenames_2 = set(get_filenames(naughty_mib_0))
+    print(filenames_1)
+    print(filenames_2)
+    target = set((str(naughty_mib_0), str(naughty_mib_1)))
+    assert filenames_1 == target
+    assert filenames_2 == target
+
+
+@needsdata
 def test_detect(lt_ctx):
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)["parameters"]
     assert params == {
@@ -71,10 +93,12 @@ def test_detect(lt_ctx):
     }
 
 
+@needsdata
 def test_simple_open(default_mib):
     assert tuple(default_mib.shape) == (32, 32, 256, 256)
 
 
+@needsdata
 def test_positive_sync_offset(default_mib, lt_ctx):
     udf = SumSigUDF()
     sync_offset = 2
@@ -120,6 +144,7 @@ def test_positive_sync_offset(default_mib, lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
+@needsdata
 def test_negative_sync_offset(default_mib, lt_ctx):
     udf = SumSigUDF()
     sync_offset = -2
@@ -163,6 +188,7 @@ def test_negative_sync_offset(default_mib, lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
+@needsdata
 def test_offset_smaller_than_nav_shape(lt_ctx):
     nav_shape = (32, 32)
     sync_offset = -1030
@@ -179,6 +205,7 @@ def test_offset_smaller_than_nav_shape(lt_ctx):
         )
 
 
+@needsdata
 def test_offset_greater_than_nav_shape(lt_ctx):
     nav_shape = (32, 32)
     sync_offset = 1030
@@ -195,6 +222,7 @@ def test_offset_greater_than_nav_shape(lt_ctx):
         )
 
 
+@needsdata
 @pytest.mark.with_numba
 def test_read(default_mib):
     partitions = default_mib.get_partitions()
@@ -217,6 +245,7 @@ def test_read(default_mib):
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
 
 
+@needsdata
 @pytest.mark.skipif(pyxem is None, reason="No PyXem found")
 def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
     udf = ValidationUDF(
@@ -225,6 +254,7 @@ def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_mib)
 
 
+@needsdata
 @pytest.mark.skipif(pyxem is None, reason="No PyXem found")
 def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
     roi = np.random.choice(
@@ -236,6 +266,7 @@ def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_mib, roi=roi)
 
 
+@needsdata
 def test_pickle_is_small(default_mib):
     pickled = pickle.dumps(default_mib)
     pickle.loads(pickled)
@@ -244,6 +275,7 @@ def test_pickle_is_small(default_mib):
     assert len(pickled) < 2 * 1024
 
 
+@needsdata
 def test_apply_mask_analysis(default_mib, lt_ctx):
     mask = np.ones((256, 256))
     analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_mib)
@@ -251,18 +283,21 @@ def test_apply_mask_analysis(default_mib, lt_ctx):
     assert results[0].raw_data.shape == (32, 32)
 
 
+@needsdata
 def test_sum_analysis(default_mib, lt_ctx):
     analysis = lt_ctx.create_sum_analysis(dataset=default_mib)
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
 
 
+@needsdata
 def test_pick_analysis(default_mib, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_mib, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (256, 256)
 
 
+@needsdata
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
@@ -278,6 +313,7 @@ def test_correction(default_mib, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
+@needsdata
 @pytest.mark.with_numba
 def test_with_roi(default_mib, lt_ctx):
     udf = PickUDF()
@@ -287,6 +323,7 @@ def test_with_roi(default_mib, lt_ctx):
     np.array(res['intensity']).shape == (1, 256, 256)
 
 
+@needsdata
 def test_read_at_boundaries(default_mib, lt_ctx):
     nav_shape = (32, 32)
     ds_odd = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=nav_shape)
@@ -301,14 +338,17 @@ def test_read_at_boundaries(default_mib, lt_ctx):
     assert np.allclose(res[0].raw_data, res_odd[0].raw_data)
 
 
+@needsdata
 def test_diagnostics(default_mib):
     print(default_mib.diagnostics)
 
 
+@needsdata
 def test_cache_key_json_serializable(default_mib):
     json.dumps(default_mib.get_cache_key())
 
 
+@needsdata
 @pytest.mark.dist
 def test_mib_dist(dist_ctx):
     nav_shape = (32, 32)
@@ -319,6 +359,7 @@ def test_mib_dist(dist_ctx):
     assert results[0].raw_data.shape == (256, 256)
 
 
+@needsdata
 def test_too_many_files(lt_ctx):
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=(32, 32))
 
@@ -333,6 +374,7 @@ def test_too_many_files(lt_ctx):
     assert "Saving data in many small files" in record[0].message.args[0]
 
 
+@needsdata
 def test_not_too_many_files(lt_ctx):
     ds = MIBDataSet(path=MIB_TESTDATA_PATH, nav_shape=(32, 32))
 
@@ -346,6 +388,7 @@ def test_not_too_many_files(lt_ctx):
     assert len(record) == 0
 
 
+@needsdata
 def test_reshape_nav(lt_ctx):
     udf = SumSigUDF()
 
@@ -364,6 +407,7 @@ def test_reshape_nav(lt_ctx):
     assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
 
 
+@needsdata
 def test_incorrect_sig_shape(lt_ctx):
     nav_shape = (32, 32)
     sig_shape = (5, 5)
@@ -380,6 +424,7 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
+@needsdata
 def test_scan_size_deprecation(lt_ctx):
     scan_size = (2, 2)
 
@@ -392,6 +437,7 @@ def test_scan_size_deprecation(lt_ctx):
     assert tuple(ds.shape) == (2, 2, 256, 256)
 
 
+@needsdata
 def test_compare_backends(lt_ctx, default_mib, buffered_mib):
     y = random.choice(range(default_mib.shape.nav[0]))
     x = random.choice(range(default_mib.shape.nav[1]))
@@ -407,6 +453,7 @@ def test_compare_backends(lt_ctx, default_mib, buffered_mib):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 def test_compare_backends_sparse(lt_ctx, default_mib, buffered_mib):
     roi = np.zeros(default_mib.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True

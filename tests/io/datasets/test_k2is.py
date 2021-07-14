@@ -6,7 +6,7 @@ import random
 import numpy as np
 import pytest
 
-from libertem.io.dataset.k2is import K2ISDataSet
+from libertem.io.dataset.k2is import K2ISDataSet, get_filenames
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common.buffers import BufferWrapper
@@ -31,7 +31,7 @@ K2IS_TESTDATA_RAW = os.path.join(
 HAVE_K2IS_TESTDATA = os.path.exists(K2IS_TESTDATA_PATH)
 HAVE_K2IS_RAWDATA = os.path.exists(K2IS_TESTDATA_RAW)
 
-pytestmark = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testdata")  # NOQA
+needsdata = pytest.mark.skipif(not HAVE_K2IS_TESTDATA, reason="need K2IS testdata")  # NOQA
 
 
 @pytest.fixture
@@ -64,6 +64,28 @@ def default_k2is_raw():
     )
 
 
+def test_glob(tmp_path, naughty_filename):
+    naughty_dir = tmp_path / naughty_filename
+    naughty_dir.mkdir()
+
+    naughty_gtg = naughty_dir / (naughty_filename + '_.gtg')
+    naughty_gtg.touch()
+
+    naughty_bin_0 = naughty_dir / (naughty_filename + '_1.bin')
+    naughty_bin_1 = naughty_dir / (naughty_filename + '_2.bin')
+    naughty_bin_0.touch()
+    naughty_bin_1.touch()
+
+    filenames_1 = set(get_filenames(naughty_gtg))
+    filenames_2 = set(get_filenames(naughty_bin_0))
+    print(filenames_1)
+    print(filenames_2)
+    target = set((str(naughty_bin_0), str(naughty_bin_1)))
+    assert filenames_1 == target
+    assert filenames_2 == target
+
+
+@needsdata
 def test_detect():
     params = K2ISDataSet.detect_params(K2IS_TESTDATA_PATH, InlineJobExecutor())["parameters"]
     assert params == {
@@ -74,6 +96,7 @@ def test_detect():
     }
 
 
+@needsdata
 def test_simple_open(default_k2is):
     assert tuple(default_k2is.shape) == (34, 35, 1860, 2048)
 
@@ -81,16 +104,19 @@ def test_simple_open(default_k2is):
     json.dumps(tuple(default_k2is.shape))
 
 
+@needsdata
 def test_check_valid(default_k2is):
     assert default_k2is.check_valid()
 
 
+@needsdata
 def test_sync(default_k2is):
     with default_k2is._get_syncer().sectors[0] as sector:
         first_block = next(sector.get_blocks())
     assert first_block.header['frame_id'] == 59
 
 
+@needsdata
 def test_read(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
@@ -111,6 +137,7 @@ def test_read(default_k2is):
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
 
 
+@needsdata
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     udf = ValidationUDF(
@@ -120,6 +147,7 @@ def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is)
 
 
+@needsdata
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
     roi = np.random.choice(
@@ -134,6 +162,7 @@ def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_k2is, roi=roi)
 
 
+@needsdata
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison_mask(default_k2is, default_k2is_raw, local_cluster_ctx, lt_ctx):
     default_k2is_raw_ds = local_cluster_ctx.load(
@@ -152,6 +181,7 @@ def test_comparison_mask(default_k2is, default_k2is_raw, local_cluster_ctx, lt_c
     )
 
 
+@needsdata
 def test_read_full_frames(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
@@ -175,6 +205,7 @@ def test_read_full_frames(default_k2is):
         assert t.tile_slice.origin[0] < p.shape[0]
 
 
+@needsdata
 def test_read_invalid_tileshape(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
@@ -192,6 +223,7 @@ def test_read_invalid_tileshape(default_k2is):
         next(p.get_tiles(tiling_scheme=tiling_scheme))
 
 
+@needsdata
 @pytest.mark.slow
 def test_apply_mask_analysis(default_k2is, lt_ctx):
     mask = np.ones((1860, 2048))
@@ -200,6 +232,7 @@ def test_apply_mask_analysis(default_k2is, lt_ctx):
     assert results[0].raw_data.shape == (34, 35)
 
 
+@needsdata
 @pytest.mark.slow
 def test_sum_analysis(default_k2is, lt_ctx):
     analysis = lt_ctx.create_sum_analysis(dataset=default_k2is)
@@ -207,12 +240,14 @@ def test_sum_analysis(default_k2is, lt_ctx):
     assert results[0].raw_data.shape == (1860, 2048)
 
 
+@needsdata
 def test_pick_analysis(default_k2is, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_k2is, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
 
 
+@needsdata
 @pytest.mark.parametrize(
     # Default is too large for test without ROI
     "with_roi", (True, )
@@ -229,6 +264,7 @@ def test_correction(default_k2is, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
+@needsdata
 def test_dataset_is_picklable(default_k2is):
     pickled = pickle.dumps(default_k2is)
     pickle.loads(pickled)
@@ -237,6 +273,7 @@ def test_dataset_is_picklable(default_k2is):
     assert len(pickled) < 4 * 1024
 
 
+@needsdata
 def test_partition_is_picklable(default_k2is):
     pickled = pickle.dumps(next(default_k2is.get_partitions()))
     pickle.loads(pickled)
@@ -245,6 +282,7 @@ def test_partition_is_picklable(default_k2is):
     assert len(pickled) < 4 * 1024
 
 
+@needsdata
 def test_get_diags(default_k2is):
     diags = default_k2is.diagnostics
 
@@ -252,6 +290,7 @@ def test_get_diags(default_k2is):
     json.dumps(diags)
 
 
+@needsdata
 @pytest.mark.slow
 def test_udf_on_k2is(lt_ctx, default_k2is):
     res = lt_ctx.map(
@@ -277,6 +316,7 @@ class PixelsumUDF(UDF):
         self.results.pixelsum[:] = np.sum(frame)
 
 
+@needsdata
 @pytest.mark.with_numba
 def test_udf_roi(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.flatten_nav().nav, dtype=bool)
@@ -286,6 +326,7 @@ def test_udf_roi(lt_ctx, default_k2is):
     assert 'pixelsum' in res
 
 
+@needsdata
 def test_roi(lt_ctx, default_k2is):
     p = next(default_k2is.get_partitions())
     roi = np.zeros(p.shape.flatten_nav().nav, dtype=bool)
@@ -307,6 +348,7 @@ def test_roi(lt_ctx, default_k2is):
     assert len(tiles) == 2*8*16
 
 
+@needsdata
 def test_macrotile_normal(lt_ctx, default_k2is):
     ps = default_k2is.get_partitions()
     _ = next(ps)
@@ -316,6 +358,7 @@ def test_macrotile_normal(lt_ctx, default_k2is):
     assert macrotile.tile_slice.origin[0] == p2._start_frame
 
 
+@needsdata
 def test_macrotile_roi_1(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool)
     roi[0, 5] = 1
@@ -325,6 +368,7 @@ def test_macrotile_roi_1(lt_ctx, default_k2is):
     assert tuple(macrotile.tile_slice.shape) == (2, 1860, 2048)
 
 
+@needsdata
 def test_macrotile_roi_2(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool)
     # all ones are in the first partition, so we don't get any data in p2:
@@ -337,6 +381,7 @@ def test_macrotile_roi_2(lt_ctx, default_k2is):
     assert tuple(macrotile.tile_slice.shape) == (0, 1860, 2048)
 
 
+@needsdata
 def test_macrotile_roi_3(lt_ctx, default_k2is):
     roi = np.ones(default_k2is.shape.nav, dtype=bool)
     ps = default_k2is.get_partitions()
@@ -346,10 +391,12 @@ def test_macrotile_roi_3(lt_ctx, default_k2is):
     assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)
 
 
+@needsdata
 def test_cache_key_json_serializable(default_k2is):
     json.dumps(default_k2is.get_cache_key())
 
 
+@needsdata
 @pytest.mark.dist
 def test_k2is_dist(dist_ctx):
     ds = K2ISDataSet(path=K2IS_TESTDATA_PATH)
@@ -365,6 +412,7 @@ def test_k2is_dist(dist_ctx):
     assert results[0].raw_data.shape == (1860, 2048)
 
 
+@needsdata
 def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
     y = random.choice(range(default_k2is.shape.nav[0]))
     x = random.choice(range(default_k2is.shape.nav[1]))
@@ -380,6 +428,7 @@ def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
@@ -393,6 +442,7 @@ def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 @pytest.mark.with_numba
 def test_regression_simple_stride(lt_ctx, default_k2is):
     # bug that only seems happens if tileshape[-1] == 16 and tileshape[1] != 930:
@@ -406,6 +456,7 @@ def test_regression_simple_stride(lt_ctx, default_k2is):
     next(p.get_tiles(tiling_scheme=ts))
 
 
+@needsdata
 def test_positive_sync_offset_1(default_k2is, lt_ctx):
     udf = PickUDF()
     # native_sync_offset is 250
@@ -428,6 +479,7 @@ def test_positive_sync_offset_1(default_k2is, lt_ctx):
     )
 
 
+@needsdata
 def test_positive_sync_offset_2(default_k2is, lt_ctx):
     udf = PickUDF()
     # native_sync_offset is 250
@@ -454,6 +506,7 @@ def test_positive_sync_offset_2(default_k2is, lt_ctx):
     )
 
 
+@needsdata
 def test_zero_sync_offset(default_k2is, lt_ctx):
     udf = PickUDF()
     # native_sync_offset is 250
@@ -480,6 +533,7 @@ def test_zero_sync_offset(default_k2is, lt_ctx):
     )
 
 
+@needsdata
 def test_negative_sync_offset(default_k2is, lt_ctx):
     udf = PickUDF()
     # native_sync_offset is 250
@@ -506,6 +560,7 @@ def test_negative_sync_offset(default_k2is, lt_ctx):
     )
 
 
+@needsdata
 def test_offset_smaller_than_image_count(lt_ctx):
     sync_offset = -1520
 
@@ -520,6 +575,7 @@ def test_offset_smaller_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_offset_greater_than_image_count(lt_ctx):
     sync_offset = 1520
 
@@ -534,6 +590,7 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_reshape_nav(default_k2is, lt_ctx):
     udf = PickUDF()
 
@@ -565,6 +622,7 @@ def test_reshape_nav(default_k2is, lt_ctx):
     assert np.allclose(result_2['intensity'].raw_data, ref['intensity'].raw_data)
 
 
+@needsdata
 def test_incorrect_sig_shape(lt_ctx):
     sig_shape = (5, 5)
 

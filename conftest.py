@@ -361,6 +361,23 @@ def raw_data_8x8x8x8_path(tmpdir_factory):
 
 
 @pytest.fixture
+def naughty_filename():
+    '''
+    Return a string with many special charaters that tests the limits
+    of what the file system allows on that platform. This allows to stress-test
+    globs or regular expressions applied to paths.
+    '''
+    system = platform.system()
+    # See https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
+    if system == 'Windows':  # NTFS
+        return "!§$&[%)(]=`´';,.#~ 🤪"
+    elif system == 'Darwin':  # HFS+, APFS?
+        return "!\"\\§$&[%)(]=?`´';,.# ~ * | < ** > 🤪"
+    else:  # Linux, other Unix
+        return "!\"\\§$&[%)(]=?`´':;,.# ~ * | < ** > 🤪"
+
+
+@pytest.fixture
 def scheduler_addr():
     return os.environ['DASK_SCHEDULER_ADDRESS']
 

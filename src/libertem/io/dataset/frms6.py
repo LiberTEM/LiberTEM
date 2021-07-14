@@ -2,7 +2,7 @@
 import os
 import re
 import csv
-from glob import glob
+from glob import glob, escape
 import typing
 import logging
 import warnings
@@ -175,18 +175,25 @@ def _read_file_header(path):
 def _pattern(path):
     path, ext = os.path.splitext(path)
     if ext == ".hdr":
-        pattern = "%s_*.frms6" % path
+        pattern = "%s_*.frms6" % escape(path)
     elif ext == ".frms6":
         pattern = "%s*.frms6" % (
-            re.sub(r'[0-9]+$', '', path)
+            escape(re.sub(r'[0-9]+$', '', path))
         )
     else:
         raise DataSetException("unknown extension: %s" % ext)
     return pattern
 
 
+def get_filenames(path, disable_glob=False):
+    if disable_glob:
+        return [path]
+    else:
+        return list(sorted(glob(_pattern(path))))
+
+
 def _get_sig_shape(path, bin_factor):
-    filenames = list(sorted(glob(_pattern(path))))
+    filenames = get_filenames(path)
     header = _read_file_header(filenames[0])
     sig_shape = 2 * header['height'], header['width'] // 2
     if bin_factor > 1:
@@ -448,7 +455,7 @@ class FRMS6DataSet(DataSet):
         return self._meta.shape
 
     def _do_initialize(self):
-        self._filenames = list(sorted(glob(_pattern(self._path))))
+        self._filenames = get_filenames(self._path)
         self._hdr_info = self._read_hdr_info()
         self._headers = [
             _read_file_header(path)

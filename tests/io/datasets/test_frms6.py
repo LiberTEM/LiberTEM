@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 
 from libertem.io.dataset.frms6 import (
-    FRMS6DataSet, _map_y, FRMS6Decoder,
+    FRMS6DataSet, _map_y, FRMS6Decoder, get_filenames
 )
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.sum import SumAnalysis
@@ -30,7 +30,7 @@ except ModuleNotFoundError:
 FRMS6_TESTDATA_PATH = os.path.join(get_testdata_path(), 'frms6', 'C16_15_24_151203_019.hdr')
 HAVE_FRMS6_TESTDATA = os.path.exists(FRMS6_TESTDATA_PATH)
 
-pytestmark = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 testdata")  # NOQA
+needsdata = pytest.mark.skipif(not HAVE_FRMS6_TESTDATA, reason="need frms6 testdata")  # NOQA
 
 
 @pytest.fixture
@@ -126,10 +126,33 @@ def default_frms6_darkref():
     return result / frame_count
 
 
+def test_glob(tmp_path, naughty_filename):
+    naughty_dir = tmp_path / naughty_filename
+    naughty_dir.mkdir()
+
+    naughty_hdr = naughty_dir / (naughty_filename + '.hdr')
+    naughty_hdr.touch()
+
+    naughty_frms6_0 = naughty_dir / (naughty_filename + '_000.frms6')
+    naughty_frms6_1 = naughty_dir / (naughty_filename + '_001.frms6')
+    naughty_frms6_0.touch()
+    naughty_frms6_1.touch()
+
+    filenames_1 = set(get_filenames(naughty_hdr))
+    filenames_2 = set(get_filenames(naughty_frms6_0))
+    print(filenames_1)
+    print(filenames_2)
+    target = set((str(naughty_frms6_0), str(naughty_frms6_1)))
+    assert filenames_1 == target
+    assert filenames_2 == target
+
+
+@needsdata
 def test_simple_open(default_frms6):
     assert tuple(default_frms6.shape) == (256, 256, 264, 264)
 
 
+@needsdata
 def test_auto_open_corrections_kwargs(lt_ctx):
     ds_corr = lt_ctx.load(
         'auto', path=FRMS6_TESTDATA_PATH, enable_offset_correction=True, nav_shape=(2, 3)
@@ -146,6 +169,7 @@ def test_auto_open_corrections_kwargs(lt_ctx):
     assert isinstance(ds, FRMS6DataSet)
 
 
+@needsdata
 def test_auto_open_corrections_posargs(lt_ctx):
     ds_corr = lt_ctx.load('auto', FRMS6_TESTDATA_PATH, True, None, None, (2, 3))
     assert not np.allclose(ds_corr.get_correction_data().get_dark_frame(), 0)
@@ -168,6 +192,7 @@ def test_auto_open_corrections_posargs(lt_ctx):
     assert isinstance(ds, FRMS6DataSet)
 
 
+@needsdata
 def test_auto_uses_correct_backend(lt_ctx):
     with pytest.raises(RuntimeError):
         ds = lt_ctx.load(
@@ -181,16 +206,19 @@ def test_auto_uses_correct_backend(lt_ctx):
         )
 
 
+@needsdata
 def test_detetct(lt_ctx):
     assert FRMS6DataSet.detect_params(
         FRMS6_TESTDATA_PATH, lt_ctx.executor
     )["parameters"] is not False
 
 
+@needsdata
 def test_check_valid(default_frms6):
     default_frms6.check_valid()
 
 
+@needsdata
 def test_sum_analysis(default_frms6, lt_ctx):
     roi = {
         "shape": "disk",
@@ -205,12 +233,14 @@ def test_sum_analysis(default_frms6, lt_ctx):
     lt_ctx.run(analysis)
 
 
+@needsdata
 def test_pick_analysis(default_frms6, lt_ctx):
     analysis = PickFrameAnalysis(dataset=default_frms6, parameters={"x": 16, "y": 16})
     results = lt_ctx.run(analysis)
     assert results[0].raw_data.shape == (264, 264)
 
 
+@needsdata
 @pytest.mark.parametrize(
     # Default is too large for test without ROI
     "with_roi", (True, )
@@ -227,6 +257,7 @@ def test_correction(default_frms6, lt_ctx, with_roi):
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
+@needsdata
 @pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     udf = ValidationUDF(
@@ -236,6 +267,7 @@ def test_comparison(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr)
 
 
+@needsdata
 @pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     roi = np.random.choice(
@@ -250,6 +282,7 @@ def test_comparison_roi(default_frms6_uncorr, default_frms6_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_frms6_uncorr, roi=roi)
 
 
+@needsdata
 @pytest.mark.skipif(stemtool is None, reason="No stemtool found")
 def test_comparison_darkref(default_frms6, default_frms6_darkref):
     corr_ds = default_frms6.get_correction_data().get_dark_frame()
@@ -257,6 +290,7 @@ def test_comparison_darkref(default_frms6, default_frms6_darkref):
     assert np.allclose(corr_ds, default_frms6_darkref)
 
 
+@needsdata
 def test_pickle_is_small(default_frms6):
     pickled = pickle.dumps(default_frms6)
     pickle.loads(pickled)
@@ -265,10 +299,12 @@ def test_pickle_is_small(default_frms6):
     assert len(pickled) < 300 * 1024
 
 
+@needsdata
 def test_cache_key_json_serializable(default_frms6):
     json.dumps(default_frms6.get_cache_key())
 
 
+@needsdata
 @pytest.mark.dist
 def test_dist_process(default_frms6, dist_ctx):
     roi = {
@@ -281,6 +317,7 @@ def test_dist_process(default_frms6, dist_ctx):
     dist_ctx.run(analysis)
 
 
+@needsdata
 @pytest.mark.dist
 def test_initialize(default_frms6, dist_ctx):
     assert default_frms6._filenames is not None
@@ -337,6 +374,7 @@ def test_decode(binning):
         assert not np.isclose(px, 0)
 
 
+@needsdata
 @pytest.mark.with_numba
 def test_with_roi(default_frms6, lt_ctx):
     udf = PickUDF()
@@ -346,6 +384,7 @@ def test_with_roi(default_frms6, lt_ctx):
     assert np.array(res['intensity']).shape == (1, 264, 264)
 
 
+@needsdata
 def test_read_invalid_tileshape(default_frms6):
     partitions = default_frms6.get_partitions()
     p = next(partitions)
@@ -363,6 +402,7 @@ def test_read_invalid_tileshape(default_frms6):
         next(p.get_tiles(tiling_scheme=tiling_scheme))
 
 
+@needsdata
 def test_positive_sync_offset(default_frms6, lt_ctx):
     udf = PickUDF()
     sync_offset = 2
@@ -385,6 +425,7 @@ def test_positive_sync_offset(default_frms6, lt_ctx):
     )
 
 
+@needsdata
 def test_negative_sync_offset(default_frms6, lt_ctx):
     udf = PickUDF()
     sync_offset = -2
@@ -407,6 +448,7 @@ def test_negative_sync_offset(default_frms6, lt_ctx):
     )
 
 
+@needsdata
 def test_offset_smaller_than_image_count(lt_ctx):
     sync_offset = -65540
 
@@ -421,6 +463,7 @@ def test_offset_smaller_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_offset_greater_than_image_count(lt_ctx):
     sync_offset = 65540
 
@@ -435,6 +478,7 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_reshape_nav(default_frms6, lt_ctx):
     udf = PickUDF()
 
@@ -468,6 +512,7 @@ def test_reshape_nav(default_frms6, lt_ctx):
     assert np.allclose(result_2['intensity'].raw_data, ref['intensity'].raw_data)
 
 
+@needsdata
 def test_incorrect_sig_shape(lt_ctx):
     sig_shape = (5, 5)
 
@@ -482,6 +527,7 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
+@needsdata
 def test_compare_backends(lt_ctx, default_frms6, buffered_frms6):
     y = random.choice(range(default_frms6.shape.nav[0]))
     x = random.choice(range(default_frms6.shape.nav[1]))
@@ -497,6 +543,7 @@ def test_compare_backends(lt_ctx, default_frms6, buffered_frms6):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 def test_compare_backends_sparse(lt_ctx, default_frms6, buffered_frms6):
     roi = np.zeros(default_frms6.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True

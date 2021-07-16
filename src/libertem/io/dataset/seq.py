@@ -35,6 +35,7 @@ import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
 import xml.etree.ElementTree as ET
+import math
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -271,6 +272,18 @@ class SEQDataSet(DataSet):
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
         self._excluded_pixels=self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
+    def cropping(self, a, start_size, req_size):
+        if start_size > req_size and math.log(start_size, 2).is_integer() and math.log(req_size, 2).is_integer():
+            rep = math.log2(start_size) - math.log2(req_size)
+        else:
+            return []
+        ac = a
+        for i in range(0, int(rep)):
+            quarter = ac.shape[0] // 4
+            ac = ac[quarter:(3 * quarter), quarter:(3 * quarter)]
+
+        return ac
+
     def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
             return None
@@ -292,15 +305,23 @@ class SEQDataSet(DataSet):
         coo_shape_x = []  # the list that contains information regarding the shape of the sparse.COO array, if u pick e.g. the 0. index element and it has the value of 4096
         # that means u will also pick the 0. index of the rows, cols and pixels list
         coo_shape_y = []
+        coo_bin_val = []  # the binning values cateorized(by inedex)
         '''
         the program can search for the appropriate data based on the position of the sig_shape's value
         in this matrix, later it will use it's index to get the rows, cols and pixels's values
          '''
 
         for b in mop:
-            coo_shape_x.append(int(b.attrib['Rows']))
-            coo_shape_y.append(int(b.attrib['Columns']))
+            chk = 0
 
+            coo_shape_x.append(int(b.attrib['Rows']))
+
+            coo_shape_y.append(int(b.attrib['Columns']))
+            if 'Binning' in b.attrib:
+                coo_bin_val.append([int(b.attrib['Binning'])])
+                chk += 1
+            elif (len(b.attrib) == 2) and chk == 0:
+                coo_bin_val.append([])
             for c in b:
 
                 tmp_cnt = 0  # to determine if we are dealing with a single pixel
@@ -381,7 +402,59 @@ class SEQDataSet(DataSet):
                 if int(index) == int(self._sig_shape[0]):
                     break
         else:
-            return None
+            Defect_ID = num_of_cat + 1
+            coo_bin_val.append([])
+            if (len(coo_bin_val[0]) == 0):
+
+                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                for i in rows_by_category[0]:
+                    if len(i) == 2:
+                        dummy_transformation_m[int(i[0]):int(i[1]) + 1] = 2
+                    if len(i) == 1:
+                        dummy_transformation_m[int(i[0])] = 2
+
+                res2 = []
+                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                for a in range(0, c.shape[0]):
+                    for b in range(0, c.shape[1]):
+                        if (c[a, b] > 1):
+                            if [a] not in res2:
+                                res2.append([a])
+                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                for i in cols_by_category[0]:
+                    if (len(i) == 2):
+                        dummy_transformation_m[:, int(i[0]):(int(i[1]) + 1)] = 2
+                    if len(i) == 1:
+                        dummy_transformation_m[:, int(i[0])] = 2
+
+                res3 = []
+                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                for a in range(0, c.shape[0]):
+                    for b in range(0, c.shape[1]):
+                        if (c[a, b] > 1):
+                            if [b] not in res3 and [a] not in res2:
+                                res3.append([b])
+
+                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                for i in pixels_by_category[0]:
+                    dummy_transformation_m[int(i[0]), int(i[1])] = 2
+
+                res4 = []
+                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                for a in range(0, c.shape[0]):
+                    for b in range(0, c.shape[1]):
+                        if (c[a, b] > 1):
+                            if [a, b] not in res4 and [a] not in res2 and [b] not in res3:
+                                res4.append([a, b])
+
+                rows_by_category[Defect_ID - 1] = res2
+                cols_by_category[Defect_ID - 1] = res3
+                pixels_by_category[Defect_ID - 1] = res4
+                Rowz.append(len(rows_by_category[Defect_ID - 1]))
+                Colz.append(len(cols_by_category[Defect_ID - 1]))
+                Pixels.append(len(pixels_by_category[Defect_ID - 1]))
+                coo_shape_x.append(self._sig_shape[0])
+                coo_shape_y.append(self._sig_shape[1])
         size = int(coo_shape_x[Defect_ID - 1])
         coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
 

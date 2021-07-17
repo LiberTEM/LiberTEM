@@ -273,6 +273,13 @@ class SEQDataSet(DataSet):
         self._excluded_pixels=self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
     def cropping(self, a, start_size, req_size):
+        '''
+
+        :param a: an array we want to appply the cropping to
+        :param start_size: the original size of image
+        :param req_size: equals with the signal shape, this is the size we want to crop to
+        :return: the middle of 'a' with the size req_size, 2d array
+        '''
         if start_size > req_size and math.log(start_size, 2).is_integer() and math.log(req_size, 2).is_integer():
             rep = math.log2(start_size) - math.log2(req_size)
         else:

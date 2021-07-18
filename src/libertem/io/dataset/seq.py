@@ -272,23 +272,21 @@ class SEQDataSet(DataSet):
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
         self._excluded_pixels=self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
-    def cropping(self, a, start_size, req_size):
+    def cropping(self, arr, start_size, req_size):
         '''
 
-        :param a: an array we want to appply the cropping to
+        :param arr: an array we want to appply the cropping to
         :param start_size: the original size of image
         :param req_size: equals with the signal shape, this is the size we want to crop to
         :return: the middle of 'a' with the size req_size, 2d array
         '''
-        if start_size > req_size and math.log(start_size, 2).is_integer() and math.log(req_size, 2).is_integer():
-            rep = math.log2(start_size) - math.log2(req_size)
-        else:
-            return []
-        ac = a
-        for i in range(0, int(rep)):
-            quarter = ac.shape[0] // 4
-            ac = ac[quarter:(3 * quarter), quarter:(3 * quarter)]
-
+        ac = arr
+        if req_size[0] <= start_size[0] and req_size[1] <= start_size[0]:
+            a = int(start_size[0]) // 2
+            b = int(start_size[1]) // 2
+            req_y = int(req_size[0]) // 2
+            req_x = int(req_size[1]) // 2
+            ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
         return ac
 
     def _maybe_load_xml(self, path):
@@ -403,17 +401,19 @@ class SEQDataSet(DataSet):
                 str_id_pixel += num_of_Pixels[x]
 
         Defect_ID = 0  # determine wich index should be used for further calculations
-        if (self._sig_shape[0] in coo_shape_x):
+        sizes = list( # list of touples consist of coo_shape_x and y's elements
+            map(lambda x, y: (x, y), coo_shape_x,coo_shape_y))
+        if (self._sig_shape[0], self._sig_shape[1]) in sizes:
             for index in coo_shape_x:
                 Defect_ID += 1
-                if int(index) == int(self._sig_shape[0]):
+                if index == (self._sig_shape[0],self._sig_shape[1]):
                     break
         else:
             Defect_ID = num_of_cat + 1
             coo_bin_val.append([])
             if (len(coo_bin_val[0]) == 0):
 
-                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                dummy_transformation_m = np.zeros(sizes[0])
                 for i in rows_by_category[0]:
                     if len(i) == 2:
                         dummy_transformation_m[int(i[0]):int(i[1]) + 1] = 2
@@ -421,13 +421,13 @@ class SEQDataSet(DataSet):
                         dummy_transformation_m[int(i[0])] = 2
 
                 res2 = []
-                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0],self._sig_shape[1]))
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
                             if [a] not in res2:
                                 res2.append([a])
-                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                dummy_transformation_m = np.zeros(sizes[0])
                 for i in cols_by_category[0]:
                     if (len(i) == 2):
                         dummy_transformation_m[:, int(i[0]):(int(i[1]) + 1)] = 2
@@ -435,19 +435,19 @@ class SEQDataSet(DataSet):
                         dummy_transformation_m[:, int(i[0])] = 2
 
                 res3 = []
-                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0], self._sig_shape[1]))
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
                             if [b] not in res3 and [a] not in res2:
                                 res3.append([b])
 
-                dummy_transformation_m = np.zeros((coo_shape_x[0], coo_shape_y[0]))
+                dummy_transformation_m = np.zeros(sizes[0])
                 for i in pixels_by_category[0]:
                     dummy_transformation_m[int(i[0]), int(i[1])] = 2
 
                 res4 = []
-                c = self.cropping(dummy_transformation_m, coo_shape_x[0], self._sig_shape[0])
+                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0],self._sig_shape[1]))
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
@@ -457,12 +457,11 @@ class SEQDataSet(DataSet):
                 rows_by_category[Defect_ID - 1] = res2
                 cols_by_category[Defect_ID - 1] = res3
                 pixels_by_category[Defect_ID - 1] = res4
-                Rowz.append(len(rows_by_category[Defect_ID - 1]))
-                Colz.append(len(cols_by_category[Defect_ID - 1]))
-                Pixels.append(len(pixels_by_category[Defect_ID - 1]))
+                num_of_Rowz.append(len(rows_by_category[Defect_ID - 1]))
+                num_of_Colz.append(len(cols_by_category[Defect_ID - 1]))
+                num_of_Pixels.append(len(pixels_by_category[Defect_ID - 1]))
                 coo_shape_x.append(self._sig_shape[0])
                 coo_shape_y.append(self._sig_shape[1])
-        size = int(coo_shape_x[Defect_ID - 1])
         coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
 
         for i1 in rows_by_category:

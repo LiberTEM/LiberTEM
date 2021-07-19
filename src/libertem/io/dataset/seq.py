@@ -292,126 +292,140 @@ class SEQDataSet(DataSet):
     def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
             return None
-        tree = ET.parse(path)
-        root = tree.getroot()
-        num_of_cat = len(root[2])  # the number of sizes (2048,4096....)
         num_of_Rowz = []  # the num of rows in different category
         num_of_Colz = []  # the number of cols in different category
         num_of_Pixels = []  # sort the number of pixels in different categories
-        mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
-        for z in root[2]:
-            mop[z] = z.attrib
+
         Rowz = []
         Colz = []
         Pixels = []  # store the elements in [row, col] format
-        row_counter = 0
-        col_counter = 0
-        pix_counter = 0
+
         coo_shape_x = []  # the list that contains information regarding the shape of the sparse.COO array, if u pick e.g. the 0. index element and it has the value of 4096
         # that means u will also pick the 0. index of the rows, cols and pixels list
         coo_shape_y = []
         coo_bin_val = []  # the binning values cateorized(by inedex)
-        '''
-        the program can search for the appropriate data based on the position of the sig_shape's value
-        in this matrix, later it will use it's index to get the rows, cols and pixels's values
-         '''
+        def xml_reader(f_path):
+            tree = ET.parse(f_path)
+            root = tree.getroot()
+            return root
 
-        for b in mop:
-            chk = 0
+        root = xml_reader(path)
+        num_of_cat = len(root[2])# the number of sizes (2048,4096....)
 
-            coo_shape_x.append(int(b.attrib['Rows']))
+        def xml_interpreter():
 
-            coo_shape_y.append(int(b.attrib['Columns']))
-            if 'Binning' in b.attrib:
-                coo_bin_val.append([int(b.attrib['Binning'])])
-                chk += 1
-            elif (len(b.attrib) == 2) and chk == 0:
-                coo_bin_val.append([])
-            for c in b:
-
-                tmp_cnt = 0  # to determine if we are dealing with a single pixel
-                tmp_dict = {}
-                tmp_dict.update(c.attrib)  # still unsplitted dictionary
-                tmp_block = []
-                for i in tmp_dict:
-                    # just to convert, but sometimes (in case of pixels) it can be used to iterate throught that dict too meaning we shuold use a counter to determine whether
-                    # the current inspected element is a pixel or just simply a row or col
-                    tmp = ''
-
-                    if (len(tmp_dict) == 2):
-                        tmp = tmp_dict[i]
-                        tmp_block.append(tmp)
-
-                        tmp_cnt += 1
-                        if tmp_cnt == 2:
-                            Pixels.append(tmp_block)
-                            pix_counter += 1
-                            tmp_cnt = 0
-                            break
-                    else:
-                        if (i == 'Rows') or (i == 'Row'):
-                            tmp = tmp_dict[i]
-                            Rowz.append(tmp.split('-'))
-                            row_counter += 1
-
-                        if (i == 'Columns') or (i == 'Column'):
-                            tmp = tmp_dict[i]
-                            Colz.append(tmp.split('-'))
-                            col_counter += 1
-            num_of_Rowz.append(row_counter)
-            num_of_Colz.append(col_counter)
-            num_of_Pixels.append(pix_counter)
+            mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
+            for z in root[2]:
+                mop[z] = z.attrib
             row_counter = 0
             col_counter = 0
             pix_counter = 0
+            for b in mop:
+                chk = 0
 
+                coo_shape_x.append(int(b.attrib['Rows']))
+
+                coo_shape_y.append(int(b.attrib['Columns']))
+                if 'Binning' in b.attrib:
+                    coo_bin_val.append([int(b.attrib['Binning'])])
+                    chk += 1
+                elif (len(b.attrib) == 2) and chk == 0:
+                    coo_bin_val.append([])
+                for c in b:
+
+                    tmp_cnt = 0  # to determine if we are dealing with a single pixel
+                    tmp_dict = {}
+                    tmp_dict.update(c.attrib)  # still unsplitted dictionary
+                    tmp_block = []
+                    for i in tmp_dict:
+                        # just to convert, but sometimes (in case of pixels) it can be used to iterate throught that dict too meaning we shuold use a counter to determine whether
+                        # the current inspected element is a pixel or just simply a row or col
+                        tmp = ''
+
+                        if (len(tmp_dict) == 2):
+                            tmp = tmp_dict[i]
+                            tmp_block.append(tmp)
+
+                            tmp_cnt += 1
+                            if tmp_cnt == 2:
+                                Pixels.append(tmp_block)
+                                pix_counter += 1
+                                tmp_cnt = 0
+                                break
+                        else:
+                            if (i == 'Rows') or (i == 'Row'):
+                                tmp = tmp_dict[i]
+                                Rowz.append(tmp.split('-'))
+                                row_counter += 1
+
+                            if (i == 'Columns') or (i == 'Column'):
+                                tmp = tmp_dict[i]
+                                Colz.append(tmp.split('-'))
+                                col_counter += 1
+                num_of_Rowz.append(row_counter)
+                num_of_Colz.append(col_counter)
+                num_of_Pixels.append(pix_counter)
+                row_counter = 0
+                col_counter = 0
+                pix_counter = 0
+        xml_interpreter()
         # splitting the results by category
         rows_by_category = {}
         cols_by_category = {}
         pixels_by_category = {}
-        end_id = 0
-        str_ind = 0
-        end_id_col = 0
-        str_id_col = 0
-        end_id_pixel = 0
-        str_id_pixel = 0
-        for x in range(0, num_of_cat):
-            if (x == 0):
-                rows_by_category[x] = Rowz[0:num_of_Rowz[x]]
-                cols_by_category[x] = Colz[0:num_of_Colz[x]]
-                pixels_by_category[x] = Pixels[0:num_of_Pixels[x]]
 
-                end_id = num_of_Rowz[x]
-                str_ind = num_of_Rowz[x]
-                end_id_col = num_of_Colz[x]
-                str_id_col = num_of_Colz[x]
-                end_id_pixel = num_of_Pixels[x]
-                str_id_pixel = num_of_Pixels[x]
+        def categorise_excludable():
+            end_id = 0
+            str_ind = 0
+            end_id_col = 0
+            str_id_col = 0
+            end_id_pixel = 0
+            str_id_pixel = 0
+            for x in range(0, num_of_cat):
+                if (x == 0):
+                    rows_by_category[x] = Rowz[0:num_of_Rowz[x]]
+                    cols_by_category[x] = Colz[0:num_of_Colz[x]]
+                    pixels_by_category[x] = Pixels[0:num_of_Pixels[x]]
+                    end_id = num_of_Rowz[x]
+                    str_ind = num_of_Rowz[x]
+                    end_id_col = num_of_Colz[x]
+                    str_id_col = num_of_Colz[x]
+                    end_id_pixel = num_of_Pixels[x]
+                    str_id_pixel = num_of_Pixels[x]
+                else:
+                    end_id += num_of_Rowz[x]
+                    end_id_col += num_of_Colz[x]
+                    end_id_pixel += num_of_Pixels[x]
+                    rows_by_category[x] = Rowz[str_ind:end_id]
+                    cols_by_category[x] = Colz[str_id_col:end_id_col]
+
+                    pixels_by_category[x] = Pixels[str_id_pixel:end_id_pixel]
+
+                    str_ind += num_of_Rowz[x]
+                    str_id_col += num_of_Colz[x]
+                    str_id_pixel += num_of_Pixels[x]
+
+        categorise_excludable()
+        sizes = list(  # list of touples consist of coo_shape_x and y's elements
+            map(lambda x, y: (x, y), coo_shape_x, coo_shape_y))
+        def generate_ID():
+            Defect_ID = 0
+
+            if (self._sig_shape[0], self._sig_shape[1]) in sizes:
+                for index in sizes:
+                    Defect_ID += 1
+                    if index == (self._sig_shape[0], self._sig_shape[1]):
+                        return Defect_ID
             else:
-                end_id += num_of_Rowz[x]
-                end_id_col += num_of_Colz[x]
-                end_id_pixel += num_of_Pixels[x]
+                return -1
 
-                rows_by_category[x] = Rowz[str_ind:end_id]
-                cols_by_category[x] = Colz[str_id_col:end_id_col]
-                pixels_by_category[x] = Pixels[str_id_pixel:end_id_pixel]
+        Defect_ID = generate_ID()  # determine wich index should be used for further calculations
 
-                str_ind += num_of_Rowz[x]
-                str_id_col += num_of_Colz[x]
-                str_id_pixel += num_of_Pixels[x]
 
-        Defect_ID = 0  # determine wich index should be used for further calculations
-        sizes = list( # list of touples consist of coo_shape_x and y's elements
-            map(lambda x, y: (x, y), coo_shape_x,coo_shape_y))
-        if (self._sig_shape[0], self._sig_shape[1]) in sizes:
-            for index in coo_shape_x:
-                Defect_ID += 1
-                if index == (self._sig_shape[0],self._sig_shape[1]):
-                    break
-        else:
+        def generate_new_size():
             Defect_ID = num_of_cat + 1
             coo_bin_val.append([])
-            if (len(coo_bin_val[0]) == 0):
+            if (len(coo_bin_val[0]) == 0):  # if the first elementi in the xml is not binned
 
                 dummy_transformation_m = np.zeros(sizes[0])
                 for i in rows_by_category[0]:
@@ -421,7 +435,7 @@ class SEQDataSet(DataSet):
                         dummy_transformation_m[int(i[0])] = 2
 
                 res2 = []
-                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0],self._sig_shape[1]))
+                c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
@@ -435,7 +449,7 @@ class SEQDataSet(DataSet):
                         dummy_transformation_m[:, int(i[0])] = 2
 
                 res3 = []
-                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0], self._sig_shape[1]))
+                c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
@@ -447,7 +461,7 @@ class SEQDataSet(DataSet):
                     dummy_transformation_m[int(i[0]), int(i[1])] = 2
 
                 res4 = []
-                c = self.cropping(dummy_transformation_m, sizes[0], (self._sig_shape[0],self._sig_shape[1]))
+                c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
                         if (c[a, b] > 1):
@@ -457,65 +471,77 @@ class SEQDataSet(DataSet):
                 rows_by_category[Defect_ID - 1] = res2
                 cols_by_category[Defect_ID - 1] = res3
                 pixels_by_category[Defect_ID - 1] = res4
-                num_of_Rowz.append(len(rows_by_category[Defect_ID - 1]))
+                num_of_Rowz.append(len(rows_by_category[Defect_ID - 1]))  # eredetiben ki kell javítani
                 num_of_Colz.append(len(cols_by_category[Defect_ID - 1]))
                 num_of_Pixels.append(len(pixels_by_category[Defect_ID - 1]))
                 coo_shape_x.append(self._sig_shape[0])
                 coo_shape_y.append(self._sig_shape[1])
-        coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
+                sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
 
-        for i1 in rows_by_category:
-            if (len(rows_by_category[i1]) != 0):
-                if i1 == Defect_ID - 1:
+        if (Defect_ID == -1):
+            generate_new_size()
+            Defect_ID = num_of_cat + 1
 
-                    for i2 in rows_by_category[i1]:
-                        if (len(i2) == 2):  # if its a list of rows in a [from,to] form
-                            start_in = int(i2[0])
-                            end_in = (int(i2[1]) + 1)
-                            coords[start_in:end_in] = 1
 
-                        if (len(i2) == 1):  # if its just a single row
 
-                            tmp = [int(i2[0])]
-                            coords[tmp] = 1
-                    break
+        def excl_rows(coords, Defect_ID):
+            for i1 in rows_by_category:
+                if (len(rows_by_category[i1]) != 0):
+                    if i1 == Defect_ID - 1:
+                        for i2 in rows_by_category[i1]:
+                            print("ertek:", len(i2))
+                            if (len(i2) == 2):  # if its a list of rows in a [from,to] form
+                                start_in = int(i2[0])
+                                end_in = (int(i2[1]) + 1)
+                                coords[start_in:end_in] = 1
 
-        for i1 in cols_by_category:
-            if (len(cols_by_category[i1]) != 0):
+                            if (len(i2) == 1):  # if its just a single row
 
-                if i1 == Defect_ID - 1:
-                    for i2 in cols_by_category[i1]:
+                                tmp = [int(i2[0])]
+                                coords[tmp] = 1
+                        return coords
+            return coords
 
-                        if (len(i2) == 2):  # if its a list of cols in a [from,to] form
-                            start_in = int(i2[0])
-                            end_in = (int(i2[1]) + 1)
+        def excl_cols(coords, Defect_ID):
+            for i1 in cols_by_category:
+                if (len(cols_by_category[i1]) != 0):
+                    if i1 == Defect_ID - 1:
+                        for i2 in cols_by_category[i1]:
 
-                            coords[:, start_in:end_in] = 1
+                            if (len(i2) == 2):  # if its a list of cols in a [from,to] form
+                                start_in = int(i2[0])
+                                end_in = (int(i2[1]) + 1)
 
-                        if (len(i2) == 1):  # if its just a single col
+                                coords[:, start_in:end_in] = 1
 
-                            tmp = [int(i2[0])]
-                            coords[:, tmp] = 1
-                    break
+                            if (len(i2) == 1):  # if its just a single col
 
-        for i1 in cols_by_category:
-            if (len(pixels_by_category[i1]) != 0):
+                                tmp = [int(i2[0])]
+                                coords[:, tmp] = 1
+                        return coords
+            return coords
 
-                if i1 == Defect_ID - 1:
-                    for i2 in pixels_by_category[i1]:
-                        coords[int(i2[0]), int(i2[1])] = 1
+        def excl_pixels(coords, Defect_ID):
+            for i1 in cols_by_category:
+                if (len(pixels_by_category[i1]) != 0):
+                    if i1 == Defect_ID - 1:
+                        for i2 in pixels_by_category[i1]:
+                            coords[int(i2[0]), int(i2[1])] = 1
 
-                    break
+                        return coords
+            return coords
+
+        def excl_all():
+            coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
+            coords = excl_rows(coords=coords, Defect_ID=Defect_ID)
+            coords = excl_cols(coords=coords, Defect_ID=Defect_ID)
+            coords = excl_pixels(coords=coords, Defect_ID=Defect_ID)
+            return coords
+        coords=excl_all()
         return sparse.COO(coords)
 
 
     def get_correction_data(self):
-        exclu=np.zeros((self._sig_shape[0],self._sig_shape[1]))
-        for i in range (0, self._sig_shape[0]):
-            exclu[775][i] = 1
-            exclu[776][i] = 1
-
-
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,

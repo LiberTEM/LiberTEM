@@ -45,12 +45,10 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 
-
 DWORD = 'L'
 LONG = 'l'
 DOUBLE = 'd'
 USHORT = 'H'
-
 
 HEADER_FIELDS = [
     ('magic', DWORD),
@@ -195,6 +193,7 @@ class SEQDataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
     """
+
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
                  sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
         super().__init__(io_backend=io_backend)
@@ -219,7 +218,7 @@ class SEQDataSet(DataSet):
         self._filesize = None
         self._dark = None
         self._gain = None
-        self._excluded_pixels=None
+        self._excluded_pixels = None
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -270,7 +269,7 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels=self._maybe_load_xml(self._path + ".Config.Metadata.xml")
+        self._excluded_pixels = self._maybe_load_xml(self._path + ".Config.Metadata.xml")
 
     def cropping(self, arr, start_size, req_size):
         '''
@@ -292,89 +291,121 @@ class SEQDataSet(DataSet):
     def _maybe_load_xml(self, path):
         if not os.path.exists(self._path):
             return None
-        num_of_Rowz = []  # the num of rows in different category
-        num_of_Colz = []  # the number of cols in different category
-        num_of_Pixels = []  # sort the number of pixels in different categories
+        num_of_rows = []  # the number of rows in different category
+        num_of_cols = []  # the number of cols in different category
+        num_of_pixels = []  # sort the number of pixels in different categories
 
-        Rowz = []
-        Colz = []
-        Pixels = []  # store the elements in [row, col] format
+        rows = []
+        cols = []
+        pixels = []  # store the elements in [row, col] format
 
-        coo_shape_x = []  # the list that contains information regarding the shape of the sparse.COO array, if u pick e.g. the 0. index element and it has the value of 4096
-        # that means u will also pick the 0. index of the rows, cols and pixels list
+        coo_shape_x = []
         coo_shape_y = []
         coo_bin_val = []  # the binning values cateorized(by inedex)
+        '''
+        coo_shape_x=
+         the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
+         the position of the elements inside the list is important as we will use it to 
+         calculate the index that matches the 0. index of the self._sig_shape's 
+        '''
+
         def xml_reader(f_path):
+            """
+
+            :param f_path: the path of the xml file
+            :return: returns an xml tree
+            """
             tree = ET.parse(f_path)
             root = tree.getroot()
             return root
 
         root = xml_reader(path)
-        num_of_cat = len(root[2])# the number of sizes (2048,4096....)
+        num_of_cat = len(root[2])
+
+        # we need the 2. index as it will be the Bad_Pixels node that contains the bad pixel maps
 
         def xml_interpreter():
-
+            """
+            this method is responsible for getting the data out of the xml file
+            however it will still be uncategorized
+            """
             mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
             for z in root[2]:
                 mop[z] = z.attrib
             row_counter = 0
             col_counter = 0
             pix_counter = 0
-            for b in mop:
+            for badPixelMap in mop:
+                '''
+                mop contains the badPixelMaps
+                '''
                 chk = 0
 
-                coo_shape_x.append(int(b.attrib['Rows']))
+                coo_shape_x.append(int(badPixelMap.attrib['Rows']))
 
-                coo_shape_y.append(int(b.attrib['Columns']))
-                if 'Binning' in b.attrib:
-                    coo_bin_val.append([int(b.attrib['Binning'])])
+                coo_shape_y.append(int(badPixelMap.attrib['Columns']))
+                '''
+                this part below is responsible for getting the binning
+                attribute out of the badPixelMap's header. If there is no binning
+                attribute then append an empty list to the coo_bin_val
+                '''
+                if 'Binning' in badPixelMap.attrib:
+                    coo_bin_val.append([int(badPixelMap.attrib['Binning'])])
                     chk += 1
-                elif (len(b.attrib) == 2) and chk == 0:
+                elif (len(badPixelMap.attrib) == 2) and chk == 0:
                     coo_bin_val.append([])
-                for c in b:
 
+                for defect in badPixelMap:
+                    '''
+                    iterates through a bad pixel map's Defect nodes
+                    '''
                     tmp_cnt = 0  # to determine if we are dealing with a single pixel
                     tmp_dict = {}
-                    tmp_dict.update(c.attrib)  # still unsplitted dictionary
+                    tmp_dict.update(defect.attrib)
                     tmp_block = []
                     for i in tmp_dict:
-                        # just to convert, but sometimes (in case of pixels) it can be used to iterate throught that dict too meaning we shuold use a counter to determine whether
-                        # the current inspected element is a pixel or just simply a row or col
                         tmp = ''
-
-                        if (len(tmp_dict) == 2):
+                        '''
+                        check if the current tmp_dict has two attributes
+                        which can only occur when we are dealing with a 
+                        pixel as it has both row and col attributes
+                        '''
+                        if len(tmp_dict) == 2:
                             tmp = tmp_dict[i]
                             tmp_block.append(tmp)
 
                             tmp_cnt += 1
                             if tmp_cnt == 2:
-                                Pixels.append(tmp_block)
+                                pixels.append(tmp_block)
                                 pix_counter += 1
                                 tmp_cnt = 0
                                 break
                         else:
                             if (i == 'Rows') or (i == 'Row'):
                                 tmp = tmp_dict[i]
-                                Rowz.append(tmp.split('-'))
+                                rows.append(tmp.split('-'))
                                 row_counter += 1
 
                             if (i == 'Columns') or (i == 'Column'):
                                 tmp = tmp_dict[i]
-                                Colz.append(tmp.split('-'))
+                                cols.append(tmp.split('-'))
                                 col_counter += 1
-                num_of_Rowz.append(row_counter)
-                num_of_Colz.append(col_counter)
-                num_of_Pixels.append(pix_counter)
+                num_of_rows.append(row_counter)
+                num_of_cols.append(col_counter)
+                num_of_pixels.append(pix_counter)
                 row_counter = 0
                 col_counter = 0
                 pix_counter = 0
+
         xml_interpreter()
-        # splitting the results by category
         rows_by_category = {}
         cols_by_category = {}
         pixels_by_category = {}
 
         def categorise_excludable():
+            '''
+            this method is responsible for the categorization of the previously extracted data
+            '''
             end_id = 0
             str_ind = 0
             end_id_col = 0
@@ -382,33 +413,38 @@ class SEQDataSet(DataSet):
             end_id_pixel = 0
             str_id_pixel = 0
             for x in range(0, num_of_cat):
-                if (x == 0):
-                    rows_by_category[x] = Rowz[0:num_of_Rowz[x]]
-                    cols_by_category[x] = Colz[0:num_of_Colz[x]]
-                    pixels_by_category[x] = Pixels[0:num_of_Pixels[x]]
-                    end_id = num_of_Rowz[x]
-                    str_ind = num_of_Rowz[x]
-                    end_id_col = num_of_Colz[x]
-                    str_id_col = num_of_Colz[x]
-                    end_id_pixel = num_of_Pixels[x]
-                    str_id_pixel = num_of_Pixels[x]
+                if x == 0:
+                    rows_by_category[x] = rows[0:num_of_rows[x]]
+                    cols_by_category[x] = cols[0:num_of_cols[x]]
+                    pixels_by_category[x] = pixels[0:num_of_pixels[x]]
+                    end_id = num_of_rows[x]
+                    str_ind = num_of_rows[x]
+                    end_id_col = num_of_cols[x]
+                    str_id_col = num_of_cols[x]
+                    end_id_pixel = num_of_pixels[x]
+                    str_id_pixel = num_of_pixels[x]
                 else:
-                    end_id += num_of_Rowz[x]
-                    end_id_col += num_of_Colz[x]
-                    end_id_pixel += num_of_Pixels[x]
-                    rows_by_category[x] = Rowz[str_ind:end_id]
-                    cols_by_category[x] = Colz[str_id_col:end_id_col]
+                    end_id += num_of_rows[x]
+                    end_id_col += num_of_cols[x]
+                    end_id_pixel += num_of_pixels[x]
+                    rows_by_category[x] = rows[str_ind:end_id]
+                    cols_by_category[x] = cols[str_id_col:end_id_col]
 
-                    pixels_by_category[x] = Pixels[str_id_pixel:end_id_pixel]
+                    pixels_by_category[x] = pixels[str_id_pixel:end_id_pixel]
 
-                    str_ind += num_of_Rowz[x]
-                    str_id_col += num_of_Colz[x]
-                    str_id_pixel += num_of_Pixels[x]
+                    str_ind += num_of_rows[x]
+                    str_id_col += num_of_cols[x]
+                    str_id_pixel += num_of_pixels[x]
 
         categorise_excludable()
-        sizes = list(  # list of touples consist of coo_shape_x and y's elements
+        sizes = list(  # list of tuples consist of coo_shape_x and y's elements
             map(lambda x, y: (x, y), coo_shape_x, coo_shape_y))
+
         def generate_ID():
+            """
+            :return: the index of self._sig_shapes value in the "sizes" list
+            in case it doesn't contain it returns -1
+            """
             Defect_ID = 0
 
             if (self._sig_shape[0], self._sig_shape[1]) in sizes:
@@ -419,13 +455,20 @@ class SEQDataSet(DataSet):
             else:
                 return -1
 
-        Defect_ID = generate_ID()  # determine wich index should be used for further calculations
-
+        Defect_ID = generate_ID()  # determine which index should be used for further calculations
 
         def generate_new_size():
+            """
+            this method is called if the generate_ID() method returns -1,
+            in this case we have to make a new size (the size of self._sig_shape),
+            and for his new size we have to calculate the pixels, columns and rows
+            values based on the original size's value which we do by cropping the middle
+            part of the original size to the size of sig_shape
+            :return:
+            """
             Defect_ID = num_of_cat + 1
             coo_bin_val.append([])
-            if (len(coo_bin_val[0]) == 0):  # if the first elementi in the xml is not binned
+            if len(coo_bin_val[0]) == 0:  # if the first element in the xml is not binned
 
                 dummy_transformation_m = np.zeros(sizes[0])
                 for i in rows_by_category[0]:
@@ -438,12 +481,12 @@ class SEQDataSet(DataSet):
                 c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
-                        if (c[a, b] > 1):
+                        if c[a, b] > 1:
                             if [a] not in res2:
                                 res2.append([a])
                 dummy_transformation_m = np.zeros(sizes[0])
                 for i in cols_by_category[0]:
-                    if (len(i) == 2):
+                    if len(i) == 2:
                         dummy_transformation_m[:, int(i[0]):(int(i[1]) + 1)] = 2
                     if len(i) == 1:
                         dummy_transformation_m[:, int(i[0])] = 2
@@ -452,7 +495,7 @@ class SEQDataSet(DataSet):
                 c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
-                        if (c[a, b] > 1):
+                        if c[a, b] > 1:
                             if [b] not in res3 and [a] not in res2:
                                 res3.append([b])
 
@@ -464,16 +507,16 @@ class SEQDataSet(DataSet):
                 c = self.cropping(dummy_transformation_m, sizes[0], self._sig_shape)
                 for a in range(0, c.shape[0]):
                     for b in range(0, c.shape[1]):
-                        if (c[a, b] > 1):
+                        if c[a, b] > 1:
                             if [a, b] not in res4 and [a] not in res2 and [b] not in res3:
                                 res4.append([a, b])
 
                 rows_by_category[Defect_ID - 1] = res2
                 cols_by_category[Defect_ID - 1] = res3
                 pixels_by_category[Defect_ID - 1] = res4
-                num_of_Rowz.append(len(rows_by_category[Defect_ID - 1]))  # eredetiben ki kell javítani
-                num_of_Colz.append(len(cols_by_category[Defect_ID - 1]))
-                num_of_Pixels.append(len(pixels_by_category[Defect_ID - 1]))
+                num_of_rows.append(len(rows_by_category[Defect_ID - 1]))
+                num_of_cols.append(len(cols_by_category[Defect_ID - 1]))
+                num_of_pixels.append(len(pixels_by_category[Defect_ID - 1]))
                 coo_shape_x.append(self._sig_shape[0])
                 coo_shape_y.append(self._sig_shape[1])
                 sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
@@ -482,20 +525,23 @@ class SEQDataSet(DataSet):
             generate_new_size()
             Defect_ID = num_of_cat + 1
 
-
-
         def excl_rows(coords, Defect_ID):
+            """
+            processes the excluded rows
+            :param coords:an array which we will do the changes
+            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :return: coords 2 dimensional array
+            """
             for i1 in rows_by_category:
                 if (len(rows_by_category[i1]) != 0):
                     if i1 == Defect_ID - 1:
                         for i2 in rows_by_category[i1]:
-                            print("ertek:", len(i2))
-                            if (len(i2) == 2):  # if its a list of rows in a [from,to] form
+                            if len(i2) == 2:  # if its a list of rows in a [from,to] form
                                 start_in = int(i2[0])
                                 end_in = (int(i2[1]) + 1)
                                 coords[start_in:end_in] = 1
 
-                            if (len(i2) == 1):  # if its just a single row
+                            if len(i2) == 1:  # if its just a single row
 
                                 tmp = [int(i2[0])]
                                 coords[tmp] = 1
@@ -503,18 +549,24 @@ class SEQDataSet(DataSet):
             return coords
 
         def excl_cols(coords, Defect_ID):
+            """
+            processes the excluded columns
+            :param coords:an array which we will do the changes
+            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :return: coords 2 dimensional array
+            """
             for i1 in cols_by_category:
-                if (len(cols_by_category[i1]) != 0):
+                if len(cols_by_category[i1]) != 0:
                     if i1 == Defect_ID - 1:
                         for i2 in cols_by_category[i1]:
 
-                            if (len(i2) == 2):  # if its a list of cols in a [from,to] form
+                            if len(i2) == 2:  # if its a list of cols in a [from,to] form
                                 start_in = int(i2[0])
                                 end_in = (int(i2[1]) + 1)
 
                                 coords[:, start_in:end_in] = 1
 
-                            if (len(i2) == 1):  # if its just a single col
+                            if len(i2) == 1:  # if its just a single col
 
                                 tmp = [int(i2[0])]
                                 coords[:, tmp] = 1
@@ -522,8 +574,14 @@ class SEQDataSet(DataSet):
             return coords
 
         def excl_pixels(coords, Defect_ID):
+            """
+            processes the excluded pixels
+            :param coords:an array which we will do the changes
+            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :return: coords 2 dimensional array
+            """
             for i1 in cols_by_category:
-                if (len(pixels_by_category[i1]) != 0):
+                if len(pixels_by_category[i1]) != 0:
                     if i1 == Defect_ID - 1:
                         for i2 in pixels_by_category[i1]:
                             coords[int(i2[0]), int(i2[1])] = 1
@@ -537,7 +595,8 @@ class SEQDataSet(DataSet):
             coords = excl_cols(coords=coords, Defect_ID=Defect_ID)
             coords = excl_pixels(coords=coords, Defect_ID=Defect_ID)
             return coords
-        coords=excl_all()
+
+        coords = excl_all()
         return sparse.COO(coords)
 
 
@@ -554,16 +613,16 @@ class SEQDataSet(DataSet):
     def get_diagnostics(self):
         header = self._header
         return [
-            {"name": k, "value": str(v)}
-            for k, v in header.items()
-        ] + [
-            {"name": "Footer size",
-             "value": str(self._footer_size)},
-            {"name": "Dark frame included",
-             "value": str(self._dark is not None)},
-            {"name": "Gain map included",
-             "value": str(self._gain is not None)},
-        ]
+                   {"name": k, "value": str(v)}
+                   for k, v in header.items()
+               ] + [
+                   {"name": "Footer size",
+                    "value": str(self._footer_size)},
+                   {"name": "Dark frame included",
+                    "value": str(self._dark is not None)},
+                   {"name": "Gain map included",
+                    "value": str(self._gain is not None)},
+               ]
 
     @property
     def meta(self):
@@ -651,7 +710,7 @@ class SEQDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        res = max(self._cores, self._filesize // (512*1024*1024))
+        res = max(self._cores, self._filesize // (512 * 1024 * 1024))
         return res
 
     def get_partitions(self):

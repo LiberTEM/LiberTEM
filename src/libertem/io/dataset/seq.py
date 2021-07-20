@@ -301,7 +301,7 @@ class SEQDataSet(DataSet):
 
         coo_shape_x = []
         coo_shape_y = []
-        coo_bin_val = []  # the binning values cateorized(by inedex)
+        coo_bin_val = []  # the binning values categorized(by inedex)
         '''
         coo_shape_x=
          the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
@@ -311,7 +311,6 @@ class SEQDataSet(DataSet):
 
         def xml_reader(f_path):
             """
-
             :param f_path: the path of the xml file
             :return: returns an xml tree
             """
@@ -326,7 +325,7 @@ class SEQDataSet(DataSet):
 
         def xml_interpreter():
             """
-            this method is responsible for getting the data out of the xml file
+            this method is responsible for getting the data out of the xml tree
             however it will still be uncategorized
             """
             mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
@@ -529,7 +528,8 @@ class SEQDataSet(DataSet):
             """
             processes the excluded rows
             :param coords:an array which we will do the changes
-            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :param Defect_ID: the Id which help us select
+            the correct key from rows_by_category dictionary
             :return: coords 2 dimensional array
             """
             for i1 in rows_by_category:
@@ -552,7 +552,8 @@ class SEQDataSet(DataSet):
             """
             processes the excluded columns
             :param coords:an array which we will do the changes
-            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :param Defect_ID: the Id which help us select
+            the correct key from rows_by_category dictionary
             :return: coords 2 dimensional array
             """
             for i1 in cols_by_category:
@@ -577,7 +578,8 @@ class SEQDataSet(DataSet):
             """
             processes the excluded pixels
             :param coords:an array which we will do the changes
-            :param Defect_ID: the Id which help us select the correct key from rows_by_category dictionary
+            :param Defect_ID: the Id which help us select
+            the correct key from rows_by_category dictionary
             :return: coords 2 dimensional array
             """
             for i1 in cols_by_category:
@@ -590,6 +592,9 @@ class SEQDataSet(DataSet):
             return coords
 
         def excl_all():
+            """
+            :return: a 2 dimensional array of excluded pixels, still not sparse array
+            """
             coords = np.zeros((int(self._sig_shape[0]), int(self._sig_shape[1])))
             coords = excl_rows(coords=coords, Defect_ID=Defect_ID)
             coords = excl_cols(coords=coords, Defect_ID=Defect_ID)

@@ -35,7 +35,6 @@ import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
 import xml.etree.ElementTree as ET
-import math
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -302,12 +301,12 @@ class SEQDataSet(DataSet):
         coo_shape_x = []
         coo_shape_y = []
         coo_bin_val = []  # the binning values categorized(by inedex)
-        '''
+        """
         coo_shape_x=
-         the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
-         the position of the elements inside the list is important as we will use it to 
-         calculate the index that matches the 0. index of the self._sig_shape's 
-        '''
+        the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
+        the position of the elements inside the list is important as we will use it to 
+        calculate the index that matches the 0. index of the self._sig_shape's
+        """
 
         def xml_reader(f_path):
             """

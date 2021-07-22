@@ -288,8 +288,9 @@ class SEQDataSet(DataSet):
         return ac
 
     def _maybe_load_xml(self, path):
-        if not os.path.exists(self._path):
-            return None
+
+
+
         num_of_rows = []  # the number of rows in different category
         num_of_cols = []  # the number of cols in different category
         num_of_pixels = []  # sort the number of pixels in different categories
@@ -313,9 +314,16 @@ class SEQDataSet(DataSet):
             :param f_path: the path of the xml file
             :return: returns an xml tree
             """
-            tree = ET.parse(f_path)
-            root = tree.getroot()
-            return root
+
+            if not os.path.exists(f_path):
+                tree = ET.fromstring(path)
+                return tree
+
+
+            else:
+                tree = ET.parse(f_path)
+                root = tree.getroot()
+                return root
 
         root = xml_reader(path)
         num_of_cat = len(root[2])

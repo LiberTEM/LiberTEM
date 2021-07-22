@@ -129,7 +129,9 @@ def _get_image_offset(header):
     else:
         return 1024
 
-
+def _load_xml_from_string(xml, sig_shape):
+        tree = ET.fromstring(xml)
+        return tree
 
 class SEQDatasetParams(MessageConverter):
     SCHEMA = {
@@ -220,19 +222,8 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-    def get_excluded_pixels(self, xml=None, path=None, sig_shape=None):
-        sig = None
-        if sig_shape == None:
-            sig = self._sig_shape
-        else:
-            print("h1")
-            sig = sig_shape
-        if (os.path.exists(path)):
-            print("h2")
-            return _load_xml(path=path, sig_shape=sig)
-        elif (xml != None):
-            print("h3")
-            return _load_xml(xml=xml, sig_shape=sig)
+    def get_excluded_pixels(self):
+        return self._excluded_pixels
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -320,9 +311,7 @@ class SEQDataSet(DataSet):
             the position of the elements inside the list is important as we will use it to 
             calculate the index that matches the 0. index of the self._sig_shape's
             """
-        def xml_string_reader(xml_s):
-            tree = ET.fromstring(xml_s)
-            return tree
+
 
         def xml_file_reader(f_path):
             tree = ET.parse(f_path)

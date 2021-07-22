@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 import pytest
+import sparse
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet, _load_xml
@@ -142,8 +143,9 @@ def test_xml_excluded_pixels_loading_unbinnd(lt_ctx):
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[776] = 1
-    expected_res = _load_xml(path=SEQ_TESTDATA_PATH,sig_shape=(1024,1024))
-    assert not np.array_equal(test_arr, expected_res)
+    expected_res = _load_xml(xml=xml_string,sig_shape=(1024,1024))
+
+    assert np.array_equal(test_arr, expected_res.todense())
 
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()

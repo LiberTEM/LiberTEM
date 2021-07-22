@@ -129,12 +129,12 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
 def test_xml_excluded_pixels_loading_unbinnd(lt_ctx):
 
-    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sig_shape=(1024, 1024))
+    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8))
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
-    test_arr[776] = 1
+    test_arr[777] = 1
     expected_res = ds.get_excluded_pixels()
     assert not np.array_equal(test_arr, expected_res)
 

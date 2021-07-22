@@ -36,7 +36,8 @@ def test_xml_excluded_pixels_loading_unbind():
     test_arr[775] = 1
     test_arr[776] = 1
     expected_res = ds.get_excluded_pixels()
-    assert not np.array_equal(test_arr, expected_res)
+    #assert not np.array_equal(test_arr, expected_res)
+    assert False
 @pytest.fixture
 def default_seq(lt_ctx):
     nav_shape = (8, 8)

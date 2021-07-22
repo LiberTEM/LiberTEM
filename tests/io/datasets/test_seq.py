@@ -127,12 +127,8 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
     assert np.allclose(result, result_with_offset)
 
-def test_xml_excluded_pixels_loading_unbind():
-    path = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-           '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-           'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
-           'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-           '</Configuration>'
+def test_xml_excluded_pixels_loading_unbinnd():
+
     ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sig_shape=(1024, 1024))
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1

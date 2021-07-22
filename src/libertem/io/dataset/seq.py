@@ -318,8 +318,6 @@ class SEQDataSet(DataSet):
 
             if not os.path.exists(f_path):
                 return None
-
-
             else:
                 tree = ET.parse(f_path)
                 root = tree.getroot()

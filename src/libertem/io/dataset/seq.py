@@ -315,13 +315,9 @@ class SEQDataSet(DataSet):
             :param f_path: the path of the xml file
             :return: returns an xml tree
             """
-
-            if not os.path.exists(f_path):
-                return None
-            else:
-                tree = ET.parse(f_path)
-                root = tree.getroot()
-                return root
+            tree = ET.parse(f_path)
+            root = tree.getroot()
+            return root
 
         root = xml_reader(path)
         num_of_cat = len(root[2])

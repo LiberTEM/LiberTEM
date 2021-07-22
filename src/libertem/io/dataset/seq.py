@@ -184,7 +184,7 @@ def _load_xml(sig_shape, xml="", path=""):
         return tree
     if os.path.exists(path):
         root = xml_file_reader(path)
-    elif xml is not None:
+    elif len(xml)!=0:
         root = xml_string_reader(xml)
 
     num_of_cat = len(root[2])

@@ -31,7 +31,6 @@ def test_xml_excluded_pixels_loading_unbind():
            'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
            '</Configuration>'
     ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sig_shape=(1024, 1024))
-    ds._maybe_load_xml(path)
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[777] = 1

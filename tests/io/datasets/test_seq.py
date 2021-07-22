@@ -136,7 +136,7 @@ def test_xml_excluded_pixels_loading_unbind():
     ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sig_shape=(1024, 1024))
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
-    test_arr[777] = 1
+    test_arr[776] = 1
     expected_res = ds.get_excluded_pixels()
     assert not np.array_equal(test_arr, expected_res)
 

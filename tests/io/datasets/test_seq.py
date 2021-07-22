@@ -21,6 +21,9 @@ except ModuleNotFoundError:
 
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
+
+#pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
+
 def test_xml_excluded_pixels_loading_unbind():
     path = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
            '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
@@ -34,9 +37,6 @@ def test_xml_excluded_pixels_loading_unbind():
     test_arr[776] = 1
     expected_res = ds.get_excluded_pixels()
     assert not np.array_equal(test_arr, expected_res)
-pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
-
-
 @pytest.fixture
 def default_seq(lt_ctx):
     nav_shape = (8, 8)

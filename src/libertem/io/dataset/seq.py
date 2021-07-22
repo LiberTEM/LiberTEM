@@ -134,7 +134,6 @@ def _load_xml(sig_shape, xml=None, path=None):
     if not os.path.exists(path) and xml==None:
         print("eror, here")
         return None
-    print("been here")
     def cropping(arr, start_size, req_size):
         '''
 
@@ -174,12 +173,14 @@ def _load_xml(sig_shape, xml=None, path=None):
             :param f_path: the path of the xml file
             :return: returns an xml tree
             """
+        print("called here")
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
 
 
     def xml_string_reader(xml_s):
+        print("called here2")
         tree = ET.fromstring(xml_s)
         return tree
 
@@ -188,6 +189,7 @@ def _load_xml(sig_shape, xml=None, path=None):
     if xml is not None:
         root = xml_string_reader(xml)
     else:
+        print("called here 3")
         return None
 
 

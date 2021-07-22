@@ -569,10 +569,13 @@ class SEQDataSet(DataSet):
         if sig_shape==None:
             sig=self._sig_shape
         else:
+            print("h1")
             sig=sig_shape
         if(os.path.exists(path)):
+            print("h2")
             return _load_xml(path=path,sig_shape=sig)
         elif(xml!=None):
+            print("h3")
             return _load_xml(xml=xml, sig_shape=sig)
 
     def _do_initialize(self):

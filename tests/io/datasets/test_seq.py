@@ -142,7 +142,7 @@ def test_xml_excluded_pixels_loading_unbinnd(lt_ctx):
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[777] = 1
-    expected_res = ds.get_excluded_pixels(path=SEQ_TESTDATA_PATH,xml=xml_string,sig_shape=(1024,1024))
+    expected_res = ds._load_xml(xml=xml_string,sig_shape=(1024,1024))
     assert not np.array_equal(test_arr, expected_res)
 
 def test_negative_sync_offset(default_seq, lt_ctx):

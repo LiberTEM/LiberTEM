@@ -174,7 +174,6 @@ def _load_xml(sig_shape, xml=None, path=None):
             :param f_path: the path of the xml file
             :return: returns an xml tree
         """
-        print("erre1")
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root

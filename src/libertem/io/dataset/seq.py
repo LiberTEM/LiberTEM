@@ -130,7 +130,7 @@ def _get_image_offset(header):
         return 1024
 
 
-def _load_xml(sig_shape, xml=None, path=None):
+def _load_xml(sig_shape, xml="", path=""):
     #if not os.path.exists(path) :
      #   return None
 

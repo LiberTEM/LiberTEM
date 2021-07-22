@@ -134,6 +134,7 @@ def _load_xml(sig_shape, xml=None, path=None):
     if not os.path.exists(path) and xml==None:
         print("eror, here")
         return None
+    print("been here")
     def cropping(arr, start_size, req_size):
         '''
 

@@ -174,6 +174,7 @@ def _load_xml(sig_shape, xml=None, path=None):
             :param f_path: the path of the xml file
             :return: returns an xml tree
         """
+        print("just t make sure2")
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
@@ -182,7 +183,7 @@ def _load_xml(sig_shape, xml=None, path=None):
         print("err2")
         tree = ET.fromstring(xml_s)
         return tree
-
+    print(os.path.exists(path))
     if os.path.exists(path):
         print("called1",path,sig_shape)
         root = xml_file_reader(path)

@@ -317,8 +317,7 @@ class SEQDataSet(DataSet):
             """
 
             if not os.path.exists(f_path):
-                tree = ET.fromstring(path)
-                return tree
+                return None
 
 
             else:

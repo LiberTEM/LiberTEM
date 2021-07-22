@@ -173,20 +173,20 @@ def _load_xml(sig_shape, xml=None, path=None):
         """
             :param f_path: the path of the xml file
             :return: returns an xml tree
-            """
-
+        """
+        print("erre1")
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
 
     def xml_string_reader(xml_s):
-
+        print("err2")
         tree = ET.fromstring(xml_s)
         return tree
 
     if os.path.exists(path):
         root = xml_file_reader(path)
-    if xml is not None:
+    elif xml is not None:
         root = xml_string_reader(xml)
 
     num_of_cat = len(root[2])
@@ -564,8 +564,16 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-    def get_excluded_pixels(self):
-        return self._excluded_pixels
+    def get_excluded_pixels(self,xml=None,path=None,sig_shape=None):
+        sig=None
+        if sig_shape==None:
+            sig=self._sig_shape
+        else:
+            sig=sig_shape
+        if(os.path.exists(path)):
+         return _load_xml(path=path,sig_shape=sig)
+        elif(xml!=None):
+            return _load_xml(xml=xml, sig_shape=sig)
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)

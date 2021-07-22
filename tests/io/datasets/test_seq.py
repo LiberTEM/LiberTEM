@@ -6,7 +6,7 @@ import pytest
 import sparse
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet, _load_xml
+from libertem.io.dataset.seq import SEQDataSet
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF

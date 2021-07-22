@@ -131,8 +131,8 @@ def _get_image_offset(header):
 
 
 def _load_xml(sig_shape, xml="", path=""):
-    #if not os.path.exists(path) :
-     #   return None
+    if not os.path.exists(path) and xml == "":
+        return None
 
     def cropping(arr, start_size, req_size):
         '''
@@ -170,21 +170,17 @@ def _load_xml(sig_shape, xml="", path=""):
         """
 
     def xml_file_reader(f_path):
-        """
-            :param f_path: the path of the xml file
-            :return: returns an xml tree
-        """
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
 
     def xml_string_reader(xml_s):
-
         tree = ET.fromstring(xml_s)
         return tree
+
     if os.path.exists(path):
         root = xml_file_reader(path)
-    elif len(xml)!=0:
+    elif len(xml) != 0:
         root = xml_string_reader(xml)
 
     num_of_cat = len(root[2])
@@ -562,17 +558,17 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-    def get_excluded_pixels(self,xml=None,path=None,sig_shape=None):
-        sig=None
-        if sig_shape==None:
-            sig=self._sig_shape
+    def get_excluded_pixels(self, xml=None, path=None, sig_shape=None):
+        sig = None
+        if sig_shape == None:
+            sig = self._sig_shape
         else:
             print("h1")
-            sig=sig_shape
-        if(os.path.exists(path)):
+            sig = sig_shape
+        if (os.path.exists(path)):
             print("h2")
-            return _load_xml(path=path,sig_shape=sig)
-        elif(xml!=None):
+            return _load_xml(path=path, sig_shape=sig)
+        elif (xml != None):
             print("h3")
             return _load_xml(xml=xml, sig_shape=sig)
 

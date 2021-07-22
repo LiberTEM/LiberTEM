@@ -132,6 +132,7 @@ def _get_image_offset(header):
 
 def _load_xml(sig_shape, xml=None, path=None):
     if not os.path.exists(path) and xml==None:
+        print("eror, here")
         return None
     def cropping(arr, start_size, req_size):
         '''
@@ -472,6 +473,7 @@ def _load_xml(sig_shape, xml=None, path=None):
         return coords
 
     coords = excl_all()
+    print(coords)
     return sparse.COO(coords)
 
 

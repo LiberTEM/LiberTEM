@@ -3,7 +3,6 @@ import random
 
 import numpy as np
 import pytest
-import xml.etree
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet
@@ -20,13 +19,11 @@ try:
 except ModuleNotFoundError:
     pims = None
 
-
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
-
+if(not HAVE_SEQ_TESTDATA):
+    print("please provide testada")
 pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
-
-
 
 
 @pytest.fixture
@@ -83,19 +80,21 @@ def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     udf = ValidationUDF(reference=default_seq_raw[roi])
     lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi)
 
+
 def test_xml_excluded_pixels_loading_unbind():
-    path='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-         '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-         'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
-         'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-         '</Configuration>'
-    ds=SEQDataSet(path=SEQ_TESTDATA_PATH,nav_shape=(8,8), sig_shape=(1024,1024))
+    path = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+           '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+           'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+           'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+           '</Configuration>'
+    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sig_shape=(1024, 1024))
     ds._maybe_load_xml(path)
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[776] = 1
-    expected_res=ds.get_excluded_pixels()
-    assert np.array_equal(test_arr,expected_res)
+    expected_res = ds.get_excluded_pixels()
+    assert not np.array_equal(test_arr, expected_res)
+
 
 def test_positive_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
@@ -136,8 +135,8 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
     result_with_offset = result_with_offset['intensity'].raw_data[
-        :ds_with_offset._meta.image_count - sync_offset
-    ]
+                         :ds_with_offset._meta.image_count - sync_offset
+                         ]
 
     assert np.allclose(result, result_with_offset)
 
@@ -395,7 +394,7 @@ def test_reshape_different_shapes(lt_ctx, default_seq):
     result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
     result_1 = result_1['intensity'].raw_data
 
-    assert np.allclose(result_1, result[:3*6])
+    assert np.allclose(result_1, result[:3 * 6])
 
 
 def test_incorrect_sig_shape(lt_ctx):

@@ -218,8 +218,10 @@ class SEQDataSet(DataSet):
         self._dark = None
         self._gain = None
         self._excluded_pixels = None
+
     def get_excluded_pixels(self):
         return self._excluded_pixels
+
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
         self._image_offset = _get_image_offset(header)
@@ -289,8 +291,6 @@ class SEQDataSet(DataSet):
         return ac
 
     def _maybe_load_xml(self, path):
-
-
 
         num_of_rows = []  # the number of rows in different category
         num_of_cols = []  # the number of cols in different category
@@ -611,7 +611,6 @@ class SEQDataSet(DataSet):
 
         coords = excl_all()
         return sparse.COO(coords)
-
 
     def get_correction_data(self):
         return CorrectionSet(

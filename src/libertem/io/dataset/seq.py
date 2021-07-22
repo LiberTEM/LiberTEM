@@ -131,9 +131,9 @@ def _get_image_offset(header):
 
 
 def _load_xml(sig_shape, xml=None, path=None):
-    if not os.path.exists(path) and xml==None:
-        print("eror, here")
+    if not os.path.exists(path) and xml == None:
         return None
+
     def cropping(arr, start_size, req_size):
         '''
 
@@ -150,6 +150,7 @@ def _load_xml(sig_shape, xml=None, path=None):
             req_x = int(req_size[1]) // 2
             ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
         return ac
+
     num_of_rows = []  # the number of rows in different category
     num_of_cols = []  # the number of cols in different category
     num_of_pixels = []  # sort the number of pixels in different categories
@@ -173,14 +174,13 @@ def _load_xml(sig_shape, xml=None, path=None):
             :param f_path: the path of the xml file
             :return: returns an xml tree
             """
-        print("called here")
+
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
 
-
     def xml_string_reader(xml_s):
-        print("called here2")
+
         tree = ET.fromstring(xml_s)
         return tree
 
@@ -188,7 +188,6 @@ def _load_xml(sig_shape, xml=None, path=None):
         root = xml_file_reader(path)
     if xml is not None:
         root = xml_string_reader(xml)
-
 
     num_of_cat = len(root[2])
 
@@ -320,7 +319,7 @@ def _load_xml(sig_shape, xml=None, path=None):
         if (sig_shape[0], sig_shape[1]) in sizes:
             for index in sizes:
                 Defect_ID += 1
-                if index == (sig_shape[0],sig_shape[1]):
+                if index == (sig_shape[0], sig_shape[1]):
                     return Defect_ID
         else:
             return -1
@@ -473,9 +472,7 @@ def _load_xml(sig_shape, xml=None, path=None):
         return coords
 
     coords = excl_all()
-    print(coords)
     return sparse.COO(coords)
-
 
 
 class SEQDatasetParams(MessageConverter):

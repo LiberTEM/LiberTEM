@@ -218,7 +218,8 @@ class SEQDataSet(DataSet):
         self._dark = None
         self._gain = None
         self._excluded_pixels = None
-
+    def get_excluded_pixels(self):
+        return self._excluded_pixels
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
         self._image_offset = _get_image_offset(header)

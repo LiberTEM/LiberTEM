@@ -174,21 +174,17 @@ def _load_xml(sig_shape, xml=None, path=None):
             :param f_path: the path of the xml file
             :return: returns an xml tree
         """
-        print("just t make sure2")
         tree = ET.parse(f_path)
         root = tree.getroot()
         return root
 
     def xml_string_reader(xml_s):
-        print("err2")
+
         tree = ET.fromstring(xml_s)
         return tree
-    print(os.path.exists(path))
     if os.path.exists(path):
-        print("called1",path,sig_shape)
         root = xml_file_reader(path)
     elif xml is not None:
-        print("called2", xml, sig_shape)
         root = xml_string_reader(xml)
 
     num_of_cat = len(root[2])
@@ -627,9 +623,14 @@ class SEQDataSet(DataSet):
         return np.squeeze(data_dict['data'])
 
     def _maybe_load_dark_gain(self):
+        xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+                     '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+                     'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+                     'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                     '</Configuration>'
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = _load_xml(sig_shape=self._sig_shape, path=self._path + ".Config.Metadata.xml")
+        self._excluded_pixels = _load_xml(sig_shape=self._sig_shape, xml=xml_string)
 
     def get_correction_data(self):
         return CorrectionSet(

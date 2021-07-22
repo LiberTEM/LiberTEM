@@ -181,7 +181,7 @@ def _load_xml(sig_shape, xml=None, path=None):
         tree = ET.fromstring(xml_s)
         return tree
 
-    if os.path.exists():
+    if os.path.exists(path):
         root = xml_file_reader(path)
     if xml is not None:
         root = xml_string_reader(xml)

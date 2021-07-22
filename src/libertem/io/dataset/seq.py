@@ -571,7 +571,7 @@ class SEQDataSet(DataSet):
         else:
             sig=sig_shape
         if(os.path.exists(path)):
-         return _load_xml(path=path,sig_shape=sig)
+            return _load_xml(path=path,sig_shape=sig)
         elif(xml!=None):
             return _load_xml(xml=xml, sig_shape=sig)
 
@@ -630,7 +630,7 @@ class SEQDataSet(DataSet):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
-            excluded_pixels=self._excluded_pixels,
+            excluded_pixels=self.get_excluded_pixels(path=self._path, sig_shape=self._sig_shape),
         )
 
     def initialize(self, executor):

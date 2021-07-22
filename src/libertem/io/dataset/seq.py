@@ -129,7 +129,7 @@ def _get_image_offset(header):
     else:
         return 1024
 
-def _load_xml_from_string(xml, sig_shape):
+def _load_xml_from_string(xml):
         tree = ET.fromstring(xml)
         return tree
 
@@ -319,7 +319,9 @@ class SEQDataSet(DataSet):
             return root
 
         root = xml_file_reader(path)
-
+        a = _load_xml_from_string()
+        if a != "":
+            root=a
         num_of_cat = len(root[2])
 
         # we need the 2. index as it will be the Bad_Pixels node that contains the bad pixel maps

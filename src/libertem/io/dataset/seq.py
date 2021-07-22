@@ -188,9 +188,6 @@ def _load_xml(sig_shape, xml=None, path=None):
         root = xml_file_reader(path)
     if xml is not None:
         root = xml_string_reader(xml)
-    else:
-        print("called here 3")
-        return None
 
 
     num_of_cat = len(root[2])

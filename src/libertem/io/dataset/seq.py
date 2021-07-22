@@ -607,7 +607,7 @@ class SEQDataSet(DataSet):
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = self._load_xml(sig_shape=self._sig_shape, path=self._path++ ".Config.Metadata.xml")
+        self._excluded_pixels = self._load_xml(sig_shape=self._sig_shape, path=self._path+ ".Config.Metadata.xml")
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,

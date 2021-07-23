@@ -924,9 +924,14 @@ class SEQDataSet(DataSet):
         coords = excl_all()
         return sparse.COO(coords)
     def _maybe_load_dark_gain(self):
+        str='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+           '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+           'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+           'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+           '</Configuration>'
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = self._load_xml(sig_shape=self._sig_shape, path=self._path+ ".Config.Metadata.xml")
+        self._excluded_pixels = _load_xml_from_string(xml=str,sig_shape=(1024, 1024))
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,

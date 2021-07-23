@@ -81,9 +81,6 @@ def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi)
 
 
-
-
-
 def test_positive_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
     sync_offset = 2
@@ -128,24 +125,22 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
     assert np.allclose(result, result_with_offset)
 
-def test_xml_excluded_pixels_loading_unbinnd(lt_ctx):
+
+def test_xml_excluded_pixels_loading_unbinnd():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-           '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-           'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
-           'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-           '</Configuration>'
-
-    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8, 8))
-
-    ds.set_num_cores(4)
-    ds = ds.initialize(lt_ctx.executor)
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                 '</Configuration>'
+    ptth = SEQ_TESTDATA_PATH
+    exe = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8,8)).get_excluded_pixels(ptth,sig_shape=(1024,1024))
 
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[776] = 1
-    expected_res = _load_xml_from_string(xml=xml_string)
+    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024))
+    assert np.array_equal(expected_res.todense(),exe.todense())
 
-    assert np.array_equal(test_arr, expected_res.todense())
 
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()

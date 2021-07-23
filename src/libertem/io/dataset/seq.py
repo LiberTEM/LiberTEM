@@ -541,8 +541,8 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-    def get_excluded_pixels(self):
-        return self._excluded_pixels
+    def get_excluded_pixels(self,path,sig_shape):
+        return self._load_xml(sig_shape=sig_shape,path=path+".Config.Metadata.xml")
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)

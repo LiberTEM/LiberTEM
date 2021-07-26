@@ -139,7 +139,7 @@ def xml_processing(tree, sig_shape):
             :param arr: an array we want to appply the cropping to
             :param start_size: the original size of image
             :param req_size: equals with the signal shape, this is the size we want to crop to
-            :return: the middle of 'a' with the size req_size, 2d array
+            :return: the middle of 'arr' with the size req_size, 2d array
             '''
         ac = arr
         if req_size[0] <= start_size[0] and req_size[1] <= start_size[0]:
@@ -623,6 +623,9 @@ class SEQDataSet(DataSet):
             gain=self._gain,
             excluded_pixels=self._excluded_pixels,
         )
+
+    def get_sig_shape(self):
+        return self._sig_shape
 
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)

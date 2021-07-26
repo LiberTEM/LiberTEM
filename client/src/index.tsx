@@ -10,7 +10,6 @@ import { Provider } from 'react-redux';
 import { applyMiddleware, compose, createStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
 import { rootSaga } from './sagas';
 import { rootReducer } from './store';
 
@@ -34,6 +33,5 @@ ReactDOM.render(
     </Provider>,
     document.getElementById('root') as HTMLElement
 );
-registerServiceWorker();
 
 sagaMiddleware.run(rootSaga);

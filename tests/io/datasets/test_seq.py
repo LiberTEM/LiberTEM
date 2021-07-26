@@ -135,6 +135,9 @@ def test_xml_excluded_pixels_loading():
 
     exe = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8,8)).get_excluded_pixels(ptth,sig_shape=(1024,1024))
     expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024))
+
+    assert exe is not None
+
     assert np.array_equal(expected_res.todense(),exe.todense())
 
 

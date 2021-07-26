@@ -10,7 +10,9 @@ export const getApiBasePath = () : string => {
 
 export const getApiWSURL = () : string => {
     const basePath = getApiBasePath();
-    return `ws://${window.location.hostname}:${window.location.port}${basePath}events/`;
+    const isSecure = window.location.protocol === 'https:';
+    const proto = isSecure ? 'wss' : 'ws';
+    return `${proto}://${window.location.hostname}:${window.location.port}${basePath}events/`;
 }
 
 export const genericDelete = async <T>(path: string): Promise<T> => {

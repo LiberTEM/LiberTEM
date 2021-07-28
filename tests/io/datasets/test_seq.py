@@ -139,6 +139,27 @@ def test_xml_excluded_pixels_loading():
     assert exe is not None
 
     assert np.array_equal(expected_res.todense(),exe.todense())
+def test_xml_excluded_pixels_unbinned():
+    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                 '</Configuration>'
+    test_arr = np.zeros((1024, 1024))
+    test_arr[775] = 1
+    test_arr[776] = 1
+    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024))
+    assert np.array_equal(expected_res.todense(),test_arr)
+
+def test_xml_excluded_pixels_binned():
+    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
+                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
+                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                 '</Configuration>'
+    test_arr = np.zeros((1024, 1024))
+    test_arr[664] = 1
+    test_arr[665] = 1
 
 
 def test_negative_sync_offset(default_seq, lt_ctx):

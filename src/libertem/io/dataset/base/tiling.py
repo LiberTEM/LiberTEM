@@ -336,8 +336,9 @@ def make_get_read_ranges(
                 np.zeros((len(result)), dtype=np.int64),
             )
 
-        max_rr_per_tile = max(len(res[1])
-                              for res in result)
+        lengths = [len(res[1])
+                   for res in result]
+        max_rr_per_tile = max(lengths)
 
         slice_indices = np.zeros(len(result), dtype=np.int64)
 

@@ -132,7 +132,7 @@ def _get_image_offset(header):
 
 def xml_processing(tree, sig_shape):
     num_of_cat = len(tree[2])
-
+    last_binned=False
     def cropping(arr, start_size, req_size):
         '''
 
@@ -299,11 +299,23 @@ def xml_processing(tree, sig_shape):
             for index in sizes:
                 Defect_ID += 1
                 if index == (sig_shape[0], sig_shape[1]):
-                    return Defect_ID
+                    if len(coo_bin_val[Defect_ID - 1]) > 0 and last_binned == False or len(
+                            coo_bin_val[Defect_ID - 1]) < 1 and last_binned == True:
+                        return -1
+                    else:
+                        return Defect_ID
         else:
             return -1
 
     Defect_ID = generate_ID()  # determine which index should be used for further calculations
+
+    def bin_array2d(a, binning):
+        sx, sy = a.shape
+        sxc = sx // binning * binning
+        syc = sy // binning * binning
+        # crop:
+        ac = a[:sxc, :syc]
+        return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
 
     def generate_new_size():
         """
@@ -315,44 +327,67 @@ def xml_processing(tree, sig_shape):
                 :return:
                 """
         Defect_ID = num_of_cat + 1
-        coo_bin_val.append([])
-        if len(coo_bin_val[0]) == 0:  # if the first element in the xml is not binned
 
-            dummy_transformation_m = np.zeros(sizes[0])
-            for i in rows_by_category[0]:
+        coo_shape_x.append(sig_shape[0])
+        coo_shape_y.append(sig_shape[1])
+        sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
+        if not last_binned:
+            coo_bin_val.append([])
+        else:
+            coo_bin_val.append([2])
+
+        def gen_new_size(valid_coord):
+
+            dummy_transformation_m = np.zeros(sizes[valid_coord])
+            for i in rows_by_category[valid_coord]:
                 if len(i) == 2:
                     dummy_transformation_m[int(i[0]):int(i[1]) + 1] = 2
                 if len(i) == 1:
                     dummy_transformation_m[int(i[0])] = 2
 
             res2 = []
-            c = cropping(dummy_transformation_m, sizes[0], sig_shape)
+            if last_binned == False:
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+            else:
+                binning_num = sizes[valid_coord][0] // sig_shape[0]
+                print(sizes[valid_coord][0], sig_shape[0])
+                c = bin_array2d(dummy_transformation_m, binning_num)
+
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
                     if c[a, b] > 1:
                         if [a] not in res2:
                             res2.append([a])
-            dummy_transformation_m = np.zeros(sizes[0])
-            for i in cols_by_category[0]:
+
+            dummy_transformation_m = np.zeros(sizes[valid_coord])
+            for i in cols_by_category[valid_coord]:
                 if len(i) == 2:
                     dummy_transformation_m[:, int(i[0]):(int(i[1]) + 1)] = 2
                 if len(i) == 1:
                     dummy_transformation_m[:, int(i[0])] = 2
 
             res3 = []
-            c = cropping(dummy_transformation_m, sizes[0], sig_shape)
+            if last_binned == False:
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+            else:
+                binning_num = sizes[valid_coord][0] // sig_shape[0]
+                c = bin_array2d(dummy_transformation_m, binning_num)
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
                     if c[a, b] > 1:
                         if [b] not in res3 and [a] not in res2:
                             res3.append([b])
 
-            dummy_transformation_m = np.zeros(sizes[0])
-            for i in pixels_by_category[0]:
+            dummy_transformation_m = np.zeros(sizes[valid_coord])
+            for i in pixels_by_category[valid_coord]:
                 dummy_transformation_m[int(i[0]), int(i[1])] = 2
 
             res4 = []
-            c = cropping(dummy_transformation_m, sizes[0], sig_shape)
+            if last_binned == False:
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+            else:
+                binning_num = sizes[valid_coord][0] // sig_shape[0]
+                c = bin_array2d(dummy_transformation_m, binning_num)
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
                     if c[a, b] > 1:
@@ -365,12 +400,34 @@ def xml_processing(tree, sig_shape):
             num_of_rows.append(len(rows_by_category[Defect_ID - 1]))
             num_of_cols.append(len(cols_by_category[Defect_ID - 1]))
             num_of_pixels.append(len(pixels_by_category[Defect_ID - 1]))
-            coo_shape_x.append(sig_shape[0])
-            coo_shape_y.append(sig_shape[1])
-            sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
+
+        for sel in range(0, len(coo_bin_val)):
+            ended = 0
+            if (len(coo_bin_val[sel]) == 0) and len(
+                    sizes) > sel and last_binned == False:  # if the first element in the xml is not binned
+                gen_new_size(sel)
+                ended = 1
+
+                break
+            if ended == 0 and len(coo_bin_val) == sel and last_binned == False:
+                gen_new_size(0)
+            if last_binned:  # so the last one is binned
+                if len(coo_bin_val[
+                           len(coo_bin_val) - 2]) > 0:
+                    print("called2")
+                    gen_new_size(len(coo_bin_val) - 2)
+                    break
+                else:
+                    for back in range(len(coo_bin_val) - 2, -1, -1):
+
+                        # -1 bc of index and another -1 bc we dont want to inc the first element
+                        if len(coo_bin_val[back]) > 0:
+                            gen_new_size(back)
+                            print("called3")
+                            break
 
     if (Defect_ID == -1):
-        generate_new_size()
+        generate_new_size(False)
         Defect_ID = num_of_cat + 1
 
     def excl_rows(coords, Defect_ID):

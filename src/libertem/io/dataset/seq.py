@@ -431,7 +431,7 @@ def xml_processing(tree, sig_shape, metadata=""):
                             break
 
     if (Defect_ID == -1):
-        generate_new_size(False)
+        generate_new_size()
         Defect_ID = num_of_cat + 1
 
     def excl_rows(coords, Defect_ID):

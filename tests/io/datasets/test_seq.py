@@ -127,18 +127,7 @@ def test_positive_sync_offset(default_seq, lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
-def test_xml_excluded_pixels_loading():
-    ptth = SEQ_TESTDATA_PATH
-    ov=ptth+".Config.Metadata.xml"
-    tree=ET.parse(ov).getroot()
-    xml_string = ET.tostring(tree,"utf8","xml")
 
-    exe = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=(8,8)).get_excluded_pixels(ptth,sig_shape=(1024,1024))
-    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024))
-
-    assert exe is not None
-
-    assert np.array_equal(expected_res.todense(),exe.todense())
 def test_xml_excluded_pixels_unbinned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
                  '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
@@ -148,7 +137,7 @@ def test_xml_excluded_pixels_unbinned():
     test_arr = np.zeros((1024, 1024))
     test_arr[775] = 1
     test_arr[776] = 1
-    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024))
+    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024),metadata=False)
     assert np.array_equal(expected_res.todense(),test_arr)
 
 def test_xml_excluded_pixels_binned():
@@ -158,9 +147,11 @@ def test_xml_excluded_pixels_binned():
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
     test_arr = np.zeros((1024, 1024))
-    test_arr[664] = 1
-    test_arr[665] = 1
-
+    test_arr[577] = 1
+    test_arr[578] = 1
+    test_arr[853] = 1
+    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024),metadata=True)
+    assert np.array_equal(expected_res.todense(),test_arr)
 
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()

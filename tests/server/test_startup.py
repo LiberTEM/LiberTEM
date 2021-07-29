@@ -41,20 +41,20 @@ async def test_start_server(base_url, http_client):
 
 @pytest.mark.asyncio
 async def test_get_config(base_url, http_client):
-    url = "{}/api/config/".format(base_url)
+    url = f"{base_url}/api/config/"
     async with http_client.get(url) as response:
         assert response.status == 200
         config = await response.json()
-        assert set(config.keys()) == set(["status", "messageType", "config"])
-        assert set(config['config'].keys()) == set([
+        assert set(config.keys()) == {"status", "messageType", "config"}
+        assert set(config['config'].keys()) == {
             "version", "revision", "localCores", "cwd",
             "separator", "resultFileFormats", "devices",
-        ])
+        }
 
 
 @pytest.mark.asyncio
 async def test_conn_is_disconnected(base_url, http_client):
-    url = "{}/api/config/connection/".format(base_url)
+    url = f"{base_url}/api/config/connection/"
     async with http_client.get(url) as response:
         assert response.status == 200
         conn = await response.json()
@@ -65,7 +65,7 @@ async def test_conn_is_disconnected(base_url, http_client):
 
 @pytest.mark.asyncio
 async def test_conn_connect_local(base_url, http_client):
-    url = "{}/api/config/connection/".format(base_url)
+    url = f"{base_url}/api/config/connection/"
     conn_details = {
         'connection': {
             'type': 'local',
@@ -97,7 +97,7 @@ async def test_conn_connect_local(base_url, http_client):
 
 @pytest.mark.asyncio
 async def test_cluster_connect_error(base_url, http_client):
-    url = "{}/api/config/connection/".format(base_url)
+    url = f"{base_url}/api/config/connection/"
     conn_details = {
         'connection': {
             'type': 'TCP',
@@ -114,7 +114,7 @@ async def test_cluster_connect_error(base_url, http_client):
 async def test_initial_state_empty(
     default_raw, base_url, http_client, server_port, local_cluster_url
 ):
-    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_url = f"{base_url}/api/config/connection/"
     conn_details = {
         'connection': {
             'type': 'tcp',
@@ -125,7 +125,7 @@ async def test_initial_state_empty(
         assert response.status == 200
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"
@@ -139,7 +139,7 @@ async def test_initial_state_empty(
 async def test_initial_state_w_existing_ds(
     default_raw, base_url, http_client, server_port, local_cluster_url
 ):
-    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_url = f"{base_url}/api/config/connection/"
     conn_details = {
         'connection': {
             'type': 'tcp',
@@ -150,7 +150,7 @@ async def test_initial_state_w_existing_ds(
         assert response.status == 200
 
     # first connect has empty list of datasets:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"
@@ -197,7 +197,7 @@ async def test_initial_state_analyses(
     await create_connection(base_url, http_client, local_cluster_url)
 
     # first connect has empty list of datasets:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"

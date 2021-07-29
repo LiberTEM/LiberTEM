@@ -17,7 +17,7 @@ from libertem.io.dataset.cluster import ClusterDataSet
 class VerboseRow(sqlite3.Row):
     """sqlite3.Row with a __repr__"""
     def __repr__(self):
-        return "<VerboseRow %r>" % (
+        return "<VerboseRow {!r}>".format(
             {
                 k: self[k]
                 for k in self.keys()
@@ -68,7 +68,7 @@ class OrphanItem:
         return self.path == other.path
 
     def __repr__(self):
-        return "<OrphanItem: %s>" % (self.path,)
+        return f"<OrphanItem: {self.path}>"
 
     @classmethod
     def from_row(cls, row):
@@ -450,7 +450,7 @@ class CachedDataSet(DataSet):
             pass
 
     def __repr__(self):
-        return "<CachedDataSet dtype=%s shape=%s source_ds=%s cache_path=%s path=%s>" % (
+        return "<CachedDataSet dtype={} shape={} source_ds={} cache_path={} path={}>".format(
             self.dtype, self.shape, self._source_ds, self._cache_path, self._path
         )
 

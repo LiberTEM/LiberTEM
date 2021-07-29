@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import os
 import re
 import csv
@@ -122,7 +121,7 @@ def _get_base_filename(_path):
 def _read_dataset_hdr(fname):
     if not os.path.exists(fname):
         raise DataSetException(
-            "Could not find .hdr file %s" % (
+            "Could not find .hdr file {}".format(
                 fname,
             )
         )
@@ -133,7 +132,7 @@ def _read_dataset_hdr(fname):
     sections = config.sections()
     if 'measurementInfo' not in sections:
         raise DataSetException(
-            "measurementInfo missing from .hdr file %s, have: %s" % (
+            "measurementInfo missing from .hdr file {}, have: {}".format(
                 fname,
                 repr(sections),
             )
@@ -531,7 +530,7 @@ class FRMS6DataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["frms6", "hdr"])
+        return {"frms6", "hdr"}
 
     @classmethod
     def get_msg_converter(cls):
@@ -617,7 +616,7 @@ class FRMS6DataSet(DataSet):
                         "error while checking validity of %s" % header['path']
                     )
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_cache_key(self):

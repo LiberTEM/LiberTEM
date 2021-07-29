@@ -16,6 +16,6 @@ with dask.set_options(pool=ThreadPool(8)), Profiler() as prof, ResourceProfiler(
         print(emd_filename)
         delta = time.time() - t0
         print(delta)
-        print("{} MB/s".format(s.data.nbytes / delta / 1024 / 1024))
+        print(f"{s.data.nbytes / delta / 1024 / 1024} MB/s")
 
 visualize([prof, rprof, cprof])

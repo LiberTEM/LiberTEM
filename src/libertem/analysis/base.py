@@ -33,7 +33,7 @@ class AnalysisResult:
     def __str__(self):
         result = ""
         for k in ("title", "desc", "key", "raw_data", "visualized"):
-            result += "%s: %s\n" % (k, getattr(self, k))
+            result += f"{k}: {getattr(self, k)}\n"
         return result
 
     def __repr__(self):
@@ -119,7 +119,7 @@ class AnalysisResultSet:
         for result in self.results:
             if result.key == k:
                 return result
-        raise AttributeError("result with key '%s' not found, have: %s" % (
+        raise AttributeError("result with key '{}' not found, have: {}".format(
             k, ", ".join([r.key for r in self.results])
         ))
 

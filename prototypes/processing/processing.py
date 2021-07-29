@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import os
 import json
 import socket
@@ -23,7 +22,7 @@ TODO:
 """
 
 
-class Slice(object):
+class Slice:
     def __init__(self, origin, shape):
         """
         Parameters
@@ -44,7 +43,7 @@ class Slice(object):
         # can we implement some kind of slicer interface? __slice__?
 
     def __repr__(self):
-        return "<Slice origin=%r shape=%r>" % (self.origin, self.shape)
+        return f"<Slice origin={self.origin!r} shape={self.shape!r}>"
 
     def shift(self, other):
         """
@@ -109,7 +108,7 @@ class Slice(object):
         )
 
 
-class DataSet(object):
+class DataSet:
     def get_partitions(self):
         raise NotImplementedError()
 
@@ -154,7 +153,7 @@ class BinaryHDFSDataSet(DataSet):
         return "<BinaryHDFSDataSet %s>" % self.index_path
 
 
-class DataTile(object):
+class DataTile:
     def __init__(self, data, tile_slice):
         """
         Parameters
@@ -171,7 +170,7 @@ class DataTile(object):
         return "<DataTile %r>" % self.tile_slice
 
 
-class Partition(object):
+class Partition:
     def __init__(self, dataset, dtype, partition_slice):
         self.dataset = dataset
         self.dtype = dtype
@@ -224,12 +223,12 @@ class BinaryHDFSPartition(Partition):
                 for l in locs[0]['hosts']]
 
     def __repr__(self):
-        return "<BinaryHDFSPartition of %r [%r] with tileshape=%s>" % (
+        return "<BinaryHDFSPartition of {!r} [{!r}] with tileshape={}>".format(
             self.dataset, self.slice, self.tileshape
         )
 
 
-class Job(object):
+class Job:
     """
     A computation on a DataSet. Inherit from this class and implement ``get_tasks``
     to yield tasks for your specific computation.
@@ -275,7 +274,7 @@ class ApplyMasksJob(Job):
         return len(self.orig_masks)
 
 
-class Task(object):
+class Task:
     """
     A computation on a partition. Inherit from this class and implement ``__call__``
     for your specific computation.
@@ -309,7 +308,7 @@ class ApplyMasksTask(Task):
         return parts
 
 
-class ResultTile(object):
+class ResultTile:
     def __init__(self, data, tile_slice):
         self.data = data
         self.tile_slice = tile_slice
@@ -329,7 +328,7 @@ class ResultTile(object):
         return result
 
 
-class JobExecutor(object):
+class JobExecutor:
     def run_job(self, job):
         raise NotImplementedError()
 

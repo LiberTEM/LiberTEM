@@ -2,7 +2,7 @@ from .state import SharedState
 from .messageconverter import MessageConverter  # NOQA: F401
 
 
-class Message(object):
+class Message:
     """
     possible messages - the translation of our python datatypes to json types
     """
@@ -190,7 +190,7 @@ class Message(object):
         return {
             "status": "error",
             "messageType": "DATASET_SCHEMA_FAILED",
-            "msg": "failed to get schema for type %s: %s" % (ds_type, msg),
+            "msg": f"failed to get schema for type {ds_type}: {msg}",
             "ds_type": ds_type,
         }
 

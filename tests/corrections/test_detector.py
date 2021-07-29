@@ -24,7 +24,7 @@ def _check_result(data, corrected, atol=1e-8, rtol=1e-5):
     )
     # From np.allclose documentation
     select = np.abs(data - corrected) > (atol + rtol * np.abs(data))
-    print("Maximum absolute error: data %s, corrected %s" % (data[m1], corrected[m1]))
+    print(f"Maximum absolute error: data {data[m1]}, corrected {corrected[m1]}")
     print("Maximum relative error: data %s, corrected %s, relative %s" %
         (data[m2], corrected[m2], relative_error[m2])
     )

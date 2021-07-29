@@ -79,10 +79,10 @@ HEADER_FIELDS = [
     # More header values not implemented
 ]
 
-HEADER_SIZE = sum([
+HEADER_SIZE = sum(
     struct.Struct('<' + field[1]).size
     for field in HEADER_FIELDS
-])
+)
 
 
 def _read_header(path, fields):
@@ -339,7 +339,7 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["seq"])
+        return {"seq"}
 
     @property
     def dtype(self):
@@ -398,4 +398,4 @@ class SEQDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<SEQDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<SEQDataSet of {self.dtype} shape={self.shape}>"

@@ -286,9 +286,9 @@ def large_raw_file(tmpdir_factory):
     dtype = np.uint16
     size = np.prod(np.int64(shape)) * np.dtype(dtype).itemsize
     if platform.system() == "Windows":
-        os.system('FSUtil File CreateNew "%s" 0x%X' % (filename, size))
+        os.system(f'FSUtil File CreateNew "{filename}" 0x{size:X}')
         os.system('FSUtil Sparse SetFlag "%s"' % filename)
-        os.system('FSUtil Sparse SetRange "%s" 0 0x%X' % (filename, size))
+        os.system(f'FSUtil Sparse SetRange "{filename}" 0 0x{size:X}')
     else:
         with open(filename, 'wb') as f:
             f.truncate(size)
@@ -606,12 +606,12 @@ def server_port(unused_tcp_port_factory, shared_state):
     """
     port = unused_tcp_port_factory()
 
-    print("starting server at port {}".format(port))
+    print(f"starting server at port {port}")
     thread = ServerThread(port, shared_state)
     thread.start()
     assert thread.start_event.wait(timeout=1), "server thread failed to start"
     yield port
-    print("stopping server at port {}".format(port))
+    print(f"stopping server at port {port}")
     thread.stop_event.set()
     thread.join(timeout=15)
     if thread.is_alive():

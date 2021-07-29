@@ -23,4 +23,4 @@ print("delta=%.3f" % delta)
 
 exp_res = detector_shape[0] * detector_shape[1]
 for r in result:
-    assert r == exp_res, "%r != %r" % (r, exp_res)
+    assert r == exp_res, f"{r!r} != {exp_res!r}"

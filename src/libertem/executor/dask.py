@@ -102,10 +102,10 @@ class DaskTaskProxy(TaskProxy):
         }
 
     def __repr__(self):
-        return "<TaskProxy: %r (id=%s)>" % (self.task, self.task_id)
+        return f"<TaskProxy: {self.task!r} (id={self.task_id})>"
 
 
-class CommonDaskMixin(object):
+class CommonDaskMixin:
     def _task_idx_to_workers(self, workers, idx):
         hosts = list(sorted(workers.hosts()))
         host_idx = idx % len(hosts)

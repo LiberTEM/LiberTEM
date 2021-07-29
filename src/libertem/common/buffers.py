@@ -133,7 +133,7 @@ class BufferPool:
         self._buffers[size].insert(0, buf)
 
 
-class BufferWrapper(object):
+class BufferWrapper:
     """
     Helper class to automatically allocate buffers, either for partitions or
     the whole dataset, and create views for partitions or single frames.
@@ -513,7 +513,7 @@ class BufferWrapper(object):
         self._data = to_numpy(self._data)
 
     def __repr__(self):
-        return "<BufferWrapper kind=%s dtype=%s extra_shape=%s>" % (
+        return "<BufferWrapper kind={} dtype={} extra_shape={}>".format(
             self._kind, self._dtype, self._extra_shape
         )
 
@@ -615,6 +615,6 @@ class AuxBufferWrapper(BufferWrapper):
         self._data_coords_global = is_global
 
     def __repr__(self):
-        return "<AuxBufferWrapper kind=%s dtype=%s extra_shape=%s>" % (
+        return "<AuxBufferWrapper kind={} dtype={} extra_shape={}>".format(
             self._kind, self._dtype, self._extra_shape
         )

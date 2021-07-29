@@ -144,7 +144,7 @@ def main(host, port, numeric_level, event_registry, shared_state):
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
-    log.info("listening on %s:%s" % (host, port))
+    log.info(f"listening on {host}:{port}")
     app = make_app(event_registry, shared_state)
     app.listen(address=host, port=port)
     return app

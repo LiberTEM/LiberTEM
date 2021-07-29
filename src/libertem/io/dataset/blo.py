@@ -190,7 +190,7 @@ class BloDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["blo"])
+        return {"blo"}
 
     @property
     def dtype(self):
@@ -221,9 +221,9 @@ class BloDataSet(DataSet):
             header = self._read_header()
             magic = header['MAGIC'][0]
             if magic != MAGIC_EXPECT:
-                raise DataSetException("invalid magic number: %x != %x" % (magic, MAGIC_EXPECT))
+                raise DataSetException(f"invalid magic number: {magic:x} != {MAGIC_EXPECT:x}")
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise DataSetException("invalid dataset: %s" % e) from e
 
     def get_cache_key(self):
@@ -270,4 +270,4 @@ class BloDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<BloDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<BloDataSet of {self.dtype} shape={self.shape}>"

@@ -37,7 +37,7 @@ def _encode_image(result, colormap, save_kwargs):
     return buf
 
 
-class Message(object):
+class Message:
     """
     possible messages - the translation of our python datatypes to json types
     """
@@ -110,7 +110,7 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         self.registry.remove_handler(self)
 
 
-class EventRegistry(object):
+class EventRegistry:
     def __init__(self):
         self.handlers = []
 
@@ -130,7 +130,7 @@ class EventRegistry(object):
                 handler.write_message(message, *args, **kwargs)
 
 
-class CORSMixin(object):
+class CORSMixin:
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")  # XXX FIXME TODO!!!
         # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
@@ -338,7 +338,7 @@ class DataSetPreviewHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(image)
 
 
-class SharedData(object):
+class SharedData:
     def __init__(self):
         self.datasets = {}
         self.jobs = {}

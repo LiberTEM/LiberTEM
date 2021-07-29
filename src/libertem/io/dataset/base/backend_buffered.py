@@ -161,10 +161,10 @@ class BufferedBackendImpl(IOBackendImpl):
         sig_dims = tiling_scheme.shape.sig.dims
         ds_shape = np.array(tiling_scheme.dataset_shape)
 
-        largest_slice = sorted([
+        largest_slice = sorted((
             (np.prod(s_.shape), s_)
             for _, s_ in tiling_scheme.slices
-        ], key=lambda x: x[0], reverse=True)[0][1]
+        ), key=lambda x: x[0], reverse=True)[0][1]
 
         buf_shape = (tiling_scheme.depth,) + tuple(largest_slice.shape)
 

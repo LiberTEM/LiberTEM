@@ -138,10 +138,10 @@ class MMapBackendImpl(IOBackendImpl):
                     origin[0] - fh.start_idx + sync_offset,
                     origin[0] - fh.start_idx + shape[0] + sync_offset
                 ),
-            ) + tuple([
+            ) + tuple(
                 slice(o, (o + s))
                 for (o, s) in zip(origin[1:], shape[1:])
-            ])
+            )
             data = memmap[data_slice]
             yield DataTile(
                 data,
@@ -177,10 +177,10 @@ class MMapBackendImpl(IOBackendImpl):
         sig_dims = tiling_scheme.shape.sig.dims
         ds_shape = np.array(tiling_scheme.dataset_shape)
 
-        largest_slice = sorted([
+        largest_slice = sorted((
             (np.prod(s_.shape), s_)
             for _, s_ in tiling_scheme.slices
-        ], key=lambda x: x[0], reverse=True)[0][1]
+        ), key=lambda x: x[0], reverse=True)[0][1]
 
         buf_shape = (tiling_scheme.depth,) + tuple(largest_slice.shape)
         need_clear = decoder.do_clear()

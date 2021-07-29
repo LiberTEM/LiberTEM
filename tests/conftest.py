@@ -56,7 +56,7 @@ def raw_on_workers(dist_ctx, tmpdir_factory):
         print("removed %s" % tmpdirpath)
         return tmpdirpath, files
 
-    print("raw_on_workers cleanup: %s" % (dist_ctx.executor.run_each_host(_cleanup),))
+    print(f"raw_on_workers cleanup: {dist_ctx.executor.run_each_host(_cleanup)}")
 
 
 @pytest.fixture
@@ -80,4 +80,4 @@ def raw_on_workers_ipy(ipy_ctx, tmpdir_factory):
         print("removed %s" % tmpdirpath)
         return tmpdirpath, files
 
-    print("raw_on_workers cleanup: %s" % (ipy_ctx.executor.run_each_host(_cleanup),))
+    print(f"raw_on_workers cleanup: {ipy_ctx.executor.run_each_host(_cleanup)}")

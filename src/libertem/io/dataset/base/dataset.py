@@ -9,7 +9,7 @@ from libertem.corrections.corrset import CorrectionSet
 from .partition import BasePartition
 
 
-class DataSet(object):
+class DataSet:
     def __init__(self, io_backend=None):
         self._cores = 1
         self._sync_offset = 0

@@ -3,7 +3,7 @@ import numpy as np
 from libertem.common.shape import Shape
 
 
-class Slice(object):
+class Slice:
     """
     A n-dimensional slice, defined by origin and shape
 
@@ -31,7 +31,7 @@ class Slice(object):
             raise ValueError("please use libertem.common.Shape instance as shape parameter")
 
     def __repr__(self):
-        return "<Slice origin=%r shape=%r>" % (self.origin, self.shape)
+        return f"<Slice origin={self.origin!r} shape={self.shape!r}>"
 
     def __hash__(self):
         # enables using a Slice as a key in dict, an item in sets etc.
@@ -42,7 +42,7 @@ class Slice(object):
         return self.shape == other.shape and self.origin == other.origin
 
     @classmethod
-    def from_shape(self, shape: tuple, sig_dims: int) -> "Slice":
+    def from_shape(cls, shape: tuple, sig_dims: int) -> "Slice":
         """
         Construct a `Slice` at zero-origin from `shape` and `sig_dims`.
         """
@@ -70,15 +70,15 @@ class Slice(object):
             )
         if self.shape.sig.dims != other.shape.sig.dims:
             raise ValueError(
-                "cannot intersect slices with different signal dimensionality (%s vs %s)" % (
+                "cannot intersect slices with different signal dimensionality ({} vs {})".format(
                     self.shape.sig.dims, other.shape.sig.dims
                 )
             )
-        new_origin = tuple([
+        new_origin = tuple(
             max(o1, o2)
             for (o1, o2) in zip(self.origin, other.origin)
-        ])
-        new_shape = tuple([
+        )
+        new_shape = tuple(
             min(
                 (o1 + s1) - no,
                 (o2 + s2) - no,
@@ -86,7 +86,7 @@ class Slice(object):
             for (o1, o2, no, s1, s2) in zip(
                     self.origin, other.origin, new_origin, self.shape, other.shape
             )
-        ])
+        )
         new_shape = [max(0, s) for s in new_shape]
         result = Slice(
             origin=new_origin,
@@ -108,7 +108,7 @@ class Slice(object):
         useful for translating to the local coordinate system of ``other``
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot shift slices with different dimensionality (%s vs %s)" % (
+            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
                 self.origin, other.origin
             ))
         return Slice(origin=tuple(our_coord - their_coord
@@ -152,21 +152,21 @@ class Slice(object):
         """
         if sig_only:
             o, s = self.origin, self.shape
-            slice_ = tuple([
+            slice_ = tuple(
                 slice(o[i], (o[i] + s[i]))
                 for i in range(s.nav.dims, s.sig.dims + s.nav.dims)
-            ])
+            )
         elif nav_only:
             o, s = self.origin, self.shape
-            slice_ = tuple([
+            slice_ = tuple(
                 slice(o[i], (o[i] + s[i]))
                 for i in range(s.nav.dims)
-            ])
+            )
         else:
-            slice_ = tuple([
+            slice_ = tuple(
                 slice(o, (o + s))
                 for (o, s) in zip(self.origin, self.shape)
-            ])
+            )
         if arr is not None:
             if sig_only:
                 # Skip the supposed nav dimensions of the data
@@ -213,31 +213,32 @@ class Slice(object):
                     self.shape.dims, shape.dims, self.shape, shape,
                 )
             )
-        ni = tuple([math.ceil(s1 / s)
-                    for (s1, s) in zip(self.shape, shape)])
+        ni = tuple(math.ceil(s1 / s)
+                   for (s1, s) in zip(self.shape, shape))
 
         def _make_slice(origin, new_shape):
             sig_dims = new_shape.sig.dims
             # this makes sure that the border tiles have the correct shape set
-            new_shape = tuple([
+            new_shape = tuple(
                 min(ns, so + s - o)
                 for (ns, so, s, o) in zip(new_shape, self.origin, self.shape, origin)
-            ])
+            )
             new_shape = Shape(new_shape, sig_dims=sig_dims)
             for x in new_shape:
-                assert x > 0, "invalid shape: %r while subslicing %r with %r (origin=%r)" % (
-                    new_shape, self.shape, shape, origin
-                )
+                assert x > 0,\
+                    "invalid shape: {!r} while subslicing {!r} with {!r} (origin={!r})".format(
+                        new_shape, self.shape, shape, origin
+                    )
             return Slice(
                 origin=origin,
                 shape=new_shape,
             )
 
         return (
-            _make_slice(origin=tuple([
+            _make_slice(origin=tuple(
                 o + i * s
                 for (o, i, s) in zip(self.origin, indexes, shape)
-            ]), new_shape=Shape(tuple(shape), sig_dims=self.shape.sig.dims))
+            ), new_shape=Shape(tuple(shape), sig_dims=self.shape.sig.dims))
 
             for indexes in np.ndindex(ni)
         )

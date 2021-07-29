@@ -232,7 +232,7 @@ class RawFileDataSet(DataSet):
             fileset = self._get_fileset()
             with fileset:
                 return True
-        except (IOError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_cache_key(self):
@@ -268,7 +268,7 @@ class RawFileDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<RawFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<RawFileDataSet of {self.dtype} shape={self.shape}>"
 
 
 class RawPartition(BasePartition):

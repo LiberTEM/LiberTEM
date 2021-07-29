@@ -137,7 +137,7 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                     data,
                     key_prefix="intensity",
                     title="intensity",
-                    desc="the frame at %s" % (coords,),
+                    desc=f"the frame at {coords}",
                     damage=True,
                     default_lin=False,
                 )
@@ -147,13 +147,13 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
                 raw_data=data,
                 visualized=visualize_simple(data, logarithmic=True, damage=True),
                 key="intensity", title="intensity [log]",
-                desc="the frame at %s log-scaled" % (coords,)
+                desc=f"the frame at {coords} log-scaled"
             ),
             AnalysisResult(
                 raw_data=data,
                 visualized=visualize_simple(data, logarithmic=False, damage=True),
                 key="intensity_lin", title="intensity [lin]",
-                desc="the frame at %s lin-scaled" % (coords,)
+                desc=f"the frame at {coords} lin-scaled"
             ),
         ])
 

@@ -26,7 +26,7 @@ def _get_uuid_str():
 
 
 async def create_connection(base_url, http_client, scheduler_url=None):
-    conn_url = "{}/api/config/connection/".format(base_url)
+    conn_url = f"{base_url}/api/config/connection/"
     if scheduler_url is None:
         conn_details = {
             'connection': {
@@ -130,7 +130,7 @@ async def create_update_compound_analysis(
         creating = True
     else:
         creating = False
-    ca_url = "{}/api/compoundAnalyses/{}/".format(base_url, ca_uuid)
+    ca_url = f"{base_url}/api/compoundAnalyses/{ca_uuid}/"
 
     if details is None:
         details = {
@@ -167,7 +167,7 @@ async def create_update_compound_analysis(
 
 async def create_job_for_analysis(ws, http_client, base_url, analysis_uuid):
     job_uuid = _get_uuid_str()
-    job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
+    job_url = f"{base_url}/api/jobs/{job_uuid}/"
     job_data = {
         "job": {
             "analysis": analysis_uuid,

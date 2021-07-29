@@ -4,7 +4,7 @@ import typing
 NodeType = typing.Union[None, 'FileTree']
 
 
-class FileTree(object):
+class FileTree:
     """
     Construct a FileTree node
 

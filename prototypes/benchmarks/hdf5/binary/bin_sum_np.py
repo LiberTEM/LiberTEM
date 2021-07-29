@@ -13,4 +13,4 @@ for filename in sys.argv[1:]:
             result[x, y] = data[x, y].sum()
     delta = time.time() - t0
     print(delta)
-    print("{} MB/s".format(data.nbytes / delta / 1024 / 1024))
+    print(f"{data.nbytes / delta / 1024 / 1024} MB/s")

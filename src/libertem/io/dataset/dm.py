@@ -224,7 +224,7 @@ class DMDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["dm3", "dm4"])
+        return {"dm3", "dm4"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -252,7 +252,7 @@ class DMDataSet(DataSet):
             with fileDM(first_fn, on_memory=True):
                 pass
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_num_partitions(self):

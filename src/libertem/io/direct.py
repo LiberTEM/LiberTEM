@@ -20,5 +20,5 @@ def readinto_direct(f, out):
     """
     ret = f.readinto(out)
     if ret is None:
-        raise IOError("could not readinto()")
+        raise OSError("could not readinto()")
     return out[:ret]

@@ -22,3 +22,8 @@ repos:
   rev: "3.2"
   hooks:
   - id: pyroma
+- repo: https://github.com/asottile/pyupgrade
+  rev: v2.20.0
+  hooks:
+    - id: pyupgrade
+      args: ["--py36-plus"]

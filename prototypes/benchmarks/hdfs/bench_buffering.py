@@ -16,7 +16,7 @@ def get_fs(config=None):
             """ Read bytes from open file """
             _lib = hdfs3.core._lib
             if not _lib.hdfsFileIsOpenForRead(self._handle):
-                raise IOError('File not read mode')
+                raise OSError('File not read mode')
             buffers = []
             buffer_size = self.buff if self.buff != 0 else hdfs3.core.DEFAULT_READ_BUFFER_SIZE
 
@@ -40,7 +40,7 @@ def get_fs(config=None):
                             buffers.append(p.raw)
                         length -= ret
                     else:
-                        raise IOError('Read file %s Failed:' % self.path, -ret)
+                        raise OSError('Read file %s Failed:' % self.path, -ret)
 
             return b''.join(buffers)
 
@@ -81,7 +81,7 @@ def timer(name, repeats=3):
                 fn(*args, **kwargs)
                 t2 = time.time()
                 deltas.append(t2 - t1)
-            print("%s: %0.5f" % (name, min(deltas)))
+            print(f"{name}: {min(deltas):0.5f}")
         return _inner
     return _decorator
 

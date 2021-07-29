@@ -81,7 +81,7 @@ class FileSet:
         return self._files[idx]
 
     def __repr__(self):
-        return "<%s %r>" % (self.__class__.__name__, self._files)
+        return f"<{self.__class__.__name__} {self._files!r}>"
 
     def get_as_arr(self):
         fileset_arr = np.zeros((len(self), 4), dtype=np.int64)

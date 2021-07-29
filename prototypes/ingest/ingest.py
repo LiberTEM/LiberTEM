@@ -8,7 +8,7 @@ import h5py
 import hdfs3
 
 
-class Ingestor(object):
+class Ingestor:
     def __init__(self, namenode='localhost', namenode_port=8020, dest_dtype=None, replication=3):
         self.namenode = namenode
         self.namenode_port = namenode_port
@@ -110,7 +110,7 @@ class Ingestor(object):
                 p['origin'][0]:(p['origin'][0] + p['shape'][0]),
                 p['origin'][1]:(p['origin'][1] + p['shape'][1]), :, :]
             assert dataslice.shape == p['shape'],\
-                "%r != %r (origin=%r)" % (dataslice.shape, p['shape'], p['origin'])
+                "{!r} != {!r} (origin={!r})".format(dataslice.shape, p['shape'], p['origin'])
             self.write_partition(
                 data=dataslice,
                 filename=os.path.join(output_path_hdfs, p["filename"]),

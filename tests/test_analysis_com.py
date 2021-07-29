@@ -57,8 +57,8 @@ def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
-    field_x = field_x.reshape((16 * 16))
-    field_y = field_y.reshape((16 * 16))
+    field_x = field_x.reshape(16 * 16)
+    field_y = field_y.reshape(16 * 16)
     for idx in range(16 * 16):
         scy, scx = measurements.center_of_mass(raw_data_by_frame[idx])
         assert np.allclose(scx, field_x[idx])
@@ -72,8 +72,8 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
     results = lt_ctx.run(analysis)
     raw_data_by_frame = ds_random.data.reshape((16 * 16, 16, 16))
     field_x, field_y = results.field.raw_data
-    field_x = field_x.reshape((16 * 16))
-    field_y = field_y.reshape((16 * 16))
+    field_x = field_x.reshape(16 * 16)
+    field_y = field_y.reshape(16 * 16)
     disk_mask = masks.circular(
         centerX=0, centerY=0,
         imageSizeX=16,
@@ -128,8 +128,8 @@ def test_com_complex_numbers(lt_ctx):
     field_x = results.x_real.raw_data + 1j * results.x_imag.raw_data
     field_y = results.y_real.raw_data + 1j * results.y_imag.raw_data
 
-    field_x = field_x.reshape((16 * 16))
-    field_y = field_y.reshape((16 * 16))
+    field_x = field_x.reshape(16 * 16)
+    field_y = field_y.reshape(16 * 16)
     for idx in range(16 * 16):
         scy, scx = measurements.center_of_mass(reshaped_data[idx])
 

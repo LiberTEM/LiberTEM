@@ -22,9 +22,9 @@ try:
             s = win32security.GetFileSecurity(full_path, win32security.OWNER_SECURITY_INFORMATION)
             sid = s.GetSecurityDescriptorOwner()
             (name, domain, t) = win32security.LookupAccountSid(None, sid)
-            return "%s\\%s" % (domain, name)
+            return f"{domain}\\{name}"
         except pywintypes.error as e:
-            raise IOError(e)
+            raise OSError(e)
 
 except ModuleNotFoundError:
     warnings.warn("Install package pywin32 to enable detecting file owners on Windows.")

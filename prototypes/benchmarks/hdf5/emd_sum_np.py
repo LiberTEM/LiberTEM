@@ -18,10 +18,10 @@ for emd_filename in emd_filename_list:
         for y in range(128):
             result[x, y] = data[x, y].sum()
 
-    print("\n{}".format(emd_filename))
+    print(f"\n{emd_filename}")
     t2 = time.time()
     delta = t2 - t0
     print("init", t1 - t0)
     print(delta)
-    print("{} MB/s (overall)".format(data.nbytes / delta / 1024 / 1024))
-    print("{} MB/s (without init)".format(data.nbytes / (t2 - t1) / 1024 / 1024))
+    print(f"{data.nbytes / delta / 1024 / 1024} MB/s (overall)")
+    print(f"{data.nbytes / (t2 - t1) / 1024 / 1024} MB/s (without init)")

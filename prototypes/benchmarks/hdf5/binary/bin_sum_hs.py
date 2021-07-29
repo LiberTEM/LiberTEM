@@ -15,5 +15,5 @@ for filename in sys.argv[1:]:
     delta = t2 - t0
     print(delta)
     print("init: %.8f" % (t1 - t0))
-    print("{} MB/s (overall)".format(s.data.nbytes / delta / 1024 / 1024))
-    print("{} MB/s (without init)".format(s.data.nbytes / (t2 - t1) / 1024 / 1024))
+    print(f"{s.data.nbytes / delta / 1024 / 1024} MB/s (overall)")
+    print(f"{s.data.nbytes / (t2 - t1) / 1024 / 1024} MB/s (without init)")

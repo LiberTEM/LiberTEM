@@ -1020,10 +1020,10 @@ class NoOpUDF(UDF):
 def check_cast(fromvar, tovar):
     if not np.can_cast(fromvar.dtype, tovar.dtype, casting='safe'):
         # FIXME exception or warning?
-        raise TypeError("Unsafe automatic casting from %s to %s" % (fromvar.dtype, tovar.dtype))
+        raise TypeError(f"Unsafe automatic casting from {fromvar.dtype} to {tovar.dtype}")
 
 
-class Task(object):
+class Task:
     """
     A computation on a partition. Inherit from this class and implement ``__call__``
     for your specific computation.
@@ -1157,7 +1157,7 @@ class UDFTask(Task):
         return result
 
     def __repr__(self):
-        return "<UDFTask %r>" % (self._udfs,)
+        return f"<UDFTask {self._udfs!r}>"
 
 
 class UDFRunner:
@@ -1407,7 +1407,7 @@ class UDFRunner:
     def _check_preconditions(self, dataset: DataSet, roi):
         if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
             raise ValueError(
-                "roi: incompatible shapes: %s (roi) vs %s (dataset)" % (
+                "roi: incompatible shapes: {} (roi) vs {} (dataset)".format(
                     roi.shape, dataset.shape.nav
                 )
             )

@@ -131,5 +131,5 @@ def get_extensions() -> typing.Set[str]:
     types = set()
     for filetype in filetypes.keys():
         cls = get_dataset_cls(filetype)
-        types = types.union(set(ext.lower() for ext in cls.get_supported_extensions()))
+        types = types.union({ext.lower() for ext in cls.get_supported_extensions()})
     return types

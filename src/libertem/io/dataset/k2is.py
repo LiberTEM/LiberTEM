@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import os
 import re
 import glob
@@ -846,7 +845,7 @@ class K2ISDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["gtg", "bin"])
+        return {"gtg", "bin"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -1016,7 +1015,7 @@ class K2ISDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<K2ISDataSet for pattern=%s nav_shape=%s>" % (
+        return "<K2ISDataSet for pattern={} nav_shape={}>".format(
             _pattern(self._path), self._nav_shape
         )
 

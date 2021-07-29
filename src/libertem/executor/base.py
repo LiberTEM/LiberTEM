@@ -71,10 +71,10 @@ class TaskProxy:
         return self.task(env=env)
 
     def __repr__(self):
-        return "<TaskProxy: %r>" % (self.task,)
+        return f"<TaskProxy: {self.task!r}>"
 
 
-class JobExecutor(object):
+class JobExecutor:
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn` on any worker
@@ -203,7 +203,7 @@ class JobExecutor(object):
         return AsyncAdapter(wrapped=self, pool=pool)
 
 
-class AsyncJobExecutor(object):
+class AsyncJobExecutor:
     async def run_tasks(self, tasks, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples

@@ -20,7 +20,7 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port, lo
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
@@ -68,7 +68,7 @@ async def test_run_job_delete_ds(
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
@@ -105,13 +105,13 @@ async def test_cancel_unknown_job(
 ):
     await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         job_uuid = "un-kn-ow-n"
-        job_url = "{}/api/jobs/{}/".format(base_url, job_uuid)
+        job_url = f"{base_url}/api/jobs/{job_uuid}/"
 
         # try to cancel unknown job:
         async with http_client.delete(job_url) as resp:
@@ -127,7 +127,7 @@ async def test_run_with_all_zeros_roi(
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
@@ -183,7 +183,7 @@ async def test_run_job_update_analysis_parameters(
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
@@ -265,7 +265,7 @@ async def test_analysis_removal(
     await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
@@ -333,7 +333,7 @@ async def test_create_compound_analysis(
     await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())

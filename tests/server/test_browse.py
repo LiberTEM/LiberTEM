@@ -11,7 +11,7 @@ async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_
     await create_connection(base_url, http_client, local_cluster_url)
     browse_path = os.path.dirname(default_raw._path)
     raw_ds_filename = os.path.basename(default_raw._path)
-    url = "{}/api/browse/localfs/".format(base_url)
+    url = f"{base_url}/api/browse/localfs/"
     async with http_client.get(url, params={"path": browse_path}) as resp:
         assert resp.status == 200
         listing = await resp.json()
@@ -26,7 +26,7 @@ async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_
         assert len(listing["files"]) >= 1
         defraw_found = False
         for entry in listing["files"]:
-            assert set(entry.keys()) == set(["name", "size", "ctime", "mtime", "owner"])
+            assert set(entry.keys()) == {"name", "size", "ctime", "mtime", "owner"}
             if entry["name"] == raw_ds_filename:
                 defraw_found = True
             assert defraw_found
@@ -39,7 +39,7 @@ async def test_browse_localfs_fail(default_raw, base_url, http_client, local_clu
         os.path.dirname(default_raw._path),
         "does", "not", "exist"
     )
-    url = "{}/api/browse/localfs/".format(base_url)
+    url = f"{base_url}/api/browse/localfs/"
     async with http_client.get(url, params={"path": browse_path}) as resp:
         assert resp.status == 200
         listing = await resp.json()

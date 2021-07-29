@@ -19,7 +19,7 @@ class WritablePartition:
         raise NotImplementedError()
 
 
-class Partition(object):
+class Partition:
     """
     Parameters
     ----------
@@ -86,7 +86,7 @@ class Partition(object):
         raise NotImplementedError()
 
     def __repr__(self):
-        return "<%s>" % (
+        return "<{}>".format(
             self.__class__.__name__,
         )
 

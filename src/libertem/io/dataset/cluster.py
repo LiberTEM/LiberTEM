@@ -68,7 +68,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
             print(sidecars.values())
             print(given_structure)
             raise DataSetException(
-                "inconsistent sidecars, please inspect %s on each node" % (
+                "inconsistent sidecars, please inspect {} on each node".format(
                     self._sidecar_path(),
                 )
             )
@@ -118,7 +118,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
         """
         run on each node on initialization
         """
-        with open(self._sidecar_path(), "r") as fh:
+        with open(self._sidecar_path()) as fh:
             return json.load(fh)
 
     def _write_sidecar(self):

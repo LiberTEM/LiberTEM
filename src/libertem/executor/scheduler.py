@@ -35,7 +35,7 @@ class WorkerSet:
         ])
 
     def hosts(self):
-        return set(worker.host for worker in self.workers)
+        return {worker.host for worker in self.workers}
 
     def names(self):
         return [worker.name for worker in self.workers]
@@ -50,7 +50,7 @@ class WorkerSet:
         return len(self.workers)
 
     def __repr__(self):
-        return "<WorkerSet %s>" % (
+        return "<WorkerSet {}>".format(
             self.workers,
         )
 
@@ -71,7 +71,7 @@ class Worker:
         return self.name
 
     def __repr__(self):
-        return "<Worker %s on %s with %s>" % (self.name, self.host, self.resources)
+        return f"<Worker {self.name} on {self.host} with {self.resources}>"
 
     def __eq__(self, other):
         return self.name == other.name and self.host == other.host

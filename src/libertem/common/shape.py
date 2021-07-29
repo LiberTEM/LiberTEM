@@ -2,7 +2,7 @@ import operator
 import functools
 
 
-class Shape(object):
+class Shape:
     """
     Create a Shape that knows how many dimensions are part of navigation/signal.
     It is assumed that the signal is in the last `sig_dims` dimensions.

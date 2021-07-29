@@ -110,4 +110,4 @@ class RawResultFormat(ResultFormat):
 
     def get_filename(self):
         arr = self._get_result_arr()
-        return "results_%s_%s.bin" % (arr.dtype, "-".join(str(i) for i in arr.shape))
+        return "results_{}_{}.bin".format(arr.dtype, "-".join(str(i) for i in arr.shape))

@@ -80,7 +80,7 @@ def test_glob(tmp_path, naughty_filename):
     filenames_2 = set(get_filenames(naughty_bin_0))
     print(filenames_1)
     print(filenames_2)
-    target = set((str(naughty_bin_0), str(naughty_bin_1)))
+    target = {str(naughty_bin_0), str(naughty_bin_1)}
     assert filenames_1 == target
     assert filenames_2 == target
 

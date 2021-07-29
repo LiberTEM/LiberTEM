@@ -1,5 +1,4 @@
 import re
-import io
 import os
 from glob import glob, escape
 import typing
@@ -64,7 +63,7 @@ class MIBDatasetParams(MessageConverter):
 def read_hdr_file(path):
     result = {}
     # FIXME: do this open via the io backend!
-    with open(path, "r", encoding='utf-8', errors='ignore') as f:
+    with open(path, encoding='utf-8', errors='ignore') as f:
         for line in f:
             if line.startswith("HDR") or line.startswith("End\t"):
                 continue
@@ -77,7 +76,7 @@ def read_hdr_file(path):
 
 def is_valid_hdr(path):
     # FIXME: do this open via the io backend!
-    with open(path, "r", encoding='utf-8', errors='ignore') as f:
+    with open(path, encoding='utf-8', errors='ignore') as f:
         line = next(f)
         return line.startswith("HDR")
 
@@ -343,7 +342,7 @@ class MIBHeaderReader:
 
     def read_header(self):
         # FIXME: do this read via the IO backend!
-        with io.open(file=self.path, mode="r", encoding="ascii", errors='ignore') as f:
+        with open(file=self.path, encoding="ascii", errors='ignore') as f:
             header = f.read(1024)
             filesize = os.fstat(f.fileno()).st_size
         parts = header.split(",")
@@ -598,7 +597,7 @@ class MIBDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["mib", "hdr"])
+        return {"mib", "hdr"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -724,7 +723,7 @@ class MIBDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<MIBDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<MIBDataSet of {self.dtype} shape={self.shape}>"
 
 
 class MIBPartition(BasePartition):

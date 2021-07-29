@@ -28,7 +28,7 @@ def _naive_mask_apply(masks, data):
     for mask in masks:
         assert mask.shape == data.shape[2:], "mask doesn't fit frame size"
 
-    dtype = np.result_type(*[m.dtype for m in masks], data.dtype)
+    dtype = np.result_type(*(m.dtype for m in masks), data.dtype)
     res = np.zeros((len(masks),) + tuple(data.shape[:2]), dtype=dtype)
     for n in range(len(masks)):
         mask = to_dense(masks[n])
@@ -48,8 +48,8 @@ def _mk_random(size, dtype='float32'):
     else:
         choice = [0, 1]
     data = np.random.choice(choice, size=size).astype(dtype)
-    coords2 = tuple((np.random.choice(range(c)) for c in size))
-    coords10 = tuple((np.random.choice(range(c)) for c in size))
+    coords2 = tuple(np.random.choice(range(c)) for c in size)
+    coords10 = tuple(np.random.choice(range(c)) for c in size)
     data[coords2] = np.random.choice(choice) * sum(size)
     data[coords10] = np.random.choice(choice) * 10 * sum(size)
     return data

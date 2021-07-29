@@ -57,7 +57,7 @@ class CopyClientCommand(distutils.cmd.Command):
 
         build = os.path.join(cwd_client, "build")
         self.announce(
-            "copying client: %s -> %s" % (build, client),
+            f"copying client: {build} -> {client}",
             level=distutils.log.INFO
         )
         shutil.copytree(build, client)

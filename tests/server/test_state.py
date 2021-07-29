@@ -24,8 +24,8 @@ async def test_job_state_remove(async_executor):
         "analysis": analysis_id,
         "dataset": dataset_id,
     }
-    assert job_state.get_for_dataset_id(dataset_id) == set([job_id])
-    assert job_state.get_for_analysis_id(analysis_id) == set([job_id])
+    assert job_state.get_for_dataset_id(dataset_id) == {job_id}
+    assert job_state.get_for_analysis_id(analysis_id) == {job_id}
 
     await job_state.remove(job_id)
 

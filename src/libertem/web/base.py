@@ -14,11 +14,11 @@ def log_message(message, exception=False):
     if exception:
         log_fn = log.exception
     if "job" in message:
-        log_fn("message: %s (job=%s)" % (message["messageType"], message["job"]))
+        log_fn("message: {} (job={})".format(message["messageType"], message["job"]))
     elif "analysis" in message:
-        log_fn("message: %s (analysis=%s)" % (message["messageType"], message["analysis"]))
+        log_fn("message: {} (analysis={})".format(message["messageType"], message["analysis"]))
     elif "dataset" in message:
-        log_fn("message: %s (dataset=%s)" % (message["messageType"], message["dataset"]))
+        log_fn("message: {} (dataset={})".format(message["messageType"], message["dataset"]))
     else:
         log_fn("message: %s" % message["messageType"])
 

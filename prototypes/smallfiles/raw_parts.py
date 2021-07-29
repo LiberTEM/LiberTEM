@@ -19,7 +19,7 @@ def _get_files(path):
     if you are using numbers!
     """
     path, ext = os.path.splitext(path)
-    pattern = "%s*%s" % (
+    pattern = "{}*{}".format(
         re.sub(r'[0-9]+$', '', path),
         ext
     )
@@ -74,7 +74,7 @@ class RawFilesDataSet(DataSet):
             # TODO: check file size match
             # TODO: try to read from file(s)?
             return True
-        except (IOError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_partitions(self):
@@ -97,7 +97,7 @@ class RawFilesDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<RawFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<RawFileDataSet of {self.dtype} shape={self.shape}>"
 
 
 def grouper(iterable, n, fillvalue=None):

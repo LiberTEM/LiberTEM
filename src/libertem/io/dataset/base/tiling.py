@@ -336,8 +336,8 @@ def make_get_read_ranges(
                 np.zeros((len(result)), dtype=np.int64),
             )
 
-        max_rr_per_tile = max([len(res[1])
-                               for res in result])
+        max_rr_per_tile = max(len(res[1])
+                              for res in result)
 
         slice_indices = np.zeros(len(result), dtype=np.int64)
 
@@ -368,7 +368,7 @@ class DataTile(np.ndarray):
 
         if obj.shape != tuple(tile_slice.shape):
             raise ValueError(
-                "shape mismatch: data=%s, tile_slice=%s" % (obj.shape, tile_slice.shape)
+                f"shape mismatch: data={obj.shape}, tile_slice={tile_slice.shape}"
             )
         return obj
 

@@ -7,7 +7,7 @@ from .messages import Message
 from .state import SharedState
 
 
-class EventRegistry(object):
+class EventRegistry:
     def __init__(self):
         self.handlers = []
 

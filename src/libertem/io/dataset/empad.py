@@ -168,7 +168,7 @@ class EMPADDataSet(DataSet):
         try:
             self._filesize = executor.run_function(self._get_filesize)
         except OSError as e:
-            raise DataSetException("could not open file %s: %s" % (self._path_raw, str(e)))
+            raise DataSetException(f"could not open file {self._path_raw}: {str(e)}")
         self._image_count = int(
             self._filesize / (
                 int(np.dtype("float32").itemsize) * int(
@@ -209,7 +209,7 @@ class EMPADDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["xml", "raw"])
+        return {"xml", "raw"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -261,7 +261,7 @@ class EMPADDataSet(DataSet):
             fileset = self._get_fileset()
             with fileset:
                 return True
-        except (IOError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_cache_key(self):
@@ -292,4 +292,4 @@ class EMPADDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<EMPADFileDataSet of %s shape=%s>" % (self.dtype, self.shape)
+        return f"<EMPADFileDataSet of {self.dtype} shape={self.shape}>"

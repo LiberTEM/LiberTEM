@@ -119,7 +119,7 @@ class HoloReconstructUDF(UDF):
                  sb_smoothness=.05,
                  precision=True):
         if len(sb_position) != 2:
-            raise ValueError("invalid sb_position %r, must be tuple of length 2" % (sb_position,))
+            raise ValueError(f"invalid sb_position {sb_position!r}, must be tuple of length 2")
         super().__init__(out_shape=out_shape,
                          sb_position=sb_position,
                          sb_size=sb_size,

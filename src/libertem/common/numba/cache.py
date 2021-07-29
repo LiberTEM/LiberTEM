@@ -103,9 +103,9 @@ if dispatcher_registry is not None:
             data = super().load_overload(*args, **kwargs)
             t1 = time.time()
             if data is None:
-                logger.info("numba cache miss %s %s" % (self._name, self._py_func))
+                logger.info(f"numba cache miss {self._name} {self._py_func}")
             else:
-                logger.info("cache hit for %s, load took %.3fs" % (self._name, (t1 - t0)))
+                logger.info(f"cache hit for {self._name}, load took {(t1 - t0):.3f}s")
             return data
 
     # if we can hack in our custom caching, do it:

@@ -147,7 +147,7 @@ def _tileshape_for_chunking(chunks, ds_shape):
     return chunks[-ds_shape.sig.dims - 1:]
 
 
-class H5Reader(object):
+class H5Reader:
     def __init__(self, path, ds_path):
         self._path = path
         self._ds_path = ds_path
@@ -273,7 +273,7 @@ class H5DataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["h5", "hdf5", "hspy", "nxs"])
+        return {"h5", "hdf5", "hspy", "nxs"}
 
     @classmethod
     def _do_detect(cls, path):
@@ -287,7 +287,7 @@ class H5DataSet(DataSet):
     def detect_params(cls, path, executor):
         try:
             executor.run_function(cls._do_detect, path)
-        except (IOError, OSError, KeyError, ValueError, TypeError, DataSetException):
+        except (OSError, KeyError, ValueError, TypeError, DataSetException):
             # not a h5py file or can't open for some reason:
             return False
 
@@ -340,7 +340,7 @@ class H5DataSet(DataSet):
             with self.get_reader().get_h5ds() as h5ds:
                 h5ds.shape
             return True
-        except (IOError, OSError, KeyError, ValueError) as e:
+        except (OSError, KeyError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
 
     def get_cache_key(self):
@@ -405,7 +405,7 @@ class H5DataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<H5DataSet of %s shape=%s>" % (self._dtype, self._shape)
+        return f"<H5DataSet of {self._dtype} shape={self._shape}>"
 
 
 class H5Partition(Partition):

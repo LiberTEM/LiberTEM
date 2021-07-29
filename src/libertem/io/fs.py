@@ -89,7 +89,7 @@ def get_fs_listing(path):
             owner = get_owner_name(full_path, s)
         except FileNotFoundError:  # only from win_tweaks.py version
             continue
-        except IOError:  # only from win_tweaks.py version
+        except OSError:  # only from win_tweaks.py version
             owner = "<Unknown>"
 
         res = {"name": name, "stat": s, "owner": owner}

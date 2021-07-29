@@ -175,7 +175,7 @@ class SERDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["ser"])
+        return {"ser"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -211,7 +211,7 @@ class SERDataSet(DataSet):
                 if f1.head['DataTypeID'] not in (0x4120, 0x4122):
                     raise DataSetException("unknown datatype id: %s" % f1.head['DataTypeID'])
             return True
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise DataSetException("invalid dataset: %s" % e) from e
 
     def get_cache_key(self):
@@ -252,7 +252,7 @@ class SERDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<SERDataSet for %s>" % (self._path,)
+        return f"<SERDataSet for {self._path}>"
 
 
 class SERPartition(BasePartition):
@@ -264,7 +264,7 @@ class SERPartition(BasePartition):
         supported = (1,) + tuple(self.shape.sig)
         if tuple(tiling_scheme.shape) != supported:
             raise ValueError(
-                "invalid tiling scheme: only supports %r, not %r" % (supported, tiling_scheme.shape)
+                f"invalid tiling scheme: only supports {supported!r}, not {tiling_scheme.shape!r}"
             )
 
     def adjust_tileshape(self, tileshape, roi):

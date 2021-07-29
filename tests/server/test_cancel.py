@@ -38,7 +38,7 @@ async def test_cancel_udf_job(
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = "ws://127.0.0.1:{}/api/events/".format(server_port)
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())

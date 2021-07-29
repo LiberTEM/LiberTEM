@@ -142,7 +142,7 @@ def exclude_pixels(sig_dims, num_excluded):
     exclude = []
 
     while len(exclude) < num_excluded:
-        exclude_item = tuple([np.random.randint(low=1, high=s-1) for s in sig_dims])
+        exclude_item = tuple(np.random.randint(low=1, high=s-1) for s in sig_dims)
         if free_map[exclude_item]:
             exclude.append(exclude_item)
             knock_out = tuple(slice(e - 1, e + 2) for e in exclude_item)

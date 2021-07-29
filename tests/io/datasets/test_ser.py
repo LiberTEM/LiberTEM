@@ -106,7 +106,7 @@ def test_with_udf(lt_ctx):
     udf_results = lt_ctx.run_udf(udf=udf, dataset=ds)
 
     # compare result with a known-working variant:
-    result = np.zeros((ds.shape.sig))
+    result = np.zeros(ds.shape.sig)
     for p in ds.get_partitions():
         tileshape = Shape(
             (1,) + tuple(ds.shape.sig),

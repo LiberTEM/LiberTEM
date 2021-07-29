@@ -154,7 +154,7 @@ class MRCDataSet(DataSet):
 
     @classmethod
     def get_supported_extensions(cls):
-        return set(["mrc"])
+        return {"mrc"}
 
     @classmethod
     def detect_params(cls, path, executor):
@@ -235,7 +235,7 @@ class MRCDataSet(DataSet):
             )
 
     def __repr__(self):
-        return "<MRCDataSet for %s>" % (self._path,)
+        return f"<MRCDataSet for {self._path}>"
 
 
 class MRCPartition(BasePartition):

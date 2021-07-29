@@ -169,8 +169,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                     AnalysisResult(
                         raw_data=absolute[b, 0],
                         visualized=partial(visualize_simple, absolute[b, 0], damage=dam),
-                        key="absolute_%s_%s" % (b, 0),
-                        title="absolute of bin %s order %s" % (b, 0),
+                        key=f"absolute_{b}_{0}",
+                        title=f"absolute of bin {b} order {0}",
                         desc="Absolute value of Fourier component",
                     )
                 )
@@ -182,8 +182,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                                 absolute[b, o] / normal[b], vmin=min_absolute, vmax=max_absolute,
                                 damage=dam
                             ),
-                            key="absolute_%s_%s" % (b, o),
-                            title="absolute of bin %s order %s" % (b, o),
+                            key=f"absolute_{b}_{o}",
+                            title=f"absolute of bin {b} order {o}",
                             desc="Absolute value of Fourier component",
                         )
                     )
@@ -196,8 +196,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                                 angle[b, o], colormap=cmaps['perception_circular'],
                                 damage=dam
                             ),
-                            key="phase_%s_%s" % (b, o),
-                            title="phase of bin %s order %s" % (b, o),
+                            key=f"phase_{b}_{o}",
+                            title=f"phase of bin {b} order {o}",
                             desc="Phase of Fourier component",
                         )
                     )
@@ -212,8 +212,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                     AnalysisResult(
                         raw_data=data,
                         visualized=f,
-                        key="complex_%s_%s" % (b, 0),
-                        title="bin %s order %s" % (b, 0),
+                        key=f"complex_{b}_{0}",
+                        title=f"bin {b} order {0}",
                         desc="Fourier component",
                     )
                 )
@@ -227,8 +227,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         AnalysisResult(
                             raw_data=data,
                             visualized=f,
-                            key="complex_%s_%s" % (b, o),
-                            title="bin %s order %s" % (b, o),
+                            key=f"complex_{b}_{o}",
+                            title=f"bin {b} order {o}",
                             desc="Fourier component",
                         )
                     )

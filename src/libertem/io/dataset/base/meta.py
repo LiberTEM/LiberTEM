@@ -4,7 +4,7 @@ import numpy as np
 from libertem.common import Shape
 
 
-class DataSetMeta(object):
+class DataSetMeta:
     """
     shape
         "native" dataset shape, can have any dimensionality

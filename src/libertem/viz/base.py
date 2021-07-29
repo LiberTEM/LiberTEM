@@ -184,7 +184,7 @@ class Live2DPlot:
         else:
             extract = None
             if channel not in eligible_channels:
-                raise ValueError("channel %s not found or not plottable, have: %r" % (
+                raise ValueError("channel {} not found or not plottable, have: {!r}".format(
                     channel, eligible_channels
                 ))
             channel_title = channel

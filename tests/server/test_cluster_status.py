@@ -10,7 +10,7 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
 
     worker_set = dist_ctx.executor.get_available_workers()
     host1, host2 = sorted(worker_set.hosts())
-    url = "{}/api/config/connection/".format(base_url)
+    url = f"{base_url}/api/config/connection/"
 
     conn_details = {
         'connection': {
@@ -21,7 +21,7 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
     async with http_client.put(url, json=conn_details) as response:
         assert response.status == 200
 
-    url = "{}/api/config/cluster/".format(base_url)
+    url = f"{base_url}/api/config/cluster/"
     async with http_client.get(url) as response:
         assert response.status == 200
         details = await response.json()
@@ -49,7 +49,7 @@ async def test_tcp_cluster_details(dist_ctx, base_url, http_client):
 async def test_local_cluster_details(shared_state, base_url, http_client):
 
     num_workers = random.randint(1, 4)
-    url = "{}/api/config/connection/".format(base_url)
+    url = f"{base_url}/api/config/connection/"
     conn_details = {
         'connection': {
             'type': 'local',
@@ -64,7 +64,7 @@ async def test_local_cluster_details(shared_state, base_url, http_client):
     worker_set = await executor.get_available_workers()
     host = worker_set.hosts().pop()
 
-    url = "{}/api/config/cluster/".format(base_url)
+    url = f"{base_url}/api/config/cluster/"
     async with http_client.get(url) as response:
         assert response.status == 200
         details = await response.json()

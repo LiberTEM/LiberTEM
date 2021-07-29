@@ -72,7 +72,7 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
     return _get_masks_for_slice
 
 
-class MaskContainer(object):
+class MaskContainer:
     '''
     Container for mask stacks that are created from factory functions.
 

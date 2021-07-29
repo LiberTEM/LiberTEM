@@ -130,9 +130,13 @@ def _get_image_offset(header):
         return 1024
 
 
-def xml_processing(tree, sig_shape):
+def xml_processing(tree, sig_shape, metadata=""):
     num_of_cat = len(tree[2])
-    last_binned=False
+    if not metadata:
+        last_binned = False
+    if metadata:
+        last_binned = True
+
     def cropping(arr, start_size, req_size):
         '''
 
@@ -511,9 +515,9 @@ def xml_processing(tree, sig_shape):
     return sparse.COO(coords)
 
 
-def _load_xml_from_string(xml, sig_shape):
+def _load_xml_from_string(xml, sig_shape, metadata=""):
     tree = ET.fromstring(xml)
-    return xml_processing(tree, sig_shape)
+    return xml_processing(tree, sig_shape, metadata)
 
 
 class SEQDatasetParams(MessageConverter):
@@ -655,14 +659,23 @@ class SEQDataSet(DataSet):
         return np.squeeze(data_dict['data'])
 
     def _load_xml_from_file(self, sig_shape, path):
-        if not os.path.exists(path):
+        if not os.path.exists(path + ".Config.Metadata.xml"):
             return None
         else:
-            tree = ET.parse(path)
+            tree = ET.parse(path + ".Config.Metadata.xml")
             root = tree.getroot()
-            return xml_processing(root,sig_shape)
-
-
+            file = open(path, mode="rb")
+            met = file.read()
+            DE_metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX', 'UnbinnedFrameSizeY',
+                               'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
+                               'FlipMode', 'OkraMode']
+            DE_metadata = dict(zip(DE_metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
+            last_binned = DE_metadata['HardwareBinning']
+            if last_binned > 1:
+                last_binned = True
+            if last_binned <= 1:
+                last_binned = False
+            return xml_processing(root, sig_shape, last_binned)
 
     def _maybe_load_dark_gain(self):
         str = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
@@ -672,7 +685,7 @@ class SEQDataSet(DataSet):
               '</Configuration>'
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = self._load_xml_from_file(self._sig_shape,path=self._path+".Config.Metadata.xml")
+        self._excluded_pixels = self._load_xml_from_file(self._sig_shape, path=self._path)
 
     def get_correction_data(self):
         return CorrectionSet(

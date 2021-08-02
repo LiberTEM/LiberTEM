@@ -132,26 +132,30 @@ def _get_image_offset(header):
 
 def xml_processing(tree, sig_shape, metadata=""):
     num_of_cat = len(tree[2])
-    if not metadata:
-        last_binned = False
-    if metadata:
+    last_binned = False
+    if 1 < metadata['HardwareBinning']:
         last_binned = True
+    offset = (metadata['OffsetY'], metadata['OffsetX'])
 
-    def cropping(arr, start_size, req_size):
-        '''
+    def cropping(arr, start_size, req_size, offsets):
+        """
+            :param arr: thearray we will make the changes on
+            :param start_size: the size of the original array
+            :param req_size: the size we want to crop to
+            :param offsets: the top left coord of the crop
+            :return: a crop which is an array
+        """
 
-            :param arr: an array we want to appply the cropping to
-            :param start_size: the original size of image
-            :param req_size: equals with the signal shape, this is the size we want to crop to
-            :return: the middle of 'arr' with the size req_size, 2d array
-            '''
         ac = arr
-        if req_size[0] <= start_size[0] and req_size[1] <= start_size[0]:
-            a = int(start_size[0]) // 2
-            b = int(start_size[1]) // 2
+        if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
+
             req_y = int(req_size[0]) // 2
             req_x = int(req_size[1]) // 2
+            a = int(offsets[0]) + req_y
+            b = int(offsets[1]) + req_x
             ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
+        else:
+            print("bad start size probably", offsets[0], start_size)
         return ac
 
     num_of_rows = []  # the number of rows in different category
@@ -170,7 +174,7 @@ def xml_processing(tree, sig_shape, metadata=""):
             the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
             the position of the elements inside the list is important as we will use it to 
             calculate the index that matches the 0. index of the self._sig_shape's
-        """
+    """
 
     root = tree
 
@@ -256,8 +260,8 @@ def xml_processing(tree, sig_shape, metadata=""):
 
     def categorise_excludable():
         '''
-                this method is responsible for the categorization of the previously extracted data
-                '''
+        this method is responsible for the categorization of the previously extracted data
+        '''
         end_id = 0
         str_ind = 0
         end_id_col = 0
@@ -292,27 +296,6 @@ def xml_processing(tree, sig_shape, metadata=""):
     sizes = list(  # list of tuples consist of coo_shape_x and y's elements
         map(lambda x, y: (x, y), coo_shape_x, coo_shape_y))
 
-    def generate_ID():
-        """
-                :return: the index of self._sig_shapes value in the "sizes" list
-                in case it doesn't contain it returns -1
-                """
-        Defect_ID = 0
-
-        if (sig_shape[0], sig_shape[1]) in sizes:
-            for index in sizes:
-                Defect_ID += 1
-                if index == (sig_shape[0], sig_shape[1]):
-                    if len(coo_bin_val[Defect_ID - 1]) > 0 and last_binned == False or len(
-                            coo_bin_val[Defect_ID - 1]) < 1 and last_binned == True:
-                        return -1
-                    else:
-                        return Defect_ID
-        else:
-            return -1
-
-    Defect_ID = generate_ID()  # determine which index should be used for further calculations
-
     def bin_array2d(a, binning):
         sx, sy = a.shape
         sxc = sx // binning * binning
@@ -332,13 +315,13 @@ def xml_processing(tree, sig_shape, metadata=""):
                 """
         Defect_ID = num_of_cat + 1
 
-        coo_shape_x.append(sig_shape[0])
-        coo_shape_y.append(sig_shape[1])
+        coo_shape_x.append(sig_shape[0] // metadata["HardwareBinning"])
+        coo_shape_y.append(sig_shape[1] // metadata["HardwareBinning"])
         sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
         if not last_binned:
             coo_bin_val.append([])
         else:
-            coo_bin_val.append([2])
+            coo_bin_val.append([metadata["HardwareBinning"]])
 
         def gen_new_size(valid_coord):
 
@@ -351,11 +334,11 @@ def xml_processing(tree, sig_shape, metadata=""):
 
             res2 = []
             if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
             else:
-                binning_num = sizes[valid_coord][0] // sig_shape[0]
-                print(sizes[valid_coord][0], sig_shape[0])
-                c = bin_array2d(dummy_transformation_m, binning_num)
+                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
+                binning_num = metadata["HardwareBinning"]
+                c = bin_array2d(cr, binning_num)
 
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
@@ -372,10 +355,11 @@ def xml_processing(tree, sig_shape, metadata=""):
 
             res3 = []
             if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
             else:
-                binning_num = sizes[valid_coord][0] // sig_shape[0]
-                c = bin_array2d(dummy_transformation_m, binning_num)
+                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
+                binning_num = metadata["HardwareBinning"]
+                c = bin_array2d(cr, binning_num)
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
                     if c[a, b] > 1:
@@ -388,10 +372,11 @@ def xml_processing(tree, sig_shape, metadata=""):
 
             res4 = []
             if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape)
+                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
             else:
-                binning_num = sizes[valid_coord][0] // sig_shape[0]
-                c = bin_array2d(dummy_transformation_m, binning_num)
+                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
+                binning_num = metadata["HardwareBinning"]
+                c = bin_array2d(cr, binning_num)
             for a in range(0, c.shape[0]):
                 for b in range(0, c.shape[1]):
                     if c[a, b] > 1:
@@ -405,34 +390,17 @@ def xml_processing(tree, sig_shape, metadata=""):
             num_of_cols.append(len(cols_by_category[Defect_ID - 1]))
             num_of_pixels.append(len(pixels_by_category[Defect_ID - 1]))
 
-        for sel in range(0, len(coo_bin_val)):
-            ended = 0
-            if (len(coo_bin_val[sel]) == 0) and len(
-                    sizes) > sel and last_binned == False:  # if the first element in the xml is not binned
-                gen_new_size(sel)
-                ended = 1
-
+        max_y = max(coo_shape_y)
+        max_x = max(coo_shape_x)
+        index_for_max = -1
+        for size in range(0, len(sizes)):
+            if sizes[size][0] == max_y and sizes[size][1] == max_x:
+                index_for_max = size
                 break
-            if ended == 0 and len(coo_bin_val) == sel and last_binned == False:
-                gen_new_size(0)
-            if last_binned:  # so the last one is binned
-                if len(coo_bin_val[
-                           len(coo_bin_val) - 2]) > 0:
-                    print("called2")
-                    gen_new_size(len(coo_bin_val) - 2)
-                    break
-                else:
-                    for back in range(len(coo_bin_val) - 2, -1, -1):
+        gen_new_size(index_for_max)
 
-                        # -1 bc of index and another -1 bc we dont want to inc the first element
-                        if len(coo_bin_val[back]) > 0:
-                            gen_new_size(back)
-                            print("called3")
-                            break
-
-    if (Defect_ID == -1):
-        generate_new_size()
-        Defect_ID = num_of_cat + 1
+    generate_new_size()
+    Defect_ID = num_of_cat + 1
 
     def excl_rows(coords, Defect_ID):
         """
@@ -503,9 +471,11 @@ def xml_processing(tree, sig_shape, metadata=""):
 
     def excl_all():
         """
-                :return: a 2 dimensional array of excluded pixels, still not sparse array
-                """
-        coords = np.zeros((int(sig_shape[0]), int(sig_shape[1])))
+        :return: a 2 dimensional array of excluded pixels, still not sparse array
+        """
+        coords = np.zeros((int(sig_shape[0]) // metadata["HardwareBinning"],
+                           int(sig_shape[1]) // metadata["HardwareBinning"])
+                          )
         coords = excl_rows(coords=coords, Defect_ID=Defect_ID)
         coords = excl_cols(coords=coords, Defect_ID=Defect_ID)
         coords = excl_pixels(coords=coords, Defect_ID=Defect_ID)
@@ -610,7 +580,7 @@ class SEQDataSet(DataSet):
         self._excluded_pixels = None
 
     def get_excluded_pixels(self, path, sig_shape):
-        return self._load_xml_from_file(sig_shape=sig_shape, path=path + ".Config.Metadata.xml")
+        return self._load_xml_from_file(sig_shape=sig_shape, path=path)
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -661,28 +631,20 @@ class SEQDataSet(DataSet):
     def _load_xml_from_file(self, sig_shape, path):
         if not os.path.exists(path + ".Config.Metadata.xml"):
             return None
+        if not os.path.exists(path + ".metadata"):
+            return None
         else:
             tree = ET.parse(path + ".Config.Metadata.xml")
             root = tree.getroot()
-            file = open(path, mode="rb")
+            file = open(path + ".metadata", mode="rb")
             met = file.read()
-            DE_metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX', 'UnbinnedFrameSizeY',
-                               'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
-                               'FlipMode', 'OkraMode']
-            DE_metadata = dict(zip(DE_metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
-            last_binned = DE_metadata['HardwareBinning']
-            if last_binned > 1:
-                last_binned = True
-            if last_binned <= 1:
-                last_binned = False
-            return xml_processing(root, sig_shape, last_binned)
+            metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX', 'UnbinnedFrameSizeY',
+                            'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
+                            'FlipMode', 'OkraMode']
+            metadata = dict(zip(metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
+            return xml_processing(root, sig_shape, metadata)
 
     def _maybe_load_dark_gain(self):
-        str = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-              '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-              'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
-              'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-              '</Configuration>'
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
         self._excluded_pixels = self._load_xml_from_file(self._sig_shape, path=self._path)

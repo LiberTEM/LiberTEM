@@ -130,22 +130,94 @@ def _get_image_offset(header):
         return 1024
 
 
-def xml_processing(tree, sig_shape, metadata=""):
-    num_of_cat = len(tree[2])
-    last_binned = False
-    if 1 < metadata['HardwareBinning']:
-        last_binned = True
-    offset = (metadata['OffsetY'], metadata['OffsetX'])
+def xml_processing(tree, metadata=""):
+    def data_extractor():
+        root = tree
+        excluded_rows = []
+        excluded_cols = []
+        excluded_pixels = []
+        bad_pixel_maps = root.findall('.//BadPixelMap')
+        map_sizes = []
+
+        for map in bad_pixel_maps:
+            if "Binning" in map.attrib:
+                map_sizes.append((int(map.attrib['Columns']), int(map.attrib['Rows']), int(map.attrib["Binning"])))
+            else:
+                map_sizes.append((int(map.attrib['Columns']), int(map.attrib['Rows']), 1))
+        map_rearrange = zip(*map_sizes)
+        xy_map_sizes = list(map_rearrange)
+
+        unbinned_x = []
+        unbinned_y = []
+        for map_ind in range(0, len(xy_map_sizes[0])):
+            if xy_map_sizes[2][map_ind] < 2:
+                unbinned_y.append(xy_map_sizes[0][map_ind])
+                unbinned_x.append(xy_map_sizes[0][map_ind])
+            else:
+                unbinned_y.append(0)
+                unbinned_x.append(0)
+        map_index = -1
+        not_max_x = 0
+        max_y = max(unbinned_y)
+        max_x = max(unbinned_x)
+        for size_ind in range(0, len(map_sizes)):
+            if (max_y, max_x) in map_sizes:
+                if map_sizes[size_ind] == (max_y, max_x):
+                    map_index = size_ind
+                    break
+            else:
+                if map_sizes[size_ind][0] == max_y:
+                    if map_sizes[size_ind][1] > not_max_x:
+                        not_max_x = map_sizes[size_ind][1]
+                        map_index = size_ind
+
+        for defect in bad_pixel_maps[map_index].findall('Defect'):
+            for attrib in defect.attrib:
+                if len(defect.attrib) == 1:
+                    if attrib == "Rows":
+                        splitted = defect.attrib["Rows"].split('-')
+                        excluded_rows.append(splitted)
+                    if attrib == "Row":
+                        excluded_rows.append([defect.attrib["Row"]])
+
+                    if attrib == "Columns":
+                        splitted = defect.attrib["Columns"].split('-')
+                        excluded_cols.append(splitted)
+                    if attrib == "Column":
+                        excluded_cols.append([defect.attrib["Column"]])
+                else:
+                    if attrib == "Column":
+                        excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
+
+        return {"r": excluded_rows,
+                "c": excluded_cols,
+                "p": excluded_pixels,
+                "size": (map_sizes[map_index][0], map_sizes[map_index][1])
+                }
+
+    def bin_array2d(a, binning):
+        """
+
+        :param a: an array
+        :param binning: the times we want to bin the array
+        :return:
+        """
+        sx, sy = a.shape
+        sxc = sx // binning * binning
+        syc = sy // binning * binning
+        # crop:
+        ac = a[:sxc, :syc]
+        return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
 
     def cropping(arr, start_size, req_size, offsets):
         """
-            :param arr: thearray we will make the changes on
-            :param start_size: the size of the original array
-            :param req_size: the size we want to crop to
-            :param offsets: the top left coord of the crop
-            :return: a crop which is an array
-        """
 
+        :param arr: thearray we will make the changes on
+        :param start_size: the size of the original array
+        :param req_size: the size we want to crop to
+        :param offsets: the top left coord of the crop
+        :return: a crop which is an array
+        """
         ac = arr
         if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
 
@@ -158,336 +230,49 @@ def xml_processing(tree, sig_shape, metadata=""):
             print("bad start size probably", offsets[0], start_size)
         return ac
 
-    num_of_rows = []  # the number of rows in different category
-    num_of_cols = []  # the number of cols in different category
-    num_of_pixels = []  # sort the number of pixels in different categories
-
-    rows = []
-    cols = []
-    pixels = []  # store the elements in [row, col] format
-
-    coo_shape_x = []
-    coo_shape_y = []
-    coo_bin_val = []  # the binning values categorized(by inedex)
-    """
-            coo_shape_x=
-            the list that contains the Row_indexes of every bad_pixel_map's Rows attribute,
-            the position of the elements inside the list is important as we will use it to 
-            calculate the index that matches the 0. index of the self._sig_shape's
-    """
-
-    root = tree
-
-    # we need the 2. index as it will be the Bad_Pixels node that contains the bad pixel maps
-
-    def xml_interpreter():
+    def generate_size(exc_rows, exc_cols, exc_pix, size):
         """
-                this method is responsible for getting the data out of the xml tree
-                however it will still be uncategorized
-                """
-        mop = {}  # dummy dictionary to store the elements of root[2] wich are the BadPixelMaps
-        for z in root[2]:
-            mop[z] = z.attrib
-        row_counter = 0
-        col_counter = 0
-        pix_counter = 0
-        for badPixelMap in mop:
-            '''
-                    mop contains the badPixelMaps
-                    '''
-            chk = 0
+        a binnelést és a cropolást kell itt csinálni
 
-            coo_shape_x.append(int(badPixelMap.attrib['Rows']))
-
-            coo_shape_y.append(int(badPixelMap.attrib['Columns']))
-            '''
-                    this part below is responsible for getting the binning
-                    attribute out of the badPixelMap's header. If there is no binning
-                    attribute then append an empty list to the coo_bin_val
-                    '''
-            if 'Binning' in badPixelMap.attrib:
-                coo_bin_val.append([int(badPixelMap.attrib['Binning'])])
-                chk += 1
-            elif (len(badPixelMap.attrib) == 2) and chk == 0:
-                coo_bin_val.append([])
-
-            for defect in badPixelMap:
-                '''
-                        iterates through a bad pixel map's Defect nodes
-                        '''
-                tmp_cnt = 0  # to determine if we are dealing with a single pixel
-                tmp_dict = {}
-                tmp_dict.update(defect.attrib)
-                tmp_block = []
-                for i in tmp_dict:
-                    tmp = ''
-                    '''
-                            check if the current tmp_dict has two attributes
-                            which can only occur when we are dealing with a 
-                            pixel as it has both row and col attributes
-                            '''
-                    if len(tmp_dict) == 2:
-                        tmp = tmp_dict[i]
-                        tmp_block.append(tmp)
-
-                        tmp_cnt += 1
-                        if tmp_cnt == 2:
-                            pixels.append(tmp_block)
-                            pix_counter += 1
-                            tmp_cnt = 0
-                            break
-                    else:
-                        if (i == 'Rows') or (i == 'Row'):
-                            tmp = tmp_dict[i]
-                            rows.append(tmp.split('-'))
-                            row_counter += 1
-
-                        if (i == 'Columns') or (i == 'Column'):
-                            tmp = tmp_dict[i]
-                            cols.append(tmp.split('-'))
-                            col_counter += 1
-            num_of_rows.append(row_counter)
-            num_of_cols.append(col_counter)
-            num_of_pixels.append(pix_counter)
-            row_counter = 0
-            col_counter = 0
-            pix_counter = 0
-
-    xml_interpreter()
-    rows_by_category = {}
-    cols_by_category = {}
-    pixels_by_category = {}
-
-    def categorise_excludable():
-        '''
-        this method is responsible for the categorization of the previously extracted data
-        '''
-        end_id = 0
-        str_ind = 0
-        end_id_col = 0
-        str_id_col = 0
-        end_id_pixel = 0
-        str_id_pixel = 0
-        for x in range(0, num_of_cat):
-            if x == 0:
-                rows_by_category[x] = rows[0:num_of_rows[x]]
-                cols_by_category[x] = cols[0:num_of_cols[x]]
-                pixels_by_category[x] = pixels[0:num_of_pixels[x]]
-                end_id = num_of_rows[x]
-                str_ind = num_of_rows[x]
-                end_id_col = num_of_cols[x]
-                str_id_col = num_of_cols[x]
-                end_id_pixel = num_of_pixels[x]
-                str_id_pixel = num_of_pixels[x]
-            else:
-                end_id += num_of_rows[x]
-                end_id_col += num_of_cols[x]
-                end_id_pixel += num_of_pixels[x]
-                rows_by_category[x] = rows[str_ind:end_id]
-                cols_by_category[x] = cols[str_id_col:end_id_col]
-
-                pixels_by_category[x] = pixels[str_id_pixel:end_id_pixel]
-
-                str_ind += num_of_rows[x]
-                str_id_col += num_of_cols[x]
-                str_id_pixel += num_of_pixels[x]
-
-    categorise_excludable()
-    sizes = list(  # list of tuples consist of coo_shape_x and y's elements
-        map(lambda x, y: (x, y), coo_shape_x, coo_shape_y))
-
-    def bin_array2d(a, binning):
-        sx, sy = a.shape
-        sxc = sx // binning * binning
-        syc = sy // binning * binning
-        # crop:
-        ac = a[:sxc, :syc]
-        return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
-
-    def generate_new_size():
+        :param exc_rows:
+        :param exc_cols:
+        :param exc_pix:
+        :param size: a tuple with the size
+        :return: a dictionary
         """
-                this method is called if the generate_ID() method returns -1,
-                in this case we have to make a new size (the size of self._sig_shape),
-                and for his new size we have to calculate the pixels, columns and rows
-                values based on the original size's value which we do by cropping the middle
-                part of the original size to the size of sig_shape
-                :return:
-                """
-        Defect_ID = num_of_cat + 1
+        required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
+        offsets = (metadata["OffsetY"], metadata["OffsetX"])
+        bin_value = metadata["HardwareBinning"]
+        dummy_m = np.zeros(size, dtype=bool)
+        for row in exc_rows:
 
-        coo_shape_x.append(sig_shape[0] // metadata["HardwareBinning"])
-        coo_shape_y.append(sig_shape[1] // metadata["HardwareBinning"])
-        sizes.append((coo_shape_x[-1:][0], coo_shape_y[-1:][0]))
-        if not last_binned:
-            coo_bin_val.append([])
-        else:
-            coo_bin_val.append([metadata["HardwareBinning"]])
+            if len(row) == 2:
+                dummy_m[int(row[0]):int(row[1]) + 1] = 1
+            if len(row) == 1:
+                dummy_m[int(row[0])] = 1
 
-        def gen_new_size(valid_coord):
+        for col in exc_cols:
 
-            dummy_transformation_m = np.zeros(sizes[valid_coord])
-            for i in rows_by_category[valid_coord]:
-                if len(i) == 2:
-                    dummy_transformation_m[int(i[0]):int(i[1]) + 1] = 2
-                if len(i) == 1:
-                    dummy_transformation_m[int(i[0])] = 2
+            if len(col) == 2:
+                dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
+            if len(col) == 1:
+                dummy_m[:, int(col[0])] = 1
 
-            res2 = []
-            if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-            else:
-                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-                binning_num = metadata["HardwareBinning"]
-                c = bin_array2d(cr, binning_num)
+        for pix in exc_pix:
+            dummy_m[int(pix[0]), int(pix[1])] = 1
 
-            for a in range(0, c.shape[0]):
-                for b in range(0, c.shape[1]):
-                    if c[a, b] > 1:
-                        if [a] not in res2:
-                            res2.append([a])
+        cropped = cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
+        binned = bin_array2d(cropped, bin_value)
+        return np.array(binned, dtype=bool)
 
-            dummy_transformation_m = np.zeros(sizes[valid_coord])
-            for i in cols_by_category[valid_coord]:
-                if len(i) == 2:
-                    dummy_transformation_m[:, int(i[0]):(int(i[1]) + 1)] = 2
-                if len(i) == 1:
-                    dummy_transformation_m[:, int(i[0])] = 2
-
-            res3 = []
-            if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-            else:
-                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-                binning_num = metadata["HardwareBinning"]
-                c = bin_array2d(cr, binning_num)
-            for a in range(0, c.shape[0]):
-                for b in range(0, c.shape[1]):
-                    if c[a, b] > 1:
-                        if [b] not in res3 and [a] not in res2:
-                            res3.append([b])
-
-            dummy_transformation_m = np.zeros(sizes[valid_coord])
-            for i in pixels_by_category[valid_coord]:
-                dummy_transformation_m[int(i[0]), int(i[1])] = 2
-
-            res4 = []
-            if last_binned == False:
-                c = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-            else:
-                cr = cropping(dummy_transformation_m, sizes[valid_coord], sig_shape, offset)
-                binning_num = metadata["HardwareBinning"]
-                c = bin_array2d(cr, binning_num)
-            for a in range(0, c.shape[0]):
-                for b in range(0, c.shape[1]):
-                    if c[a, b] > 1:
-                        if [a, b] not in res4 and [a] not in res2 and [b] not in res3:
-                            res4.append([a, b])
-
-            rows_by_category[Defect_ID - 1] = res2
-            cols_by_category[Defect_ID - 1] = res3
-            pixels_by_category[Defect_ID - 1] = res4
-            num_of_rows.append(len(rows_by_category[Defect_ID - 1]))
-            num_of_cols.append(len(cols_by_category[Defect_ID - 1]))
-            num_of_pixels.append(len(pixels_by_category[Defect_ID - 1]))
-
-        max_y = max(coo_shape_y)
-        max_x = max(coo_shape_x)
-        index_for_max = -1
-        for size in range(0, len(sizes)):
-            if sizes[size][0] == max_y and sizes[size][1] == max_x:
-                index_for_max = size
-                break
-        gen_new_size(index_for_max)
-
-    generate_new_size()
-    Defect_ID = num_of_cat + 1
-
-    def excl_rows(coords, Defect_ID):
-        """
-                processes the excluded rows
-                :param coords:an array which we will do the changes
-                :param Defect_ID: the Id which help us select
-                the correct key from rows_by_category dictionary
-                :return: coords 2 dimensional array
-                """
-        for i1 in rows_by_category:
-            if (len(rows_by_category[i1]) != 0):
-                if i1 == Defect_ID - 1:
-                    for i2 in rows_by_category[i1]:
-                        if len(i2) == 2:  # if its a list of rows in a [from,to] form
-                            start_in = int(i2[0])
-                            end_in = (int(i2[1]) + 1)
-                            coords[start_in:end_in] = 1
-
-                        if len(i2) == 1:  # if its just a single row
-
-                            tmp = [int(i2[0])]
-                            coords[tmp] = 1
-                    return coords
-        return coords
-
-    def excl_cols(coords, Defect_ID):
-        """
-                processes the excluded columns
-                :param coords:an array which we will do the changes
-                :param Defect_ID: the Id which help us select
-                the correct key from rows_by_category dictionary
-                :return: coords 2 dimensional array
-                """
-        for i1 in cols_by_category:
-            if len(cols_by_category[i1]) != 0:
-                if i1 == Defect_ID - 1:
-                    for i2 in cols_by_category[i1]:
-
-                        if len(i2) == 2:  # if its a list of cols in a [from,to] form
-                            start_in = int(i2[0])
-                            end_in = (int(i2[1]) + 1)
-
-                            coords[:, start_in:end_in] = 1
-
-                        if len(i2) == 1:  # if its just a single col
-
-                            tmp = [int(i2[0])]
-                            coords[:, tmp] = 1
-                    return coords
-        return coords
-
-    def excl_pixels(coords, Defect_ID):
-        """
-                processes the excluded pixels
-                :param coords:an array which we will do the changes
-                :param Defect_ID: the Id which help us select
-                the correct key from rows_by_category dictionary
-                :return: coords 2 dimensional array
-                """
-        for i1 in cols_by_category:
-            if len(pixels_by_category[i1]) != 0:
-                if i1 == Defect_ID - 1:
-                    for i2 in pixels_by_category[i1]:
-                        coords[int(i2[0]), int(i2[1])] = 1
-
-                    return coords
-        return coords
-
-    def excl_all():
-        """
-        :return: a 2 dimensional array of excluded pixels, still not sparse array
-        """
-        coords = np.zeros((int(sig_shape[0]) // metadata["HardwareBinning"],
-                           int(sig_shape[1]) // metadata["HardwareBinning"])
-                          )
-        coords = excl_rows(coords=coords, Defect_ID=Defect_ID)
-        coords = excl_cols(coords=coords, Defect_ID=Defect_ID)
-        coords = excl_pixels(coords=coords, Defect_ID=Defect_ID)
-        return coords
-
-    coords = excl_all()
-    return sparse.COO(coords)
+    data_dict = data_extractor()
+    coord = generate_size(data_dict["r"], data_dict["c"], data_dict["p"], data_dict["size"])
+    return sparse.COO(coord)
 
 
-def _load_xml_from_string(xml, sig_shape, metadata=""):
+def _load_xml_from_string(xml, metadata=""):
     tree = ET.fromstring(xml)
-    return xml_processing(tree, sig_shape, metadata)
+    return xml_processing(tree, metadata)
 
 
 class SEQDatasetParams(MessageConverter):
@@ -628,7 +413,7 @@ class SEQDataSet(DataSet):
         data_dict = mrcReader(path)
         return np.squeeze(data_dict['data'])
 
-    def _load_xml_from_file(self, sig_shape, path):
+    def _load_xml_from_file(self, path):
         if not os.path.exists(path + ".Config.Metadata.xml"):
             return None
         if not os.path.exists(path + ".metadata"):
@@ -642,12 +427,12 @@ class SEQDataSet(DataSet):
                             'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
                             'FlipMode', 'OkraMode']
             metadata = dict(zip(metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
-            return xml_processing(root, sig_shape, metadata)
+            return xml_processing(root, metadata)
 
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
-        self._excluded_pixels = self._load_xml_from_file(self._sig_shape, path=self._path)
+        self._excluded_pixels = self._load_xml_from_file(path=self._path)
 
     def get_correction_data(self):
         return CorrectionSet(

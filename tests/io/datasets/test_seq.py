@@ -135,16 +135,16 @@ def test_xml_excluded_pixels_unbinned():
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
     metadata = {
-        "size_x": 1024,
-        "size_y": 1024,
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
         "OffsetX": 1536,
         "OffsetY": 1536,
         "HardwareBinning": 1
     }
-    test_arr = np.zeros((1024, 1024))
-    test_arr[775] = 1
-    test_arr[776] = 1
-    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(1024, 1024),metadata=metadata)
+    test_arr = np.zeros((1024, 1024),dtype=bool)
+    test_arr[775] = True
+    test_arr[776] = True
+    expected_res = _load_xml_from_string(xml=xml_string,metadata=metadata)
     assert np.array_equal(expected_res.todense(),test_arr)
 
 def test_xml_excluded_pixels_only_binned():
@@ -154,17 +154,17 @@ def test_xml_excluded_pixels_only_binned():
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
     metadata = {
-        "size_x": 4096,
-        "size_y": 4096,
+        "UnbinnedFrameSizeX": 4096,
+        "UnbinnedFrameSizeY": 4096,
         "OffsetX": 0,
         "OffsetY": 0,
         "HardwareBinning": 4
     }
-    test_arr = np.zeros((1024, 1024))
-    test_arr[577] = 1
-    test_arr[578] = 1
-    test_arr[853] = 1
-    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(4096, 4096),metadata=metadata)
+    test_arr = np.zeros((1024, 1024), dtype=bool)
+    test_arr[577] = True
+    test_arr[578] = True
+    test_arr[853] = True
+    expected_res = _load_xml_from_string(xml=xml_string,metadata=metadata)
     assert np.array_equal(expected_res.todense(),test_arr)
 
 def test_xml_excluded_pixels_cropped_binned():
@@ -174,16 +174,16 @@ def test_xml_excluded_pixels_cropped_binned():
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
     metadata = {
-        "size_x": 2048,
-        "size_y": 2048,
+        "UnbinnedFrameSizeX": 2048,
+        "UnbinnedFrameSizeY": 2048,
         "OffsetX": 1024,
         "OffsetY": 1024,
         "HardwareBinning": 2
     }
-    test_arr = np.zeros((1024, 1024))
-    test_arr[644] = 1
-    test_arr[643] = 1
-    expected_res = _load_xml_from_string(xml=xml_string, sig_shape=(2048, 2048),metadata=metadata)
+    test_arr = np.zeros((1024, 1024),dtype=bool)
+    test_arr[644] = True
+    test_arr[643] = True
+    expected_res = _load_xml_from_string(xml=xml_string,metadata=metadata)
     assert np.array_equal(expected_res.todense(),test_arr)
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()

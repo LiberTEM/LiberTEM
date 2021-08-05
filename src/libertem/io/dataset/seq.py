@@ -130,87 +130,101 @@ def _get_image_offset(header):
         return 1024
 
 
-def xml_processing(tree, metadata=""):
-    def data_extractor():
-        root = tree
-        excluded_rows = []
-        excluded_cols = []
-        excluded_pixels = []
-        bad_pixel_maps = root.findall('.//BadPixelMap')
-        map_sizes = []
+def data_extractor(root):
+    """
+    The way it works is:
+    we read each bad pixel maps sizes and store it in the map_sizes if its
+    a binned map then we also store the bin value next to the sizes, if not it will be 1.
+    We then make an list to store the sizes of those maps that are unbinned, and select the
+    biggest sized one.
+    Then we iterate over the defects of the biggest sized one and store them after making
+    some changes in them.
 
-        for map in bad_pixel_maps:
-            if "Binning" in map.attrib:
-                map_sizes.append((int(map.attrib['Columns']), int(map.attrib['Rows']), int(map.attrib["Binning"])))
-            else:
-                map_sizes.append((int(map.attrib['Columns']), int(map.attrib['Rows']), 1))
-        map_rearrange = zip(*map_sizes)
-        xy_map_sizes = list(map_rearrange)
+    :param root: the xml file's root node
+    :return: a dictionary containing the excluded rows,cols,pixels and
+    the size of the largest map which excluded pixels we given back in
+    the previous parameters
+    """
+    excluded_rows = []
+    excluded_cols = []
+    excluded_pixels = []
+    bad_pixel_maps = root.findall('.//BadPixelMap')
+    map_sizes = []
 
-        unbinned_x = []
-        unbinned_y = []
-        for map_ind in range(0, len(xy_map_sizes[0])):
-            if xy_map_sizes[2][map_ind] < 2:
-                unbinned_y.append(xy_map_sizes[0][map_ind])
-                unbinned_x.append(xy_map_sizes[0][map_ind])
-            else:
-                unbinned_y.append(0)
-                unbinned_x.append(0)
-        map_index = -1
-        not_max_x = 0
-        max_y = max(unbinned_y)
-        max_x = max(unbinned_x)
-        for size_ind in range(0, len(map_sizes)):
-            if (max_y, max_x) in map_sizes:
-                if map_sizes[size_ind] == (max_y, max_x):
+    for size_map in bad_pixel_maps:
+        if "Binning" in size_map.attrib:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']), int(size_map.attrib["Binning"])))
+        else:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']), 1))
+    map_rearrange = zip(*map_sizes)
+    xy_map_sizes = list(map_rearrange)
+
+    unbinned_x = []
+    unbinned_y = []
+    for map_ind in range(0, len(xy_map_sizes[0])):
+        if xy_map_sizes[2][map_ind] < 2:
+            unbinned_y.append(xy_map_sizes[0][map_ind])
+            unbinned_x.append(xy_map_sizes[0][map_ind])
+        else:
+            unbinned_y.append(0)
+            unbinned_x.append(0)
+    map_index = -1
+    not_max_x = 0
+    max_y = max(unbinned_y)
+    max_x = max(unbinned_x)
+    for size_ind in range(0, len(map_sizes)):
+        if (max_y, max_x) in map_sizes:
+            if map_sizes[size_ind] == (max_y, max_x):
+                map_index = size_ind
+                break
+        else:
+            if map_sizes[size_ind][0] == max_y:
+                if map_sizes[size_ind][1] > not_max_x:
+                    not_max_x = map_sizes[size_ind][1]
                     map_index = size_ind
-                    break
+
+    for defect in bad_pixel_maps[map_index].findall('Defect'):
+        for attrib in defect.attrib:
+            if len(defect.attrib) == 1:
+                if attrib == "Rows":
+                    splitted = defect.attrib["Rows"].split('-')
+                    excluded_rows.append(splitted)
+                if attrib == "Row":
+                    excluded_rows.append([defect.attrib["Row"]])
+
+                if attrib == "Columns":
+                    splitted = defect.attrib["Columns"].split('-')
+                    excluded_cols.append(splitted)
+                if attrib == "Column":
+                    excluded_cols.append([defect.attrib["Column"]])
             else:
-                if map_sizes[size_ind][0] == max_y:
-                    if map_sizes[size_ind][1] > not_max_x:
-                        not_max_x = map_sizes[size_ind][1]
-                        map_index = size_ind
+                if attrib == "Column":
+                    excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
 
-        for defect in bad_pixel_maps[map_index].findall('Defect'):
-            for attrib in defect.attrib:
-                if len(defect.attrib) == 1:
-                    if attrib == "Rows":
-                        splitted = defect.attrib["Rows"].split('-')
-                        excluded_rows.append(splitted)
-                    if attrib == "Row":
-                        excluded_rows.append([defect.attrib["Row"]])
+    return {"r": excluded_rows,
+            "c": excluded_cols,
+            "p": excluded_pixels,
+            "size": (map_sizes[map_index][0], map_sizes[map_index][1])
+            }
 
-                    if attrib == "Columns":
-                        splitted = defect.attrib["Columns"].split('-')
-                        excluded_cols.append(splitted)
-                    if attrib == "Column":
-                        excluded_cols.append([defect.attrib["Column"]])
-                else:
-                    if attrib == "Column":
-                        excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
 
-        return {"r": excluded_rows,
-                "c": excluded_cols,
-                "p": excluded_pixels,
-                "size": (map_sizes[map_index][0], map_sizes[map_index][1])
-                }
-
-    def bin_array2d(a, binning):
-        """
+def bin_array2d(a, binning):
+    """
 
         :param a: an array
         :param binning: the times we want to bin the array
         :return:
         """
-        sx, sy = a.shape
-        sxc = sx // binning * binning
-        syc = sy // binning * binning
-        # crop:
-        ac = a[:sxc, :syc]
-        return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
+    sx, sy = a.shape
+    sxc = sx // binning * binning
+    syc = sy // binning * binning
+    # crop:
+    ac = a[:sxc, :syc]
+    return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
 
-    def cropping(arr, start_size, req_size, offsets):
-        """
+
+def cropping(arr, start_size, req_size, offsets):
+    """
 
         :param arr: thearray we will make the changes on
         :param start_size: the size of the original array
@@ -218,59 +232,60 @@ def xml_processing(tree, metadata=""):
         :param offsets: the top left coord of the crop
         :return: a crop which is an array
         """
-        ac = arr
-        if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
+    ac = arr
+    if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
+        req_y = int(req_size[0]) // 2
+        req_x = int(req_size[1]) // 2
+        a = int(offsets[0]) + req_y
+        b = int(offsets[1]) + req_x
+        ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
+    return ac
 
-            req_y = int(req_size[0]) // 2
-            req_x = int(req_size[1]) // 2
-            a = int(offsets[0]) + req_y
-            b = int(offsets[1]) + req_x
-            ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
-        else:
-            print("bad start size probably", offsets[0], start_size)
-        return ac
 
-    def generate_size(exc_rows, exc_cols, exc_pix, size):
-        """
-        a binnelést és a cropolást kell itt csinálni
+def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
+    """
+        This function will be responsible for generating new size based on the parameters.
 
-        :param exc_rows:
-        :param exc_cols:
-        :param exc_pix:
+        :param metadata: the metadata where we specify the image's parameters
+        :param exc_rows: excluded rows
+        :param exc_cols: excluded columns
+        :param exc_pix: excluded pixels
         :param size: a tuple with the size
-        :return: a dictionary
+        :return: an np array with the excluded pixels as True
         """
-        required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
-        offsets = (metadata["OffsetY"], metadata["OffsetX"])
-        bin_value = metadata["HardwareBinning"]
-        dummy_m = np.zeros(size, dtype=bool)
-        for row in exc_rows:
+    required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
+    offsets = (metadata["OffsetY"], metadata["OffsetX"])
+    bin_value = metadata["HardwareBinning"]
+    dummy_m = np.zeros(size, dtype=bool)
+    for row in exc_rows:
 
-            if len(row) == 2:
-                dummy_m[int(row[0]):int(row[1]) + 1] = 1
-            if len(row) == 1:
-                dummy_m[int(row[0])] = 1
+        if len(row) == 2:
+            dummy_m[int(row[0]):int(row[1]) + 1] = 1
+        if len(row) == 1:
+            dummy_m[int(row[0])] = 1
 
-        for col in exc_cols:
+    for col in exc_cols:
 
-            if len(col) == 2:
-                dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
-            if len(col) == 1:
-                dummy_m[:, int(col[0])] = 1
+        if len(col) == 2:
+            dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
+        if len(col) == 1:
+            dummy_m[:, int(col[0])] = 1
 
-        for pix in exc_pix:
-            dummy_m[int(pix[0]), int(pix[1])] = 1
+    for pix in exc_pix:
+        dummy_m[int(pix[0]), int(pix[1])] = 1
 
-        cropped = cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
-        binned = bin_array2d(cropped, bin_value)
-        return np.array(binned, dtype=bool)
+    cropped = cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
+    binned = bin_array2d(cropped, bin_value)
+    return np.array(binned, dtype=bool)
 
-    data_dict = data_extractor()
-    coord = generate_size(data_dict["r"], data_dict["c"], data_dict["p"], data_dict["size"])
+
+def xml_processing(tree, metadata_dict):
+    data_dict = data_extractor(tree)
+    coord = generate_size(data_dict["r"], data_dict["c"], data_dict["p"], data_dict["size"], metadata_dict)
     return sparse.COO(coord)
 
 
-def _load_xml_from_string(xml, metadata=""):
+def _load_xml_from_string(xml, metadata):
     tree = ET.fromstring(xml)
     return xml_processing(tree, metadata)
 

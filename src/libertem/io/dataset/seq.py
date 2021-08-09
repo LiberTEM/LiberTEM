@@ -272,7 +272,7 @@ def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
             dummy_m[:, int(col[0])] = 1
 
     for pix in exc_pix:
-        dummy_m[int(pix[0]), int(pix[1])] = 1
+        dummy_m[int(pix[1]), int(pix[0])] = 1
 
     cropped = cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
     binned = bin_array2d(cropped, bin_value)

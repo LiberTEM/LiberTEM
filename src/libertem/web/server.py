@@ -24,6 +24,7 @@ from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
 from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
 from .generator import DownloadScriptHandler, CopyScriptHandler
+from .plugins import PluginListHandler
 
 log = logging.getLogger(__name__)
 
@@ -101,6 +102,10 @@ def make_app(event_registry, shared_state):
             "event_registry": event_registry
         }),
         (r"/api/config/connection/", ConnectHandler, {
+            "state": shared_state,
+            "event_registry": event_registry,
+        }),
+        (r"/api/datasets/([^/]+)/plugins/", PluginListHandler, {
             "state": shared_state,
             "event_registry": event_registry,
         }),

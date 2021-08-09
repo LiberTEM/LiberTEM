@@ -184,8 +184,13 @@ class BufferWrapper:
         :code:`None` means the buffer is used both as a final and intermediate result.
 
         .. versionadded:: 0.7.0
+
+    title : Optional[str]
+        Short title describing this result buffer
+
+        .. versionadded:: 0.8.0
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None, title=None):
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
@@ -199,6 +204,7 @@ class BufferWrapper:
         self._roi_is_zero = None
         self._contiguous_cache = dict()
         self.use = use
+        self.title = title
 
     def set_roi(self, roi):
         if roi is not None:

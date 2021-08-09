@@ -256,3 +256,11 @@ class Message:
             "compoundAnalysis": uuid,
         }
         return msg
+
+    def plugin_list(self, plugins):
+        msg = {
+            "status": "ok",
+            "messageType": "PLUGIN_LIST",
+            "plugins": plugins,
+        }
+        return msg

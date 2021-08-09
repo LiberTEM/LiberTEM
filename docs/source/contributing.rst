@@ -320,7 +320,13 @@ Before submitting a pull request, please check the code style by running:
    $ pre-commit run
 
 You may need to install `pre-commit <https://pre-commit.com/>`_ into your
-Python environment first.
+Python environment first. You can use the following to automatically run
+the pre-commit hooks before each commit:
+
+.. code-block:: shell
+
+   $ pre-commit install --install-hooks
+
 We recommend using an editor that can check code style on the fly, such as
 `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
 

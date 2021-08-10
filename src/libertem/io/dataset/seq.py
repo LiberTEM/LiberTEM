@@ -133,17 +133,20 @@ def _get_image_offset(header):
 def data_extractor(root):
     """
     The way it works is:
-    we read each bad pixel maps sizes and store it in the map_sizes if its
-    a binned map then we also store the bin value next to the sizes, if not it will be 1.
+    we read each bad pixel map sizes and store it in the map_sizes if its
+    a binned map then we also store the bin value next to the sizes (like:(1024,1024,2)), if not it will be 1.
     We then make an list to store the sizes of those maps that are unbinned, and select the
     biggest sized one.
     Then we iterate over the defects of the biggest sized one and store them after making
     some changes in them.
 
-    :param root: the xml file's root node
-    :return: a dictionary containing the excluded rows,cols,pixels and
+    returns a dictionary containing the excluded rows,cols,pixels and
     the size of the largest map which excluded pixels we given back in
     the previous parameters
+
+    Parameters
+    ----------
+    root: the xml file's root node
     """
     excluded_rows = []
     excluded_cols = []
@@ -210,11 +213,12 @@ def data_extractor(root):
 
 def bin_array2d(a, binning):
     """
-
-        :param a: an array
-        :param binning: the times we want to bin the array
-        :return:
-        """
+    Parameters
+    ----------
+    a: np array
+    binning: int
+        the times we want to bin the array
+    """
     sx, sy = a.shape
     sxc = sx // binning * binning
     syc = sy // binning * binning
@@ -225,13 +229,18 @@ def bin_array2d(a, binning):
 
 def cropping(arr, start_size, req_size, offsets):
     """
-
-        :param arr: thearray we will make the changes on
-        :param start_size: the size of the original array
-        :param req_size: the size we want to crop to
-        :param offsets: the top left coord of the crop
-        :return: a crop which is an array
-        """
+    returns a crop from the original image
+    Parameters
+    ----------
+    arr: np array
+        the array we will make the changes on
+    start_size: tuple
+        the size of the original array
+    req_size: tuple
+        the size we want to crop to
+    offsets: tuple
+        the top left coord of the crop
+    """
     ac = arr
     if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
         req_y = int(req_size[0]) // 2
@@ -244,15 +253,21 @@ def cropping(arr, start_size, req_size, offsets):
 
 def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
     """
-        This function will be responsible for generating new size based on the parameters.
+    This function will be responsible for generating new size based on the parameters.
+    returns an np array with the excluded pixels as True
 
-        :param metadata: the metadata where we specify the image's parameters
-        :param exc_rows: excluded rows
-        :param exc_cols: excluded columns
-        :param exc_pix: excluded pixels
-        :param size: a tuple with the size
-        :return: an np array with the excluded pixels as True
-        """
+    Parameters
+    ----------
+    exc_rows: list
+        list with the excluded rows as lists which length is 1 if its a single row
+        and two if its an interval of rows
+    exc_cols: list
+    exc_pix: list
+    size: tuple
+        selected bad pixel maps size
+    metadata: dictionary
+        the metadata where we specify the image's parameters
+    """
     required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
     offsets = (metadata["OffsetY"], metadata["OffsetX"])
     bin_value = metadata["HardwareBinning"]

@@ -258,11 +258,11 @@ def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
 
     Parameters
     ----------
-    exc_rows: list
+    exc_rows: list of lists
         list with the excluded rows as lists which length is 1 if its a single row
         and two if its an interval of rows
-    exc_cols: list
-    exc_pix: list
+    exc_cols: list of lists
+    exc_pix: list of lists
     size: tuple
         selected bad pixel maps size
     metadata: dictionary
@@ -394,8 +394,6 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-    def get_excluded_pixels(self, path, sig_shape):
-        return self._load_xml_from_file(sig_shape=sig_shape, path=path)
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)

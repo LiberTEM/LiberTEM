@@ -3,8 +3,7 @@ import random
 
 import numpy as np
 import pytest
-import sparse
-import xml.etree.ElementTree as ET
+
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string

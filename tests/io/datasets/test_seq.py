@@ -11,6 +11,7 @@ from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.corrections import CorrectionSet
 
 from utils import get_testdata_path, ValidationUDF
 
@@ -64,21 +65,23 @@ def default_seq_raw():
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
 def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
+    corrset = CorrectionSet()
     udf = ValidationUDF(
         reference=reshaped_view(default_seq_raw, (-1, *tuple(default_seq.shape.sig)))
     )
-    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq)
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, corrections=corrset)
 
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
 def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
+    corrset = CorrectionSet()
     roi = np.random.choice(
         [True, False],
         size=tuple(default_seq.shape.nav),
         p=[0.5, 0.5]
     )
     udf = ValidationUDF(reference=default_seq_raw[roi])
-    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi)
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi, corrections=corrset)
 
 
 def test_positive_sync_offset(default_seq, lt_ctx):

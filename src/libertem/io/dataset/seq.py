@@ -90,6 +90,7 @@ def _read_header(path, fields):
         fh.seek(0)
         return _unpack_header(fh.read(HEADER_SIZE), fields)
 
+
 def _unpack_header(header_bytes, fields):
     str_fields = {"name", "description"}
     tmp = dict()
@@ -155,8 +156,8 @@ def xml_defect_data_extractor(root):
     map_sizes = []
 
     for size_map in bad_pixel_maps:
-        map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows'])
-                          , int(size_map.attrib.get("Binning", 1))))
+        map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
+                          int(size_map.attrib.get("Binning", 1))))
     map_rearrange = zip(*map_sizes)
     xy_map_sizes = list(map_rearrange)
 
@@ -174,9 +175,9 @@ def xml_defect_data_extractor(root):
     max_y = max(unbinned_y)
     max_x = max(unbinned_x)
     for size_ind in range(0, len(map_sizes)):
-        map_size=map_sizes[size_ind]
-        if (max_y, max_x,1) in map_sizes:
-            if map_size == (max_y, max_x,1):
+        map_size = map_sizes[size_ind]
+        if (max_y, max_x, 1) in map_sizes:
+            if map_size == (max_y, max_x, 1):
                 map_index = size_ind
                 break
         else:
@@ -394,7 +395,6 @@ class SEQDataSet(DataSet):
         self._gain = None
         self._excluded_pixels = None
 
-
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
         self._image_offset = _get_image_offset(header)
@@ -451,8 +451,9 @@ class SEQDataSet(DataSet):
             root = tree.getroot()
             with open(path + ".metadata", mode="rb") as file:
                 met = file.read()
-            metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX', 'UnbinnedFrameSizeY',
-                            'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
+            metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX',
+                            'UnbinnedFrameSizeY', 'OffsetX', 'OffsetY', 'HardwareBinning',
+                            'Bitmode', 'FrameRate', 'RotationMode',
                             'FlipMode', 'OkraMode']
             metadata = dict(zip(metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
             return xml_processing(root, metadata)

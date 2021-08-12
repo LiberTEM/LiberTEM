@@ -90,7 +90,7 @@ def _read_header(path, fields):
         fh.seek(0)
         return _unpack_header(fh.read(HEADER_SIZE), fields)
 
-
+assert False
 def _unpack_header(header_bytes, fields):
     str_fields = {"name", "description"}
     tmp = dict()
@@ -130,11 +130,12 @@ def _get_image_offset(header):
         return 1024
 
 
-def data_extractor(root):
+def xml_defect_data_extractor(root):
     """
     The way it works is:
     we read each bad pixel map sizes and store it in the map_sizes if its
-    a binned map then we also store the bin value next to the sizes (like:(1024,1024,2)), if not it will be 1.
+    a binned map then we also store the bin value next to the sizes (like:(1024,1024,2)),
+    if not it will be 1.
     We then make an list to store the sizes of those maps that are unbinned, and select the
     biggest sized one.
     Then we iterate over the defects of the biggest sized one and store them after making
@@ -155,10 +156,8 @@ def data_extractor(root):
     map_sizes = []
 
     for size_map in bad_pixel_maps:
-        if "Binning" in size_map.attrib:
-            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']), int(size_map.attrib["Binning"])))
-        else:
-            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']), 1))
+        map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows'])
+                          , int(size_map.attrib.get("Binning", 1))))
     map_rearrange = zip(*map_sizes)
     xy_map_sizes = list(map_rearrange)
 
@@ -167,24 +166,24 @@ def data_extractor(root):
     for map_ind in range(0, len(xy_map_sizes[0])):
         if xy_map_sizes[2][map_ind] < 2:
             unbinned_y.append(xy_map_sizes[0][map_ind])
-            unbinned_x.append(xy_map_sizes[0][map_ind])
+            unbinned_x.append(xy_map_sizes[1][map_ind])
         else:
             unbinned_y.append(0)
             unbinned_x.append(0)
     map_index = -1
-    not_max_x = 0
+    relative_max_x = 0
     max_y = max(unbinned_y)
     max_x = max(unbinned_x)
     for size_ind in range(0, len(map_sizes)):
-        if (max_y, max_x) in map_sizes:
-            if map_sizes[size_ind] == (max_y, max_x):
+        map_size=map_sizes[size_ind]
+        if (max_y, max_x,1) in map_sizes:
+            if map_size == (max_y, max_x,1):
                 map_index = size_ind
                 break
         else:
-            if map_sizes[size_ind][0] == max_y:
-                if map_sizes[size_ind][1] > not_max_x:
-                    not_max_x = map_sizes[size_ind][1]
-                    map_index = size_ind
+            if map_size[0] == max_y and map_size[1] > relative_max_x:
+                relative_max_x = map_size[1]
+                map_index = size_ind
 
     for defect in bad_pixel_maps[map_index].findall('Defect'):
         for attrib in defect.attrib:
@@ -204,9 +203,9 @@ def data_extractor(root):
                 if attrib == "Column":
                     excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
 
-    return {"r": excluded_rows,
-            "c": excluded_cols,
-            "p": excluded_pixels,
+    return {"rows": excluded_rows,
+            "cols": excluded_cols,
+            "pixels": excluded_pixels,
             "size": (map_sizes[map_index][0], map_sizes[map_index][1])
             }
 
@@ -224,7 +223,8 @@ def bin_array2d(a, binning):
     syc = sy // binning * binning
     # crop:
     ac = a[:sxc, :syc]
-    return ac.reshape(ac.shape[0] // binning, binning, ac.shape[1] // binning, binning).sum(3).sum(1)
+    return ac.reshape(ac.shape[0] // binning, binning,
+                      ac.shape[1] // binning, binning).sum(3).sum(1)
 
 
 def cropping(arr, start_size, req_size, offsets):
@@ -295,8 +295,9 @@ def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
 
 
 def xml_processing(tree, metadata_dict):
-    data_dict = data_extractor(tree)
-    coord = generate_size(data_dict["r"], data_dict["c"], data_dict["p"], data_dict["size"], metadata_dict)
+    data_dict = xml_defect_data_extractor(tree)
+    coord = generate_size(data_dict["rows"], data_dict["cols"],
+                          data_dict["pixels"], data_dict["size"], metadata_dict)
     return sparse.COO(coord)
 
 
@@ -449,8 +450,8 @@ class SEQDataSet(DataSet):
         else:
             tree = ET.parse(path + ".Config.Metadata.xml")
             root = tree.getroot()
-            file = open(path + ".metadata", mode="rb")
-            met = file.read()
+            with open(path + ".metadata", mode="rb") as file:
+                met = file.read()
             metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX', 'UnbinnedFrameSizeY',
                             'OffsetX', 'OffsetY', 'HardwareBinning', 'Bitmode', 'FrameRate', 'RotationMode',
                             'FlipMode', 'OkraMode']
@@ -468,9 +469,6 @@ class SEQDataSet(DataSet):
             gain=self._gain,
             excluded_pixels=self._excluded_pixels,
         )
-
-    def get_sig_shape(self):
-        return self._sig_shape
 
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)

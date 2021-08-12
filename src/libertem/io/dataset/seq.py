@@ -90,7 +90,6 @@ def _read_header(path, fields):
         fh.seek(0)
         return _unpack_header(fh.read(HEADER_SIZE), fields)
 
-assert False
 def _unpack_header(header_bytes, fields):
     str_fields = {"name", "description"}
     tmp = dict()

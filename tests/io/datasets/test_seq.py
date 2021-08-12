@@ -171,7 +171,7 @@ def test_xml_excluded_pixels_only_binned():
     test_arr[577] = True
     test_arr[578] = True
     test_arr[853] = True
-    test_arr[300]=True
+    test_arr[300] = True
     test_arr[25, 37] = True
     test_arr[:, 325] = True
     test_arr[:, 327:329] = True

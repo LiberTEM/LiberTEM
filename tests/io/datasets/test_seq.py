@@ -128,8 +128,8 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
 def test_xml_excluded_pixels_unbinned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-                 'Rows="4096" ' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize>' \
+                 '</DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
                  'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect ' \
                  'Column="2311"/></BadPixelMap><BadPixelMap Binning="2" ' \
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
@@ -152,9 +152,9 @@ def test_xml_excluded_pixels_unbinned():
 
 def test_xml_excluded_pixels_only_binned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-                 'Rows="4096" ' \
-                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect Columns="1310-1312"/>' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
+                 '<BadPixels><BadPixelMap Rows="4096" Columns="4096"><Defect Rows="2311-2312"/>' \
+                 '<Defect Rows="3413-3414"/><Defect Columns="1310-1312"/>' \
                  '<Defect Column="1300"/> <Defect Row="1200"/><Defect Row="100" Column="150" />' \
                  '</BadPixelMap><BadPixelMap Binning="2" ' \
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
@@ -181,9 +181,9 @@ def test_xml_excluded_pixels_only_binned():
 
 def test_xml_excluded_pixels_cropped_binned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-                 'Rows="4096" ' \
-                 'Columns="4096"><Defect Columns="1310-1312"/><Defect Column="1300"/><Defect ' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
+                 '<BadPixels><BadPixelMap Rows="4096" Columns="4096">' \
+                 '<Defect Columns="1310-1312"/><Defect Column="1300"/><Defect ' \
                  'Rows="2311-2312"/><Defect ' \
                  'Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
@@ -207,10 +207,12 @@ def test_xml_excluded_pixels_cropped_binned():
 
 def correct_bad_pixel_map_selector_test():
     xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-          'Rows="4096" Columns="4080"><Defect Columns="1310-1312"/><</BadPixelMap>' \
+          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
+          '<BadPixels><BadPixelMap Rows="4096" Columns="4080">' \
+          '<Defect Columns="1310-1312"/><</BadPixelMap>' \
           '<BadPixelMap ' \
-          'Rows="4080" Columns="4096"><Defect Rows="1155-1156"/></BadPixelMap></BadPixels>' \
+          'Rows="4080" Columns="4096"><Defect Rows="1155-1156"/>' \
+          '</BadPixelMap></BadPixels>' \
           '</Configuration>'
     tree = ET.fromstring(xml)
     excluded_rows_dict = xml_defect_data_extractor(tree)
@@ -219,8 +221,9 @@ def correct_bad_pixel_map_selector_test():
 
 def correct_bad_pixel_map_selector_test_2():
     xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-          'Rows="4096" Columns="4096"><Defect Columns="1310-1312"/><</BadPixelMap>' \
+          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
+          '<BadPixels><BadPixelMap Rows="4096" Columns="4096">' \
+          '<Defect Columns="1310-1312"/><</BadPixelMap>' \
           '<BadPixelMap ' \
           'Rows="4080" Columns="4080"><Defect Rows="1155-1156"/></BadPixelMap></BadPixels>' \
           '</Configuration>'

@@ -4,7 +4,6 @@ import random
 import numpy as np
 import pytest
 
-
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor
 from libertem.common import Shape
@@ -200,18 +199,30 @@ def test_xml_excluded_pixels_cropped_binned():
     expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
     assert np.array_equal(expected_res.todense(), test_arr)
 
+
 def correct_bad_pixel_map_selector_test():
-    xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
-                 'Rows="4096" Columns="4096"><Defect Columns="1310-1312"/><</BadPixelMap>' \
-                 '<BadPixelMap Binning="2" ' \
-                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
-                 'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-                 '</Configuration>'
+    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
+          'Rows="4096" Columns="4080"><Defect Columns="1310-1312"/><</BadPixelMap>' \
+          '<BadPixelMap ' \
+          'Rows="4080" Columns="4096"><Defect Rows="1155-1156"/></BadPixelMap></BadPixels>' \
+          '</Configuration>'
     tree = ET.fromstring(xml)
-    excluded_rows_dict=xml_defect_data_extractor(tree)
-    assert excluded_rows_dict["Cols"] != [[1310,1312]]
-    assert False
+    excluded_rows_dict = xml_defect_data_extractor(tree)
+    assert excluded_rows_dict["Cols"] == [[1310, 1312]]
+
+
+def correct_bad_pixel_map_selector_test_2():
+    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
+          'Rows="4096" Columns="4096"><Defect Columns="1310-1312"/><</BadPixelMap>' \
+          '<BadPixelMap ' \
+          'Rows="4080" Columns="4080"><Defect Rows="1155-1156"/></BadPixelMap></BadPixels>' \
+          '</Configuration>'
+    tree = ET.fromstring(xml)
+    excluded_rows_dict = xml_defect_data_extractor(tree)
+    assert excluded_rows_dict["Cols"] == [[1310, 1312]]
+
 
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()

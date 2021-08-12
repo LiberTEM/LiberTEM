@@ -128,9 +128,12 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
 def test_xml_excluded_pixels_unbinned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect Column="2311"/></BadPixelMap><BadPixelMap Binning="2" ' \
-                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
+                 'Rows="4096" ' \
+                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect ' \
+                 'Column="2311"/></BadPixelMap><BadPixelMap Binning="2" ' \
+                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
+                 'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
     metadata = {
         "UnbinnedFrameSizeX": 1024,
@@ -152,7 +155,8 @@ def test_xml_excluded_pixels_only_binned():
                  '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize><BadPixels><BadPixelMap ' \
                  'Rows="4096" ' \
                  'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect Columns="1310-1312"/>' \
-                 '<Defect Column="1300"/><Defect Row="100" Column="150" /></BadPixelMap><BadPixelMap Binning="2" ' \
+                 '<Defect Column="1300"/> <Defect Row="1200"/><Defect Row="100" Column="150" />' \
+                 '</BadPixelMap><BadPixelMap Binning="2" ' \
                  'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
                  'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
                  '</Configuration>'
@@ -167,6 +171,7 @@ def test_xml_excluded_pixels_only_binned():
     test_arr[577] = True
     test_arr[578] = True
     test_arr[853] = True
+    test_arr[300]=True
     test_arr[25, 37] = True
     test_arr[:, 325] = True
     test_arr[:, 327:329] = True

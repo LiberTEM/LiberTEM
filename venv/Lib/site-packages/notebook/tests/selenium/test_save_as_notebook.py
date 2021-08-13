@@ -19,7 +19,7 @@ def get_notebook_name(nb):
     return nb.browser.execute_script(JS)
 
 def set_notebook_name(nb, name):
-    JS = 'Jupyter.notebook.rename("{}")'.format(name)
+    JS = f'Jupyter.notebook.rename("{name}")'
     nb.browser.execute_script(JS)   
 
 def test_save_notebook_as(notebook):

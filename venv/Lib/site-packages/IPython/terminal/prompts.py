@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.enums import EditingMode
 
 
-class Prompts(object):
+class Prompts:
     def __init__(self, shell):
         self.shell = shell
 

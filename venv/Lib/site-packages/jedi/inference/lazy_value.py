@@ -9,7 +9,7 @@ class AbstractLazyValue:
         self.max = max
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.data)
+        return f'<{self.__class__.__name__}: {self.data}>'
 
     def infer(self):
         raise NotImplementedError

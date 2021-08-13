@@ -71,4 +71,4 @@ class ImplicitNamespaceValue(Value, SubModuleDictMixin):
         return NamespaceContext(self)
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.py__name__())
+        return f'<{self.__class__.__name__}: {self.py__name__()}>'

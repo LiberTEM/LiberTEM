@@ -20,7 +20,7 @@ class AbstractFolderIO:
         raise NotImplementedError
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.path)
+        return f'<{self.__class__.__name__}: {self.path}>'
 
 
 class FolderIO(AbstractFolderIO):

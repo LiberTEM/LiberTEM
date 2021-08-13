@@ -43,7 +43,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from __future__ import division
 
 from errno import ENOENT
 from os import listdir, lstat, stat, strerror
@@ -96,7 +95,7 @@ if IS_PY3:
     unicode = str  # Because Python <= 3.2 doesn't have u'unicode' syntax
 
 
-class GenericDirEntry(object):
+class GenericDirEntry:
     __slots__ = ('name', '_stat', '_lstat', '_scandir_path', '_path')
 
     def __init__(self, scandir_path, name):
@@ -158,7 +157,7 @@ class GenericDirEntry(object):
         return st.st_ino
 
     def __str__(self):
-        return '<{0}: {1!r}>'.format(self.__class__.__name__, self.name)
+        return f'<{self.__class__.__name__}: {self.name!r}>'
 
     __repr__ = __str__
 
@@ -274,7 +273,7 @@ if sys.platform == 'win32':
                                    int(st_ctime * 1000000000),
                                    attributes)
 
-        class Win32DirEntryPython(object):
+        class Win32DirEntryPython:
             __slots__ = ('name', '_stat', '_lstat', '_find_data', '_scandir_path', '_path', '_inode')
 
             def __init__(self, scandir_path, name, find_data):
@@ -352,7 +351,7 @@ if sys.platform == 'win32':
                 return self._inode
 
             def __str__(self):
-                return '<{0}: {1!r}>'.format(self.__class__.__name__, self.name)
+                return f'<{self.__class__.__name__}: {self.name!r}>'
 
             __repr__ = __str__
 
@@ -491,7 +490,7 @@ elif sys.platform.startswith(('linux', 'darwin', 'sunos5')) or 'bsd' in sys.plat
 
         file_system_encoding = sys.getfilesystemencoding()
 
-        class PosixDirEntry(object):
+        class PosixDirEntry:
             __slots__ = ('name', '_d_type', '_stat', '_lstat', '_scandir_path', '_path', '_inode')
 
             def __init__(self, scandir_path, name, d_type, inode):
@@ -566,7 +565,7 @@ elif sys.platform.startswith(('linux', 'darwin', 'sunos5')) or 'bsd' in sys.plat
                 return self._inode
 
             def __str__(self):
-                return '<{0}: {1!r}>'.format(self.__class__.__name__, self.name)
+                return f'<{self.__class__.__name__}: {self.name!r}>'
 
             __repr__ = __str__
 

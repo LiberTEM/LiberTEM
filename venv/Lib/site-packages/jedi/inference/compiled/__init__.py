@@ -39,7 +39,7 @@ class ExactValue(LazyValueWrapper):
         return instance
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self._compiled_value)
+        return f'<{self.__class__.__name__}: {self._compiled_value}>'
 
 
 def create_simple_object(inference_state, obj):

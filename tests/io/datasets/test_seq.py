@@ -154,27 +154,24 @@ def test_xml_excluded_pixels_only_binned():
     xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
                  '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
                  '<BadPixels><BadPixelMap Rows="4096" Columns="4096"><Defect Rows="2311-2312"/>' \
-                 '<Defect Rows="3413-3414"/><Defect Columns="1310-1312"/>' \
-                 '<Defect Column="1300"/> <Defect Row="1200"/><Defect Row="100" Column="150" />' \
-                 '</BadPixelMap><BadPixelMap Binning="2" ' \
-                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
-                 'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
+                 '<Defect Columns="1310-1312"/><Defect Row="600" />' \
+                 '<Defect Column="1300"/><Defect Row="100" Column="150" />' \
+                 '</BadPixelMap></BadPixels>' \
                  '</Configuration>'
     metadata = {
         "UnbinnedFrameSizeX": 4096,
         "UnbinnedFrameSizeY": 4096,
         "OffsetX": 0,
         "OffsetY": 0,
-        "HardwareBinning": 4
+        "HardwareBinning": 2
     }
-    test_arr = np.zeros((1024, 1024), dtype=bool)
-    test_arr[577] = True
-    test_arr[578] = True
-    test_arr[853] = True
+    test_arr = np.zeros((2048, 2048), dtype=bool)
+    test_arr[1155] = True
+    test_arr[1156] = True
     test_arr[300] = True
-    test_arr[25, 37] = True
-    test_arr[:, 325] = True
-    test_arr[:, 327:329] = True
+    test_arr[50, 75] = True
+    test_arr[:, 650] = True
+    test_arr[:, 655:657] = True
     expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
     assert np.array_equal(expected_res.todense(), test_arr)
 

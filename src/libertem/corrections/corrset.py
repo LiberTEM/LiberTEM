@@ -27,6 +27,7 @@ def factorizations(n, primes):
 def min_disjunct_multiplier(excluded):
     '''
     Calculate a small integer i for which i * n not in "excluded" for any n > 0
+
     To make sure that the tile shape negotiation retains as much flexibility as possible,
     it is important to find a small integer and not just any integer that fulfills
     this condition.
@@ -35,7 +36,7 @@ def min_disjunct_multiplier(excluded):
         # If two integers are equal, their prime factor decompositions
         # are equal, too, and vice versa.
         # We find the global maximum power for each of the prime factors
-        # that construct the elements of "excluded".
+        # that construct the elements of " excluded".
         # By choosing a number that has one power more, we make sure
         # that multiples of that number can never be equal to one of the excluded
         # elements: The prime factor decompositions of any multiple of that number
@@ -52,15 +53,19 @@ def min_disjunct_multiplier(excluded):
 class CorrectionSet:
     """
     A set of corrections to apply.
+
     .. versionadded:: 0.6.0
+
     Parameters
     ----------
     dark : np.ndarray
         A ND array containing a dark frame to substract from all frames,
         its shape needs to match the signal shape of the dataset.
+
     gain : np.ndarray
         A ND array containing a gain map to multiply with each frame,
         its shape needs to match the signal shape of the dataset.
+
     excluded_pixels : sparse.COO
         A "sparse pydata" COO array containing only entries for pixels
         that should be excluded. The shape needs to match the signal
@@ -79,6 +84,7 @@ class CorrectionSet:
         self._gain = gain
         if excluded_pixels is not None:
             excluded_pixels = sparse.COO(excluded_pixels, prune=True)
+
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty
         if not allow_empty and excluded_pixels is not None:
@@ -114,14 +120,11 @@ class CorrectionSet:
         """
         dark_frame = self.get_dark_frame()
         gain_map = self.get_gain_map()
-
         if not self.have_corrections():
             return
 
         sig_slice = tile_slice.get(sig_only=True)
-        f = open("D:/gitMine/LiberTEM/data/DE16_20-04-30_scan_64-64_8fps/debug.txt", "a")
-        f.write("Now the file has more content!")
-        f.close()
+
         if dark_frame is not None:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:

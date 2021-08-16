@@ -35,7 +35,6 @@ import defusedxml.ElementTree as ET
 import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
-#import xml.etree.ElementTree as ET
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -275,17 +274,17 @@ def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
     dummy_m = np.zeros(size, dtype=bool)
     for row in exc_rows:
 
-        if len(row) == 2:
-            dummy_m[int(row[0]):int(row[1]) + 1] = 1
         if len(row) == 1:
             dummy_m[int(row[0])] = 1
+        else:
+            dummy_m[int(row[0]):int(row[1]) + 1] = 1
 
     for col in exc_cols:
 
-        if len(col) == 2:
-            dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
         if len(col) == 1:
             dummy_m[:, int(col[0])] = 1
+        else:
+            dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
 
     for pix in exc_pix:
         dummy_m[int(pix[1]), int(pix[0])] = 1

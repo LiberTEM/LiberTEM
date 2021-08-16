@@ -31,10 +31,11 @@ import struct
 import warnings
 from typing import Tuple
 
+import defusedxml.ElementTree as ET
 import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
-import xml.etree.ElementTree as ET
+#import xml.etree.ElementTree as ET
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter

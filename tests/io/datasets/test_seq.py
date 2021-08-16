@@ -13,7 +13,7 @@ from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 
 from utils import get_testdata_path, ValidationUDF
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 try:
     import pims

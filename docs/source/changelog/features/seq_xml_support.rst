@@ -1,5 +1,6 @@
-[Feature] Added support for seq files to load excluded pixels from xml (:issue:'805', :pr:'1077')
-
+*****
+**[Feature] Added support for seq files to load excluded pixels from xml (:issue:'805 <https://github.com/LiberTEM/LiberTEM/issues/805>', :pr:'1077 <https://github.com/LiberTEM/LiberTEM/pull/1077>')**
+*****
     - added function xml_data_extractor(root)
     - added function bin_array_2d(a,binning)
     - added function cropping(arr, start_size, req_size, offset)

@@ -19,7 +19,6 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 # @click.option('--host', help='host on which the server should listen on',
 #               default="localhost", type=str)
 def main(port, local_directory, browser, log_level, host="localhost"):
-
     from libertem.utils.threading import set_num_threads_env
     with set_num_threads_env(1):
         from libertem.cli_tweaks import console_tweaks

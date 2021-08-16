@@ -119,7 +119,9 @@ class CorrectionSet:
             return
 
         sig_slice = tile_slice.get(sig_only=True)
-
+        f = open("D:/gitMine/LiberTEM/data/DE16_20-04-30_scan_64-64_8fps/debug.txt", "a")
+        f.write("Now the file has more content!")
+        f.close()
         if dark_frame is not None:
             dark_frame = dark_frame[sig_slice]
         if gain_map is not None:

@@ -18,7 +18,7 @@ def factorizations(n, primes):
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
-        f = np.prod(primes[np.newaxis, :] ** zero_modulos, axis=1)
+        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
         n = n // f
 
     return factorization
@@ -36,7 +36,7 @@ def min_disjunct_multiplier(excluded):
         # If two integers are equal, their prime factor decompositions
         # are equal, too, and vice versa.
         # We find the global maximum power for each of the prime factors
-        # that construct the elements of " excluded".
+        # that construct the elements of "excluded".
         # By choosing a number that has one power more, we make sure
         # that multiples of that number can never be equal to one of the excluded
         # elements: The prime factor decompositions of any multiple of that number
@@ -78,13 +78,11 @@ class CorrectionSet:
         Do not throw an exception if a repair environment is empty. The pixel
         is left uncorrected in that case.
     """
-
     def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
             excluded_pixels = sparse.COO(excluded_pixels, prune=True)
-
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty
         if not allow_empty and excluded_pixels is not None:
@@ -120,6 +118,7 @@ class CorrectionSet:
         """
         dark_frame = self.get_dark_frame()
         gain_map = self.get_gain_map()
+
         if not self.have_corrections():
             return
 
@@ -239,13 +238,13 @@ def adjust_direct(clean, adjusted_shape_inout, sig_shape, dim, excluded_list):
 
 
 def adjust_heuristic(clean, adjusted_shape_inout, base_shape, sig_shape, shrink, dim,
-                     excluded_list):
+        excluded_list):
     start = adjusted_shape_inout[dim]
     stop = sig_shape[dim]
     step = adjusted_shape_inout[dim]
     excluded_set = frozenset(excluded_list)
     right_boundary_set = frozenset(range(start, stop, step))
-    left_boundary_set = frozenset(range(start - 1, stop - 1, step))
+    left_boundary_set = frozenset(range(start-1, stop-1, step))
 
     right_of = not right_boundary_set.isdisjoint(excluded_set)
     left_of = not left_boundary_set.isdisjoint(excluded_set)

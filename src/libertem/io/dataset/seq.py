@@ -130,7 +130,7 @@ def _get_image_offset(header):
         return 1024
 
 
-def get_xml_map_size(bad_pixel_maps):
+def xml_map_sizes(bad_pixel_maps):
     map_sizes = []
 
     for size_map in bad_pixel_maps:
@@ -208,7 +208,7 @@ def xml_defect_data_extractor(root):
         the xml file's root node
     """
     bad_pixel_maps = root.findall('.//BadPixelMap')
-    xy_size, map_sizes = get_xml_map_size(bad_pixel_maps)
+    xy_size, map_sizes = xml_map_sizes(bad_pixel_maps)
     unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes=xy_size)
     map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
     defect_dict = xml_defect_extractor(bad_pixel_maps[map_index], map_index, map_sizes)

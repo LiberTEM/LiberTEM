@@ -130,7 +130,29 @@ def _get_image_offset(header):
         return 1024
 
 
-def get_xml_map_size(bad_pixel_maps):
+def xml_defect_data_extractor(root):
+    """
+    The way it works is:
+    we read each bad pixel map sizes and store it in the map_sizes if its
+    a binned map then we also store the bin value next to the sizes (like:(1024,1024,2)),
+    if not it will be 1.
+    We then make an list to store the sizes of those maps that are unbinned, and select the
+    biggest sized one.
+    Then we iterate over the defects of the biggest sized one and store them after making
+    some changes in them.
+
+    returns a dictionary containing the excluded rows,cols,pixels and
+    the size of the largest map which excluded pixels we given back in
+    the previous parameters
+
+    Parameters
+    ----------
+    root: the xml file's root node
+    """
+    excluded_rows = []
+    excluded_cols = []
+    excluded_pixels = []
+    bad_pixel_maps = root.findall('.//BadPixelMap')
     map_sizes = []
 
     for size_map in bad_pixel_maps:
@@ -138,10 +160,7 @@ def get_xml_map_size(bad_pixel_maps):
                           int(size_map.attrib.get("Binning", 1))))
     map_rearrange = zip(*map_sizes)
     xy_map_sizes = list(map_rearrange)
-    return xy_map_sizes, map_sizes
 
-
-def unbinned_map_maker(xy_map_sizes):
     unbinned_x = []
     unbinned_y = []
     for map_ind in range(0, len(xy_map_sizes[0])):
@@ -151,10 +170,6 @@ def unbinned_map_maker(xy_map_sizes):
         else:
             unbinned_y.append(0)
             unbinned_x.append(0)
-    return unbinned_x, unbinned_y
-
-
-def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
     map_index = -1
     relative_max_x = 0
     max_y = max(unbinned_y)
@@ -169,50 +184,30 @@ def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
             if map_size[0] == max_y and map_size[1] > relative_max_x:
                 relative_max_x = map_size[1]
                 map_index = size_ind
-    return map_index
 
+    for defect in bad_pixel_maps[map_index].findall('Defect'):
+        for attrib in defect.attrib:
+            if len(defect.attrib) == 1:
+                if attrib == "Rows":
+                    splitted = defect.attrib["Rows"].split('-')
+                    excluded_rows.append(splitted)
+                if attrib == "Row":
+                    excluded_rows.append([defect.attrib["Row"]])
 
-def xml_defect_extractor(bad_pixel_map, map_index, map_sizes):
-    excluded_rows = []
-    excluded_cols = []
-    excluded_pixels = []
-    for defect in bad_pixel_map.findall('Defect'):
-        if len(defect.attrib) == 1:
-            defect_attrib_key = defect.attrib.keys()
-            if "Rows" in defect_attrib_key:
-                split = defect.attrib["Rows"].split('-')
-                excluded_rows.append(split)
-            if "Row" in defect_attrib_key:
-                excluded_rows.append([defect.attrib["Row"]])
-
-            if "Columns" in defect_attrib_key:
-                split = defect.attrib["Columns"].split('-')
-                excluded_cols.append(split)
-            if "Column" in defect_attrib_key:
-                excluded_cols.append([defect.attrib["Column"]])
-        else:
-            excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
+                if attrib == "Columns":
+                    splitted = defect.attrib["Columns"].split('-')
+                    excluded_cols.append(splitted)
+                if attrib == "Column":
+                    excluded_cols.append([defect.attrib["Column"]])
+            else:
+                if attrib == "Column":
+                    excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
 
     return {"rows": excluded_rows,
             "cols": excluded_cols,
             "pixels": excluded_pixels,
             "size": (map_sizes[map_index][0], map_sizes[map_index][1])
             }
-
-
-def xml_defect_data_extractor(root):
-    """
-    Parameters
-    ----------
-    root: node
-        the xml file's root node
-    """
-    bad_pixel_maps = root.findall('.//BadPixelMap')
-    xy_size, map_sizes = get_xml_map_size(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes=xy_size)
-    map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
-    defect_dict = xml_defect_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
-    return defect_dict
 
 
 def bin_array2d(a, binning):

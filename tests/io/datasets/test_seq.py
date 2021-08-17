@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor, cropping
+from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor
 from libertem.io.dataset.seq import xml_map_sizes, unbinned_map_maker, xml_map_index_selector
-from libertem.io.dataset.seq import xml_defect_extractor
+from libertem.io.dataset.seq import xml_defect_extractor, cropping
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF

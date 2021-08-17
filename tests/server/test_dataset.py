@@ -29,13 +29,15 @@ def _get_raw_params(path):
 
 
 @pytest.mark.asyncio
-async def test_load_raw_success(default_raw, base_url, http_client, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_load_raw_success(
+    default_raw, base_url, http_client, local_cluster_url, default_token
+):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
     )
     ds_data = _get_raw_params(raw_path)
     async with http_client.put(ds_url, json=ds_data) as resp:
@@ -47,12 +49,12 @@ async def test_load_raw_success(default_raw, base_url, http_client, local_cluste
 
 
 @pytest.mark.asyncio
-async def test_load_raw_fail(default_raw, base_url, http_client, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_load_raw_fail(default_raw, base_url, http_client, local_cluster_url, default_token):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
     )
     ds_data = _get_raw_params("/does/not/exist/")
     async with http_client.put(ds_url, json=ds_data) as resp:
@@ -67,18 +69,20 @@ async def test_load_raw_fail(default_raw, base_url, http_client, local_cluster_u
 
 
 @pytest.mark.asyncio
-async def test_dataset_delete(default_raw, base_url, http_client, server_port, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_dataset_delete(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
     )
     ds_data = _get_raw_params(raw_path)
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
@@ -96,19 +100,19 @@ async def test_dataset_delete(default_raw, base_url, http_client, server_port, l
 
 @pytest.mark.asyncio
 async def test_initial_state_after_reconnect(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
     )
     ds_data = _get_raw_params(raw_path)
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
@@ -139,10 +143,11 @@ async def test_initial_state_after_reconnect(
 
 @pytest.mark.asyncio
 async def test_prime_cache(
-    shared_state, default_raw, base_url, http_client, server_port, local_cluster_url
+    shared_state, default_raw, base_url, http_client, server_port, local_cluster_url,
+    default_token,
 ):
     # first, connect to get the state
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     executor = InlineJobExecutor()
 
@@ -160,13 +165,13 @@ async def test_prime_cache(
     raw_path = default_raw._path
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
     )
     ds_data = _get_raw_params(raw_path)
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')

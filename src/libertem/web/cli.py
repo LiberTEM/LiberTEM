@@ -5,21 +5,34 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 
 
 @click.command()
+@click.option('-h', '--host', help='host on which the server should listen on',
+              default="localhost", type=str)
 @click.option('-p', '--port', help='port on which the server should listen on',
               default=9000, type=int)
 @click.option('-d', '--local-directory', help='local directory to manage dask-worker-space files',
               default='dask-worker-space', type=str)
 @click.option('-b/-n', '--browser/--no-browser',
               help='enable/disable opening the browser', default='True')
-@click.option('-l', '--log-level', help=f"set logging level. Default is 'info'. {log_values}",
+@click.option('-l', '--log-level',
+              help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
-# FIXME: the host parameter is currently disabled, as it poses a security risk
-# as long as there is no authentication
-# see also: https://github.com/LiberTEM/LiberTEM/issues/67
-# @click.option('--host', help='host on which the server should listen on',
-#               default="localhost", type=str)
-def main(port, local_directory, browser, log_level, host="localhost"):
+@click.option('-t', '--token-path',
+              help="path to a file containing a token for authenticating API requests",
+              type=click.Path(exists=True))
+def main(port, local_directory, browser, log_level, host="localhost", token_path=None):
     from libertem.utils.threading import set_num_threads_env
+    token = None
+    if token_path is not None:
+        with open(token_path, 'r') as f:
+            token = f.read().strip()
+        if len(token) == 0:
+            raise click.UsageError(
+                f'{token_path} is empty! Refusing to start with insecure configuration.'
+            )
+    if token is None and host != 'localhost':
+        raise click.UsageError(
+            f'listening on non-localhost {host}:{port} currently requires token authentication'
+        )
     with set_num_threads_env(1):
         from libertem.cli_tweaks import console_tweaks
         from .server import run
@@ -27,4 +40,4 @@ def main(port, local_directory, browser, log_level, host="localhost"):
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-        run(host, port, browser, local_directory, numeric_level)
+        run(host, port, browser, local_directory, numeric_level, token)

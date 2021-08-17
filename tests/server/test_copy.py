@@ -19,30 +19,31 @@ pytestmark = [pytest.mark.functional]
 @pytest.mark.slow
 @pytest.mark.asyncio
 async def test_copy_notebook(
-    default_raw, base_url, tmpdir_factory, http_client, server_port, local_cluster_url
+    default_raw, base_url, tmpdir_factory, http_client, server_port, local_cluster_url,
+    default_token,
 ):
     datadir = tmpdir_factory.mktemp('test_copy')
 
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [],
-            }
+            }, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
@@ -55,23 +56,23 @@ async def test_copy_notebook(
                     "ri": 5,
                     "ro": 8,
                 }
-            }
+            }, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid],
-            }
+            }, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
-        download_url = "{}/api/compoundAnalyses/{}/copy/notebook/".format(
-            base_url, ca_uuid,
+        download_url = "{}/api/compoundAnalyses/{}/copy/notebook/?token={}".format(
+            base_url, ca_uuid, default_token,
         )
         async with http_client.get(download_url) as resp:
             assert resp.status == 200

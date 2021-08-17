@@ -554,12 +554,13 @@ def shared_state():
 
 
 class ServerThread(threading.Thread):
-    def __init__(self, port, shared_state, *args, **kwargs):
+    def __init__(self, port, shared_state, token, *args, **kwargs):
         super().__init__(name='LiberTEM-background', *args, **kwargs)
         self.stop_event = threading.Event()
         self.start_event = threading.Event()
         self.port = port
         self.shared_state = shared_state
+        self.token = token
         self.loop = None
 
     async def stop(self):
@@ -588,7 +589,7 @@ class ServerThread(threading.Thread):
             loop.set_debug(True)
 
             event_registry = EventRegistry()
-            app = make_app(event_registry, self.shared_state)
+            app = make_app(event_registry, self.shared_state, self.token)
             self.server = app.listen(address="127.0.0.1", port=self.port)
             # self.shared_state.set_server(self.server)
 
@@ -599,15 +600,15 @@ class ServerThread(threading.Thread):
             self.loop.stop()
 
 
-@pytest.fixture(scope="function")
-def server_port(unused_tcp_port_factory, shared_state):
+@contextlib.contextmanager
+def common_server_startup(unused_tcp_port_factory, shared_state, token):
     """
     start a LiberTEM API server on a unused port
     """
     port = unused_tcp_port_factory()
 
     print(f"starting server at port {port}")
-    thread = ServerThread(port, shared_state)
+    thread = ServerThread(port, shared_state, token)
     thread.start()
     assert thread.start_event.wait(timeout=1), "server thread failed to start"
     yield port
@@ -619,8 +620,28 @@ def server_port(unused_tcp_port_factory, shared_state):
 
 
 @pytest.fixture(scope="function")
+def default_token():
+    token = "something_random"
+    return token
+
+
+@pytest.fixture(scope="function")
+def server_port(unused_tcp_port_factory, shared_state, default_token):
+    with common_server_startup(unused_tcp_port_factory, shared_state, token=default_token) as port:
+        yield port
+
+
+@pytest.fixture(scope="function")
 async def base_url(server_port):
     return "http://127.0.0.1:%d" % server_port
+
+
+@pytest.fixture(scope="function")
+async def base_url_no_token(unused_tcp_port_factory, shared_state):
+    with common_server_startup(
+            unused_tcp_port_factory, shared_state, token=None
+    ) as server_port:
+        yield "http://127.0.0.1:%d" % server_port
 
 
 def find_unused_port():

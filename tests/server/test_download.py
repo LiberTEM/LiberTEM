@@ -21,38 +21,48 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_download_hdf5(default_raw, base_url, http_client, server_port, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_download_hdf5(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(base_url, http_client, local_cluster_url, token=default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
+        await ws.ensure_open()
+        print(ws.state)
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
+
+        print("checkpoint 3")
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
+
+        print("checkpoint 4")
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
+        print("checkpoint 5")
+
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/HDF5/".format(
-            base_url, ca_uuid, analysis_uuid,
+        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/HDF5/?token={}".format(
+            base_url, ca_uuid, analysis_uuid, default_token,
         )
         async with http_client.get(download_url) as resp:
             assert resp.status == 200
@@ -91,43 +101,43 @@ async def test_download_hdf5(default_raw, base_url, http_client, server_port, lo
     list(ResultFormatRegistry.get_available_formats().keys())
 )
 async def test_download_other_formats(
-    default_raw, base_url, http_client, server_port, filetype, local_cluster_url
+    default_raw, base_url, http_client, server_port, filetype, local_cluster_url, default_token,
 ):
     """
     This test just triggers download with different formats,
     it does not yet check the result files!
     """
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/{}/".format(
-            base_url, ca_uuid, analysis_uuid, filetype,
+        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/{}/?token={}".format(
+            base_url, ca_uuid, analysis_uuid, filetype, default_token,
         )
         async with http_client.get(download_url) as resp:
             assert resp.status == 200
@@ -154,28 +164,28 @@ async def test_download_other_formats(
 
 @pytest.mark.asyncio
 async def test_download_com(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "CENTER_OF_MASS",
                 "analyses": [],
-            }
+            }, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
@@ -186,17 +196,17 @@ async def test_download_com(
                     "cy": 8,
                     "r": 32,
                 }
-            }
+            }, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/TIFF/".format(
-            base_url, ca_uuid, analysis_uuid,
+        download_url = "{}/api/compoundAnalyses/{}/analyses/{}/download/TIFF/?token={}".format(
+            base_url, ca_uuid, analysis_uuid, default_token,
         )
         async with http_client.get(download_url) as resp:
             assert resp.status == 200
@@ -216,28 +226,28 @@ async def test_download_com(
 
 @pytest.mark.asyncio
 async def test_download_notebook(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "CENTER_OF_MASS",
                 "analyses": [],
-            }
+            }, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
@@ -248,24 +258,24 @@ async def test_download_notebook(
                     "cy": 8,
                     "r": 32,
                 }
-            }
+            }, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "CENTER_OF_MASS",
                 "analyses": [analysis_uuid],
-            }
+            }, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
 
-        download_url = "{}/api/compoundAnalyses/{}/download/notebook/".format(
-            base_url, ca_uuid,
+        download_url = "{}/api/compoundAnalyses/{}/download/notebook/?token={}".format(
+            base_url, ca_uuid, default_token,
         )
         async with http_client.get(download_url) as resp:
             assert resp.status == 200

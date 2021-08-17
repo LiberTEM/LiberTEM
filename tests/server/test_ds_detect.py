@@ -11,11 +11,11 @@ pytestmark = [pytest.mark.functional]
 
 @pytest.mark.asyncio
 async def test_detect_failed(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
@@ -23,7 +23,7 @@ async def test_detect_failed(
         assert initial_msg['jobs'] == []
 
         path = default_raw._path
-        detect_url = f"{base_url}/api/datasets/detect/"
+        detect_url = f"{base_url}/api/datasets/detect/?token={default_token}"
 
         async with http_client.get(detect_url, params={"path": path}) as resp:
             assert resp.status == 200
@@ -32,10 +32,12 @@ async def test_detect_failed(
 
 
 @pytest.mark.asyncio
-async def test_detect_hdf5(hdf5, base_url, http_client, server_port, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_detect_hdf5(
+    hdf5, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
@@ -43,7 +45,7 @@ async def test_detect_hdf5(hdf5, base_url, http_client, server_port, local_clust
         assert initial_msg['jobs'] == []
 
         path = hdf5.filename
-        detect_url = f"{base_url}/api/datasets/detect/"
+        detect_url = f"{base_url}/api/datasets/detect/?token={default_token}"
 
         async with http_client.get(detect_url, params={"path": path}) as resp:
             assert resp.status == 200

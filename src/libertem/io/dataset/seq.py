@@ -213,18 +213,19 @@ def xml_defect_extractor(bad_pixel_map, map_index, map_sizes):
     excluded_cols = []
     excluded_pixels = []
     for defect in bad_pixel_map.findall('Defect'):
-        defect_attrib_key = defect.attrib.keys()
-        if "Rows" in defect_attrib_key and len(defect.attrib) == 1:
-            split = defect.attrib["Rows"].split('-')
-            excluded_rows.append(split)
-        if "Row" in defect_attrib_key and len(defect.attrib) == 1:
-            excluded_rows.append([defect.attrib["Row"]])
+        if len(defect.attrib) == 1:
+            defect_attrib_key = defect.attrib.keys()
+            if "Rows" in defect_attrib_key:
+                split = defect.attrib["Rows"].split('-')
+                excluded_rows.append(split)
+            if "Row" in defect_attrib_key:
+                excluded_rows.append([defect.attrib["Row"]])
 
-        if "Columns" in defect_attrib_key and len(defect.attrib) == 1:
-            split = defect.attrib["Columns"].split('-')
-            excluded_cols.append(split)
-        if "Column" in defect_attrib_key and len(defect.attrib) == 1:
-            excluded_cols.append([defect.attrib["Column"]])
+            if "Columns" in defect_attrib_key:
+                split = defect.attrib["Columns"].split('-')
+                excluded_cols.append(split)
+            if "Column" in defect_attrib_key:
+                excluded_cols.append([defect.attrib["Column"]])
         else:
             excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
 

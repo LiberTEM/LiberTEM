@@ -110,7 +110,9 @@ can be downloaded `from our example collection on GitHub
 How UDFs works
 --------------
 
-.. image:: ./images/udf-diagram.png
+.. image:: ./images/udf-diagram.svg
+   :width: 450
+   :alt: Diagram with the data flow of a UDF.
 
 To allow for parallel processing, data is first divided into partitions along the navigation axes,
 which are worked on by different worker processes. Then, for each frame of a partition, a

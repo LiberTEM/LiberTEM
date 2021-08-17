@@ -4,34 +4,69 @@
 Sample Datasets
 ================
 
-Public datasets
-~~~~~~~~~~~~~~~~
+Bullseye and circular probe diffraction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some data to work with can be downloaded from Zenodo.
+Scanning convergent beam electron diffraction data of gold nanoparticles
+(:code:`4DSTEM_experiment/data/datacubes/polyAu_4DSTEM/data`) and simulated
+strained gold (:code:`4DSTEM_experiment/data/datacubes/simulation_4DSTEM/data`)
+with one file using a standard circular aperture and another using a bullseye
+aperture.
 
-+----------------------------------------------------------+-------------------------------------------------------------------+-----------------+----------------------+---------+
-| Link                                                     | Description                                                       | Format          | Dimension            | Size    |
-+==========================================================+===================================================================+=================+======================+=========+
-| `Bullseye and circular probe diffraction`_               | Scanning convergent beam electron diffraction data                | HDF5 (uint16)   | 4D                   | 2.1 GB  |
-| :cite:`ophus_colin_2019_3592520,Zeltmann2019`            | of gold nanoparticles                                             |                 |                      |         |
-|                                                          | (:code:`4DSTEM_experiment/data/datacubes/polyAu_4DSTEM/data`)     |                 | (100, 84, 250, 250)  |         |
-|                                                          | and simulated strained gold                                       |                 |                      |         |
-|                                                          | (:code:`4DSTEM_experiment/data/datacubes/simulation_4DSTEM/data`) |                 |                      |         |
-|                                                          | with one file using a standard circular aperture and another      |                 |                      |         |
-|                                                          | using a bullseye aperture.                                        |                 |                      |         |
-+----------------------------------------------------------+-------------------------------------------------------------------+-----------------+----------------------+---------+
-| `Electron Bessel beam diffraction`_                      | Scanning convergent beam electron diffraction with ring-shaped    | Stack of DM3    | 3D                   | 2.6 GB  |
-| :cite:`giulio_guzzinati_2019_2566137,Guzzinati2019`      | aperture and overlapping diffraction orders.                      | (currently only |                      |         |
-|                                                          |                                                                   | scripting)      |                      |         |
-+----------------------------------------------------------+-------------------------------------------------------------------+-----------------+----------------------+---------+
-| `High-resolution 4D STEM dataset of SrTiO3`_             | This dataset can be used to test various analysis methods for     | MIB (6 bit)     | 4D                   | 177 MB  |
-| :cite:`strauch_achim_2021_5113449`                       | high-resolution 4D STEM, including phase contrast methods such    |                 |                      |         |
-|                                                          | as ptychography.                                                  |                 | (128, 128, 256, 256) |         |
-+----------------------------------------------------------+-------------------------------------------------------------------+-----------------+----------------------+---------+
-| `Synthetic 4D STEM dataset based on a SrTiO3 supercell`_ | This dataset allows to investigate phase contrast methods for 4D  | RAW (float32)   | 4D                   | 14.2 GB |
-| :cite:`strauch_achim_2021_5113235`                       | scanning transmission electron microscopy, such as ptychography.  |                 |                      |         |
-|                                                          |                                                                   |                 | (100, 100, 596, 596) |         |
-+----------------------------------------------------------+-------------------------------------------------------------------+-----------------+----------------------+---------+
+:Link:
+    https://zenodo.org/record/3592520 :cite:`ophus_colin_2019_3592520,Zeltmann2019`
+:Format:
+    HDF5 (uint16)
+:Dimension:
+    4D (100, 84, 250, 250)
+:Size:
+    2.1 GB
+
+Electron Bessel beam diffraction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Scanning convergent beam electron diffraction with ring-shaped aperture and
+overlapping diffraction orders.
+
+:Link:
+    https://zenodo.org/record/2566137 :cite:`giulio_guzzinati_2019_2566137,Guzzinati2019`
+:Format:
+    Stack of DM3 (currently only scripting)
+:Dimension:
+    3D
+:Size:
+    2.6 GB
+
+High-resolution 4D STEM dataset of SrTiO3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This dataset can be used to test various analysis methods for high-resolution 4D
+STEM, including phase contrast methods such as ptychography.
+
+:Link:
+    https://zenodo.org/record/5113449 :cite:`strauch_achim_2021_5113449`
+:Format:
+    MIB (6 bit)
+:Dimension:
+    4D (128, 128, 256, 256)
+:Size:
+    177 MB
+
+
+Synthetic 4D STEM dataset based on a SrTiO3 supercell
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This dataset allows to investigate phase contrast methods for 4D scanning
+transmission electron microscopy, such as ptychography.
+
+:Link:
+    https://zenodo.org/record/5113235 :cite:`strauch_achim_2021_5113235`
+:Format:
+    RAW (float32)
+:Dimension:
+    4D (100, 100, 596, 596)
+:Size:
+    14.2 GB
 
 Creating random data
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -104,8 +139,3 @@ has no physical significance.
 Alternatively, you can enter the parameters (scan_size, dtype, detector_size)
 directly into the load dialog of the GUI. For more details on loading, please
 check :ref:`loading data`.
-
-.. _`Bullseye and circular probe diffraction`: https://zenodo.org/record/3592520
-.. _`Electron Bessel beam diffraction`: https://zenodo.org/record/2566137
-.. _`High-resolution 4D STEM dataset of SrTiO3`: https://zenodo.org/record/5113449
-.. _`Synthetic 4D STEM dataset based on a SrTiO3 supercell`: https://zenodo.org/record/5113235

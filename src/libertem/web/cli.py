@@ -4,6 +4,18 @@ import logging
 log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'."
 
 
+def get_token(token_path):
+    token = None
+    if token_path is not None:
+        with open(token_path) as f:
+            token = f.read().strip()
+        if len(token) == 0:
+            raise click.UsageError(
+                f'{token_path} is empty! Refusing to start with insecure configuration.'
+            )
+    return token
+
+
 @click.command()
 @click.option('-h', '--host', help='host on which the server should listen on',
               default="localhost", type=str)
@@ -21,14 +33,7 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
               type=click.Path(exists=True))
 def main(port, local_directory, browser, log_level, host="localhost", token_path=None):
     from libertem.utils.threading import set_num_threads_env
-    token = None
-    if token_path is not None:
-        with open(token_path) as f:
-            token = f.read().strip()
-        if len(token) == 0:
-            raise click.UsageError(
-                f'{token_path} is empty! Refusing to start with insecure configuration.'
-            )
+    token = get_token(token_path)
     if token is None and host != 'localhost':
         raise click.UsageError(
             f'listening on non-localhost {host}:{port} currently requires token authentication'

@@ -1,5 +1,7 @@
 import json
 import uuid
+import urllib.parse as urlparse
+from urllib.parse import urlencode
 
 from utils import assert_msg
 
@@ -25,8 +27,19 @@ def _get_uuid_str():
     return str(uuid.uuid4())
 
 
-async def create_connection(base_url, http_client, scheduler_url=None):
+def add_token(url, token):
+    if token is None:
+        return url
+    url_parts = list(urlparse.urlparse(url))
+    query = dict(urlparse.parse_qsl(url_parts[4]))
+    query['token'] = token
+    url_parts[4] = urlencode(query)
+    return urlparse.urlunparse(url_parts)
+
+
+async def create_connection(base_url, http_client, scheduler_url=None, token=None):
     conn_url = f"{base_url}/api/config/connection/"
+    conn_url = add_token(conn_url, token)
     if scheduler_url is None:
         conn_details = {
             'connection': {
@@ -72,16 +85,22 @@ async def consume_task_results(ws, job_uuid):
     assert num_followup > 0
 
 
-async def create_default_dataset(default_raw, ws, http_client, base_url):
+async def create_default_dataset(default_raw, ws, http_client, base_url, token=None):
     ds_uuid = _get_uuid_str()
     ds_url = "{}/api/datasets/{}/".format(
         base_url, ds_uuid
     )
+    ds_url = add_token(ds_url, token)
     ds_data = _get_raw_params(default_raw._path)
+
+    print("creating dataset: dispatching PUT request")
+
     async with http_client.put(ds_url, json=ds_data) as resp:
         assert resp.status == 200
         resp_json = await resp.json()
         assert_msg(resp_json, 'CREATE_DATASET')
+
+    print("PUT request done, waiting for websocket response")
 
     # same msg via ws:
     msg = json.loads(await ws.recv())
@@ -90,11 +109,12 @@ async def create_default_dataset(default_raw, ws, http_client, base_url):
     return ds_uuid, ds_url
 
 
-async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=None):
+async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=None, token=None):
     analysis_uuid = _get_uuid_str()
     analysis_url = "{}/api/compoundAnalyses/{}/analyses/{}/".format(
         base_url, ca_uuid, analysis_uuid
     )
+    analysis_url = add_token(analysis_url, token)
     if details is None:
         details = {
             "analysisType": "SUM_FRAMES",
@@ -123,7 +143,7 @@ async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=N
 
 
 async def create_update_compound_analysis(
-    ws, http_client, base_url, ds_uuid, details=None, ca_uuid=None,
+    ws, http_client, base_url, ds_uuid, details=None, ca_uuid=None, token=None,
 ):
     if ca_uuid is None:
         ca_uuid = _get_uuid_str()
@@ -131,6 +151,7 @@ async def create_update_compound_analysis(
     else:
         creating = False
     ca_url = f"{base_url}/api/compoundAnalyses/{ca_uuid}/"
+    ca_url = add_token(ca_url, token)
 
     if details is None:
         details = {
@@ -145,6 +166,8 @@ async def create_update_compound_analysis(
         "dataset": ds_uuid,
         "details": details,
     }
+
+    print("dispatching PUT request...")
 
     async with http_client.put(ca_url, json=ca_data) as resp:
         print(await resp.text())
@@ -165,7 +188,7 @@ async def create_update_compound_analysis(
     return ca_uuid, ca_url
 
 
-async def create_job_for_analysis(ws, http_client, base_url, analysis_uuid):
+async def create_job_for_analysis(ws, http_client, base_url, analysis_uuid, token=None):
     job_uuid = _get_uuid_str()
     job_url = f"{base_url}/api/jobs/{job_uuid}/"
     job_data = {
@@ -173,6 +196,7 @@ async def create_job_for_analysis(ws, http_client, base_url, analysis_uuid):
             "analysis": analysis_uuid,
         }
     }
+    job_url = add_token(job_url, token)
     async with http_client.put(job_url, json=job_data) as resp:
         print(await resp.text())
         assert resp.status == 200

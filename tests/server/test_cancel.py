@@ -31,22 +31,22 @@ def _get_ds_params():
 
 @pytest.mark.asyncio
 async def test_cancel_udf_job(
-    base_url, default_raw, http_client, server_port, shared_state, local_cluster_url
+    base_url, default_raw, http_client, server_port, shared_state, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-        ds_url = "{}/api/datasets/{}/".format(
-            base_url, ds_uuid
+        ds_url = "{}/api/datasets/{}/?token={}".format(
+            base_url, ds_uuid, default_token,
         )
 
         ds_data = _get_ds_params()
@@ -60,15 +60,15 @@ async def test_cancel_udf_job(
         assert_msg(msg, 'CREATE_DATASET')
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid,
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await asyncio.sleep(0)  # for debugging, set to >0

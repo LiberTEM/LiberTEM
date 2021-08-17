@@ -3,12 +3,14 @@ import tornado.web
 from libertem.io.fs import get_fs_listing, FSError
 from .messages import Message
 from .state import SharedState
+from .base import TokenAuthMixin
 
 
-class LocalFSBrowseHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
+class LocalFSBrowseHandler(TokenAuthMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry, token):
         self.state = state
         self.event_registry = event_registry
+        self.token = token
 
     async def get(self):
         executor = self.state.executor_state.get_executor()

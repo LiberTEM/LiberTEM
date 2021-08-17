@@ -14,32 +14,36 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_run_job_1_sum(default_raw, base_url, http_client, server_port, local_cluster_url):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+async def test_run_job_1_sum(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token
+    )
 
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid,
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -58,36 +62,38 @@ async def test_run_job_1_sum(default_raw, base_url, http_client, server_port, lo
 
 @pytest.mark.asyncio
 async def test_run_job_delete_ds(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
     """
     main difference to test above: we just close the dataset without
     removing the job first. this tests another code path in `remove_dataset`
     """
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid,
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -101,17 +107,19 @@ async def test_run_job_delete_ds(
 
 @pytest.mark.asyncio
 async def test_cancel_unknown_job(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
 
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         job_uuid = "un-kn-ow-n"
-        job_url = f"{base_url}/api/jobs/{job_uuid}/"
+        job_url = f"{base_url}/api/jobs/{job_uuid}/?token={default_token}"
 
         # try to cancel unknown job:
         async with http_client.delete(job_url) as resp:
@@ -121,24 +129,26 @@ async def test_cancel_unknown_job(
 
 @pytest.mark.asyncio
 async def test_run_with_all_zeros_roi(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
@@ -154,11 +164,11 @@ async def test_run_with_all_zeros_roi(
                         "cy": -1,
                     }
                 }
-            }
+            }, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -177,32 +187,34 @@ async def test_run_with_all_zeros_roi(
 
 @pytest.mark.asyncio
 async def test_run_job_update_analysis_parameters(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
     print("checkpoint 1")
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid,
+            ws, http_client, base_url, ds_uuid, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid,
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -241,7 +253,7 @@ async def test_run_job_update_analysis_parameters(
         }
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -260,28 +272,30 @@ async def test_run_job_update_analysis_parameters(
 
 @pytest.mark.asyncio
 async def test_analysis_removal(
-    default_raw, base_url, http_client, server_port, shared_state, local_cluster_url
+    default_raw, base_url, http_client, server_port, shared_state, local_cluster_url, default_token
 ):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         # compound analysis is first created without any analyses:
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, details=None,
+            ws, http_client, base_url, ds_uuid, details=None, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid,
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         # compound analysis is updated with the newly created analysis:
@@ -289,11 +303,11 @@ async def test_analysis_removal(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid]
-            }, ca_uuid=ca_uuid
+            }, ca_uuid=ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)
@@ -328,28 +342,30 @@ async def test_analysis_removal(
 
 @pytest.mark.asyncio
 async def test_create_compound_analysis(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, scheduler_url=local_cluster_url)
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         print("checkpoint 2")
         initial_msg = json.loads(await ws.recv())
         assert_msg(initial_msg, 'INITIAL_STATE')
 
         ds_uuid, ds_url = await create_default_dataset(
-            default_raw, ws, http_client, base_url
+            default_raw, ws, http_client, base_url, token=default_token,
         )
 
         # compound analysis is first created without any analyses:
         ca_uuid, ca_url = await create_update_compound_analysis(
-            ws, http_client, base_url, ds_uuid, details=None,
+            ws, http_client, base_url, ds_uuid, details=None, token=default_token,
         )
 
         analysis_uuid, analysis_url = await create_analysis(
-            ws, http_client, base_url, ds_uuid, ca_uuid
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
         )
 
         # compound analysis is updated with the newly created analysis:
@@ -357,11 +373,11 @@ async def test_create_compound_analysis(
             ws, http_client, base_url, ds_uuid, details={
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid]
-            }, ca_uuid=ca_uuid
+            }, ca_uuid=ca_uuid, token=default_token,
         )
 
         job_uuid, job_url = await create_job_for_analysis(
-            ws, http_client, base_url, analysis_uuid
+            ws, http_client, base_url, analysis_uuid, token=default_token,
         )
 
         await consume_task_results(ws, job_uuid)

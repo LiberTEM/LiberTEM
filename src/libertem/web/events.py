@@ -2,7 +2,7 @@ import asyncio
 
 import tornado.websocket
 
-from .base import log_message, ResultHandlerMixin
+from .base import log_message, ResultHandlerMixin, TokenAuthMixin
 from .messages import Message
 from .state import SharedState
 
@@ -38,16 +38,18 @@ class EventRegistry:
         return asyncio.gather(*futures)
 
 
-class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler):
-    def initialize(self, state: SharedState, event_registry: EventRegistry):
+class ResultEventHandler(ResultHandlerMixin, TokenAuthMixin, tornado.websocket.WebSocketHandler):
+    def initialize(self, state: SharedState, event_registry: EventRegistry, token):
         self.event_registry = event_registry
         self.state = state
+        self.token = token
 
     def check_origin(self, origin):
         # FIXME: implement this when we want to support CORS later
         return super().check_origin(origin)
 
     async def open(self):
+        # self.check_token()
         self.event_registry.add_handler(self)
         if self.state.executor_state.have_executor():
             await self.state.dataset_state.verify()

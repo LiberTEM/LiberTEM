@@ -2,14 +2,16 @@ import tornado
 import logging
 
 from .state import SharedState
+from .base import TokenAuthMixin
 
 log = logging.getLogger(__name__)
 
 
-class ShutdownHandler(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
+class ShutdownHandler(TokenAuthMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry, token):
         self.state = state
         self.event_registry = event_registry
+        self.token = token
 
     async def delete(self):
         log.info("Handling shutdown button")

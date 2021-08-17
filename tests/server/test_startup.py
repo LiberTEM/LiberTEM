@@ -28,20 +28,20 @@ def _get_raw_params(path):
 
 
 @pytest.mark.asyncio
-async def test_start_server(base_url, http_client):
+async def test_start_server(base_url, http_client, default_token):
     """
     start the server and HTTP GET '/', which should
     return a 200 status code
     """
-    url = base_url
+    url = f"{base_url}?token={default_token}"
     async with http_client.get(url) as response:
         assert response.status == 200
         print(await response.text())
 
 
 @pytest.mark.asyncio
-async def test_get_config(base_url, http_client):
-    url = f"{base_url}/api/config/"
+async def test_get_config(base_url, http_client, default_token):
+    url = f"{base_url}/api/config/?token={default_token}"
     async with http_client.get(url) as response:
         assert response.status == 200
         config = await response.json()
@@ -53,8 +53,8 @@ async def test_get_config(base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_conn_is_disconnected(base_url, http_client):
-    url = f"{base_url}/api/config/connection/"
+async def test_conn_is_disconnected(base_url, http_client, default_token):
+    url = f"{base_url}/api/config/connection/?token={default_token}"
     async with http_client.get(url) as response:
         assert response.status == 200
         conn = await response.json()
@@ -64,8 +64,8 @@ async def test_conn_is_disconnected(base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_conn_connect_local(base_url, http_client):
-    url = f"{base_url}/api/config/connection/"
+async def test_conn_connect_local(base_url, http_client, default_token):
+    url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {
         'connection': {
             'type': 'local',
@@ -96,8 +96,8 @@ async def test_conn_connect_local(base_url, http_client):
 
 
 @pytest.mark.asyncio
-async def test_cluster_connect_error(base_url, http_client):
-    url = f"{base_url}/api/config/connection/"
+async def test_cluster_connect_error(base_url, http_client, default_token):
+    url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {
         'connection': {
             'type': 'TCP',
@@ -112,9 +112,9 @@ async def test_cluster_connect_error(base_url, http_client):
 
 @pytest.mark.asyncio
 async def test_initial_state_empty(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    conn_url = f"{base_url}/api/config/connection/"
+    conn_url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {
         'connection': {
             'type': 'tcp',
@@ -125,7 +125,7 @@ async def test_initial_state_empty(
         assert response.status == 200
 
     # connect to ws endpoint:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"
@@ -137,9 +137,9 @@ async def test_initial_state_empty(
 
 @pytest.mark.asyncio
 async def test_initial_state_w_existing_ds(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    conn_url = f"{base_url}/api/config/connection/"
+    conn_url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {
         'connection': {
             'type': 'tcp',
@@ -150,7 +150,7 @@ async def test_initial_state_w_existing_ds(
         assert response.status == 200
 
     # first connect has empty list of datasets:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"
@@ -160,8 +160,8 @@ async def test_initial_state_w_existing_ds(
     raw_path = default_raw._path
 
     ds_uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, ds_uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, ds_uuid, default_token,
     )
     ds_params = _get_raw_params(raw_path)
     async with http_client.put(ds_url, json=ds_params) as resp:
@@ -192,12 +192,12 @@ async def test_initial_state_w_existing_ds(
 
 @pytest.mark.asyncio
 async def test_initial_state_analyses(
-    default_raw, base_url, http_client, server_port, local_cluster_url
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
 ):
-    await create_connection(base_url, http_client, local_cluster_url)
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     # first connect has empty list of datasets:
-    ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
     async with websockets.connect(ws_url) as ws:
         initial_msg = json.loads(await ws.recv())
         assert initial_msg['messageType'] == "INITIAL_STATE"
@@ -207,8 +207,8 @@ async def test_initial_state_analyses(
     raw_path = default_raw._path
 
     ds_uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
-    ds_url = "{}/api/datasets/{}/".format(
-        base_url, ds_uuid
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, ds_uuid, default_token,
     )
     ds_params = _get_raw_params(raw_path)
     async with http_client.put(ds_url, json=ds_params) as resp:
@@ -223,11 +223,12 @@ async def test_initial_state_analyses(
             assert initial_msg['messageType'] == "INITIAL_STATE"
 
             ca_uuid, ca_url = await create_update_compound_analysis(
-                ws, http_client, base_url, ds_uuid,
+                ws, http_client, base_url, ds_uuid, token=default_token,
             )
 
             analysis_uuid, analysis_url = await create_analysis(
-                ws, http_client, base_url, ds_uuid, ca_uuid, details={
+                ws, http_client, base_url, ds_uuid, ca_uuid,
+                details={
                     "analysisType": "SUM_FRAMES",
                     "parameters": {
                         "roi": {
@@ -235,9 +236,9 @@ async def test_initial_state_analyses(
                             "r": 1,
                             "cx": 1,
                             "cy": 1,
-                            }
                         }
-                }
+                    }
+                }, token=default_token,
             )
 
     # second connect has one dataset and one analysis:

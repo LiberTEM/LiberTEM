@@ -7,12 +7,12 @@ pytestmark = [pytest.mark.functional]
 
 
 @pytest.mark.asyncio
-async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_url, default_token):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     browse_path = os.path.dirname(default_raw._path)
     raw_ds_filename = os.path.basename(default_raw._path)
     url = f"{base_url}/api/browse/localfs/"
-    async with http_client.get(url, params={"path": browse_path}) as resp:
+    async with http_client.get(url, params={"path": browse_path, "token": default_token}) as resp:
         assert resp.status == 200
         listing = await resp.json()
         assert listing['status'] == 'ok'
@@ -33,14 +33,16 @@ async def test_browse_localfs(default_raw, base_url, http_client, local_cluster_
 
 
 @pytest.mark.asyncio
-async def test_browse_localfs_fail(default_raw, base_url, http_client, local_cluster_url):
-    await create_connection(base_url, http_client, local_cluster_url)
+async def test_browse_localfs_fail(
+    default_raw, base_url, http_client, local_cluster_url, default_token
+):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
     browse_path = os.path.join(
         os.path.dirname(default_raw._path),
         "does", "not", "exist"
     )
     url = f"{base_url}/api/browse/localfs/"
-    async with http_client.get(url, params={"path": browse_path}) as resp:
+    async with http_client.get(url, params={"path": browse_path, "token": default_token}) as resp:
         assert resp.status == 200
         listing = await resp.json()
         assert listing['status'] == 'error'

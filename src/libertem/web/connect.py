@@ -6,17 +6,18 @@ import tornado.web
 from libertem.executor.base import AsyncAdapter, sync_to_async
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from .messages import Message
-from .base import log_message, ResultHandlerMixin
+from .base import log_message, ResultHandlerMixin, TokenAuthMixin
 from .state import SharedState
 from libertem.utils.devices import detect
 
 log = logging.getLogger(__name__)
 
 
-class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
+class ConnectHandler(ResultHandlerMixin, TokenAuthMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry, token):
         self.state = state
         self.event_registry = event_registry
+        self.token = token
 
     async def get(self):
         log.info("ConnectHandler.get")

@@ -1,6 +1,9 @@
 import logging
 import asyncio
+import hmac
+import hashlib
 
+from tornado.web import HTTPError
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.analysis.base import AnalysisResultSet
@@ -47,6 +50,20 @@ class CORSMixin:
 #        """
 #        self.set_status(204)
 #        self.finish()
+
+
+class TokenAuthMixin:
+    def check_token(self):
+        if self.token is not None:
+            # NOTE: token length may be leaked here
+            given_token = self.get_query_argument('token', '')
+            given_hash = hashlib.sha256(given_token.encode("utf8")).hexdigest()
+            expected_hash = hashlib.sha256(self.token.encode("utf8")).hexdigest()
+            if not hmac.compare_digest(given_hash, expected_hash):
+                raise HTTPError(status_code=400, log_message="token mismatch")
+
+    async def prepare(self):
+        self.check_token()
 
 
 class ResultHandlerMixin:

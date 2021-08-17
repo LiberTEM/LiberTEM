@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor, xml_map_sizes, \
-    unbinned_map_maker, xml_map_index_selector, xml_defect_extractor
+from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor, \
+    xml_map_sizes, unbinned_map_maker, xml_map_index_selector, xml_defect_extractor
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -24,26 +24,29 @@ except ModuleNotFoundError:
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
 
-pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
+needsdata = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
 
 
 @pytest.fixture
+@needsdata
 def default_seq(lt_ctx):
     nav_shape = (8, 8)
+    if HAVE_SEQ_TESTDATA is True:
+        ds = lt_ctx.load(
+            "seq",
+            path=SEQ_TESTDATA_PATH,
+            nav_shape=nav_shape,
+            io_backend=MMapBackend(),
+        )
 
-    ds = lt_ctx.load(
-        "seq",
-        path=SEQ_TESTDATA_PATH,
-        nav_shape=nav_shape,
-        io_backend=MMapBackend(),
-    )
-
-    ds.set_num_cores(4)
-    assert tuple(ds.shape) == (8, 8, 128, 128)
-    return ds
+        ds.set_num_cores(4)
+        assert tuple(ds.shape) == (8, 8, 128, 128)
+        return ds
+    return None
 
 
 @pytest.fixture
+@needsdata
 def buffered_seq(lt_ctx):
     nav_shape = (8, 8)
 
@@ -59,11 +62,13 @@ def buffered_seq(lt_ctx):
 
 
 @pytest.fixture(scope='module')
+@needsdata
 def default_seq_raw():
     return np.array(pims.open(str(SEQ_TESTDATA_PATH))).reshape((8, 8, 128, 128))
 
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
+@needsdata
 def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_seq_raw, (-1, *tuple(default_seq.shape.sig)))
@@ -72,6 +77,7 @@ def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
 
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
+@needsdata
 def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],
@@ -82,6 +88,7 @@ def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi)
 
 
+@needsdata
 def test_positive_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
     sync_offset = 2
@@ -322,6 +329,7 @@ def test_defect_extractor():
     assert defects.__eq__(expected_defects) is True
 
 
+@needsdata
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
     sync_offset = -2
@@ -365,6 +373,7 @@ def test_negative_sync_offset(default_seq, lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
+@needsdata
 def test_missing_frames(lt_ctx):
     nav_shape = (16, 8)
 
@@ -394,6 +403,7 @@ def test_missing_frames(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_missing_data_with_positive_sync_offset(lt_ctx):
     nav_shape = (16, 8)
     sync_offset = 8
@@ -423,6 +433,7 @@ def test_missing_data_with_positive_sync_offset(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_missing_data_with_negative_sync_offset(lt_ctx):
     nav_shape = (16, 8)
     sync_offset = -8
@@ -452,6 +463,7 @@ def test_missing_data_with_negative_sync_offset(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_too_many_frames(lt_ctx):
     nav_shape = (4, 8)
 
@@ -474,6 +486,7 @@ def test_too_many_frames(lt_ctx):
             pass
 
 
+@needsdata
 def test_positive_sync_offset_with_roi(default_seq, lt_ctx):
     udf = SumSigUDF()
     result = lt_ctx.run_udf(dataset=default_seq, udf=udf)
@@ -495,6 +508,7 @@ def test_positive_sync_offset_with_roi(default_seq, lt_ctx):
     assert np.allclose(result[sync_offset:8 + sync_offset], result_with_offset)
 
 
+@needsdata
 def test_negative_sync_offset_with_roi(default_seq, lt_ctx):
     udf = SumSigUDF()
     result = lt_ctx.run_udf(dataset=default_seq, udf=udf)
@@ -516,6 +530,7 @@ def test_negative_sync_offset_with_roi(default_seq, lt_ctx):
     assert np.allclose(result[:8 + sync_offset], result_with_offset[abs(sync_offset):])
 
 
+@needsdata
 def test_offset_smaller_than_image_count(lt_ctx):
     nav_shape = (8, 8)
     sync_offset = -65
@@ -532,6 +547,7 @@ def test_offset_smaller_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_offset_greater_than_image_count(lt_ctx):
     nav_shape = (8, 8)
     sync_offset = 65
@@ -548,6 +564,7 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_reshape_nav(lt_ctx, default_seq):
     udf = SumSigUDF()
 
@@ -565,6 +582,7 @@ def test_reshape_nav(lt_ctx, default_seq):
     assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
 
 
+@needsdata
 def test_reshape_different_shapes(lt_ctx, default_seq):
     udf = SumSigUDF()
 
@@ -578,6 +596,7 @@ def test_reshape_different_shapes(lt_ctx, default_seq):
     assert np.allclose(result_1, result[:3 * 6])
 
 
+@needsdata
 def test_incorrect_sig_shape(lt_ctx):
     nav_shape = (8, 8)
     sig_shape = (5, 5)
@@ -594,6 +613,7 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
+@needsdata
 def test_scan_size_deprecation(lt_ctx):
     scan_size = (5, 5)
 
@@ -606,12 +626,14 @@ def test_scan_size_deprecation(lt_ctx):
     assert tuple(ds.shape) == (5, 5, 128, 128)
 
 
+@needsdata
 def test_detect_non_seq(raw_with_zeros, lt_ctx):
     path = raw_with_zeros._path
     # raw_with_zeros is not a SEQ file, caused UnicodeDecodeError before:
     assert SEQDataSet.detect_params(path, InlineJobExecutor()) is False
 
 
+@needsdata
 def test_detect_seq(lt_ctx):
     path = SEQ_TESTDATA_PATH
     assert SEQDataSet.detect_params(path, lt_ctx.executor) is not False
@@ -620,7 +642,7 @@ def test_detect_seq(lt_ctx):
 # from utils import dataset_correction_verification
 # FIXME test with actual test file
 
-
+@needsdata
 def test_compare_backends(lt_ctx, default_seq, buffered_seq):
     y = random.choice(range(default_seq.shape.nav[0]))
     x = random.choice(range(default_seq.shape.nav[1]))
@@ -636,6 +658,7 @@ def test_compare_backends(lt_ctx, default_seq, buffered_seq):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
     roi = np.zeros(default_seq.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True

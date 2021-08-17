@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor
+from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor, cropping
 from libertem.io.dataset.seq import xml_map_sizes, unbinned_map_maker, xml_map_index_selector
 from libertem.io.dataset.seq import xml_defect_extractor
 from libertem.common import Shape
@@ -133,6 +133,15 @@ def test_positive_sync_offset(default_seq, lt_ctx):
                          ]
 
     assert np.allclose(result, result_with_offset)
+
+
+def test_array_cropping():
+    start_size = (1024, 1024)
+    crop_to_this = (512, 512)
+    offset = (600, 600)
+    array = np.zeros(start_size)
+    n_array = cropping(array, start_size, crop_to_this, offset)
+    assert np.array_equal(n_array, array)
 
 
 def test_xml_excluded_pixels_unbinned():

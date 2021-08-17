@@ -159,13 +159,11 @@ def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
     relative_max_x = 0
     max_y = max(unbinned_y)
     max_x = max(unbinned_x)
-    for size_ind in range(0, len(map_sizes)):
-        map_size = map_sizes[size_ind]
-        if (max_y, max_x, 1) in map_sizes:
-            if map_size == (max_y, max_x, 1):
-                map_index = size_ind
-                break
-        else:
+    if (max_y, max_x, 1) in map_sizes:
+        map_index = map_sizes.index((max_y, max_x, 1))
+    else:
+        for size_ind in range(0, len(map_sizes)):
+            map_size = map_sizes[size_ind]
             if map_size[0] == max_y and map_size[1] > relative_max_x:
                 relative_max_x = map_size[1]
                 map_index = size_ind

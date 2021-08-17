@@ -131,6 +131,14 @@ def _get_image_offset(header):
 
 
 def xml_map_sizes(bad_pixel_maps):
+    """
+    returns the sizes and binning values of bad_pixel_maps
+
+    Parameters
+    ----------
+    bad_pixel_maps: node
+        all of the bad pixel map nodes from the root
+    """
     map_sizes = []
 
     for size_map in bad_pixel_maps:
@@ -142,6 +150,14 @@ def xml_map_sizes(bad_pixel_maps):
 
 
 def unbinned_map_maker(xy_map_sizes):
+    """
+    returns two list of unbinned sizes(rows and cols) if the size was binned
+    return 0 in the list in its place
+    Parameters
+    ----------
+    xy_map_sizes: list of tuple
+        bad pixel maps sizes separated by row and col
+    """
     unbinned_x = []
     unbinned_y = []
     for map_ind in range(0, len(xy_map_sizes[0])):
@@ -155,6 +171,17 @@ def unbinned_map_maker(xy_map_sizes):
 
 
 def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
+    """
+    returns the the bad pixel maps  index with the largest column count
+
+    Parameters
+    ----------
+    unbinned_x: list
+        the height of bad pixel maps(rows) where it was not binned
+    unbinned_y: list
+    map_sizes: list of tuples
+        the size of every bad pixel maps with the bin val at its end
+    """
     map_index = -1
     relative_max_x = 0
     max_y = max(unbinned_y)
@@ -171,6 +198,17 @@ def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
 
 
 def xml_defect_extractor(bad_pixel_map, map_index, map_sizes):
+    """
+    returns the chosen bad pixel map's defects
+
+    Parameters
+    ----------
+    bad_pixel_map: node
+        the xml file's root node
+    map_index: int
+        the index of the correct bad pixel map
+    map_sizes: list of tuples
+    """
     excluded_rows = []
     excluded_cols = []
     excluded_pixels = []

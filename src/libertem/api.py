@@ -25,8 +25,8 @@ from libertem.utils.async_utils import async_generator
 
 RunUDFResultType = Dict[str, BufferWrapper]
 RunUDFAsync = Coroutine[RunUDFResultType, None, None]
-RunUDFGenType = Generator[RunUDFResultType, None, None]
-RunUDFAGenType = AsyncGenerator[RunUDFResultType, None]
+RunUDFGenType = Generator[UDFResults, None, None]
+RunUDFAGenType = AsyncGenerator[UDFResults, None]
 
 
 class Context:

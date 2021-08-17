@@ -10,9 +10,38 @@ Defining UDFs
 
 See :ref:`user-defined functions` for an introduction and in-depth explanation.
 
-.. automodule:: libertem.udf.base
-   :members:
-   :exclude-members: Task,UDFTask,UDFRunner
+Mixins for processing methods
+#############################
+
+.. autoclass:: libertem.udf.base.UDFFrameMixin
+    :members:
+
+.. autoclass:: libertem.udf.base.UDFTileMixin
+    :members:
+
+.. autoclass:: libertem.udf.base.UDFPartitionMixin
+    :members:
+
+Base UDF class
+##############
+
+.. autoclass:: libertem.udf.base.UDF
+    :members:
+
+Meta information
+################
+
+.. autoclass:: libertem.udf.base.UDFMeta
+    :members:
+
+Pre- and postprocessing
+#######################
+
+.. autoclass:: libertem.udf.base.UDFPreprocessMixin
+    :members:
+
+.. autoclass:: libertem.udf.base.UDFPostprocessMixin
+    :members:
 
 .. _`run udf ref`:
 
@@ -24,6 +53,11 @@ Three methods of :class:`libertem.api.Context` are relevant for running user-def
 .. autoclass:: libertem.api.Context
    :members: run_udf,run_udf_iter,map
    :noindex:
+
+Result type for UDF result iterators:
+
+.. autoclass:: libertem.udf.base.UDFResults
+    :members:
 
 .. _`buffer udf ref`:
 
@@ -96,4 +130,10 @@ Load data
 #########
 
 .. autoclass:: libertem.udf.raw.PickUDF
+    :members:
+
+NoOp
+####
+
+.. autoclass:: libertem.udf.base.NoOpUDF
     :members:

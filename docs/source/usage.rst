@@ -30,20 +30,32 @@ There are a few command line options available::
     Usage: libertem-server [OPTIONS]
 
     Options:
-      -p, --port INTEGER  port on which the server should listen on
-      -d, --local-directory TEXT    local directory to manage dask-worker-space files
-      -b, --browser / -n, --no-browser  enable/disable opening the browser
+      -h, --host TEXT                 host on which the server should listen on
+      -p, --port INTEGER              port on which the server should listen on
+      -d, --local-directory TEXT      local directory to manage dask-worker-space
+                                      files
+
+      -b, --browser / -n, --no-browser
+                                      enable/disable opening the browser
       -l, --log-level TEXT            set logging level. Default is 'info'.
                                       Allowed values are 'critical', 'error',
                                       'warning', 'info', 'debug'.
-      --help          Show this message and exit.
+
+      -t, --token-path PATH           path to a file containing a token for
+                                      authenticating API requests
+
+      --help                          Show this message and exit.
 
 .. versionadded:: 0.4.0
     :code:`--browser` / :code:`--no-browser` option was added, open browser by default.
 .. versionadded:: 0.6.0
     :code:`-l, --log-level` was added.
+.. versionadded:: 0.8.0
+    :code:`-t, --token-path` was added and :code:`-h, --host` was re-enabled.
 
-To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`.
+To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`
+or our :ref:`jupyter integration`, if you already have JupyterHub or JupyterLab
+set up on a server.
 
 
 Connecting

@@ -23,7 +23,7 @@ def main(port, local_directory, browser, log_level, host="localhost", token_path
     from libertem.utils.threading import set_num_threads_env
     token = None
     if token_path is not None:
-        with open(token_path, 'r') as f:
+        with open(token_path) as f:
             token = f.read().strip()
         if len(token) == 0:
             raise click.UsageError(

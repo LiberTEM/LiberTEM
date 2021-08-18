@@ -1,10 +1,14 @@
 *****
 **[Feature] Added support for seq files to load excluded pixels from xml (:issue:'805', :pr:'1077')**
 *****
-    - added function xml_data_extractor(root)
+    - added function xml_map_sizes(mad pixel map)
+    - added function xml_unbinned_map_maker(xy_map_sizes)
+    - added function xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
+    - added function xml_defect_coord_extractor(bad_pixel_map, map_index, map_sizes)
+    - added function xml_defect_data_extractor(root)
     - added function bin_array_2d(a,binning)
-    - added function cropping(arr, start_size, req_size, offset)
-    - added function generate_size(exc_rows, exc_cols, exc_pix, size, metadata)
+    - added function array_cropping(arr, start_size, req_size, offset)
+    - added function xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata)
     - added function xml_processing(tree, metadata_dict)
     - added function load_xml_from_string(xml, metadata)
     - added function _load_xml_from_file(self, path)

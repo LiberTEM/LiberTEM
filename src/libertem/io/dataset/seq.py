@@ -149,7 +149,7 @@ def xml_map_sizes(bad_pixel_maps):
     return xy_map_sizes, map_sizes
 
 
-def unbinned_map_maker(xy_map_sizes):
+def xml_unbinned_map_maker(xy_map_sizes):
     """
     returns two list of unbinned sizes(rows and cols) if the size was binned
     return 0 in the list in its place
@@ -197,7 +197,7 @@ def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
     return map_index
 
 
-def xml_defect_extractor(bad_pixel_map, map_index, map_sizes):
+def xml_defect_coord_extractor(bad_pixel_map, map_index, map_sizes):
     """
     returns the chosen bad pixel map's defects
 
@@ -245,9 +245,9 @@ def xml_defect_data_extractor(root):
     """
     bad_pixel_maps = root.findall('.//BadPixelMap')
     xy_size, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes=xy_size)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes=xy_size)
     map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
-    defect_dict = xml_defect_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
+    defect_dict = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
     return defect_dict
 
 
@@ -268,9 +268,9 @@ def bin_array2d(a, binning):
                       ac.shape[1] // binning, binning).sum(3).sum(1)
 
 
-def cropping(arr, start_size, req_size, offsets):
+def array_cropping(arr, start_size, req_size, offsets):
     """
-    returns a crop from the original image
+    returns a crop from the original array
     Parameters
     ----------
     arr: np array
@@ -292,7 +292,7 @@ def cropping(arr, start_size, req_size, offsets):
     return ac
 
 
-def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
+def xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata):
     """
     This function will be responsible for generating new size based on the parameters.
     returns an np array with the excluded pixels as True
@@ -330,15 +330,15 @@ def generate_size(exc_rows, exc_cols, exc_pix, size, metadata):
     for pix in exc_pix:
         dummy_m[int(pix[1]), int(pix[0])] = 1
 
-    cropped = cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
+    cropped = array_cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
     binned = bin_array2d(cropped, bin_value)
     return np.array(binned, dtype=bool)
 
 
 def xml_processing(tree, metadata_dict):
     data_dict = xml_defect_data_extractor(tree)
-    coord = generate_size(data_dict["rows"], data_dict["cols"],
-                          data_dict["pixels"], data_dict["size"], metadata_dict)
+    coord = xml_generate_map_size(data_dict["rows"], data_dict["cols"], data_dict["pixels"], data_dict["size"],
+                                  metadata_dict)
     return sparse.COO(coord)
 
 

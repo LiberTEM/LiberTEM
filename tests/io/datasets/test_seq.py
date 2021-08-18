@@ -6,8 +6,8 @@ import pytest
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor
-from libertem.io.dataset.seq import xml_map_sizes, unbinned_map_maker, xml_map_index_selector
-from libertem.io.dataset.seq import xml_defect_extractor, cropping
+from libertem.io.dataset.seq import xml_map_sizes, xml_unbinned_map_maker, xml_map_index_selector
+from libertem.io.dataset.seq import xml_defect_coord_extractor, array_cropping
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -140,7 +140,7 @@ def test_array_cropping():
     crop_to_this = (512, 512)
     offset = (600, 600)
     array = np.zeros(start_size)
-    n_array = cropping(array, start_size, crop_to_this, offset)
+    n_array = array_cropping(array, start_size, crop_to_this, offset)
     assert np.array_equal(n_array, array)
 
 
@@ -270,7 +270,7 @@ def test_unbinned_map_maker():
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, _ = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
     assert unbinned_x == [4096, 2048, 2048, 0]
     assert unbinned_y == [4096, 2048, 1024, 0]
 
@@ -286,7 +286,7 @@ def test_map_index_selector_case1():
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
     map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
     expected_index = 0
     assert map_index == expected_index
@@ -303,7 +303,7 @@ def test_map_index_selector_case2():
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
     map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
     expected_index = 1
     assert map_index == expected_index
@@ -328,9 +328,9 @@ def test_defect_extractor():
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = unbinned_map_maker(xy_map_sizes)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
     map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
-    defects = xml_defect_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
+    defects = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
     expected_defects = {"rows": [['2311', '2312'], ['1300']],
                         "cols": [['2300', '2301'], ['600']],
                         "pixels": [['100', '230']],

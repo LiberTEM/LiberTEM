@@ -337,8 +337,8 @@ def xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata):
 
 def xml_processing(tree, metadata_dict):
     data_dict = xml_defect_data_extractor(tree)
-    coord = xml_generate_map_size(data_dict["rows"], data_dict["cols"], data_dict["pixels"], data_dict["size"],
-                                  metadata_dict)
+    coord = xml_generate_map_size(data_dict["rows"], data_dict["cols"], data_dict["pixels"],
+                                  data_dict["size"],metadata_dict)
     return sparse.COO(coord)
 
 

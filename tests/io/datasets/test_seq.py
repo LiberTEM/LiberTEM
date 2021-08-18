@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet, _load_xml_from_string, xml_defect_data_extractor
-from libertem.io.dataset.seq import xml_map_sizes, xml_unbinned_map_maker, xml_map_index_selector
-from libertem.io.dataset.seq import xml_defect_coord_extractor, array_cropping
+from libertem.io.dataset.seq import (SEQDataSet, _load_xml_from_string, xml_defect_data_extractor,
+                                     xml_map_sizes, xml_unbinned_map_maker, array_cropping,
+                                     xml_defect_coord_extractor, xml_map_index_selector)
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -29,25 +29,21 @@ needsdata = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata
 
 
 @pytest.fixture
-@needsdata
 def default_seq(lt_ctx):
     nav_shape = (8, 8)
-    if HAVE_SEQ_TESTDATA is True:
-        ds = lt_ctx.load(
-            "seq",
-            path=SEQ_TESTDATA_PATH,
-            nav_shape=nav_shape,
-            io_backend=MMapBackend(),
-        )
+    ds = lt_ctx.load(
+        "seq",
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=MMapBackend(),
+    )
 
-        ds.set_num_cores(4)
-        assert tuple(ds.shape) == (8, 8, 128, 128)
-        return ds
-    return None
+    ds.set_num_cores(4)
+    assert tuple(ds.shape) == (8, 8, 128, 128)
+    return ds
 
 
 @pytest.fixture
-@needsdata
 def buffered_seq(lt_ctx):
     nav_shape = (8, 8)
 
@@ -63,7 +59,6 @@ def buffered_seq(lt_ctx):
 
 
 @pytest.fixture(scope='module')
-@needsdata
 def default_seq_raw():
     return np.array(pims.open(str(SEQ_TESTDATA_PATH))).reshape((8, 8, 128, 128))
 
@@ -145,14 +140,24 @@ def test_array_cropping():
 
 
 def test_xml_excluded_pixels_unbinned():
-    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize>' \
-                 '</DiffPixelSize><BadPixels><BadPixelMap Rows="4096" ' \
-                 'Columns="4096"><Defect Rows="2311-2312"/><Defect Rows="3413-3414"/><Defect ' \
-                 'Column="2311"/></BadPixelMap><BadPixelMap Binning="2" ' \
-                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
-                 'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-                 '</Configuration>'
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                        <BadPixelMap Rows="4096" Columns="4096">
+                            <Defect Rows="2311-2312"/>
+                            <Defect Rows="3413-3414"/>
+                            <Defect Column="2311"/>
+                        </BadPixelMap>
+                        <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                            <Defect Rows="1155-1156"/>
+                            <Defect Rows="1706-1707"/>
+                        </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        
+            '''
+
     metadata = {
         "UnbinnedFrameSizeX": 1024,
         "UnbinnedFrameSizeY": 1024,
@@ -169,13 +174,20 @@ def test_xml_excluded_pixels_unbinned():
 
 
 def test_xml_excluded_pixels_only_binned():
-    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
-                 '<BadPixels><BadPixelMap Rows="4096" Columns="4096"><Defect Rows="2311-2312"/>' \
-                 '<Defect Columns="1310-1312"/><Defect Row="600" />' \
-                 '<Defect Column="1300"/><Defect Row="100" Column="150" />' \
-                 '</BadPixelMap></BadPixels>' \
-                 '</Configuration>'
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Rows="2311-2312"/>
+                                <Defect Row="600"/>
+                                <Defect Columns="1310-1312"/>
+                                <Defect Column="1300"/>
+                                <Defect Row="100" Column="150"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
     metadata = {
         "UnbinnedFrameSizeX": 4096,
         "UnbinnedFrameSizeY": 4096,
@@ -195,15 +207,24 @@ def test_xml_excluded_pixels_only_binned():
 
 
 def test_xml_excluded_pixels_cropped_binned():
-    xml_string = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                 '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
-                 '<BadPixels><BadPixelMap Rows="4096" Columns="4096">' \
-                 '<Defect Columns="1310-1312"/><Defect Column="1300"/><Defect ' \
-                 'Rows="2311-2312"/><Defect ' \
-                 'Rows="3413-3414"/></BadPixelMap><BadPixelMap Binning="2" ' \
-                 'Rows="2048" Columns="2048"><Defect Rows="1155-1156"/><Defect ' \
-                 'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-                 '</Configuration>'
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Rows="2311-2312"/>
+                                <Defect Rows="3413-3414"/>
+                                <Defect Columns="1310-1312"/>
+                                <Defect Column="1300"/>
+                                <Defect Row="100" Column="150"/>
+                            </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Rows="1706-1707"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
     metadata = {
         "UnbinnedFrameSizeX": 2048,
         "UnbinnedFrameSizeY": 2048,
@@ -221,37 +242,52 @@ def test_xml_excluded_pixels_cropped_binned():
 
 
 def test_correct_bad_pixel_map_selector():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
-          '<BadPixels><BadPixelMap Rows="4096" Columns="4096">' \
-          '<Defect Columns="1310-1312"/></BadPixelMap><BadPixelMap ' \
-          'Rows="4126" Columns="4024"><Defect Rows="1155-1156"/><Defect ' \
-          'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-          '</Configuration>'
-    tree = ET.fromstring(xml)
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Columns="1310-1312"/>
+                            </BadPixelMap>
+                            <BadPixelMap Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Rows="1706-1707"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    tree = ET.fromstring(xml_string)
     excluded_rows_dict = xml_defect_data_extractor(tree)
     assert excluded_rows_dict["cols"] == [['1310', '1312']]
 
 
 def test_correct_bad_pixel_map_selector_2():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<Configuration><PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>' \
-          '<BadPixels><BadPixelMap Rows="4096" Columns="4096">' \
-          '<Defect Columns="1310-1312"/></BadPixelMap><BadPixelMap Binning="2" ' \
-          'Rows="4080" Columns="4096"><Defect Rows="1155-1156"/><Defect ' \
-          'Rows="1706-1707"/></BadPixelMap></BadPixels>' \
-          '</Configuration>'
-    tree = ET.fromstring(xml)
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Columns="1310-1312"/>
+                            </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="8192" Columns="8192">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Rows="1706-1707"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    tree = ET.fromstring(xml_string)
     excluded_rows_dict = xml_defect_data_extractor(tree)
     assert excluded_rows_dict["cols"] == [['1310', '1312']]
 
 
 def test_map_size():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<BadPixels>' \
-          '<BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>' \
-          '<BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>' \
-          '</BadPixels>'
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+          '''
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
@@ -260,29 +296,29 @@ def test_map_size():
 
 
 def test_unbinned_map_maker():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<BadPixels>' \
-          '<BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="1024"></BadPixelMap>' \
-          '<BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>' \
-          '</BadPixels>'
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+         '''
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, _ = xml_map_sizes(bad_pixel_maps)
     unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
-    assert unbinned_x == [4096, 2048, 2048, 0]
-    assert unbinned_y == [4096, 2048, 1024, 0]
+    assert unbinned_x == [4096, 2048, 0]
+    assert unbinned_y == [4096, 2048, 0]
 
 
 def test_map_index_selector_case1():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<BadPixels>' \
-          '<BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="1024"></BadPixelMap>' \
-          '<BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>' \
-          '</BadPixels>'
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap binning="2" Rows="512" Columns="512"></BadPixelMap>
+          </BadPixels>
+         '''
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
@@ -292,39 +328,22 @@ def test_map_index_selector_case1():
     assert map_index == expected_index
 
 
-def test_map_index_selector_case2():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<BadPixels>' \
-          '<BadPixelMap Rows="5120" Columns="3072"></BadPixelMap>' \
-          '<BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="1024"></BadPixelMap>' \
-          '<BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>' \
-          '</BadPixels>'
-    tree = ET.fromstring(xml)
-    bad_pixel_maps = tree.findall('.//BadPixelMap')
-    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
-    map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
-    expected_index = 1
-    assert map_index == expected_index
-
-
 def test_defect_extractor():
-    xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-          '<BadPixels>' \
-          '<BadPixelMap Rows="5120" Columns="3072">' \
-          '<Defect Rows="10-200" />' \
-          '</BadPixelMap>' \
-          '<BadPixelMap Rows="4096" Columns="4096">' \
-          '<Defect Rows="2311-2312" />' \
-          '<Defect Row="1300" />' \
-          '<Defect Columns="2300-2301" />' \
-          '<Defect Column="600" />' \
-          '<Defect Row="230" Column="100" />' \
-          '</BadPixelMap>' \
-          '<BadPixelMap Rows="2048" Columns="1024"></BadPixelMap>' \
-          '<BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>' \
-          '</BadPixels>'
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096">
+                  <Defect Rows="2311-2312" />
+                  <Defect Row="1300" />
+                  <Defect Columns="2300-2301" />
+                  <Defect Column="600" />
+                  <Defect Row="230" Column="100" />
+              </BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048">
+                    <Defect Column="10"/>
+              </BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+          '''
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
@@ -336,7 +355,7 @@ def test_defect_extractor():
                         "pixels": [['100', '230']],
                         "size": (4096, 4096)
                         }
-    assert defects.__eq__(expected_defects) is True
+    assert defects == expected_defects
 
 
 @needsdata

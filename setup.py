@@ -162,6 +162,7 @@ setup(
         'nbconvert',
         'autopep8',
         'empyre>=0.3.0',
+        'defusedxml',
     ],
     extras_require={
         'torch': 'torch',

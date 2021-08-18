@@ -1,6 +1,6 @@
-*****
-**[Feature] Added support for seq files to load excluded pixels from xml (:issue:'805', :pr:'1077')**
-*****
+
+[Feature] Added support for seq files to load excluded pixels from xml (:pr:`805`, :pr:`1077`)
+====
     - added function xml_map_sizes(mad pixel map)
     - added function xml_unbinned_map_maker(xy_map_sizes)
     - added function xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)

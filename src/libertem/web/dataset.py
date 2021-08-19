@@ -6,7 +6,7 @@ import tornado.web
 
 from libertem.io.dataset import load, detect, get_dataset_cls
 from libertem.common.numba import prime_numba_cache
-from .base import CORSMixin, TokenAuthMixin, log_message
+from .base import CORSMixin, log_message
 from libertem.utils.async_utils import sync_to_async
 from .messages import Message
 from .state import SharedState
@@ -14,12 +14,11 @@ from .state import SharedState
 log = logging.getLogger(__name__)
 
 
-class DataSetDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.dataset_state = state.dataset_state
         self.event_registry = event_registry
-        self.token = token
 
     async def delete(self, uuid):
         try:
@@ -89,11 +88,10 @@ class DataSetDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandler
             return
 
 
-class DataSetOpenSchema(TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class DataSetOpenSchema(tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     def get(self):
         try:
@@ -112,11 +110,10 @@ class DataSetOpenSchema(TokenAuthMixin, tornado.web.RequestHandler):
             return
 
 
-class DataSetDetectHandler(TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class DataSetDetectHandler(tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     async def get(self):
         path = self.request.arguments['path'][0].decode("utf8")

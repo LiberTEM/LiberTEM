@@ -126,6 +126,8 @@ class IOBackendImpl:
         read_dtype : np.dtype
             The data dtype into which the data is converted when reading
 
+        decoder : libertem.io.dataset.base.Decoder
+
         sync_offset : int
             if positive, number of frames to skip from the start
             if negative, number of blank frames to insert at the start

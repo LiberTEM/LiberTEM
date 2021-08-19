@@ -16,6 +16,7 @@ import h5py
 import aiohttp
 from dask import distributed as dd
 from distributed.scheduler import Scheduler
+import tornado.httpserver
 
 import libertem.api as lt
 from libertem.executor.inline import InlineJobExecutor
@@ -590,7 +591,8 @@ class ServerThread(threading.Thread):
 
             event_registry = EventRegistry()
             app = make_app(event_registry, self.shared_state, self.token)
-            self.server = app.listen(address="127.0.0.1", port=self.port)
+            self.server = tornado.httpserver.HTTPServer(app)
+            self.server.listen(address="127.0.0.1", port=self.port)
             # self.shared_state.set_server(self.server)
 
             asyncio.ensure_future(self.wait_for_stop())

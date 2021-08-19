@@ -2,13 +2,13 @@ import io
 
 import tornado.web
 
-from .base import CORSMixin, TokenAuthMixin, log_message
+from .base import CORSMixin, log_message
 from .messages import Message
 from .state import SharedState
 from libertem.io.writers.results.base import ResultFormatRegistry
 
 
-class AnalysisDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandler):
+class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
     """
     API Handler for CRUD of analyses.
 
@@ -16,10 +16,9 @@ class AnalysisDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandle
     zero or one Job.
 
     """
-    def initialize(self, state: SharedState, event_registry, token):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     async def put(self, compoundUuid, uuid):
         """
@@ -76,11 +75,10 @@ class AnalysisDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandle
         self.write(msg)
 
 
-class DownloadDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     def _get_format(self):
         # FIXME: unused for now
@@ -104,11 +102,10 @@ class DownloadDetailHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandle
         self.write(buf.getvalue())
 
 
-class CompoundAnalysisHandler(CORSMixin, TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     async def put(self, uuid):
         request_data = tornado.escape.json_decode(self.request.body)

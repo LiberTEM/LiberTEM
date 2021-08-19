@@ -7,14 +7,17 @@ import select
 import threading
 import webbrowser
 from functools import partial
+import hmac
+import hashlib
+import time
 
 import tornado.web
 import tornado.gen
 import tornado.websocket
 import tornado.ioloop
 import tornado.escape
+from tornado import httputil
 
-from .base import TokenAuthMixin
 from .shutdown import ShutdownHandler
 from .state import SharedState
 from .config import ConfigHandler, ClusterDetailHandler
@@ -29,26 +32,65 @@ from .generator import DownloadScriptHandler, CopyScriptHandler
 log = logging.getLogger(__name__)
 
 
-class IndexHandler(TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class IndexHandler(tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     def get(self):
         self.render("client/index.html")
 
 
+def _get_token(request):
+    token = request.query_arguments.get('token', [b''])[0].decode("utf-8")
+    if not token:
+        token = request.headers.get('X-Api-Key', '')
+    return token
+
+
+def _write_token_mismatch_error(request):
+    start_line = httputil.ResponseStartLine("", 400, "bad request: token mismatch")
+    headers = httputil.HTTPHeaders({
+        "Content-Type": "text/html; charset=UTF-8",
+        "Date": httputil.format_timestamp(time.time()),
+    })
+    return request.connection.write_headers(
+        start_line, headers, b""
+    )
+
+
+def check_token_auth_middleware(app, expected_token):
+    # bypass token check if no token is set:
+    if expected_token is None:
+        return lambda r: app(r)
+
+    expected_hash = hashlib.sha256(expected_token.encode("utf8")).hexdigest()
+
+    def _middleware(request):
+        # NOTE: token length may be leaked here
+        given_token = _get_token(request)
+        given_hash = hashlib.sha256(given_token.encode("utf8")).hexdigest()
+        if not hmac.compare_digest(given_hash, expected_hash):
+            return _write_token_mismatch_error(request)
+        return app(request)
+
+    return _middleware
+
+
 def make_app(event_registry, shared_state, token=None):
+    """
+    Returns the fully assembled web API app, which is a
+    callable(request) (not the "raw" tornado Application
+    instance, because we want to apply middleare around it)
+    """
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
     common_kwargs = {
         "state": shared_state,
         "event_registry": event_registry,
-        "token": token,
     }
-    return tornado.web.Application([
+    app = tornado.web.Application([
         (r"/", IndexHandler, common_kwargs),
         (r"/api/datasets/detect/", DataSetDetectHandler, common_kwargs),
         (r"/api/datasets/schema/", DataSetOpenSchema, common_kwargs),
@@ -70,6 +112,8 @@ def make_app(event_registry, shared_state, token=None):
         (r"/api/config/cluster/", ClusterDetailHandler, common_kwargs),
         (r"/api/config/connection/", ConnectHandler, common_kwargs),
     ], **settings)
+    app = check_token_auth_middleware(app, token)
+    return app
 
 
 async def do_stop(shared_state):
@@ -111,8 +155,9 @@ def main(host, port, numeric_level, event_registry, shared_state, token):
     )
     log.info(f"listening on {host}:{port}")
     app = make_app(event_registry, shared_state, token)
-    app.listen(address=host, port=port)
-    return app
+    http_server = tornado.httpserver.HTTPServer(app)
+    http_server.listen(address=host, port=port)
+    return http_server
 
 
 def _confirm_exit(shared_state, loop):

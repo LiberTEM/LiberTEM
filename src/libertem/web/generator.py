@@ -3,17 +3,15 @@ import logging
 from .notebook_generator.notebook_generator import notebook_generator
 from .notebook_generator.copy import copy_notebook
 
-from .base import TokenAuthMixin
 from .state import SharedState
 
 log = logging.getLogger(__name__)
 
 
-class DownloadScriptHandler(TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class DownloadScriptHandler(tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     async def get(self, compoundUuid: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]
@@ -40,11 +38,10 @@ class DownloadScriptHandler(TokenAuthMixin, tornado.web.RequestHandler):
         self.write(buf.getvalue())
 
 
-class CopyScriptHandler(TokenAuthMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, token):
+class CopyScriptHandler(tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self.token = token
 
     async def get(self, compoundUuid: str):
         compoundAnalysis = self.state.compound_analysis_state[compoundUuid]

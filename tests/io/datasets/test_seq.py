@@ -158,7 +158,6 @@ def test_xml_excluded_pixels_unbinned():
                     </Configuration>
         
             '''
-
     metadata = {
         "UnbinnedFrameSizeX": 1024,
         "UnbinnedFrameSizeY": 1024,
@@ -404,13 +403,6 @@ def test_defect_extractor():
               <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
           </BadPixels>
           '''
-    metadata = {
-        "UnbinnedFrameSizeX": 1024,
-        "UnbinnedFrameSizeY": 1024,
-        "OffsetX": 1536,
-        "OffsetY": 1536,
-        "HardwareBinning": 2
-    }
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)

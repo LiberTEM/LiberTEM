@@ -142,8 +142,12 @@ def xml_map_sizes(bad_pixel_maps):
     map_sizes = []
 
     for size_map in bad_pixel_maps:
-        map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
-                          int(size_map.attrib.get("Binning", 1))))
+        if "Binning" in size_map.attrib:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
+                              int(size_map.attrib["Binning"])))
+        else:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
+                              int(size_map.attrib.get("Binning", 1))))
     map_rearrange = zip(*map_sizes)
     xy_map_sizes = list(map_rearrange)
     return xy_map_sizes, map_sizes
@@ -170,24 +174,39 @@ def xml_unbinned_map_maker(xy_map_sizes):
     return unbinned_x, unbinned_y
 
 
-def xml_map_index_selector(unbinned_x, unbinned_y, map_sizes):
+def xml_binned_map_maker(xy_map_sizes):
+    """
+    returns two list of binned sizes(rows and cols) if the size was not binned
+    return 0 in the list in its place
+    Parameters
+    ----------
+    xy_map_sizes: list of tuple
+        bad pixel maps sizes separated by row and col
+    """
+    unbinned_x = []
+    unbinned_y = []
+    for map_ind in range(0, len(xy_map_sizes[0])):
+        if xy_map_sizes[2][map_ind] > 1:
+            unbinned_y.append(xy_map_sizes[0][map_ind])
+            unbinned_x.append(xy_map_sizes[1][map_ind])
+        else:
+            unbinned_y.append(0)
+            unbinned_x.append(0)
+    return unbinned_x, unbinned_y
+
+
+def xml_map_index_selector(used_y):
     """
     returns the the bad pixel maps  index with the largest column count
 
     Parameters
     ----------
-    unbinned_x: list
-        the height of bad pixel maps(rows) where it was not binned
-    unbinned_y: list
-    map_sizes: list of tuples
-        the size of every bad pixel maps with the bin val at its end
+    used_y: list
+        list of either binned or unbinned y coordinates
     """
-    map_index = -1
-    relative_max_x = 0
-    max_y = max(unbinned_y)
-    max_x = max(unbinned_x)
+    max_y = max(used_y)
 
-    map_index = map_sizes.index((max_y, max_x, 1))
+    map_index = used_y.index(max_y)
     return map_index
 
 
@@ -230,7 +249,7 @@ def xml_defect_coord_extractor(bad_pixel_map, map_index, map_sizes):
             }
 
 
-def xml_defect_data_extractor(root):
+def xml_defect_data_extractor(root, metadata):
     """
     Parameters
     ----------
@@ -239,8 +258,11 @@ def xml_defect_data_extractor(root):
     """
     bad_pixel_maps = root.findall('.//BadPixelMap')
     xy_size, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes=xy_size)
-    map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
+    if (metadata['HardwareBinning']) < 2:
+        used_x, used_y = xml_unbinned_map_maker(xy_map_sizes=xy_size)
+    else:
+        used_x, used_y = xml_binned_map_maker(xy_map_sizes=xy_size)
+    map_index = xml_map_index_selector(used_y)
     defect_dict = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
     return defect_dict
 
@@ -306,6 +328,9 @@ def xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata):
     required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
     offsets = (metadata["OffsetY"], metadata["OffsetX"])
     bin_value = metadata["HardwareBinning"]
+    if bin_value > 1:
+        required_size = (required_size[0]//2, required_size[1]//2)
+        offsets = (offsets[0]//2, offsets[1]//2)
     dummy_m = np.zeros(size, dtype=bool)
     for row in exc_rows:
 
@@ -325,12 +350,11 @@ def xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata):
         dummy_m[int(pix[1]), int(pix[0])] = 1
 
     cropped = array_cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
-    binned = bin_array2d(cropped, bin_value)
-    return np.array(binned, dtype=bool)
+    return np.array(cropped, dtype=bool)
 
 
 def xml_processing(tree, metadata_dict):
-    data_dict = xml_defect_data_extractor(tree)
+    data_dict = xml_defect_data_extractor(tree, metadata_dict)
     coord = xml_generate_map_size(data_dict["rows"], data_dict["cols"], data_dict["pixels"],
                                   data_dict["size"], metadata_dict)
     return sparse.COO(coord)

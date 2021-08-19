@@ -7,7 +7,8 @@ import pytest
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.seq import (SEQDataSet, _load_xml_from_string, xml_defect_data_extractor,
                                      xml_map_sizes, xml_unbinned_map_maker, array_cropping,
-                                     xml_defect_coord_extractor, xml_map_index_selector)
+                                     xml_defect_coord_extractor, xml_map_index_selector,
+                                     xml_binned_map_maker)
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -185,6 +186,13 @@ def test_xml_excluded_pixels_only_binned():
                                 <Defect Column="1300"/>
                                 <Defect Row="100" Column="150"/>
                             </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Row="300"/>
+                                <Defect Columns="655-656"/>
+                                <Defect Column="650"/>
+                                <Defect Row="50" Column="75"/>
+                            </BadPixelMap>
                         </BadPixels>
                     </Configuration>
         '''
@@ -206,7 +214,7 @@ def test_xml_excluded_pixels_only_binned():
     assert np.array_equal(expected_res.todense(), test_arr)
 
 
-def test_xml_excluded_pixels_cropped_binned():
+def test_xml_excluded_pixels_binned_cropped():
     xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <Configuration>
                         <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
@@ -219,24 +227,28 @@ def test_xml_excluded_pixels_cropped_binned():
                                 <Defect Row="100" Column="150"/>
                             </BadPixelMap>
                             <BadPixelMap Binning="2" Rows="2048" Columns="2048">
-                                <Defect Rows="1155-1156"/>
-                                <Defect Rows="1706-1707"/>
+                                <Defect Rows="1250-1252"/>
+                                <Defect Row="800"/>
+                                <Defect Columns="768-770"/>
+                                <Defect Column="1000"/>
+                                <Defect Row="1200" Column="1100"/>
                             </BadPixelMap>
                         </BadPixels>
                     </Configuration>
         '''
     metadata = {
-        "UnbinnedFrameSizeX": 2048,
-        "UnbinnedFrameSizeY": 2048,
-        "OffsetX": 1024,
-        "OffsetY": 1024,
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
         "HardwareBinning": 2
     }
-    test_arr = np.zeros((1024, 1024), dtype=bool)
-    test_arr[644] = True
-    test_arr[643] = True
-    test_arr[:, 143:145] = True
-    test_arr[:, 138] = True
+    test_arr = np.zeros((512, 512), dtype=bool)
+    test_arr[482:485] = True
+    test_arr[32] = True
+    test_arr[:, 0:3] = True
+    test_arr[:, 232] = True
+    test_arr[432, 332] = True
     expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
     assert np.array_equal(expected_res.todense(), test_arr)
 
@@ -256,8 +268,15 @@ def test_correct_bad_pixel_map_selector():
                         </BadPixels>
                     </Configuration>
         '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 1
+    }
     tree = ET.fromstring(xml_string)
-    excluded_rows_dict = xml_defect_data_extractor(tree)
+    excluded_rows_dict = xml_defect_data_extractor(tree, metadata)
     assert excluded_rows_dict["cols"] == [['1310', '1312']]
 
 
@@ -269,16 +288,22 @@ def test_correct_bad_pixel_map_selector_2():
                             <BadPixelMap Rows="4096" Columns="4096">
                                 <Defect Columns="1310-1312"/>
                             </BadPixelMap>
-                            <BadPixelMap Binning="2" Rows="8192" Columns="8192">
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
                                 <Defect Rows="1155-1156"/>
-                                <Defect Rows="1706-1707"/>
                             </BadPixelMap>
                         </BadPixels>
                     </Configuration>
         '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 2
+    }
     tree = ET.fromstring(xml_string)
-    excluded_rows_dict = xml_defect_data_extractor(tree)
-    assert excluded_rows_dict["cols"] == [['1310', '1312']]
+    excluded_rows_dict = xml_defect_data_extractor(tree, metadata)
+    assert excluded_rows_dict["rows"] == [['1155', '1156']]
 
 
 def test_map_size():
@@ -311,20 +336,55 @@ def test_unbinned_map_maker():
     assert unbinned_y == [4096, 2048, 0]
 
 
+def test_binned_map_maker():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4096" Columns="4096"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, _ = xml_map_sizes(bad_pixel_maps)
+    unbinned_x, unbinned_y = xml_binned_map_maker(xy_map_sizes)
+    assert unbinned_x == [0, 0, 4096]
+    assert unbinned_y == [0, 0, 4096]
+
+
 def test_map_index_selector_case1():
     xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
           <BadPixels>
               <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
               <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
-              <BadPixelMap binning="2" Rows="512" Columns="512"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="512" Columns="512"></BadPixelMap>
           </BadPixels>
          '''
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
-    map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
+    used_x, used_y = xml_unbinned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
     expected_index = 0
+    assert map_index == expected_index
+
+
+def test_map_index_selector_case2():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="512" Columns="512"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
+    used_x, used_y = xml_binned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
+    print(used_y)
+    expected_index = 2
+
     assert map_index == expected_index
 
 
@@ -344,11 +404,18 @@ def test_defect_extractor():
               <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
           </BadPixels>
           '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 2
+    }
     tree = ET.fromstring(xml)
     bad_pixel_maps = tree.findall('.//BadPixelMap')
     xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
-    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
-    map_index = xml_map_index_selector(unbinned_x, unbinned_y, map_sizes)
+    used_x, used_y = xml_unbinned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
     defects = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
     expected_defects = {"rows": [['2311', '2312'], ['1300']],
                         "cols": [['2300', '2301'], ['600']],

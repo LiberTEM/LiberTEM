@@ -22,7 +22,8 @@ Installation
     .. code-block:: shell
         
         (jupyter-venv) $ git clone git@github.com:sk1p/jupyter-server-proxy.git
-        (jupyter-venv) $ cd jupyter-server-proxy && pip install .
+        (jupyter-venv) $ cd jupyter-server-proxy && git checkout websocket-request-headers
+        (jupyter-venv) $ pip install .
 
     Note that this needs to be done in the environment where 
     :code:`libertem-juypter-server` was installed.

@@ -255,6 +255,8 @@ def xml_defect_data_extractor(root, metadata):
     ----------
     root: node
         the xml file's root node
+    metadata: dictionary
+        the content of the metadata file as a dictionary
     """
     bad_pixel_maps = root.findall('.//BadPixelMap')
     xy_size, map_sizes = xml_map_sizes(bad_pixel_maps)

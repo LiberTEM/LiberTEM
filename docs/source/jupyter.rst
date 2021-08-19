@@ -9,6 +9,15 @@ management infrastructure of Jupyter can be re-used to offer LiberTEM as
 a service. The LiberTEM GUI will have access to the same data that is available
 to jupyter notebooks.
 
+.. note::
+
+    Currently, Jupyter integration is only supported on Unix, not on Windows
+    because of outstanding issues in some dependencies. See `simpervisor/6
+    <https://github.com/jupyterhub/simpervisor/issues/6>`_ and
+    `jupyter-server-proxy/181
+    <https://github.com/jupyterhub/jupyter-server-proxy/pull/181>`_ for more
+    details.
+
 Installation
 ------------
 

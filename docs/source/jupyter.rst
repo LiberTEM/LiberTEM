@@ -12,6 +12,22 @@ to jupyter notebooks.
 Installation
 ------------
 
+.. note::
+
+    Currently, a fork of :code:`jupyter-server-proxy` needs to be used, which includes
+    the PR `jupyter-server-proxy/287 <https://github.com/jupyterhub/jupyter-server-proxy/pull/287>`_.
+    This can be done with the following commands, after having followed the installation
+    instructions below:
+
+    .. code-block:: shell
+        
+        (jupyter-venv) $ git clone git@github.com:sk1p/jupyter-server-proxy.git
+        (jupyter-venv) $ cd jupyter-server-proxy && pip install .
+
+    Note that this needs to be done in the environment where 
+    :code:`libertem-juypter-server` was installed.
+
+
 As a first step, you will need to install
 `LiberTEM-jupyter-proxy <https://github.com/LiberTEM/LiberTEM-jupyter-proxy>`_
 into the Python environment where jupyterhub or jupyterlab is installed. Then,

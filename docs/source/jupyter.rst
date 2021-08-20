@@ -23,9 +23,13 @@ Installation
 
 .. note::
 
-    Currently, a fork of :code:`jupyter-server-proxy` needs to be used, which includes
-    the PR `jupyter-server-proxy/287 <https://github.com/jupyterhub/jupyter-server-proxy/pull/287>`_.
-    This can be done with the following commands, after having followed the installation
+    Currently, a fork of :code:`jupyter-server-proxy` needs to be used, which
+    includes the PR `jupyter-server-proxy/287
+    <https://github.com/jupyterhub/jupyter-server-proxy/pull/287>`_ and a fix to
+    allow restarting LiberTEM after a graceful shutdown, see also
+    `jupyter-server-proxy/215
+    <https://github.com/jupyterhub/jupyter-server-proxy/pull/215>`_. This can be
+    done with the following commands, after having followed the installation
     instructions below:
 
     .. code-block:: shell
@@ -61,12 +65,6 @@ This allows to separate the jupyter installation from the LiberTEM installation.
 The given path can also point to a wrapper script, for example for further environment
 preparations, like loading modules on an HPC system. The wrapper script should forward
 any arguments it reveices to the :code:`libertem-server` call.
-
-.. note:: Currently, after pressing the shutdown button in the LiberTEM GUI, the
-   libertem-server doesn't automatically restart again afterwards. A work-around
-   is to shut down the user's notebook server instead of using the built-in shutdown
-   button of LiberTEM. In https://github.com/jupyterhub/jupyter-server-proxy/pull/215
-   a proper solution is being worked on.
 
 Usage
 -----

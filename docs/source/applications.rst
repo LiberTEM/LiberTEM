@@ -11,6 +11,7 @@ Applications
 .. toctree::
    :maxdepth: 2
 
+   app/phasecontrast
    app/amorphous
    app/strain
    app/phasechange

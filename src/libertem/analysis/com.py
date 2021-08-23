@@ -45,9 +45,9 @@ class ComTemplate(GeneratorHelper):
         for k in ['cx', 'cy']:
             params.append(f'{k}={self.params[k]}')
         params.append(f"mask_radius={self.params['r']}")
-        if self.params['flip_y']:
+        if self.params.get('flip_y', False):
             params.append("flip_y=True")
-        if self.params['scan_rotation'] is not None:
+        if self.params.get('scan_rotation') is not None:
             params.append(f"scan_rotation={self.params['scan_rotation']}")
         return ', '.join(params)
 

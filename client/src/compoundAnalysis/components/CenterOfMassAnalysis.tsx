@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Accordion, Checkbox, Form, Icon, Input } from "semantic-ui-react";
+import { Checkbox, Form, Header, Icon, Input, Modal, Popup } from "semantic-ui-react";
 import { defaultDebounce } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes } from "../../messages";
@@ -26,7 +26,6 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
     const [r, setR] = useState(minLength / 4);
     const [flip_y, setFlipY] = useState(false);
     const [scan_rotation, setScanRotation] = useState(0.0);
-    const [paramsVisible, setParamsVisible] = useState(false);
 
     const dispatch = useDispatch();
 
@@ -87,20 +86,6 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         }));
     };
 
-    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
-
-    const toggleParamsVisible = () => setParamsVisible(!paramsVisible);
-    const updateFlipY = (e: React.ChangeEvent<HTMLInputElement>, { checked }: { checked: boolean }) => {
-        setFlipY(checked);
-    };
-    const updateScanRotation = (e: React.ChangeEvent<HTMLInputElement>, { value }: { value: string }) => {
-        let newScanRotation = parseFloat(value);
-        if (!newScanRotation) {
-            newScanRotation = 0.0;
-        }
-        setScanRotation(newScanRotation);
-    };
-
     const analyses = useSelector((state: RootReducer) => state.analyses)
     const jobs = useSelector((state: RootReducer) => state.jobs)
 
@@ -117,24 +102,72 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         }
     }, [haveResult, flip_y, scan_rotation]);
 
+    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
+
+    const updateFlipY = (e: React.ChangeEvent<HTMLInputElement>, { checked }: { checked: boolean }) => {
+        setFlipY(checked);
+    };
+    const updateScanRotation = (e: React.ChangeEvent<HTMLInputElement>, { value }: { value: string }) => {
+        let newScanRotation = parseFloat(value);
+        if (!newScanRotation) {
+            newScanRotation = 0.0;
+        }
+        setScanRotation(newScanRotation);
+    };
+
     const comParams = (
-        <Accordion>
-            <Accordion.Title active={paramsVisible} index={0} onClick={toggleParamsVisible}>
-                <Icon name='dropdown' />
-                Parameters
-            </Accordion.Title>
-            <Accordion.Content active={paramsVisible}>
-                <Form>
-                    <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
+        <>
+            <Header>
+                <Modal trigger={
+                    <Header.Content>
+                        Parameters
+                        {' '}
+                        <Icon name="info circle" size="small" link />
+                    </Header.Content>
+                }>
+                    <Popup.Header>CoM / first moment parameters</Popup.Header>
+                    <Popup.Content>
+                        <Header>Flip in y direction</Header>
+                        <p>
+                        Flip the Y coordinate. Some detectors, for example Quantum
+                        Detectors Merlin, may have pixel (0, 0) at the lower
+                        left corner. This has to be corrected to get the sign of
+                        the y shift as well as curl and divergence right.
+                        </p>
+                        <Header>Rotation between scan and detector</Header>
+                        <p>
+                            The optics of an electron microscope can rotate the
+                            image. Furthermore, scan generators may allow
+                            scanning in arbitrary directions. This means that
+                            the x and y coordinates of the detector image are
+                            usually not parallel to the x and y scan
+                            coordinates. For interpretation of center of mass
+                            sifts, however, the shift vector in detector
+                            coordinates has to be put in relation to the
+                            position on the sample. This parameter can be used
+                            to rotate the detector coordinates to match the scan
+                            coordinate system. A positive value rotates the
+                            displacement vector clock-wise. That means if the
+                            detector seems rotated to the right relative to the
+                            scan, this value should be negative to counteract
+                            this rotation.
+                        </p>
+                    </Popup.Content>
+                </Modal>
+            </Header>
+            <Form>
+                <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
+                <Form.Group widths="equal">
                     <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
-                </Form>
-            </Accordion.Content>
-        </Accordion>
+                </Form.Group>
+                <Form.Field type="range" min="-360" max="360" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
+            </Form>
+        </>
     );
 
     return (
         <AnalysisLayoutTwoCol
-            title="COM analysis" subtitle={subtitle}
+            title="CoM / first moment analysis" subtitle={subtitle}
             left={<>
                 <ResultList
                     extraHandles={frameViewHandles} extraWidgets={frameViewWidgets}

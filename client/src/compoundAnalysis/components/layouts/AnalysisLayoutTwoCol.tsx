@@ -7,6 +7,7 @@ interface AnalysisLayoutTwoColProps {
     left: React.ReactNode,
     right: React.ReactNode,
     toolbar?: React.ReactNode,
+    params?: React.ReactNode,
 }
 
 type MergedProps = AnalysisLayoutTwoColProps;
@@ -15,6 +16,7 @@ const AnalysisLayoutTwoCol: React.FC<MergedProps> = ({
     title, subtitle,
     left, right,
     toolbar,
+    params,
 }) => (
     <>
         <Header as='h3' attached="top">
@@ -33,6 +35,7 @@ const AnalysisLayoutTwoCol: React.FC<MergedProps> = ({
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
+            {params}
         </Segment>
         {toolbar}
     </>

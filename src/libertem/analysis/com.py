@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 
 
 class ComTemplate(GeneratorHelper):
-
     short_name = "com"
     api = "create_com_analysis"
     temp = GeneratorHelper.temp_analysis
@@ -295,3 +294,22 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
     @classmethod
     def get_template_helper(cls):
         return ComTemplate
+
+    def need_rerun(self, old_params, new_params):
+        """
+        Don't need to re-run UDF if only `flip_y` or `scan_rotation`
+        have changed.
+        """
+        ignore_keys = {"flip_y", "scan_rotation"}
+        old_without_ignored = {
+            k: v
+            for k, v in old_params.items()
+            if k not in ignore_keys
+        }
+        new_without_ignored = {
+            k: v
+            for k, v in new_params.items()
+            if k not in ignore_keys
+        }
+        print(old_without_ignored, new_without_ignored)
+        return old_without_ignored != new_without_ignored

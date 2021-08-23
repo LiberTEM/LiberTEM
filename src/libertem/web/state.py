@@ -94,11 +94,14 @@ class AnalysisState:
     def remove_results(self, uuid):
         del self.results[uuid]
 
-    def set_results(self, uuid, details, results, job_id):
+    def set_results(self, uuid, details, results, job_id, udf_results):
         """
         set results: create or update
         """
-        self.results[uuid] = (details, results, job_id)
+        self.results[uuid] = (copy.deepcopy(details), results, job_id, udf_results)
+
+    def have_results(self, uuid):
+        return uuid in self.results
 
     def get_results(self, uuid):
         return self.results[uuid]

@@ -163,9 +163,9 @@ class Analysis:
     """
     # TODO: once we require Py3.8, we can use Literal here:
     # https://www.python.org/dev/peps/pep-0586/
-    TYPE: typing.Union[str, None] = None
+    TYPE: typing.Optional[str] = None
 
-    registry = {}
+    registry: typing.Dict = {}
 
     def __init_subclass__(cls, id_=None, **kwargs):
 
@@ -228,6 +228,24 @@ class Analysis:
         Get analysis parameters. Override to set defaults
         """
         raise NotImplementedError()
+
+    def need_rerun(self, old_params, new_params):
+        """
+        Determine if the analysis needs to be re-run on the data. If not,
+        we can just call `get_udf_results` again, for example if the parameters
+        only change the visualization.
+
+        Parameters
+        ----------
+        old_params : Dict
+        new_params : Dict
+
+        Returns
+        -------
+        bool
+            True iff the parameter change needs to cause a re-run on the data
+        """
+        return True
 
 
 class BaseAnalysis(Analysis):

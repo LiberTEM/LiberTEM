@@ -79,6 +79,9 @@ class DiskMaskAnalysis(SingleMaskAnalysis, id_="APPLY_DISK_MASK"):
             'mask_dtype': np.float32,
         }
 
+    def need_rerun(self, old_params, new_params):
+        return old_params != new_params
+
     @classmethod
     def get_template_helper(cls):
         return DiskTemplate

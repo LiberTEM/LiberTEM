@@ -45,6 +45,10 @@ class ComTemplate(GeneratorHelper):
         for k in ['cx', 'cy']:
             params.append(f'{k}={self.params[k]}')
         params.append(f"mask_radius={self.params['r']}")
+        if self.params['flip_y']:
+            params.append("flip_y=True")
+        if self.params['scan_rotation'] is not None:
+            params.append(f"scan_rotation={self.params['scan_rotation']}")
         return ', '.join(params)
 
     def get_plot(self):
@@ -311,5 +315,4 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             for k, v in new_params.items()
             if k not in ignore_keys
         }
-        print(old_without_ignored, new_without_ignored)
         return old_without_ignored != new_without_ignored

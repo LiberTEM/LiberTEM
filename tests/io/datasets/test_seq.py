@@ -156,7 +156,6 @@ def test_xml_excluded_pixels_unbinned():
                         </BadPixelMap>
                         </BadPixels>
                     </Configuration>
-        
             '''
     metadata = {
         "UnbinnedFrameSizeX": 1024,

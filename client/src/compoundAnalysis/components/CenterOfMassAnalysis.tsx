@@ -25,7 +25,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
     const [cy, setCy] = useState(imageHeight / 2);
     const [r, setR] = useState(minLength / 4);
     const [flip_y, setFlipY] = useState(false);
-    const [scan_rotation, setScanRotation] = useState(0.0);
+    const [scan_rotation, setScanRotation] = useState("0.0");
 
     const dispatch = useDispatch();
 
@@ -72,6 +72,11 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
 
     const subtitle = <>{frameViewTitle} Disk: center=(x={cx.toFixed(2)}, y={cy.toFixed(2)}), r={r.toFixed(2)}</>;
 
+    let parsedScanRotation: number =  parseFloat(scan_rotation);
+    if (!parsedScanRotation) {
+        parsedScanRotation = 0.0;
+    }
+
     const runAnalysis = () => {
         dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
             analysisType: AnalysisTypes.CENTER_OF_MASS,
@@ -81,7 +86,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                 cy,
                 r,
                 flip_y,
-                scan_rotation,
+                scan_rotation: parsedScanRotation,
             }
         }));
     };
@@ -107,12 +112,12 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
     const updateFlipY = (e: React.ChangeEvent<HTMLInputElement>, { checked }: { checked: boolean }) => {
         setFlipY(checked);
     };
+
     const updateScanRotation = (e: React.ChangeEvent<HTMLInputElement>, { value }: { value: string }) => {
-        let newScanRotation = parseFloat(value);
-        if (!newScanRotation) {
-            newScanRotation = 0.0;
+        if (value === "-") {
+            setScanRotation("-");
         }
-        setScanRotation(newScanRotation);
+        setScanRotation(value);
     };
 
     const comParams = (
@@ -157,9 +162,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
             </Header>
             <Form>
                 <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
-                <Form.Group widths="equal">
-                    <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
-                </Form.Group>
+                <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
                 <Form.Field type="range" min="-360" max="360" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
             </Form>
         </>

@@ -100,6 +100,27 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
                 )
             )
 
+        # short circuit if the parameters only change the visualization
+        # (as determined by the analysis via `Analysis.need_rerun`):
+        if self.state.analysis_state.have_results(analysis_id):
+            old_results = self.state.analysis_state.get_results(analysis_id)
+            old_details, _, _, old_udf_results = old_results
+            if not analysis.need_rerun(
+                old_details["parameters"],
+                details["parameters"],
+            ):
+                results = await sync_to_async(
+                    analysis.get_udf_results,
+                    udf_results=old_udf_results.buffers[0],
+                    roi=roi,
+                    damage=old_udf_results.damage
+                )
+                await self.send_results(
+                    results, job_id, analysis_id, details, finished=True,
+                    udf_results=old_udf_results,
+                )
+                return
+
         t = time.time()
         post_t = time.time()
         window = 0.3
@@ -119,7 +140,9 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
                 damage=udf_results.damage
             )
             post_t = time.time()
-            await self.send_results(results, job_id, analysis_id, details)
+            await self.send_results(
+                results, job_id, analysis_id, details, udf_results=udf_results
+            )
             # The broadcast might have taken quite some time due to
             # backpressure from the network
             t = time.time()
@@ -132,4 +155,6 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
             roi=roi,
             damage=udf_results.damage
         )
-        await self.send_results(results, job_id, analysis_id, details, finished=True)
+        await self.send_results(
+            results, job_id, analysis_id, details, finished=True, udf_results=udf_results
+        )

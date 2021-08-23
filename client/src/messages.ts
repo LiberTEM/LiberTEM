@@ -365,6 +365,8 @@ export interface CenterOfMassParams {
     cx: number,
     cy: number,
     r: number,
+    flip_y: boolean,
+    scan_rotation: number,
 }
 
 export interface PickFrameParams {

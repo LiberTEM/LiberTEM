@@ -51,7 +51,7 @@ class CORSMixin:
 
 class ResultHandlerMixin:
     async def send_results(self, results: AnalysisResultSet, job_id, analysis_id,
-                           details, finished=False):
+                           details, finished=False, udf_results=None):
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         images = await result_images(results)
@@ -67,7 +67,9 @@ class ResultHandlerMixin:
                     for result in results
                 ],
             )
-            self.state.analysis_state.set_results(analysis_id, details, results, job_id)
+            self.state.analysis_state.set_results(
+                analysis_id, details, results, job_id, udf_results
+            )
         else:
             msg = Message(self.state).task_result(
                 job_id=job_id,
@@ -95,12 +97,12 @@ class ResultHandlerMixin:
 
     async def send_existing_job_results(self):
         results = self.state.analysis_state.get_all_results()
-        for analysis_id, (details, result_set, job_id) in results:
+        for analysis_id, (details, result_set, job_id, udf_results) in results:
             await self.event_registry.broadcast_event(
                 Message(self.state).start_job(
                     job_id=job_id, analysis_id=analysis_id,
                 )
             )
             await self.send_results(
-                result_set, job_id, analysis_id, details, finished=True
+                result_set, job_id, analysis_id, details, finished=True, udf_results=udf_results
             )

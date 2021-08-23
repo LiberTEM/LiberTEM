@@ -87,7 +87,7 @@ class DownloadDetailHandler(CORSMixin, tornado.web.RequestHandler):
         return fmt[0].decode("utf8")
 
     async def get(self, compoundUuid: str, uuid: str, file_format_id: str):
-        details, result_set, job_id = self.state.analysis_state.get_results(uuid)
+        details, result_set, job_id, udf_results = self.state.analysis_state.get_results(uuid)
         format_cls = ResultFormatRegistry.get_format_by_id(file_format_id)
         result_formatter = format_cls(result_set)
         buf = io.BytesIO()

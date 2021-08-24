@@ -101,11 +101,13 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         [1],
     );
 
+    // NOTE: haveResult is not a dependency here, as we don't want to re-run directly
+    // after the results have become available.
     React.useEffect(() => {
         if (haveResult) {
             runAnalysis();
         }
-    }, [haveResult, flip_y, scan_rotation]);
+    }, [flip_y, scan_rotation]);
 
     const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
 
@@ -120,6 +122,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         setScanRotation(value);
     };
 
+    // TODO: debounce parameters
     const comParams = (
         <>
             <Header>

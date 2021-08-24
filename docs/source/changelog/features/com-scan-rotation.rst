@@ -1,4 +1,4 @@
-[Feature] GUI Support for advanced parameters in CoM / first moment
+[Feature] GUI support for advanced parameters in CoM / first moment
 ===================================================================
 
 * Support in the GUI for specifying rotation of scan against detector and

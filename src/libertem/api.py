@@ -232,7 +232,8 @@ class Context:
         )
 
     def create_com_analysis(self, dataset: DataSet, cx: int = None, cy: int = None,
-                            mask_radius: int = None, flip_y: bool = False,
+                            mask_radius: float = None, flip_y: bool = False,
+                            mask_radius_inner: float = None,
                             scan_rotation: float = 0.0) -> COMAnalysis:
         """
         Create a center-of-mass (first moment) analysis, possibly masked.
@@ -246,7 +247,12 @@ class Context:
         cy
             reference center y value
         mask_radius
-            mask out intensity outside of mask_radius from (cy, cx)
+            mask out intensity outside of `mask_radius` from `(cy, cx)`
+        mask_radius_inner
+            mask out intensity except for the ring between `mask_radius_inner` and
+            `mask_radius`, centered around `(cy, cx)`
+
+            .. versionadded:: 0.8.0
         flip_y : bool
             Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,
             may have pixel (0, 0) at the lower left corner. This has to be corrected
@@ -286,6 +292,13 @@ class Context:
         }
         if mask_radius is not None:
             parameters['r'] = mask_radius
+        if mask_radius_inner is not None:
+            if mask_radius is None:
+                raise ValueError(
+                    "incompatible parameters: must pass both `mask_radius` and "
+                    "`mask_radius_inner` for annular CoM"
+                )
+            parameters['ri'] = mask_radius_inner
         analysis = COMAnalysis(
             dataset=dataset, parameters=parameters
         )

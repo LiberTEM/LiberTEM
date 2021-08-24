@@ -16,13 +16,14 @@ def test_com_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     dataset = _get_hdf5_params(path)
 
     analysis = [{
-            "analysisType": 'CENTER_OF_MASS',
-            "parameters": {
-                        'shape': 'com',
-                        'cx': 0,
-                        'cy': 0,
-                        'r': 8,
-                        }
+        "analysisType": 'CENTER_OF_MASS',
+        "parameters": {
+            'shape': 'com',
+            'cx': 0,
+            'cy': 0,
+            'r': 8,
+            'ri': 4,
+        }
     }]
 
     notebook = notebook_generator(conn, dataset, analysis, save=True)
@@ -31,12 +32,12 @@ def test_com_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     ep = ExecutePreprocessor(timeout=600)
     ep.preprocess(nb, {"metadata": {"path": datadir}})
     channels = [
-            "field",
-            "magnitude",
-            "divergence",
-            "curl",
-            "x",
-            "y"
+        "field",
+        "magnitude",
+        "divergence",
+        "curl",
+        "x",
+        "y"
     ]
     results = {}
     for channel in channels:
@@ -44,11 +45,12 @@ def test_com_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
         results[channel] = np.load(data_path)
 
     com_analysis = lt_ctx.create_com_analysis(
-                                dataset=hdf5_ds_2,
-                                cx=0,
-                                cy=0,
-                                mask_radius=8
-                            )
+        dataset=hdf5_ds_2,
+        cx=0,
+        cy=0,
+        mask_radius=8,
+        mask_radius_inner=4,
+    )
     expected = lt_ctx.run(com_analysis)
 
     assert np.allclose(results["field"], expected["field"].raw_data)

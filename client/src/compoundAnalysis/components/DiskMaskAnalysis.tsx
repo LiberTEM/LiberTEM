@@ -49,9 +49,7 @@ const DiskMaskAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, d
     </>);
 
     const frameViewWidgets = (
-        <Disk cx={cx} cy={cy} r={r}
-            imageWidth={imageWidth} imageHeight={imageHeight}
-        />
+        <Disk cx={cx} cy={cy} r={r} imageWidth={imageWidth} />
     );
 
     const dispatch = useDispatch();

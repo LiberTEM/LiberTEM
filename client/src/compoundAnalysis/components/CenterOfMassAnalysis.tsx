@@ -150,7 +150,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                             the x and y coordinates of the detector image are
                             usually not parallel to the x and y scan
                             coordinates. For interpretation of center of mass
-                            sifts, however, the shift vector in detector
+                            shifts, however, the shift vector in detector
                             coordinates has to be put in relation to the
                             position on the sample. This parameter can be used
                             to rotate the detector coordinates to match the scan

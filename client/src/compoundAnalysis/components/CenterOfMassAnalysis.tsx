@@ -163,7 +163,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
             <Form>
                 <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
                 <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
-                <Form.Field type="range" min="-360" max="360" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
+                <Form.Field type="range" min="-180" max="180" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
             </Form>
         </>
     );

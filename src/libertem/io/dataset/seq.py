@@ -31,7 +31,9 @@ import struct
 import warnings
 from typing import Tuple
 
+import defusedxml.ElementTree as ET
 import numpy as np
+import sparse
 from ncempy.io.mrc import mrcReader
 
 from libertem.common import Shape
@@ -42,12 +44,10 @@ from libertem.io.dataset.base import (
 )
 from libertem.corrections import CorrectionSet
 
-
 DWORD = 'L'
 LONG = 'l'
 DOUBLE = 'd'
 USHORT = 'H'
-
 
 HEADER_FIELDS = [
     ('magic', DWORD),
@@ -130,6 +130,243 @@ def _get_image_offset(header):
         return 1024
 
 
+def xml_map_sizes(bad_pixel_maps):
+    """
+    returns the sizes and binning values of bad_pixel_maps
+
+    Parameters
+    ----------
+    bad_pixel_maps: node
+        all of the bad pixel map nodes from the root
+    """
+    map_sizes = []
+
+    for size_map in bad_pixel_maps:
+        if "Binning" in size_map.attrib:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
+                              int(size_map.attrib["Binning"])))
+        else:
+            map_sizes.append((int(size_map.attrib['Columns']), int(size_map.attrib['Rows']),
+                              int(size_map.attrib.get("Binning", 1))))
+    map_rearrange = zip(*map_sizes)
+    xy_map_sizes = list(map_rearrange)
+    return xy_map_sizes, map_sizes
+
+
+def xml_unbinned_map_maker(xy_map_sizes):
+    """
+    returns two list of unbinned sizes(rows and cols) if the size was binned
+    return 0 in the list in its place
+    Parameters
+    ----------
+    xy_map_sizes: list of tuple
+        bad pixel maps sizes separated by row and col
+    """
+    unbinned_x = []
+    unbinned_y = []
+    for map_ind in range(0, len(xy_map_sizes[0])):
+        if xy_map_sizes[2][map_ind] < 2:
+            unbinned_y.append(xy_map_sizes[0][map_ind])
+            unbinned_x.append(xy_map_sizes[1][map_ind])
+        else:
+            unbinned_y.append(0)
+            unbinned_x.append(0)
+    return unbinned_x, unbinned_y
+
+
+def xml_binned_map_maker(xy_map_sizes):
+    """
+    returns two list of binned sizes(rows and cols) if the size was not binned
+    return 0 in the list in its place
+    Parameters
+    ----------
+    xy_map_sizes: list of tuple
+        bad pixel maps sizes separated by row and col
+    """
+    unbinned_x = []
+    unbinned_y = []
+    for map_ind in range(0, len(xy_map_sizes[0])):
+        if xy_map_sizes[2][map_ind] > 1:
+            unbinned_y.append(xy_map_sizes[0][map_ind])
+            unbinned_x.append(xy_map_sizes[1][map_ind])
+        else:
+            unbinned_y.append(0)
+            unbinned_x.append(0)
+    return unbinned_x, unbinned_y
+
+
+def xml_map_index_selector(used_y):
+    """
+    returns the the bad pixel maps  index with the largest column count
+
+    Parameters
+    ----------
+    used_y: list
+        list of either binned or unbinned y coordinates
+    """
+    max_y = max(used_y)
+
+    map_index = used_y.index(max_y)
+    return map_index
+
+
+def xml_defect_coord_extractor(bad_pixel_map, map_index, map_sizes):
+    """
+    returns the chosen bad pixel map's defects
+
+    Parameters
+    ----------
+    bad_pixel_map: node
+        the xml file's root node
+    map_index: int
+        the index of the correct bad pixel map
+    map_sizes: list of tuples
+    """
+    excluded_rows = []
+    excluded_cols = []
+    excluded_pixels = []
+    for defect in bad_pixel_map.findall('Defect'):
+        if len(defect.attrib) == 1:
+            defect_attrib_key = defect.attrib.keys()
+            if "Rows" in defect_attrib_key:
+                split = defect.attrib["Rows"].split('-')
+                excluded_rows.append(split)
+            if "Row" in defect_attrib_key:
+                excluded_rows.append([defect.attrib["Row"]])
+
+            if "Columns" in defect_attrib_key:
+                split = defect.attrib["Columns"].split('-')
+                excluded_cols.append(split)
+            if "Column" in defect_attrib_key:
+                excluded_cols.append([defect.attrib["Column"]])
+        else:
+            excluded_pixels.append([defect.attrib["Column"], defect.attrib["Row"]])
+
+    return {"rows": excluded_rows,
+            "cols": excluded_cols,
+            "pixels": excluded_pixels,
+            "size": (map_sizes[map_index][0], map_sizes[map_index][1])
+            }
+
+
+def xml_defect_data_extractor(root, metadata):
+    """
+    Parameters
+    ----------
+    root: node
+        the xml file's root node
+    metadata: dictionary
+        the content of the metadata file as a dictionary
+    """
+    bad_pixel_maps = root.findall('.//BadPixelMap')
+    xy_size, map_sizes = xml_map_sizes(bad_pixel_maps)
+    if (metadata['HardwareBinning']) < 2:
+        used_x, used_y = xml_unbinned_map_maker(xy_map_sizes=xy_size)
+    else:
+        used_x, used_y = xml_binned_map_maker(xy_map_sizes=xy_size)
+    map_index = xml_map_index_selector(used_y)
+    defect_dict = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
+    return defect_dict
+
+
+def bin_array2d(a, binning):
+    """
+    Parameters
+    ----------
+    a: np array
+    binning: int
+        the times we want to bin the array
+    """
+    sx, sy = a.shape
+    sxc = sx // binning * binning
+    syc = sy // binning * binning
+    # crop:
+    ac = a[:sxc, :syc]
+    return ac.reshape(ac.shape[0] // binning, binning,
+                      ac.shape[1] // binning, binning).sum(3).sum(1)
+
+
+def array_cropping(arr, start_size, req_size, offsets):
+    """
+    returns a crop from the original array
+    Parameters
+    ----------
+    arr: np array
+        the array we will make the changes on
+    start_size: tuple
+        the size of the original array
+    req_size: tuple
+        the size we want to crop to
+    offsets: tuple
+        the top left coord of the crop
+    """
+    ac = arr
+    if offsets[0] + req_size[0] <= start_size[0] and offsets[1] + req_size[1] <= start_size[1]:
+        req_y = int(req_size[0]) // 2
+        req_x = int(req_size[1]) // 2
+        a = int(offsets[0]) + req_y
+        b = int(offsets[1]) + req_x
+        ac = ac[(a - req_y):(a + req_y), (b - req_x):(b + req_x)]
+    return ac
+
+
+def xml_generate_map_size(exc_rows, exc_cols, exc_pix, size, metadata):
+    """
+    This function will be responsible for generating new size based on the parameters.
+    returns an np array with the excluded pixels as True
+
+    Parameters
+    ----------
+    exc_rows: list of lists
+        list with the excluded rows as lists which length is 1 if its a single row
+        and two if its an interval of rows
+    exc_cols: list of lists
+    exc_pix: list of lists
+    size: tuple
+        selected bad pixel maps size
+    metadata: dictionary
+        the metadata where we specify the image's parameters
+    """
+    required_size = (metadata["UnbinnedFrameSizeY"], metadata["UnbinnedFrameSizeX"])
+    offsets = (metadata["OffsetY"], metadata["OffsetX"])
+    bin_value = metadata["HardwareBinning"]
+    if bin_value > 1:
+        required_size = (required_size[0]//2, required_size[1]//2)
+        offsets = (offsets[0]//2, offsets[1]//2)
+    dummy_m = np.zeros(size, dtype=bool)
+    for row in exc_rows:
+
+        if len(row) == 1:
+            dummy_m[int(row[0])] = 1
+        else:
+            dummy_m[int(row[0]):int(row[1]) + 1] = 1
+
+    for col in exc_cols:
+
+        if len(col) == 1:
+            dummy_m[:, int(col[0])] = 1
+        else:
+            dummy_m[:, int(col[0]):int(col[1]) + 1] = 1
+
+    for pix in exc_pix:
+        dummy_m[int(pix[1]), int(pix[0])] = 1
+
+    cropped = array_cropping(dummy_m, start_size=size, req_size=required_size, offsets=offsets)
+    return np.array(cropped, dtype=bool)
+
+
+def xml_processing(tree, metadata_dict):
+    data_dict = xml_defect_data_extractor(tree, metadata_dict)
+    coord = xml_generate_map_size(data_dict["rows"], data_dict["cols"], data_dict["pixels"],
+                                  data_dict["size"], metadata_dict)
+    return sparse.COO(coord)
+
+
+def _load_xml_from_string(xml, metadata):
+    tree = ET.fromstring(xml)
+    return xml_processing(tree, metadata)
+
+
 class SEQDatasetParams(MessageConverter):
     SCHEMA = {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -175,29 +412,24 @@ class SEQFileSet(FileSet):
 class SEQDataSet(DataSet):
     """
     Read data from Norpix SEQ files.
-
     Examples
     --------
-
     >>> ds = ctx.load("seq", path="/path/to/file.seq", nav_shape=(1024, 1024))  # doctest: +SKIP
-
     Parameters
     ----------
     path
         Path to the .seq file
-
     nav_shape: tuple of int
         A n-tuple that specifies the size of the navigation region ((y, x), but
         can also be of length 1 for example for a line scan, or length 3 for
         a data cube, for example)
-
     sig_shape: tuple of int, optional
         Signal/detector size (height, width)
-
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
     """
+
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
                  sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
         super().__init__(io_backend=io_backend)
@@ -222,6 +454,7 @@ class SEQDataSet(DataSet):
         self._filesize = None
         self._dark = None
         self._gain = None
+        self._excluded_pixels = None
 
     def _do_initialize(self):
         header = self._header = _read_header(self._path, HEADER_FIELDS)
@@ -269,14 +502,33 @@ class SEQDataSet(DataSet):
         data_dict = mrcReader(path)
         return np.squeeze(data_dict['data'])
 
+    def _load_xml_from_file(self, path):
+        if not os.path.exists(path + ".Config.Metadata.xml"):
+            return None
+        if not os.path.exists(path + ".metadata"):
+            return None
+        else:
+            tree = ET.parse(path + ".Config.Metadata.xml")
+            root = tree.getroot()
+            with open(path + ".metadata", mode="rb") as file:
+                met = file.read()
+            metdata_keys = ['DEMetadataSize', 'DEMetadataVersion', 'UnbinnedFrameSizeX',
+                            'UnbinnedFrameSizeY', 'OffsetX', 'OffsetY', 'HardwareBinning',
+                            'Bitmode', 'FrameRate', 'RotationMode',
+                            'FlipMode', 'OkraMode']
+            metadata = dict(zip(metdata_keys, struct.unpack_from('iiiiiiiiiii?', met, 282)))
+            return xml_processing(root, metadata)
+
     def _maybe_load_dark_gain(self):
         self._dark = self._maybe_load_mrc(self._path + ".dark.mrc")
         self._gain = self._maybe_load_mrc(self._path + ".gain.mrc")
+        self._excluded_pixels = self._load_xml_from_file(path=self._path)
 
     def get_correction_data(self):
         return CorrectionSet(
             dark=self._dark,
             gain=self._gain,
+            excluded_pixels=self._excluded_pixels,
         )
 
     def initialize(self, executor):
@@ -285,16 +537,16 @@ class SEQDataSet(DataSet):
     def get_diagnostics(self):
         header = self._header
         return [
-            {"name": k, "value": str(v)}
-            for k, v in header.items()
-        ] + [
-            {"name": "Footer size",
-             "value": str(self._footer_size)},
-            {"name": "Dark frame included",
-             "value": str(self._dark is not None)},
-            {"name": "Gain map included",
-             "value": str(self._gain is not None)},
-        ]
+                   {"name": k, "value": str(v)}
+                   for k, v in header.items()
+               ] + [
+                   {"name": "Footer size",
+                    "value": str(self._footer_size)},
+                   {"name": "Dark frame included",
+                    "value": str(self._dark is not None)},
+                   {"name": "Gain map included",
+                    "value": str(self._gain is not None)},
+               ]
 
     @property
     def meta(self):
@@ -382,7 +634,7 @@ class SEQDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        res = max(self._cores, self._filesize // (512*1024*1024))
+        res = max(self._cores, self._filesize // (512 * 1024 * 1024))
         return res
 
     def get_partitions(self):

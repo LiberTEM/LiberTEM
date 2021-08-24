@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 
 from libertem.executor.inline import InlineJobExecutor
-from libertem.io.dataset.seq import SEQDataSet
+from libertem.io.dataset.seq import (SEQDataSet, _load_xml_from_string, xml_defect_data_extractor,
+                                     xml_map_sizes, xml_unbinned_map_maker, array_cropping,
+                                     xml_defect_coord_extractor, xml_map_index_selector,
+                                     xml_binned_map_maker)
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -14,23 +17,22 @@ from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
 from libertem.corrections import CorrectionSet
 
 from utils import get_testdata_path, ValidationUDF
+import defusedxml.ElementTree as ET
 
 try:
     import pims
 except ModuleNotFoundError:
     pims = None
 
-
 SEQ_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.seq')
 HAVE_SEQ_TESTDATA = os.path.exists(SEQ_TESTDATA_PATH)
 
-pytestmark = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
+needsdata = pytest.mark.skipif(not HAVE_SEQ_TESTDATA, reason="need .seq testdata")
 
 
 @pytest.fixture
 def default_seq(lt_ctx):
     nav_shape = (8, 8)
-
     ds = lt_ctx.load(
         "seq",
         path=SEQ_TESTDATA_PATH,
@@ -64,6 +66,7 @@ def default_seq_raw():
 
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
+@needsdata
 def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
     corrset = CorrectionSet()
     udf = ValidationUDF(
@@ -73,6 +76,7 @@ def test_comparison(default_seq, default_seq_raw, lt_ctx_fast):
 
 
 @pytest.mark.skipif(pims is None, reason="No PIMS found")
+@needsdata
 def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     corrset = CorrectionSet()
     roi = np.random.choice(
@@ -84,6 +88,7 @@ def test_comparison_roi(default_seq, default_seq_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_seq, roi=roi, corrections=corrset)
 
 
+@needsdata
 def test_positive_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
     sync_offset = 2
@@ -123,12 +128,298 @@ def test_positive_sync_offset(default_seq, lt_ctx):
 
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
     result_with_offset = result_with_offset['intensity'].raw_data[
-        :ds_with_offset._meta.image_count - sync_offset
-    ]
+                         :ds_with_offset._meta.image_count - sync_offset
+                         ]
 
     assert np.allclose(result, result_with_offset)
 
 
+def test_array_cropping():
+    start_size = (1024, 1024)
+    crop_to_this = (512, 512)
+    offset = (600, 600)
+    array = np.zeros(start_size)
+    n_array = array_cropping(array, start_size, crop_to_this, offset)
+    assert np.array_equal(n_array, array)
+
+
+def test_xml_excluded_pixels_unbinned():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                        <BadPixelMap Rows="4096" Columns="4096">
+                            <Defect Rows="2311-2312"/>
+                            <Defect Rows="3413-3414"/>
+                            <Defect Column="2311"/>
+                        </BadPixelMap>
+                        <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                            <Defect Rows="1155-1156"/>
+                            <Defect Rows="1706-1707"/>
+                        </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+            '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 1
+    }
+    test_arr = np.zeros((1024, 1024), dtype=bool)
+    test_arr[775] = True
+    test_arr[:, 775] = True
+    test_arr[776] = True
+    expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
+    assert np.array_equal(expected_res.todense(), test_arr)
+
+
+def test_xml_excluded_pixels_only_binned():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Rows="2311-2312"/>
+                                <Defect Row="600"/>
+                                <Defect Columns="1310-1312"/>
+                                <Defect Column="1300"/>
+                                <Defect Row="100" Column="150"/>
+                            </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Row="300"/>
+                                <Defect Columns="655-656"/>
+                                <Defect Column="650"/>
+                                <Defect Row="50" Column="75"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    metadata = {
+        "UnbinnedFrameSizeX": 4096,
+        "UnbinnedFrameSizeY": 4096,
+        "OffsetX": 0,
+        "OffsetY": 0,
+        "HardwareBinning": 2
+    }
+    test_arr = np.zeros((2048, 2048), dtype=bool)
+    test_arr[1155] = True
+    test_arr[1156] = True
+    test_arr[300] = True
+    test_arr[50, 75] = True
+    test_arr[:, 650] = True
+    test_arr[:, 655:657] = True
+    expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
+    assert np.array_equal(expected_res.todense(), test_arr)
+
+
+def test_xml_excluded_pixels_binned_cropped():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Rows="2311-2312"/>
+                                <Defect Rows="3413-3414"/>
+                                <Defect Columns="1310-1312"/>
+                                <Defect Column="1300"/>
+                                <Defect Row="100" Column="150"/>
+                            </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                                <Defect Rows="1250-1252"/>
+                                <Defect Row="800"/>
+                                <Defect Columns="768-770"/>
+                                <Defect Column="1000"/>
+                                <Defect Row="1200" Column="1100"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 2
+    }
+    test_arr = np.zeros((512, 512), dtype=bool)
+    test_arr[482:485] = True
+    test_arr[32] = True
+    test_arr[:, 0:3] = True
+    test_arr[:, 232] = True
+    test_arr[432, 332] = True
+    expected_res = _load_xml_from_string(xml=xml_string, metadata=metadata)
+    assert np.array_equal(expected_res.todense(), test_arr)
+
+
+def test_correct_bad_pixel_map_selector():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Columns="1310-1312"/>
+                            </BadPixelMap>
+                            <BadPixelMap Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                                <Defect Rows="1706-1707"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 1
+    }
+    tree = ET.fromstring(xml_string)
+    excluded_rows_dict = xml_defect_data_extractor(tree, metadata)
+    assert excluded_rows_dict["cols"] == [['1310', '1312']]
+
+
+def test_correct_bad_pixel_map_selector_2():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    <Configuration>
+                        <PixelSize></PixelSize><DiffPixelSize></DiffPixelSize>
+                        <BadPixels>
+                            <BadPixelMap Rows="4096" Columns="4096">
+                                <Defect Columns="1310-1312"/>
+                            </BadPixelMap>
+                            <BadPixelMap Binning="2" Rows="2048" Columns="2048">
+                                <Defect Rows="1155-1156"/>
+                            </BadPixelMap>
+                        </BadPixels>
+                    </Configuration>
+        '''
+    metadata = {
+        "UnbinnedFrameSizeX": 1024,
+        "UnbinnedFrameSizeY": 1024,
+        "OffsetX": 1536,
+        "OffsetY": 1536,
+        "HardwareBinning": 2
+    }
+    tree = ET.fromstring(xml_string)
+    excluded_rows_dict = xml_defect_data_extractor(tree, metadata)
+    assert excluded_rows_dict["rows"] == [['1155', '1156']]
+
+
+def test_map_size():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+          '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
+    xy_map_sizes_expected = [(4096, 4096), (4096, 4080), (1, 2)]
+    assert xy_map_sizes == xy_map_sizes_expected
+
+
+def test_unbinned_map_maker():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, _ = xml_map_sizes(bad_pixel_maps)
+    unbinned_x, unbinned_y = xml_unbinned_map_maker(xy_map_sizes)
+    assert unbinned_x == [4096, 2048, 0]
+    assert unbinned_y == [4096, 2048, 0]
+
+
+def test_binned_map_maker():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4096" Columns="4096"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, _ = xml_map_sizes(bad_pixel_maps)
+    unbinned_x, unbinned_y = xml_binned_map_maker(xy_map_sizes)
+    assert unbinned_x == [0, 0, 4096]
+    assert unbinned_y == [0, 0, 4096]
+
+
+def test_map_index_selector_case1():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="512" Columns="512"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
+    used_x, used_y = xml_unbinned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
+    expected_index = 0
+    assert map_index == expected_index
+
+
+def test_map_index_selector_case2():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096"></BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048"></BadPixelMap>
+              <BadPixelMap Binning="2" Rows="512" Columns="512"></BadPixelMap>
+          </BadPixels>
+         '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
+    used_x, used_y = xml_binned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
+    print(used_y)
+    expected_index = 2
+
+    assert map_index == expected_index
+
+
+def test_defect_extractor():
+    xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          <BadPixels>
+              <BadPixelMap Rows="4096" Columns="4096">
+                  <Defect Rows="2311-2312" />
+                  <Defect Row="1300" />
+                  <Defect Columns="2300-2301" />
+                  <Defect Column="600" />
+                  <Defect Row="230" Column="100" />
+              </BadPixelMap>
+              <BadPixelMap Rows="2048" Columns="2048">
+                    <Defect Column="10"/>
+              </BadPixelMap>
+              <BadPixelMap Binning="2" Rows="4080" Columns="4096"></BadPixelMap>
+          </BadPixels>
+          '''
+    tree = ET.fromstring(xml)
+    bad_pixel_maps = tree.findall('.//BadPixelMap')
+    xy_map_sizes, map_sizes = xml_map_sizes(bad_pixel_maps)
+    used_x, used_y = xml_unbinned_map_maker(xy_map_sizes)
+    map_index = xml_map_index_selector(used_y)
+    defects = xml_defect_coord_extractor(bad_pixel_maps[map_index], map_index, map_sizes)
+    expected_defects = {"rows": [['2311', '2312'], ['1300']],
+                        "cols": [['2300', '2301'], ['600']],
+                        "pixels": [['100', '230']],
+                        "size": (4096, 4096)
+                        }
+    assert defects == expected_defects
+
+
+@needsdata
 def test_negative_sync_offset(default_seq, lt_ctx):
     udf = SumSigUDF()
     sync_offset = -2
@@ -172,6 +463,7 @@ def test_negative_sync_offset(default_seq, lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
+@needsdata
 def test_missing_frames(lt_ctx):
     nav_shape = (16, 8)
 
@@ -201,6 +493,7 @@ def test_missing_frames(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_missing_data_with_positive_sync_offset(lt_ctx):
     nav_shape = (16, 8)
     sync_offset = 8
@@ -230,6 +523,7 @@ def test_missing_data_with_positive_sync_offset(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_missing_data_with_negative_sync_offset(lt_ctx):
     nav_shape = (16, 8)
     sync_offset = -8
@@ -259,6 +553,7 @@ def test_missing_data_with_negative_sync_offset(lt_ctx):
     assert t.tile_slice.shape[0] == 4
 
 
+@needsdata
 def test_too_many_frames(lt_ctx):
     nav_shape = (4, 8)
 
@@ -281,6 +576,7 @@ def test_too_many_frames(lt_ctx):
             pass
 
 
+@needsdata
 def test_positive_sync_offset_with_roi(default_seq, lt_ctx):
     udf = SumSigUDF()
     result = lt_ctx.run_udf(dataset=default_seq, udf=udf)
@@ -302,6 +598,7 @@ def test_positive_sync_offset_with_roi(default_seq, lt_ctx):
     assert np.allclose(result[sync_offset:8 + sync_offset], result_with_offset)
 
 
+@needsdata
 def test_negative_sync_offset_with_roi(default_seq, lt_ctx):
     udf = SumSigUDF()
     result = lt_ctx.run_udf(dataset=default_seq, udf=udf)
@@ -323,6 +620,7 @@ def test_negative_sync_offset_with_roi(default_seq, lt_ctx):
     assert np.allclose(result[:8 + sync_offset], result_with_offset[abs(sync_offset):])
 
 
+@needsdata
 def test_offset_smaller_than_image_count(lt_ctx):
     nav_shape = (8, 8)
     sync_offset = -65
@@ -339,6 +637,7 @@ def test_offset_smaller_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_offset_greater_than_image_count(lt_ctx):
     nav_shape = (8, 8)
     sync_offset = 65
@@ -355,6 +654,7 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
+@needsdata
 def test_reshape_nav(lt_ctx, default_seq):
     udf = SumSigUDF()
 
@@ -372,6 +672,7 @@ def test_reshape_nav(lt_ctx, default_seq):
     assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
 
 
+@needsdata
 def test_reshape_different_shapes(lt_ctx, default_seq):
     udf = SumSigUDF()
 
@@ -382,9 +683,10 @@ def test_reshape_different_shapes(lt_ctx, default_seq):
     result_1 = lt_ctx.run_udf(dataset=ds_1, udf=udf)
     result_1 = result_1['intensity'].raw_data
 
-    assert np.allclose(result_1, result[:3*6])
+    assert np.allclose(result_1, result[:3 * 6])
 
 
+@needsdata
 def test_incorrect_sig_shape(lt_ctx):
     nav_shape = (8, 8)
     sig_shape = (5, 5)
@@ -401,6 +703,7 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
+@needsdata
 def test_scan_size_deprecation(lt_ctx):
     scan_size = (5, 5)
 
@@ -413,12 +716,14 @@ def test_scan_size_deprecation(lt_ctx):
     assert tuple(ds.shape) == (5, 5, 128, 128)
 
 
+@needsdata
 def test_detect_non_seq(raw_with_zeros, lt_ctx):
     path = raw_with_zeros._path
     # raw_with_zeros is not a SEQ file, caused UnicodeDecodeError before:
     assert SEQDataSet.detect_params(path, InlineJobExecutor()) is False
 
 
+@needsdata
 def test_detect_seq(lt_ctx):
     path = SEQ_TESTDATA_PATH
     assert SEQDataSet.detect_params(path, lt_ctx.executor) is not False
@@ -427,7 +732,7 @@ def test_detect_seq(lt_ctx):
 # from utils import dataset_correction_verification
 # FIXME test with actual test file
 
-
+@needsdata
 def test_compare_backends(lt_ctx, default_seq, buffered_seq):
     y = random.choice(range(default_seq.shape.nav[0]))
     x = random.choice(range(default_seq.shape.nav[1]))
@@ -443,6 +748,7 @@ def test_compare_backends(lt_ctx, default_seq, buffered_seq):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
     roi = np.zeros(default_seq.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True

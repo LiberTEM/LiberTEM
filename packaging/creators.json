@@ -157,5 +157,12 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
+    },
+    {
+        "displayname": "Levente Puskás",
+        "authorname": "Puskás Levente",
+        "affiliation": "University of Szeged",
+        "github": "DYVZ8X",
+        "contribution": "Issue 805 Implemented XML support for seq files"
     }
 ]

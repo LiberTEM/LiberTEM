@@ -259,7 +259,7 @@ class Context:
             The optics of an electron microscope can rotate the image. Furthermore, scan
             generators may allow scanning in arbitrary directions. This means that the x and y
             coordinates of the detector image are usually not parallel to the x and y scan
-            coordinates. For interpretation of center of mass sifts, however, the shift vector
+            coordinates. For interpretation of center of mass shifts, however, the shift vector
             in detector coordinates has to be put in relation to the position on the sample.
             The :code:`scan_rotation` parameter can be used to rotate the detector coordinates
             to match the scan coordinate system. A positive value rotates the displacement

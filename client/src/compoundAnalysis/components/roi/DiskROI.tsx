@@ -57,7 +57,7 @@ const useDiskROI = ({ scanWidth, scanHeight }: {
 
     const diskRoiWidgets = (
         <Disk cx={cx} cy={cy} r={r}
-            imageWidth={scanWidth} imageHeight={scanHeight}
+            imageWidth={scanWidth}
         />
     );
 

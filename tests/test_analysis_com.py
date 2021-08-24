@@ -415,3 +415,28 @@ def test_com_curl_rotate(lt_ctx):
 
     assert np.allclose(res["divergence"].raw_data, 0)
     assert np.allclose(res["curl"].raw_data, -2)
+
+
+def test_com_invalid_parameters(lt_ctx, ds_random):
+    # mask_radius_inner depends on mask_radius being set, too,
+    # to switch to annular mode:
+    with pytest.raises(ValueError):
+        lt_ctx.create_com_analysis(
+            dataset=ds_random,
+            cx=8,
+            cy=8,
+            mask_radius_inner=7,
+        )
+
+
+def test_com_valid_parameters(lt_ctx, ds_random):
+    a = lt_ctx.create_com_analysis(
+        dataset=ds_random,
+        cx=8,
+        cy=8,
+        mask_radius=12,
+        mask_radius_inner=7,
+    )
+
+    assert a.parameters['r'] == 12
+    assert a.parameters['ri'] == 7

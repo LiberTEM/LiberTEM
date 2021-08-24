@@ -3,7 +3,6 @@ import { defaultMaskStyles } from "./styles";
 
 export interface DiskProps {
     imageWidth: number,
-    imageHeight: number,
     cx: number,
     cy: number,
     r: number,

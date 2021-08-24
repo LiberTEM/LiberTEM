@@ -100,9 +100,7 @@ const FFTAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysis, datase
     </>);
 
     const frameViewWidgetsreal = (
-        <Disk cx={realCenterX} cy={realCenterY} r={realRad}
-            imageWidth={imageWidth} imageHeight={imageHeight}
-        />
+        <Disk cx={realCenterX} cy={realCenterY} r={realRad} imageWidth={imageWidth} />
     );
 
     const runAnalysis = () => {

@@ -6,7 +6,7 @@ import websockets
 from utils import assert_msg
 from aio_utils import (
     create_connection, consume_task_results, create_default_dataset, create_analysis,
-    create_update_compound_analysis, create_job_for_analysis,
+    create_update_compound_analysis, create_job_for_analysis, update_analysis,
 )
 
 
@@ -374,6 +374,107 @@ async def test_create_compound_analysis(
                 "mainType": "APPLY_RING_MASK",
                 "analyses": [analysis_uuid]
             }, ca_uuid=ca_uuid, token=default_token,
+        )
+
+        job_uuid, job_url = await create_job_for_analysis(
+            ws, http_client, base_url, analysis_uuid, token=default_token,
+        )
+
+        await consume_task_results(ws, job_uuid)
+
+
+@pytest.mark.asyncio
+async def test_rerun_com_analysis(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
+
+    # connect to ws endpoint:
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
+    async with websockets.connect(ws_url) as ws:
+        print("checkpoint 2")
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+
+        ds_uuid, ds_url = await create_default_dataset(
+            default_raw, ws, http_client, base_url, token=default_token,
+        )
+
+        # compound analysis is first created without any analyses:
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details=None, token=default_token,
+        )
+
+        analysis_uuid, analysis_url = await create_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
+            details={
+                "analysisType": "CENTER_OF_MASS",
+                "parameters": {
+                    "shape": "com",
+                    "cx": 128,
+                    "cy": 128,
+                    "r": 64,
+                    "flip_y": False,
+                    "scan_rotation": 0,
+                }
+            },
+        )
+
+        # compound analysis is updated with the newly created analysis:
+        _, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details={
+                "mainType": "CENTER_OF_MASS",
+                "analyses": [analysis_uuid]
+            }, ca_uuid=ca_uuid, token=default_token,
+        )
+
+        job_uuid, job_url = await create_job_for_analysis(
+            ws, http_client, base_url, analysis_uuid, token=default_token,
+        )
+
+        await consume_task_results(ws, job_uuid)
+
+        # update analysis and run again, this should cover the short circuit case
+        await update_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
+            analysis_uuid=analysis_uuid,
+            details={
+                "analysisType": "CENTER_OF_MASS",
+                "parameters": {
+                    "shape": "com",
+                    "cx": 128,
+                    "cy": 128,
+                    "r": 64,
+                    "flip_y": False,
+                    "scan_rotation": 88,
+                }
+            },
+        )
+
+        job_uuid, job_url = await create_job_for_analysis(
+            ws, http_client, base_url, analysis_uuid, token=default_token,
+        )
+
+        await consume_task_results(ws, job_uuid)
+
+        # and once again with changed parameters, this should cover the case
+        # of having old results, but still needing a re-run:
+        await update_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
+            analysis_uuid=analysis_uuid,
+            details={
+                "analysisType": "CENTER_OF_MASS",
+                "parameters": {
+                    "shape": "com",
+                    "cx": 128,
+                    "cy": 128,
+                    "r": 48,
+                    "flip_y": False,
+                    "scan_rotation": 88,
+                }
+            },
         )
 
         job_uuid, job_url = await create_job_for_analysis(

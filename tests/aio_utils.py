@@ -142,6 +142,32 @@ async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=N
     return analysis_uuid, analysis_url
 
 
+async def update_analysis(
+    ws, http_client, base_url, ds_uuid, ca_uuid, analysis_uuid, details, token=None,
+):
+    analysis_url = "{}/api/compoundAnalyses/{}/analyses/{}/".format(
+        base_url, ca_uuid, analysis_uuid
+    )
+    analysis_url = add_token(analysis_url, token)
+    assert "analysisType" in details
+    assert "parameters" in details
+    analysis_data = {
+        "dataset": ds_uuid,
+        "details": details,
+    }
+    async with http_client.put(analysis_url, json=analysis_data) as resp:
+        print(await resp.text())
+        assert resp.status == 200
+        resp_json = await resp.json()
+        assert resp_json['status'] == "ok"
+
+    msg = json.loads(await ws.recv())
+    assert_msg(msg, 'ANALYSIS_UPDATED')
+    assert msg['dataset'] == ds_uuid
+    assert msg['analysis'] == analysis_uuid
+    assert msg['details'] == details
+
+
 async def create_update_compound_analysis(
     ws, http_client, base_url, ds_uuid, details=None, ca_uuid=None, token=None,
 ):

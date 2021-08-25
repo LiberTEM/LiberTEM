@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Checkbox, Dropdown, DropdownProps, Form, Header, Icon, Input, Modal, Popup } from "semantic-ui-react";
+import { Checkbox, Dropdown, DropdownProps, Form, Header, Icon, Input, List, Modal, Popup } from "semantic-ui-react";
 import { defaultDebounce, getEnumValues } from "../../helpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes, CenterOfMassParams } from "../../messages";
@@ -207,12 +207,20 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                 }>
                     <Popup.Header>CoM / first moment parameters</Popup.Header>
                     <Popup.Content>
+                        <Header>CoM mask shape</Header>
+                        <p>
+                            Select a shape that will be used to mask out the data:
+                        </p>
+                        <ul>
+                            <li><em>Annular CoM</em>: calculate the center of mass in a selected ring</li>
+                            <li><em>Disk cut-off</em>: calculate the center of mass in a selected disk</li>
+                        </ul>
                         <Header>Flip in y direction</Header>
                         <p>
-                        Flip the Y coordinate. Some detectors, for example Quantum
-                        Detectors Merlin, may have pixel (0, 0) at the lower
-                        left corner. This has to be corrected to get the sign of
-                        the y shift as well as curl and divergence right.
+                            Flip the Y coordinate. Some detectors, for example Quantum
+                            Detectors Merlin, may have pixel (0, 0) at the lower
+                            left corner. This has to be corrected to get the sign of
+                            the y shift as well as curl and divergence right.
                         </p>
                         <Header>Rotation between scan and detector</Header>
                         <p>
@@ -232,30 +240,34 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                             scan, this value should be negative to counteract
                             this rotation.
                         </p>
-                        <Header>CoM mask shape</Header>
                         <p>
-                            Select a shape that will be used to mask out the data.
-                            <ul>
-                                <li><em>Annular CoM</em>: calculate the center of mass in a selected ring</li>
-                                <li><em>Disk cut-off</em>: calculate the center of mass in a selected disk</li>
-                            </ul>
+                            Use either the numeric input or the slider to adjust
+                            the rotation angle.
                         </p>
                     </Popup.Content>
                 </Modal>
             </Header>
-            <p>
-                <MaskShapeSelector selectedShape={maskShape} handleChange={(e, data) => {
-                    // eslint-disable-next-line no-console
-                    console.log(data.value);
-                    // eslint-disable-next-line no-console
-                    console.log(data);
-                    setMaskShape(data.value as CoMMaskShapes)
-                }} />
-            </p>
             <Form>
-                <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
-                <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
-                <Form.Field type="range" min="-180" max="180" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
+                <List relaxed="very">
+                    <List.Item>
+                        <List.Content>
+                            <MaskShapeSelector selectedShape={maskShape} handleChange={(e, data) => {
+                                setMaskShape(data.value as CoMMaskShapes)
+                            }} />
+                        </List.Content>
+                    </List.Item>
+                    <List.Item>
+                        <List.Content>
+                            <Form.Field control={Checkbox} label="Flip in y direction" checked={flip_y} onChange={updateFlipY} />
+                        </List.Content>
+                    </List.Item>
+                    <List.Item>
+                        <List.Content>
+                            <Form.Field type="number" control={Input} label="Rotation between scan and detector (deg)" value={scan_rotation} onChange={updateScanRotation} />
+                            <Form.Field type="range" min="-180" max="180" step="0.1" control={Input} value={scan_rotation} onChange={updateScanRotation} />
+                        </List.Content>
+                    </List.Item>
+                </List>
             </Form>
         </>
     );

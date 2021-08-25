@@ -35,8 +35,8 @@ const AnalysisLayoutTwoCol: React.FC<MergedProps> = ({
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
-            {params}
         </Segment>
+        {params === null ? params : <Segment attached>{params}</Segment>}
         {toolbar}
     </>
 )

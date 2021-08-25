@@ -113,7 +113,13 @@ class AnalysisState:
         return self.analyses[uuid]
 
     def serialize(self, uuid):
-        return self[uuid]
+        result = copy.copy(self[uuid])
+        result["jobs"] = [
+            job_id
+            for job_id in result["jobs"]
+            if not self.job_state.is_cancelled(job_id)
+        ]
+        return result
 
     def serialize_all(self):
         return [

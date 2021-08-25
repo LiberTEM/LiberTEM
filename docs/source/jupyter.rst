@@ -24,13 +24,14 @@ Installation
 .. note::
 
     Currently, a fork of :code:`jupyter-server-proxy` needs to be used, which
-    includes the PR `jupyter-server-proxy/287
-    <https://github.com/jupyterhub/jupyter-server-proxy/pull/287>`_ and a fix to
-    allow restarting LiberTEM after a graceful shutdown, see also
+    includes a fix to allow restarting LiberTEM after a graceful shutdown, see
+    also
     `jupyter-server-proxy/215
-    <https://github.com/jupyterhub/jupyter-server-proxy/pull/215>`_. This can be
-    done with the following commands, after having followed the installation
-    instructions below:
+    <https://github.com/jupyterhub/jupyter-server-proxy/pull/215>`_. 
+    The fork also includes other unreleased but necessary changes from the
+    master branch of :code:`jupyter-server-proxy`.
+    Installation can be done with the following commands, after having followed
+    the installation instructions below:
 
     .. code-block:: shell
         

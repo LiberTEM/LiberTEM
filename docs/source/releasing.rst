@@ -39,7 +39,7 @@ When planning a release, create a new issue with the following checklist:
 
     # Release checklist
 
-    Issues to be considered for this release:
+    Issues and pull requests to be considered for this release:
     
     * #XXX
     * #YYY
@@ -48,28 +48,29 @@ When planning a release, create a new issue with the following checklist:
     ## Before (using a release candidate package)
 
     * [ ] Review open issues and pull requests
-    * [ ] Handle deprecation, search the code base for :code:`DeprecationWarning`
+    * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3)
+    * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
-    * [ ] GUI dependency update with :code:`npm install`
+    * [ ] GUI dependency update with `npm install`
     * [ ] Review https://github.com/LiberTEM/LiberTEM/security/dependabot and update dependencies
     * [ ] Full documentation review and update, including link check using
           ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
     * [ ] Run complete test suite, including slow tests that are deactivated by default
           and tests that require sample files.
-    * [ ] Update the expected version in notes on changes, i.e. from :code:`0.3.0.dev0`
-          to :code:`0.3.0` when releasing version 0.3.0.
-    * [ ] Update and review change log in :code:`docs/source/changelog.rst`, merging
-          snippets in :code:`docs/source/changelog/*/` as appropriate.
+    * [ ] Update the expected version in notes on changes, i.e. from `0.3.0.dev0`
+          to `0.3.0` when releasing version 0.3.0.
+    * [ ] Update and review change log in `docs/source/changelog.rst`, merging
+          snippets in `docs/source/changelog/*/` as appropriate.
     * [ ] Update the JSON files in the ``packaging/`` folder with author and project information
-    * [ ] Edit :code:`setup.cfg` to exclude flaky tests temporarily from release builds
-    * [ ] Create a release candidate using :code:`scripts/release`. See :code:`scripts/release --help` for details.
+    * [ ] Edit `setup.cfg` to exclude flaky tests temporarily from release builds
+    * [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
     * [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
           GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
     * [ ] Confirm that a new version with the most recent release candidate is created in the
           `Zenodo.org sandbox <https://sandbox.zenodo.org/record/367108>`_ that is ready for submission.
     * [ ] Install release candidate packages in a clean environment
           (for example:
-          :code:`python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
+          `python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
     * [ ] For the GUI-related items, open in an incognito window to start from a clean slate
     * [ ] Correct version info displayed in info dialogue?
     * [ ] Link check in version info dialogue
@@ -119,9 +120,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Update documentation with new links, if necessary
         * [ ] Add zenodo badge for the new release to Changelog page
     * [ ] Send announcement message on mailing list
-    * [ ] Edit :code:`setup.cfg` to include flaky tests again
-    * [ ] Bump version in master branch to next .dev0
+    * [ ] Edit `setup.cfg` to include flaky tests again
+    * [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
     * [ ] Add to institutional publication databases
-    * [ ] Add the current LiberTEM version to
-      [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>)
-      - add both the singularity and the .desktop file!
+    * [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>) - add both the singularity and the .desktop file!

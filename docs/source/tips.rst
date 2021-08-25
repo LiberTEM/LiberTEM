@@ -38,6 +38,11 @@ Notebook extension `has to be activated manually
 .. code-block:: shell
 
     $ jupyter nbextension enable --py widgetsnbextension
+    
+For :class:`~libertem.viz.bqp.BQLive2DPlot` to function correctly in JupyterHub
+and possibly JupyterLab, the packages :code:`bqplot`. :code:`bqplot-image-gl`
+have to be installed in both the notebook environment and in the environment for
+the notebook server. This might require admin privileges.
 
 Running in a top-level script
 -----------------------------

@@ -1,6 +1,5 @@
 import os
 import warnings
-from xml.dom import minidom
 import defusedxml.ElementTree as ET
 import numpy as np
 
@@ -12,14 +11,6 @@ from .raw import RawFile, RawFileSet
 
 EMPAD_DETECTOR_SIZE = (128, 128)
 EMPAD_DETECTOR_SIZE_RAW = (130, 128)
-
-
-def xml_get_text(nodelist):
-    rc = []
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            rc.append(node.data)
-    return ''.join(rc)
 
 
 def get_params_from_xml(path):

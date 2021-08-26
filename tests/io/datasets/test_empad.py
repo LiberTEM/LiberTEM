@@ -24,7 +24,7 @@ EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 EMPAD_XML_2 = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 HAVE_EMPAD_TESTDATA = os.path.exists(EMPAD_RAW) and os.path.exists(EMPAD_XML)
 
-assert os.path.exists(EMPAD_XML)
+
 pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD testdata")  # NOQA
 
 

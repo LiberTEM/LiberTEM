@@ -1,7 +1,7 @@
 import os
 import warnings
 from xml.dom import minidom
-
+import defusedxml.ElementTree as ET
 import numpy as np
 
 from libertem.common import Shape
@@ -23,29 +23,24 @@ def xml_get_text(nodelist):
 
 
 def get_params_from_xml(path):
-    dom = minidom.parse(path)
-    root = dom.getElementsByTagName("root")[0]
-    raw_filename = root.getElementsByTagName("raw_file")[0].getAttribute('filename')
-    # because these XML files contain the full path, they are not relocatable.
-    # we strip off the path and only use the basename, hoping the .raw file will
-    # be in the same directory as the XML file:
+    em = ET.parse(path)
+    root = em.getroot()
+    raw_filename = root.find("raw_file").attrib['filename']
     filename = os.path.basename(raw_filename)
     path_raw = os.path.join(
         os.path.dirname(path),
         filename
     )
-
     scan_parameters = [
         elem
-        for elem in root.getElementsByTagName("scan_parameters")
-        if elem.getAttribute("mode") == "acquire"
+        for elem in root.findall("scan_parameters")
+        if elem.attrib["mode"] == "acquire"
     ]
 
-    node_scan_y = scan_parameters[0].getElementsByTagName("scan_resolution_y")[0]
-    node_scan_x = scan_parameters[0].getElementsByTagName("scan_resolution_x")[0]
-
-    nav_y = int(xml_get_text(node_scan_y.childNodes))
-    nav_x = int(xml_get_text(node_scan_x.childNodes))
+    node_scan_x = scan_parameters[0].find("scan_resolution_x")
+    node_scan_y = scan_parameters[0].find("scan_resolution_y")
+    nav_x = int(node_scan_x.text)
+    nav_y = int(node_scan_y.text)
     nav_shape = (nav_y, nav_x)
     return path_raw, nav_shape
     # TODO: read more metadata

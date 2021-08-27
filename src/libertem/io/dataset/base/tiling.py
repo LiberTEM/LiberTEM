@@ -426,8 +426,8 @@ class Negotiator:
         # lower size value for some cases (for example HDF5, which overrides
         # some of the sizing negotiation we are doing here)
         size_px = max(size, io_max_size) // itemsize
-        if any(s > ps for s, ps in zip(shape, partition_shape)):
-            raise ValueError("generated tileshape does not fit the partition")
+        if any(s > ps for s, ps in zip(shape[1:], partition_shape[1:])):
+            raise ValueError("generated tileshape %r does not fit the partition %r" % (shape, partition_shape))
         if np.prod(shape, dtype=np.int64) > size_px:
             message = "shape %r (%d) does not fit into size %d" % (
                 shape, np.prod(shape, dtype=np.int64), size_px

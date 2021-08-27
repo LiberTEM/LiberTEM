@@ -2,6 +2,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
+import os
 
 from dask import distributed as dd
 
@@ -28,6 +29,8 @@ def worker_setup(resource, device):
         set_use_cuda(device)
     elif resource == "CPU":
         set_use_cpu(device)
+        if hasattr(os, 'sched_setaffinity'):
+            os.sched_setaffinity(0, [device])
     else:
         raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
 

@@ -7,7 +7,7 @@ The web-based LiberTEM GUI can be integrated into existing JupyterLab and
 JupyterHub installations. That way, the existing authentication and user
 management infrastructure of Jupyter can be re-used to offer LiberTEM as
 a service. The LiberTEM GUI will have access to the same data that is available
-to jupyter notebooks.
+to Jupyter notebooks.
 
 .. note::
 
@@ -45,7 +45,7 @@ Installation
 
 As a first step, you will need to install
 `LiberTEM-jupyter-proxy <https://github.com/LiberTEM/LiberTEM-jupyter-proxy>`_
-into the Python environment where jupyterhub or jupyterlab is installed. Then,
+into the Python environment where JupyterHub or JupyterLab is installed. Then,
 you will also need an installation of LiberTEM, which can live in either the same
 Python environment, or in its own.
 
@@ -53,7 +53,7 @@ In case of a separate Python environment for LiberTEM, you will need to tell
 LiberTEM-jupyter-proxy how to start the :code:`libertem-server`. This is done
 with a simple JSON configuration file. The configuration file needs to be saved in the
 Python environment where LiberTEM-jupyter-proxy is installed. If the virtualenv
-that contains the jupyter installation is created at
+that contains the Jupyter installation is created at
 :code:`/opt/jupyter/venv/`, the configuration filename should be
 :code:`/opt/jupyter/venv/etc/libertem_jupyter_proxy.json`. The contents should
 look like this:
@@ -62,7 +62,7 @@ look like this:
 
    {"libertem_server_path": "/opt/libertem/venv/bin/libertem-server"}
 
-This allows to separate the jupyter installation from the LiberTEM installation.
+This allows to separate the Jupyter installation from the LiberTEM installation.
 The given path can also point to a wrapper script, for example for further environment
 preparations, like loading modules on an HPC system. The wrapper script should forward
 any arguments it reveices to the :code:`libertem-server` call.

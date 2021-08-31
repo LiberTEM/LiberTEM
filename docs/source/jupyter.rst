@@ -40,7 +40,7 @@ Installation
         (jupyter-venv) $ pip install .
 
     Note that this needs to be done in the environment where 
-    :code:`libertem-juypter-server` was installed.
+    :code:`libertem-jupyter-proxy` was installed.
 
 
 As a first step, you will need to install

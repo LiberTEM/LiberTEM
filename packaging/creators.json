@@ -48,6 +48,14 @@
         "orcid": "0000-0001-5045-5650"
     },
     {
+        "displayname": "Matthew Bryan",
+        "authorname": "Bryan, Matthew",
+        "affiliation": "CEA-Leti",
+        "github": "matbryan52",
+        "orcid": "0000-0001-9134-384X",
+        "contribution": "DM dataset argument validation, HDF5 documentation improvement"
+    },
+    {
         "displayname": "Jan Caron",
         "authorname": "Caron, Jan",
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
@@ -117,6 +125,13 @@
         "contribution": "Help with setting up AppImage building and Continuous Integration"
     },
     {
+        "displayname": "Levente Puskás",
+        "authorname": "Puskás, Levente",
+        "affiliation": "University of Szeged",
+        "github": "DYVZ8X",
+        "contribution": "Issue 805: Implemented XML support for seq files"
+    }
+    {
         "displayname": "Jay van Schyndel",
         "authorname": "Schyndel van, Jay",
         "affiliation": "Monash University eResearch Centre" ,
@@ -136,14 +151,7 @@
         "affiliation": "Columbia University",
         "github": "saisunku",
         "contribution": "Bug fixes"
-    },
-    {
-        "displayname": "Matthew Bryan",
-        "authorname": "Bryan, Matthew",
-        "affiliation": "CEA-Leti",
-        "github": "matbryan52",
-        "orcid": "0000-0001-9134-384X"
-    },    
+    }, 
     {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
@@ -157,12 +165,5 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-    {
-        "displayname": "Levente Puskás",
-        "authorname": "Puskás Levente",
-        "affiliation": "University of Szeged",
-        "github": "DYVZ8X",
-        "contribution": "Issue 805 Implemented XML support for seq files"
     }
 ]

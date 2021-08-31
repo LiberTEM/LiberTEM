@@ -87,7 +87,7 @@ which has the following license:
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Confirm message on exit using ctrl+c is implemented by referencing jupyter
+Confirm message on exit using ctrl+c is implemented by referencing Jupyter
 notebook project, which has the following license:
 
 .. code-block:: text

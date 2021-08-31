@@ -204,7 +204,7 @@ New features
 * GUI: Filebrowser improvements: users can star directories in the file browser for easy navigation (:pr:`772`).
 * Support for running multiple UDFs "at the same time", not yet exposed in public APIs (:pr:`788`).
 * GUI: Users can add or remove scan size dimensions according to the dataset's shape (:pr:`779`).
-* GUI: Shutdown button to stop server, useful for example for jupyterhub integration (:pr:`786`).
+* GUI: Shutdown button to stop server, useful for example for JupyterHub integration (:pr:`786`).
 * Infrastructure for consistent coordinate transforms are added in
   :mod:`libertem.corrections.coordinates` and :mod:`libertem.utils`. See also a
   description of coordinate systems in :ref:`concepts`.

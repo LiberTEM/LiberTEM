@@ -189,7 +189,7 @@ have changed.
 
 After updating the installation, you can run the updated version by restarting
 the libertem-server and afterwards reloading all browser windows that are
-running the LiberTEM GUI. In other environments, like jupyter notebooks, you
+running the LiberTEM GUI. In other environments, like Jupyter notebooks, you
 need to restart the Python interpreter to make sure the new version is used,
 for example by restarting the ipython kernel.
 

@@ -71,7 +71,7 @@ conda environment or virtualenv activated:
 
    (libertem) $ python -m pip install line_profiler
 
-Then the easiest way to get started is to use the ipython/jupyter integration of
+Then the easiest way to get started is to use the IPython/Jupyter integration of
 `line_profiler`. Put :code:`%load_ext line_profiler` somewhere in your notebook,
 then you can use the :code:`%lprun` magic command to run your UDF while profiling:
 

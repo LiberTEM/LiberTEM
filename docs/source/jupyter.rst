@@ -3,6 +3,8 @@
 Jupyter integration
 ===================
 
+.. versionadded:: 0.8.0
+
 The web-based LiberTEM GUI can be integrated into existing JupyterLab and
 JupyterHub installations. That way, the existing authentication and user
 management infrastructure of Jupyter can be re-used to offer LiberTEM as

@@ -8,14 +8,15 @@ This is a collection of various helpful tips that don't fit in elsewhere.
 Using SSH forwarding
 --------------------
 
-As there is currently no built-in authentication yet, listening on a different host than
-:code:`127.0.0.1` / :code:`localhost` is disabled. As a workaround, if you want
-to access LiberTEM from a different computer, you can use ssh port forwarding.
+As there is no built-in authentication yet, LiberTEM should not listen on a network
+port where untrusted parties have access. You can use ssh port forwarding from `localhost` instead
+to access LiberTEM from a different computer.
+
 For example with conda:
 
 .. code-block:: shell
 
-     $ ssh -L 9000:localhost:9000 <remote-hostname> "source activate libertem; libertem-server"
+     $ ssh -L 9000:localhost:9000 <remote-hostname> "conda activate libertem; libertem-server"
 
 Or, with virtualenv:
 
@@ -26,9 +27,11 @@ Or, with virtualenv:
 This makes LiberTEM, which is running on `remote-hostname`, available on your
 local host via http://localhost:9000/
 
+Alternatively, you can launch and access LiberTEM on remote systems through
+:ref:`jupyter integration`.
 
-Activating iywidgets in Jupyter
--------------------------------
+Activating ipywidgets in Jupyter
+--------------------------------
 
 Some examples use :code:`ipywidgets` in notebooks, most notably the fast
 :class:`~libertem.viz.bqp.BQLive2DPlot`. In some cases the corresponding Jupyter
@@ -334,3 +337,5 @@ creating a new notebook and running
 .. code-block:: python
 
     In [1]: import libertem
+
+See also :ref:`jupyter integration` for launching the web GUI from JupyterHub or JupyterLab.

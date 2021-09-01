@@ -129,8 +129,8 @@ https://python-gsoc.org/index.html#apply https://python-gsoc.org/students.html
 with links to additional resources. Please remember to name the sub-organization
 *LiberTEM* in your proposal!
 
-To get an inspiration on how to write your application, `Mailman
-<https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt>`_ gives a few general ideas.
+To get an inspiration on how to write your application, Mailman
+(link broken :samp:`https://turnbull.sk.tsukuba.ac.jp/Blog/SPAM.txt`) gives a few general ideas.
 For us it is most important to know why you'd like to contribute to LiberTEM,
 what your experience level is and what you'd like to learn in order to find a
 good match for a project. Generally, we like targeted applications and

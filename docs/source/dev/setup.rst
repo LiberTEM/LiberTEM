@@ -68,8 +68,8 @@ by following these steps:
 
     $ git clone https://github.com/your-user-name/LiberTEM
 
-For more information about `forking a repository
-<https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo>`_.
+More information about `forking a repository
+<https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_.
 For a beginner-friendly introduction to git and GitHub, consider going through
 the following resources:
 

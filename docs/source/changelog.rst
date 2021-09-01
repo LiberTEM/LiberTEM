@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.8.0.dev0
+0.9.0.dev0
 ##########
 
 .. toctree::
@@ -19,7 +19,55 @@ Changelog
 
   changelog/*/*
 
+.. _`v0-8-0`:
+
 .. _latest:
+
+0.8.0 / release pending
+#######################
+
+This release mainly contains improvements of center of mass / first moment
+analysis and support for starting the web GUI from JupyterHub or JupyterLab.
+
+New features
+------------
+
+* Support for center of mass with annular masks in :meth:`~libertem.api.Context.create_com_analysis`,
+  :class:`~libertem.analysis.com.COMAnalysis` and the GUI (:issue:`633`, :pr:`1089`).
+* Support in the GUI for specifying rotation of scan against detector and
+  flipping the detector y axis (:pr:`1087`, :issue:`31`). Previously this was only
+  supported in the Python API.
+* Small changes and instructions for JupyterHub and JupyterLab integration, see :ref:`jupyter integration` (:pr:`1074`).
+* In the web API, support was added to re-run visualization only, without
+  re-running UDFs for an analysis. This allows for almost instant feedback
+  for some operations, like changing CoM parameters.
+* Added token-based authentication. For now, it is only usable via
+  integrations like Jupyter. It will be extended to local/manual usage
+  later (:pr:`1074`, :issue:`1097`). Please comment on :issue:`1097` if local/manual use
+  would be beneficial for you so that it is prioritized accordingly.
+* SEQ dataset: Added support for loading excluded pixels from XML (:issue:`805`, :pr:`1077`).
+  See :class:`~libertem.io.dataset.seq.SEQDataSet` for more information.
+
+Bugfixes
+--------
+
+* Assert that the files argument to DMDataset is actually a list or tuple,
+  to prevent iterating over a string path (:pr:`1058`).
+* Escape globs to support special characters in file names for multi-file
+  datasets (:issue:`1066`, :pr:`1067`).
+
+Documentation
+-------------
+
+* Note on handling HDF5 files with non-standard compression
+  in :class:`~libertem.io.dataset.hdf5.H5DataSet` (:pr:`1059`).
+* Link to two more public datasets in :ref:`sample data`
+  :cite:`strauch_achim_2021_5113449,strauch_achim_2021_5113235` (:pr:`1073`).
+
+Many thanks to our new contributors Levente Puskás for the excluded pixel loading and to
+Matthew Bryan for figuring non-standard compression in HDF5 and improving DM
+input validation! Congratulations to Alex for closing the long-standing CoM issue :issue:`31`
+and for enabling easy and secure access to the web interface on shared IT infrastructure.
 
 .. _`v0-7-1`:
 

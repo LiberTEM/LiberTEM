@@ -11,12 +11,14 @@ The following data set formats ship with some of
 this correction data:
 
 * FRMS6: dark frame is loaded from the first part of the data set
-* SEQ: dark frame and gain map are loaded from MRC sidecar files (:code:`<basename>.dark.mrc` and :code:`<basename>.gain.mrc`)
+* SEQ: dark frame and gain map are loaded from MRC sidecar files
+  :code:`<basename>.dark.mrc` and :code:`<basename>.gain.mrc`, and
+  bad pixels are loaded from :code:`<basename>.Config.Metadata.xml`.
 
 In the GUI, all corrections that are supplied by the data set will be applied. In the Python API,
 the user can decide to pass their own corrections to apply, via the :code:`corrections` parameter
-of :code:`Context.run` and :code:`Context.run_udf`. It expects a :class:`~libertem.corrections.CorrectionSet` object, which
-can also be empty to disable corrections completely. For example:
+of :code:`Context.run()` and :code:`Context.run_udf()`. It expects a :class:`~libertem.corrections.CorrectionSet` object,
+for example:
 
 .. testsetup:: *
 
@@ -46,5 +48,10 @@ can also be empty to disable corrections completely. For example:
         excluded_pixels=excluded,
     ))
 
+It can also be empty to disable corrections:
 
-.. autoclass:: libertem.corrections.corrset.CorrectionSet
+.. testcode::
+
+    ctx.run_udf(udf=SumUDF(), dataset=dataset, corrections=CorrectionSet())
+
+.. autoclass:: libertem.corrections.CorrectionSet

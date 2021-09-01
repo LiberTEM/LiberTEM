@@ -59,11 +59,11 @@ class CorrectionSet:
     Parameters
     ----------
     dark : np.ndarray
-        A ND array containing a dark frame to substract from all frames,
+        An array containing a dark frame to substract from all frames,
         its shape needs to match the signal shape of the dataset.
 
     gain : np.ndarray
-        A ND array containing a gain map to multiply with each frame,
+        An array containing a gain map to multiply with each frame,
         its shape needs to match the signal shape of the dataset.
 
     excluded_pixels : sparse.COO
@@ -71,12 +71,12 @@ class CorrectionSet:
         that should be excluded. The shape needs to match the signal
         shape of the dataset. Can also be anything that is directly
         compatible with the :code:`sparse.COO` constructor, for example a
-        "roi-like" numpy array. A :code:`sparse.COO` array can be
+        "roi-like" NumPy array. A :code:`sparse.COO` array can be
         directly constructed from a coordinate array, using
         :code:`sparse.COO(coords=coords, data=1, shape=ds.shape.sig)`
     allow_empty : bool
-        Do not throw an exception if a repair environment is empty. The pixel
-        is left uncorrected in that case.
+        Do not throw an exception if a repair environment for an excluded pixel
+        is empty. The pixel is left uncorrected in that case.
     """
     def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
         self._dark = dark

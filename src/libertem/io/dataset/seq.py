@@ -412,11 +412,15 @@ class SEQFileSet(FileSet):
 class SEQDataSet(DataSet):
     """
     Read data from Norpix SEQ files.
+
     Examples
     --------
+
     >>> ds = ctx.load("seq", path="/path/to/file.seq", nav_shape=(1024, 1024))  # doctest: +SKIP
+
     Parameters
     ----------
+
     path
         Path to the .seq file
     nav_shape: tuple of int
@@ -426,8 +430,26 @@ class SEQDataSet(DataSet):
     sig_shape: tuple of int, optional
         Signal/detector size (height, width)
     sync_offset: int, optional
-        If positive, number of frames to skip from start
-        If negative, number of blank frames to insert at start
+        If positive, number of frames to skip from start.
+        If negative, number of blank frames to insert at start.
+
+    Note
+    ----
+
+    Dark and gain reference are loaded from MRC files with the same root as the
+    SEQ file and the extensions :code:`.dark.mrc` and :code:`.gain.mrc`, i.e.
+    :code:`/path/to/file.dark.mrc` and :code:`/path/to/file.gain.mrc` if they are present.
+
+    .. versionadded:: 0.8.0
+
+    Dead pixels are read from an XML file with the same root as the
+    SEQ file and the extension :code:`.Config.Metadata.xml`, i.e.
+    :code:`/path/to/file.Config.Metadata.xml` in the above example if both this file and
+    :code:`/path/to/file.metadata` are present.
+
+    See :ref:`corrections` for more information on how to change or disable corrections.
+
+    FIXME find public documentation of the XML format and dark/gain maps.
     """
 
     def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,

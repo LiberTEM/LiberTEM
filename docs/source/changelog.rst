@@ -37,7 +37,9 @@ New features
 * Support in the GUI for specifying rotation of scan against detector and
   flipping the detector y axis (:pr:`1087`, :issue:`31`). Previously this was only
   supported in the Python API.
-* Small changes and instructions for JupyterHub and JupyterLab integration, see :ref:`jupyter integration` (:pr:`1074`).
+* Tweaks and instructions for JupyterHub and JupyterLab integration in LiberTEM, see :ref:`jupyter integration` (:pr:`1074`).
+  New package `LiberTEM/LiberTEM-jupyter-proxy <https://github.com/LiberTEM/LiberTEM-jupyter-proxy>`_
+  for interfacing.
 * In the web API, support was added to re-run visualization only, without
   re-running UDFs for an analysis. This allows for almost instant feedback
   for some operations, like changing CoM parameters.
@@ -51,7 +53,7 @@ New features
 Bugfixes
 --------
 
-* Assert that the files argument to DMDataset is actually a list or tuple,
+* Assert that the :code:`files` argument to :class:`~libertem.io.dataset.dm.DMDataSet` is actually a list or tuple,
   to prevent iterating over a string path (:pr:`1058`).
 * Escape globs to support special characters in file names for multi-file
   datasets (:issue:`1066`, :pr:`1067`).
@@ -61,12 +63,11 @@ Documentation
 
 * Note on handling HDF5 files with non-standard compression
   in :class:`~libertem.io.dataset.hdf5.H5DataSet` (:pr:`1059`).
-* Link to two more public datasets in :ref:`sample data`
-  :cite:`strauch_achim_2021_5113449,strauch_achim_2021_5113235` (:pr:`1073`).
+* Link to two more public datasets: :ref:`hires STO` and :ref:`synthetic STO` (:pr:`1073`).
 
 Many thanks to our new contributors Levente Puskás for the excluded pixel loading and to
 Matthew Bryan for figuring non-standard compression in HDF5 and improving DM
-input validation! Congratulations to Alex for closing the long-standing CoM issue :issue:`31`
+input validation. Congratulations to Alex for closing the long-standing CoM issue :issue:`31`
 and for enabling easy and secure access to the web interface on shared IT infrastructure.
 
 .. _`v0-7-1`:

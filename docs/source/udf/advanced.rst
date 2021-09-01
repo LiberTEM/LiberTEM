@@ -168,7 +168,7 @@ buffers:
                 out_heights=peak_values[f], out_elevations=peak_elevations[f]
             )
 
-The :meth:`libertem.udf.base.UDFPreprocessMixin.postprocess` method is called
+The :meth:`libertem.udf.base.UDFPostprocessMixin.postprocess` method is called
 for each partition on the worker process, before the results from different
 partitions have been merged.
 
@@ -388,6 +388,8 @@ that matches the dataset or partition via
 Device class
 ~~~~~~~~~~~~
 
+.. versionadded:: 0.6.0
+
 The currently used compute device class can be accessed through
 :attr:`libertem.udf.base.UDFMeta.device_class`. It defaults to 'cpu' and can be 'cuda'
 for UDFs that make use of :ref:`udf cuda` support.
@@ -447,6 +449,8 @@ dimension as it appears in processing:
 Coordinates
 ~~~~~~~~~~~
 
+.. versionadded:: 0.6.0
+
 The coordinates of the current frame, tile or partition within the true dataset
 navigation dimension, as opposed to the current slice that is given in flattened
 nav dimensions with applied ROI, is available through
@@ -499,6 +503,8 @@ ptychography
 Preferred input dtype
 ---------------------
 
+.. versionadded:: 0.4.0
+
 UDFs can override :meth:`~libertem.udf.base.UDF.get_preferred_input_dtype` to
 indicate a "lowest common denominator" compatible dtype. The actual input dtype
 is determined by combining the indicated preferred dtype with the input
@@ -515,14 +521,14 @@ processing routine since indicating a preferred dtype doesn't enforce it. That
 way, unsafe conversions are performed explicitly in the UDF rather than
 indirectly in the back-end.
 
-.. versionadded:: 0.4.0
-
 .. _`udf cuda`:
 
 CuPy support
 ------------
 
-LiberTEM can use CUDA devices through `CuPy <https://cupy.chainer.org/>`_. Since
+.. versionadded:: 0.6.0
+
+LiberTEM can use CUDA devices through `CuPy <https://cupy.dev/>`_. Since
 CuPy largely replicates the NumPy array interface, any UDF that uses NumPy for
 its main processing can likely be ported to use both CPUs and CUDA devices in
 parallel. Some adjustments are often necessary to account for minor differences
@@ -566,8 +572,6 @@ The :meth:`~libertem.api.Context.run_udf` method allows setting the
 :code:`backends` attribute to :code:`('numpy',)` :code:`('cupy',)` or :code:`('cuda',)` to
 restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
 useful for testing.
-
-.. versionadded:: 0.6.0
 
 .. _auto UDF:
 

@@ -47,7 +47,7 @@ branch for each pull request.
 All pull requests should come from a user's personal fork since we don't push to
 the main repository for development. See the `GitHub documentation on how to
 create and manage forks
-<https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo>`_
+<https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_
 for details.
 
 Before creating a pull request, please make sure all tests still pass. See

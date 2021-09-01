@@ -37,6 +37,8 @@ overlapping diffraction orders.
 :Size:
     2.6 GB
 
+.. _`hires STO`:
+
 High-resolution 4D STEM dataset of SrTiO3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -52,6 +54,7 @@ STEM, including phase contrast methods such as ptychography.
 :Size:
     177 MB
 
+.. _`synthetic STO`:
 
 Synthetic 4D STEM dataset based on a SrTiO3 supercell
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

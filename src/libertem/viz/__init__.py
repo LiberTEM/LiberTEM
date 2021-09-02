@@ -1,6 +1,8 @@
 from empyre.vis.colors import ColormapCubehelix, ColormapPerception, ColormapHLS, ColormapClassic
 
-from .base import encode_image, visualize_simple, get_plottable_2D_channels
+from .base import visualize_simple, get_plottable_2D_channels
+
+from libertem.common.viz import encode_image
 
 
 __all__ = ['ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',

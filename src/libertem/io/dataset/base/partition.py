@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 
 from libertem.common import Slice, Shape
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from .tiling import DataTile, TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet

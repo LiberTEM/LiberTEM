@@ -15,7 +15,7 @@ this correction data:
 
 In the GUI, all corrections that are supplied by the data set will be applied. In the Python API,
 the user can decide to pass their own corrections to apply, via the :code:`corrections` parameter
-of :code:`Context.run` and :code:`Context.run_udf`. It expects a :class:`~libertem.corrections.CorrectionSet` object, which
+of :code:`Context.run` and :code:`Context.run_udf`. It expects a :class:`~libertem.io.corrections.CorrectionSet` object, which
 can also be empty to disable corrections completely. For example:
 
 .. testsetup:: *
@@ -31,7 +31,7 @@ can also be empty to disable corrections completely. For example:
 
 .. testcode::
 
-    from libertem.corrections import CorrectionSet
+    from libertem.io.corrections import CorrectionSet
     import sparse
 
     # excluded pixels are passed as a sparse COO matrix, which can be built
@@ -47,4 +47,4 @@ can also be empty to disable corrections completely. For example:
     ))
 
 
-.. autoclass:: libertem.corrections.corrset.CorrectionSet
+.. autoclass:: libertem.io.corrections.CorrectionSet

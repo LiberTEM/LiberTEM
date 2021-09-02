@@ -2,7 +2,7 @@ import numpy as np
 import sparse
 import pytest
 
-from libertem.corrections import CorrectionSet, detector
+from libertem.io.corrections import CorrectionSet, detector
 from libertem.utils.generate import gradient_data, exclude_pixels
 from libertem.udf.base import NoOpUDF
 

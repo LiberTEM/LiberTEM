@@ -6,7 +6,7 @@ import pytest
 from libertem.executor.dask import (
     CommonDaskMixin
 )
-from libertem.executor.scheduler import Worker, WorkerSet
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.executor.dask import DaskJobExecutor
 from libertem.udf.base import UDFRunner
 from libertem.udf.sum import SumUDF

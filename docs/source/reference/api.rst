@@ -12,7 +12,7 @@ Context
 Analysis API
 ~~~~~~~~~~~~
 
-.. automodule:: libertem.analysis.base
+.. automodule:: libertem.common.analysis
    :members: Analysis, AnalysisResult, AnalysisResultSet
 
 .. automodule:: libertem.analysis.masks

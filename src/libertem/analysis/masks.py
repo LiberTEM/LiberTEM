@@ -1,4 +1,5 @@
-from .base import BaseAnalysis, AnalysisResultSet, AnalysisResult
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResultSet, AnalysisResult
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.analysis.getroi import get_roi
 
@@ -89,7 +90,7 @@ class MasksResultSet(AnalysisResultSet):
 
     Attributes
     ----------
-    mask_0, mask_1, ..., mask_<n> : libertem.analysis.base.AnalysisResult
+    mask_0, mask_1, ..., mask_<n> : libertem.common.analysis.AnalysisResult
         For dataset and masks containing only real numbers:
         Results of the element-wise multiplication and sum of each individual mask with
         each detector frame. Each mask result has the shape of the navigation dimension.
@@ -97,7 +98,7 @@ class MasksResultSet(AnalysisResultSet):
         complex numbers.
     mask_0, mask_0_real, mask_0_imag, mask_0_angle, mask_0_complex,\
     mask_1, mask_1_real, ...,\
-    mask_<n>, ..., mask_<n>_complex : libertem.analysis.base.AnalysisResult
+    mask_<n>, ..., mask_<n>_complex : libertem.common.analysis.AnalysisResult
         If masks or dataset contain complex numbers: Absolute, real part, imaginary part,
         phase angle, complex result of the element-wise multiplication and sum of each individual
         mask with each detector frame. Each mask result has the shape of the navigation dimension.
@@ -118,27 +119,27 @@ class SingleMaskResultSet(AnalysisResultSet):
 
     Attributes
     ----------
-    intensity : libertem.analysis.base.AnalysisResult
+    intensity : libertem.common.analysis.AnalysisResult
         Sum of the selected region for each detector frame, with shape of
         the navigation dimension. Absolute of the result if the dataset or mask contains
         complex numbers.
-    intensity_log : libertem.analysis.base.AnalysisResult
+    intensity_log : libertem.common.analysis.AnalysisResult
         Log-scaled sum of the selected region for each detector frame, with shape of
         the navigation dimension. Absolute of the result if the dataset or mask contains
         complex numbers.
 
         .. versionadded:: 0.6.0
 
-    intensity_real : libertem.analysis.base.AnalysisResult
+    intensity_real : libertem.common.analysis.AnalysisResult
         Real part of the sum of the selected region. This is only available if the dataset
         or mask contains complex numbers.
-    intensity_imag : libertem.analysis.base.AnalysisResult
+    intensity_imag : libertem.common.analysis.AnalysisResult
         Imaginary part of the sum of the selected region. This is only available if the dataset
         contains complex numbers.
-    intensity_angle : libertem.analysis.base.AnalysisResult
+    intensity_angle : libertem.common.analysis.AnalysisResult
         Phase angle of the sum of the selected region. This is only available if the dataset
         or mask contains complex numbers.
-    intensity_complex : libertem.analysis.base.AnalysisResult
+    intensity_complex : libertem.common.analysis.AnalysisResult
         Complex result of the sum of the selected region. This is only available if the dataset
         or mask contains complex numbers.
     """

@@ -1,6 +1,6 @@
 from libertem.analysis.sum import SumAnalysis
 from libertem.masks import _make_circular_mask
-from .base import AnalysisResult, AnalysisResultSet
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from .helper import GeneratorHelper
 
 import numpy as np

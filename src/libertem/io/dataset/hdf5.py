@@ -8,8 +8,8 @@ import h5py
 
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
-from libertem.corrections import CorrectionSet
-from libertem.web.messages import MessageConverter
+from libertem.io.corrections import CorrectionSet
+from libertem.common.messages import MessageConverter
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
     TilingScheme,

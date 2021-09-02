@@ -14,7 +14,7 @@ from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 
 from utils import get_testdata_path, ValidationUDF
 import defusedxml.ElementTree as ET

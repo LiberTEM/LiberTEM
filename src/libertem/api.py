@@ -2,7 +2,7 @@ from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator
 import warnings
 
 import numpy as np
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.common.buffers import BufferWrapper
@@ -17,7 +17,7 @@ from libertem.analysis.ring import RingMaskAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
-from libertem.analysis.base import AnalysisResultSet, Analysis
+from libertem.common.analysis import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFRunner, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator
@@ -202,7 +202,7 @@ class Context:
 
         Returns
         -------
-        MasksAnalysis : libertem.analysis.base.Analysis
+        MasksAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.masks.MasksResultSet`.
 
@@ -276,7 +276,7 @@ class Context:
 
         Returns
         -------
-        COMAnalysis : libertem.analysis.base.Analysis
+        COMAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.com.COMResultSet`.
         """
@@ -331,7 +331,7 @@ class Context:
 
         Returns
         -------
-        RadialFourierAnalysis : libertem.analysis.base.Analysis
+        RadialFourierAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.radialfourier.RadialFourierResultSet`.
         """
@@ -366,7 +366,7 @@ class Context:
 
         Returns
         -------
-        DiskMaskAnalysis : libertem.analysis.base.Analysis
+        DiskMaskAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
@@ -398,7 +398,7 @@ class Context:
 
         Returns
         -------
-        RingMaskAnalysis : libertem.analysis.base.Analysis
+        RingMaskAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
@@ -417,7 +417,7 @@ class Context:
 
         Returns
         -------
-        PointMaskAnalysis : libertem.analysis.base.Analysis
+        PointMaskAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.masks.SingleMaskResultSet`.
         """
@@ -446,7 +446,7 @@ class Context:
 
         Returns
         -------
-        SumAnalysis : libertem.analysis.base.Analysis
+        SumAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.sum.SumResultSet`.
         """
@@ -473,7 +473,7 @@ class Context:
 
         Returns
         -------
-        PickFrameAnalysis : libertem.analysis.base.Analysis
+        PickFrameAnalysis : libertem.common.analysis.Analysis
             When run by the Context, this Analysis generates a
             :class:`libertem.analysis.raw.PickResultSet`.
 
@@ -500,7 +500,7 @@ class Context:
         corrections: CorrectionSet = None,
     ) -> Union[np.ndarray, AnalysisResultSet]:
         """
-        Run the given :class:`~libertem.analysis.base.Analysis`
+        Run the given :class:`~libertem.common.analysis.Analysis`
         and return the result data.
 
         .. versionchanged:: 0.5.0
@@ -525,8 +525,8 @@ class Context:
 
         Returns
         -------
-        result : libertem.analysis.base.AnalysisResultSet
-            Running an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`.
+        result : libertem.common.analysis.AnalysisResultSet
+            Running an Analysis returns a :class:`libertem.common.analysis.AnalysisResultSet`.
             See the matching :code:`create_*_analysis` function for documentation
             of the specific :code:`AnalysisResultSet` subclass or :class:`numpy.ndarray` that
             is being returned.

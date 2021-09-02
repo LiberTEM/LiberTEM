@@ -1,5 +1,6 @@
 import inspect
-from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 import libertem.udf.stddev as std
 from libertem.analysis.getroi import get_roi
 from .helper import GeneratorHelper

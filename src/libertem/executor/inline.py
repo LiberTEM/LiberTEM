@@ -2,7 +2,7 @@ import cloudpickle
 import psutil
 
 from .base import JobExecutor, Environment
-from .scheduler import Worker, WorkerSet
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 
 

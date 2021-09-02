@@ -11,7 +11,7 @@ from .base import (
     JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter, TaskProxy,
     Environment,
 )
-from .scheduler import Worker, WorkerSet
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.utils.async_utils import adjust_event_loop_policy
 

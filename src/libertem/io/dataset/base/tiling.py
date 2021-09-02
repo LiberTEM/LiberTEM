@@ -9,7 +9,7 @@ import numpy as np
 
 from libertem.common import Slice, Shape
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from .roi import _roi_to_indices
 
 log = logging.getLogger(__name__)

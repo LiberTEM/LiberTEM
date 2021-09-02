@@ -5,7 +5,7 @@ import sparse
 
 from utils import _naive_mask_apply, _mk_random
 
-from libertem.masks import to_dense, to_sparse, is_sparse
+from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common import Shape, Slice
 from libertem.utils.devices import detect

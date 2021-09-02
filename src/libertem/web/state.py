@@ -7,10 +7,10 @@ from collections import defaultdict
 import psutil
 
 import libertem
-from libertem.analysis.base import AnalysisResultSet
+from libertem.common.analysis import AnalysisResultSet
 from libertem.io.dataset.base import DataSetException
 from libertem.io.writers.results.base import ResultFormatRegistry
-from libertem.io.writers.results import formats  # NOQA
+from libertem.io.writers.results import formats  # NOQA: F401
 from libertem.utils import devices
 
 

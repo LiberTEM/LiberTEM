@@ -6,7 +6,7 @@ import numpy as np
 import sparse
 
 from libertem import masks
-from .base import AnalysisResult, AnalysisResultSet
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from .helper import GeneratorHelper
 
@@ -91,7 +91,7 @@ class RadialFourierResultSet(AnalysisResultSet):
     phase_0_0, ..., phase_0_<max_order>,\
     complex_0_0, ..., complex_0_<max_order>;\
     dominant_1, absolute_1_0, ..., complex_1_<max_order>;\
-    dominant_<nbins-1>, ..., complex_<nbins-1>_<max_order> : libertem.analysis.base.AnalysisResult
+    dominant_<nbins-1>, ..., complex_<nbins-1>_<max_order> : libertem.common.analysis.AnalysisResult
         Results for each bin: dominant Fourier coefficient (indicates symmetry),
         absolute values of each Fourier coefficient,
         phase values of each Fourier coefficient, complex values of each Fourier coefficient.

@@ -1,7 +1,7 @@
 import sparse
 import numpy as np
 
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import Negotiator
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf import UDF

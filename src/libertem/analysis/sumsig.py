@@ -1,4 +1,5 @@
-from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 import libertem.udf.sumsigudf as sumsigudf
 from .helper import GeneratorHelper
 

@@ -7,7 +7,7 @@ import numpy as np
 from ncempy.io.ser import fileSER
 
 from libertem.common import Shape, Slice
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
     _roi_to_indices, DataTile,

@@ -4,7 +4,7 @@ import defusedxml.ElementTree as ET
 import numpy as np
 
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from .base import DataSet, DataSetException, DataSetMeta, BasePartition
 from .raw import RawFile, RawFileSet
 

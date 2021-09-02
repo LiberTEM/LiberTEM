@@ -4,7 +4,8 @@ import inspect
 import re
 from textwrap import dedent
 
-from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.udf.masks import ApplyMasksUDF
@@ -39,7 +40,7 @@ class ClusterTemplate(GeneratorHelper):
            "from libertem.udf.masks import ApplyMasksUDF",
            "from libertem.analysis.getroi import get_roi",
            "from sklearn.cluster import AgglomerativeClustering",
-           "from libertem.analysis.base import AnalysisResult, AnalysisResultSet",
+           "from libertem.common.analysis import AnalysisResult, AnalysisResultSet",
            "from libertem.viz import visualize_simple",
         ]
         return dep

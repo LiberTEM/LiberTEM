@@ -5,7 +5,7 @@ import numpy as np
 from ncempy.io.mrc import fileMRC
 
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, LocalFile
 
 log = logging.getLogger(__name__)

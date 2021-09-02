@@ -12,9 +12,9 @@ import scipy.io as sio
 import numpy as np
 import numba
 
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     FileSet, BasePartition, LocalFile, Decoder,

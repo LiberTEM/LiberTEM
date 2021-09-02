@@ -4,7 +4,7 @@ import logging
 import psutil
 import numpy as np
 
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
     LocalFile, MMapBackend,

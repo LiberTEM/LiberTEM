@@ -1,7 +1,8 @@
 import numpy as np
 import inspect
 from libertem.udf.raw import PickUDF
-from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from .helper import GeneratorHelper
 
 
@@ -52,25 +53,25 @@ class PickResultSet(AnalysisResultSet):
 
     Attributes
     ----------
-    intensity : libertem.analysis.base.AnalysisResult
+    intensity : libertem.common.analysis.AnalysisResult
         The specified detector frame. Absolute value if the dataset
         contains complex numbers. Log-scaled visualization.
-    intensity_lin : libertem.analysis.base.AnalysisResult
+    intensity_lin : libertem.common.analysis.AnalysisResult
         The specified detector frame. Absolute value if the dataset
         contains complex numbers. Linear visualization.
 
         .. versionadded:: 0.6.0
 
-    intensity_real : libertem.analysis.base.AnalysisResult
+    intensity_real : libertem.common.analysis.AnalysisResult
         Real part of the specified detector frame. This is only available if the dataset
         contains complex numbers.
-    intensity_imag : libertem.analysis.base.AnalysisResult
+    intensity_imag : libertem.common.analysis.AnalysisResult
         Imaginary part of the specified detector frame. This is only available if the dataset
         contains complex numbers.
-    intensity_angle : libertem.analysis.base.AnalysisResult
+    intensity_angle : libertem.common.analysis.AnalysisResult
         Phase angle of the specified detector frame. This is only available if the dataset
         contains complex numbers.
-    intensity_complex : libertem.analysis.base.AnalysisResult
+    intensity_complex : libertem.common.analysis.AnalysisResult
         Complex result of the specified detector frame. This is only available if the dataset
         contains complex numbers.
     """

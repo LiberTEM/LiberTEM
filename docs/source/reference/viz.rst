@@ -26,3 +26,6 @@ Base classes and functions
 
 .. automodule:: libertem.viz.base
    :members:
+
+.. automodule:: libertem.common.viz
+   :members:

@@ -12,6 +12,7 @@ Python API reference
    io_backends
    application
    masks
+   sparse
    internals
    dask
    cluster-ds

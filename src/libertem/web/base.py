@@ -3,7 +3,7 @@ import asyncio
 
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
-from libertem.analysis.base import AnalysisResultSet
+from libertem.common.analysis import AnalysisResultSet
 from .messages import Message
 
 log = logging.getLogger(__name__)

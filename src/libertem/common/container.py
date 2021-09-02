@@ -6,7 +6,7 @@ import scipy.sparse
 import numpy as np
 import cloudpickle
 
-from libertem.masks import to_dense, to_sparse, is_sparse
+from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
 
 

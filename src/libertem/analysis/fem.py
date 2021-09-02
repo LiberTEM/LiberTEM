@@ -1,6 +1,7 @@
 import inspect
 
-from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
+from .base import BaseAnalysis
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from .helper import GeneratorHelper
 import libertem.udf.FEM as FEM
 

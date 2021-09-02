@@ -4,8 +4,8 @@ import numpy as np
 
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException
-from libertem.web.messageconverter import MessageConverter
-from libertem.corrections.corrset import CorrectionSet
+from libertem.common.messages import MessageConverter
+from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition
 
 

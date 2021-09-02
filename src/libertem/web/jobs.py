@@ -3,7 +3,7 @@ import logging
 
 import tornado.web
 
-from libertem.analysis.base import Analysis
+from libertem.common.analysis import Analysis
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message

@@ -3,7 +3,7 @@ import inspect
 import numpy as np
 
 from libertem import masks
-from .base import AnalysisResult, AnalysisResultSet
+from libertem.common.analysis import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from libertem.corrections.coordinates import rotate_deg, flip_y, identity
 from .helper import GeneratorHelper
@@ -173,30 +173,30 @@ class COMResultSet(AnalysisResultSet):
 
     Attributes
     ----------
-    field : libertem.analysis.base.AnalysisResult
+    field : libertem.common.analysis.AnalysisResult
         Center of mass shift relative to the center given to the analysis within the given radius
         as a vector field with components (x, y). The visualized result uses a
         cubehelix color wheel.
-    magnitude : libertem.analysis.base.AnalysisResult
+    magnitude : libertem.common.analysis.AnalysisResult
         Magnitude of the center of mass shift.
-    divergence : libertem.analysis.base.AnalysisResult
+    divergence : libertem.common.analysis.AnalysisResult
         Divergence of the center of mass vector field at a given point
-    curl : libertem.analysis.base.AnalysisResult
+    curl : libertem.common.analysis.AnalysisResult
         Curl of the center of mass 2D vector field at a given point.
 
         .. versionadded:: 0.6.0
 
-    x : libertem.analysis.base.AnalysisResult
+    x : libertem.common.analysis.AnalysisResult
         X component of the center of mass shift
-    y : libertem.analysis.base.AnalysisResult
+    y : libertem.common.analysis.AnalysisResult
         Y component of the center of mass shift
-    x_real : libertem.analysis.base.AnalysisResult
+    x_real : libertem.common.analysis.AnalysisResult
         Real part of the x component of the center of mass shift (complex dataset only)
-    y_real : libertem.analysis.base.AnalysisResult
+    y_real : libertem.common.analysis.AnalysisResult
         Real part of y component of the center of mass shift (complex dataset only)
-    x_imag : libertem.analysis.base.AnalysisResult
+    x_imag : libertem.common.analysis.AnalysisResult
         Imaginary part of the x component of the center of mass shift (complex dataset only)
-    y_imag : libertem.analysis.base.AnalysisResult
+    y_imag : libertem.common.analysis.AnalysisResult
         Imaginary part of y component of the center of mass shift (complex dataset only)
     """
     pass

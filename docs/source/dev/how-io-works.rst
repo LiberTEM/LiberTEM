@@ -109,7 +109,7 @@ Notes for implementing a :class:`~libertem.io.dataset.base.DataSet`
 - Implement :meth:`~libertem.io.dataset.base.DataSet.check_valid` - this will
   be run on a worker node
 - Implement :meth:`~libertem.io.dataset.base.DataSet.get_msg_converter` - the
-  :class:`~libertem.web.messages.MessageConverter` class returned is responsible
+  :class:`~libertem.common.messages.MessageConverter` class returned is responsible
   for parsing parameters passed to the Web API and converting them to a Python
   representation that can be passed to the
   :class:`~libertem.io.dataset.base.DataSet` constructor.

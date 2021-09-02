@@ -37,12 +37,12 @@ import sparse
 from ncempy.io.mrc import mrcReader
 
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
     LocalFile,
 )
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 
 DWORD = 'L'
 LONG = 'l'

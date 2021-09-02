@@ -1,4 +1,5 @@
 from typing import Type, Dict
+
 from libertem.analysis.base import AnalysisResultSet
 
 

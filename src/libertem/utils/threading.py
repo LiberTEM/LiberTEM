@@ -120,3 +120,6 @@ def set_num_threads_env(n=1, set_numba=None):
         yield
     finally:
         os.environ.update(old_env)
+        for key in env_keys:
+            if key not in old_env:
+                del os.environ[key]

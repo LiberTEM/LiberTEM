@@ -3,6 +3,7 @@ import os
 import numpy as np
 import numba
 import pytest
+import psutil
 
 from libertem.executor.dask import (
     CommonDaskMixin
@@ -48,7 +49,7 @@ def test_task_affinity_1():
 @pytest.mark.asyncio
 async def test_fd_limit(async_executor):
     import resource
-    import psutil
+
     # set soft limit, throws errors but allows to raise it
     # again afterwards:
     proc = psutil.Process()
@@ -174,7 +175,7 @@ def test_threads_per_worker(default_raw, dask_executor):
     res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())['num_threads']
     res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())['num_threads']
     assert np.allclose(res, 1)
-    assert np.allclose(res_inline, 4)
+    assert np.allclose(res_inline, psutil.cpu_count(logical=False))
 
 
 @pytest.mark.functional
@@ -188,4 +189,4 @@ def test_threads_per_worker_vanilla(default_raw, monkeypatch):
     print(res['num_threads'].data)
     assert np.all(res['num_threads'].data == 1)
     print(res_inline['num_threads'].data)
-    assert np.all(res_inline['num_threads'].data == 4)
+    assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))

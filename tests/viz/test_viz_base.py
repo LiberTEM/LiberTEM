@@ -64,3 +64,17 @@ def test_live_autoextraction(lt_ctx, default_raw, udf_cls):
     udf = udf_cls()
     plots = [Dummy2DPlot(dataset=default_raw, udf=udf, channel=('intensity', np.abs))]
     lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=plots)
+
+
+def test_live_RGB(lt_ctx, default_raw):
+    udf = SumSigUDF()
+
+    def RGB_plot(udf_result, damage):
+        data = udf_result['intensity'].data
+        plot = viz.CMAP_CIRCULAR_DEFAULT.rgb_from_vector((data, 0, 0))
+        return (plot, damage)
+
+    plots = [Dummy2DPlot(dataset=default_raw, udf=udf, channel=RGB_plot)]
+    lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=plots)
+
+    assert plots[0].data.shape == tuple(default_raw.shape.nav) + (3, )

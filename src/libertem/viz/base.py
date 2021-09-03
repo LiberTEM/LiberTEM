@@ -253,7 +253,15 @@ class Live2DPlot:
         if (not force) and delta < self.min_delta:
             return  # don't update plot if we recently updated
         (self.data, damage) = self.extract(udf_results, damage)
-        damage = damage & np.isfinite(self.data)
+        finite = np.isfinite(self.data)
+        # duck typing "array-like" since damage can also be bool
+        if hasattr(damage, "shape"):
+            start_axis = len(damage.shape)
+            stop_axis = len(self.data.shape)
+            # Reduce surplus axes, for example RGB plotting #1052
+            if stop_axis > start_axis:
+                finite = np.all(finite, axis=tuple(range(start_axis, stop_axis)))
+        damage = damage & finite
         self.update(damage, force=force)
         self.last_update = time.time()
         logger.debug("%s updated in %.3f seconds", self.__class__.__name__, self.last_update - t0)

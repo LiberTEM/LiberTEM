@@ -180,9 +180,15 @@ def test_threads_per_worker(default_raw, dask_executor):
 
 @pytest.mark.functional
 def test_threads_per_worker_vanilla(default_raw, monkeypatch):
+    old_threads = os.environ.get('NUMBA_NUM_THREADS')
     # Triggers #1053
     monkeypatch.delenv('NUMBA_NUM_THREADS', raising=False)
     ctx = Context()
+    assert 'NUMBA_NUM_THREADS' not in os.environ
+    # We have to reset it properly since it is set in pytest.ini
+    # and Numba will complain if it is changed
+    if old_threads:
+        os.environ['NUMBA_NUM_THREADS'] = old_threads
     inline_ctx = Context(executor=InlineJobExecutor())
     res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
     res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())

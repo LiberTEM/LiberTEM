@@ -2,7 +2,7 @@ import typing
 import importlib
 
 from libertem.io.dataset.base import DataSetException
-from libertem.utils.async_utils import sync_to_async
+from libertem.common.async_utils import sync_to_async
 
 
 filetypes = {

@@ -34,6 +34,12 @@ class WorkerSet:
             if fn(w)
         ])
 
+    def has_cpu(self):
+        return self.filter(lambda worker: bool(worker.resources.get('CPU', False)))
+
+    def has_cuda(self):
+        return self.filter(lambda worker: bool(worker.resources.get('CUDA', False)))
+
     def hosts(self):
         return {worker.host for worker in self.workers}
 
@@ -78,7 +84,7 @@ class Worker:
 
 
 class Scheduler:
-    def __init__(self, all_workers):
+    def __init__(self, all_workers: WorkerSet):
         self.workers = all_workers
 
     def workers_for_task(self, task):
@@ -92,3 +98,23 @@ class Scheduler:
         Given a partition, return a WorkerSet
         """
         pass
+
+    def effective_worker_count(self):
+        '''
+        Return the effective number of workers for partitioning
+
+        This avoids residual partitions that would degrade performance.
+        '''
+        cpu_workers = self.workers.has_cpu()
+        gpu_workers = self.workers.has_cuda()
+
+        # Mixed case: return only CPU workers or GPU workers, whichever is
+        # larger, to not have residual partitions in CPU-only or GPU-only
+        # processing. Plus, a GPU worker will spin a CPU at 100 % while running.
+        if cpu_workers:
+            return max(len(cpu_workers), len(gpu_workers))
+        # GPU-only
+        elif gpu_workers:
+            return len(gpu_workers)
+        else:
+            return len(self.workers)

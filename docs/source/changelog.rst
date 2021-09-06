@@ -57,6 +57,12 @@ Bugfixes
   to prevent iterating over a string path (:pr:`1058`).
 * Escape globs to support special characters in file names for multi-file
   datasets (:issue:`1066`, :pr:`1067`).
+* Make sure multithreading in the main process still works properly after
+  launching a :class:`~libertem.api.Context` (:issue:`1053`, :pr:`1100`).
+* Allow custom plots to return RGB as plot data, for example a color
+  wheel for vector fields (:issue:`1052`, :pr:`1101`).
+* Adjust partition count to match the number of CPU compute workers,
+  not total workers to prevent residual partitions (:issue:`1086`, :pr:`1103`).
 
 Documentation
 -------------

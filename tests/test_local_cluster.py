@@ -24,6 +24,13 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
         dataset=hdf5_ds_1, factories=[lambda: mask]
     )
 
+    num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
+    workers = ctx.executor.get_available_workers()
+    cpu_count = len(workers.has_cpu())
+    gpu_count = len(workers.has_cuda())
+
+    assert num_cores_ds._cores == max(cpu_count, gpu_count)
+
     # Based on ApplyMasksUDF, which is CuPy-enabled
     hybrid = ctx.run(analysis)
     _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)

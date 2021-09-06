@@ -3,6 +3,7 @@ import importlib
 
 from libertem.io.dataset.base import DataSetException
 from libertem.utils.async_utils import sync_to_async
+from libertem.executor.scheduler import Scheduler
 
 
 filetypes = {
@@ -62,7 +63,12 @@ def load(filetype, *args, enable_async=False, executor, **kwargs):
         ds = cls(*args, **kwargs)
         ds = await sync_to_async(ds.initialize, executor=executor.ensure_sync())
         workers = await executor.get_available_workers()
-        ds.set_num_cores(len(workers))
+        scheduler = Scheduler(workers)
+        # FIXME the partitioning should be dynamic
+        # since the number of eligible workers may depend on
+        # the set of UDFs that may or may not run on CPU or GPU
+        # This is a workaround with a "best guess compromise"
+        ds.set_num_cores(scheduler.effective_worker_count())
         await executor.run_function(ds.check_valid)
         return ds
 
@@ -71,7 +77,9 @@ def load(filetype, *args, enable_async=False, executor, **kwargs):
     else:
         ds = cls(*args, **kwargs)
         ds = ds.initialize(executor)
-        ds.set_num_cores(len(executor.get_available_workers()))
+        workers = executor.get_available_workers()
+        scheduler = Scheduler(workers)
+        ds.set_num_cores(scheduler.effective_worker_count())
         executor.run_function(ds.check_valid)
         return ds
 

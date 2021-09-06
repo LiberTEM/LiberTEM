@@ -377,6 +377,13 @@ class BufferWrapper:
             raise RuntimeError("Cache is not empty, has to be flushed")
         return self._data
 
+    def _get_slice(self, slice: Slice):
+        real_slice = slice.get()
+        result = self._data[real_slice]
+        # Defend against #1026
+        assert result.shape == tuple(slice.shape) + self.extra_shape
+        return result
+
     def get_view_for_partition(self, partition):
         """
         get a view for a single partition in a whole-result-sized buffer
@@ -384,10 +391,9 @@ class BufferWrapper:
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "nav":
-            slice_ = self._slice_for_partition(partition)
-            return self._data[slice_.get(nav_only=True)]
+            return self._get_slice(self._slice_for_partition(partition).nav)
         elif self._kind == "sig":
-            return self._data[partition.slice.get(sig_only=True)]
+            return self._get_slice(partition.slice.sig)
         elif self._kind == "single":
             return self._data
 
@@ -402,14 +408,16 @@ class BufferWrapper:
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._kind == "sig":
-            return self._data[tile.tile_slice.get(sig_only=True)]
+            return self._get_slice(tile.tile_slice.sig)
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
             if self._data_coords_global:
                 offset = 0
             else:
                 offset = partition_slice.origin[0]
-            result_idx = (tile.tile_slice.origin[0] + frame_idx - offset,)
+            # Defense against #1026: if it is an int, there is no empty or out
+            # of range slice, but an index error
+            result_idx = (int(tile.tile_slice.origin[0] + frame_idx - offset),)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) > 0:
                 return self._data[result_idx]
@@ -429,7 +437,7 @@ class BufferWrapper:
         if self.roi_is_zero:
             raise ValueError("cannot get view for tile with zero ROI")
         if self._kind == "sig":
-            return self._data[tile.tile_slice.get(sig_only=True)]
+            return self._get_slice(tile.tile_slice.sig)
         elif self._kind == "nav":
             partition_slice = self._slice_for_partition(partition)
             tile_slice = tile.tile_slice
@@ -439,6 +447,9 @@ class BufferWrapper:
                 offset = partition_slice.origin[0]
             result_start = tile_slice.origin[0] - offset
             result_stop = result_start + tile_slice.shape[0]
+            # Defend against #1026
+            assert result_start < len(self._data)
+            assert result_stop <= len(self._data)
             # shape: (1,) + self._extra_shape
             if len(self._extra_shape) + tile_slice.shape[0] > 1:
                 return self._data[result_start:result_stop]
@@ -474,8 +485,7 @@ class BufferWrapper:
             if key in self._contiguous_cache:
                 view = self._contiguous_cache[key]
             else:
-                sl = key.get(sig_only=True)
-                view = self._data[sl]
+                view = self._get_slice(key.sig)
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
                 if not view.flags.c_contiguous:

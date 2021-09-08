@@ -112,33 +112,32 @@ class CommonDaskMixin:
         host = hosts[host_idx]
         return workers.filter(lambda w: w.host == host)
 
-    def _futures_for_locations(self, fns_and_meta):
+    def _future_for_location(self, task, locations, resources, workers):
         """
         Submit tasks and return the resulting futures
 
         Parameters
         ----------
-
-        fns_and_meta : List[Tuple[callable,WorkerSet, dict]]
-            callables zipped with potential locations and required resources.
+        task:
+            callable
+        locations:
+            potential locations to run the task
+        resources:
+            required resources for the task
+        workers : WorkerSet
+            Available workers in the cluster
         """
-        workers = self.get_available_workers()
-        futures = []
-        for task, locations, resources in fns_and_meta:
-            submit_kwargs = {}
-            if locations is not None:
-                if len(locations) == 0:
-                    raise ValueError("no workers found for task")
-                locations = locations.names()
-            submit_kwargs.update({
-                'resources': self._validate_resources(workers, resources),
-                'workers': locations,
-                'pure': False,
-            })
-            futures.append(
-                self.client.submit(task, **submit_kwargs)
-            )
-        return futures
+        submit_kwargs = {}
+        if locations is not None:
+            if len(locations) == 0:
+                raise ValueError("no workers found for task")
+            locations = locations.names()
+        submit_kwargs.update({
+            'resources': self._validate_resources(workers, resources),
+            'workers': locations,
+            'pure': False,
+        })
+        return self.client.submit(task, **submit_kwargs)
 
     def _validate_resources(self, workers, resources):
         # This is set in the constructor of DaskJobExecutor
@@ -169,19 +168,17 @@ class CommonDaskMixin:
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_futures(self, tasks):
-        available_workers = self.get_available_workers()
-        if len(available_workers) == 0:
+    def _get_future(self, task, workers):
+        if len(workers) == 0:
             raise RuntimeError("no workers available!")
-        return self._futures_for_locations([
-            (
-                task,
-                task.get_locations() or self._task_idx_to_workers(
-                    available_workers, task.idx),
-                task.get_resources()
-            )
-            for task in tasks
-        ])
+        return self._future_for_location(
+            task,
+            task.get_locations() or self._task_idx_to_workers(
+                workers, task.idx
+            ),
+            task.get_resources(),
+            workers
+        )
 
     def get_available_workers(self):
         info = self.client.scheduler_info()
@@ -250,17 +247,32 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         for idx, orig_task in enumerate(tasks):
             tasks_wrapped.append(DaskTaskProxy(orig_task, idx))
 
-        futures = self._get_futures(tasks_wrapped)
-        self._futures[cancel_id] = futures
+        workers = self.get_available_workers()
+
+        self._futures[cancel_id] = []
+        initial = []
+
+        for w in range(int(len(workers))):
+            if not tasks_wrapped:
+                break
+            wrapped_task = tasks_wrapped.pop(0)
+            future = self._get_future(wrapped_task, workers)
+            initial.append(future)
+            self._futures[cancel_id].append(future)
 
         try:
-            as_completed = dd.as_completed(futures, with_results=True, loop=self.client.loop)
+            as_completed = dd.as_completed(initial, with_results=True, loop=self.client.loop)
             for future, result_wrap in as_completed:
                 if future.cancelled():
                     del self._futures[cancel_id]
                     raise JobCancelledError()
                 result = result_wrap['task_result']
                 task = _id_to_task(result_wrap['task_id'])
+                if tasks_wrapped:
+                    wrapped_task = tasks_wrapped.pop(0)
+                    future = self._get_future(wrapped_task, workers)
+                    as_completed.add(future)
+                    self._futures[cancel_id].append(future)
                 yield result, task
         finally:
             if cancel_id in self._futures:
@@ -304,7 +316,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             # TODO check if we should request a compute resource
             items = ((lambda: fn(p), p.get_locations(), {})
                      for p in partitions)
-        futures = self._futures_for_locations(items)
+        workers = self.get_available_workers()
+        futures = [self._future_for_location(*item, workers) for item in items]
         # TODO: do we need cancellation and all that good stuff?
         for future, result in dd.as_completed(futures, with_results=True, loop=self.client.loop):
             if future.cancelled():

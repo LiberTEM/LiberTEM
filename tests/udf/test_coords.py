@@ -151,9 +151,11 @@ class SimpleTestByTileWithROIUDF(UDF):
     def process_tile(self, tile):
         if self.meta.slice.origin == (0, 0, 0):
             expected_coords = [[0, 0], [0, 7]]
+            print("meta:", self.meta.coordinates, "expected:", expected_coords)
             assert np.allclose(self.meta.coordinates, expected_coords)
         elif self.meta.slice.origin == (2, 0, 0):
             expected_coords = [[7, 0], [7, 7]]
+            print("meta:", self.meta.coordinates, "expected:", expected_coords)
             assert np.allclose(self.meta.coordinates, expected_coords)
 
 

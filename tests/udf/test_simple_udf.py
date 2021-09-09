@@ -393,7 +393,7 @@ def test_udf_pickle(lt_ctx):
     partition = next(dataset.get_partitions())
     pixelsum = PixelsumUDF()
     meta = UDFMeta(
-        partition_shape=partition.slice.shape,
+        partition_slice=partition.slice,
         dataset_shape=dataset.shape,
         roi=None,
         dataset_dtype="float32",

@@ -674,7 +674,7 @@ def _mask_from_analysis(dataset, analysis):
     )
     udf = analysis.get_udf()
     meta = UDFMeta(
-        partition_shape=None,
+        partition_slice=None,
         dataset_shape=dataset.shape,
         roi=None,
         dataset_dtype=dataset.dtype,

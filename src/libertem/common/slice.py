@@ -311,6 +311,7 @@ class Slice:
         """
         if roi is None:
             return self
+        roi = roi.reshape(-1)
         assert self.shape.nav.dims == 1
         s_o = self.origin[0]
         s_s = self.shape[0]

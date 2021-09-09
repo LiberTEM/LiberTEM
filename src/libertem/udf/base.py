@@ -37,11 +37,11 @@ class UDFMeta:
         Information on compute backend, corrections, coordinates and tiling scheme added
     """
 
-    def __init__(self, partition_shape: Shape, dataset_shape: Shape, roi: np.ndarray,
+    def __init__(self, partition_slice: Slice, dataset_shape: Shape, roi: np.ndarray,
                  dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
                  tiling_index: int = 0, corrections=None, device_class: str = None,
                  threads_per_worker: Optional[int] = None):
-        self._partition_shape = partition_shape
+        self._partition_slice = partition_slice
         self._dataset_shape = dataset_shape
         self._dataset_dtype = dataset_dtype
         self._input_dtype = input_dtype
@@ -54,8 +54,7 @@ class UDFMeta:
             roi = roi.reshape(dataset_shape.nav)
         self._roi = roi
         self._slice = None
-        self._coordinates = None
-        self._cached_coordinates = {}
+        self._cached_coordinates = None
         if corrections is None:
             corrections = CorrectionSet()
         self._corrections = corrections
@@ -79,7 +78,7 @@ class UDFMeta:
         Shape : The shape of the partition this UDF currently works on.
                 If a ROI was applied, the shape will be modified accordingly.
         """
-        return self._partition_shape
+        return self._partition_slice.shape
 
     @property
     def dataset_shape(self) -> Shape:
@@ -159,13 +158,10 @@ class UDFMeta:
         """
         # Check if key is present in the cached_coordinates, generate the coords otherwise
         roi_key = "None" if self._roi is None else tuple(map(tuple, self._roi))
-        key = (self._slice, tuple(self._dataset_shape), roi_key)
-        coords = self._cached_coordinates.get(key)
-        if coords is None:
-            coords = get_coordinates(self._slice, self._dataset_shape, self._roi)
-            self._cached_coordinates.update({key: coords})
-            self._coordinates = coords
-        return coords
+        if self._cached_coordinates is None:
+            self._cached_coordinates = get_coordinates(self._partition_slice, self._dataset_shape, self._roi)
+        shifted_slice = self._slice.shift(self._partition_slice)
+        return shifted_slice.get(arr=self._cached_coordinates, nav_only=True)
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -1173,7 +1169,7 @@ class UDFRunner:
         """
         runner = UDFRunner([udf])
         meta = UDFMeta(
-            partition_shape=None,
+            partition_slice=None,
             dataset_shape=dataset.shape,
             roi=None,
             dataset_dtype=dataset.dtype,
@@ -1226,7 +1222,7 @@ class UDFRunner:
     def _init_udfs(self, numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env):
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
-            partition_shape=partition.slice.adjust_for_roi(roi).shape,
+            partition_slice=partition.slice.adjust_for_roi(roi),
             dataset_shape=partition.meta.shape,
             roi=roi,
             dataset_dtype=partition.dtype,
@@ -1270,7 +1266,7 @@ class UDFRunner:
 
         # FIXME: don't fully re-create?
         meta = UDFMeta(
-            partition_shape=partition.slice.adjust_for_roi(roi).shape,
+            partition_slice=partition.slice.adjust_for_roi(roi),
             dataset_shape=partition.meta.shape,
             roi=roi,
             dataset_dtype=partition.dtype,
@@ -1417,7 +1413,7 @@ class UDFRunner:
     ):
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
-            partition_shape=None,
+            partition_slice=None,
             dataset_shape=dataset.shape,
             roi=roi,
             dataset_dtype=dataset.dtype,

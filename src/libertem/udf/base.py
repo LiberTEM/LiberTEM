@@ -156,10 +156,12 @@ class UDFMeta:
 
         .. versionadded:: 0.6.0
         """
-        # Check if key is present in the cached_coordinates, generate the coords otherwise
-        roi_key = "None" if self._roi is None else tuple(map(tuple, self._roi))
         if self._cached_coordinates is None:
-            self._cached_coordinates = get_coordinates(self._partition_slice, self._dataset_shape, self._roi)
+            self._cached_coordinates = get_coordinates(
+                self._partition_slice,
+                self._dataset_shape,
+                self._roi
+            )
         shifted_slice = self._slice.shift(self._partition_slice)
         return shifted_slice.get(arr=self._cached_coordinates, nav_only=True)
 

@@ -32,7 +32,7 @@ class SimpleTestByPartitionUDF(UDF):
 
 def test_tiles_by_partition(lt_ctx):
     data = _mk_random(size=(8, 8, 8, 8), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(4, 8, 8),
+    dataset = MemoryDataSet(data=data, tileshape=(32, 8, 8),
                             num_partitions=2, sig_dims=2)
 
     test = SimpleTestByPartitionUDF()

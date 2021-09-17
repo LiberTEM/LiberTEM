@@ -1302,7 +1302,7 @@ class UDFRunner:
                     udf.process_frame(frame)
             elif method == 'partition':
                 udf.set_views_for_tile(partition, tile)
-                udf.set_slice(partition.slice)
+                udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)
 
     def _run_udfs(self, numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype):

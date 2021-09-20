@@ -197,7 +197,7 @@ def coordinate_check(y_centers, x_centers):
     return (straight, flipped)
 
 
-def guess_corections(y_centers, x_centers):
+def guess_corrections(y_centers, x_centers):
     '''
     Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data
 

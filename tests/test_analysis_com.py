@@ -6,7 +6,7 @@ from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
-from libertem.analysis.com import apply_correction, guess_corections
+from libertem.analysis.com import apply_correction, guess_corrections
 
 
 @pytest.fixture
@@ -487,7 +487,7 @@ def test_com_parameter_guess(lt_ctx):
     print(res.divergence.raw_data)
     print(res.curl.raw_data)
 
-    guess = guess_corections(res.y.raw_data, res.x.raw_data)
+    guess = guess_corrections(res.y.raw_data, res.x.raw_data)
     print(guess)
 
     g_rot, g_flip_y, g_cy, g_cx = guess
@@ -511,7 +511,7 @@ def test_com_parameter_guess(lt_ctx):
     )
     res_changed = lt_ctx.run(analysis_changed)
 
-    guess = guess_corections(res_changed.y.raw_data, res_changed.x.raw_data)
+    guess = guess_corrections(res_changed.y.raw_data, res_changed.x.raw_data)
     print(guess)
 
     g_rot, g_flip_y, g_cy, g_cx = guess
@@ -532,7 +532,7 @@ def test_com_parameter_guess(lt_ctx):
     )
     res_corrected = lt_ctx.run(analysis_corrected)
 
-    corrected_guess = guess_corections(res_corrected.y.raw_data, res_corrected.x.raw_data)
+    corrected_guess = guess_corrections(res_corrected.y.raw_data, res_corrected.x.raw_data)
     print(corrected_guess)
     print(res_corrected.divergence.raw_data)
     print(res_corrected.curl.raw_data)

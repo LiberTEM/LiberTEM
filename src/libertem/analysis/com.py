@@ -5,7 +5,7 @@ import numpy as np
 from libertem import masks
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
-from libertem.corrections.coordinates import rotate_deg, flip_y, identity
+from libertem.corrections import coordinates
 from .helper import GeneratorHelper
 
 log = logging.getLogger(__name__)
@@ -139,6 +139,24 @@ def center_shifts(img_sum, img_y, img_x, ref_y, ref_x):
     return (y_centers, x_centers)
 
 
+def apply_correction(y_centers, x_centers, scan_rotation, flip_y, forward=True):
+    shape = y_centers.shape
+    if flip_y:
+        transform = coordinates.flip_y()
+    else:
+        transform = coordinates.identity()
+    # Transformations are applied right to left
+    transform = coordinates.rotate_deg(scan_rotation) @ transform
+    y_centers = y_centers.reshape(-1)
+    x_centers = x_centers.reshape(-1)
+    if not forward:
+        transform = np.linalg.inv(transform)
+    y_transformed, x_transformed = transform @ (y_centers, x_centers)
+    y_transformed = y_transformed.reshape(shape)
+    x_transformed = x_transformed.reshape(shape)
+    return (y_transformed, x_transformed)
+
+
 def divergence(y_centers, x_centers):
     return np.gradient(y_centers, axis=0) + np.gradient(x_centers, axis=1)
 
@@ -152,6 +170,84 @@ def curl_2d(y_centers, x_centers):
 
 def magnitude(y_centers, x_centers):
     return np.sqrt(y_centers**2 + x_centers**2)
+
+
+def coordinate_check(y_centers, x_centers):
+    '''
+    Calculate the RMS curl as a function of :code:`scan_rotation` and :code:`flip_y`.
+
+    The curl for a purely electrostatic field is zero. That means
+    the correct settings for :code:`scan_rotation` and :code:`flip_y` should
+    minimize the RMS curl for non-magnetic specimens.
+    '''
+    straight = np.zeros(360)
+    flipped = np.zeros(360)
+    for angle in range(360):
+        for flip_y in (True, False):
+            y_transformed, x_transformed = apply_correction(
+                y_centers, x_centers, scan_rotation=angle, flip_y=flip_y
+            )
+            curl = curl_2d(y_transformed, x_transformed)
+            # The last row and column contain artefacts
+            result = np.sqrt(np.mean(curl[:-1, :-1]**2))
+            if flip_y:
+                flipped[angle] = result
+            else:
+                straight[angle] = result
+    return (straight, flipped)
+
+
+def guess_corections(y_centers, x_centers):
+    '''
+    Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data
+
+    This function can generate a CoM parameter guess for atomic resolution 4D STEM data
+    by using the following assumptions:
+
+    * The field is purely electrostatic, i.e. the RMS curl should be minimized
+    * There is no net field over the field of view and no descan error,
+      i.e. the mean deflection is zero.
+    * Atomic resolution STEM means that the divergence will be negative at atom columns
+      and consequently the histogram of divergence will have a stronger tail towards
+      negative values than towards positive values.
+
+    If any corrections were applied when generating the input data, please note that the corrections
+    should be applied relative to these previous value. In particular, the
+    center corrections have to be back-transformed, for example with
+    :code:`apply_corrections(..., forward=False)
+
+    Returns
+    -------
+    scan_rotation, flip_y, cy, cx : relative to current values
+    '''
+    straight, flipped = coordinate_check(y_centers, x_centers)
+    # The one with lower minima is the correct one
+    flip_y = bool(np.min(flipped) < np.min(straight))
+    if flip_y:
+        angle = np.argmin(flipped)
+    else:
+        angle = np.argmin(straight)
+
+    corrected_y, corrected_x = apply_correction(
+        y_centers, x_centers, scan_rotation=angle, flip_y=flip_y
+    )
+    # There are two equivalent angles that minimize RMS curl since a 180°
+    # rotation inverts the coordinates and just flips the sign for divergence
+    # and curl. To distinguish the two, the distribution of the divergence is
+    # analyzed. With negative electrons and positive nuclei, the beam is
+    # deflected towards the nuclei and the divergence is negative there. Since
+    # the beam is deflected most strongly near the nuclei, the histogram should
+    # have more values at the negative end of the range than at the positive
+    # end.
+    div = divergence(corrected_y, corrected_x)
+    all_range = np.maximum(-np.min(div), np.max(div))
+    hist, bins = np.histogram(div, range=(-all_range, all_range), bins=5)
+    polarity_off = np.sum(hist[:1]) < np.sum(hist[-1:])
+    if polarity_off:
+        angle += 180
+    if angle > 180:
+        angle -= 360
+    return (angle, flip_y, np.mean(y_centers), np.mean(x_centers))
 
 
 class COMResultSet(AnalysisResultSet):
@@ -219,17 +315,11 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         y_centers_raw, x_centers_raw = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
-        shape = y_centers_raw.shape
-        if self.parameters["flip_y"]:
-            transform = flip_y()
-        else:
-            transform = identity()
-        # Transformations are applied right to left
-        transform = rotate_deg(self.parameters["scan_rotation"]) @ transform
-        y_centers, x_centers = transform @ (y_centers_raw.reshape(-1), x_centers_raw.reshape(-1))
-
-        y_centers = y_centers.reshape(shape)
-        x_centers = x_centers.reshape(shape)
+        y_centers, x_centers = apply_correction(
+            y_centers_raw, x_centers_raw,
+            scan_rotation=self.parameters["scan_rotation"],
+            flip_y=self.parameters["flip_y"]
+        )
 
         if img_sum.dtype.kind == 'c':
             x_real, x_imag = np.real(x_centers), np.imag(x_centers)

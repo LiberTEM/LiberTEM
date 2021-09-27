@@ -4,40 +4,40 @@
 #
 #    pip-compile --output-file=requirements.txt ../../setup.py
 #
-async-generator==1.10
-    # via nbclient
 attrs==21.2.0
     # via jsonschema
 autopep8==1.5.7
     # via libertem (../../setup.py)
-bleach==3.3.0
+bleach==4.1.0
     # via nbconvert
 click==8.0.1
     # via
     #   distributed
     #   libertem (../../setup.py)
-cloudpickle==1.6.0
+cloudpickle==2.0.0
     # via
     #   dask
     #   distributed
     #   libertem (../../setup.py)
 cycler==0.10.0
     # via matplotlib
-dask==2021.05.1
+dask==2021.09.1
     # via distributed
-decorator==4.4.2
-    # via networkx
 defusedxml==0.7.1
-    # via nbconvert
-distributed==2021.5.1
+    # via
+    #   libertem (../../setup.py)
+    #   nbconvert
+distributed==2021.9.1
     # via libertem (../../setup.py)
 empyre==0.3.1
     # via libertem (../../setup.py)
 entrypoints==0.3
-    # via nbconvert
-fsspec==2021.5.0
+    # via
+    #   jupyter-client
+    #   nbconvert
+fsspec==2021.9.0
     # via dask
-h5py==3.2.1
+h5py==3.4.0
     # via
     #   libertem (../../setup.py)
     #   ncempy
@@ -46,35 +46,35 @@ heapdict==1.0.1
 imageio==2.9.0
     # via scikit-image
 ipython-genutils==0.2.0
-    # via
-    #   nbformat
-    #   traitlets
+    # via nbformat
 jinja2==3.0.1
-    # via nbconvert
+    # via
+    #   distributed
+    #   nbconvert
 joblib==1.0.1
     # via scikit-learn
 jsonschema==3.2.0
     # via
     #   libertem (../../setup.py)
     #   nbformat
-jupyter-client==6.1.12
+jupyter-client==7.0.3
     # via nbclient
-jupyter-core==4.7.1
+jupyter-core==4.8.1
     # via
     #   jupyter-client
     #   nbconvert
     #   nbformat
 jupyterlab-pygments==0.1.2
     # via nbconvert
-kiwisolver==1.3.1
+kiwisolver==1.3.2
     # via matplotlib
-llvmlite==0.36.0
+llvmlite==0.37.0
     # via numba
 locket==0.2.1
     # via partd
 markupsafe==2.0.1
     # via jinja2
-matplotlib==3.4.2
+matplotlib==3.4.3
     # via
     #   empyre
     #   libertem (../../setup.py)
@@ -84,9 +84,9 @@ mistune==0.8.4
     # via nbconvert
 msgpack==1.0.2
     # via distributed
-nbclient==0.5.3
+nbclient==0.5.4
     # via nbconvert
-nbconvert==6.0.7
+nbconvert==6.2.0
     # via libertem (../../setup.py)
 nbformat==5.1.3
     # via
@@ -96,10 +96,12 @@ nbformat==5.1.3
 ncempy==1.8.1
     # via libertem (../../setup.py)
 nest-asyncio==1.5.1
-    # via nbclient
-networkx==2.5.1
+    # via
+    #   jupyter-client
+    #   nbclient
+networkx==2.6.3
     # via scikit-image
-numba==0.53.1
+numba==0.54.0
     # via
     #   libertem (../../setup.py)
     #   sparse
@@ -118,9 +120,11 @@ numpy==1.20.3
     #   scipy
     #   sparse
     #   tifffile
-packaging==20.9
-    # via bleach
-pandocfilters==1.4.3
+packaging==21.0
+    # via
+    #   bleach
+    #   dask
+pandocfilters==1.5.0
     # via nbconvert
 partd==1.2.0
     # via dask
@@ -139,7 +143,7 @@ psutil==5.8.0
     #   libertem (../../setup.py)
 pycodestyle==2.7.0
     # via autopep8
-pygments==2.9.0
+pygments==2.10.0
     # via
     #   jupyterlab-pygments
     #   nbconvert
@@ -147,9 +151,9 @@ pyparsing==2.4.7
     # via
     #   matplotlib
     #   packaging
-pyrsistent==0.17.3
+pyrsistent==0.18.0
     # via jsonschema
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via
     #   jupyter-client
     #   matplotlib
@@ -159,15 +163,15 @@ pyyaml==5.4.1
     # via
     #   dask
     #   distributed
-pyzmq==22.1.0
+pyzmq==22.3.0
     # via jupyter-client
-scikit-image==0.18.1
+scikit-image==0.18.3
     # via
     #   empyre
     #   libertem (../../setup.py)
-scikit-learn==0.24.2
+scikit-learn==1.0
     # via libertem (../../setup.py)
-scipy==1.6.3
+scipy==1.7.1
     # via
     #   empyre
     #   libertem (../../setup.py)
@@ -183,17 +187,17 @@ six==1.16.0
     #   python-dateutil
 sortedcontainers==2.4.0
     # via distributed
-sparse==0.12.0
+sparse==0.13.0
     # via libertem (../../setup.py)
 tblib==1.7.0
     # via distributed
 testpath==0.5.0
     # via nbconvert
-threadpoolctl==2.1.0
+threadpoolctl==2.2.0
     # via
     #   libertem (../../setup.py)
     #   scikit-learn
-tifffile==2021.4.8
+tifffile==2021.8.30
     # via scikit-image
 toml==0.10.2
     # via autopep8
@@ -207,11 +211,11 @@ tornado==6.1
     #   distributed
     #   jupyter-client
     #   libertem (../../setup.py)
-tqdm==4.61.0
+tqdm==4.62.3
     # via
     #   empyre
     #   libertem (../../setup.py)
-traitlets==5.0.5
+traitlets==5.1.0
     # via
     #   jupyter-client
     #   jupyter-core

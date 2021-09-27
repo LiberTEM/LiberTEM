@@ -1,2 +1,2 @@
 #!/bin/bash
-pip-compile ../../setup.py -Uo requirements.txt
+pip-compile --no-emit-index-url ../../setup.py -Uo requirements.txt

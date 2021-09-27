@@ -4,7 +4,7 @@ services:
   scheduler:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     ports:
       - "8786:8786"
       - "8787:8787"
@@ -13,7 +13,7 @@ services:
   worker-1:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: worker-1
     image: libertem/libertem-dev
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
@@ -26,7 +26,7 @@ services:
   worker-2:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: worker-2
     image: libertem/libertem-dev
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
@@ -39,7 +39,7 @@ services:
   ipy-controller:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: ipy-controller
     image: libertem/libertem-dev
     command: ["/venv/bin/ipcontroller", "--ip='*'"]
@@ -48,7 +48,7 @@ services:
   ipy-worker-1:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: ipy-worker-1
     image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
@@ -62,7 +62,7 @@ services:
   ipy-worker-2:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: ipy-worker-2
     image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
@@ -76,7 +76,7 @@ services:
   tests:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile
+      dockerfile: packaging/docker/Dockerfile.dev
     hostname: tests
     image: libertem/libertem-dev
     working_dir: /code/

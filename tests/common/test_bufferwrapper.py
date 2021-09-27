@@ -1,11 +1,14 @@
 import pytest
 import numpy as np
 
-from libertem.io.dataset.memory import MemoryDataSet
+from libertem.io.dataset.memory import (
+    MemPartition, MemoryDataSet, FileSet, MemoryFile
+)
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, reshaped_view, PlaceholderBufferWrapper,
 )
-from libertem.common import Shape
+from libertem.common import Shape, Slice
+from libertem.udf.base import UDF
 
 from utils import _mk_random
 
@@ -75,3 +78,119 @@ def test_result_buffer_decl():
     with pytest.raises(ValueError):
         # no array associated with this bufferwrapper:
         np.array(buf)
+
+
+class BadMemPartition(MemPartition):
+    def get_tiles(self, *args, **kwargs):
+        for t in super().get_tiles(*args, **kwargs):
+            sl = t.tile_slice
+            origin = np.array(sl.origin)
+            origin += 1
+            new_sl = Slice(origin=tuple(origin), shape=sl.shape)
+            t.tile_slice = new_sl
+            yield t
+
+
+class BadMemoryDS(MemoryDataSet):
+    def get_partitions(self):
+        fileset = FileSet([
+            MemoryFile(
+                path=None,
+                start_idx=0,
+                end_idx=self._image_count,
+                native_dtype=self.data.dtype,
+                sig_shape=self.shape.sig,
+                data=self.data.reshape(self.shape.flatten_nav()),
+                check_cast=self._check_cast,
+            )
+        ])
+
+        for part_slice, start, stop in self.get_slices():
+            yield BadMemPartition(
+                meta=self._meta,
+                partition_slice=part_slice,
+                fileset=fileset,
+                start_frame=start,
+                num_frames=stop - start,
+                tiledelay=self._tiledelay,
+                tileshape=self.tileshape,
+                base_shape=self._base_shape,
+                force_need_decode=self._force_need_decode,
+                io_backend=self.get_io_backend(),
+            )
+
+
+class BaseSigUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'data': self.buffer(kind='sig')
+        }
+
+    def merge(self, dest, src):
+        dest.data[:] += src.data
+
+
+class FrameSigUDF(BaseSigUDF):
+    def process_frame(self, frame):
+        self.results.data[:] += frame
+
+
+class TileSigUDF(BaseSigUDF):
+    def process_tile(self, tile):
+        self.results.data[:] += tile.sum(axis=0)
+
+
+class PartitionSigUDF(BaseSigUDF):
+    def process_partition(self, partition):
+        self.results.data[:] += partition.sum(axis=0)
+
+
+class BaseNavUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'data': self.buffer(kind='nav')
+        }
+
+
+class FrameNavUDF(BaseNavUDF):
+    def process_frame(self, frame):
+        self.results.data[:] = frame.sum()
+
+
+class TileNavUDF(BaseNavUDF):
+    def process_tile(self, tile):
+        self.results.data[:] = tile.sum(axis=tuple(range(1, len(tile.shape))))
+
+
+class PartitionNavUDF(BaseNavUDF):
+    def process_partition(self, partition):
+        self.results.data[:] = partition.sum(
+            axis=tuple(range(1, len(partition.shape)))
+        )
+
+
+@pytest.mark.parametrize(
+    'tileshape', [None, (7, 16, 16), (7, 7, 7), (16, 8, 16)]
+)
+@pytest.mark.parametrize(
+    'udf_cls', (FrameSigUDF, TileSigUDF, PartitionSigUDF, FrameNavUDF, TileNavUDF, PartitionNavUDF)
+)
+def test_buffer_slices(lt_ctx, tileshape, udf_cls):
+    data = _mk_random(size=(16, 16, 16, 16))
+    bad_ds = BadMemoryDS(
+        data=data,
+        tileshape=tileshape,
+        num_partitions=2,
+        sig_dims=2
+    )
+    ds = MemoryDataSet(
+        data=data,
+        tileshape=tileshape,
+        num_partitions=2,
+        sig_dims=2
+    )
+
+    _ = lt_ctx.run_udf(dataset=ds, udf=udf_cls())
+    with pytest.raises(Exception) as exc_info:
+        _ = lt_ctx.run_udf(dataset=bad_ds, udf=udf_cls())
+    assert exc_info.errisinstance((AssertionError, IndexError))

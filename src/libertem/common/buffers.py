@@ -380,7 +380,8 @@ class BufferWrapper:
     def _get_slice(self, slice: Slice):
         real_slice = slice.get()
         result = self._data[real_slice]
-        # Defend against #1026
+        # Defend against #1026 (internal bugs), allow deactivating in
+        # optimized builds for performance
         assert result.shape == tuple(slice.shape) + self.extra_shape
         return result
 
@@ -447,7 +448,8 @@ class BufferWrapper:
                 offset = partition_slice.origin[0]
             result_start = tile_slice.origin[0] - offset
             result_stop = result_start + tile_slice.shape[0]
-            # Defend against #1026
+            # Defend against #1026 (internal bugs), allow deactivating in
+            # optimized builds for performance
             assert result_start < len(self._data)
             assert result_stop <= len(self._data)
             # shape: (1,) + self._extra_shape

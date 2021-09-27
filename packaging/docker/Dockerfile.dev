@@ -34,3 +34,5 @@ COPY --from=builder /code/ /code/
 ENV PYTHONUNBUFFERED 1
 
 CMD ["/venv/bin/libertem-server"]
+
+# vim:ft=dockerfile

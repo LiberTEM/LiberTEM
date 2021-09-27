@@ -349,7 +349,7 @@ stages:
           cd packaging/docker/
           ./update_reqs.sh
           docker pull libertem/libertem-dev || true
-          docker build --cache-from=libertem/libertem-dev -t libertem/libertem-dev --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
+          docker build --cache-from=libertem/libertem-dev -t libertem/libertem-dev --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.dev
           # make this succeed even if the access token is not available:
           (docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && docker push libertem/libertem-dev) || true
         displayName: 'Build docker container(s)'

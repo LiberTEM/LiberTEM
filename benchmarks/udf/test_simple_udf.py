@@ -56,9 +56,12 @@ def test_udf_noncontiguous_tiles(lt_ctx, backend, benchmark):
     group="udf overheads"
 )
 def test_overhead(shared_dist_ctx, benchmark):
-    ds = shared_dist_ctx.load('memory', data=np.zeros((1024, 1024, 2)), sig_dims=1)
-    # many partitions
-    ds.set_num_cores(32*1024)
+    ds = shared_dist_ctx.load(
+        'memory',
+        data=np.zeros((1024, 1024, 2)),
+        sig_dims=1,
+        num_partitions=32
+    )
     benchmark(
         shared_dist_ctx.run_udf,
         dataset=ds,

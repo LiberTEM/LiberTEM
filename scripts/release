@@ -555,6 +555,40 @@ def do_build_appimage(ctx):
 
 
 @cli.command()
+def docker_tags():
+    """
+    Prints the tags that should be used for any docker images that are built,
+    separated by whitespace.
+    """
+    kind = get_release_kind()
+    branch = env['branch']
+    is_master = branch == "master"
+    is_stable_branch = branch and STABLE_VERSION_PAT.match(branch) is not None
+    is_pull_request = env['is_pr']
+
+    if is_pull_request:
+        raise click.UsageError("refusing to tag pull request builds")
+
+    version = get_release_tag()
+
+    tags = []
+
+    if version is not None:
+        tags.append(version["full"])
+
+    if is_stable_branch:
+        tags.append("stable")
+
+    if kind == "dev":
+        tags.append("continuous")
+
+    if is_master:
+        tags.append("latest")
+
+    print(" ".join(tags))
+
+
+@cli.command()
 @click.argument('new_version', type=str)
 @click.option('--tag/--no-tag', help='create a git tag after bumping (implies --commit)',
               default=False)

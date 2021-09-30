@@ -105,6 +105,18 @@ class DaskTaskProxy(TaskProxy):
         return f"<TaskProxy: {self.task!r} (id={self.task_id})>"
 
 
+def _run_task(what):
+    """
+    Very simple wrapper function. As dask internally caches functions that are
+    submitted to the cluster in various ways, we need to make sure to
+    consistently use the same function, and not build one on the fly.
+
+    Without this function, DaskTaskProxy->UDFTask->UDF->UDFData ends up in the
+    cache, which blows up memory usage over time.
+    """
+    return what()
+
+
 class CommonDaskMixin:
     def _task_idx_to_workers(self, workers, idx):
         hosts = list(sorted(workers.hosts()))
@@ -137,7 +149,7 @@ class CommonDaskMixin:
             'workers': locations,
             'pure': False,
         })
-        return self.client.submit(task, **submit_kwargs)
+        return self.client.submit(_run_task, task, **submit_kwargs)
 
     def _validate_resources(self, workers, resources):
         # This is set in the constructor of DaskJobExecutor

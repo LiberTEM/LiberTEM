@@ -13,43 +13,64 @@ import warnings
 log = logging.getLogger(__name__)
 
 
+__has_pyfftw = None
+__has_pytorch = None
+
+
 @contextmanager
 def set_fftw_threads(n):
-    try:
-        import pyfftw
-    except ImportError:
-        yield
-        return
+    global __has_pyfftw
+    if __has_pyfftw is None:
+        try:
+            import pyfftw
+            __has_pyfftw = True
+        except ImportError:
+            __has_pyfftw = False
+            yield
+            return
 
-    pyfftw_threads = pyfftw.config.NUM_THREADS
-    try:
-        pyfftw.config.NUM_THREADS = n
+    if __has_pyfftw:
+        import pyfftw  # noqa:F811
+        pyfftw_threads = pyfftw.config.NUM_THREADS
+        try:
+            pyfftw.config.NUM_THREADS = n
+            yield
+        finally:
+            pyfftw.config.NUM_THREADS = pyfftw_threads
+    else:
         yield
-    finally:
-        pyfftw.config.NUM_THREADS = pyfftw_threads
 
 
 @contextmanager
 def set_torch_threads(n):
-    try:
-        import torch
-    except ImportError:
+    global __has_pytorch
+    if __has_pytorch is None:
+        try:
+            import torch
+            __has_pytorch = True
+        except ImportError:
+            __has_pytorch = False
+            yield
+            return
+
+    if __has_pytorch:
+        import torch  # noqa:F811
+        torch_threads = torch.get_num_threads()
+        # See also https://pytorch.org/docs/stable/torch.html#parallelism
+        # At the time of writing the difference between threads and interop threads
+        # wasn't clear from the documentation. However, changing the
+        # interop_threads on runtime
+        # caused errors, so it is commented out here.
+        # torch_interop_threads = torch.get_num_interop_threads()
+        try:
+            torch.set_num_threads(n)
+            # torch.set_num_interop_threads(n)
+            yield
+        finally:
+            torch.set_num_threads(torch_threads)
+            # torch.set_num_interop_threads(torch_interop_threads)
+    else:
         yield
-        return
-    torch_threads = torch.get_num_threads()
-    # See also https://pytorch.org/docs/stable/torch.html#parallelism
-    # At the time of writing the difference between threads and interop threads
-    # wasn't clear from the documentation. However, changing the
-    # interop_threads on runtime
-    # caused errors, so it is commented out here.
-    # torch_interop_threads = torch.get_num_interop_threads()
-    try:
-        torch.set_num_threads(n)
-        # torch.set_num_interop_threads(n)
-        yield
-    finally:
-        torch.set_num_threads(torch_threads)
-        # torch.set_num_interop_threads(torch_interop_threads)
 
 
 @contextmanager
@@ -123,9 +144,11 @@ def set_num_threads(n):
         __threadpool_wrapper = ThreadpoolWrapper()
     # We use __threadpool_wrapper last so that it can cover
     # libraries that the other ones load
-    with set_fftw_threads(n), set_torch_threads(n),\
-            set_numba_threads(n), __threadpool_wrapper(n):
-        yield
+    with set_fftw_threads(n):
+        with set_torch_threads(n):
+            with set_numba_threads(n):
+                with __threadpool_wrapper(n):
+                    yield
 
 
 @contextmanager

@@ -169,11 +169,24 @@ class UDFMeta:
     def threads_per_worker(self) -> Optional[int]:
         """
         int or None : number of threads that a UDF is allowed to use in the `process_*` method.
-                      For numba, pyfftw, OMP, MKL, OpenBLAS, this limit is set automatically;
-                      this property can be used for other cases, like manually creating
-                      thread pools.
+                      For numba, pyfftw, NumPy and SciPy (OMP, MKL, OpenBLAS), this limit is set
+                      automatically; this property can be used for other cases, like manually
+                      creating thread pools or setting limits for unsupported modules.
                       None means no limit is set, and the UDF can use any number of threads
                       it deems necessary (should be limited to system limits, of course).
+
+        Note
+        ----
+
+        .. versionchanged:: 0.8.0
+            Since discovery of loaded libraries can be slow with :mod:`threadpoolctl`
+            (:issue:`1117`), they are cached now. In case an UDF triggers loading of a new
+            library or instance of a library that is supported by :mod:`threadpoolctl`,
+            it will only be discovered in the first run on a :class:`~libertem.api.Context`.
+            The threading settings for such other libraries or instances can therefore depend on the
+            execution order. In such cases the thread count for affected libraries should be
+            set in the UDF based on :code:`threads_per_worker`. NumPy and SciPy should not be
+            affected since they are loaded before the first discovery.
 
         See also: :func:`libertem.utils.threading.set_num_threads`
 

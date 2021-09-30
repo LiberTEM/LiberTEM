@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from libertem.udf.base import UDF
+from libertem.udf.base import UDF, NoOpUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -50,3 +50,17 @@ def test_udf_noncontiguous_tiles(lt_ctx, backend, benchmark):
         set_use_cpu(0)
 
     assert np.all(res["sigbuf"].data == 0)
+
+
+@pytest.mark.benchmark(
+    group="udf overheads"
+)
+def test_overhead(shared_dist_ctx, benchmark):
+    ds = shared_dist_ctx.load('memory', data=np.zeros((1024, 1024, 2)), sig_dims=1)
+    # many partitions
+    ds.set_num_cores(32*1024)
+    benchmark(
+        shared_dist_ctx.run_udf,
+        dataset=ds,
+        udf=NoOpUDF()
+    )

@@ -2,6 +2,7 @@ benchmarks
 prototypes
 data
 packaging/appimage
+scripts/release
 build
 dist
 htmlcov

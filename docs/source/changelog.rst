@@ -63,6 +63,9 @@ Bugfixes
   wheel for vector fields (:issue:`1052`, :pr:`1101`).
 * Adjust partition count to match the number of CPU compute workers,
   not total workers to prevent residual partitions (:issue:`1086`, :pr:`1103`).
+* Correct partition shape for ROI in :class:`~libertem.udf.base.UDFMeta` (:pr:`1109`).
+* Fix memory leak: Don't submit dynamically generated callables directly to the distributed cluster,
+  as they are cached in an unbounded cache (:issue:`894,964`, :pr:`1119`).
 
 Documentation
 -------------
@@ -70,6 +73,14 @@ Documentation
 * Note on handling HDF5 files with non-standard compression
   in :class:`~libertem.io.dataset.hdf5.H5DataSet` (:pr:`1059`).
 * Link to two more public datasets: :ref:`hires STO` and :ref:`synthetic STO` (:pr:`1073`).
+
+Misc
+----
+
+* Speed up coordinate calculation (:issue:`1108`, :pr:`1109`).
+* Make sure tasks are scheduled dynamically on available workers if they have uneven
+  run time to benefit more from GPUs (:pr:`1107`).
+* Cache loaded libraries to reduce overhead of setting the thread count (:issue:`1117`, :pr:`1118`).
 
 Many thanks to our new contributors Levente Puskás for the excluded pixel loading and to
 Matthew Bryan for figuring non-standard compression in HDF5 and improving DM

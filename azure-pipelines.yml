@@ -431,3 +431,25 @@ stages:
           LT_RELEASE_UPLOAD_ZENODO_TOKEN: $(LT_RELEASE_UPLOAD_ZENODO_TOKEN)
           LT_RELEASE_UPLOAD_ZENODO_SANDBOX_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_SANDBOX_PARENT)
           LT_RELEASE_UPLOAD_ZENODO_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_PARENT)
+
+    - job: build_docker_image
+      pool:
+        vmImage: 'ubuntu-latest'
+      variables:
+        DOCKER_BUILDKIT: "1"
+      steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.9'
+      - bash: pip install -U tox 'virtualenv>19' pip-tools
+        displayName: 'install requirements'
+      - script: |
+          cd packaging/docker/
+          ./update_reqs.sh
+          docker pull libertem/libertem || true
+          docker build --cache-from=libertem/libertem -t libertem/libertem --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
+          # make this succeed even if the access token is not available:
+          (docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && docker push libertem/libertem) || true
+        displayName: 'Build docker container(s)'
+        env:
+          DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)

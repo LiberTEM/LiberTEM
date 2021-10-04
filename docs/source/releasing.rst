@@ -62,7 +62,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Update and review change log in `docs/source/changelog.rst`, merging
           snippets in `docs/source/changelog/*/` as appropriate.
     * [ ] Update the JSON files in the ``packaging/`` folder with author and project information
-    * [ ] Edit `setup.cfg` to exclude flaky tests temporarily from release builds
+    * [ ] Edit `pytest.ini` to exclude flaky tests temporarily from release builds
     * [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
     * [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
           GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
@@ -109,6 +109,8 @@ When planning a release, create a new issue with the following checklist:
         * [ ] Still usable, decent response times?
     * [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
       in appropriate branch.
+    * [ ] Final version bump: `./scripts/release bump v0.3.0 --tag`, push to github
+    * [ ] After pipeline finishes, write minimal release notes for the [release](https://github.com/liberTEM/LiberTEM/releases) and publish the GitHub release
 
     ## After releasing on GitHub
 
@@ -120,7 +122,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Update documentation with new links, if necessary
         * [ ] Add zenodo badge for the new release to Changelog page
     * [ ] Send announcement message on mailing list
-    * [ ] Edit `setup.cfg` to include flaky tests again
+    * [ ] Edit `pytest.ini` to include flaky tests again
     * [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
     * [ ] Add to institutional publication databases
     * [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>) - add both the singularity and the .desktop file!

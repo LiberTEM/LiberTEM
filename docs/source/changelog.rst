@@ -23,8 +23,11 @@ Changelog
 
 .. _latest:
 
-0.8.0 / release pending
-#######################
+0.8.0 / 2021-10-04
+##################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5547992.svg
+   :target: https://doi.org/10.5281/zenodo.5547992
 
 This release mainly contains improvements of center of mass / first moment
 analysis and support for starting the web GUI from JupyterHub or JupyterLab.

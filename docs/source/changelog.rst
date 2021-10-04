@@ -48,7 +48,9 @@ New features
   later (:pr:`1074`, :issue:`1097`). Please comment on :issue:`1097` if local/manual use
   would be beneficial for you so that it is prioritized accordingly.
 * SEQ dataset: Added support for loading excluded pixels from XML (:issue:`805`, :pr:`1077`).
-  See :class:`~libertem.io.dataset.seq.SEQDataSet` for more information.
+  See :class:`~libertem.io.dataset.seq.SEQDataSet` for more information. Also
+  support both :code:`*.seq.seq` and :code:`*.seq` as extension for the main SEQ file
+  to find files with matching base name that contain correction data (:issue:`1120`, :pr:`1121`).
 
 Bugfixes
 --------

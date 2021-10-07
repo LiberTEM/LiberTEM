@@ -43,6 +43,19 @@ def default_mib(lt_ctx):
 
 
 @pytest.fixture
+def default_mib_readahead(lt_ctx):
+    nav_shape = (32, 32)
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=MMapBackend(enable_readahead_hints=True),
+    )
+    ds.set_num_cores(4)
+    return ds
+
+
+@pytest.fixture
 def buffered_mib(lt_ctx):
     buffered = BufferedBackend()
     ds = lt_ctx.load(
@@ -237,6 +250,29 @@ def test_read(default_mib):
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=tileshape,
         dataset_shape=default_mib.shape,
+    )
+
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    # we get 3D tiles here, because MIB partitions are inherently 3D
+    assert tuple(t.tile_slice.shape) == (3, 256, 256)
+
+
+@needsdata
+@pytest.mark.with_numba
+def test_read_ahead(default_mib_readahead):
+    partitions = default_mib_readahead.get_partitions()
+    p = next(partitions)
+    assert len(p.shape) == 3
+    assert tuple(p.shape[1:]) == (256, 256)
+
+    tileshape = Shape(
+        (3,) + tuple(default_mib_readahead.shape.sig),
+        sig_dims=default_mib_readahead.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_mib_readahead.shape,
     )
 
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)

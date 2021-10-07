@@ -328,7 +328,7 @@ class MMapBackendImpl(IOBackendImpl):
 
         with self.open_files(fileset) as open_files:
             if self._enable_readahead:
-                self._set_readahead_hints(roi, fileset)
+                self._set_readahead_hints(roi, open_files)
             if not self.need_copy(
                 decoder=decoder,
                 tiling_scheme=tiling_scheme,
@@ -359,21 +359,21 @@ class MMapBackendImpl(IOBackendImpl):
         for mi, ma, fidx in prefr:
             f = fileset[fidx]
             os.posix_fadvise(
-                f.fileno(),
+                f.handle.fileno(),
                 mi,
                 ma - mi,
                 os.POSIX_FADV_WILLNEED
             )
 
-    def _set_readahead_hints(self, roi, fileset):
+    def _set_readahead_hints(self, roi, open_files):
         if not hasattr(os, 'posix_fadvise'):
             return
-        if any([f.fileno() is None
-                for f in fileset]):
+        if any([f.handle.fileno() is None
+                for f in open_files]):
             return
-        for f in fileset:
+        for f in open_files:
             os.posix_fadvise(
-                f.fileno(),
+                f.handle.fileno(),
                 0,
                 0,
                 os.POSIX_FADV_WILLNEED

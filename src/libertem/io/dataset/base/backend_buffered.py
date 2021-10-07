@@ -254,8 +254,6 @@ class BufferedBackendImpl(IOBackendImpl):
             read_size = max_per_file[fileno] - min_per_file[fileno]
             # FIXME: re-use buffers across _read_block_dense calls!
             buffers[fileno] = np.zeros(read_size, dtype=np.uint8)
-            # FIXME: file header offset handling is a bit weird
-            # FIXME: maybe file header offset should be folded into the read ranges instead?
             fh.seek(min_per_file[fileno])
             fh.readinto(buffers[fileno])
 

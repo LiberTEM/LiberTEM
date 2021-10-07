@@ -715,7 +715,6 @@ class K2ISFile(File):
 
     def get_array_from_memview(self, mem: memoryview, slicing: OffsetsSizes) -> np.ndarray:
         mem = mem[slicing.file_offset:]
-        # assert False
         return np.frombuffer(mem, dtype=self._native_dtype)
 
 
@@ -995,7 +994,7 @@ class K2ISDataSet(DataSet):
             )
         return sy
 
-    def _get_fileset(self, io_backend):
+    def _get_fileset(self):
         files = [
             K2ISFile(
                 path=path,
@@ -1021,7 +1020,7 @@ class K2ISDataSet(DataSet):
 
     def get_partitions(self):
         io_backend = self.get_io_backend()
-        fileset = self._get_fileset(io_backend)
+        fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
             yield K2ISPartition(
                 meta=self._meta,

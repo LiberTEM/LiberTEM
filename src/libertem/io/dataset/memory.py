@@ -1,6 +1,5 @@
 import time
 import logging
-import contextlib
 
 import psutil
 import numpy as np
@@ -38,18 +37,10 @@ class MemBackend(MMapBackend):
 
 
 class MemBackendImpl(MMapBackendImpl):
+    FILE_CLS = FakeMMapFile
+
     def _set_readahead_hints(self, roi, fileset):
         pass
-
-    @contextlib.contextmanager
-    def open_files(self, fileset: FileSet):
-        mmap_files = [
-            FakeMMapFile(path=f.path, desc=f).open()
-            for f in fileset
-        ]
-        yield mmap_files
-        for f in mmap_files:
-            f.close()
 
     def _get_tiles_roi(self, tiling_scheme, open_files, read_ranges, roi, sync_offset):
         ds_sig_shape = tiling_scheme.dataset_shape.sig

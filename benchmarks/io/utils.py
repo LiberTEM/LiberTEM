@@ -64,4 +64,5 @@ backends_by_name = {
     "mmap": MMapBackend(),
     "mmap_readahead": MMapBackend(enable_readahead_hints=True),
     "buffered": BufferedBackend(),
+    "direct": BufferedBackend(direct_io=True),
 }

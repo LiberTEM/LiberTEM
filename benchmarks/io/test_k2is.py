@@ -60,7 +60,7 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", ("mmap", "mmap_readahead", "buffered"),
+        "io_backend", ("mmap", "mmap_readahead", "buffered", "direct"),
     )
     def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, io_backend):
         io_backend = backends_by_name[io_backend]

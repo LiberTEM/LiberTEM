@@ -6,7 +6,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, FileSet, LocalFile,
+    BasePartition, FileSet, File,
 )
 from libertem.web.messages import MessageConverter
 
@@ -246,7 +246,7 @@ class BloDataSet(DataSet):
 
     def _get_fileset(self):
         return BloFileSet([
-            LocalFile(
+            File(
                 path=self._path,
                 start_idx=0,
                 end_idx=self._image_count,

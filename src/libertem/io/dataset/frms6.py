@@ -17,7 +17,7 @@ from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    FileSet, BasePartition, LocalFile, Decoder,
+    FileSet, BasePartition, File, Decoder,
     TilingScheme, make_get_read_ranges,
 )
 
@@ -276,10 +276,11 @@ def _frms6_read_ranges_tile_block(
             file_idx = file_idxs[i]
             f = fileset_arr[file_idx]
             frame_in_file_idx = inner_frame - f[0]
+            file_header_bytes = f[3]
 
             # we are reading a part of a single frame, so we first need to find
             # the offset caused by headers:
-            header_offset = frame_header_bytes * (frame_in_file_idx + 1)
+            header_offset = file_header_bytes + frame_header_bytes * (frame_in_file_idx + 1)
 
             # now let's figure in the current frame index:
             # (go down into the file by full frames; `sig_size`)
@@ -359,10 +360,6 @@ class FRMS6Decoder(Decoder):
             2: decode_frms6_b2,
             4: decode_frms6_b4,
         }[self._binning]
-
-
-class FRMS6File(LocalFile):
-    pass
 
 
 class FRMS6FileSet(FileSet):
@@ -660,7 +657,7 @@ class FRMS6DataSet(DataSet):
             sig_shape = (header['height'], header['width'])
             num_frames = _num_frames(header)
             files.append(
-                FRMS6File(
+                File(
                     path=path,
                     start_idx=start_idx,
                     end_idx=start_idx + num_frames,

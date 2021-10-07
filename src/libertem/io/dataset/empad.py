@@ -240,13 +240,15 @@ class EMPADDataSet(DataSet):
                 end_idx=self._image_count,
                 sig_shape=self.shape.sig,
                 native_dtype=self._meta.raw_dtype,
+                frame_footer=2*128*4,
             )
         ])
 
     def check_valid(self):
         try:
             fileset = self._get_fileset()
-            with fileset:
+            backend = self.get_io_backend().get_impl()
+            with backend.open_files(fileset):
                 return True
         except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

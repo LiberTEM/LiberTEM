@@ -3,7 +3,7 @@ import typing
 import numpy as np
 
 from libertem.io.utils import get_partition_shape
-from libertem.io.dataset.base import DataSetException
+from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
 from libertem.corrections.corrset import CorrectionSet
 from .partition import BasePartition
@@ -197,7 +197,16 @@ class DataSet:
     def get_cache_key(self):
         raise NotImplementedError()
 
+    def _get_default_io_backend(self):
+        import platform
+        if platform.system() == "Windows":
+            from libertem.io.dataset.base import BufferedBackend
+            return BufferedBackend()
+        return MMapBackend()
+
     def get_io_backend(self):
+        if self._io_backend is None:
+            return self._get_default_io_backend()
         return self._io_backend
 
     def get_correction_data(self):

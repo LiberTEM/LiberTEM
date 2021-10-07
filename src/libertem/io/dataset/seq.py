@@ -40,7 +40,7 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
-    LocalFile,
+    File,
 )
 from libertem.corrections import CorrectionSet
 
@@ -638,7 +638,7 @@ class SEQDataSet(DataSet):
 
     def _get_fileset(self):
         return SEQFileSet(files=[
-            LocalFile(
+            File(
                 path=self._path,
                 start_idx=0,
                 end_idx=self._image_count,

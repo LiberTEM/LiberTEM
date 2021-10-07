@@ -9,10 +9,11 @@ import numba
 import numpy as np
 
 from libertem.common import Shape
+from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, FileSet, LocalFile, make_get_read_ranges,
+    BasePartition, FileSet, File, make_get_read_ranges,
     Decoder, TilingScheme, default_get_read_ranges,
     DtypeConversionDecoder,
 )
@@ -130,7 +131,7 @@ def get_image_count_and_sig_shape(path):
 @numba.njit(inline='always', cache=True)
 def _mib_r_px_to_bytes(
     bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
-    frame_footer_bytes, frame_header_bytes,
+    frame_footer_bytes, frame_header_bytes, file_header_bytes,
     file_idx, read_ranges,
 ):
     # NOTE: bpp is not used, instead we divide by 8 because we have 8 pixels per byte!
@@ -143,7 +144,7 @@ def _mib_r_px_to_bytes(
 
     # now let's figure in the current frame index:
     # (go down into the file by full frames; `sig_size`)
-    offset = byte_offset + frame_in_file_idx * sig_size // 8
+    offset = file_header_bytes + byte_offset + frame_in_file_idx * sig_size // 8
 
     # offset in px in the current frame:
     sig_origin_bytes = sig_origin // 8
@@ -160,7 +161,7 @@ def _mib_r_px_to_bytes(
 @numba.njit(inline='always', cache=True)
 def _mib_r24_px_to_bytes(
     bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
-    frame_footer_bytes, frame_header_bytes,
+    frame_footer_bytes, frame_header_bytes, file_header_bytes,
     file_idx, read_ranges,
 ):
     # we are reading a part of a single frame, so we first need to find
@@ -171,7 +172,7 @@ def _mib_r24_px_to_bytes(
 
     # now let's figure in the current frame index:
     # (go down into the file by full frames; `sig_size`)
-    offset = byte_offset + frame_in_file_idx * sig_size * bpp
+    offset = file_header_bytes + byte_offset + frame_in_file_idx * sig_size * bpp
 
     # offset in px in the current frame:
     sig_origin_bytes = sig_origin * bpp
@@ -409,20 +410,21 @@ class MIBHeaderReader:
         return self._fields
 
 
-class MIBFile(LocalFile):
+class MIBFile(File):
     def __init__(self, header, *args, **kwargs):
         self._header = header
         super().__init__(*args, **kwargs)
 
-    def _mmap_to_array(self, raw_mmap, start, stop):
-        res = np.frombuffer(raw_mmap, dtype="uint8")
+    def get_array_from_memview(self, mem: memoryview, slicing: OffsetsSizes):
+        mem = mem[slicing.file_offset:-slicing.skip_end]
+        res = np.frombuffer(mem, dtype="uint8")
         cutoff = self._header['num_images'] * (
             self._header['image_size_bytes'] + self._header['header_size_bytes']
         )
         res = res[:cutoff]
         return res.view(dtype=self._native_dtype).reshape(
             (self.num_frames, -1)
-        )[:, start:stop]
+        )[:, slicing.frame_offset:slicing.frame_offset + slicing.frame_size]
 
 
 class MIBFileSet(FileSet):

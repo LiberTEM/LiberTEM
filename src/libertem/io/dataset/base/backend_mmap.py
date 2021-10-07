@@ -1,10 +1,14 @@
 import os
+import mmap
+import contextlib
+import typing
 
 import numpy as np
 from numba.typed import List
 import numba
 
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
+from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
 from libertem.common.numba import cached_njit
@@ -84,13 +88,104 @@ class MMapBackend(IOBackend, id_="mmap"):
         raise NotImplementedError("TODO! implement me!")
 
 
+class MMapFileBase:
+    def __init__(self, path, desc):
+        raise NotImplementedError()
+
+    def open(self):
+        raise NotImplementedError()
+
+    def close(self):
+        raise NotImplementedError()
+
+    @property
+    def mmap(self):
+        raise NotImplementedError()
+
+    @property
+    def array(self):
+        raise NotImplementedError()
+
+    @property
+    def handle(self):
+        raise NotImplementedError()
+
+
+class MMapFile(MMapFileBase):
+    def __init__(self, path, desc):
+        self.path = path
+        self.desc = desc
+        self._handle = None
+        self._mmap = None
+        self._arr = None
+
+    def open(self):
+        # FIXME: maybe DO switch off buffering? because it means more copies, right?
+        # NOTE: for `readinto` to work, we must not switch off buffering here!
+        # otherwise, `readinto` may return partial results, which can be hard to handle
+        self._handle = open(self.path, "rb")
+        self._mmap = mmap.mmap(
+            fileno=self._handle.fileno(),
+            length=0,
+            # can't use offset for cutting off file header, as it needs to be
+            # aligned to page size...
+            offset=0,
+            access=mmap.ACCESS_READ,
+        )
+        slicing = self.desc.get_offsets_sizes(self._mmap.size())
+        self._arr = self.desc.get_array_from_memview(
+            memoryview(self._mmap),
+            slicing
+        )
+        return self
+
+    def close(self):
+        del self._arr
+        del self._mmap
+        self._handle.close()
+        self._handle = None
+
+    @property
+    def mmap(self):
+        if self._mmap is None:
+            raise RuntimeError("trying to access a mmap for a closed file")
+        return self._mmap
+
+    @property
+    def array(self):
+        if self._arr is None:
+            raise RuntimeError("trying to access array for a closed file")
+        return self._arr
+
+    @property
+    def handle(self):
+        if self._handle is None:
+            raise RuntimeError("trying to access file handle of closed file")
+        return self._handle
+
+
 class MMapBackendImpl(IOBackendImpl):
+    FILE_CLS: typing.Type = MMapFile
+
     def __init__(self, enable_readahead_hints=False):
         super().__init__()
         self._enable_readahead = enable_readahead_hints
         self._buffer_pool = BufferPool()
 
-    def _get_tiles_straight(self, tiling_scheme, fileset, read_ranges, sync_offset=0):
+    @contextlib.contextmanager
+    def open_files(self, fileset: FileSet):
+        mmap_files = [
+            self.FILE_CLS(path=f.path, desc=f).open()
+            for f in fileset
+        ]
+        yield mmap_files
+        for f in mmap_files:
+            f.close()
+
+    def _get_tiles_straight(
+        self, tiling_scheme, open_files: typing.List[MMapFile], read_ranges,
+        sync_offset=0
+    ):
         """
         Read straight from the file system cache, via memory mapping, without
         any decoding step.
@@ -104,13 +199,17 @@ class MMapBackendImpl(IOBackendImpl):
         Parameters
         ----------
 
-        fileset : FileSet
-            The fileset must correspond to the indices used in the `read_ranges`.
+        tiling_scheme : TilingScheme
+
+        open_files : List[MMapFile]
+            The list of files must correspond to the indices used in the `read_ranges`.
             Usually, that means it is limited to the files that are part of the
             current partition.
 
         read_ranges : Tuple[np.ndarray, np.ndarray, np.ndarray]
             As returned by `get_read_ranges`
+
+        sync_offset : int
         """
 
         ds_sig_shape = tuple(tiling_scheme.dataset_shape.sig)
@@ -125,8 +224,8 @@ class MMapBackendImpl(IOBackendImpl):
             # that span multiple files. This is ensured in IOBackend.need_copy
             # (that is, we force copying if files are smaller than tiles)
             file_idx = tile_ranges[0][0]
-            fh = fileset[file_idx]
-            memmap = fh.mmap().reshape((fh.num_frames,) + ds_sig_shape)
+            fh = open_files[file_idx]
+            arr = fh.array.reshape((fh.desc.num_frames,) + ds_sig_shape)
             tile_slice = Slice(
                 origin=origin,
                 shape=Shape(shape, sig_dims=sig_dims)
@@ -135,14 +234,14 @@ class MMapBackendImpl(IOBackendImpl):
             # in case of negative sync_offset, _get_tiles_w_copy is used
             data_slice = (
                 slice(
-                    origin[0] - fh.start_idx + sync_offset,
-                    origin[0] - fh.start_idx + shape[0] + sync_offset
+                    origin[0] - fh.desc.start_idx + sync_offset,
+                    origin[0] - fh.desc.start_idx + shape[0] + sync_offset
                 ),
             ) + tuple(
                 slice(o, (o + s))
                 for (o, s) in zip(origin[1:], shape[1:])
             )
-            data = memmap[data_slice]
+            data = arr[data_slice]
             yield DataTile(
                 data,
                 tile_slice=tile_slice,
@@ -158,7 +257,7 @@ class MMapBackendImpl(IOBackendImpl):
         return r_n_d
 
     def _get_tiles_w_copy(
-        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype,
+        self, tiling_scheme, open_files, read_ranges, read_dtype, native_dtype,
         decoder=None, corrections=None,
     ):
         if decoder is None:
@@ -171,8 +270,8 @@ class MMapBackendImpl(IOBackendImpl):
 
         native_dtype = decoder.get_native_dtype(native_dtype, read_dtype)
         mmaps = List()
-        for fh in fileset:
-            mmaps.append(np.frombuffer(fh.raw_mmap(), dtype=np.uint8))
+        for fh in open_files:
+            mmaps.append(np.frombuffer(fh.mmap, dtype=np.uint8))
 
         sig_dims = tiling_scheme.shape.sig.dims
         ds_shape = np.array(tiling_scheme.dataset_shape)
@@ -227,7 +326,7 @@ class MMapBackendImpl(IOBackendImpl):
         # strategy: assume low (20%?) fill rate, read whole partition and apply ROI in-memory
         #           partitioning when opening the dataset, or by having one file per partition
 
-        with fileset:
+        with self.open_files(fileset) as open_files:
             if self._enable_readahead:
                 self._set_readahead_hints(roi, fileset)
             if not self.need_copy(
@@ -241,12 +340,12 @@ class MMapBackendImpl(IOBackendImpl):
                 corrections=corrections,
             ):
                 yield from self._get_tiles_straight(
-                    tiling_scheme, fileset, read_ranges, sync_offset,
+                    tiling_scheme, open_files, read_ranges, sync_offset,
                 )
             else:
                 yield from self._get_tiles_w_copy(
                     tiling_scheme=tiling_scheme,
-                    fileset=fileset,
+                    open_files=open_files,
                     read_ranges=read_ranges,
                     read_dtype=read_dtype,
                     native_dtype=native_dtype,

@@ -9,6 +9,9 @@ from libertem.corrections.corrset import CorrectionSet
 from .partition import BasePartition
 
 
+MAX_PARTITION_SIZE = 512*1024*1024
+
+
 class DataSet:
     def __init__(self, io_backend=None):
         self._cores = 1

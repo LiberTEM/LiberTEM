@@ -59,7 +59,7 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "io_backend", ("mmap", "mmap_readahead", "buffered"),
+        "io_backend", ("mmap", "mmap_readahead", "buffered", "direct"),
     )
     @pytest.mark.parametrize(
         "context", ("dist", "inline")

@@ -20,8 +20,8 @@ def _alloc_aligned(size, blocksize=4096):
     # (and check for windows compat)
     buf = mmap.mmap(-1, blocksize * blocks)
 
-    if hasattr(buf, 'madvise'):
-        buf.madvise(mmap.MADV_WILLNEED)
+    # if hasattr(buf, 'madvise'):
+    #    buf.madvise(mmap.MADV_WILLNEED)
 
     return buf
 
@@ -124,13 +124,34 @@ class BufferPool:
 
     @contextmanager
     def bytes(self, size):
+        buf = self.checkout_bytes(size)
+        yield buf
+        self.checkin_bytes(size, buf)
+
+    def checkout_bytes(self, size):
         buffers = self._buffers[size]
         try:
             buf = buffers.pop()
         except IndexError:
-            buf = _alloc_aligned(size, blocksize=2*2**20)
-        yield buf
+            buf = _alloc_aligned(size, blocksize=4096)
+            # buf = _alloc_aligned(size, blocksize=2*2**20)
+        return buf
+
+    def checkin_bytes(self, size, buf):
         self._buffers[size].insert(0, buf)
+
+
+class ManagedBuffer:
+    """
+    Allocate `size` bytes from `pool`, and return them to the pool once we are GC'd
+    """
+    def __init__(self, pool, size):
+        self.pool = pool
+        self.buf = pool.checkout_bytes(size)
+        self.size = size
+
+    def __del__(self):
+        self.pool.checkin_bytes(self.size, self.buf)
 
 
 class BufferWrapper:

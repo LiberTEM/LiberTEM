@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import numba
 from numba.typed import Dict
@@ -6,7 +8,7 @@ import contextlib
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
 from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
-from libertem.common.buffers import BufferPool
+from libertem.common.buffers import BufferPool, ManagedBuffer
 from libertem.common.numba import cached_njit
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
@@ -99,10 +101,9 @@ class BufferedFile:
         self._arr = None
 
     def open(self):
-        # FIXME: maybe DO switch off buffering? because it means more copies, right?
-        # NOTE: for `readinto` to work, we must not switch off buffering here!
-        # otherwise, `readinto` may return partial results, which can be hard to handle
-        self._handle = open(self.path, "rb")
+        # disable internal I/O buffering, as we want to read directly
+        # into our own buffer here:
+        self._handle = open(self.path, "rb", buffering=0)
         return self
 
     def close(self):
@@ -119,7 +120,34 @@ class BufferedFile:
         self._handle.seek(offset)
 
     def readinto(self, buf):
-        self._handle.readinto(buf)
+        buf_orig = buf
+        buf = memoryview(buf)
+        to_read = len(buf)
+        offset = 0
+        # `readinto` may return early, so we may need to re-run it:
+        while to_read > 0:
+            bytes_read = self._handle.readinto(buf[offset:])
+            if bytes_read == 0:
+                break
+            to_read -= bytes_read
+            offset += bytes_read
+        return buf_orig[:offset]
+
+
+class DirectBufferedFile(BufferedFile):
+    def open(self):
+        # disable internal I/O buffering, as we want to read directly
+        # into our own buffer here:
+        self._fh = os.open(self.path, os.O_RDONLY | os.O_DIRECT)
+        self._handle = open(self._fh, "rb", buffering=0)
+        return self
+
+    def close(self):
+        super().close()
+        self._fh = None
+
+    def readinto(self, buf):
+        return super().readinto(buf)
 
 
 class BufferedBackend(IOBackend, id_="buffered"):
@@ -165,8 +193,12 @@ class BufferedBackendImpl(IOBackendImpl):
 
     @contextlib.contextmanager
     def open_files(self, fileset: FileSet):
+        if self._direct_io:
+            cls = DirectBufferedFile
+        else:
+            cls = BufferedFile
         files = [
-            BufferedFile(path=f.path, desc=f).open()
+            cls(path=f.path, desc=f).open()
             for f in fileset
         ]
         yield files
@@ -249,13 +281,34 @@ class BufferedBackendImpl(IOBackendImpl):
         """
         # phase 1: read
         buffers = Dict()
+
+        # this list manages the lifetime of the ManagedBuffer instances;
+        # after `buf_ref` goes out of scope, the buffers are returned to
+        # the buffer pool, so make sure that this matches with the usage
+        # of the buffers!
+        buf_ref = []
+        align_to = 4096
         for fileno in min_per_file.keys():
             fh = open_files[fileno]
-            read_size = max_per_file[fileno] - min_per_file[fileno]
-            # FIXME: re-use buffers across _read_block_dense calls!
-            buffers[fileno] = np.zeros(read_size, dtype=np.uint8)
-            fh.seek(min_per_file[fileno])
-            fh.readinto(buffers[fileno])
+            # add align_to to allow for alignment cut:
+            read_size = max_per_file[fileno] - min_per_file[fileno] + align_to
+            # ManagedBuffer gives us memory in 4k blocks, so the size is 4k aligned
+            mb = ManagedBuffer(self._buffer_pool, read_size)
+            arr = np.frombuffer(mb.buf, dtype=np.uint8)
+            buf_ref.append(mb)
+            seek_pos = min_per_file[fileno]
+            alignment = 0
+            # seek_pos needs to be aligned to 4k block size, too:
+            if seek_pos % align_to != 0:
+                alignment = seek_pos % align_to
+                seek_pos = align_to * (seek_pos // align_to)
+            fh.seek(seek_pos)
+            read_result = fh.readinto(arr)
+            # read may be truncated, if the buffer is larger than the file; we
+            # truncate the buffer, too, to make sure we don't use any
+            # uninitialized values. Also cut off `alignment` bytes at the beginning,
+            # which were read to make O_DIRECT happy:
+            buffers[fileno] = read_result[alignment:]
 
         # phase 2: decode tiles from the data that was read
         for idx in range(block_idx, block_idx + tile_block_size):

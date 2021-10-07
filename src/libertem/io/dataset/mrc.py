@@ -1,12 +1,14 @@
 import os
 import logging
-import numpy as np
 
+import numpy as np
 from ncempy.io.mrc import fileMRC
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, LocalFile
+from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File
+from .base.backend import IOBackend
+from .base.backend_mmap import MMapBackendImpl, MMapFileBase
 
 log = logging.getLogger(__name__)
 
@@ -51,23 +53,38 @@ class MRCDatasetParams(MessageConverter):
         return data
 
 
-class MRCFile(LocalFile):
+class MRCBackendFile(MMapFileBase):
+    def __init__(self, path, desc):
+        self.path = path
+        self.desc = desc
+        self._handle = None
+        self._mmap = None
+
     def open(self):
-        self._file = fileMRC(self._path)
-        self._mmap = self._file.getMemmap()
-        self._raw_mmap = self._mmap
+        self._handle = fileMRC(self.path)
+        self._mmap = self._handle.getMemmap()
+        return self
 
     def close(self):
-        self._file = None
+        self._handle = None
         self._mmap = None
-        self._raw_mmap = None
 
-    def fileno(self):
-        return None
+    @property
+    def array(self):
+        return self._mmap
+
+    @property
+    def mmap(self):
+        return self._mmap
 
 
-class MRCFileSet(FileSet):
-    pass
+class MRCBackend(IOBackend):
+    def get_impl(self):
+        return MRCBackendImpl()
+
+
+class MRCBackendImpl(MMapBackendImpl):
+    FILE_CLS = MRCBackendFile
 
 
 class MRCDataSet(DataSet):
@@ -209,8 +226,8 @@ class MRCDataSet(DataSet):
 
     def _get_fileset(self):
         assert self._image_count is not None
-        return MRCFileSet([
-            MRCFile(
+        return FileSet([
+            File(
                 path=self._path,
                 start_idx=0,
                 end_idx=self._image_count,
@@ -218,6 +235,9 @@ class MRCDataSet(DataSet):
                 native_dtype=self._meta.raw_dtype,
             )
         ])
+
+    def get_io_backend(self):
+        return MRCBackend()
 
     def get_partitions(self):
         fileset = self._get_fileset()

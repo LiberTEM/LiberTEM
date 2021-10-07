@@ -6,9 +6,9 @@ from ncempy.io.dm import fileDM
 import numpy as np
 
 from libertem.common import Shape
+from libertem.io.dataset.base.file import OffsetsSizes
 from .base import (
-    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
-    LocalFile,
+    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
 )
 
 log = logging.getLogger(__name__)
@@ -26,9 +26,10 @@ def _get_metadata(path):
     }
 
 
-class StackedDMFile(LocalFile):
-    def _mmap_to_array(self, raw_mmap, start, stop):
-        res = np.frombuffer(raw_mmap, dtype="uint8")
+class StackedDMFile(File):
+    def get_array_from_memview(self, mem: memoryview, slicing: OffsetsSizes):
+        mem = mem[slicing.file_offset:-slicing.skip_end]
+        res = np.frombuffer(mem, dtype="uint8")
         itemsize = np.dtype(self._native_dtype).itemsize
         sigsize = int(np.prod(self._sig_shape, dtype=np.int64))
         cutoff = 0
@@ -38,7 +39,7 @@ class StackedDMFile(LocalFile):
         res = res[:cutoff]
         return res.view(dtype=self._native_dtype).reshape(
             (self.num_frames, -1)
-        )[:, start:stop]
+        )[:, slicing.frame_offset:slicing.frame_offset + slicing.frame_size]
 
 
 class DMFileSet(FileSet):

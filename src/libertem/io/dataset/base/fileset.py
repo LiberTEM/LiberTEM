@@ -23,7 +23,6 @@ class FileSet:
         self._tree = FileTree.make(files)
         if self._tree is None:
             raise ValueError(str(files))
-        self._files_open = False
         # FIXME: maybe should be moved into the array representation
         # if the fileset, taken from individual files
         self._frame_header_bytes = frame_header_bytes
@@ -59,17 +58,6 @@ class FileSet:
         lower_bound, f = self._tree.search_start(start)
         for idx in range(lower_bound, len(self._files)):
             yield self._files[idx]
-
-    def __enter__(self):
-        for f in self._files:
-            f.open()
-        self._files_open = True
-        return self
-
-    def __exit__(self, *exc):
-        for f in self._files:
-            f.close()
-        self._files_open = False
 
     def __iter__(self):
         return iter(self._files)

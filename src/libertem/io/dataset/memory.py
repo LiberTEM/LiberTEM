@@ -1,5 +1,6 @@
 import time
 import logging
+import contextlib
 
 import psutil
 import numpy as np
@@ -7,14 +8,28 @@ import numpy as np
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
-    LocalFile, MMapBackend,
+    File, MMapBackend,
 )
-from libertem.io.dataset.base.backend_mmap import MMapBackendImpl
+from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
 
 
 log = logging.getLogger(__name__)
+
+
+class FakeMMapFile(MMapFile):
+    """
+    Implementing the same interface as MMapFile, without filesystem backing
+    """
+    def open(self):
+        self._arr = self.desc._data
+        self._mmap = self.desc._data
+        return self
+
+    def close(self):
+        self._arr = None
+        self._mmap = None
 
 
 class MemBackend(MMapBackend):
@@ -26,13 +41,23 @@ class MemBackendImpl(MMapBackendImpl):
     def _set_readahead_hints(self, roi, fileset):
         pass
 
-    def _get_tiles_roi(self, tiling_scheme, fileset, read_ranges, roi, sync_offset):
+    @contextlib.contextmanager
+    def open_files(self, fileset: FileSet):
+        mmap_files = [
+            FakeMMapFile(path=f.path, desc=f).open()
+            for f in fileset
+        ]
+        yield mmap_files
+        for f in mmap_files:
+            f.close()
+
+    def _get_tiles_roi(self, tiling_scheme, open_files, read_ranges, roi, sync_offset):
         ds_sig_shape = tiling_scheme.dataset_shape.sig
         sig_dims = tiling_scheme.shape.sig.dims
         slices, ranges, scheme_indices = read_ranges
 
-        fh = fileset[0]
-        memmap = fh.mmap().reshape((fh.num_frames,) + tuple(ds_sig_shape))
+        fh = open_files[0]
+        memmap = fh.array.reshape((fh.desc.num_frames,) + tuple(ds_sig_shape))
         if sync_offset == 0:
             flat_roi = roi.reshape((-1,))
         elif sync_offset > 0:
@@ -74,10 +99,10 @@ class MemBackendImpl(MMapBackendImpl):
     ):
         if roi is None:
             # support arbitrary tiling in case of no roi
-            with fileset:
+            with self.open_files(fileset) as open_files:
                 if sync_offset >= 0:
                     for tile in self._get_tiles_straight(
-                        tiling_scheme, fileset, read_ranges, sync_offset
+                        tiling_scheme, open_files, read_ranges, sync_offset
                     ):
                         data = tile.astype(read_dtype)
                         self.preprocess(data, tile.tile_slice, corrections)
@@ -85,7 +110,7 @@ class MemBackendImpl(MMapBackendImpl):
                 else:
                     for tile in self._get_tiles_w_copy(
                         tiling_scheme=tiling_scheme,
-                        fileset=fileset,
+                        open_files=open_files,
                         read_ranges=read_ranges,
                         read_dtype=read_dtype,
                         native_dtype=native_dtype,
@@ -94,10 +119,10 @@ class MemBackendImpl(MMapBackendImpl):
                     ):
                         yield tile
         else:
-            with fileset:
+            with self.open_files(fileset) as open_files:
                 for tile in self._get_tiles_roi(
                     tiling_scheme=tiling_scheme,
-                    fileset=fileset,
+                    open_files=open_files,
                     read_ranges=read_ranges,
                     roi=roi,
                     sync_offset=sync_offset,
@@ -161,26 +186,15 @@ class MemDatasetParams(MessageConverter):
         return data
 
 
-class MemoryFile(LocalFile):
+class MemoryFile(File):
     def __init__(self, data, check_cast=True, *args, **kwargs):
         self._data = data
         self._check_cast = check_cast
         super().__init__(*args, **kwargs)
 
-    def open(self):
-        pass
-
-    def close(self):
-        pass
-
-    def mmap(self):
+    @property
+    def data(self):
         return self._data
-
-    def raw_mmap(self):
-        return self._data.view(np.uint8)
-
-    def fileno(self):
-        raise NotImplementedError()
 
 
 class MemoryDataSet(DataSet):

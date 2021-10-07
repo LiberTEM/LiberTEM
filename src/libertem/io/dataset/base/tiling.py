@@ -1,5 +1,5 @@
 import math
-from typing import List, Tuple
+from typing import List
 import logging
 import warnings
 
@@ -116,14 +116,18 @@ class TilingScheme:
 @numba.njit(inline='always')
 def _default_px_to_bytes(
     bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
-    frame_footer_bytes, frame_header_bytes,
+    frame_footer_bytes, frame_header_bytes, file_header_bytes,
     file_idx, read_ranges,
 ):
+    """
+    Convert from a slice (sig_origin, slice_sig_size) to a byte slice (start, stop)
+    and append the result to the read_ranges numba List
+    """
     # we are reading a part of a single frame, so we first need to find
     # the offset caused by headers and footers:
     footer_offset = frame_footer_bytes * frame_in_file_idx
     header_offset = frame_header_bytes * (frame_in_file_idx + 1)
-    byte_offset = footer_offset + header_offset
+    byte_offset = file_header_bytes + footer_offset + header_offset
 
     # now let's figure in the current frame index:
     # (go down into the file by full frames; `sig_size`)
@@ -202,6 +206,7 @@ def _default_read_ranges_tile_block(
             f = fileset_arr[file_idx]
 
             frame_in_file_idx = inner_frame - f[0]
+            file_header_bytes = f[3]
 
             px_to_bytes(
                 bpp=bpp,
@@ -211,6 +216,7 @@ def _default_read_ranges_tile_block(
                 sig_origin=sig_origin,
                 frame_footer_bytes=frame_footer_bytes,
                 frame_header_bytes=frame_header_bytes,
+                file_header_bytes=file_header_bytes,
                 file_idx=file_idx,
                 read_ranges=read_ranges,
             )
@@ -228,7 +234,7 @@ def _default_read_ranges_tile_block(
 def make_get_read_ranges(
     px_to_bytes=_default_px_to_bytes,
     read_ranges_tile_block=_default_read_ranges_tile_block,
-) -> Tuple[np.ndarray, np.ndarray]:
+):
     """
     Translate the `TilingScheme` combined with the `roi` into (pixel)-read-ranges,
     together with their tile slices.

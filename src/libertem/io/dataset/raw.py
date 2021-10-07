@@ -1,13 +1,12 @@
 import os
 import warnings
-import mmap
 import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, LocalFile, FileSet,
+    BasePartition, File, FileSet,
 )
 
 
@@ -51,29 +50,8 @@ class RAWDatasetParams(MessageConverter):
         return data
 
 
-class RawFile(LocalFile):
-    def open(self):
-        f = open(self._path, "rb")
-        self._file = f
-        self._raw_mmap = mmap.mmap(
-            fileno=f.fileno(),
-            length=0,
-            offset=0,
-            access=mmap.ACCESS_READ,
-        )
-        # TODO: self._raw_mmap.madvise(mmap.MADV_HUGEPAGE) - benchmark this!
-        itemsize = np.dtype(self._native_dtype).itemsize
-        assert self._frame_header % itemsize == 0
-        assert self._frame_footer % itemsize == 0
-        start = self._frame_header // itemsize
-        stop = start + int(np.prod(self._sig_shape))
-        if self._raw_mmap.size() % int(np.prod(self._sig_shape)) != 0:
-            new_mmap_size = self.num_frames * (
-                itemsize * np.prod(self.sig_shape, dtype=np.int64)
-            )
-            skip_partial_frame = self._raw_mmap.size() - new_mmap_size
-            self._raw_mmap = memoryview(self._raw_mmap)[:-skip_partial_frame]
-        self._mmap = self._mmap_to_array(self._raw_mmap, start, stop)
+class RawFile(File):
+    pass
 
 
 class RawFileSet(FileSet):
@@ -230,7 +208,8 @@ class RawFileDataSet(DataSet):
             raise DataSetException("LiberTEM currently only supports Direct I/O on Linux")
         try:
             fileset = self._get_fileset()
-            with fileset:
+            backend = self.get_io_backend().get_impl()
+            with backend.open_files(fileset):
                 return True
         except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

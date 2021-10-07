@@ -1,8 +1,10 @@
 import numpy as np
 import numba
 from numba.typed import Dict
+import contextlib
 
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
+from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
 from libertem.common.numba import cached_njit
@@ -89,6 +91,37 @@ def block_get_min_fill_factor(rrs):
     return min_fill_factor, max_buffer_size, min_per_file, max_per_file
 
 
+class BufferedFile:
+    def __init__(self, path, desc):
+        self.path = path
+        self.desc = desc
+        self._handle = None
+        self._arr = None
+
+    def open(self):
+        # FIXME: maybe DO switch off buffering? because it means more copies, right?
+        # NOTE: for `readinto` to work, we must not switch off buffering here!
+        # otherwise, `readinto` may return partial results, which can be hard to handle
+        self._handle = open(self.path, "rb")
+        return self
+
+    def close(self):
+        self._handle.close()
+        self._handle = None
+
+    @property
+    def handle(self):
+        if self._handle is None:
+            raise RuntimeError("trying to access file handle of closed file")
+        return self._handle
+
+    def seek(self, offset):
+        self._handle.seek(offset)
+
+    def readinto(self, buf):
+        self._handle.readinto(buf)
+
+
 class BufferedBackend(IOBackend, id_="buffered"):
     """
     I/O backend using a buffered reading strategy. Useful for slower media
@@ -105,8 +138,9 @@ class BufferedBackend(IOBackend, id_="buffered"):
         Maximum buffer size, in bytes. This is passed to the tileshape
         negotiation to select the right depth.
     """
-    def __init__(self, max_buffer_size=16*1024*1024):
+    def __init__(self, max_buffer_size=16*1024*1024, direct_io=False):
         self._max_buffer_size = max_buffer_size
+        self._direct_io = direct_io
 
     @classmethod
     def from_json(cls, msg):
@@ -118,14 +152,26 @@ class BufferedBackend(IOBackend, id_="buffered"):
     def get_impl(self):
         return BufferedBackendImpl(
             max_buffer_size=self._max_buffer_size,
+            direct_io=self._direct_io,
         )
 
 
 class BufferedBackendImpl(IOBackendImpl):
-    def __init__(self, max_buffer_size):
+    def __init__(self, max_buffer_size, direct_io):
         super().__init__()
         self._max_buffer_size = max_buffer_size
+        self._direct_io = direct_io
         self._buffer_pool = BufferPool()
+
+    @contextlib.contextmanager
+    def open_files(self, fileset: FileSet):
+        files = [
+            BufferedFile(path=f.path, desc=f).open()
+            for f in fileset
+        ]
+        yield files
+        for f in files:
+            f.close()
 
     def need_copy(
         self, decoder, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None,
@@ -145,7 +191,7 @@ class BufferedBackendImpl(IOBackendImpl):
         return self._max_buffer_size
 
     def _get_tiles_by_block(
-        self, tiling_scheme, fileset, read_ranges, read_dtype, native_dtype, decoder=None,
+        self, tiling_scheme, open_files, read_ranges, read_dtype, native_dtype, decoder=None,
         corrections=None, sync_offset=0,
     ):
         if decoder is None:
@@ -187,13 +233,13 @@ class BufferedBackendImpl(IOBackendImpl):
                 # TODO: if it makes sense, implement sparse variant
                 # if req_buf_size > self._max_buffer_size or fill_factor < self._sparse_threshold:
                 yield from self._read_block_dense(
-                    block_idx, tile_block_size, min_per_file, max_per_file, fileset,
+                    block_idx, tile_block_size, min_per_file, max_per_file, open_files,
                     slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
                     sig_dims, ds_shape, need_clear, native_dtype, corrections,
                 )
 
     def _read_block_dense(
-        self, block_idx, tile_block_size, min_per_file, max_per_file, fileset,
+        self, block_idx, tile_block_size, min_per_file, max_per_file, open_files,
         slices, ranges, scheme_indices, shape_prods, out_decoded, r_n_d,
         sig_dims, ds_shape, need_clear, native_dtype, corrections,
     ):
@@ -204,13 +250,13 @@ class BufferedBackendImpl(IOBackendImpl):
         # phase 1: read
         buffers = Dict()
         for fileno in min_per_file.keys():
-            fh = fileset[fileno]
+            fh = open_files[fileno]
             read_size = max_per_file[fileno] - min_per_file[fileno]
-            # FIXME: re-use buffers
+            # FIXME: re-use buffers across _read_block_dense calls!
             buffers[fileno] = np.zeros(read_size, dtype=np.uint8)
             # FIXME: file header offset handling is a bit weird
             # FIXME: maybe file header offset should be folded into the read ranges instead?
-            fh.seek(min_per_file[fileno] + fh._file_header)
+            fh.seek(min_per_file[fileno])
             fh.readinto(buffers[fileno])
 
         # phase 2: decode tiles from the data that was read
@@ -244,10 +290,10 @@ class BufferedBackendImpl(IOBackendImpl):
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
         sync_offset, corrections,
     ):
-        with fileset:
+        with self.open_files(fileset) as open_files:
             yield from self._get_tiles_by_block(
                 tiling_scheme=tiling_scheme,
-                fileset=fileset,
+                open_files=open_files,
                 read_ranges=read_ranges,
                 read_dtype=read_dtype,
                 native_dtype=native_dtype,

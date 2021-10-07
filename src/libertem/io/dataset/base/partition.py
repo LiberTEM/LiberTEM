@@ -1,4 +1,5 @@
 import itertools
+from typing import Optional
 
 import numpy as np
 
@@ -7,7 +8,7 @@ from libertem.corrections import CorrectionSet
 from .tiling import DataTile, TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet
-from . import MMapBackend, IOBackend
+from . import IOBackend
 from .decode import Decoder
 
 
@@ -230,7 +231,7 @@ class BasePartition(Partition):
             corrections=corrections,
         )
 
-    def _get_decoder(self) -> Decoder:
+    def _get_decoder(self) -> Optional[Decoder]:
         return None
 
     def _get_read_ranges(self, tiling_scheme, roi=None):
@@ -243,16 +244,8 @@ class BasePartition(Partition):
             roi=roi,
         )
 
-    def _get_default_io_backend(self):
-        import platform
-        if platform.system() == "Windows":
-            from libertem.io.dataset.base import BufferedBackend
-            return BufferedBackend()
-        return MMapBackend()
-
     def get_io_backend(self):
-        if self._io_backend is None:
-            return self._get_default_io_backend()
+        assert self._io_backend is not None
         return self._io_backend
 
     def set_corrections(self, corrections: CorrectionSet):

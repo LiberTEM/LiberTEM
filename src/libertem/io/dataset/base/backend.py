@@ -1,21 +1,19 @@
-import mmap
 import logging
+from typing import Dict, Optional, Type
+import contextlib
 
 import numpy as np
 
-from .file import File
+from .fileset import FileSet
 
 log = logging.getLogger(__name__)
 
 
-_r_n_d_cache = {}
-
-
 class IOBackend:
-    registry = {}
+    registry: Dict[str, Type["IOBackend"]] = {}
 
-    def __init_subclass__(cls, id_=None, **kwargs):
-        super().__init_subclass__(**kwargs)
+    def __init_subclass__(cls, id_: Optional[str] = None):
+        super().__init_subclass__()
         if id_ is not None:
             cls.registry[id_] = cls
 
@@ -36,6 +34,19 @@ class IOBackend:
 class IOBackendImpl:
     def __init__(self):
         pass
+
+    @contextlib.contextmanager
+    def open_files(self, fileset: FileSet):
+        """
+        Open files, yielding a list of implementation-specific file objects
+        representing these open files.
+
+        Parameters
+        ----------
+        fileset : FileSet
+            [description]
+        """
+        raise NotImplementedError()
 
     def need_copy(
         self, decoder, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None,
@@ -136,87 +147,3 @@ class IOBackendImpl:
             A set of corrections to apply in a preprocesing step
         """
         raise NotImplementedError()
-
-
-class LocalFile(File):
-    def open(self):
-        # NOTE: for `readinto` to work, we must not switch off buffering here!
-        # otherwise, `readinto` may return partial results, which can be hard to handle
-        f = open(self._path, "rb")
-        self._file = f
-        self._raw_mmap = mmap.mmap(
-            fileno=f.fileno(),
-            length=0,
-            # can't use offset for cutting off file header, as it needs to be
-            # aligned to page size...
-            offset=0,
-            access=mmap.ACCESS_READ,
-        )
-        # self._raw_mmap.madvise(mmap.MADV_HUGEPAGE) # TODO - benchmark this!
-        itemsize = np.dtype(self._native_dtype).itemsize
-        assert self._frame_header % itemsize == 0
-        assert self._frame_footer % itemsize == 0
-        start = self._frame_header // itemsize
-        stop = start + int(np.prod(self._sig_shape))
-        if self._file_header != 0:
-            # FIXME: keep the mmap object around maybe?
-            self._raw_mmap = memoryview(self._raw_mmap)[self._file_header:]
-        self._mmap = self._mmap_to_array(self._raw_mmap, start, stop)
-
-    def _mmap_to_array(self, raw_mmap, start, stop):
-        """
-        Create an array from the raw memory map, stripping away
-        frame headers and footers
-
-        Parameters
-        ----------
-
-        raw_mmap : np.memmap or memoryview
-            The raw memory map, with the file header already stripped away
-
-        start : int
-            Number of items cut away at the start of each frame (frame_header // itemsize)
-
-        stop : int
-            Number of items per frame (something like start + np.prod(sig_shape))
-        """
-        return np.frombuffer(raw_mmap, dtype=self._native_dtype).reshape(
-            (self.num_frames, -1)
-        )[:, start:stop]
-
-    def close(self):
-        self._mmap = None
-        self._raw_mmap = None
-        self._file.close()
-        self._file = None
-
-    def mmap(self):
-        """
-        Memory map for this file, with file header, frame header and frame footer cut off
-
-        Used for reading tiles straight from the filesystem cache
-        """
-        return self._mmap
-
-    def raw_mmap(self):
-        """
-        Memory map for this file, with only the file header cut off
-
-        Used for reading tiles with a decoding step, using the read ranges
-        """
-        return self._raw_mmap
-
-    def readinto(self, out):
-        """
-        Fill `out` by reading from the current file position
-        """
-        return self._file.readinto(out)
-
-    def seek(self, pos):
-        self._file.seek(pos)
-
-    def tell(self):
-        return self._file.tell()
-
-    def fileno(self):
-        return self._file.fileno()

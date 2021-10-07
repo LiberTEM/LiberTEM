@@ -16,9 +16,10 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, BasePartition, DataSetException, DataSetMeta,
-    FileSet, LocalFile, Decoder, make_get_read_ranges,
+    FileSet, File, Decoder, make_get_read_ranges,
     TilingScheme,
 )
+from .base.file import OffsetsSizes
 
 log = logging.getLogger(__name__)
 
@@ -199,12 +200,14 @@ def _k2is_read_ranges_tile_block(
                     block_index_x = origin_block_x + block_x_i
                     sector_id = block_index_x // 16
                     sector_index_x = block_index_x % 16
-                    # f = fileset_arr[sector_id]
+                    f = fileset_arr[sector_id]
+                    file_header_bytes = f[3]
 
                     # "linear" block index per sector:
                     blockidx = (15 - sector_index_x) + sector_index_y * 16
                     offset = (
-                        frame_in_file_idx * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
+                        file_header_bytes
+                        + frame_in_file_idx * BLOCK_SIZE * BLOCKS_PER_SECTOR_PER_FRAME
                         + blockidx * BLOCK_SIZE
                     )
                     start = offset + HEADER_SIZE
@@ -697,9 +700,23 @@ class K2FileSet(FileSet):
         return k2is_get_read_ranges(**kwargs)
 
 
-class K2ISFile(LocalFile):
-    def _mmap_to_array(self, raw_mmap, start, stop):
-        return np.frombuffer(raw_mmap, dtype=self._native_dtype)
+class K2ISFile(File):
+    def get_offsets_sizes(self, size: int) -> OffsetsSizes:
+        """
+        The simple "offset/size/header/footer" method doesn't
+        apply for the K2IS format, so we stub it out here:
+        """
+        return OffsetsSizes(
+            file_offset=self._file_header,
+            skip_end=0,
+            frame_offset=0,
+            frame_size=0,
+        )
+
+    def get_array_from_memview(self, mem: memoryview, slicing: OffsetsSizes) -> np.ndarray:
+        mem = mem[slicing.file_offset:]
+        # assert False
+        return np.frombuffer(mem, dtype=self._native_dtype)
 
 
 class K2ISDataSet(DataSet):
@@ -978,7 +995,7 @@ class K2ISDataSet(DataSet):
             )
         return sy
 
-    def _get_fileset(self, with_sync=True):
+    def _get_fileset(self, io_backend):
         files = [
             K2ISFile(
                 path=path,
@@ -1003,7 +1020,8 @@ class K2ISDataSet(DataSet):
         return res
 
     def get_partitions(self):
-        fileset = self._get_fileset()
+        io_backend = self.get_io_backend()
+        fileset = self._get_fileset(io_backend)
         for part_slice, start, stop in self.get_slices():
             yield K2ISPartition(
                 meta=self._meta,
@@ -1011,7 +1029,7 @@ class K2ISDataSet(DataSet):
                 partition_slice=part_slice,
                 start_frame=start,
                 num_frames=stop - start,
-                io_backend=self.get_io_backend(),
+                io_backend=io_backend,
             )
 
     def __repr__(self):

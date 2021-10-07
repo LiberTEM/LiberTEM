@@ -654,7 +654,16 @@ def test_different_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
     assert ds._meta.image_count == 256
 
 
-def test_incorrect_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
+@pytest.mark.parametrize(
+    "io_backend", (
+        BufferedBackend(),
+        MMapBackend(),
+    ),
+)
+def test_extra_data_at_the_end(lt_ctx, raw_data_8x8x8x8_path, io_backend):
+    """
+    If there is extra data at the end of the file, make sure it is cut off
+    """
     nav_shape = (8, 8)
     sig_shape = (3, 3)
 
@@ -664,6 +673,7 @@ def test_incorrect_sig_shape(lt_ctx, raw_data_8x8x8x8_path):
         nav_shape=nav_shape,
         sig_shape=sig_shape,
         dtype="float32",
+        io_backend=io_backend,
     )
 
     assert ds._meta.image_count == 455

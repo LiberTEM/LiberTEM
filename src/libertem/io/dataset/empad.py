@@ -267,8 +267,8 @@ class EMPADDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 1024MB per partition
-        res = max(self._cores, self._filesize // (1024*1024*1024))
+        # let's try to aim for MAX_PARTITION_SIZE per partition
+        res = max(self._cores, self._filesize // (MAX_PARTITION_SIZE))
         return res
 
     def get_partitions(self):

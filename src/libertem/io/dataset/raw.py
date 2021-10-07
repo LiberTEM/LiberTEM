@@ -229,8 +229,8 @@ class RawFileDataSet(DataSet):
         """
         returns the number of partitions the dataset should be split into
         """
-        # let's try to aim for 1024MB (converted float data) per partition
-        partition_size_px = 1024 * 1024 * 1024 // 4
+        # let's try to aim for MAX_PARTITION_SIZE (converted float32 data) per partition
+        partition_size_px = MAX_PARTITION_SIZE // 4
         total_size_px = np.prod(self.shape, dtype=np.int64)
         res = max(self._cores, total_size_px // partition_size_px)
         return res

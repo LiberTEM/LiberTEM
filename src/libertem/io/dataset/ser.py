@@ -10,7 +10,7 @@ from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
-    _roi_to_indices, DataTile,
+    _roi_to_indices, DataTile, MAX_PARTITION_SIZE,
 )
 
 log = logging.getLogger(__name__)
@@ -230,7 +230,7 @@ class SERDataSet(DataSet):
         returns the number of partitions the dataset should be split into
         """
         # let's try to aim for 512MB per partition
-        res = max(self._cores, self._filesize // (64*1024*1024))
+        res = max(self._cores, self._filesize // (MAX_PARTITION_SIZE//8))
         return res
 
     def _get_fileset(self):

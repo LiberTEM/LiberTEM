@@ -5,7 +5,7 @@ from .backend import IOBackend
 from .backend_mmap import MMapBackend
 from .backend_buffered import BufferedBackend
 from .backend_direct import DirectBackend
-from .dataset import DataSet, WritableDataSet
+from .dataset import DataSet, WritableDataSet, MAX_PARTITION_SIZE
 from .partition import Partition, BasePartition, WritablePartition
 from .utils import FileTree
 from .fileset import FileSet

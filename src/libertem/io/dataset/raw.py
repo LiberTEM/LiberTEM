@@ -6,7 +6,7 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, File, FileSet,
+    BasePartition, File, FileSet, BufferedBackend,
 )
 
 
@@ -98,6 +98,15 @@ class RawFileDataSet(DataSet):
     def __init__(self, path, dtype, scan_size=None, detector_size=None, enable_direct=False,
                  detector_size_raw=None, crop_detector_to=None, tileshape=None,
                  nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
+        if enable_direct and io_backend is not None:
+            raise ValueError("can't specify io_backend and enable_direct at the same time")
+        if enable_direct:
+            warnings.warn(
+                "enable_direct is deprecated; pass "
+                "`io_backend=BufferedBackend(direct_io=True)` instead",
+                FutureWarning
+            )
+            io_backend = BufferedBackend(direct_io=True)
         super().__init__(io_backend=io_backend)
         # handle backwards-compatability:
         if tileshape is not None:
@@ -145,12 +154,6 @@ class RawFileDataSet(DataSet):
         self._path = path
         self._sig_dims = len(self._sig_shape)
         self._dtype = dtype
-        if enable_direct:
-            warnings.warn(
-                "enable_direct is ignored for now, this may be re-added as a separate backend",
-                FutureWarning
-            )
-        self._enable_direct = enable_direct
         self._filesize = None
 
     def initialize(self, executor):

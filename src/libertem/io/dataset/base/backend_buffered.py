@@ -160,6 +160,8 @@ class DirectBufferedFile(BufferedFile):
             )
             fd = msvcrt.open_osfhandle(int(self._fh), os.O_RDONLY)
             self._handle = os.fdopen(fd, "rb", buffering=0)
+        else:
+            raise RuntimeError("Direct I/O not supported on this platform.")
         return self
 
     def close(self):

@@ -138,8 +138,28 @@ class DirectBufferedFile(BufferedFile):
     def open(self):
         # disable internal I/O buffering, as we want to read directly
         # into our own buffer here:
-        self._fh = os.open(self.path, os.O_RDONLY | os.O_DIRECT)
-        self._handle = open(self._fh, "rb", buffering=0)
+        if hasattr(os, 'O_DIRECT'):
+            self._fh = os.open(self.path, os.O_RDONLY | os.O_DIRECT)
+            self._handle = open(self._fh, "rb", buffering=0)
+        elif os.name == 'nt':
+            import win32file
+            import msvcrt
+            # Make sure to keep a reference, otherwise
+            # it will be closed
+            self._fh = win32file.CreateFile(
+                self.path,  # fileName
+                win32file.GENERIC_READ,  # desiredAccess
+                win32file.FILE_SHARE_READ
+                | win32file.FILE_SHARE_WRITE
+                | win32file.FILE_SHARE_DELETE,  # shareMode
+                None,  # attributes
+                win32file.OPEN_EXISTING,  # CreationDisposition
+                # O_DIRECT equivalent (?)
+                win32file.FILE_FLAG_NO_BUFFERING,  # flagsAndAttributes
+                0,  # hTemplateFile
+            )
+            fd = msvcrt.open_osfhandle(int(self._fh), os.O_RDONLY)
+            self._handle = os.fdopen(fd, "rb", buffering=0)
         return self
 
     def close(self):

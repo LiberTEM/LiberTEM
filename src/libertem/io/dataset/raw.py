@@ -204,8 +204,6 @@ class RawFileDataSet(DataSet):
         ])
 
     def check_valid(self):
-        if self._enable_direct and not hasattr(os, 'O_DIRECT'):
-            raise DataSetException("LiberTEM currently only supports Direct I/O on Linux")
         try:
             fileset = self._get_fileset()
             backend = self.get_io_backend().get_impl()

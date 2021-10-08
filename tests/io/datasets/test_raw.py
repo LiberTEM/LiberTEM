@@ -315,9 +315,20 @@ def test_missing_sig_shape(lt_ctx, default_raw):
     assert e.match("missing 1 required argument: 'sig_shape'")
 
 
-@pytest.mark.skipif(not sys.platform.startswith('linux'),
-                    reason='Direct I/O only implemented on Linux')
 def test_load_direct(lt_ctx, default_raw):
+    ds_direct = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        nav_shape=(16, 16),
+        sig_shape=(16, 16),
+        dtype="float32",
+        io_backend=BufferedBackend(direct_io=True),
+    )
+    analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
+    lt_ctx.run(analysis)
+
+
+def test_load_legacy_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",
         path=default_raw._path,
@@ -328,21 +339,6 @@ def test_load_direct(lt_ctx, default_raw):
     )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     lt_ctx.run(analysis)
-
-
-@pytest.mark.skipif(sys.platform.startswith('linux'),
-                    reason='No direct IO only on non-Linux')
-def test_direct_io_enabled_non_linux(lt_ctx, default_raw):
-    with pytest.raises(Exception) as e:
-        lt_ctx.load(
-            "raw",
-            path=default_raw._path,
-            nav_shape=(16, 16),
-            sig_shape=(16, 16),
-            dtype="float32",
-            enable_direct=True,
-        )
-    assert e.match("LiberTEM currently only supports Direct I/O on Linux")
 
 
 def test_big_endian(big_endian_raw, lt_ctx):

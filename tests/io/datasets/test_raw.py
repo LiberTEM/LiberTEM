@@ -315,6 +315,10 @@ def test_missing_sig_shape(lt_ctx, default_raw):
     assert e.match("missing 1 required argument: 'sig_shape'")
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
 def test_load_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",

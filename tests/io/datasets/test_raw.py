@@ -332,6 +332,10 @@ def test_load_direct(lt_ctx, default_raw):
     lt_ctx.run(analysis)
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
 def test_load_legacy_direct(lt_ctx, default_raw):
     ds_direct = lt_ctx.load(
         "raw",

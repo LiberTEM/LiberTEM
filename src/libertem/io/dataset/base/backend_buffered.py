@@ -188,9 +188,8 @@ class BufferedBackend(IOBackend, id_="buffered"):
         Maximum buffer size, in bytes. This is passed to the tileshape
         negotiation to select the right depth.
     """
-    def __init__(self, max_buffer_size=16*1024*1024, direct_io=False):
+    def __init__(self, max_buffer_size=16*1024*1024):
         self._max_buffer_size = max_buffer_size
-        self._direct_io = direct_io
 
     @classmethod
     def from_json(cls, msg):
@@ -202,12 +201,11 @@ class BufferedBackend(IOBackend, id_="buffered"):
     def get_impl(self):
         return BufferedBackendImpl(
             max_buffer_size=self._max_buffer_size,
-            direct_io=self._direct_io,
         )
 
 
 class BufferedBackendImpl(IOBackendImpl):
-    def __init__(self, max_buffer_size, direct_io):
+    def __init__(self, max_buffer_size, direct_io=False):
         super().__init__()
         self._max_buffer_size = max_buffer_size
         self._direct_io = direct_io

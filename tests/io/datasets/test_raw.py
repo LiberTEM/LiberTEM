@@ -13,7 +13,9 @@ from libertem.udf.raw import PickUDF
 
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.raw import RAWDatasetParams, RawFileDataSet
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import (
+    TilingScheme, BufferedBackend, MMapBackend, DirectBackend,
+)
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -326,7 +328,7 @@ def test_load_direct(lt_ctx, default_raw):
         nav_shape=(16, 16),
         sig_shape=(16, 16),
         dtype="float32",
-        io_backend=BufferedBackend(direct_io=True),
+        io_backend=DirectBackend(),
     )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     lt_ctx.run(analysis)
@@ -347,6 +349,25 @@ def test_load_legacy_direct(lt_ctx, default_raw):
     )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     lt_ctx.run(analysis)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_raw, direct_raw):
+    y = random.choice(range(default_raw.shape.nav[0]))
+    x = random.choice(range(default_raw.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_raw,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_raw,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
 
 
 def test_big_endian(big_endian_raw, lt_ctx):

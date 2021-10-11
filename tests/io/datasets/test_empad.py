@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pickle
 import random
@@ -8,7 +9,9 @@ import numpy as np
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
-from libertem.io.dataset.base import DataSetException, TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import (
+    DataSetException, TilingScheme, BufferedBackend, MMapBackend, DirectBackend
+)
 from libertem.io.dataset.empad import EMPADDataSet
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
@@ -44,6 +47,16 @@ def buffered_empad(lt_ctx):
         "empad",
         path=EMPAD_XML,
         io_backend=buffered,
+    )
+
+
+@pytest.fixture
+def direct_empad(lt_ctx):
+    direct = DirectBackend()
+    return lt_ctx.load(
+        "empad",
+        path=EMPAD_XML,
+        io_backend=direct,
     )
 
 
@@ -392,6 +405,25 @@ def test_compare_backends(lt_ctx, default_empad, buffered_empad):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_empad,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_empad, direct_empad):
+    y = random.choice(range(default_empad.shape.nav[0]))
+    x = random.choice(range(default_empad.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_empad,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_empad,
         x=x, y=y,
     )).intensity
 

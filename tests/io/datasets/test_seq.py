@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 
 import numpy as np
@@ -13,7 +14,7 @@ from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 from libertem.corrections import CorrectionSet
 
 from utils import get_testdata_path, ValidationUDF
@@ -54,6 +55,21 @@ def buffered_seq(lt_ctx):
         path=SEQ_TESTDATA_PATH,
         nav_shape=nav_shape,
         io_backend=BufferedBackend(),
+    )
+
+    ds.set_num_cores(4)
+    return ds
+
+
+@pytest.fixture
+def direct_seq(lt_ctx):
+    nav_shape = (8, 8)
+
+    ds = lt_ctx.load(
+        "seq",
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        io_backend=DirectBackend(),
     )
 
     ds.set_num_cores(4)
@@ -742,6 +758,25 @@ def test_compare_backends(lt_ctx, default_seq, buffered_seq):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_seq,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_seq, direct_seq):
+    y = random.choice(range(default_seq.shape.nav[0]))
+    x = random.choice(range(default_seq.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_seq,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_seq,
         x=x, y=y,
     )).intensity
 

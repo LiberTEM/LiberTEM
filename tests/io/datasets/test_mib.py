@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import json
 from unittest import mock
@@ -13,7 +14,9 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import (
+    TilingScheme, BufferedBackend, MMapBackend, DirectBackend
+)
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
@@ -63,6 +66,18 @@ def buffered_mib(lt_ctx):
         path=MIB_TESTDATA_PATH,
         nav_shape=(32, 32),
         io_backend=buffered,
+    )
+    return ds
+
+
+@pytest.fixture
+def direct_mib(lt_ctx):
+    direct = DirectBackend()
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=(32, 32),
+        io_backend=direct,
     )
     return ds
 
@@ -483,6 +498,25 @@ def test_compare_backends(lt_ctx, default_mib, buffered_mib):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_mib,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_mib, direct_mib):
+    y = random.choice(range(default_mib.shape.nav[0]))
+    x = random.choice(range(default_mib.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_mib,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_mib,
         x=x, y=y,
     )).intensity
 

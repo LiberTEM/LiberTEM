@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import json
 import random
@@ -13,7 +14,7 @@ from libertem.io.dataset.frms6 import (
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.raw import PickUDF
@@ -50,6 +51,16 @@ def buffered_frms6(lt_ctx):
         "frms6",
         path=str(FRMS6_TESTDATA_PATH),
         io_backend=buffered,
+    )
+
+
+@pytest.fixture
+def direct_frms6(lt_ctx):
+    direct = DirectBackend()
+    return lt_ctx.load(
+        "frms6",
+        path=str(FRMS6_TESTDATA_PATH),
+        io_backend=direct,
     )
 
 
@@ -537,6 +548,25 @@ def test_compare_backends(lt_ctx, default_frms6, buffered_frms6):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_frms6,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_frms6, direct_frms6):
+    y = random.choice(range(default_frms6.shape.nav[0]))
+    x = random.choice(range(default_frms6.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_frms6,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_frms6,
         x=x, y=y,
     )).intensity
 

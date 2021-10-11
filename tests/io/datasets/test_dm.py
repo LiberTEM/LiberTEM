@@ -1,4 +1,5 @@
 import os
+import sys
 from glob import glob
 import random
 
@@ -10,7 +11,9 @@ from libertem.udf.sum import SumUDF
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DataSetException
+from libertem.io.dataset.base import (
+    TilingScheme, BufferedBackend, MMapBackend, DataSetException, DirectBackend
+)
 
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
@@ -45,6 +48,17 @@ def default_dm_raw():
 @pytest.fixture
 def buffered_dm(lt_ctx):
     buffered = BufferedBackend()
+    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    return lt_ctx.load(
+        "dm",
+        files=files,
+        io_backend=buffered,
+    )
+
+
+@pytest.fixture
+def direct_dm(lt_ctx):
+    buffered = DirectBackend()
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
     return lt_ctx.load(
         "dm",
@@ -373,6 +387,24 @@ def test_compare_backends(lt_ctx, default_dm, buffered_dm):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_dm,
+        x=x,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_dm, direct_dm):
+    x = random.choice(range(default_dm.shape.nav[0]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_dm,
+        x=x,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_dm,
         x=x,
     )).intensity
 

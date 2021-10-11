@@ -1,4 +1,5 @@
 import os
+import io
 
 import numpy as np
 import numba
@@ -120,17 +121,31 @@ class BufferedFile:
         self._handle.seek(offset)
 
     def readinto(self, buf):
+        BLOCKSIZE = 4096
         buf_orig = buf
         buf = memoryview(buf)
         to_read = len(buf)
         offset = 0
+        last_to_read = to_read
         # `readinto` may return early, so we may need to re-run it:
         while to_read > 0:
+            # Make sure reads are aligned to BLOCKSIZE blocks
+            # to allow Direct I/O on Windows
+            blockcount, remainder = divmod(offset, BLOCKSIZE)
+            to_read += remainder
+            offset = blockcount * BLOCKSIZE
+            self._handle.seek(-remainder, io.SEEK_CUR)
             bytes_read = self._handle.readinto(buf[offset:])
             if bytes_read == 0:
                 break
             to_read -= bytes_read
             offset += bytes_read
+            # The block aligning code would otherwise
+            # try to read a "tail" in an infinite loop if the file size
+            # is not a multiple of BLOCKSIZE
+            if to_read == last_to_read:
+                break
+            last_to_read = to_read
         return buf_orig[:offset]
 
 

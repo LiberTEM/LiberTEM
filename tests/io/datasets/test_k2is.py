@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pickle
 import random
@@ -14,7 +15,7 @@ from libertem.udf import UDF
 from libertem.udf.raw import PickUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend
+from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem import masks
@@ -51,6 +52,16 @@ def buffered_k2is(lt_ctx):
         "k2is",
         path=str(K2IS_TESTDATA_PATH),
         io_backend=buffered,
+    )
+
+
+@pytest.fixture
+def direct_k2is(lt_ctx):
+    direct = DirectBackend()
+    return lt_ctx.load(
+        "k2is",
+        path=str(K2IS_TESTDATA_PATH),
+        io_backend=direct,
     )
 
 
@@ -422,6 +433,25 @@ def test_compare_backends(lt_ctx, default_k2is, buffered_k2is):
     )).intensity
     buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
         dataset=buffered_k2is,
+        x=x, y=y,
+    )).intensity
+
+    assert np.allclose(mm_f0, buffered_f0)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin"),
+    reason="No support for direct I/O on Mac OS X"
+)
+def test_compare_direct_to_mmap(lt_ctx, default_k2is, direct_k2is):
+    y = random.choice(range(default_k2is.shape.nav[0]))
+    x = random.choice(range(default_k2is.shape.nav[1]))
+    mm_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=default_k2is,
+        x=x, y=y,
+    )).intensity
+    buffered_f0 = lt_ctx.run(lt_ctx.create_pick_analysis(
+        dataset=direct_k2is,
         x=x, y=y,
     )).intensity
 

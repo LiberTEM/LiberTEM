@@ -7,6 +7,12 @@ class DirectBackend(IOBackend, id_="direct"):
     I/O backend using a direct I/O reading strategy. This currently
     works on Linux and Windows, Mac OS X is not yet supported.
 
+    Use this backend if your data is much larger than your RAM, and
+    you have fast enough storage (NVMe RAID, for example).
+    In these cases, the :code:`MMapBackend` or :code:`BufferedBackend`
+    is not efficient, as the system is constantly under memory pressure.  In
+    that case, this backend can perform much better.
+
     Parameters
     ----------
     max_buffer_size : int

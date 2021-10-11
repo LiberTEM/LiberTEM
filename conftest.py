@@ -23,7 +23,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.io.dataset.base import BufferedBackend, MMapBackend
+from libertem.io.dataset.base import BufferedBackend, MMapBackend, DirectBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.utils.threading import set_num_threads_env
 from libertem.viz.base import Dummy2DPlot
@@ -257,6 +257,25 @@ def buffered_raw(tmpdir_factory, default_raw_data):
         nav_shape=(16, 16),
         sig_shape=(128, 128),
         io_backend=BufferedBackend(),
+    )
+    yield ds
+
+
+@pytest.fixture(scope='session')
+def direct_raw(tmpdir_factory, default_raw_data):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-direct'
+    default_raw_data.tofile(str(filename))
+    del default_raw_data
+
+    ds = lt_ctx.load(
+        "raw",
+        path=str(filename),
+        dtype="float32",
+        nav_shape=(16, 16),
+        sig_shape=(128, 128),
+        io_backend=DirectBackend(),
     )
     yield ds
 

@@ -6,7 +6,7 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, File, FileSet, BufferedBackend,
+    BasePartition, File, FileSet, DirectBackend,
 )
 
 
@@ -103,10 +103,10 @@ class RawFileDataSet(DataSet):
         if enable_direct:
             warnings.warn(
                 "enable_direct is deprecated; pass "
-                "`io_backend=BufferedBackend(direct_io=True)` instead",
+                "`io_backend=DirectBackend()` instead",
                 FutureWarning
             )
-            io_backend = BufferedBackend(direct_io=True)
+            io_backend = DirectBackend()
         super().__init__(io_backend=io_backend)
         # handle backwards-compatability:
         if tileshape is not None:

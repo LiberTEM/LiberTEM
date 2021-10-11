@@ -4,6 +4,7 @@ from .roi import _roi_to_indices, _roi_to_nd_indices
 from .backend import IOBackend
 from .backend_mmap import MMapBackend
 from .backend_buffered import BufferedBackend
+from .backend_direct import DirectBackend
 from .dataset import DataSet, WritableDataSet
 from .partition import Partition, BasePartition, WritablePartition
 from .utils import FileTree
@@ -27,5 +28,5 @@ __all__ = [
     'default_get_read_ranges', 'make_get_read_ranges',
     'Decoder', 'DtypeConversionDecoder', 'Negotiator',
     'decode_swap_2', 'decode_swap_4', 'get_coordinates',
-    'IOBackend', 'BufferedBackend', 'MMapBackend',
+    'IOBackend', 'BufferedBackend', 'MMapBackend', 'DirectBackend',
 ]

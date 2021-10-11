@@ -11,6 +11,10 @@ parameter of :meth:`~libertem.api.Context.load` to use a different backend.
 This allows you to override the default backend choice, or set parameters
 for the backend.
 
+Note that some file formats can't support different I/O backends, such as HDF5
+or SER, because they are implemented using third-party reading libraries
+which perform their own I/O.
+
 Available I/O backends
 ----------------------
 

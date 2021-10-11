@@ -20,8 +20,8 @@ def _alloc_aligned(size, blocksize=4096):
     # (and check for windows compat)
     buf = mmap.mmap(-1, blocksize * blocks)
 
-    # if hasattr(buf, 'madvise'):
-    #    buf.madvise(mmap.MADV_WILLNEED)
+    # FIXME: if `blocksize` > PAGE_SIZE, we may have to align the start
+    # address here, too.
 
     return buf
 
@@ -104,54 +104,54 @@ class BufferPool:
         self._buffers = collections.defaultdict(lambda: [])
 
     @contextmanager
-    def zeros(self, size, dtype):
+    def zeros(self, size, dtype, alignment=4096):
         if dtype == object or np.prod(size, dtype=np.int64) == 0:
             yield np.zeros(size, dtype=dtype)
         else:
-            with self.empty(size, dtype) as res:
+            with self.empty(size, dtype, alignment) as res:
                 res[:] = 0
                 yield res
 
     @contextmanager
-    def empty(self, size, dtype):
+    def empty(self, size, dtype, alignment=4096):
         size_flat = np.prod(size, dtype=np.int64)
         dtype = np.dtype(dtype)
-        with self.bytes(dtype.itemsize * size_flat) as buf:
+        with self.bytes(dtype.itemsize * size_flat, alignment) as buf:
             # self.bytes may give us more memory (for alignment reasons), so
             # crop it off the end:
             npbuf = np.frombuffer(buf, dtype=dtype)[:size_flat]
             yield npbuf.reshape(size)
 
     @contextmanager
-    def bytes(self, size):
-        buf = self.checkout_bytes(size)
+    def bytes(self, size, alignment=4096):
+        buf = self.checkout_bytes(size, alignment)
         yield buf
-        self.checkin_bytes(size, buf)
+        self.checkin_bytes(size, alignment, buf)
 
-    def checkout_bytes(self, size):
-        buffers = self._buffers[size]
+    def checkout_bytes(self, size, alignment):
+        buffers = self._buffers[(size, alignment)]
         try:
             buf = buffers.pop()
         except IndexError:
-            buf = _alloc_aligned(size, blocksize=4096)
-            # buf = _alloc_aligned(size, blocksize=2*2**20)
+            buf = _alloc_aligned(size, blocksize=alignment)
         return buf
 
-    def checkin_bytes(self, size, buf):
-        self._buffers[size].insert(0, buf)
+    def checkin_bytes(self, size, alignment, buf):
+        self._buffers[(size, alignment)].insert(0, buf)
 
 
 class ManagedBuffer:
     """
     Allocate `size` bytes from `pool`, and return them to the pool once we are GC'd
     """
-    def __init__(self, pool, size):
+    def __init__(self, pool, size, alignment):
         self.pool = pool
-        self.buf = pool.checkout_bytes(size)
+        self.buf = pool.checkout_bytes(size, alignment)
         self.size = size
+        self.alignment = alignment
 
     def __del__(self):
-        self.pool.checkin_bytes(self.size, self.buf)
+        self.pool.checkin_bytes(self.size, self.alignment, self.buf)
 
 
 class BufferWrapper:

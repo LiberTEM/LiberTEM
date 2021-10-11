@@ -101,6 +101,13 @@ class BufferedFile:
         self._handle = None
         self._arr = None
 
+    def get_blocksize(self):
+        """
+        Return the block size to which reads should be aligned to. In case of normal
+        buffered I/O, this can be 1
+        """
+        return 1
+
     def open(self):
         # disable internal I/O buffering, as we want to read directly
         # into our own buffer here:
@@ -121,7 +128,7 @@ class BufferedFile:
         self._handle.seek(offset)
 
     def readinto(self, buf):
-        BLOCKSIZE = 4096
+        BLOCKSIZE = self.get_blocksize()
         buf_orig = buf
         buf = memoryview(buf)
         to_read = len(buf)
@@ -129,12 +136,15 @@ class BufferedFile:
         last_to_read = to_read
         # `readinto` may return early, so we may need to re-run it:
         while to_read > 0:
-            # Make sure reads are aligned to BLOCKSIZE blocks
-            # to allow Direct I/O on Windows
+            # Make sure reads are aligned to the blocksize,
+            # after an early return of `readinto` to allow Direct I/O on Windows.
+            # On Linux, a misaligned read which turns out to be at the end of the
+            # file doesn't cause an error
             blockcount, remainder = divmod(offset, BLOCKSIZE)
             to_read += remainder
             offset = blockcount * BLOCKSIZE
-            self._handle.seek(-remainder, io.SEEK_CUR)
+            if remainder > 0:
+                self._handle.seek(-remainder, io.SEEK_CUR)
             bytes_read = self._handle.readinto(buf[offset:])
             if bytes_read == 0:
                 break
@@ -150,6 +160,15 @@ class BufferedFile:
 
 
 class DirectBufferedFile(BufferedFile):
+    def get_blocksize(self):
+        """
+        Return the block size to which reads should be aligned to. On Linux,
+        this should be a multiple of the logical block size of the file system.
+        """
+        # NOTE: if required, this can be replaced with the appropriate syscall
+        # to determine the block size. On Linux, this would be BLKBSZGET.
+        return 4096
+
     def open(self):
         # disable internal I/O buffering, as we want to read directly
         # into our own buffer here:
@@ -182,9 +201,6 @@ class DirectBufferedFile(BufferedFile):
     def close(self):
         super().close()
         self._fh = None
-
-    def readinto(self, buf):
-        return super().readinto(buf)
 
 
 class BufferedBackend(IOBackend, id_="buffered"):
@@ -322,13 +338,13 @@ class BufferedBackendImpl(IOBackendImpl):
         # the buffer pool, so make sure that this matches with the usage
         # of the buffers!
         buf_ref = []
-        align_to = 4096
         for fileno in min_per_file.keys():
             fh = open_files[fileno]
             # add align_to to allow for alignment cut:
+            align_to = fh.get_blocksize()
             read_size = max_per_file[fileno] - min_per_file[fileno] + align_to
             # ManagedBuffer gives us memory in 4k blocks, so the size is 4k aligned
-            mb = ManagedBuffer(self._buffer_pool, read_size)
+            mb = ManagedBuffer(self._buffer_pool, read_size, alignment=fh.get_blocksize())
             arr = np.frombuffer(mb.buf, dtype=np.uint8)
             buf_ref.append(mb)
             seek_pos = min_per_file[fileno]

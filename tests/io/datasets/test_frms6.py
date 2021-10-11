@@ -554,6 +554,7 @@ def test_compare_backends(lt_ctx, default_frms6, buffered_frms6):
     assert np.allclose(mm_f0, buffered_f0)
 
 
+@needsdata
 @pytest.mark.skipif(
     sys.platform.startswith("darwin"),
     reason="No support for direct I/O on Mac OS X"

@@ -236,6 +236,10 @@ class MRCDataSet(DataSet):
             )
         ])
 
+    @classmethod
+    def get_supported_io_backends(self):
+        return []
+
     def get_io_backend(self):
         return MRCBackend()
 

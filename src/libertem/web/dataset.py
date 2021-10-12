@@ -88,28 +88,6 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             return
 
 
-class DataSetOpenSchema(tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry):
-        self.state = state
-        self.event_registry = event_registry
-
-    def get(self):
-        try:
-            ds_type = self.request.arguments['type'][0].decode("utf8")
-            cls = get_dataset_cls(ds_type)
-            ConverterCls = cls.get_msg_converter()
-            converter = ConverterCls()
-            schema = converter.SCHEMA
-            msg = Message(self.state).dataset_schema(ds_type, schema)
-            log_message(msg)
-            self.write(msg)
-        except Exception as e:
-            msg = Message(self.state).dataset_schema_failed(ds_type, str(e))
-            log_message(msg, exception=True)
-            self.write(msg)
-            return
-
-
 class DataSetDetectHandler(tornado.web.RequestHandler):
     def initialize(self, state: SharedState, event_registry):
         self.state = state

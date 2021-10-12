@@ -197,16 +197,25 @@ class DataSet:
     def get_cache_key(self):
         raise NotImplementedError()
 
-    def _get_default_io_backend(self):
+    @classmethod
+    def get_default_io_backend(cls):
         import platform
         if platform.system() == "Windows":
             from libertem.io.dataset.base import BufferedBackend
             return BufferedBackend()
         return MMapBackend()
 
+    @classmethod
+    def get_supported_io_backends(cls) -> typing.List[str]:
+        """
+        Get the supported I/O backends as list of their IDs. Some DataSet
+        implementations with a custom backend may return an empty list here.
+        """
+        return ["mmap", "buffered", "direct"]
+
     def get_io_backend(self):
         if self._io_backend is None:
-            return self._get_default_io_backend()
+            return self.get_default_io_backend()
         return self._io_backend
 
     def get_correction_data(self):

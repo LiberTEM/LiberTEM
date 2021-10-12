@@ -178,6 +178,10 @@ class SERDataSet(DataSet):
         return {"ser"}
 
     @classmethod
+    def get_supported_io_backends(self):
+        return []
+
+    @classmethod
     def detect_params(cls, path, executor):
         if path.lower().endswith(".ser"):
             ds = cls(path)

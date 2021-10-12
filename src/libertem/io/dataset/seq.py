@@ -40,7 +40,7 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
-    File,
+    File, IOBackend,
 )
 from libertem.corrections import CorrectionSet
 
@@ -389,6 +389,9 @@ class SEQDatasetParams(MessageConverter):
                 "maxItems": 2
             },
             "sync_offset": {"type": "number"},
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
+            }
         },
         "required": ["type", "path", "nav_shape"],
     }

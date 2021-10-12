@@ -17,7 +17,7 @@ from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, BasePartition, DataSetException, DataSetMeta,
     FileSet, File, Decoder, make_get_read_ranges,
-    TilingScheme,
+    TilingScheme, IOBackend,
 )
 from .base.file import OffsetsSizes
 
@@ -58,6 +58,9 @@ class K2ISDatasetParams(MessageConverter):
               "maxItems": 2
           },
           "sync_offset": {"type": "number"},
+          "io_backend": {
+              "enum": IOBackend.get_supported(),
+          },
       },
       "required": ["type", "path"]
     }

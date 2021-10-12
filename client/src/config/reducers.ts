@@ -47,6 +47,7 @@ export const initialConfigState: ConfigState = {
         cudas: [] as number[],
     },
     starred: [],
+    datasetTypes: {},
 }
 
 export const configReducer = (state = initialConfigState, action: AllActions): ConfigState => {

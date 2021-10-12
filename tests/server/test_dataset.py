@@ -49,7 +49,34 @@ async def test_load_raw_success(
 
 
 @pytest.mark.asyncio
-async def test_load_raw_fail(default_raw, base_url, http_client, local_cluster_url, default_token):
+async def test_load_raw_with_backends(
+    default_raw, base_url, http_client, local_cluster_url, default_token
+):
+    await create_connection(base_url, http_client, local_cluster_url, default_token)
+    raw_path = default_raw._path
+
+    uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"
+    ds_url = "{}/api/datasets/{}/?token={}".format(
+        base_url, uuid, default_token,
+    )
+    ds_data = _get_raw_params(raw_path)
+    for backend in ["mmap", "buffered"]:
+        ds_data["dataset"]["params"]["io_backend"] = backend
+        async with http_client.put(ds_url, json=ds_data) as resp:
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert_msg(resp_json, 'CREATE_DATASET')
+            for k in ds_data['dataset']['params']:
+                assert ds_data['dataset']['params'][k] == resp_json['details']['params'][k]
+            assert ds_data["dataset"]["params"]["io_backend"] == backend
+        async with http_client.delete(ds_url) as resp:
+            assert resp.status == 200
+            resp_json = await resp.json()
+            assert_msg(resp_json, 'DELETE_DATASET')
+
+
+@pytest.mark.asyncio
+async def test_load_raw_fail(base_url, http_client, local_cluster_url, default_token):
     await create_connection(base_url, http_client, local_cluster_url, default_token)
 
     uuid = "ae5d23bd-1f2a-4c57-bab2-dfc59a1219f3"

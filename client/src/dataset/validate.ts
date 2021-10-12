@@ -1,7 +1,6 @@
 import Ajv, { ErrorObject } from 'ajv';
 import { FormikErrors, FormikValues } from 'formik';
-import { DataSetOpenSchemaResponse } from '../messages';
-import { getSchema } from './api';
+import { JsonSchema } from '../messages';
 
 export const convertErrors = (errors: ErrorObject[]): FormikErrors<FormikValues> => {
     const res: FormikErrors<FormikValues> = {};
@@ -24,18 +23,11 @@ export const throwErrors = (validateErrors : ErrorObject[] | null = [], customVa
     }
 }
 
-export const validateOpen = async<T> (type: string, data: T, customValidateErrors?: FormikErrors<FormikValues>): Promise<void> => (
-    getSchema(type).then((schemaResponse: DataSetOpenSchemaResponse) => {
-        if (schemaResponse.status === "error") {
-            throw new Error(schemaResponse.msg);
-        }
-        // FIXME: cache compiled schema
-        const schema = schemaResponse.schema;
-        const ajv = new Ajv();
-        const validate = ajv.compile(schema);
-        const valid = validate(data);
-        if (!valid || customValidateErrors) {
-            throwErrors(validate.errors, customValidateErrors);
-        }
-    })
-);
+export const validateOpen = <T>(schema: JsonSchema, data: T, customValidateErrors?: FormikErrors<FormikValues>): void => {
+    const ajv = new Ajv();
+    const validate = ajv.compile(schema);
+    const valid = validate(data);
+    if (!valid || customValidateErrors) {
+        throwErrors(validate.errors, customValidateErrors);
+    }
+}

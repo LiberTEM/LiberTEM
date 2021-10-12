@@ -1,4 +1,5 @@
 import os
+import typing
 import logging
 import warnings
 
@@ -7,11 +8,22 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
+from libertem.web.messageconverter import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
 )
 
 log = logging.getLogger(__name__)
+
+
+class DMDatasetParams(MessageConverter):
+    SCHEMA: typing.Dict = {}
+
+    def convert_from_python(self, raw_data):
+        return super().convert_from_python(raw_data)
+
+    def convert_to_python(self, raw_data):
+        return super().convert_to_python(raw_data)
 
 
 def _get_metadata(path):
@@ -227,6 +239,10 @@ class DMDataSet(DataSet):
     @classmethod
     def get_supported_extensions(cls):
         return {"dm3", "dm4"}
+
+    @classmethod
+    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
+        return DMDatasetParams
 
     @classmethod
     def detect_params(cls, path, executor):

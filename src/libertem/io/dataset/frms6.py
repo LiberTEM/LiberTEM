@@ -18,7 +18,7 @@ from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
     FileSet, BasePartition, File, Decoder,
-    TilingScheme, make_get_read_ranges,
+    TilingScheme, make_get_read_ranges, IOBackend,
 )
 
 log = logging.getLogger(__name__)
@@ -72,6 +72,9 @@ class FRMS6DatasetParams(MessageConverter):
                 "maxItems": 2
             },
             "sync_offset": {"type": "number"},
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
+            },
         },
         "required": ["type", "path"]
         }

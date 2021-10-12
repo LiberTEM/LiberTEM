@@ -30,7 +30,6 @@ def raw_dataset_8x8x8x8(lt_ctx, raw_data_8x8x8x8_path):
         nav_shape=(8, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
     )
     ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
@@ -257,7 +256,6 @@ def test_message_converter_direct():
         "dtype": "d",
         "nav_shape": [16, 16],
         "sig_shape": [8, 8],
-        "enable_direct": True,
         "sync_offset": 0,
     }
     converted = RAWDatasetParams().convert_to_python(src)
@@ -266,7 +264,6 @@ def test_message_converter_direct():
         "dtype": "d",
         "nav_shape": [16, 16],
         "sig_shape": [8, 8],
-        "enable_direct": True,
         "sync_offset": 0,
     }
 
@@ -405,7 +402,6 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         nav_shape=(8, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
         sync_offset=sync_offset,
         io_backend=io_backend,
     )
@@ -462,7 +458,6 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         nav_shape=(8, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
         sync_offset=sync_offset,
         io_backend=io_backend,
     )
@@ -514,7 +509,6 @@ def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         nav_shape=(10, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
         io_backend=io_backend,
     )
     ds.set_num_cores(4)
@@ -553,7 +547,6 @@ def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         nav_shape=(6, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
         io_backend=io_backend,
     )
     ds.set_num_cores(4)
@@ -583,7 +576,6 @@ def test_offset_smaller_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
             nav_shape=(8, 8),
             sig_shape=(8, 8),
             dtype="float32",
-            enable_direct=False,
             sync_offset=sync_offset
         )
     assert e.match(
@@ -601,7 +593,6 @@ def test_offset_greater_than_image_count(lt_ctx, raw_data_8x8x8x8_path):
             nav_shape=(8, 8),
             sig_shape=(8, 8),
             dtype="float32",
-            enable_direct=False,
             sync_offset=sync_offset
         )
     assert e.match(
@@ -624,7 +615,6 @@ def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_back
         nav_shape=(64,),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
         io_backend=io_backend,
     )
     result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
@@ -639,7 +629,6 @@ def test_reshape_nav(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path, io_back
         nav_shape=(2, 4, 8),
         sig_shape=(8, 8),
         dtype="float32",
-        enable_direct=False,
     )
     result_with_3d_nav = lt_ctx.run_udf(dataset=ds_with_3d_nav, udf=udf)
     result_with_3d_nav = result_with_3d_nav['intensity'].raw_data

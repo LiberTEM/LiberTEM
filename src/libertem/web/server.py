@@ -21,7 +21,7 @@ from tornado import httputil
 from .shutdown import ShutdownHandler
 from .state import SharedState
 from .config import ConfigHandler, ClusterDetailHandler
-from .dataset import DataSetDetailHandler, DataSetDetectHandler, DataSetOpenSchema
+from .dataset import DataSetDetailHandler, DataSetDetectHandler
 from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
@@ -93,7 +93,6 @@ def make_app(event_registry, shared_state, token=None):
     app = tornado.web.Application([
         (r"/", IndexHandler, common_kwargs),
         (r"/api/datasets/detect/", DataSetDetectHandler, common_kwargs),
-        (r"/api/datasets/schema/", DataSetOpenSchema, common_kwargs),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, common_kwargs),
         (r"/api/browse/localfs/", LocalFSBrowseHandler, common_kwargs),
         (r"/api/jobs/([^/]+)/", JobDetailHandler, common_kwargs),

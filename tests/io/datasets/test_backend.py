@@ -3,6 +3,7 @@ import platform
 import pytest
 
 from libertem.udf.sum import SumUDF
+from libertem.io.dataset.base import IOBackend
 
 from utils import FakeBackend
 
@@ -22,6 +23,14 @@ def test_backend_selection(lt_ctx, default_raw):
         expected_backend = 'BufferedBackend'
 
     assert p.get_io_backend().__class__.__name__ == expected_backend
+
+
+def test_supported_backends():
+    backends = IOBackend.get_supported()
+    if platform.system() == "Darwin":
+        assert backends == ["mmap", "buffered", "fake"]
+    else:
+        assert backends == ["mmap", "buffered", "direct", "fake"]
 
 
 def test_load_uses_correct_backend(lt_ctx, default_raw):

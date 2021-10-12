@@ -11,17 +11,35 @@ log = logging.getLogger(__name__)
 
 class IOBackend:
     registry: Dict[str, Type["IOBackend"]] = {}
+    id_: Optional[str] = None
 
     def __init_subclass__(cls, id_: Optional[str] = None):
         super().__init_subclass__()
         if id_ is not None:
             cls.registry[id_] = cls
+            cls.id_ = id_
+
+    @classmethod
+    def get_cls_by_id(cls, id_):
+        return cls.registry.get(id_)
+
+    @classmethod
+    def get_supported(cls):
+        return [
+            k
+            for k in cls.registry.keys()
+            if cls.registry[k].platform_supported()
+        ]
 
     def __init__(self):
         pass
 
     def get_impl(self) -> 'IOBackendImpl':
         raise NotImplementedError()
+
+    @classmethod
+    def platform_supported(cls):
+        return True
 
     @classmethod
     def from_json(cls, msg):

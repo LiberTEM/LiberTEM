@@ -276,6 +276,10 @@ class H5DataSet(DataSet):
         return {"h5", "hdf5", "hspy", "nxs"}
 
     @classmethod
+    def get_supported_io_backends(self):
+        return []
+
+    @classmethod
     def _do_detect(cls, path):
         try:
             with h5py.File(path, 'r'):

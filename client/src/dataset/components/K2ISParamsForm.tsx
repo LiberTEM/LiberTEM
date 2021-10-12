@@ -36,7 +36,6 @@ const K2ISFileParamsForm: React.FC<MergedProps> = ({
             <ErrorMessage name="name" />
             <Field name="name" id="id_name" />
         </Form.Field>
-        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
         <Form.Field>
             <label htmlFor="id_io_backend">I/O Backend:</label>
             <ErrorMessage name="io_backend" />
@@ -45,6 +44,7 @@ const K2ISFileParamsForm: React.FC<MergedProps> = ({
                 datasetTypeInfo={datasetTypeInfo}
                 setFieldValue={setFieldValue} />
         </Form.Field>
+        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
         <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
         <Button type="button" onClick={onCancel}>Cancel</Button>
         <Button type="button" onClick={handleReset}>Reset</Button>

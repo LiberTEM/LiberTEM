@@ -29,6 +29,7 @@ const BackendSelectionDropdown: React.FC<BackendSelectionDropdownProps> = ({
     return (
         <>
             <Dropdown
+            selection
             options={backendOptions}
             value={value ? value : defaultValue}
             onChange={handleChange} />

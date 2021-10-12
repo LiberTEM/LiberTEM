@@ -1,5 +1,15 @@
+import copy
+
 from libertem.analysis.base import Analysis
 from .template import TemplateBase
+
+
+class Literal:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self) -> str:
+        return self.value
 
 
 class CodeTemplate(TemplateBase):
@@ -31,9 +41,24 @@ class CodeTemplate(TemplateBase):
 
     def dataset(self):
         ds_type = self.ds['type']
-        ds_params = self.ds['params']
-        data = {'type': ds_type, 'params': ds_params}
-        return self.code_formatter(self.format_template(self.temp_ds, data))
+        ds_params = copy.copy(self.ds['params'])
+        data = {
+            'type': ds_type,
+            'params': ds_params,
+        }
+        result = []
+        # because the io_backend parameter is not trivially serializable
+        # like the others, we special case it here:
+        if "io_backend" in ds_params:
+            ds_params["io_backend"] = Literal("io_backend")
+            data['backend_cls'] = self.ds["params"]["io_backend"].__class__.__name__
+            result.append(
+                self.code_formatter(self.format_template(self.temp_ds_backend, data))
+            )
+        result.append(
+            self.code_formatter(self.format_template(self.temp_ds, data))
+        )
+        return "\n".join(result)
 
     def dependency(self):
         """
@@ -47,6 +72,14 @@ class CodeTemplate(TemplateBase):
 
         if self.conn['type'].lower() == "tcp":
             extra_dep.extend(self.temp_dep_conn)
+
+        if "io_backend" in self.ds["params"]:
+            data = {
+                "backend_cls": self.ds["params"]["io_backend"].__class__.__name__
+            }
+            extra_dep.append(
+                self.code_formatter(self.format_template(self.temp_dep_ds, data))
+            )
 
         for helper in self.analysis_helper.values():
             analysis_dep = helper.get_dependency()

@@ -10,8 +10,11 @@ class TemplateBase:
     This can be override by specific code in subclasses.
     '''
 
+    temp_ds_backend = ["io_backend = ${backend_cls}()"]
     temp_ds = ['params = $params',
                'ds = ctx.load("$type", **params)']
+
+    temp_dep_ds = ["from libertem.io.dataset.base import ${backend_cls}"]
 
     temp_dep = ["import matplotlib.pyplot as plt",
                 "import libertem.api as lt",

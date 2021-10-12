@@ -1,3 +1,5 @@
+import platform
+
 from .backend import IOBackend
 from .backend_buffered import BufferedBackendImpl
 
@@ -28,6 +30,10 @@ class DirectBackend(IOBackend, id_="direct"):
         Construct an instance from the already-decoded `msg`.
         """
         raise NotImplementedError("TODO! implement me!")
+
+    @classmethod
+    def platform_supported(cls):
+        return platform.system() in ["Linux", "Windows"]
 
     def get_impl(self):
         return BufferedBackendImpl(

@@ -324,14 +324,36 @@ class SharedState:
     def get_local_directory(self):
         return self.local_directory
 
+    def get_ds_type_info(self, ds_type_id):
+        from libertem.io.dataset import get_dataset_cls
+        cls = get_dataset_cls(ds_type_id)
+        ConverterCls = cls.get_msg_converter()
+        converter = ConverterCls()
+        schema = converter.SCHEMA
+        supported_backends = cls.get_supported_io_backends()
+        default_backend = cls.get_default_io_backend().id_
+        if not supported_backends:
+            default_backend = None
+        return {
+            "schema": schema,
+            "default_io_backend": default_backend,
+            "supported_io_backends": supported_backends,
+        }
+
     def get_config(self):
+        from libertem.io.dataset import filetypes
         detected_devices = devices.detect()
+        ds_types = list(filetypes.keys())
         return {
             "version": libertem.__version__,
             "resultFileFormats": ResultFormatRegistry.get_available_formats(),
             "revision": libertem.revision,
             "localCores": self.get_local_cores(),
             "devices": detected_devices,
+            "datasetTypes": {
+                ds_type_id.upper(): self.get_ds_type_info(ds_type_id)
+                for ds_type_id in ds_types
+            },
             "cwd": os.getcwd(),
             # '/' works on Windows, too.
             "separator": '/'

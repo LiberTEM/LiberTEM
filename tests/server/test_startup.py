@@ -49,6 +49,7 @@ async def test_get_config(base_url, http_client, default_token):
         assert set(config['config'].keys()) == {
             "version", "revision", "localCores", "cwd",
             "separator", "resultFileFormats", "devices",
+            "datasetTypes",
         }
 
 

@@ -14,6 +14,14 @@ export interface ResultFileFormat {
     description: string,
 }
 
+export type JsonSchema = Record<string, unknown>;
+
+export interface DatasetTypeInfo {
+    schema: JsonSchema,
+    default_io_backend: IOBackendId | null,
+    supported_io_backends: IOBackendId[],
+}
+
 export interface MsgPartConfig {
     version: string,
     revision: string,
@@ -27,6 +35,9 @@ export interface MsgPartConfig {
     separator: string,
     resultFileFormats: {
         [id: string]: ResultFileFormat,
+    },
+    datasetTypes: {
+        [id: string]: DatasetTypeInfo,
     },
 }
 
@@ -118,6 +129,9 @@ export interface DatasetParamsCommon {
     nav_shape: number[],
     sig_shape: number[],
     sync_offset: number,
+    io_backend?: IOBackendId,
+
+    // deprecated, for loading old localStorage values:
     scan_size?: number[],
     detector_size?: number[],
 }
@@ -149,7 +163,6 @@ export type DatasetParamsRaw = {
     type: DatasetTypes.RAW,
     path: string,
     dtype: string,
-    enable_direct: boolean,
 } & DatasetParamsCommon
 
 export interface DatasetInfoRAW {
@@ -273,8 +286,22 @@ export type CreateDatasetMessage = Omit<DatasetOpen, "status">;
 
 export type Dataset = DatasetOpening | DatasetOpen | DatasetDeleting;
 
+export type IOBackendId = "direct" | "buffered" | "mmap";
+
+export const IOBackendMetadata: { [s in IOBackendId]: { label: string } } = {
+    "mmap": {
+        label: "MMAP I/O backend (default on Linux)",
+    },
+    "buffered": {
+        label: "Buffered I/O backend, useful for slow HDD storage (default on Windows)",
+    },
+    "direct": {
+        label: "Direct I/O backend, useful for very large data on fast storage",
+    },
+};
+
 export interface OpenDatasetRequest {
-    dataset: DatasetCreateParams
+    dataset: DatasetCreateParams,
 }
 
 export interface OpenDatasetResponseOk {
@@ -309,20 +336,6 @@ export interface DetectDatasetErrorResponse {
 }
 
 export type DetectDatasetResponse = DetectDatasetSuccessResponse | DetectDatasetErrorResponse;
-
-export interface DataSetOpenSchemaSuccessResponse {
-    status: "ok",
-    ds_type: string,
-    schema: Record<string, unknown>,
-}
-
-export interface DataSetOpenSchemaErrorResponse {
-    status: "error",
-    ds_type: string,
-    msg: string,
-}
-
-export type DataSetOpenSchemaResponse = DataSetOpenSchemaSuccessResponse | DataSetOpenSchemaErrorResponse;
 
 export type MsgPartInitialDataset = DatasetOpen
 

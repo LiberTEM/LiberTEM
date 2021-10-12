@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetInfoRAW, DatasetParamsRaw, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, parseNumList, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+import BackendSelectionDropdown from "./BackendSelectionDropdown";
 import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
@@ -26,6 +27,7 @@ const RawFileParamsForm: React.FC<MergedProps> = ({
     handleReset,
     onCancel,
     setFieldValue,
+    datasetTypeInfo,
 }) => (
     <Form onSubmit={handleSubmit}>
         <Form.Field>
@@ -38,12 +40,15 @@ const RawFileParamsForm: React.FC<MergedProps> = ({
             <ErrorMessage name="dtype" />
             <Field name="dtype" id="id_dtype" />
         </Form.Field>
-        <Form.Field>
-            <label htmlFor="id_enable_direct">Enable Direct I/O (for usage with fast SSDs and files much larger than RAM):</label>
-            <ErrorMessage name="enable_direct" />
-            <Field type="checkbox" name="enable_direct" checked={values.enable_direct} id="id_enable_direct" />
-        </Form.Field>
         <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} hideInfo setFieldValue={setFieldValue} />
+        <Form.Field>
+            <label htmlFor="id_io_backend">I/O Backend:</label>
+            <ErrorMessage name="io_backend" />
+            <BackendSelectionDropdown
+                value={values.io_backend}
+                datasetTypeInfo={datasetTypeInfo}
+                setFieldValue={setFieldValue} />
+        </Form.Field>
         <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
         <Button type="button" onClick={onCancel}>Cancel</Button>
         <Button type="button" onClick={handleReset}>Reset</Button>
@@ -53,21 +58,21 @@ const RawFileParamsForm: React.FC<MergedProps> = ({
 export default withValidation<DatasetParamsRaw, DatasetParamsRawForForm, DatasetInfoRAW>({
     mapPropsToValues: ({ path, initial }) => ({
         name: getInitialName("name", path, initial),
-        enable_direct: getInitial("enable_direct", false, initial),
         dtype: getInitial("dtype", "float32", initial),
         nav_shape: getInitial("nav_shape", "", initial).toString(),
         sig_shape: getInitial("sig_shape", "", initial).toString(),
         sync_offset: getInitial("sync_offset", 0, initial),
+        io_backend: getInitial("io_backend", undefined, initial),
     }),
     formToJson: (values, path) => ({
         path,
         type: DatasetTypes.RAW,
         name: values.name,
         dtype: values.dtype,
-        enable_direct: values.enable_direct,
         nav_shape: parseNumList(values.nav_shape),
         sig_shape: parseNumList(values.sig_shape),
         sync_offset: values.sync_offset,
+        io_backend: values.io_backend,
     }),
     type: DatasetTypes.RAW,
 })(RawFileParamsForm);

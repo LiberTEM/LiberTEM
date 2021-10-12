@@ -6,7 +6,7 @@ import numpy as np
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, FileSet, File,
+    BasePartition, FileSet, File, IOBackend,
 )
 from libertem.web.messages import MessageConverter
 
@@ -35,6 +35,9 @@ class BLODatasetParams(MessageConverter):
             "maxItems": 2
         },
         "sync_offset": {"type": "number"},
+        "io_backend": {
+            "enum": IOBackend.get_supported(),
+        },
       },
       "required": ["type", "path"],
     }

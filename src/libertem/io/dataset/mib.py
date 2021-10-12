@@ -15,7 +15,7 @@ from .base import (
     DataSet, DataSetException, DataSetMeta,
     BasePartition, FileSet, File, make_get_read_ranges,
     Decoder, TilingScheme, default_get_read_ranges,
-    DtypeConversionDecoder,
+    DtypeConversionDecoder, IOBackend,
 )
 
 log = logging.getLogger(__name__)
@@ -43,6 +43,9 @@ class MIBDatasetParams(MessageConverter):
                 "maxItems": 2
             },
             "sync_offset": {"type": "number"},
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
+            },
         },
         "required": ["type", "path"],
     }

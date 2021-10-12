@@ -6,7 +6,7 @@ from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
-    BasePartition, File, FileSet, DirectBackend,
+    BasePartition, File, FileSet, DirectBackend, IOBackend,
 )
 
 
@@ -33,8 +33,8 @@ class RAWDatasetParams(MessageConverter):
                 "maxItems": 2
             },
             "sync_offset": {"type": "number"},
-            "enable_direct": {
-                "type": "boolean"
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
             },
         },
         "required": ["type", "path", "nav_shape", "sig_shape", "dtype"]
@@ -43,7 +43,7 @@ class RAWDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "dtype", "nav_shape", "sig_shape", "enable_direct"]
+            for k in ["path", "dtype", "nav_shape", "sig_shape"]
         }
         if "sync_offset" in raw_data:
             data["sync_offset"] = raw_data["sync_offset"]

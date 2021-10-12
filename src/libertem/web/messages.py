@@ -178,22 +178,6 @@ class Message:
             "alternative": alternative,
         }
 
-    def dataset_schema(self, ds_type, schema):
-        return {
-            "status": "ok",
-            "messageType": "DATASET_SCHEMA",
-            "schema": schema,
-            "ds_type": ds_type,
-        }
-
-    def dataset_schema_failed(self, ds_type, msg):
-        return {
-            "status": "error",
-            "messageType": "DATASET_SCHEMA_FAILED",
-            "msg": f"failed to get schema for type {ds_type}: {msg}",
-            "ds_type": ds_type,
-        }
-
     def create_analysis(self, uuid, dataset_uuid, analysis_type, parameters):
         return {
             "status": "ok",

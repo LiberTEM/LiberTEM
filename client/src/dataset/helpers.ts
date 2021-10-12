@@ -89,7 +89,11 @@ export const withValidation = <SubmitParams, FormParams, FormInfo>(
         onSubmit(submitData);
         formikBag.setSubmitting(false);
     },
-    validate: (values, props) => validateOpen(opts.type, opts.formToJson(values, props.path), opts.customValidation?.(values, props)),
+    validate: (values, props) => validateOpen(
+        props.datasetTypeInfo.schema,
+        opts.formToJson(values, props.path),
+        opts.customValidation?.(values, props)
+    ),
     enableReinitialize: true,
     validateOnChange: true,
     validateOnBlur: true,

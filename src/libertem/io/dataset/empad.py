@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
-from .base import DataSet, DataSetException, DataSetMeta, BasePartition
+from .base import DataSet, DataSetException, DataSetMeta, BasePartition, IOBackend
 from .raw import RawFile, RawFileSet
 
 
@@ -52,7 +52,7 @@ class EMPADDatasetParams(MessageConverter):
             "items": {"type": "number", "minimum": 1},
             "minItems": 2,
             "maxItems": 2
-            },
+        },
         "sig_shape": {
             "type": "array",
             "items": {"type": "number", "minimum": 1},
@@ -60,6 +60,9 @@ class EMPADDatasetParams(MessageConverter):
             "maxItems": 2
         },
         "sync_offset": {"type": "number"},
+        "io_backend": {
+            "enum": IOBackend.get_supported(),
+        },
       },
       "required": ["type", "path"]
     }

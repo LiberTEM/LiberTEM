@@ -9,10 +9,10 @@ from libertem.corrections.corrset import CorrectionSet
 from .partition import BasePartition
 
 
-MAX_PARTITION_SIZE = 512*1024*1024
-
-
 class DataSet:
+    # The default partition size in bytes
+    MAX_PARTITION_SIZE = 512*1024*1024
+
     def __init__(self, io_backend=None):
         self._cores = 1
         self._sync_offset = 0
@@ -63,9 +63,17 @@ class DataSet:
 
     def get_num_partitions(self):
         """
-        Returns the number of partitions the dataset should be split into
+        Returns the number of partitions the dataset should be split into.
+
+        The default implementation sizes partition such that they
+        fit into 512MB of float data in memory, regardless of their
+        native dtype. At least :code:`self._cores` partitions
+        are created.
         """
-        raise NotImplementedError()
+        partition_size_float_px = self.MAX_PARTITION_SIZE // 4
+        dataset_size_px = np.prod(self.shape, dtype=np.int64)
+        num = max(self._cores, dataset_size_px // partition_size_float_px)
+        return num
 
     def get_slices(self):
         """

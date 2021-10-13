@@ -216,14 +216,6 @@ class MRCDataSet(DataSet):
             "sync_offset": self._sync_offset,
         }
 
-    def _get_num_partitions(self):
-        """
-        returns the number of partitions the dataset should be split into
-        """
-        # let's try to aim for MAX_PARTITION_SIZE per partition
-        res = max(self._cores, self._filesize // (MAX_PARTITION_SIZE))
-        return res
-
     def _get_fileset(self):
         assert self._image_count is not None
         return FileSet([
@@ -247,7 +239,7 @@ class MRCDataSet(DataSet):
         fileset = self._get_fileset()
         for part_slice, start, stop in MRCPartition.make_slices(
                 shape=self.shape,
-                num_partitions=self._get_num_partitions(),
+                num_partitions=self.get_num_partitions(),
                 sync_offset=self._sync_offset):
             yield MRCPartition(
                 meta=self._meta,

@@ -636,16 +636,6 @@ class FRMS6DataSet(DataSet):
     def raw_dtype(self):
         return self._meta.raw_dtype
 
-    def get_num_partitions(self):
-        """
-        returns the number of partitions the dataset should be split into
-        """
-        # let's try to aim for MAX_PARTITION_SIZE (converted float32 data) per partition
-        partition_size_px = MAX_PARTITION_SIZE // 4
-        total_size_px = np.prod(self.shape, dtype=np.int64)
-        res = max(self._cores, total_size_px // partition_size_px)
-        return res
-
     def _get_fileset(self, headers=None):
         files = []
         start_idx = 0

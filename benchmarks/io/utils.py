@@ -1,7 +1,7 @@
 import os
 import platform
 
-from libertem.io.dataset.base import MMapBackend, BufferedBackend
+from libertem.io.dataset.base import MMapBackend, BufferedBackend, DirectBackend
 
 
 def warmup_cache(flist):
@@ -64,5 +64,5 @@ backends_by_name = {
     "mmap": MMapBackend(),
     "mmap_readahead": MMapBackend(enable_readahead_hints=True),
     "buffered": BufferedBackend(),
-    "direct": BufferedBackend(direct_io=True),
+    "direct": DirectBackend(),
 }

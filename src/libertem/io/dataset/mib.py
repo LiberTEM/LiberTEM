@@ -701,16 +701,6 @@ class MIBDataSet(DataSet):
             for f in self._files_sorted
         ], dtype=dtype, kind=kind, bit_depth=bit_depth, frame_header_bytes=header_size)
 
-    def get_num_partitions(self):
-        """
-        returns the number of partitions the dataset should be split into
-        """
-        # let's try to aim for MAX_PARTITION_SIZE (converted float32 data) per partition
-        partition_size_px = MAX_PARTITION_SIZE // 4
-        total_size_px = np.prod(self.shape, dtype=np.int64)
-        res = max(self._cores, total_size_px // partition_size_px)
-        return res
-
     def get_partitions(self):
         first_file = self._files_sorted[0]
         fileset = self._get_fileset()

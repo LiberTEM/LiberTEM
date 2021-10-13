@@ -78,6 +78,7 @@ def test_roi(lt_ctx):
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 1] = True
 
+    ds.set_num_cores(2)
     parts = ds.get_partitions()
 
     p = next(parts)

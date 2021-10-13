@@ -668,13 +668,6 @@ class SEQDataSet(DataSet):
             "sync_offset": self._sync_offset,
         }
 
-    def get_num_partitions(self):
-        """
-        returns the number of partitions the dataset should be split into
-        """
-        res = max(self._cores, self._filesize // MAX_PARTITION_SIZE)
-        return res
-
     def get_partitions(self):
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():

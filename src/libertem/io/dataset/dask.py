@@ -68,20 +68,16 @@ class DaskDataSet(DataSet):
         The dtype of the data as it is on disk. Can contain endian indicator, for
         example >u2 for big-endian 16bit data.
     """
-    def __init__(self, dask_array, nav_shape, sig_shape, io_backend=None):
+    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
 
-        self._nav_shape = tuple(nav_shape)
-        self._sig_shape = tuple(sig_shape)
-        if self._nav_shape is None:
-            raise TypeError("missing 1 required argument: 'nav_shape'")
-        if self._sig_shape is None:
-            raise TypeError("missing 1 required argument: 'sig_shape'")
         self._array = dask_array
-        self._sig_dims = len(self._sig_shape)
+        self._sig_dims = sig_dims
+        self._sig_shape = self._array.shape[-self._sig_dims:]
         self._dtype = self._array.dtype
+        self._preserve_dimension = preserve_dimensions
 
     def _get_decoder(self):
         return None

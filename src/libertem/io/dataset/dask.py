@@ -102,7 +102,6 @@ class DaskDataSet(DataSet):
             sync_offset=0,
             image_count=self._nav_shape_product,
         )
-        self._array = self._adapt_chunking(self._array)
         return self
 
     @property

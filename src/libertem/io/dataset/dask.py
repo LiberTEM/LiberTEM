@@ -1,5 +1,5 @@
-import os
 import warnings
+import logging
 import itertools
 import numpy as np
 import dask.array as da
@@ -10,6 +10,13 @@ from .base import (
 )
 from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
 from .memory import MemBackendImpl
+
+
+log = logging.getLogger(__name__)
+
+class DaskRechunkWarning(RuntimeWarning):
+    pass
+warnings.simplefilter('always', DaskRechunkWarning)
 
 
 class FakeDaskMMapFile(MMapFile):

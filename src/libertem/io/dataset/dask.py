@@ -86,6 +86,9 @@ class DaskDataSet(DataSet):
         return DaskBackend()
 
     def initialize(self, executor):
+        self._array = self._adapt_chunking(self._array, self._sig_dims)
+        self._nav_shape = self._array.shape[:-self._sig_dims]
+
         self._nav_shape_product = int(np.prod(self._nav_shape))
         self._image_count = self._nav_shape_product
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)

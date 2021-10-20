@@ -174,21 +174,30 @@ class DaskDataSet(DataSet):
                                f'New shape: {array.shape} with '
                                f'n_blocks: {[len(c) for c in array.chunks]}.'),
                               DaskRechunkWarning)
-        # Handle chunked nav_dimensions other than the first
+        # Handle chunked nav_dimensions
+        # We can allow nav_dimensions to be fully chunked (one chunk per element)
+        # up-to-but-not-including the first non-fully chunked dimension. After this point
+        # we must merge/rechunk all subsequent nav dimensions to ensure continuity
+        # of frame indexes in a flattened nav dimension. This should be removed
+        # when if we allow non-contiguous flat_idx Partitions
         nav_rechunk_dict = {}
         for dim_idx, dim_chunking in enumerate(array.chunks[:-sig_dims]):
-            if dim_idx == 0:
+            if set(dim_chunking) == {1}:
                 continue
-            # The only chunksize we can accept in the >zeroth nav_dims is 1
-            # This is due to a limitation of how LiberTEM constructs partitions
-            # using a flattened nav index (frame number/index)
-            # If we lift this limitation then we don't need to rechunk nav dims
-            # except to enforce logical chunk sizes (by merging only)
-            if len(dim_chunking) > 1:
-                unique_chunksizes = set(dim_chunking)
-                if unique_chunksizes != {1}:
-                    nav_rechunk_dict[dim_idx] = -1
-        array = array.rechunk(nav_rechunk_dict)
+            else:
+                merge_dimensions = [*range(dim_idx + 1, n_dimension - sig_dims)]
+                for merge_i in merge_dimensions:
+                    if len(array.chunks[merge_i]) > 1:
+                        nav_rechunk_dict[merge_i] = -1
+        if nav_rechunk_dict:
+            original_n_chunks = [len(c) for c in array.chunks]
+            array = array.rechunk(nav_rechunk_dict)
+            warnings.warn(('Merging nav dimension chunks according to scheme '
+                           f'{nav_rechunk_dict} as we cannot maintain continuity '
+                           'of frame indexing in the flattened navigation dimension. '
+                           f'Original n_blocks: {original_n_chunks}. '
+                           f'New n_blocks: {[len(c) for c in array.chunks]}.'),
+                          DaskRechunkWarning)
         # Warn about poor dataset chunking for zeroth dimension
         if len(array.chunks[0]) == 1:
             warnings.warn(('Zeroth dimension of the array is not chunked, '
@@ -225,19 +234,17 @@ class DaskDataSet(DataSet):
         return tuple(s.stop for s in slices)
 
     @staticmethod
-    def flatten_nav(slices, sig_dims):
+    def flatten_nav(slices, nav_shape, sig_dims):
         """
         Because LiberTEM partitions are set up with a flat nav dimension
         we must flatten the Dask array slices. This is ensured to be possible
         by earlier calls to _adapt_chunking but should be removed if ever
         partitions are able to have >1D navigation axes.
         """
-        assert all([s.start == 0 for s in slices[1:]]),\
-            'Only support chunking in first dimension for compatibility'
         nav_slices = slices[:-sig_dims]
         sig_slices = slices[-sig_dims:]
-        start_frame = nav_slices[0].start * np.prod([s.stop - s.start for s in nav_slices[1:]])
-        end_frame = start_frame + np.prod([s.stop - s.start for s in nav_slices])
+        start_frame = np.ravel_multi_index([s.start for s in nav_slices], nav_shape)
+        end_frame = 1 + np.ravel_multi_index([s.stop - 1 for s in nav_slices], nav_shape)
         nav_slice = slice(start_frame, end_frame)
         return (nav_slice,) + sig_slices, start_frame, end_frame
 
@@ -252,7 +259,7 @@ class DaskDataSet(DataSet):
         chunk_slices = self._chunk_slices(self._array)
 
         for full_slices in chunk_slices:
-            flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._sig_dims)
+            flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._nav_shape, self._sig_dims)
             flat_slice = Slice(origin=self.slices_to_origin(flat_slices),
                                shape=Shape(self.slices_to_shape(flat_slices),
                                            sig_dims=self._sig_dims))

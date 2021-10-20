@@ -121,6 +121,58 @@ class DaskDataSet(DataSet):
         slices = self._chunk_slices(array)
         return array[slices[chunk_flat_idx]]
 
+    def _adapt_chunking(self, array, sig_dims):
+        n_dimension = array.ndim
+        # Handle chunked signal dimensions by merging just in case
+        sig_dim_idxs = [*range(n_dimension)[-sig_dims:]]
+        if any([len(array.chunks[c]) > 1 for c in sig_dim_idxs]):
+            original_n_chunks = [len(c) for c in array.chunks]
+            array = array.rechunk({idx: -1 for idx in sig_dim_idxs})
+            warnings.warn(('Merging sig dim chunks as LiberTEM does not '
+                           'support paritioning along the sig axes. '
+                           f'Original n_blocks: {original_n_chunks}. '
+                           f'New n_blocks: {[len(c) for c in array.chunks]}.'),
+                          DaskRechunkWarning)
+        # Orient the nav dimensions so that the zeroth dimension is
+        # the most chunked, this obviously changes the dataset nav_shape !
+        if not self._preserve_dimension:
+            n_nav_chunks = [len(dim_chunking) for dim_chunking in array.chunks[:-sig_dims]]
+            nav_sort_order = np.argsort(n_nav_chunks)[::-1].tolist()
+            sort_order = nav_sort_order + sig_dim_idxs
+            if not np.equal(sort_order, np.arange(n_dimension)).all():
+                original_shape = array.shape
+                original_n_chunks = [len(c) for c in array.chunks]
+                array = da.transpose(array, axes=sort_order)
+                warnings.warn(('Re-ordered nav_dimensions to improve partitioning, '
+                               'create the dataset with preserve_dimensions=True '
+                               'to suppress this behaviour. '
+                               f'Original shape: {original_shape} with '
+                               f'n_blocks: {original_n_chunks}. '
+                               f'New shape: {array.shape} with '
+                               f'n_blocks: {[len(c) for c in array.chunks]}.'),
+                              DaskRechunkWarning)
+        # Handle chunked nav_dimensions other than the first
+        nav_rechunk_dict = {}
+        for dim_idx, dim_chunking in enumerate(array.chunks[:-sig_dims]):
+            if dim_idx == 0:
+                continue
+            # The only chunksize we can accept in the >zeroth nav_dims is 1
+            # This is due to a limitation of how LiberTEM constructs partitions
+            # using a flattened nav index (frame number/index)
+            # If we lift this limitation then we don't need to rechunk nav dims
+            # except to enforce logical chunk sizes (by merging only)
+            if len(dim_chunking) > 1:
+                unique_chunksizes = set(dim_chunking)
+                if unique_chunksizes != {1}:
+                    nav_rechunk_dict[dim_idx] = -1
+        array = array.rechunk(nav_rechunk_dict)
+        # Warn about poor dataset chunking for zeroth dimension
+        if len(array.chunks[0]) == 1:
+            warnings.warn(('Zeroth dimension of the array is not chunked, '
+                           'this will likely lead to excessive memory usage '
+                           'by loading the whole dataset in one operation. '
+                           f'First chunk size is {self._get_chunk(array, 0).nbytes / 1e6:.1f} MiB'),
+                          DaskRechunkWarning)
         return array
 
     def check_valid(self):

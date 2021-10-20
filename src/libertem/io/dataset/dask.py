@@ -112,17 +112,15 @@ class DaskDataSet(DataSet):
     def shape(self):
         return self._meta.shape
 
-    @staticmethod
-    def _adapt_chunking(array):
-        chunk_sizes = array.chunks
-        num_chunks_dim = [len(c) for c in chunk_sizes]
-        if num_chunks_dim[0] == 1:
-            print(f'chunks_per_dim: {num_chunks_dim}')
-            warnings.warn('Array badly chunked, 0th dimension chunking is length 1')
-        if any([n > 1 for n in num_chunks_dim[1:]]):
-            array = array.rechunk({idx: -1 for idx, _ in enumerate(num_chunks_dim) if idx > 0})
-            warnings.warn(f'Additional dimensions are chunked, this is currently not well handled, trying to merge\n\
-Array rechunked from to {num_chunks_dim} blocks to {[len(c) for c in array.chunks]}')
+    def _chunk_slices(self, array):
+        chunks = array.chunks
+        boundaries = tuple(tuple(self.chunks_to_slices(chunk_lengths)) for chunk_lengths in chunks)
+        return tuple(itertools.product(*boundaries))
+
+    def _get_chunk(self, array, chunk_flat_idx):
+        slices = self._chunk_slices(array)
+        return array[slices[chunk_flat_idx]]
+
         return array
 
     def check_valid(self):
@@ -163,9 +161,7 @@ Array rechunked from to {num_chunks_dim} blocks to {[len(c) for c in array.chunk
         return (nav_slice,) + sig_slices, start_frame, end_frame
 
     def get_slices(self):
-        chunks = self._array.chunks
-        boundaries = tuple(tuple(self.chunks_to_slices(chunk_lengths)) for chunk_lengths in chunks)
-        chunk_slices = tuple(itertools.product(*boundaries))
+        chunk_slices = self._chunk_slices(self._array)
 
         for full_slices in chunk_slices:
             flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._sig_dims)

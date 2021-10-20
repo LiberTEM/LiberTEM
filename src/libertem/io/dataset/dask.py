@@ -174,7 +174,7 @@ class DaskDataSet(DataSet):
 
     def _get_fileset(self):
         partitions = []
-        for full_slices, part_slice, start, stop in self.get_slices():
+        for full_slices, _, start, stop in self.get_slices():
             partitions.append(DaskFile(
                 array_chunk=self._array[full_slices],
                 path=None,
@@ -187,7 +187,7 @@ class DaskDataSet(DataSet):
 
     def get_partitions(self):
         fileset = self._get_fileset()
-        for full_slices, part_slice, start, stop in self.get_slices():
+        for _, part_slice, start, stop in self.get_slices():
             yield DaskPartition(
                 self._array,
                 meta=self._meta,

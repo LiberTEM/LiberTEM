@@ -5,11 +5,14 @@ import numpy as np
 import dask.array as da
 
 from libertem.common import Shape, Slice
-from .base import (
+from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet
 )
-from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
-from .memory import MemBackendImpl
+# from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
+import libertem.io.dataset.base.backend_mmap as backend_mmap
+MMapBackend = backend_mmap.MMapBackend
+MMapFile = backend_mmap.MMapFile
+from libertem.io.dataset.memory import MemBackendImpl
 
 
 log = logging.getLogger(__name__)

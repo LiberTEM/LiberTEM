@@ -46,27 +46,50 @@ class DaskBackendImpl(MemBackendImpl):
 
 class DaskDataSet(DataSet):
     """
+    This dataset wraps a Dask.array.array and makes it compatible with the
+    UDF interface. Partitions are created to be aligned with the array chunking
+    where the restrictions of LiberTEM and Dask allow. When these restrictions are
+    broken, tries to perform rechunking/merging and dimension re-ordering
+    to achieve compatible and optimal behaviour. Clearly there are no guarantees.
+
+    This is only useful if the underlying Dask array was created using
+    lazy I/O with something like dask.delayed. If the root node for the
+    Dask task graph backing the array loads the whole dataset into memory
+    then you are better off using MemoryDataSet. Similarly if the dask_array
+    has been re-chunked without preserving the original lazy I/O structure
+    then this dataset will either underperform (read amplification) and at worst
+    will cause memory trouble as each worker may load large chunks of data
+    simultaneously.
+
     Parameters
     ----------
 
-    path: str
-        Path to the file
+    dask_array: dask.array.array
+        A Dask array
 
-    nav_shape: tuple of int
-        A n-tuple that specifies the size of the navigation region ((y, x), but
-        can also be of length 1 for example for a line scan, or length 3 for
-        a data cube, for example)
+    sig_dims: int
+        Number of dimensions in dask_array.shape counting from the right
+        to treat as signal dimensions
 
-    sig_shape: tuple of int
-        Common case: (height, width); but can be any dimensionality
+    preserve_dimensions: bool, optional
+        Whether the prevent optimization of the dask_arry chunking to
+        avoid over-reading in a single partition. When False this can
+        result in a change of nav_shape relative to the original array
+        # TODO add mechanism to re-order the dimensions of results automatically
 
-    sync_offset: int, optional
-        If positive, number of frames to skip from start
-        If negative, number of blank frames to insert at start
+    io_backend: bool, optional
+        For compatibility, accept an unused io_backend argument
 
-    dtype: numpy dtype
-        The dtype of the data as it is on disk. Can contain endian indicator, for
-        example >u2 for big-endian 16bit data.
+    Examples
+    --------
+
+    >>> from libertem.io.dataset.dask import DaskDataSet
+    >>> import dask.array as da
+    >>>
+    >>> d_arr = da.ones((10, 100, 256, 256), chunks=(2, -1, -1, -1))
+    >>> ds = DaskDataSet(d_arr, sig_dims=2)
+
+    Will create a dataset with 5 partitions split along the zeroth dimension.
     """
     def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False, io_backend=None):
         super().__init__(io_backend=io_backend)

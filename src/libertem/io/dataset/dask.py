@@ -17,7 +17,9 @@ class FakeDaskMMapFile(MMapFile):
     Implementing the same interface as MMapFile, without filesystem backing
     """
     def open(self):
-        self._arr = self.desc._array.compute()
+        # scheduler='threads' ensures that upstream computation for this array
+        # chunk happens completely on this worker and not elsewhere
+        self._arr = self.desc._array.compute(scheduler='threads')
         self._mmap = self._arr
         return self
 

@@ -226,6 +226,12 @@ class DaskDataSet(DataSet):
 
     @staticmethod
     def flatten_nav(slices, sig_dims):
+        """
+        Because LiberTEM partitions are set up with a flat nav dimension
+        we must flatten the Dask array slices. This is ensured to be possible
+        by earlier calls to _adapt_chunking but should be removed if ever
+        partitions are able to have >1D navigation axes.
+        """
         assert all([s.start == 0 for s in slices[1:]]),\
             'Only support chunking in first dimension for compatibility'
         nav_slices = slices[:-sig_dims]
@@ -236,18 +242,29 @@ class DaskDataSet(DataSet):
         return (nav_slice,) + sig_slices, start_frame, end_frame
 
     def get_slices(self):
+        """
+        Generates the LiberTEM slices which correspond to the chunks
+        in the Dask array backing the dataset
+
+        Generates both the flat_nav slice for creating the LiberTEM partition
+        and also the full_slices used to index into the dask array
+        """
         chunk_slices = self._chunk_slices(self._array)
 
         for full_slices in chunk_slices:
             flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._sig_dims)
-            part_slices = Slice(origin=self.slices_to_origin(flat_slices),
-                                shape=Shape(self.slices_to_shape(flat_slices),
-                                            sig_dims=self._sig_dims))
+            flat_slice = Slice(origin=self.slices_to_origin(flat_slices),
+                               shape=Shape(self.slices_to_shape(flat_slices),
+                                           sig_dims=self._sig_dims))
             # This only works if the Dask chunking is contiguous in
             # the first dimension, will not work for true blocks
-            yield full_slices, part_slices, start_frame, end_frame
+            yield full_slices, flat_slice, start_frame, end_frame
 
     def _get_fileset(self):
+        """
+        The fileset is set up to have one 'file' per partition
+        which corresponds to one 'file' per Dask chunk
+        """
         partitions = []
         for full_slices, _, start, stop in self.get_slices():
             partitions.append(DaskFile(
@@ -261,6 +278,12 @@ class DaskDataSet(DataSet):
         return DaskFileSet(partitions)
 
     def get_partitions(self):
+        """
+        Partitions contain a reference to the whole array and the whole
+        fileset, but the part_slice and start_frame/num_frames provided mean
+        that the subsequent call to get_read_ranges() means only one 'file'
+        is read/.compute(), and this corresponds to the partition *exactly*
+        """
         fileset = self._get_fileset()
         for _, part_slice, start, stop in self.get_slices():
             yield DaskPartition(
@@ -280,6 +303,10 @@ class DaskDataSet(DataSet):
 
 class DaskFile(File):
     def __init__(self, *args, array_chunk=None, **kwargs):
+        """
+        Upon creation, the dask array has been sliced to give
+        only one chunk corresponding to a LiberTEM partition
+        """
         self._array = array_chunk
         super().__init__(*args, **kwargs)
 

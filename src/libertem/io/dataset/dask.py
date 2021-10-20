@@ -251,8 +251,8 @@ class DaskDataSet(DataSet):
             )
 
     def __repr__(self):
-        return f"<DaskDataSet of {self.dtype} shape={self.shape}, \
-n_blocks={[len(c) for c in self._array.chunks]}>"
+        return (f"<DaskDataSet of {self.dtype} shape={self.shape}, "
+                f"n_blocks={[len(c) for c in self._array.chunks]}>")
 
 
 class DaskFile(File):

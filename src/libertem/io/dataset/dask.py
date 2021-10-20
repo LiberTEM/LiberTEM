@@ -79,6 +79,10 @@ class DaskDataSet(DataSet):
         self._dtype = self._array.dtype
         self._preserve_dimension = preserve_dimensions
 
+    @property
+    def array(self):
+        return self._array
+
     def _get_decoder(self):
         return None
 

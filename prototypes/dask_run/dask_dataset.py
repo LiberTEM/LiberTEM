@@ -80,6 +80,10 @@ class DaskDataSet(DataSet):
         result in a change of nav_shape relative to the original array
         # TODO add mechanism to re-order the dimensions of results automatically
 
+    min_size: float, optional
+        The minimum partition size in bytes iff the array chunking allows
+        an order-preserving merge strategy
+
     io_backend: bool, optional
         For compatibility, accept an unused io_backend argument
 

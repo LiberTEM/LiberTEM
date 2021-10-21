@@ -102,7 +102,7 @@ def merge_until_target(array, target, min_chunks):
         to_merge = min_with_min_neighbor(last_chunking)
         chunking = modify_chunking(chunking, last_chunked_dim, to_merge)
         chunksizes = get_chunksizes(array, chunking=chunking)
-    return chunking
+    return chunking, chunksizes.min(), chunksizes.max()
 
 
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     target = 128e6
     min_chunks = 3
-    chunking = merge_until_target(ar, target, min_chunks)
+    chunking, _min, _max = merge_until_target(ar, target, min_chunks)
 
     """
     Greedy algo, merge smallest chunk into smallest neighbour

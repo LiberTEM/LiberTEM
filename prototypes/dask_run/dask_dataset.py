@@ -14,6 +14,7 @@ MMapBackend = backend_mmap.MMapBackend
 MMapFile = backend_mmap.MMapFile
 from libertem.io.dataset.memory import MemBackendImpl
 
+from merge_util import merge_until_target, get_chunksizes
 
 log = logging.getLogger(__name__)
 
@@ -206,6 +207,19 @@ class DaskDataSet(DataSet):
                            'of frame indexing in the flattened navigation dimension. '
                            f'Original n_blocks: {original_n_chunks}. '
                            f'New n_blocks: {[len(c) for c in array.chunks]}.'),
+                          DaskRechunkWarning)
+        # Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes
+        # or a minmum number of partitions corresponding to the number of workers
+        new_chunking, min_size, max_size = merge_until_target(array, self._min_size, self._min_npart)
+        if new_chunking != array.chunks:
+            original_n_chunks = [len(c) for c in array.chunks]
+            chunksizes = get_chunksizes(array)
+            orig_min, orig_max = chunksizes.min(), chunksizes.max()
+            array = array.rechunk(new_chunking)
+            warnings.warn(('Applying re-chunking to increase minimum partition size. '
+                           f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
+                           f'Min chunk size {orig_min / 1e6:.0f} => {min_size / 1e6:.0f} MiB , '
+                           f'Max chunk size {orig_max / 1e6:.0f} => {max_size / 1e6:.0f} MiB.'),
                           DaskRechunkWarning)
         # Warn about poor dataset chunking for zeroth dimension
         if len(array.chunks[0]) == 1:

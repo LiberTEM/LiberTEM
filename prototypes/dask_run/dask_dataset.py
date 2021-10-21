@@ -98,7 +98,7 @@ class DaskDataSet(DataSet):
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
-    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False, io_backend=None):
+    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False, min_size=128e6, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
@@ -108,6 +108,7 @@ class DaskDataSet(DataSet):
         self._sig_shape = self._array.shape[-self._sig_dims:]
         self._dtype = self._array.dtype
         self._preserve_dimension = preserve_dimensions
+        self._min_size = min_size
 
     @property
     def array(self):
@@ -120,6 +121,7 @@ class DaskDataSet(DataSet):
         return DaskBackend()
 
     def initialize(self, executor):
+        self._min_npart = len(executor.get_available_workers())
         self._array = self._adapt_chunking(self._array, self._sig_dims)
         self._nav_shape = self._array.shape[:-self._sig_dims]
 

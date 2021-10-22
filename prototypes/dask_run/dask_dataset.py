@@ -153,6 +153,16 @@ class DaskDataSet(DataSet):
         return array[slices[chunk_flat_idx]]
 
     def _adapt_chunking(self, array, sig_dims):
+        #Warn if there is no nav_dim chunking
+        n_nav_chunks = [len(dim_chunking) for dim_chunking in array.chunks[:-sig_dims]]
+        if set(n_nav_chunks) == {1}:
+            warnings.warn(('Dask array is not chunked in navigation dimensions, '
+                           'cannot split into nav-partitions without loading the '
+                           'whole dataset on each worker. '
+                           f'Array shape: {array.shape}. '
+                           f'Chunking: {array.chunks}. '
+                           f'Array size {array.nbytes / 1e6} MiB.'),
+                          DaskRechunkWarning)
         n_dimension = array.ndim
         # Handle chunked signal dimensions by merging just in case
         sig_dim_idxs = [*range(n_dimension)[-sig_dims:]]
@@ -218,13 +228,6 @@ class DaskDataSet(DataSet):
                            f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
                            f'Min chunk size {orig_min / 1e6:.0f} => {min_size / 1e6:.0f} MiB , '
                            f'Max chunk size {orig_max / 1e6:.0f} => {max_size / 1e6:.0f} MiB.'),
-                          DaskRechunkWarning)
-        # Warn about poor dataset chunking for zeroth dimension
-        if len(array.chunks[0]) == 1:
-            warnings.warn(('Zeroth dimension of the array is not chunked, '
-                           'this will likely lead to excessive memory usage '
-                           'by loading the whole dataset in one operation. '
-                           f'First chunk size is {self._get_chunk(array, 0).nbytes / 1e6:.1f} MiB'),
                           DaskRechunkWarning)
         return array
 

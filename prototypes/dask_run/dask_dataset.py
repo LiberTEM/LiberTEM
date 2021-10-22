@@ -47,6 +47,8 @@ class DaskBackendImpl(MemBackendImpl):
 
 class DaskDataSet(DataSet):
     """
+    DaskDataSet(DataSet)
+
     This dataset wraps a Dask.array.array and makes it compatible with the
     UDF interface. Partitions are created to be aligned with the array chunking
     where the restrictions of LiberTEM and Dask allow. When these restrictions are
@@ -54,13 +56,19 @@ class DaskDataSet(DataSet):
     to achieve compatible and optimal behaviour. Clearly there are no guarantees.
 
     This is only useful if the underlying Dask array was created using
-    lazy I/O with something like dask.delayed. If the root node for the
-    Dask task graph backing the array loads the whole dataset into memory
-    then you are better off using MemoryDataSet. Similarly if the dask_array
-    has been re-chunked without preserving the original lazy I/O structure
-    then this dataset will either underperform (read amplification) and at worst
-    will cause memory trouble as each worker may load large chunks of data
-    simultaneously.
+    lazy I/O with something like dask.delayed. The major assumption of this
+    class is that the chunks in the provided dask array can each be individually
+    .compute()'d without causing excessive read amplification. If this is not the case
+    then this class could perform very poorly. This could occur either if the
+    array was loaded without lazy, chunked I/O, or if upstream dask computations
+    requried rechunking of the array before it was passed to this class.
+
+    The class performs rechunking using a merge-only strategy, it will never
+    split chunks which were present in the original array. Naturally, if the array
+    is originally very lightly chunked, then the corresponding LiberTEM partitions
+    will be very large. There is also a soft assumption that the underlying file
+    is C-ordered, as we assume the signal dimensions are the rightmost and we use
+    a merge strategy from right-to-left.
 
     Parameters
     ----------
@@ -73,9 +81,10 @@ class DaskDataSet(DataSet):
         to treat as signal dimensions
 
     preserve_dimensions: bool, optional
-        Whether the prevent optimization of the dask_arry chunking to
-        avoid over-reading in a single partition. When False this can
-        result in a change of nav_shape relative to the original array
+        Whether the prevent optimization of the dask_arry chunking by
+        re-ordering the nav_shape to put the most chunked dimensions first.
+        When False this can result in a change of nav_shape relative to the
+        original array
         # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional

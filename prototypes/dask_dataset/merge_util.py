@@ -105,7 +105,7 @@ def merge_until_target(array, target, min_chunks):
     chunking = array.chunks
     if array.nbytes < target:
         # A really small dataset, better to treat as one partition
-        return tuple([(s,) for s in array.shape])
+        return tuple((s,) for s in array.shape)
     chunksizes = get_chunksizes(array)
     while chunksizes.size > min_chunks and chunksizes.min() < target:
         last_chunked_dim = get_last_chunked_dim(chunking)

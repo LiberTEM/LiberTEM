@@ -311,8 +311,6 @@ class DaskDataSet(DataSet):
             flat_slice = Slice(origin=self.slices_to_origin(flat_slices),
                                shape=Shape(self.slices_to_shape(flat_slices),
                                            sig_dims=self._sig_dims))
-            # This only works if the Dask chunking is contiguous in
-            # the first dimension, will not work for true blocks
             yield full_slices, flat_slice, start_frame, end_frame
 
     def _get_fileset(self):

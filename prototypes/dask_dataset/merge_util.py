@@ -3,6 +3,19 @@ import math
 import dask.array as da
 
 
+"""
+This file contains an implementation of a greedy chunk merging
+algorithm which:
+ - merges array chunks from right to left dimension-wise
+ - merges the smallest pairing of chunks in a dimension
+ - breaks ties from the right of a dimension
+ - stops when the minimum chunk byte-size is larger than a target
+ - (or) stops when there are fewer than a minimum number of chunks
+
+ The entry point is merge_until_target(array, target, min_chunks)
+"""
+
+
 def array_mult(*arrays):
     num_arrays = len(arrays)
     if num_arrays == 1:
@@ -32,8 +45,8 @@ def get_chunksizes(array, chunking=None):
     last_chunked = get_last_chunked_dim(chunking)
     if last_chunked < 0:
         return np.asarray(array.nbytes)
-    static_size = math.prod(shape[last_chunked+1:]) * el_bytes
-    chunksizes = array_mult(*chunking[:last_chunked+1]) * static_size
+    static_size = math.prod(shape[last_chunked + 1:]) * el_bytes
+    chunksizes = array_mult(*chunking[:last_chunked + 1]) * static_size
     return chunksizes
 
 
@@ -41,8 +54,9 @@ def modify_chunking(chunking, dim, merge_idxs):
     chunk_dim = chunking[dim]
     merge_idxs = tuple(sorted(merge_idxs))
     before = chunk_dim[:merge_idxs[0]]
-    after = chunk_dim[merge_idxs[1]+1:]
-    new_chunk_dim = tuple(before) + (sum(chunk_dim[merge_idxs[0]:merge_idxs[1]+1]),) + tuple(after)
+    after = chunk_dim[merge_idxs[1] + 1:]
+    merged_dim = (sum(chunk_dim[merge_idxs[0]:merge_idxs[1] + 1]),)
+    new_chunk_dim = tuple(before) + merged_dim + tuple(after)
     chunking = chunking[:dim] + (new_chunk_dim,) + chunking[dim + 1:]
     return chunking
 
@@ -54,11 +68,11 @@ def findall(sequence, val):
 def neighbour_idxs(sequence, idx):
     max_idx = len(sequence) - 1
     if idx > 0 and idx < max_idx:
-        return (idx-1, idx+1)
+        return (idx - 1, idx + 1)
     elif idx == 0:
-        return (None, idx+1)
+        return (None, idx + 1)
     elif idx == max_idx:
-        return (idx-1, None)
+        return (idx - 1, None)
     else:
         raise
 
@@ -80,7 +94,7 @@ def min_with_min_neighbor(sequence):
     pair = [sum(get_values(sequence, idxs)) for idxs in min_idx_pairs]
     min_pair = min(pair)
     min_pair_occurences = findall(pair, min_pair)
-    return min_idx_pairs[min_pair_occurences[-1]] # breaking ties from right
+    return min_idx_pairs[min_pair_occurences[-1]]  # breaking ties from right
 
 
 def get_values(sequence, idxs):
@@ -105,33 +119,15 @@ def merge_until_target(array, target, min_chunks):
     return chunking, chunksizes.min(), chunksizes.max()
 
 
-
 if __name__ == '__main__':
-    chunking = {0:(64,), 1:(10,), 2:-1, 3:-1}
+    chunking = {0: (8, 4, 3, 1, 7, 6), 1: (2, 7, 3, 7, 6, 1), 2: -1, 3: -1}
     shape = (sum(chunking[0]), sum(chunking[1]), 256, 256)
     sig_dims = 2
     dtype = np.float32
     ar = da.ones(shape, dtype=dtype, chunks=chunking)
 
+    print(f'START: {ar.chunks}')
     target = 128e6
     min_chunks = 3
     chunking, _min, _max = merge_until_target(ar, target, min_chunks)
-
-    """
-    Greedy algo, merge smallest chunk into smallest neighbour
-    until a certain target bytesize is met for all chunks
-    Criteria is minimum chunk bytesize on higher axes
-    as it's better to have bigger partitions than smaller
-    due to overheads. Could also exclude from merging
-    when a given chunk is already well above the target.
-    Have a multiplier for flexibility on the target so that
-    a really small chunk can be merged into a really big chunk
-    in the worst case where the big chunk is already bigger than the target
-    Add shortcut for where merging all chunks in a dimension is still
-    below the target size
-    Gotta be careful in really degenerate case when a
-    high dimension is bizarrely chunked, which skews min/max chunk sizes
-    for the current dimension. This should never happen in the current
-    case, though, as we'd expect all ones in higher dimensions!
-    """
-
+    print(f'END: {chunking}')

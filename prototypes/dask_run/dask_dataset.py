@@ -8,10 +8,7 @@ from libertem.common import Shape, Slice
 from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
-# from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
-import libertem.io.dataset.base.backend_mmap as backend_mmap
-MMapBackend = backend_mmap.MMapBackend
-MMapFile = backend_mmap.MMapFile
+from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
 from libertem.io.dataset.memory import MemBackendImpl
 
 from merge_util import merge_until_target, get_chunksizes

@@ -6,7 +6,7 @@ import dask.array as da
 
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import (
-    DataSet, DataSetMeta, BasePartition, File, FileSet
+    DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
 # from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
 import libertem.io.dataset.base.backend_mmap as backend_mmap
@@ -104,6 +104,7 @@ class DaskDataSet(DataSet):
         if io_backend is not None:
             raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
 
+        self._check_array(dask_array, sig_dims)
         self._array = dask_array
         self._sig_dims = sig_dims
         self._sig_shape = self._array.shape[-self._sig_dims:]
@@ -230,8 +231,32 @@ class DaskDataSet(DataSet):
                           DaskRechunkWarning)
         return array
 
+    def _check_array(self, array, sig_dims):
+        if not isinstance(array, da.Array):
+            raise DataSetException('Expected a Dask array as input, recieved '
+                                   f'{type(array)}.')
+        if not isinstance(sig_dims, int) and sig_dims >= 0:
+            raise DataSetException('Expected non-negative integer sig_dims,'
+                                   f'recieved {sig_dims}.')   
+        if any([np.isnan(c).any() for c in array.shape]):
+            raise DataSetException('Dask array has undetermined shape: '
+                                   f'{array.shape}.')
+        if any([np.isnan(c).any() for c in array.chunks]):
+            raise DataSetException('Dask array has unknown chunk sizes so cannot '
+                                   'be interpreted as a LiberTEM partitions. '
+                                   'Run array.compute_compute_chunk_sizes() '
+                                   'before passing to DaskDataSet, though this '
+                                   'may be performance-intensive. Chunking: '
+                                   f'{array.chunks}.')
+        if sig_dims >= array.ndim:
+            raise DataSetException(f'Number of sig_dims {sig_dims} not compatible '
+                                   f'with number of array dims {array.ndim}, '
+                                   'must be able to create partitions along nav '
+                                   'dimensions.')
+        return True
+
     def check_valid(self):
-        assert isinstance(self._array, da.Array)
+        return self._check_array(self._array, self._sig_dims)
 
     def get_num_partitions(self):
         return len(itertools.product(*self._array.chunks))

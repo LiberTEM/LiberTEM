@@ -96,7 +96,8 @@ class DaskDataSet(DataSet):
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
-    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False, min_size=128e6, io_backend=None):
+    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False,
+                 min_size=128e6, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
@@ -153,7 +154,7 @@ class DaskDataSet(DataSet):
         return array[slices[chunk_flat_idx]]
 
     def _adapt_chunking(self, array, sig_dims):
-        #Warn if there is no nav_dim chunking
+        # Warn if there is no nav_dim chunking
         n_nav_chunks = [len(dim_chunking) for dim_chunking in array.chunks[:-sig_dims]]
         if set(n_nav_chunks) == {1}:
             warnings.warn(('Dask array is not chunked in navigation dimensions, '
@@ -218,7 +219,8 @@ class DaskDataSet(DataSet):
                           DaskRechunkWarning)
         # Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes
         # or a minmum number of partitions corresponding to the number of workers
-        new_chunking, min_size, max_size = merge_until_target(array, self._min_size, self._min_npart)
+        new_chunking, min_size, max_size = merge_until_target(array, self._min_size,
+                                                              self._min_npart)
         if new_chunking != array.chunks:
             original_n_chunks = [len(c) for c in array.chunks]
             chunksizes = get_chunksizes(array)
@@ -237,7 +239,7 @@ class DaskDataSet(DataSet):
                                    f'{type(array)}.')
         if not isinstance(sig_dims, int) and sig_dims >= 0:
             raise DataSetException('Expected non-negative integer sig_dims,'
-                                   f'recieved {sig_dims}.')   
+                                   f'recieved {sig_dims}.')
         if any([np.isnan(c).any() for c in array.shape]):
             raise DataSetException('Dask array has undetermined shape: '
                                    f'{array.shape}.')
@@ -307,7 +309,8 @@ class DaskDataSet(DataSet):
         chunk_slices = self._chunk_slices(self._array)
 
         for full_slices in chunk_slices:
-            flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._nav_shape, self._sig_dims)
+            flat_slices, start_frame, end_frame = self.flatten_nav(full_slices, self._nav_shape,
+                                                                   self._sig_dims)
             flat_slice = Slice(origin=self.slices_to_origin(flat_slices),
                                shape=Shape(self.slices_to_shape(flat_slices),
                                            sig_dims=self._sig_dims))

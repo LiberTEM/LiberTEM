@@ -114,6 +114,19 @@ def test_com_fails_with_non_4d_data_2(lt_ctx):
         )
 
 
+def test_com_linescan(lt_ctx):
+    data = _mk_random(size=(1, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data.astype("<u2"),
+        tileshape=(1, 16, 16),
+        num_partitions=4,
+    )
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset, cx=0, cy=0, mask_radius=8
+    )
+    results = lt_ctx.run(analysis)
+
+
 def test_com_complex_numbers(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16), dtype="complex64")
     ds_complex = MemoryDataSet(

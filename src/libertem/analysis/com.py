@@ -258,9 +258,14 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             else:
                 vmax = 1
             f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0), vmax=vmax)
-            d = divergence(y_centers, x_centers)
-            c = curl_2d(y_centers, x_centers)
             m = magnitude(y_centers, x_centers)
+            if all([s > 1 for s in shape]):
+                d = divergence(y_centers, x_centers)
+                c = curl_2d(y_centers, x_centers)
+            else:
+                log.info(('Unable to calculate CoM gradients for 1D Datasets, '
+                          'returning zeros for div/curl results'))
+                d = c = np.zeros_like(m)
 
             return COMResultSet([
                 AnalysisResult(

@@ -263,8 +263,8 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                 d = divergence(y_centers, x_centers)
                 c = curl_2d(y_centers, x_centers)
             else:
-                log.info(('Unable to calculate CoM gradients for 1D Datasets, '
-                          'returning zeros for div/curl results'))
+                log.info('Unable to calculate CoM gradients for 1D Datasets, '
+                          'returning zeros for div/curl results')
                 d = c = np.zeros_like(m)
 
             return COMResultSet([

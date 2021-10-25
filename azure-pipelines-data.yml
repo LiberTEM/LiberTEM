@@ -45,7 +45,7 @@ stages:
         displayName: 'install tox'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
-        - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
+        - bash: ./venv/bin/tox -e notebooks -r -- examples/*.ipynb -v
           displayName: 'Run nbval tests $(Agent.OS) (recreating)'
 
       - ${{ if eq(parameters.recreate_tox, false) }}:

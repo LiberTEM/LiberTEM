@@ -259,7 +259,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                 vmax = 1
             f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0), vmax=vmax)
             m = magnitude(y_centers, x_centers)
-
+            # Create results which are valid for any nav_shape
             results_list = [
                 AnalysisResult(
                     raw_data=(x_centers, y_centers),
@@ -283,7 +283,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                     key="y", title="y", desc="y component of the center"
                 ),
             ]
-
+            # Add results which depend on np.gradient, i.e. all(nav_shape) > 1
             if all([s > 1 for s in shape]):
                 d = divergence(y_centers, x_centers)
                 c = curl_2d(y_centers, x_centers)

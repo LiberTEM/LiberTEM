@@ -124,7 +124,7 @@ def test_com_linescan(lt_ctx):
     analysis = lt_ctx.create_com_analysis(
         dataset=dataset, cx=0, cy=0, mask_radius=8
     )
-    results = lt_ctx.run(analysis)
+    lt_ctx.run(analysis)
 
 
 def test_com_complex_numbers(lt_ctx):

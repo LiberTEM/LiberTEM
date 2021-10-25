@@ -5,6 +5,14 @@ variables:
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
 
+parameters:
+  # by default, the tox environment is kept around, so we need this parameter
+  # as a way to manually re-create it, in case dependencies change.
+  - name: recreate_tox
+    displayName: Recreate tox environments?
+    type: boolean
+    default: false
+
 stages:
   - stage: test
     jobs:
@@ -36,8 +44,13 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
-        displayName: 'Run nbval tests $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
+          displayName: 'Run nbval tests $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
+          displayName: 'Run nbval tests $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -93,8 +106,13 @@ stages:
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
 
-      - bash: ./venv/bin/tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: ./venv/bin/tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: ./venv/bin/tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'

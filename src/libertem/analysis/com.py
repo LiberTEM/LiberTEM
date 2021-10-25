@@ -299,7 +299,9 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                         key="curl", title="curl", desc="curl of the 2D vector field"
                     ),
                 ]
-                results_list.extend(extra_results)
+                # Insert the results at position 2 for backwards compatibility/tests
+                # This could later be replaced with results_list.extend(extra_results)
+                results_list[2:2] = extra_results
 
         return COMResultSet(results_list)
 

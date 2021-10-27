@@ -21,7 +21,7 @@ cloudpickle==2.0.0
     #   libertem (../../setup.py)
 cycler==0.10.0
     # via matplotlib
-dask==2021.09.1
+dask==2021.10.0
     # via distributed
 defusedxml==0.7.1
     # via

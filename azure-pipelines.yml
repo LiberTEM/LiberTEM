@@ -231,23 +231,26 @@ stages:
           testRunTitle: 'Publish test results for Python $(python.version)'
 
     - job: macos_tests
-      pool:
-        vmImage: 'macOS-latest'
       strategy:
         matrix:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36'
-            vmImage: 'macos-10.14'
+            imageName: 'macos-10.14'
           Python37:
             python.version: '3.7'
             TOXENV: 'py37'
+            imageName: 'macos-latest'
           Python38:
             python.version: '3.8'
             TOXENV: 'py38'
+            imageName: 'macos-latest'
           Python39:
             python.version: '3.9'
             TOXENV: 'py39'
+            imageName: 'macos-latest'
+      pool:
+        vmImage: '$(imageName)'
       variables:
         TOXENV: '$(TOXENV)'
       steps:

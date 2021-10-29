@@ -238,6 +238,7 @@ stages:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36'
+            vmImage: 'macos-10.14'
           Python37:
             python.version: '3.7'
             TOXENV: 'py37'

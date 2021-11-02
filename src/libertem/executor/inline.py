@@ -1,5 +1,6 @@
 import cloudpickle
 import psutil
+import contextlib
 
 from .base import JobExecutor, Environment
 from .scheduler import Worker, WorkerSet
@@ -23,7 +24,11 @@ class InlineJobExecutor(JobExecutor):
         self._debug = debug
         self._inline_threads = inline_threads
 
-    def run_tasks(self, tasks, cancel_id):
+    @contextlib.contextmanager
+    def scatter(self, obj):
+        yield obj
+
+    def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
         threads = self._inline_threads
         if threads is None:
             threads = psutil.cpu_count(logical=False)
@@ -31,7 +36,7 @@ class InlineJobExecutor(JobExecutor):
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
-            result = task(env=env)
+            result = task(env=env, params=params_handle, const=const_handle)
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
             yield result, task

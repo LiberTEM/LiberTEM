@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Optional
 import logging
 import warnings
 
@@ -452,7 +452,7 @@ class Negotiator:
                 )
 
     def get_scheme(
-            self, udfs, partition, read_dtype: np.dtype, roi: np.ndarray,
+            self, udfs, partition, read_dtype: np.dtype, roi: Optional[np.ndarray],
             corrections: CorrectionSet = None):
         """
         Generate a :class:`TilingScheme` instance that is

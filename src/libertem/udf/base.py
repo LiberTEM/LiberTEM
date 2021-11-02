@@ -1058,7 +1058,7 @@ def check_cast(fromvar, tovar):
 class UDFParams:
     def __init__(
         self,
-        udfs: List[UDF],
+        kwargs: List[dict],
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
     ):
@@ -1067,16 +1067,21 @@ class UDFParams:
 
         Parameters
         ----------
-        udfs : List[UDF]
+        kwargs : List[dict]
             [description]
         roi : [type]
             [description]
         corrections : [type]
             [description]
         """
-        self._kwargs = [udf._kwargs for udf in udfs]
+        self._kwargs = kwargs
         self._roi = roi
         self._corrections = corrections
+
+    @classmethod
+    def from_udfs(cls, udfs, roi, corrections):
+        kwargs = [udf._kwargs for udf in udfs]
+        return cls(kwargs, roi, corrections)
 
     @property
     def roi(self):
@@ -1354,6 +1359,7 @@ class UDFRunner:
             udf.set_backend('cupy')
         udfs = numpy_udfs + cupy_udfs
         for udf in udfs:
+            udf.get_method()  # validate that one of the `process_*` methods is implemented
             udf.set_meta(meta)
             udf.init_result_buffers()
             udf.allocate_for_part(partition, roi)
@@ -1572,7 +1578,7 @@ class UDFRunner:
                 udf.preprocess()
             # TODO fill with life later
             const.append(UDFConst())
-        params = UDFParams(
+        params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
             corrections=corrections

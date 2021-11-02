@@ -1704,7 +1704,7 @@ class UDFRunner:
         Make per-worker constant data (constant for the whole UDF run, as
         opposed to the constant-per-partition task data).
 
-        This is run on the worker itself.
+        This is run on workers or on the main node at the discretion of the executor.
         """
         # TODO: this data can be put into shared memory, which is something
         # our interface should allow for.

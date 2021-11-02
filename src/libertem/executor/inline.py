@@ -1,8 +1,9 @@
+from typing import Any, Iterable
 import cloudpickle
 import psutil
 import contextlib
 
-from .base import JobExecutor, Environment
+from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 
@@ -28,7 +29,13 @@ class InlineJobExecutor(JobExecutor):
     def scatter(self, obj):
         yield obj
 
-    def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        const_handle: Any,
+        cancel_id: Any,
+    ):
         threads = self._inline_threads
         if threads is None:
             threads = psutil.cpu_count(logical=False)

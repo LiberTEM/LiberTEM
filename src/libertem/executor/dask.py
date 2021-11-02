@@ -3,13 +3,14 @@ from copy import deepcopy
 import functools
 import logging
 import signal
+from typing import Iterable, Any
 
 from dask import distributed as dd
 
 from libertem.utils.threading import set_num_threads_env
 
 from .base import (
-    JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter,
+    JobExecutor, JobCancelledError, TaskProtocol, sync_to_async, AsyncAdapter,
     Environment,
 )
 from .scheduler import Worker, WorkerSet
@@ -257,7 +258,13 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
     def scatter(self, obj):
         yield self.client.scatter(obj, broadcast=True)
 
-    def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        const_handle: Any,
+        cancel_id: Any,
+    ):
         tasks = list(tasks)
         tasks_w_index = list(enumerate(tasks))
 

@@ -1,7 +1,8 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional
+from typing import Optional, Any, Iterable
+from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
 
@@ -54,25 +55,9 @@ class Environment:
             yield self
 
 
-class TaskProxy:
-    """
-    This type wraps `UDFTask` and adds executor-specific information
-    and behavior
-    """
-    def __init__(self, task):
-        self.task = task
-
-    def __getattr__(self, k):
-        if k in ["task"]:
-            return super().__getattr__(k)
-        return getattr(self.task, k)
-
-    def __call__(self, *args, **kwargs):
-        env = Environment(threads_per_worker=None)
-        return self.task(env=env)
-
-    def __repr__(self):
-        return f"<TaskProxy: {self.task!r}>"
+class TaskProtocol(Protocol):
+    def __call__(self, env: Environment, params: Any, const: Any):
+        pass
 
 
 class JobExecutor:
@@ -100,7 +85,28 @@ class JobExecutor:
         '''
         raise NotImplementedError()
 
-    def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        const_handle: Any,
+        cancel_id: Any,
+    ):
+        """
+        Run the tasks with the given parameters and constant parameters.
+
+        Parameters
+        ----------
+        tasks
+            The tasks to be run
+        params_handle : [type]
+            A handle for the task parameters, as returned from :meth:`JobExecutor.scatter`
+        const_handle : [type]
+            A handle for the constant task parameters, as returned from :meth:`JobExecutor.scatter`
+        cancel_id
+            An identifier which can be used for cancelling all tasks together. The
+            same identifier should be passed to :meth:`AsyncJobExecutor.cancel`
+        """
         raise NotImplementedError()
 
     def run_each_partition(self, partitions, fn, all_nodes=False):

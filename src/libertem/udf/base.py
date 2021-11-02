@@ -1068,11 +1068,12 @@ class UDFParams:
         Parameters
         ----------
         kwargs : List[dict]
-            [description]
-        roi : [type]
-            [description]
-        corrections : [type]
-            [description]
+            List of kwargs which can be used to re-create the UDF instances
+            that were passed to `run_for_dataset`
+        roi
+            Boolean array to select parts of the navigation space
+        corrections
+            Corrections to apply
         """
         self._kwargs = kwargs
         self._roi = roi

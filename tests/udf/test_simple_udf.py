@@ -556,7 +556,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         partition = next(dataset.get_partitions())
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
         # Enabling debug=True checks for disjoint cache keys
-        params = UDFParams(
+        params = UDFParams.from_udfs(
             udfs=[udf],
             roi=None,
             corrections=None

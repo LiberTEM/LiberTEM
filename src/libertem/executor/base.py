@@ -3,6 +3,7 @@ import functools
 import asyncio
 from typing import Optional
 from contextlib import contextmanager
+from async_generator import asynccontextmanager
 
 from libertem.utils.threading import set_num_threads
 from libertem.utils.async_utils import (
@@ -79,6 +80,27 @@ class JobExecutor:
         """
         run a callable `fn` on any worker
         """
+        raise NotImplementedError()
+
+    @contextmanager
+    def scatter(self, obj):
+        '''
+        Scatter :code:`obj` throughout the cluster
+
+        Parameters
+        ----------
+
+        obj
+            Some kind of Python object or variable
+
+        Returns
+        -------
+        handle
+            Handle for the scattered :code:`obj`
+        '''
+        raise NotImplementedError()
+
+    def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
         raise NotImplementedError()
 
     def run_each_partition(self, partitions, fn, all_nodes=False):
@@ -204,7 +226,7 @@ class JobExecutor:
 
 
 class AsyncJobExecutor:
-    async def run_tasks(self, tasks, cancel_id):
+    async def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples
         """
@@ -305,11 +327,23 @@ class AsyncAdapter(AsyncJobExecutor):
     def ensure_sync(self):
         return self._wrapped
 
-    async def run_tasks(self, tasks, cancel_id):
+    @asynccontextmanager
+    async def scatter(self, obj):
+        try:
+            res = await sync_to_async(self._wrapped.scatter.__enter__, self._pool)
+            yield res
+        finally:
+            exit_fn = functools.partial(
+                self._wrapped.scatter.__exit__,
+                None, None, None,  # FIXME: exc_type, exc_value, traceback?
+            )
+            await sync_to_async(exit_fn, self._pool)
+
+    async def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
         """
         run a number of Tasks
         """
-        gen = self._wrapped.run_tasks(tasks, cancel_id)
+        gen = self._wrapped.run_tasks(tasks, params_handle, const_handle, cancel_id)
         agen = async_generator_eager(gen, self._pool)
         async for i in agen:
             yield i

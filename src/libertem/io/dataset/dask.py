@@ -100,7 +100,7 @@ class DaskDataSet(DataSet):
                  min_size=128e6, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
-            raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
+            raise DataSetException("DaskDataSet currently doesn't support alternative I/O backends")
 
         self._check_array(dask_array, sig_dims)
         self._array = dask_array

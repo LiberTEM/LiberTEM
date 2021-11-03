@@ -9,7 +9,7 @@ from libertem.udf.sum import SumUDF
 from libertem.io.dataset.base import DataSetException
 from libertem.io.dataset.dask import DaskDataSet
 
-# from utils import dataset_correction_verification
+from utils import dataset_correction_verification
 
 
 def _create_chunk(shape, dtype, value=1):
@@ -272,20 +272,21 @@ def test_part_file_mapping2(lt_ctx):
         assert np.allclose(np.unique(np.asarray(macrotile)), sequence)
         sequence += sequence.size
 
-# @pytest.mark.parametrize(
-#     "with_roi", (True, False)
-# )
-# def test_correction(lt_ctx, with_roi):
-#     data = _mk_dask_from_delayed(shape=(16, 16, 16, 16), chunking=(16, -1, -1, -1))
-#     ds = lt_ctx.load('dask', data, sig_dims=2)
 
-#     if with_roi:
-#         roi = np.zeros(ds.shape.nav, dtype=bool)
-#         roi[:1] = True
-#     else:
-#         roi = None
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_correction(lt_ctx, with_roi):
+    data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, -1, -1, -1))
+    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
 
-#     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 # def test_positive_sync_offset(lt_ctx):

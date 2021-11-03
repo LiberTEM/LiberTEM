@@ -8,8 +8,7 @@ from libertem.common import Shape, Slice
 from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
-from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
-from libertem.io.dataset.memory import MemBackendImpl
+from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend, MMapBackendImpl
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class DaskBackend(MMapBackend):
         return DaskBackendImpl()
 
 
-class DaskBackendImpl(MemBackendImpl):
+class DaskBackendImpl(MMapBackendImpl):
     FILE_CLS = FakeDaskMMapFile
 
 

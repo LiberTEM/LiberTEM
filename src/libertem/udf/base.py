@@ -1,5 +1,5 @@
-from typing import Dict, Optional, List, Type, Iterable, Union
-from typing_extensions import Protocol, runtime_checkable
+from typing import Dict, Optional, List, Type, Iterable, Union, Set
+from typing_extensions import Protocol, runtime_checkable, Literal
 import warnings
 import logging
 import uuid
@@ -27,7 +27,14 @@ from libertem.executor.base import Environment, JobExecutor
 
 log = logging.getLogger(__name__)
 
-BackendSpec = Union[str, Iterable[str]]
+Backend = Literal['numpy', 'cuda', 'cupy']
+BackendSpec = Union[Backend, Iterable[Backend]]
+ResourceDef = Dict[
+    Literal[
+        'CPU', 'compute', 'ndarray', 'CUDA',
+    ],
+    int
+]
 
 
 class UDFMeta:
@@ -174,6 +181,7 @@ class UDFMeta:
                 self._dataset_shape,
                 self._roi
             )
+        assert self._slice is not None
         shifted_slice = self._slice.shift(self._partition_slice)
         return shifted_slice.get(arr=self._cached_coordinates, nav_only=True)
 
@@ -243,7 +251,7 @@ class UDFData:
 
     def __init__(self, data: Dict[str, BufferWrapper]):
         self._data = data
-        self._views = {}
+        self._views: Dict[str, np.ndarray] = {}
 
     def __repr__(self) -> str:
         return "<UDFData: %r>" % (
@@ -574,9 +582,12 @@ class UDFBase:
     def set_slice(self, slice_):
         self.meta.slice = slice_
 
-    def set_backend(self, backend):
+    def set_backend(self, backend: Backend):
         assert backend in self.get_backends()
         self._backend = backend
+
+    def get_backends(self) -> BackendSpec:
+        raise NotImplementedError()  # see impl in UDF.get_backends
 
     @property
     def xp(self):
@@ -907,7 +918,7 @@ class UDF(UDFBase):
             "total_size": UDF.TILE_SIZE_MAX,
         }
 
-    def get_backends(self):
+    def get_backends(self) -> BackendSpec:
         # TODO see interaction with C++ CUDA modules requires a different type than CuPy
         '''
         Signal which computation back-ends the UDF can use.
@@ -927,7 +938,8 @@ class UDF(UDFBase):
             An iterable containing possible values :code:`numpy` (default), :code:`'cuda'` and
             :code:`cupy`
         '''
-        return ('numpy', )
+        # mypy error here fixed in master: https://github.com/python/mypy/pull/11236
+        return ('numpy', )  # type: ignore
 
     def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
         pass
@@ -1119,7 +1131,7 @@ class Task:
     def get_locations(self):
         return self.partition.get_locations()
 
-    def get_resources(self):
+    def get_resources(self) -> ResourceDef:
         '''
         Specify the resources that a Task will use.
 
@@ -1181,6 +1193,71 @@ class Task:
         raise NotImplementedError()
 
 
+def _get_canonical_backends(backends: Optional[BackendSpec]) -> Set[Backend]:
+    """
+    Convert from either an iterable of backends or a simple string form into a
+    canonical form of Set[str]
+    """
+    if backends is None:
+        return set()
+    if isinstance(backends, str):
+        backends = (backends,)
+    return set(backends)
+
+
+def get_resources_for_backends(
+    udf_backends: List[BackendSpec],
+    user_backends: Optional[BackendSpec]
+) -> ResourceDef:
+    """
+    Find the resource definition that is appropriate for the backends specified
+    by the UDFs and the user. This is the intersection between the backend specified
+    in each UDF, and the backend that was sepected by the user.
+
+    Parameters
+    ----------
+    udf_backends
+        The backends specified by each UDF that we want to run
+
+    user_backends
+        The backends specified by the user
+
+    See :meth:`Task.get_resources` for details.
+    """
+    udf_backends_canonical = [
+        _get_canonical_backends(bs)
+        for bs in udf_backends
+    ]
+    user_backends_canonical = _get_canonical_backends(user_backends)
+
+    needs_cuda = 0
+    needs_cpu = 0
+    needs_ndarray = 0
+
+    # Limit to externally specified backends
+    for backend_set in udf_backends_canonical:
+        if user_backends_canonical:
+            backends = set(user_backends_canonical).intersection(backend_set)
+        else:
+            backends = backend_set
+        needs_cuda += 'numpy' not in backends
+        needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
+        needs_ndarray += 'cuda' not in backends
+    if needs_cuda and needs_cpu:
+        raise ValueError(
+            "There is no common supported UDF backend (have: %r, limited to %r)"
+            % (udf_backends, user_backends_canonical)
+        )
+    result: ResourceDef = {'compute': 1}
+    if needs_cpu:
+        result['CPU'] = 1
+    if needs_cuda:
+        result['CUDA'] = 1
+    if needs_ndarray:
+        result['ndarray'] = 1
+    return result
+
+
 class UDFTask(Task):
     def __init__(
         self,
@@ -1209,11 +1286,7 @@ class UDFTask(Task):
         super().__init__(partition=partition, idx=idx)
         self._backends = backends
         self._udf_classes = udf_classes
-        self._udf_backends = []
-        for backends_for_udf in udf_backends:
-            if isinstance(backends_for_udf, str):
-                backends_for_udf = (backends_for_udf,)
-            self._udf_backends.append(set(backends_for_udf))
+        self._udf_backends = udf_backends
 
     def __call__(self, params: UDFParams, const: UDFConst, env: Environment):
         udfs = [
@@ -1224,41 +1297,13 @@ class UDFTask(Task):
             self.partition, params, const, env,
         )
 
-    def get_resources(self):
+    def get_resources(self) -> ResourceDef:
         """
         Intersection of resources of all UDFs, throws if empty.
 
         See docstring of super class for details.
         """
-        needs_cuda = 0
-        needs_cpu = 0
-        needs_ndarray = 0
-
-        # Limit to externally specified backends
-        for backend_set in self._udf_backends:
-            if self._backends is not None:
-                b = self._backends
-                if isinstance(b, str):
-                    b = (b, )
-                backends = set(b).intersection(backend_set)
-            else:
-                backends = backend_set
-            needs_cuda += 'numpy' not in backends
-            needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
-            needs_ndarray += 'cuda' not in backends
-        if needs_cuda and needs_cpu:
-            raise ValueError(
-                "There is no common supported UDF backend (have: %r, limited to %r)"
-                % (self._udf_backends, self._backends)
-            )
-        result = {'compute': 1}
-        if needs_cpu:
-            result['CPU'] = 1
-        if needs_cuda:
-            result['CUDA'] = 1
-        if needs_ndarray:
-            result['ndarray'] = 1
-        return result
+        return get_resources_for_backends(self._udf_backends, user_backends=self._backends)
 
     def __repr__(self):
         return f"<UDFTask {self._udf_classes!r}>"

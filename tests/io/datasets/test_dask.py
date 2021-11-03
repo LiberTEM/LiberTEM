@@ -222,6 +222,18 @@ def test_3d_array(lt_ctx):
     assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (16,), (16,))
 
 
+def test_4d_1sig_array(lt_ctx):
+    data = _mk_dask_from_delayed(shape=(5, 36, 50, 16), chunking=(1, 6, 10, 8))
+    ds = lt_ctx.load('dask', data, sig_dims=1, preserve_dimensions=True, min_size=0.)
+    assert tuple(ds.array.chunks) == ((1,) * 5, (6,) * 6, (50,), (16,))
+
+
+def test_4d_3sig_array(lt_ctx):
+    data = _mk_dask_from_delayed(shape=(5, 36, 50, 16), chunking=(1, 6, 10, 8))
+    ds = lt_ctx.load('dask', data, sig_dims=3, preserve_dimensions=True, min_size=0.)
+    assert tuple(ds.array.chunks) == ((1,) * 5, (36,), (50,), (16,))
+
+
 def test_5d_array(lt_ctx):
     data = _mk_dask_from_delayed(shape=(8, 4, 5, 16, 16), chunking=(4, 2, 1, 8, 8))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)

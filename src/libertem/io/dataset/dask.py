@@ -249,7 +249,7 @@ class DaskDataSet(DataSet):
         return self._check_array(self._array, self._sig_dims)
 
     def get_num_partitions(self):
-        return len(itertools.product(*self._array.chunks))
+        return len([*itertools.product(*self._array.chunks)])
 
     @staticmethod
     def chunks_to_slices(chunk_lengths):

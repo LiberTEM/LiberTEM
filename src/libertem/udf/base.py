@@ -1109,12 +1109,6 @@ class UDFParams:
         return self._kwargs
 
 
-class UDFConst:
-    # TODO fill with life late, pass around as "item" for now
-    # to develop the correct executor - UDFRunner - UDF relationship
-    pass
-
-
 class Task:
     """
     A computation on a partition. Inherit from this class and implement ``__call__``
@@ -1189,7 +1183,7 @@ class Task:
         # No CUDA support for the deprecated Job interface
         return {'CPU': 1, 'compute': 1, 'ndarray': 1}
 
-    def __call__(self, params: UDFParams, const: UDFConst, env: Environment):
+    def __call__(self, params: UDFParams, env: Environment):
         raise NotImplementedError()
 
 
@@ -1288,13 +1282,13 @@ class UDFTask(Task):
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
 
-    def __call__(self, params: UDFParams, const: UDFConst, env: Environment):
+    def __call__(self, params: UDFParams, env: Environment):
         udfs = [
             cls.new_for_partition(kwargs, self.partition, params.roi)
             for cls, kwargs in zip(self._udf_classes, params.kwargs)
         ]
         return UDFRunner(udfs).run_for_partition(
-            self.partition, params, const, env,
+            self.partition, params, env,
         )
 
     def get_resources(self) -> ResourceDef:
@@ -1547,7 +1541,6 @@ class UDFRunner:
         self,
         partition: Partition,
         params: UDFParams,
-        const: UDFConst,
         env: Environment
     ):
         roi = params.roi
@@ -1568,14 +1561,11 @@ class UDFRunner:
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
                 (meta, tiling_scheme, dtype) = self._init_udfs(
-                    # TODO pass in const
                     numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
                 )
                 # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)
-                # TODO pass in const
                 self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
-                # TODO pass in const
                 self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
             finally:
                 if previous_id is not None:
@@ -1613,7 +1603,6 @@ class UDFRunner:
             input_dtype=self._get_dtype(dataset.dtype, corrections),
             corrections=corrections,
         )
-        const = []
         for udf in self._udfs:
             udf.set_meta(meta)
             udf.init_result_buffers()
@@ -1622,8 +1611,6 @@ class UDFRunner:
             if hasattr(udf, 'preprocess'):
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
-            # TODO fill with life later
-            const.append(UDFConst())
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
@@ -1633,7 +1620,7 @@ class UDFRunner:
             tasks = []
         else:
             tasks = list(self._make_udf_tasks(dataset, roi, backends))
-        return (tasks, params, const)
+        return (tasks, params)
 
     def run_for_dataset(self, dataset: DataSet, executor,
                         roi=None, progress=False, corrections=None, backends=None, dry=False):
@@ -1659,7 +1646,7 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         dry: bool = False
     ):
-        tasks, params, const = self._prepare_run_for_dataset(
+        tasks, params = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends, dry
         )
         cancel_id = str(uuid.uuid4())
@@ -1674,13 +1661,11 @@ class UDFRunner:
             if progress:
                 from tqdm import tqdm
                 t = tqdm(total=len(tasks))
-            with executor.scatter(params) as params_handle,\
-                    executor.scatter(const) as const_handle:
+            with executor.scatter(params) as params_handle:
                 if tasks:
                     result_iter = executor.run_tasks(
                         tasks,
                         params_handle,
-                        const_handle,
                         cancel_id,
                     )
                     for part_results, task in result_iter:
@@ -1743,23 +1728,6 @@ class UDFRunner:
 
     def _roi_for_partition(self, roi, partition: Partition):
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
-
-    def _make_udf_const_data(self, udf_classes, dataset: DataSet, roi, corrections, backends):
-        """
-        Make per-worker constant data (constant for the whole UDF run, as
-        opposed to the constant-per-partition task data).
-
-        This is run on workers or on the main node at the discretion of the executor.
-        """
-        # TODO: this data can be put into shared memory, which is something
-        # our interface should allow for.
-        data = UDFConst(
-            # udf_classes=udf_classes,
-            roi=roi,
-            corrections=corrections,
-            backends=backends,
-        )
-        return data
 
     def _make_udf_tasks(
         self,

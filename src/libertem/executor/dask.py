@@ -90,7 +90,7 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
     return workers_spec
 
 
-def _run_task(task, params, const, task_id):
+def _run_task(task, params, task_id):
     """
     Very simple wrapper function. As dask internally caches functions that are
     submitted to the cluster in various ways, we need to make sure to
@@ -100,7 +100,7 @@ def _run_task(task, params, const, task_id):
     cache, which blows up memory usage over time.
     """
     env = Environment(threads_per_worker=1)
-    task_result = task(env=env, params=params, const=const)
+    task_result = task(env=env, params=params)
     return {
         "task_result": task_result,
         "task_id": task_id,
@@ -180,7 +180,7 @@ class CommonDaskMixin:
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_future(self, task, workers, idx, params_handle, const_handle):
+    def _get_future(self, task, workers, idx, params_handle):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
         return self._future_for_location(
@@ -192,7 +192,6 @@ class CommonDaskMixin:
             workers,
             task_args=(
                 params_handle,
-                const_handle,
                 idx,
             )
         )
@@ -262,7 +261,6 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self,
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
-        const_handle: Any,
         cancel_id: Any,
     ):
         tasks = list(tasks)
@@ -280,7 +278,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             if not tasks_w_index:
                 break
             idx, wrapped_task = tasks_w_index.pop(0)
-            future = self._get_future(wrapped_task, workers, idx, params_handle, const_handle)
+            future = self._get_future(wrapped_task, workers, idx, params_handle)
             initial.append(future)
             self._futures[cancel_id].append(future)
 
@@ -295,7 +293,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
                 if tasks_w_index:
                     idx, wrapped_task = tasks_w_index.pop(0)
                     future = self._get_future(
-                        wrapped_task, workers, idx, params_handle, const_handle
+                        wrapped_task, workers, idx, params_handle,
                     )
                     as_completed.add(future)
                     self._futures[cancel_id].append(future)

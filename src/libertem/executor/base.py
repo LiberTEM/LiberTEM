@@ -56,7 +56,7 @@ class Environment:
 
 
 class TaskProtocol(Protocol):
-    def __call__(self, env: Environment, params: Any, const: Any):
+    def __call__(self, env: Environment, params: Any):
         pass
 
 
@@ -89,11 +89,10 @@ class JobExecutor:
         self,
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
-        const_handle: Any,
         cancel_id: Any,
     ):
         """
-        Run the tasks with the given parameters and constant parameters.
+        Run the tasks with the given parameters
 
         Parameters
         ----------
@@ -101,8 +100,6 @@ class JobExecutor:
             The tasks to be run
         params_handle : [type]
             A handle for the task parameters, as returned from :meth:`JobExecutor.scatter`
-        const_handle : [type]
-            A handle for the constant task parameters, as returned from :meth:`JobExecutor.scatter`
         cancel_id
             An identifier which can be used for cancelling all tasks together. The
             same identifier should be passed to :meth:`AsyncJobExecutor.cancel`
@@ -232,7 +229,7 @@ class JobExecutor:
 
 
 class AsyncJobExecutor:
-    async def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
+    async def run_tasks(self, tasks, params_handle, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples
         """
@@ -345,11 +342,11 @@ class AsyncAdapter(AsyncJobExecutor):
             )
             await sync_to_async(exit_fn, self._pool)
 
-    async def run_tasks(self, tasks, params_handle, const_handle, cancel_id):
+    async def run_tasks(self, tasks, params_handle, cancel_id):
         """
         run a number of Tasks
         """
-        gen = self._wrapped.run_tasks(tasks, params_handle, const_handle, cancel_id)
+        gen = self._wrapped.run_tasks(tasks, params_handle, cancel_id)
         agen = async_generator_eager(gen, self._pool)
         async for i in agen:
             yield i

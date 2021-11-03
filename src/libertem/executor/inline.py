@@ -33,7 +33,6 @@ class InlineJobExecutor(JobExecutor):
         self,
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
-        const_handle: Any,
         cancel_id: Any,
     ):
         threads = self._inline_threads
@@ -43,7 +42,7 @@ class InlineJobExecutor(JobExecutor):
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
-            result = task(env=env, params=params_handle, const=const_handle)
+            result = task(env=env, params=params_handle)
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
             yield result, task

@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pytest
 
-from libertem.udf.base import UDF, UDFRunner, UDFParams, UDFConst
+from libertem.udf.base import UDF, UDFRunner, UDFParams
 from libertem.udf.base import UDFMeta
 from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
@@ -561,12 +561,9 @@ def test_noncontiguous_tiles(lt_ctx, backend):
             roi=None,
             corrections=None
         )
-        # TODO fill with actual implementation later
-        const = [UDFConst()]
         UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,
             params=params,
-            const=const,
             env=Environment(threads_per_worker=1),
         )
 

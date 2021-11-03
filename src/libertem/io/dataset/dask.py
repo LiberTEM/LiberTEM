@@ -26,9 +26,8 @@ class FakeDaskMMapFile(MMapFile):
         return self
 
     def close(self):
-        self._arr = None
-        self._mmap = None
-
+        del self._arr
+        del self._mmap
 
 class DaskBackend(MMapBackend):
     def get_impl(self):

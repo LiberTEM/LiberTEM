@@ -11,13 +11,7 @@ from libertem.io.dataset.base import (
 from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
 from libertem.io.dataset.memory import MemBackendImpl
 
-from merge_util import merge_until_target, get_chunksizes
-
 log = logging.getLogger(__name__)
-
-class DaskRechunkWarning(RuntimeWarning):
-    pass
-warnings.simplefilter('always', DaskRechunkWarning)
 
 
 class FakeDaskMMapFile(MMapFile):
@@ -47,8 +41,6 @@ class DaskBackendImpl(MemBackendImpl):
 
 class DaskDataSet(DataSet):
     """
-    DaskDataSet(DataSet)
-
     This dataset wraps a Dask.array.array and makes it compatible with the
     UDF interface. Partitions are created to be aligned with the array chunking
     where the restrictions of LiberTEM and Dask allow. When these restrictions are
@@ -123,9 +115,6 @@ class DaskDataSet(DataSet):
     def array(self):
         return self._array
 
-    def _get_decoder(self):
-        return None
-
     def get_io_backend(self):
         return DaskBackend()
 
@@ -157,10 +146,6 @@ class DaskDataSet(DataSet):
         chunks = array.chunks
         boundaries = tuple(tuple(self.chunks_to_slices(chunk_lengths)) for chunk_lengths in chunks)
         return tuple(itertools.product(*boundaries))
-
-    def _get_chunk(self, array, chunk_flat_idx):
-        slices = self._chunk_slices(array)
-        return array[slices[chunk_flat_idx]]
 
     def _adapt_chunking(self, array, sig_dims):
         n_dimension = array.ndim
@@ -284,10 +269,6 @@ class DaskDataSet(DataSet):
     @staticmethod
     def slices_to_origin(slices):
         return tuple(s.start for s in slices)
-
-    @staticmethod
-    def slices_to_end(slices):
-        return tuple(s.stop for s in slices)
 
     @staticmethod
     def flatten_nav(slices, nav_shape, sig_dims):

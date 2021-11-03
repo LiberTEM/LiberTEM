@@ -116,12 +116,16 @@ def _mk_dask_from_delayed(shape, chunking, dtype='float32', indexed_values=False
     return da.block(blocks)
 
 
-def test_get_macrotile(lt_ctx):
+@pytest.mark.parametrize(
+    "dest_dtype", ('float32', 'int32')
+)
+def test_get_macrotile(lt_ctx, dest_dtype):
     data = _mk_dask_from_delayed(shape=(16, 16, 16, 16), chunking=(1, -1, -1, -1))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True)
     p = next(ds.get_partitions())
-    mt = p.get_macrotile()
+    mt = p.get_macrotile(dest_dtype=dest_dtype)
     assert tuple(mt.shape) == (256, 16, 16)
+    assert mt.dtype == np.dtype(dest_dtype)
 
 
 def test_merge_sig(lt_ctx):
@@ -287,6 +291,3 @@ def test_correction(lt_ctx, with_roi):
         roi = None
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
-
-
-# test read dtypes and preprocess

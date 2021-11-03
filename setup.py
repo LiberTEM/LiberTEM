@@ -156,7 +156,7 @@ setup(
         'jsonschema',
         'scikit-learn',
         'tqdm',
-        'threadpoolctl',
+        'threadpoolctl>=3.0',
         'primesieve',
         'nbformat',
         'nbconvert',

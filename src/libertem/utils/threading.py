@@ -95,16 +95,14 @@ def set_numba_threads(n):
 
 class ThreadpoolWrapper:
     def __init__(self, repeats=2):
-        # FIXME switch to released version as soon as ThreadpoolController is available
-        from . import threadpoolctl
+        import threadpoolctl
         self._info = threadpoolctl.threadpool_info()
         self._controller = threadpoolctl.ThreadpoolController()
         self._stable = 0
         self.repeats = repeats
 
     def check_update(self):
-        # FIXME switch to released version as soon as ThreadpoolController is available
-        from . import threadpoolctl
+        import threadpoolctl
         new_info = threadpoolctl.threadpool_info()
         if new_info != self._info:
             self._stable = 0

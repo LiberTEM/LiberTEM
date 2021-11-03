@@ -4,16 +4,12 @@ import dask
 import dask.array as da
 import itertools
 
-from libertem.io.dataset.base import TilingScheme
-from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.sum import SumUDF
 from libertem.io.dataset.base import DataSetException
-
 from libertem.io.dataset.dask import DaskDataSet
 
-from utils import _mk_random
-from utils import dataset_correction_verification
+# from utils import dataset_correction_verification
 
 
 def _create_chunk(shape, dtype, value=1):
@@ -115,7 +111,7 @@ def _mk_dask_from_delayed(shape, chunking, dtype='float32', indexed_values=False
         )
         blocks.append(chunk)
 
-    nblocks_per_dim = tuple([len(ss) for ss in slices_per_dim])
+    nblocks_per_dim = tuple(len(ss) for ss in slices_per_dim)
     blocks = _reshape_list(blocks, nblocks_per_dim)
     return da.block(blocks)
 
@@ -197,7 +193,7 @@ def test_check_sig_dims2(lt_ctx):
     data = da.random.random(size=(5, 25, 16, 16), chunks=((-1,) * 4))
 
     with pytest.raises(DataSetException):
-        lt_ctx.load('dask', data, sig_dims=7)   
+        lt_ctx.load('dask', data, sig_dims=7)
 
 
 def test_io_backend():

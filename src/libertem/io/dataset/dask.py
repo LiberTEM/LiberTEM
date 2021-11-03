@@ -230,16 +230,14 @@ class DaskDataSet(DataSet):
         if not isinstance(sig_dims, int) and sig_dims >= 0:
             raise DataSetException('Expected non-negative integer sig_dims,'
                                    f'recieved {sig_dims}.')
-        if any([np.isnan(c).any() for c in array.shape]):
-            raise DataSetException('Dask array has undetermined shape: '
-                                   f'{array.shape}.')
-        if any([np.isnan(c).any() for c in array.chunks]):
-            raise DataSetException('Dask array has unknown chunk sizes so cannot '
-                                   'be interpreted as a LiberTEM partitions. '
+        if any([np.isnan(c).any() for c in array.shape])\
+           or any([np.isnan(c).any() for c in array.chunks]):
+            raise DataSetException('Dask array has an unknown shape or chunk sizes '
+                                   'so cannot be interpreted as a LiberTEM partitions. '
                                    'Run array.compute_compute_chunk_sizes() '
                                    'before passing to DaskDataSet, though this '
                                    'may be performance-intensive. Chunking: '
-                                   f'{array.chunks}.')
+                                   f'{array.chunks}, Shape {array.shape}')
         if sig_dims >= array.ndim:
             raise DataSetException(f'Number of sig_dims {sig_dims} not compatible '
                                    f'with number of array dims {array.ndim}, '

@@ -142,8 +142,12 @@ def test_contig_nav(lt_ctx):
 
 def test_reorient_nav(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(5, 1, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
+    sig_dims = 2
+    ds = lt_ctx.load('dask', data, sig_dims=sig_dims, min_size=0.)
     assert tuple(ds.array.chunks) == ((1,) * data.shape[1], (5,), (16,), (16,))
+    assert ds.array.shape == (25, 5, 16, 16)
+    assert tuple(reversed(sorted(len(c) for c in ds.array.chunks[:-sig_dims])))\
+           == tuple(len(c) for c in ds.array.chunks[:-sig_dims])
 
 
 def test_size_based_merging(lt_ctx):

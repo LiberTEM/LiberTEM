@@ -12,8 +12,13 @@ from libertem.io.dataset.dask import DaskDataSet
 from utils import dataset_correction_verification
 
 
-def _create_chunk(shape, dtype, value=1):
-    return np.ones(shape, dtype=dtype) * value
+def _create_chunk(*, chunk_shape, dtype, value=1, **kwargs):
+    return np.ones(chunk_shape, dtype=dtype) * value
+
+
+def _mmap_load_chunk(*, dataset_shape, dtype, filename, sl, offset=0, **kwargs):
+    data = np.memmap(filename, mode='r', shape=dataset_shape, dtype=dtype, offset=offset)
+    return data[sl]
 
 
 def _take_n(iterable, n):
@@ -88,23 +93,31 @@ def _get_block_slices(blocksizes, shape):
     return [_blocksize_to_dim_slices(bsize, dim) for bsize, dim in zip(blocksizes, shape)]
 
 
-def _mk_dask_from_delayed(shape, chunking, dtype='float32', indexed_values=False):
+def _mk_dask_from_delayed(shape, chunking, dtype='float32', filename=None):
     """
     Create a dask array by combining individually created blocks
+
+    If filename is not None will load from file using np.memmap
+    otherwise will generate numbered partitions using np.ones * chunk_idx
     """
-    create = dask.delayed(_create_chunk, name='create_chunk', pure=True, traverse=False)
+    if filename is not None:
+        create = dask.delayed(_mmap_load_chunk, name='create_chunk', pure=True, traverse=False)
+    else:
+        create = dask.delayed(_create_chunk, name='create_chunk', pure=True, traverse=False)
 
     slices_per_dim = _get_block_slices(chunking, shape)
     blocks = []
     # rightmost advances fastest with itertools.product
     for chunk_idx, chunk_slices in enumerate(itertools.product(*slices_per_dim)):
-        chunk_value = chunk_idx if indexed_values else 1
         chunk_shape = _slices_to_chunk_shape(chunk_slices, shape)
         chunk = dask.array.from_delayed(
             create(
-                shape=chunk_shape,
+                dataset_shape=shape,
+                chunk_shape=chunk_shape,
                 dtype=dtype,
-                value=chunk_value
+                value=chunk_idx,
+                filename=filename,
+                sl=chunk_slices
             ),
             shape=chunk_shape,
             dtype=dtype
@@ -259,20 +272,19 @@ def test_sum_udf(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, 8, 8))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
     res = lt_ctx.run_udf(ds, udf=SumUDF())
-    assert np.allclose(res['intensity'].data, np.prod(data.shape[:2]) * np.ones(data.shape[2:]))
+    assert np.allclose(res['intensity'].data, data.sum(axis=(0, 1)).compute())
 
 
 def test_sumsig_udf(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, -1, 8, 8))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
     res = lt_ctx.run_udf(ds, udf=SumSigUDF())
-    assert np.allclose(res['intensity'].data, np.prod(data.shape[2:]) * np.ones(data.shape[:2]))
+    assert np.allclose(res['intensity'].data, data.sum(axis=(2, 3)).compute())
 
 
 def test_part_file_mapping(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16),
-                                 chunking=(1, -1, -1, -1),
-                                 indexed_values=True)
+                                 chunking=(1, -1, -1, -1))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
 
     for part_idx, part in enumerate(ds.get_partitions()):
@@ -282,8 +294,7 @@ def test_part_file_mapping(lt_ctx):
 
 def test_part_file_mapping2(lt_ctx):
     data = _mk_dask_from_delayed(shape=(4, 24, 16, 16),
-                                 chunking=(2, 12, -1, -1),
-                                 indexed_values=True)
+                                 chunking=(2, 12, -1, -1))
     ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
 
     sequence = np.asarray([0, 1]).astype(np.float32)

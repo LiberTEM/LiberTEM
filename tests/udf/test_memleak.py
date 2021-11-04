@@ -83,7 +83,12 @@ def test_executor_memleak(local_cluster_ctx, lt_ctx_fast, default_raw, ctx_selec
     def mask_factory():
         return masks
 
-    udf = ApplyMasksUDF(mask_factories=mask_factory, mask_count=mask_count, mask_dtype=masks.dtype, use_torch=False)
+    udf = ApplyMasksUDF(
+        mask_factories=mask_factory,
+        mask_count=mask_count,
+        mask_dtype=masks.dtype,
+        use_torch=False
+    )
 
     # warm-up
     for _ in ctx.run_udf_iter(dataset=default_raw, udf=udf):

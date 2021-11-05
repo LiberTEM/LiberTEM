@@ -16,7 +16,7 @@ from utils_dask import _mk_dask_from_delayed
 )
 def test_get_macrotile(lt_ctx, dest_dtype):
     data = _mk_dask_from_delayed(shape=(16, 16, 16, 16), chunking=(1, -1, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True)
+    ds = lt_ctx.load('dask', data, sig_dims=2)
     p = next(ds.get_partitions())
     mt = p.get_macrotile(dest_dtype=dest_dtype)
     assert tuple(mt.shape) == (256, 16, 16)
@@ -25,20 +25,20 @@ def test_get_macrotile(lt_ctx, dest_dtype):
 
 def test_merge_sig(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, 8, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (25,), (16,), (16,))
 
 
 def test_contig_nav(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, 5, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     assert tuple(ds.array.chunks) == ((2, 2, 1), (25,), (16,), (16,))
 
 
 def test_reorient_nav(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(5, 1, -1, -1))
     sig_dims = 2
-    ds = lt_ctx.load('dask', data, sig_dims=sig_dims, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=sig_dims, preserve_dimensions=False, min_size=0.)
     assert tuple(ds.array.chunks) == ((1,) * data.shape[1], (5,), (16,), (16,))
     assert ds.array.shape == (25, 5, 16, 16)
     assert tuple(reversed(sorted(len(c) for c in ds.array.chunks[:-sig_dims])))\
@@ -59,7 +59,7 @@ def test_size_based_merging2(lt_ctx):
     data = _mk_dask_from_delayed(shape=(12, 25, 16, 16), chunking=(1, 2, -1, -1), dtype=dtype)
     frame_size = np.prod(data.shape[2:]) * np.dtype(dtype).itemsize
     min_size = frame_size * 4
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=min_size)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=min_size)
     assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (6, 4, 4, 4, 7), (16,), (16,))
 
 
@@ -107,7 +107,7 @@ def test_io_backend():
 
 def test_get_num_part(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, 5, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     assert ds.get_num_partitions() == 3
 
 
@@ -119,19 +119,19 @@ def test_3d_array(lt_ctx):
 
 def test_4d_1sig_array(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 36, 50, 16), chunking=(1, 6, 10, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=1, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=1, min_size=0.)
     assert tuple(ds.array.chunks) == ((1,) * 5, (6,) * 6, (50,), (16,))
 
 
 def test_4d_3sig_array(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 36, 50, 16), chunking=(1, 6, 10, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=3, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=3, min_size=0.)
     assert tuple(ds.array.chunks) == ((1,) * 5, (36,), (50,), (16,))
 
 
 def test_5d_array(lt_ctx):
     data = _mk_dask_from_delayed(shape=(8, 4, 5, 16, 16), chunking=(4, 2, 1, 8, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     assert tuple(ds.array.chunks) == ((4, 4), (4,), (5,), (16,), (16,))
 
 
@@ -140,26 +140,26 @@ def test_5d_size_based_merging(lt_ctx):
     data = _mk_dask_from_delayed(shape=(8, 12, 25, 16, 16), chunking=(1, 1, 2, -1, -1), dtype=dtype)
     frame_size = np.prod(data.shape[2:]) * np.dtype(dtype).itemsize
     min_size = frame_size * 4
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=min_size)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=min_size)
     assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (4, 4, 4), (25,), (16,), (16,))
 
 
 def test_6d_array(lt_ctx):
     data = _mk_dask_from_delayed(shape=(4, 8, 4, 5, 16, 16), chunking=(2, 4, 2, 1, 8, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     assert tuple(ds.array.chunks) == ((2, 2), (8,), (4,), (5,), (16,), (16,))
 
 
 def test_sum_udf(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, 8, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     res = lt_ctx.run_udf(ds, udf=SumUDF())
     assert np.allclose(res['intensity'].data, data.sum(axis=(0, 1)).compute())
 
 
 def test_sumsig_udf(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, -1, 8, 8))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
     res = lt_ctx.run_udf(ds, udf=SumSigUDF())
     assert np.allclose(res['intensity'].data, data.sum(axis=(2, 3)).compute())
 
@@ -167,7 +167,7 @@ def test_sumsig_udf(lt_ctx):
 def test_part_file_mapping(lt_ctx):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16),
                                  chunking=(1, -1, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
 
     for part_idx, part in enumerate(ds.get_partitions()):
         macrotile = part.get_macrotile(dest_dtype="float32")
@@ -177,7 +177,7 @@ def test_part_file_mapping(lt_ctx):
 def test_part_file_mapping2(lt_ctx):
     data = _mk_dask_from_delayed(shape=(4, 24, 16, 16),
                                  chunking=(2, 12, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
 
     sequence = np.asarray([0, 1]).astype(np.float32)
     for part in ds.get_partitions():
@@ -191,7 +191,7 @@ def test_part_file_mapping2(lt_ctx):
 )
 def test_correction(lt_ctx, with_roi):
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, -1, -1, -1))
-    ds = lt_ctx.load('dask', data, sig_dims=2, preserve_dimensions=True, min_size=0.)
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=0.)
 
     if with_roi:
         roi = np.zeros(ds.shape.nav, dtype=bool)

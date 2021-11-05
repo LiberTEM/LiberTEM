@@ -1,6 +1,5 @@
 import logging
 import itertools
-import math
 import numpy as np
 import dask.array as da
 
@@ -9,8 +8,33 @@ from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
 from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend, MMapBackendImpl
+from libertem.web.messages import MessageConverter
 
 log = logging.getLogger(__name__)
+
+
+class DaskDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/DaskDatasetParams.schema.json",
+        "title": "DaskDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "DASK"},
+            "sig_dims": {"type": "number", "minimum": 1},
+            "preserve_dimensions": {"type": "boolean"},
+            "min_size": {"type": "number", "minimum": 1},
+        },
+        "required": ["type"],
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["sig_dims", "preserve_dimensions", "min_size"]
+            if k in raw_data
+        }
+        return data
 
 
 class FakeDaskMMapFile(MMapFile):
@@ -87,7 +111,7 @@ class DaskDataSet(DataSet):
         # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional
-        The minimum partition size in bytes iff the array chunking allows
+        The minimum partition size in bytes if the array chunking allows
         an order-preserving merge strategy. The default min_size is 128 MiB.
 
     io_backend: bool, optional
@@ -150,6 +174,10 @@ class DaskDataSet(DataSet):
     @property
     def shape(self):
         return self._meta.shape
+
+    @classmethod
+    def get_msg_converter(cls):
+        return DaskDatasetParams
 
     def _chunk_slices(self, array):
         chunks = array.chunks
@@ -406,7 +434,7 @@ def get_chunksizes(array, chunking=None):
     last_chunked = get_last_chunked_dim(chunking)
     if last_chunked < 0:
         return np.asarray(array.nbytes)
-    static_size = math.prod(shape[last_chunked + 1:]) * el_bytes
+    static_size = np.prod(shape[last_chunked + 1:]) * el_bytes
     chunksizes = array_mult(*chunking[:last_chunked + 1]) * static_size
     return chunksizes
 

@@ -97,7 +97,7 @@ class DaskDataSet(DataSet):
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
     def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False,
-                 min_size=128e6, io_backend=None):
+                 min_size=None, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise DataSetException("DaskDataSet currently doesn't support alternative I/O backends")
@@ -109,6 +109,8 @@ class DaskDataSet(DataSet):
         self._dtype = self._array.dtype
         self._preserve_dimension = preserve_dimensions
         self._min_size = min_size
+        if self._min_size is None:
+            self._min_size = 128e6  # TODO add a method to determine a sensible partition byte-size
 
     @property
     def array(self):

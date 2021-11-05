@@ -1,8 +1,10 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional
+from typing import Optional, Any, Iterable
+from typing_extensions import Protocol
 from contextlib import contextmanager
+from async_generator import asynccontextmanager
 
 from libertem.utils.threading import set_num_threads
 from libertem.utils.async_utils import (
@@ -53,31 +55,54 @@ class Environment:
             yield self
 
 
-class TaskProxy:
-    """
-    This type wraps `UDFTask` and adds executor-specific information
-    and behavior
-    """
-    def __init__(self, task):
-        self.task = task
-
-    def __getattr__(self, k):
-        if k in ["task"]:
-            return super().__getattr__(k)
-        return getattr(self.task, k)
-
-    def __call__(self, *args, **kwargs):
-        env = Environment(threads_per_worker=None)
-        return self.task(env=env)
-
-    def __repr__(self):
-        return f"<TaskProxy: {self.task!r}>"
+class TaskProtocol(Protocol):
+    def __call__(self, env: Environment, params: Any):
+        pass
 
 
 class JobExecutor:
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable `fn` on any worker
+        """
+        raise NotImplementedError()
+
+    @contextmanager
+    def scatter(self, obj):
+        '''
+        Scatter :code:`obj` throughout the cluster
+
+        Parameters
+        ----------
+
+        obj
+            Some kind of Python object or variable
+
+        Returns
+        -------
+        handle
+            Handle for the scattered :code:`obj`
+        '''
+        raise NotImplementedError()
+
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        cancel_id: Any,
+    ):
+        """
+        Run the tasks with the given parameters
+
+        Parameters
+        ----------
+        tasks
+            The tasks to be run
+        params_handle : [type]
+            A handle for the task parameters, as returned from :meth:`JobExecutor.scatter`
+        cancel_id
+            An identifier which can be used for cancelling all tasks together. The
+            same identifier should be passed to :meth:`AsyncJobExecutor.cancel`
         """
         raise NotImplementedError()
 
@@ -204,7 +229,7 @@ class JobExecutor:
 
 
 class AsyncJobExecutor:
-    async def run_tasks(self, tasks, cancel_id):
+    async def run_tasks(self, tasks, params_handle, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples
         """
@@ -305,11 +330,23 @@ class AsyncAdapter(AsyncJobExecutor):
     def ensure_sync(self):
         return self._wrapped
 
-    async def run_tasks(self, tasks, cancel_id):
+    @asynccontextmanager
+    async def scatter(self, obj):
+        try:
+            res = await sync_to_async(self._wrapped.scatter.__enter__, self._pool)
+            yield res
+        finally:
+            exit_fn = functools.partial(
+                self._wrapped.scatter.__exit__,
+                None, None, None,  # FIXME: exc_type, exc_value, traceback?
+            )
+            await sync_to_async(exit_fn, self._pool)
+
+    async def run_tasks(self, tasks, params_handle, cancel_id):
         """
         run a number of Tasks
         """
-        gen = self._wrapped.run_tasks(tasks, cancel_id)
+        gen = self._wrapped.run_tasks(tasks, params_handle, cancel_id)
         agen = async_generator_eager(gen, self._pool)
         async for i in agen:
             yield i

@@ -156,13 +156,15 @@ setup(
         'jsonschema',
         'scikit-learn',
         'tqdm',
-        'threadpoolctl',
+        'threadpoolctl>=3.0',
         'primesieve',
         'nbformat',
         'nbconvert',
         'autopep8',
         'empyre>=0.3.0',
         'defusedxml',
+        'async_generator',  # backwards-compat. for contextlib.asynccontextmanager
+        'typing-extensions',  # backwards-compatibility for newer typing constructs
     ],
     extras_require={
         'torch': 'torch',

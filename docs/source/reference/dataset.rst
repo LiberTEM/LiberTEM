@@ -98,6 +98,13 @@ Memory data set
 
 .. autoclass:: libertem.io.dataset.memory.MemoryDataSet
 
+.. _`daskds`:
+
+Dask data set
+~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.dask.DaskDataSet
+
 Internal DataSet API
 --------------------
 

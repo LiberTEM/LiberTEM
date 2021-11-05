@@ -97,5 +97,12 @@ LiberTEM supports the following file formats out of the box, see links for detai
 * :ref:`seq`
 * :ref:`mrc`
 
-Furthermore, a memory data set can be constructed from a NumPy array for testing
-purposes. See :ref:`memory` for details.
+Furthermore, two alternative mechanisms exist for interfacing LiberTEM with data loaded
+elsewhere in Python via other libraries:
+
+- a memory data set can be constructed from a NumPy array for testing
+  purposes. See :ref:`memory` for details.
+- a Dask data set can be constructed from a Dask array. Depending on the
+  method used to construct the source array this can achieve good performance.
+  See :ref:`daskds` for details.
+  

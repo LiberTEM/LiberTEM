@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pytest
 
-from libertem.udf.base import UDF, UDFRunner
+from libertem.udf.base import UDF, UDFRunner, UDFParams
 from libertem.udf.base import UDFMeta
 from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
@@ -556,10 +556,14 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         partition = next(dataset.get_partitions())
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
         # Enabling debug=True checks for disjoint cache keys
+        params = UDFParams.from_udfs(
+            udfs=[udf],
+            roi=None,
+            corrections=None
+        )
         UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,
-            roi=None,
-            corrections=None,
+            params=params,
             env=Environment(threads_per_worker=1),
         )
 

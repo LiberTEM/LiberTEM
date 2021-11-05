@@ -1,14 +1,16 @@
+import contextlib
 from copy import deepcopy
 import functools
 import logging
 import signal
+from typing import Iterable, Any
 
 from dask import distributed as dd
 
 from libertem.utils.threading import set_num_threads_env
 
 from .base import (
-    JobExecutor, JobCancelledError, sync_to_async, AsyncAdapter, TaskProxy,
+    JobExecutor, JobCancelledError, TaskProtocol, sync_to_async, AsyncAdapter,
     Environment,
 )
 from .scheduler import Worker, WorkerSet
@@ -88,33 +90,25 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
     return workers_spec
 
 
-class DaskTaskProxy(TaskProxy):
-    def __init__(self, task, task_id):
-        super().__init__(task)
-        self.task_id = task_id
-
-    def __call__(self, *args, **kwargs):
-        env = Environment(threads_per_worker=1)
-        task_result = self.task(env=env)
-        return {
-            "task_result": task_result,
-            "task_id": self.task_id,
-        }
-
-    def __repr__(self):
-        return f"<TaskProxy: {self.task!r} (id={self.task_id})>"
-
-
-def _run_task(what):
+def _run_task(task, params, task_id):
     """
     Very simple wrapper function. As dask internally caches functions that are
     submitted to the cluster in various ways, we need to make sure to
     consistently use the same function, and not build one on the fly.
 
-    Without this function, DaskTaskProxy->UDFTask->UDF->UDFData ends up in the
+    Without this function, UDFTask->UDF->UDFData ends up in the
     cache, which blows up memory usage over time.
     """
-    return what()
+    env = Environment(threads_per_worker=1)
+    task_result = task(env=env, params=params)
+    return {
+        "task_result": task_result,
+        "task_id": task_id,
+    }
+
+
+def _simple_run_task(task):
+    return task()
 
 
 class CommonDaskMixin:
@@ -124,7 +118,9 @@ class CommonDaskMixin:
         host = hosts[host_idx]
         return workers.filter(lambda w: w.host == host)
 
-    def _future_for_location(self, task, locations, resources, workers):
+    def _future_for_location(
+        self, task, locations, resources, workers, task_args=None, wrap_fn=_run_task,
+    ):
         """
         Submit tasks and return the resulting futures
 
@@ -140,6 +136,8 @@ class CommonDaskMixin:
             Available workers in the cluster
         """
         submit_kwargs = {}
+        if task_args is None:
+            task_args = {}
         if locations is not None:
             if len(locations) == 0:
                 raise ValueError("no workers found for task")
@@ -149,7 +147,9 @@ class CommonDaskMixin:
             'workers': locations,
             'pure': False,
         })
-        return self.client.submit(_run_task, task, **submit_kwargs)
+        return self.client.submit(
+            wrap_fn, task, *task_args, **submit_kwargs
+        )
 
     def _validate_resources(self, workers, resources):
         # This is set in the constructor of DaskJobExecutor
@@ -180,16 +180,20 @@ class CommonDaskMixin:
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_future(self, task, workers):
+    def _get_future(self, task, workers, idx, params_handle):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
         return self._future_for_location(
             task,
             task.get_locations() or self._task_idx_to_workers(
-                workers, task.idx
+                workers, idx
             ),
             task.get_resources(),
-            workers
+            workers,
+            task_args=(
+                params_handle,
+                idx,
+            )
         )
 
     def get_available_workers(self):
@@ -249,15 +253,21 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         self.lt_resources = lt_resources
         self._futures = {}
 
-    def run_tasks(self, tasks, cancel_id):
+    @contextlib.contextmanager
+    def scatter(self, obj):
+        yield self.client.scatter(obj, broadcast=True)
+
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        cancel_id: Any,
+    ):
         tasks = list(tasks)
-        tasks_wrapped = []
+        tasks_w_index = list(enumerate(tasks))
 
         def _id_to_task(task_id):
             return tasks[task_id]
-
-        for idx, orig_task in enumerate(tasks):
-            tasks_wrapped.append(DaskTaskProxy(orig_task, idx))
 
         workers = self.get_available_workers()
 
@@ -265,10 +275,10 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         initial = []
 
         for w in range(int(len(workers))):
-            if not tasks_wrapped:
+            if not tasks_w_index:
                 break
-            wrapped_task = tasks_wrapped.pop(0)
-            future = self._get_future(wrapped_task, workers)
+            idx, wrapped_task = tasks_w_index.pop(0)
+            future = self._get_future(wrapped_task, workers, idx, params_handle)
             initial.append(future)
             self._futures[cancel_id].append(future)
 
@@ -280,9 +290,11 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
                     raise JobCancelledError()
                 result = result_wrap['task_result']
                 task = _id_to_task(result_wrap['task_id'])
-                if tasks_wrapped:
-                    wrapped_task = tasks_wrapped.pop(0)
-                    future = self._get_future(wrapped_task, workers)
+                if tasks_w_index:
+                    idx, wrapped_task = tasks_w_index.pop(0)
+                    future = self._get_future(
+                        wrapped_task, workers, idx, params_handle,
+                    )
                     as_completed.add(future)
                     self._futures[cancel_id].append(future)
                 yield result, task
@@ -329,7 +341,10 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             items = ((lambda: fn(p), p.get_locations(), {})
                      for p in partitions)
         workers = self.get_available_workers()
-        futures = [self._future_for_location(*item, workers) for item in items]
+        futures = [
+            self._future_for_location(*item, workers, wrap_fn=_simple_run_task)
+            for item in items
+        ]
         # TODO: do we need cancellation and all that good stuff?
         for future, result in dd.as_completed(futures, with_results=True, loop=self.client.loop):
             if future.cancelled():

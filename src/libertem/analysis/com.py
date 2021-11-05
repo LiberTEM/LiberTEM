@@ -258,11 +258,9 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
             else:
                 vmax = 1
             f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0), vmax=vmax)
-            d = divergence(y_centers, x_centers)
-            c = curl_2d(y_centers, x_centers)
             m = magnitude(y_centers, x_centers)
-
-            return COMResultSet([
+            # Create results which are valid for any nav_shape
+            results_list = [
                 AnalysisResult(
                     raw_data=(x_centers, y_centers),
                     visualized=f,
@@ -275,16 +273,6 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                     key="magnitude", title="magnitude", desc="magnitude of the vector field"
                 ),
                 AnalysisResult(
-                    raw_data=d,
-                    visualized=visualize_simple(d, damage=damage),
-                    key="divergence", title="divergence", desc="divergence of the vector field"
-                ),
-                AnalysisResult(
-                    raw_data=c,
-                    visualized=visualize_simple(c, damage=damage),
-                    key="curl", title="curl", desc="curl of the 2D vector field"
-                ),
-                AnalysisResult(
                     raw_data=x_centers,
                     visualized=visualize_simple(x_centers, damage=damage),
                     key="x", title="x", desc="x component of the center"
@@ -294,7 +282,28 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                     visualized=visualize_simple(y_centers, damage=damage),
                     key="y", title="y", desc="y component of the center"
                 ),
-            ])
+            ]
+            # Add results which depend on np.gradient, i.e. all(nav_shape) > 1
+            if all([s > 1 for s in shape]):
+                d = divergence(y_centers, x_centers)
+                c = curl_2d(y_centers, x_centers)
+                extra_results = [
+                    AnalysisResult(
+                        raw_data=d,
+                        visualized=visualize_simple(d, damage=damage),
+                        key="divergence", title="divergence", desc="divergence of the vector field"
+                    ),
+                    AnalysisResult(
+                        raw_data=c,
+                        visualized=visualize_simple(c, damage=damage),
+                        key="curl", title="curl", desc="curl of the 2D vector field"
+                    ),
+                ]
+                # Insert the results at position 2 for backwards compatibility/tests
+                # This could later be replaced with results_list.extend(extra_results)
+                results_list[2:2] = extra_results
+
+        return COMResultSet(results_list)
 
     def get_mask_factories(self):
         if self.dataset.shape.sig.dims != 2:

@@ -1,6 +1,6 @@
-import warnings
 import logging
 import itertools
+import math
 import numpy as np
 import dask.array as da
 
@@ -8,16 +8,9 @@ from libertem.common import Shape, Slice
 from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
-from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend
-from libertem.io.dataset.memory import MemBackendImpl
-
-from merge_util import merge_until_target, get_chunksizes
+from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend, MMapBackendImpl
 
 log = logging.getLogger(__name__)
-
-class DaskRechunkWarning(RuntimeWarning):
-    pass
-warnings.simplefilter('always', DaskRechunkWarning)
 
 
 class FakeDaskMMapFile(MMapFile):
@@ -32,8 +25,8 @@ class FakeDaskMMapFile(MMapFile):
         return self
 
     def close(self):
-        self._arr = None
-        self._mmap = None
+        del self._arr
+        del self._mmap
 
 
 class DaskBackend(MMapBackend):
@@ -41,34 +34,41 @@ class DaskBackend(MMapBackend):
         return DaskBackendImpl()
 
 
-class DaskBackendImpl(MemBackendImpl):
+class DaskBackendImpl(MMapBackendImpl):
     FILE_CLS = FakeDaskMMapFile
 
 
 class DaskDataSet(DataSet):
     """
-    DaskDataSet(DataSet)
+    Wraps a Dask.array.array such that it can be processed by LiberTEM.
+    Partitions are created to be aligned with the array chunking. When
+    the array chunking is not compatible with LiberTEM the wrapper
+    merges chunks until compatibility is achieved.
 
-    This dataset wraps a Dask.array.array and makes it compatible with the
-    UDF interface. Partitions are created to be aligned with the array chunking
-    where the restrictions of LiberTEM and Dask allow. When these restrictions are
-    broken, tries to perform rechunking/merging and dimension re-ordering
-    to achieve compatible and optimal behaviour. Clearly there are no guarantees.
+    The best-case scenario is for the original array to be chunked in
+    the leftmost navigation dimension. If instead another navigation
+    dimension is chunked then the user can set `preserve_dimension=False`
+    to re-order the navigation shape to achieve better chunking for LiberTEM.
+    If more than one navigation dimension is chunked, the class will do
+    its best to merge chunks without creating partitions which are too large.
 
-    This is only useful if the underlying Dask array was created using
-    lazy I/O with something like dask.delayed. The major assumption of this
-    class is that the chunks in the provided dask array can each be individually
-    .compute()'d without causing excessive read amplification. If this is not the case
-    then this class could perform very poorly. This could occur either if the
-    array was loaded without lazy, chunked I/O, or if upstream dask computations
-    requried rechunking of the array before it was passed to this class.
+    LiberTEM requires that a partition contains only whole signal frames,
+    so any signal dimension chunking is immediately merged by this class.
 
-    The class performs rechunking using a merge-only strategy, it will never
-    split chunks which were present in the original array. Naturally, if the array
+    This wrapper is most useful when the Dask array was created using
+    lazy I/O via `dask.delayed`, or via `dask.array` operations.
+    The major assumption is that the chunks in the array can each be
+    individually evaluated without having to read or compute more data
+    than the chunk itself contains. If this is not the case then this class
+    could perform very poorly due to read amplification, or even crash the Dask
+    workers.
+
+    As the class performs rechunking using a merge-only strategy it will never
+    split chunks which were present in the original array. If the array
     is originally very lightly chunked, then the corresponding LiberTEM partitions
-    will be very large. There is also a soft assumption that the underlying file
-    is C-ordered, as we assume the signal dimensions are the rightmost and we use
-    a merge strategy from right-to-left.
+    will be very large. In addition, overly-chunked arrays (for example one chunk per
+    frame) can incurr excessive Dask task graph overheads and should be avoided
+    where possible.
 
     Parameters
     ----------
@@ -81,20 +81,19 @@ class DaskDataSet(DataSet):
         to treat as signal dimensions
 
     preserve_dimensions: bool, optional
-        Whether the prevent optimization of the dask_arry chunking by
+        If False, allow optimization of the dask_arry chunking by
         re-ordering the nav_shape to put the most chunked dimensions first.
-        When False this can result in a change of nav_shape relative to the
-        original array
+        This can help when more than one nav dimension is chunked.
         # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional
         The minimum partition size in bytes iff the array chunking allows
-        an order-preserving merge strategy
+        an order-preserving merge strategy. The default min_size is 128 MiB.
 
     io_backend: bool, optional
-        For compatibility, accept an unused io_backend argument
+        For compatibility, accept an unused io_backend argument.
 
-    Examples
+    Example
     --------
 
     >>> from libertem.io.dataset.dask import DaskDataSet
@@ -105,11 +104,11 @@ class DaskDataSet(DataSet):
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
-    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False,
-                 min_size=128e6, io_backend=None):
+    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=True,
+                 min_size=None, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
-            raise ValueError("DaskDataSet currently doesn't support alternative I/O backends")
+            raise DataSetException("DaskDataSet currently doesn't support alternative I/O backends")
 
         self._check_array(dask_array, sig_dims)
         self._array = dask_array
@@ -118,13 +117,12 @@ class DaskDataSet(DataSet):
         self._dtype = self._array.dtype
         self._preserve_dimension = preserve_dimensions
         self._min_size = min_size
+        if self._min_size is None:
+            self._min_size = 128e6  # TODO add a method to determine a sensible partition byte-size
 
     @property
     def array(self):
         return self._array
-
-    def _get_decoder(self):
-        return None
 
     def get_io_backend(self):
         return DaskBackend()
@@ -158,10 +156,6 @@ class DaskDataSet(DataSet):
         boundaries = tuple(tuple(self.chunks_to_slices(chunk_lengths)) for chunk_lengths in chunks)
         return tuple(itertools.product(*boundaries))
 
-    def _get_chunk(self, array, chunk_flat_idx):
-        slices = self._chunk_slices(array)
-        return array[slices[chunk_flat_idx]]
-
     def _adapt_chunking(self, array, sig_dims):
         n_dimension = array.ndim
         # Handle chunked signal dimensions by merging just in case
@@ -170,18 +164,18 @@ class DaskDataSet(DataSet):
             original_n_chunks = [len(c) for c in array.chunks]
             array = array.rechunk({idx: -1 for idx in sig_dim_idxs})
             log.info('Merging sig dim chunks as LiberTEM does not '
-                      'support paritioning along the sig axes. '
-                      f'Original n_blocks: {original_n_chunks}. '
-                      f'New n_blocks: {[len(c) for c in array.chunks]}.')
+                     'support paritioning along the sig axes. '
+                     f'Original n_blocks: {original_n_chunks}. '
+                     f'New n_blocks: {[len(c) for c in array.chunks]}.')
         # Warn if there is no nav_dim chunking
         n_nav_chunks = [len(dim_chunking) for dim_chunking in array.chunks[:-sig_dims]]
         if set(n_nav_chunks) == {1}:
             log.info('Dask array is not chunked in navigation dimensions, '
-                      'cannot split into nav-partitions without loading the '
-                      'whole dataset on each worker. '
-                      f'Array shape: {array.shape}. '
-                      f'Chunking: {array.chunks}. '
-                      f'array size {array.nbytes / 1e6} MiB.')
+                     'cannot split into nav-partitions without loading the '
+                     'whole dataset on each worker. '
+                     f'Array shape: {array.shape}. '
+                     f'Chunking: {array.chunks}. '
+                     f'array size {array.nbytes / 1e6} MiB.')
             # If we are here there is nothing else to do.
             return array
         # Orient the nav dimensions so that the zeroth dimension is
@@ -195,12 +189,12 @@ class DaskDataSet(DataSet):
                 original_n_chunks = [len(c) for c in array.chunks]
                 array = da.transpose(array, axes=sort_order)
                 log.info('Re-ordered nav_dimensions to improve partitioning, '
-                          'create the dataset with preserve_dimensions=True '
-                          'to suppress this behaviour. '
-                          f'Original shape: {original_shape} with '
-                          f'n_blocks: {original_n_chunks}. '
-                          f'New shape: {array.shape} with '
-                          f'n_blocks: {[len(c) for c in array.chunks]}.')
+                         'create the dataset with preserve_dimensions=True '
+                         'to suppress this behaviour. '
+                         f'Original shape: {original_shape} with '
+                         f'n_blocks: {original_n_chunks}. '
+                         f'New shape: {array.shape} with '
+                         f'n_blocks: {[len(c) for c in array.chunks]}.')
         # Handle chunked nav_dimensions
         # We can allow nav_dimensions to be fully chunked (one chunk per element)
         # up-to-but-not-including the first non-fully chunked dimension. After this point
@@ -220,10 +214,10 @@ class DaskDataSet(DataSet):
             original_n_chunks = [len(c) for c in array.chunks]
             array = array.rechunk(nav_rechunk_dict)
             log.info('Merging nav dimension chunks according to scheme '
-                      f'{nav_rechunk_dict} as we cannot maintain continuity '
-                      'of frame indexing in the flattened navigation dimension. '
-                      f'Original n_blocks: {original_n_chunks}. '
-                      f'New n_blocks: {[len(c) for c in array.chunks]}.')
+                     f'{nav_rechunk_dict} as we cannot maintain continuity '
+                     'of frame indexing in the flattened navigation dimension. '
+                     f'Original n_blocks: {original_n_chunks}. '
+                     f'New n_blocks: {[len(c) for c in array.chunks]}.')
         # Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes
         # or a minmum number of partitions corresponding to the number of workers
         new_chunking, min_size, max_size = merge_until_target(array, self._min_size,
@@ -234,9 +228,9 @@ class DaskDataSet(DataSet):
             orig_min, orig_max = chunksizes.min(), chunksizes.max()
             array = array.rechunk(new_chunking)
             log.info('Applying re-chunking to increase minimum partition size. '
-                      f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
-                      f'Min chunk size {orig_min / 1e6:.1f} => {min_size / 1e6:.1f} MiB , '
-                      f'Max chunk size {orig_max / 1e6:.1f} => {max_size / 1e6:.1f} MiB.')
+                     f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
+                     f'Min chunk size {orig_min / 1e6:.1f} => {min_size / 1e6:.1f} MiB , '
+                     f'Max chunk size {orig_max / 1e6:.1f} => {max_size / 1e6:.1f} MiB.')
         return array
 
     def _check_array(self, array, sig_dims):
@@ -246,16 +240,14 @@ class DaskDataSet(DataSet):
         if not isinstance(sig_dims, int) and sig_dims >= 0:
             raise DataSetException('Expected non-negative integer sig_dims,'
                                    f'recieved {sig_dims}.')
-        if any([np.isnan(c).any() for c in array.shape]):
-            raise DataSetException('Dask array has undetermined shape: '
-                                   f'{array.shape}.')
-        if any([np.isnan(c).any() for c in array.chunks]):
-            raise DataSetException('Dask array has unknown chunk sizes so cannot '
-                                   'be interpreted as a LiberTEM partitions. '
+        if any([np.isnan(c).any() for c in array.shape])\
+           or any([np.isnan(c).any() for c in array.chunks]):
+            raise DataSetException('Dask array has an unknown shape or chunk sizes '
+                                   'so cannot be interpreted as a LiberTEM partitions. '
                                    'Run array.compute_compute_chunk_sizes() '
                                    'before passing to DaskDataSet, though this '
                                    'may be performance-intensive. Chunking: '
-                                   f'{array.chunks}.')
+                                   f'{array.chunks}, Shape {array.shape}')
         if sig_dims >= array.ndim:
             raise DataSetException(f'Number of sig_dims {sig_dims} not compatible '
                                    f'with number of array dims {array.ndim}, '
@@ -267,7 +259,7 @@ class DaskDataSet(DataSet):
         return self._check_array(self._array, self._sig_dims)
 
     def get_num_partitions(self):
-        return len(itertools.product(*self._array.chunks))
+        return len([*itertools.product(*self._array.chunks)])
 
     @staticmethod
     def chunks_to_slices(chunk_lengths):
@@ -284,10 +276,6 @@ class DaskDataSet(DataSet):
     @staticmethod
     def slices_to_origin(slices):
         return tuple(s.start for s in slices)
-
-    @staticmethod
-    def slices_to_end(slices):
-        return tuple(s.stop for s in slices)
 
     @staticmethod
     def flatten_nav(slices, nav_shape, sig_dims):
@@ -387,3 +375,109 @@ class DaskPartition(BasePartition):
 
     def get_io_backend(self):
         return DaskBackend()
+
+
+def array_mult(*arrays, dtype=np.float64):
+    num_arrays = len(arrays)
+    if num_arrays == 1:
+        return np.asarray(arrays[0]).astype(dtype)
+    elif num_arrays == 2:
+        return np.multiply.outer(*arrays).astype(dtype)
+    elif num_arrays > 2:
+        return np.multiply.outer(arrays[0], array_mult(*arrays[1:]))
+    else:
+        raise RuntimeError('Unexpected number of arrays')
+
+
+def get_last_chunked_dim(chunking):
+    n_chunks = [len(c) for c in chunking]
+    chunked_dims = [idx for idx, el in enumerate(n_chunks) if el > 1]
+    try:
+        return chunked_dims[-1]
+    except IndexError:
+        return -1
+
+
+def get_chunksizes(array, chunking=None):
+    if chunking is None:
+        chunking = array.chunks
+    shape = array.shape
+    el_bytes = array.dtype.itemsize
+    last_chunked = get_last_chunked_dim(chunking)
+    if last_chunked < 0:
+        return np.asarray(array.nbytes)
+    static_size = math.prod(shape[last_chunked + 1:]) * el_bytes
+    chunksizes = array_mult(*chunking[:last_chunked + 1]) * static_size
+    return chunksizes
+
+
+def modify_chunking(chunking, dim, merge_idxs):
+    chunk_dim = chunking[dim]
+    merge_idxs = tuple(sorted(merge_idxs))
+    before = chunk_dim[:merge_idxs[0]]
+    after = chunk_dim[merge_idxs[1] + 1:]
+    merged_dim = (sum(chunk_dim[merge_idxs[0]:merge_idxs[1] + 1]),)
+    new_chunk_dim = tuple(before) + merged_dim + tuple(after)
+    chunking = chunking[:dim] + (new_chunk_dim,) + chunking[dim + 1:]
+    return chunking
+
+
+def findall(sequence, val):
+    return [idx for idx, e in enumerate(sequence) if e == val]
+
+
+def neighbour_idxs(sequence, idx):
+    max_idx = len(sequence) - 1
+    if idx > 0 and idx < max_idx:
+        return (idx - 1, idx + 1)
+    elif idx == 0:
+        return (None, idx + 1)
+    elif idx == max_idx:
+        return (idx - 1, None)
+    else:
+        raise
+
+
+def min_neighbour(sequence, idx):
+    left, right = neighbour_idxs(sequence, idx)
+    if left is None:
+        return right
+    elif right is None:
+        return left
+    else:
+        return min([left, right], key=lambda x: sequence[x])
+
+
+def min_with_min_neighbor(sequence):
+    min_val = min(sequence)
+    occurences = findall(sequence, min_val)
+    min_idx_pairs = [(idx, min_neighbour(sequence, idx)) for idx in occurences]
+    pair = [sum(get_values(sequence, idxs)) for idxs in min_idx_pairs]
+    min_pair = min(pair)
+    min_pair_occurences = findall(pair, min_pair)
+    return min_idx_pairs[min_pair_occurences[-1]]  # breaking ties from right
+
+
+def get_values(sequence, idxs):
+    return [sequence[idx] for idx in idxs]
+
+
+def merge_until_target(array, target, min_chunks):
+    chunking = array.chunks
+    if array.nbytes < target:
+        # A really small dataset, better to treat as one partition
+        chunking = tuple((s,) for s in array.shape)
+    chunksizes = get_chunksizes(array)
+    while chunksizes.size > min_chunks and chunksizes.min() < target:
+        if (chunksizes < 0).any():
+            log.warn('Overflow in chunksize calculation, will be clipped!')
+        chunksizes = np.clip(chunksizes, 0., np.inf)
+        last_chunked_dim = get_last_chunked_dim(chunking)
+        if last_chunked_dim < 0:
+            # No chunking, by definition complete
+            break
+        last_chunking = chunking[last_chunked_dim]
+        to_merge = min_with_min_neighbor(last_chunking)
+        chunking = modify_chunking(chunking, last_chunked_dim, to_merge)
+        chunksizes = get_chunksizes(array, chunking=chunking)
+    return chunking, chunksizes.min(), chunksizes.max()

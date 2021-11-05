@@ -55,8 +55,8 @@ class DaskDataSet(DataSet):
     LiberTEM requires that a partition contains only whole signal frames,
     so any signal dimension chunking is immediately merged by this class.
 
-    This is most useful when the Dask array was created using
-    lazy I/O via dask.delayed, or via dask.array operations.
+    This wrapper is most useful when the Dask array was created using
+    lazy I/O via `dask.delayed`, or via `dask.array` operations.
     The major assumption is that the chunks in the array can each be
     individually evaluated without having to read or compute more data
     than the chunk itself contains. If this is not the case then this class
@@ -66,8 +66,9 @@ class DaskDataSet(DataSet):
     As the class performs rechunking using a merge-only strategy it will never
     split chunks which were present in the original array. If the array
     is originally very lightly chunked, then the corresponding LiberTEM partitions
-    will be very large. Similarly, over-chunked (for example one chunk per
-    frame), this can incurr excessive Dask task graph overheads.
+    will be very large. In addition, overly-chunked arrays (for example one chunk per
+    frame) can incurr excessive Dask task graph overheads and should be avoided
+    where possible.
 
     Parameters
     ----------

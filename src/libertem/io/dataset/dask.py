@@ -72,18 +72,16 @@ class DaskDataSet(DataSet):
         to treat as signal dimensions
 
     preserve_dimensions: bool, optional
-        Whether the prevent optimization of the dask_arry chunking by
+        If False, allow optimization of the dask_arry chunking by
         re-ordering the nav_shape to put the most chunked dimensions first.
-        When False this can result in a change of nav_shape relative to the
-        original array
         # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional
         The minimum partition size in bytes iff the array chunking allows
-        an order-preserving merge strategy
+        an order-preserving merge strategy. The default min_size is 128 MiB.
 
     io_backend: bool, optional
-        For compatibility, accept an unused io_backend argument
+        For compatibility, accept an unused io_backend argument.
 
     Examples
     --------
@@ -96,7 +94,7 @@ class DaskDataSet(DataSet):
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
-    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=False,
+    def __init__(self, dask_array, *, sig_dims, preserve_dimensions=True,
                  min_size=None, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:

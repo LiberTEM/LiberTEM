@@ -101,3 +101,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     result = ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
+
+In addition, Dask arrays can be interpreted as LiberTEM datasets under certain conditions
+through use of the :meth:`~libertem.io.datasets.dask.DaskDataSet` wrapper class. This is
+only likely to lead to good performance when the Dask array chunks are created through
+lazy I/O or functions, via dask.delayed or similar routes. See :ref:`daskds` for details.

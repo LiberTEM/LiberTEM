@@ -369,12 +369,12 @@ class DaskPartition(BasePartition):
         return DaskBackend()
 
 
-def array_mult(*arrays):
+def array_mult(*arrays, dtype=np.float64):
     num_arrays = len(arrays)
     if num_arrays == 1:
-        return np.asarray(arrays[0])
+        return np.asarray(arrays[0]).astype(dtype)
     elif num_arrays == 2:
-        return np.multiply.outer(*arrays)
+        return np.multiply.outer(*arrays).astype(dtype)
     elif num_arrays > 2:
         return np.multiply.outer(arrays[0], array_mult(*arrays[1:]))
     else:

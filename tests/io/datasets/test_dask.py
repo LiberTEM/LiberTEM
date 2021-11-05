@@ -45,6 +45,21 @@ def test_reorient_nav(lt_ctx):
            == tuple(len(c) for c in ds.array.chunks[:-sig_dims])
 
 
+def test_reorient_nav2(lt_ctx):
+    data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, -1, -1))
+    sig_dims = 2
+    ds = lt_ctx.load('dask', data, sig_dims=sig_dims, preserve_dimensions=False, min_size=0.)
+    assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (25,), (16,), (16,))
+    assert ds.array.shape == data.shape
+
+
+def test_reorient_nav3(lt_ctx):
+    data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(2, 1, -1, -1))
+    sig_dims = 2
+    ds = lt_ctx.load('dask', data, sig_dims=sig_dims, preserve_dimensions=True, min_size=0.)
+    assert ds.array.shape == data.shape
+
+
 def test_size_based_merging(lt_ctx):
     dtype = np.float32
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, -1, -1), dtype=dtype)

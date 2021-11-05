@@ -215,3 +215,16 @@ def test_correction(lt_ctx, with_roi):
         roi = None
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+
+
+@pytest.mark.dist
+def test_dist_process(dist_ctx):
+    shape = (3, 5, 7, 11)
+    data = da.random.random(shape, chunks=(2, 2, 2, 2))
+    roi = np.random.choice([True, False], data.shape[:2])
+    # Dask doesn't do multi-dimensional fancy indexing with booleans,
+    # unlike NumPy :rolleyes:
+    ref = data.reshape((np.prod(shape[:2]), *shape[2:]))[roi.flatten()].sum(axis=0).compute()
+    ds = dist_ctx.load("dask", data, sig_dims=2)
+    res = dist_ctx.run_udf(dataset=ds, udf=SumUDF(), roi=roi)
+    assert np.allclose(res['intensity'].raw_data, ref)

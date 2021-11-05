@@ -4,6 +4,7 @@ import warnings
 import defusedxml.ElementTree as ET
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import DataSet, DataSetException, DataSetMeta, BasePartition, IOBackend
@@ -162,7 +163,7 @@ class EMPADDataSet(DataSet):
         self._image_count = int(
             self._filesize / (
                 int(np.dtype("float32").itemsize) * int(
-                    np.prod(EMPAD_DETECTOR_SIZE_RAW, dtype=np.int64)
+                    prod(EMPAD_DETECTOR_SIZE_RAW)
                 )
             )
         )
@@ -172,14 +173,14 @@ class EMPADDataSet(DataSet):
             raise ValueError(
                     "either nav_shape needs to be passed, or path needs to point to the .xml file"
                 )
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         if nav_shape_from_XML:
-            self._image_count = int(np.prod(nav_shape_from_XML))
+            self._image_count = int(prod(nav_shape_from_XML))
         if self._sig_shape is None:
             self._sig_shape = EMPAD_DETECTOR_SIZE
-        elif int(np.prod(self._sig_shape)) != int(np.prod(EMPAD_DETECTOR_SIZE)):
+        elif int(prod(self._sig_shape)) != int(prod(EMPAD_DETECTOR_SIZE)):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(EMPAD_DETECTOR_SIZE))
+                "sig_shape must be of size: %s" % int(prod(EMPAD_DETECTOR_SIZE))
             )
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(

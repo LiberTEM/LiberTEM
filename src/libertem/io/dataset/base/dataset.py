@@ -4,6 +4,7 @@ from typing import Generator, Optional
 import numpy as np
 from libertem.common.shape import Shape
 
+from libertem.common.math import prod
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
@@ -78,7 +79,7 @@ class DataSet:
         are created.
         """
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
-        dataset_size_px = np.prod(self.shape, dtype=np.int64)
+        dataset_size_px = prod(self.shape)
         num = max(self._cores, dataset_size_px // partition_size_float_px)
         return num
 

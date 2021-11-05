@@ -1,5 +1,6 @@
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import _roi_to_nd_indices
 
@@ -28,7 +29,7 @@ def get_coordinates(slice_: Slice, ds_shape: Shape, roi=None) -> np.ndarray:
     end_idx = o[0] + s[0]
     nav_shape = ds_shape[:-sig_dims]
     if roi is None:
-        flat_nav_shape = tuple((int(np.prod(nav_shape)),))
+        flat_nav_shape = tuple((int(prod(nav_shape)),))
         coordinates = np.stack(
             np.unravel_index(
                 np.ravel_multi_index([np.arange(start_idx, end_idx)], flat_nav_shape),

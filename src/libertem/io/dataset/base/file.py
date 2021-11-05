@@ -1,6 +1,8 @@
 from typing import NamedTuple, Tuple
 import numpy as np
 
+from libertem.common.math import prod
+
 
 class OffsetsSizes(NamedTuple):
     """
@@ -111,13 +113,13 @@ class File:
         itemsize = np.dtype(self._native_dtype).itemsize
         assert self._frame_header % itemsize == 0
         assert self._frame_footer % itemsize == 0
-        frame_size = int(np.prod(self._sig_shape, dtype=np.int64))
+        frame_size = int(prod(self._sig_shape))
         frame_offset = self._frame_header // itemsize
         file_offset = self._file_header
         skip_end = 0
 
         # cut off any extra data at the end of the file:
-        if size % int(np.prod(self._sig_shape)):
+        if size % int(prod(self._sig_shape)):
             new_mmap_size = self.num_frames * (
                 (itemsize * frame_size) + self._frame_header + self._frame_footer
             )

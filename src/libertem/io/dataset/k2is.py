@@ -11,6 +11,7 @@ import numba
 from numba.typed import List
 from ncempy.io import dm
 
+from libertem.common.math import prod
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -764,11 +765,11 @@ class K2ISDataSet(DataSet):
         self._set_skip_frames_and_nav_shape()
         if self._sig_shape is None:
             self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-        elif int(np.prod(self._sig_shape)) != int(np.prod(
+        elif int(prod(self._sig_shape)) != int(prod(
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
                 )):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(
+                "sig_shape must be of size: %s" % int(prod(
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
                 ))
             )
@@ -813,7 +814,7 @@ class K2ISDataSet(DataSet):
         self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
         if self._user_sync_offset is None:
             self._user_sync_offset = self._native_sync_offset
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self._get_sync_offset_info()
         if not self._is_time_series:
             if self._user_sync_offset == self._native_sync_offset:

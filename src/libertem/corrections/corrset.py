@@ -19,7 +19,7 @@ def factorizations(n, primes):
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
-        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
+        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1, dtype=np.int64)
         n = n // f
 
     return factorization

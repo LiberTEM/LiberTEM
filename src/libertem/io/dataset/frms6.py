@@ -12,6 +12,7 @@ import scipy.io as sio
 import numpy as np
 import numba
 
+from libertem.common.math import prod
 from libertem.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
@@ -477,11 +478,11 @@ class FRMS6DataSet(DataSet):
             self._nav_shape = tuple(hdr['stemimagesize'])
         if self._sig_shape is None:
             self._sig_shape = frame_size
-        elif int(np.prod(self._sig_shape)) != int(np.prod(frame_size)):
+        elif int(prod(self._sig_shape)) != int(prod(frame_size)):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(frame_size))
+                "sig_shape must be of size: %s" % int(prod(frame_size))
             )
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
 
         if self._enable_offset_correction:
@@ -512,7 +513,7 @@ class FRMS6DataSet(DataSet):
             hdr = executor.run_function(_read_dataset_hdr, hdr_filename)
             bin_factor = hdr['readoutmode']['bin']
             nav_shape = tuple(hdr['stemimagesize'])
-            image_count = int(np.prod(nav_shape))
+            image_count = int(prod(nav_shape))
             sig_shape = executor.run_function(_get_sig_shape, path, bin_factor)
         except Exception:
             return False

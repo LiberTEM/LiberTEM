@@ -4,6 +4,7 @@ import logging
 import psutil
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
@@ -218,8 +219,8 @@ class MemoryDataSet(DataSet):
         # if tileshape is None:
         #     sig_shape = data.shape[-sig_dims:]
         #     target = 2**20
-        #     framesize = np.prod(sig_shape)
-        #     framecount = max(1, min(np.prod(data.shape[:-sig_dims]), int(target / framesize)))
+        #     framesize = prod(sig_shape)
+        #     framecount = max(1, min(prod(data.shape[:-sig_dims]), int(target / framesize)))
         #     tileshape = (framecount, ) + sig_shape
         self.data = data
         self._base_shape = base_shape
@@ -238,7 +239,7 @@ class MemoryDataSet(DataSet):
         self._check_cast = check_cast
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
-        self._image_count = int(np.prod(self._nav_shape))
+        self._image_count = int(prod(self._nav_shape))
         self._shape = Shape(
             tuple(self._nav_shape) + tuple(self._sig_shape), sig_dims=self.sig_dims
         )
@@ -247,7 +248,7 @@ class MemoryDataSet(DataSet):
         else:
             assert len(tileshape) == self.sig_dims + 1
             self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=self._shape,

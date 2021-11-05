@@ -6,6 +6,7 @@ import contextlib
 import numpy as np
 from ncempy.io.ser import fileSER
 
+from libertem.common.math import prod
 from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
@@ -151,11 +152,11 @@ class SERDataSet(DataSet):
                 self._nav_shape = nav_dims
             if self._sig_shape is None:
                 self._sig_shape = tuple(data.shape)
-            elif int(np.prod(self._sig_shape)) != int(np.prod(data.shape)):
+            elif int(prod(self._sig_shape)) != int(prod(data.shape)):
                 raise DataSetException(
-                    "sig_shape must be of size: %s" % int(np.prod(data.shape))
+                    "sig_shape must be of size: %s" % int(prod(data.shape))
                 )
-            self._nav_shape_product = int(np.prod(self._nav_shape))
+            self._nav_shape_product = int(prod(self._nav_shape))
             self._sync_offset_info = self.get_sync_offset_info()
             self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
             self._meta = DataSetMeta(
@@ -193,7 +194,7 @@ class SERDataSet(DataSet):
                     "sig_shape": tuple(ds.shape.sig),
                 },
                 "info": {
-                    "image_count": int(np.prod(ds.shape.nav)),
+                    "image_count": int(prod(ds.shape.nav)),
                     "native_sig_shape": tuple(ds.shape.sig),
                 }
             }

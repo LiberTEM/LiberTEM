@@ -36,6 +36,7 @@ import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
@@ -512,12 +513,12 @@ class SEQDataSet(DataSet):
 
         if self._sig_shape is None:
             self._sig_shape = tuple((header['height'], header['width']))
-        elif int(np.prod(self._sig_shape)) != (header['height'] * header['width']):
+        elif int(prod(self._sig_shape)) != (header['height'] * header['width']):
             raise DataSetException(
                 "sig_shape must be of size: %s" % (header['height'] * header['width'])
             )
 
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
 

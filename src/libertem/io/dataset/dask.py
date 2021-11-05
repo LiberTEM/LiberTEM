@@ -40,26 +40,34 @@ class DaskBackendImpl(MMapBackendImpl):
 
 class DaskDataSet(DataSet):
     """
-    This dataset wraps a Dask.array.array and makes it compatible with the
-    UDF interface. Partitions are created to be aligned with the array chunking
-    where the restrictions of LiberTEM and Dask allow. When these restrictions are
-    broken, tries to perform rechunking/merging and dimension re-ordering
-    to achieve compatible and optimal behaviour. Clearly there are no guarantees.
+    Wraps a Dask.array.array such that it can be processed by LiberTEM.
+    Partitions are created to be aligned with the array chunking. When
+    the array chunking is not compatible with LiberTEM the wrapper
+    merges chunks until compatibility is achieved.
 
-    This is only useful if the underlying Dask array was created using
-    lazy I/O with something like dask.delayed. The major assumption of this
-    class is that the chunks in the provided dask array can each be individually
-    .compute()'d without causing excessive read amplification. If this is not the case
-    then this class could perform very poorly. This could occur either if the
-    array was loaded without lazy, chunked I/O, or if upstream dask computations
-    requried rechunking of the array before it was passed to this class.
+    The best-case scenario is for the original array to be chunked in
+    the leftmost navigation dimension. If instead another navigation
+    dimension is chunked then the user can set `preserve_dimension=False`
+    to re-order the navigation shape to achieve better chunking for LiberTEM.
+    If more than one navigation dimension is chunked, the class will do
+    its best to merge chunks without creating partitions which are too large.
 
-    The class performs rechunking using a merge-only strategy, it will never
-    split chunks which were present in the original array. Naturally, if the array
+    LiberTEM requires that a partition contains only whole signal frames,
+    so any signal dimension chunking is immediately merged by this class.
+
+    This is most useful when the Dask array was created using
+    lazy I/O via dask.delayed, or via dask.array operations.
+    The major assumption is that the chunks in the array can each be
+    individually evaluated without having to read or compute more data
+    than the chunk itself contains. If this is not the case then this class
+    could perform very poorly due to read amplification, or even crash the Dask
+    workers.
+
+    As the class performs rechunking using a merge-only strategy it will never
+    split chunks which were present in the original array. If the array
     is originally very lightly chunked, then the corresponding LiberTEM partitions
-    will be very large. There is also a soft assumption that the underlying file
-    is C-ordered, as we assume the signal dimensions are the rightmost and we use
-    a merge strategy from right-to-left.
+    will be very large. Similarly, over-chunked (for example one chunk per
+    frame), this can incurr excessive Dask task graph overheads.
 
     Parameters
     ----------
@@ -74,6 +82,7 @@ class DaskDataSet(DataSet):
     preserve_dimensions: bool, optional
         If False, allow optimization of the dask_arry chunking by
         re-ordering the nav_shape to put the most chunked dimensions first.
+        This can help when more than one nav dimension is chunked.
         # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional
@@ -83,7 +92,7 @@ class DaskDataSet(DataSet):
     io_backend: bool, optional
         For compatibility, accept an unused io_backend argument.
 
-    Examples
+    Example
     --------
 
     >>> from libertem.io.dataset.dask import DaskDataSet

@@ -434,7 +434,7 @@ def get_chunksizes(array, chunking=None):
     last_chunked = get_last_chunked_dim(chunking)
     if last_chunked < 0:
         return np.asarray(array.nbytes)
-    static_size = np.prod(shape[last_chunked + 1:]) * el_bytes
+    static_size = np.prod(shape[last_chunked + 1:], dtype=np.float64) * el_bytes
     chunksizes = array_mult(*chunking[:last_chunked + 1]) * static_size
     return chunksizes
 

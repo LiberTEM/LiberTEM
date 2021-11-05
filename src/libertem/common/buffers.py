@@ -7,6 +7,7 @@ import collections
 
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common.slice import Slice
 from .backend import get_use_cuda
 
@@ -42,7 +43,7 @@ def bytes_aligned(size: int) -> memoryview:
 
 
 def empty_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
-    size_flat = int(np.prod(size, dtype=np.int64))
+    size_flat = prod(size)
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size_flat)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
@@ -51,7 +52,7 @@ def empty_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
 
 
 def zeros_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
-    if dtype == object or np.prod(size, dtype=np.int64) == 0:
+    if dtype == object or prod(size) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)
@@ -115,7 +116,7 @@ class BufferPool:
 
     @contextmanager
     def zeros(self, size, dtype, alignment=4096):
-        if dtype == object or np.prod(size, dtype=np.int64) == 0:
+        if dtype == object or prod(size) == 0:
             yield np.zeros(size, dtype=dtype)
         else:
             with self.empty(size, dtype, alignment) as res:
@@ -124,7 +125,7 @@ class BufferPool:
 
     @contextmanager
     def empty(self, size, dtype, alignment=4096):
-        size_flat = np.prod(size, dtype=np.int64)
+        size_flat = prod(size)
         dtype = np.dtype(dtype)
         with self.bytes(dtype.itemsize * size_flat, alignment) as buf:
             # self.bytes may give us more memory (for alignment reasons), so
@@ -390,7 +391,7 @@ class BufferWrapper:
         return self._roi_is_zero
 
     def _update_roi_is_zero(self):
-        self._roi_is_zero = np.prod(self._shape) == 0
+        self._roi_is_zero = prod(self._shape) == 0
 
     def _slice_for_partition(self, partition):
         """
@@ -633,7 +634,7 @@ class AuxBufferWrapper(BufferWrapper):
             new_data = self._data[ps]
         buf.set_buffer(new_data, is_global=False)
         buf.set_roi(roi)
-        assert np.prod(new_data.shape) > 0
+        assert prod(new_data.shape) > 0
         assert not buf._data_coords_global
         return buf
 

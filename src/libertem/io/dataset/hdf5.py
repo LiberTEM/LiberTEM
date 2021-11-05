@@ -6,6 +6,7 @@ import time
 import numpy as np
 import h5py
 
+from libertem.common.math import prod
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.corrections import CorrectionSet
@@ -88,7 +89,7 @@ def _have_contig_chunks(chunks, ds_shape):
     False
     """
     # In other terms:
-    # There exists an index `i` such that `np.prod(chunks[:i]) == 1` and
+    # There exists an index `i` such that `prod(chunks[:i]) == 1` and
     # chunks[i+1:] == ds_shape[i+1:], limited to the nav part of chunks and ds_shape
     #
     nav_shape = tuple(ds_shape.nav)
@@ -97,7 +98,7 @@ def _have_contig_chunks(chunks, ds_shape):
 
     for i in range(nav_dims):
         left = chunks_nav[:i]
-        left_prod = np.prod(left, dtype=np.uint64)
+        left_prod = prod(left)
         if left_prod == 1 and chunks_nav[i + 1:] == nav_shape[i + 1:]:
             return True
     return False
@@ -626,7 +627,7 @@ class H5Partition(Partition):
             # switch to full frames:
             if any(t > c for t, c in zip(sig_ts, sig_chunks)):
                 # try to keep total tileshape size:
-                tileshape_size = np.prod(tileshape, dtype=np.int64)
+                tileshape_size = prod(tileshape)
                 depth = max(1, tileshape_size // self.shape.sig.size)
                 return (depth,) + self.shape.sig
             else:

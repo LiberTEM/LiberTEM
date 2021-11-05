@@ -7,6 +7,7 @@ import numpy as np
 from numba.typed import List
 import numba
 
+from libertem.common.math import prod
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
 from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
@@ -277,7 +278,7 @@ class MMapBackendImpl(IOBackendImpl):
         ds_shape = np.array(tiling_scheme.dataset_shape)
 
         largest_slice = sorted((
-            (np.prod(s_.shape), s_)
+            (prod(s_.shape), s_)
             for _, s_ in tiling_scheme.slices
         ), key=lambda x: x[0], reverse=True)[0][1]
 
@@ -287,7 +288,7 @@ class MMapBackendImpl(IOBackendImpl):
         with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
             out_decoded = out_decoded.reshape((-1,))
             slices = read_ranges[0]
-            shape_prods = np.prod(slices[..., 1, :], axis=1)
+            shape_prods = np.prod(slices[..., 1, :], axis=1, dtype=np.int64)
             ranges = read_ranges[1]
             scheme_indices = read_ranges[2]
             for idx in range(slices.shape[0]):

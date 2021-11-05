@@ -7,6 +7,7 @@ import numba
 from numba.typed import List as NumbaList
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Slice, Shape
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
 from libertem.corrections import CorrectionSet
@@ -304,7 +305,7 @@ def make_get_read_ranges(
         inner_indices_start = 0
         inner_indices_stop = min(depth, num_indices)
 
-        # this should be `np.prod(..., axis=-1)``, which is not supported by numba yet:
+        # this should be `prod(..., axis=-1)``, which is not supported by numba yet:
         # slices that divide the signal dimensions:
         slice_sig_sizes = np.array([
             np.prod(slices_arr[slice_idx, 1, :].astype(np.int64))
@@ -437,9 +438,9 @@ class Negotiator:
         size_px = max(size, io_max_size) // itemsize
         if any(s > ps for s, ps in zip(shape, partition_shape)):
             raise ValueError("generated tileshape does not fit the partition")
-        if np.prod(shape, dtype=np.int64) > size_px:
+        if prod(shape) > size_px:
             message = "shape %r (%d) does not fit into size %d" % (
-                shape, np.prod(shape, dtype=np.int64), size_px
+                shape, prod(shape), size_px
             )
             # The shape might be exceeded if dead pixel correction didn't find a
             # valid tiling scheme. In that case it falls back to by-frame processing.
@@ -537,7 +538,7 @@ class Negotiator:
         min_base_shape = self._scale_base_shape(base_shape, min_factors)
 
         # considering the min size, calculate the max depth:
-        max_depth = max(1, size_px // np.prod(min_base_shape, dtype=np.int64))
+        max_depth = max(1, size_px // prod(min_base_shape))
         if depth > max_depth:
             depth = max_depth
 
@@ -589,7 +590,7 @@ class Negotiator:
             if io_max_size is None:
                 io_max_size = 2**20
         else:
-            io_max_size = itemsize * np.prod(partition.shape, dtype=np.int64)
+            io_max_size = itemsize * prod(partition.shape)
         return io_max_size
 
     def _get_scale_factors(self, shape, containing_shape, size, min_factors=None):
@@ -611,7 +612,7 @@ class Negotiator:
             for s, cs in zip(shape, containing_shape)
         )
         prelim_shape = self._scale_base_shape(shape, factors)
-        rest = size / np.prod(prelim_shape, dtype=np.int64)
+        rest = size / prod(prelim_shape)
         if rest < 1:
             rest = 1
         for idx in range(len(shape)):
@@ -623,7 +624,7 @@ class Negotiator:
                 factor = max_factor
             factors[idx] = factor
             prelim_shape = self._scale_base_shape(shape, factors)
-            rest = max(1, math.floor(size / np.prod(prelim_shape, dtype=np.int64)))
+            rest = max(1, math.floor(size / prod(prelim_shape)))
         log.debug(
             "_get_scale_factors out: %r",
             factors,
@@ -654,8 +655,8 @@ class Negotiator:
         Calculate the maximum tile size in bytes
         """
         udf_method = udf.get_method()
-        partition_size = itemsize * np.prod(partition.shape, dtype=np.int64)
-        partition_size_sig = itemsize * np.prod(partition.shape.sig, dtype=np.int64)
+        partition_size = itemsize * prod(partition.shape)
+        partition_size_sig = itemsize * prod(partition.shape.sig)
         if udf_method == "frame":
             size = max(self._get_default_size(), partition_size_sig)
         elif udf_method == "partition":
@@ -669,7 +670,7 @@ class Negotiator:
 
             # if the base_shape is larger than the current maximum size,
             # we need to increase the size:
-            base_size = itemsize * np.prod(base_shape, dtype=np.int64)
+            base_size = itemsize * prod(base_shape)
             size = max(base_size, size)
         return size
 

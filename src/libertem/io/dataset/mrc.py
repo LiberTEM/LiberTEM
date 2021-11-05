@@ -1,9 +1,9 @@
 import os
 import logging
 
-import numpy as np
 from ncempy.io.mrc import fileMRC
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File
@@ -144,9 +144,9 @@ class MRCDataSet(DataSet):
         )
         if self._sig_shape is None:
             self._sig_shape = native_sig_shape
-        elif int(np.prod(self._sig_shape)) != int(np.prod(native_sig_shape)):
+        elif int(prod(self._sig_shape)) != int(prod(native_sig_shape)):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(native_sig_shape))
+                "sig_shape must be of size: %s" % int(prod(native_sig_shape))
             )
 
         self._sig_dims = len(self._sig_shape)

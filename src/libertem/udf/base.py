@@ -1089,7 +1089,7 @@ class UDF(UDFBase):
         ...
         >>> # for each frame, provide three values from a sequential series:
         >>> aux1 = MyUDF.aux_data(
-        ...     data=np.arange(prod(dataset.shape.nav) * 3, dtype=np.float32),
+        ...     data=np.arange(np.prod(dataset.shape.nav) * 3, dtype=np.float32),
         ...     kind="nav", extra_shape=(3,), dtype="float32"
         ... )
         >>> udf = MyUDF(aux_data=aux1)

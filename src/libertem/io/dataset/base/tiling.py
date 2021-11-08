@@ -146,7 +146,7 @@ def _default_px_to_bytes(
     read_ranges.append((file_idx, start, stop))
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, nogil=True)
 def _find_file_for_frame_idx(fileset_arr, frame_idx):
     """
     Find the file in `fileset_arr` that contains
@@ -268,7 +268,7 @@ def make_get_read_ranges(
         where the last dimension contains: file index, start_byte, stop_byte
     """
 
-    @cached_njit(boundscheck=True, cache=True)
+    @cached_njit(boundscheck=True, cache=True, nogil=True)
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, roi, depth,
         slices_arr, fileset_arr, sig_shape,

@@ -21,7 +21,7 @@ def _make_buffered_reader_and_decoder(decode):
     """
     decode: from buffers, in bytes, possibly interpreted as native_dtype, to out_decoded.dtype
     """
-    @cached_njit(boundscheck=False)
+    @cached_njit(boundscheck=False, nogil=True)
     def _buffered_tilereader(outer_idx, buffers, sig_dims, tile_read_ranges,
                            out_decoded, native_dtype, do_zero,
                            origin, shape, ds_shape, offsets):
@@ -47,7 +47,7 @@ def _make_buffered_reader_and_decoder(decode):
     return _buffered_tilereader
 
 
-@numba.njit(cache=True)
+@numba.njit(cache=True, nogil=True)
 def block_get_min_fill_factor(rrs):
     """
     Try to find out how sparse the given read ranges are, per file.

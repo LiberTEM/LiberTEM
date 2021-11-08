@@ -4,7 +4,7 @@ import numpy as np
 from libertem.common import Slice
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def _roi_to_indices(roi, start, stop, sync_offset=0):
     """
     Helper function to calculate indices from roi mask. Indices

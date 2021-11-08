@@ -84,8 +84,17 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         "bench", ('libertem', 'mmap')
     )
-    def test_inline(self, lt_ctx_fast, medium_raw, method, bench, benchmark):
+    @pytest.mark.parametrize(
+        "typ", ('uint16', 'float32')
+    )
+    def test_inline(self, lt_ctx_fast, medium_raw, medium_raw_float32, method, bench, typ, benchmark):
         ctx = lt_ctx_fast
+        if typ == 'uint16':
+            medium_raw = medium_raw
+        elif typ == 'float32':
+            medium_raw = medium_raw_float32
+        else:
+            raise ValueError()
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
         if bench == 'libertem':
             _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
@@ -103,8 +112,17 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         "bench", ('libertem', 'dask.array')
     )
-    def test_concurrent(self, concurrent_ctx, medium_raw, method, bench, benchmark):
+    @pytest.mark.parametrize(
+        "typ", ('uint16', 'float32')
+    )
+    def test_concurrent(self, concurrent_ctx, medium_raw, medium_raw_float32, method, bench, typ, benchmark):
         ctx = concurrent_ctx
+        if typ == 'uint16':
+            medium_raw = medium_raw
+        elif typ == 'float32':
+            medium_raw = medium_raw_float32
+        else:
+            raise ValueError()
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
         if bench == 'libertem':
             _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
@@ -122,11 +140,20 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         "bench", ('libertem', 'dask.array')
     )
-    def test_dist(self, shared_dist_ctx_globaldask, medium_raw, method, bench, benchmark):
+    @pytest.mark.parametrize(
+        "typ", ('uint16', 'float32')
+    )
+    def test_dist(self, shared_dist_ctx_globaldask, medium_raw, medium_raw_float32, method, bench, typ, benchmark):
         # This one has to run separately since using the shared_dist_ctx_globaldask fixture
         # makes all Dask operations use the distributed scheduler, making it perform poorly
         # with the inline and concurrent executor for LiberTEM
         ctx = shared_dist_ctx_globaldask
+        if typ == 'uint16':
+            medium_raw = medium_raw
+        elif typ == 'float32':
+            medium_raw = medium_raw_float32
+        else:
+            raise ValueError()
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
         if bench == 'libertem':
             _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)

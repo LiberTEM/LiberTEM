@@ -81,10 +81,18 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         'method', ('from_array', 'native', 'delayed')
     )
-    def test_inline(self, lt_ctx_fast, medium_raw, method, benchmark):
+    @pytest.mark.parametrize(
+        "bench", ('libertem', 'mmap')
+    )
+    def test_inline(self, lt_ctx_fast, medium_raw, method, bench, benchmark):
         ctx = lt_ctx_fast
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
-        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        if bench == 'libertem':
+            _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        elif bench == 'mmap':
+            _mmap_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        else:
+            raise ValueError()
 
     @pytest.mark.benchmark(
         group="dask from_array",
@@ -92,10 +100,18 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         'method', ('from_array', 'native', 'delayed')
     )
-    def test_concurrent(self, concurrent_ctx, medium_raw, method, benchmark):
+    @pytest.mark.parametrize(
+        "bench", ('libertem', 'dask.array')
+    )
+    def test_concurrent(self, concurrent_ctx, medium_raw, method, bench, benchmark):
         ctx = concurrent_ctx
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
-        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        if bench == 'libertem':
+            _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        elif bench == 'dask.array':
+            _dask_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        else:
+            raise ValueError()
 
     @pytest.mark.benchmark(
         group="dask from_array",
@@ -103,13 +119,21 @@ class TestDaskArray:
     @pytest.mark.parametrize(
         'method', ('from_array', 'native', 'delayed')
     )
-    def test_dist(self, shared_dist_ctx_globaldask, medium_raw, method, benchmark):
+    @pytest.mark.parametrize(
+        "bench", ('libertem', 'dask.array')
+    )
+    def test_dist(self, shared_dist_ctx_globaldask, medium_raw, method, bench, benchmark):
         # This one has to run separately since using the shared_dist_ctx_globaldask fixture
         # makes all Dask operations use the distributed scheduler, making it perform poorly
         # with the inline and concurrent executor for LiberTEM
         ctx = shared_dist_ctx_globaldask
         ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
-        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        if bench == 'libertem':
+            _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        elif bench == 'dask.array':
+            _dask_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+        else:
+            raise ValueError()
 
 
 def _mk_ds(method, ctx, raw_ds):
@@ -125,7 +149,7 @@ def _mk_ds(method, ctx, raw_ds):
         arr = _mk_dask_from_delayed(
             shape=shape,
             dtype=dtype,
-            chunking=(1, -1, 32, -1),
+            chunking=(4, -1, 64, -1),
             filename=filename
         )
         ds = ctx.load('dask', arr, sig_dims=2)
@@ -135,9 +159,28 @@ def _mk_ds(method, ctx, raw_ds):
     return ds
 
 
-def _do_bench(ctx, ds, benchmark):
+def _libertem_bench(ctx, ds, benchmark):
     benchmark(
         ctx.run_udf,
         dataset=ds,
         udf=SumUDF()
     )
+
+
+def _dask_bench(ctx, ds, benchmark):
+    if hasattr(ds, '_array') and isinstance(ds._array, da.Array):
+        benchmark(ds._array.sum(axis=(0, 1)).compute)
+    else:
+        pytest.skip("Not a Dask array")
+
+
+def _mmap_bench(ds, benchmark):
+    if not hasattr(ds, '_array') and hasattr(ds, '_dtype'):
+        filename = ds._path
+        shape = tuple(ds.shape)
+        dtype = ds.dtype
+        arr = np.memmap(filename, shape=shape, dtype=dtype, mode='r')
+
+        benchmark(arr.sum, axis=(0, 1))
+    else:
+        pytest.skip("Not a RAW dataset")

@@ -132,7 +132,7 @@ class ConcurrentJobExecutor(JobExecutor):
 
     def close(self):
         if self.is_local:
-            self.client.shutdown(wait=False, cancel_futures=True)
+            self.client.shutdown(wait=False)
 
     @classmethod
     def make_local(cls):
@@ -147,7 +147,6 @@ class ConcurrentJobExecutor(JobExecutor):
         devices = detect()
         n_threads = len(devices['cpus'])
         client = concurrent.futures.ThreadPoolExecutor(max_workers=n_threads)
-
         return cls(client=client, is_local=True)
 
     def __enter__(self):

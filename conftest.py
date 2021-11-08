@@ -25,6 +25,7 @@ from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import BufferedBackend, MMapBackend, DirectBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
+from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.utils.threading import set_num_threads_env
 from libertem.viz.base import Dummy2DPlot
 
@@ -336,6 +337,44 @@ def large_raw(large_raw_file):
 
 
 @pytest.fixture(scope='session')
+def medium_raw_file(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-medium-sparse'
+    shape = (128, 128, 256, 256)
+    dtype = np.uint16
+    size = np.prod(np.int64(shape)) * np.dtype(dtype).itemsize
+    if platform.system() == "Windows":
+        os.system(f'FSUtil File CreateNew "{filename}" 0x{size:X}')
+        os.system('FSUtil Sparse SetFlag "%s"' % filename)
+        os.system(f'FSUtil Sparse SetRange "{filename}" 0 0x{size:X}')
+    else:
+        with open(filename, 'wb') as f:
+            f.truncate(size)
+        stat = os.stat(filename)
+        if stat.st_blocks != 0:
+            warnings.warn(
+                f"Created file {filename} is not reported as "
+                f"sparse: {stat}, blocks {stat.st_blocks}"
+            )
+    yield filename, shape, dtype
+
+
+@pytest.fixture(scope='session')
+def medium_raw(medium_raw_file):
+    filename, shape, dtype = medium_raw_file
+    ds = RawFileDataSet(
+        path=str(filename),
+        nav_shape=shape[:2],
+        dtype=dtype,
+        sig_shape=shape[2:],
+        io_backend=MMapBackend()
+    )
+    ds.set_num_cores(2)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
+@pytest.fixture(scope='session')
 def uint16_raw(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-default-uint16'
@@ -455,6 +494,41 @@ def shared_dist_ctx():
     ctx.close()
 
 
+@pytest.fixture(scope="class")
+def shared_dist_ctx_globaldask():
+    # Sets default dask.distributed client
+    # for integration testing
+    print("start shared Context()")
+    devices = detect()
+    spec = cluster_spec(
+        # Only use at most 2 CPUs and 1 GPU
+        cpus=devices['cpus'],
+        cudas=devices['cudas'],
+        has_cupy=devices['has_cupy']
+    )
+
+    cluster_kwargs = {
+        'silence_logs': logging.WARN,
+        'scheduler': {
+            'cls': Scheduler,
+        },
+    }
+
+    with set_num_threads_env(1, set_numba=False):
+        cluster = dd.SpecCluster(
+            workers=spec,
+            **(cluster_kwargs or {})
+        )
+        client = dd.Client(cluster, set_as_default=True)
+        client.wait_for_workers(len(spec))
+    ctx = lt.Context(executor=DaskJobExecutor(client))
+    yield ctx
+    print("stop shared Context()")
+    ctx.close()
+    client.close()
+    cluster.close()
+
+
 @pytest.fixture(autouse=True)
 def fixup_event_loop():
     import nest_asyncio
@@ -551,6 +625,13 @@ async def async_executor(local_cluster_url):
 @pytest.fixture
 def dask_executor(local_cluster_url):
     executor = DaskJobExecutor.connect(local_cluster_url)
+    yield executor
+    executor.close()
+
+
+@pytest.fixture
+def concurrent_executor():
+    executor = ConcurrentJobExecutor.make_local()
     yield executor
     executor.close()
 
@@ -713,6 +794,11 @@ def local_cluster_url():
 @pytest.fixture(scope='function')
 def local_cluster_ctx(dask_executor):
     return lt.Context(executor=dask_executor)
+
+
+@pytest.fixture
+def concurrent_ctx(concurrent_executor):
+    return lt.Context(executor=concurrent_executor)
 
 
 @pytest.fixture

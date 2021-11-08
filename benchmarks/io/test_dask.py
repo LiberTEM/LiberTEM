@@ -90,7 +90,7 @@ class TestDaskArray:
         if bench == 'libertem':
             _libertem_bench(ctx=ctx, ds=ds, benchmark=benchmark)
         elif bench == 'mmap':
-            _mmap_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+            _mmap_bench(ds=ds, benchmark=benchmark)
         else:
             raise ValueError()
 

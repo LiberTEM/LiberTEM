@@ -1,8 +1,12 @@
 import pathlib
 import importlib
+
 import pytest
+import numpy as np
+import dask.array as da
 
 from libertem.udf.base import NoOpUDF
+from libertem.udf.sum import SumUDF
 
 # Load the dask dataset utils from the tests folder
 # This is really ugly but we're outside of the package structure!
@@ -33,9 +37,9 @@ __nblock_params = ((100, 1, 1, 1),
     __nblock_params,
     ids=tuple(f'nblocks: {c}' for c in __nblock_params)
 )
-def test_dask_nav_chunking(shared_dist_ctx, large_raw_file, nblocks, benchmark):
-    _run_benchmark(shared_dist_ctx, large_raw_file, nblocks, benchmark,
-                   preserve_dim=True, min_size=None)
+def test_dask_nav_chunking(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark):
+    _run_benchmark(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark,
+                preserve_dim=True, min_size=None)
 
 
 def _run_benchmark(shared_dist_ctx, large_raw_file, nblocks, benchmark, preserve_dim, min_size):
@@ -67,4 +71,73 @@ def _run_benchmark(shared_dist_ctx, large_raw_file, nblocks, benchmark, preserve
         warmup_rounds=0,
         rounds=5,
         iterations=1,
+    )
+
+
+class TestDaskArray:
+    @pytest.mark.benchmark(
+        group="dask from_array",
+    )
+    @pytest.mark.parametrize(
+        'method', ('from_array', 'native', 'delayed')
+    )
+    def test_inline(self, lt_ctx_fast, medium_raw, method, benchmark):
+        ctx = lt_ctx_fast
+        ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
+        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+
+    @pytest.mark.benchmark(
+        group="dask from_array",
+    )
+    @pytest.mark.parametrize(
+        'method', ('from_array', 'native', 'delayed')
+    )
+    def test_concurrent(self, concurrent_ctx, medium_raw, method, benchmark):
+        ctx = concurrent_ctx
+        ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
+        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+
+    @pytest.mark.benchmark(
+        group="dask from_array",
+    )
+    @pytest.mark.parametrize(
+        'method', ('from_array', 'native', 'delayed')
+    )
+    def test_dist(self, shared_dist_ctx_globaldask, medium_raw, method, benchmark):
+        # This one has to run separately since using the shared_dist_ctx_globaldask fixture
+        # makes all Dask operations use the distributed scheduler, making it perform poorly
+        # with the inline and concurrent executor for LiberTEM
+        ctx = shared_dist_ctx_globaldask
+        ds = _mk_ds(method=method, ctx=ctx, raw_ds=medium_raw)
+        _do_bench(ctx=ctx, ds=ds, benchmark=benchmark)
+
+
+def _mk_ds(method, ctx, raw_ds):
+    filename = raw_ds._path
+    shape = tuple(raw_ds.shape)
+    dtype = raw_ds.dtype
+    if method == 'from_array':
+        arr = da.from_array(np.memmap(filename, shape=shape, dtype=dtype, mode='r'))
+        ds = ctx.load('dask', arr, sig_dims=2)
+    elif method == 'native':
+        ds = raw_ds
+    elif method == 'delayed':
+        arr = _mk_dask_from_delayed(
+            shape=shape,
+            dtype=dtype,
+            chunking=(1, -1, 32, -1),
+            filename=filename
+        )
+        ds = ctx.load('dask', arr, sig_dims=2)
+    else:
+        raise ValueError
+
+    return ds
+
+
+def _do_bench(ctx, ds, benchmark):
+    benchmark(
+        ctx.run_udf,
+        dataset=ds,
+        udf=SumUDF()
     )

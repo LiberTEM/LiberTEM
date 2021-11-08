@@ -7,7 +7,7 @@ from libertem.udf import UDF
 from libertem.common.buffers import reshaped_view
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     '''
     Basic function to perform numerically stable merge.
@@ -55,7 +55,7 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     return sumsum, varsum
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
     """
     Given two sets of buffers, with sum of frames
@@ -101,7 +101,7 @@ def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
     return n
 
 
-@numba.njit(fastmath=True)
+@numba.njit(fastmath=True, nogil=True)
 def process_tile(tile, n_0, sum_inout, varsum_inout):
     '''
     Compute sum and variance of :code:`tile` along navigation axis

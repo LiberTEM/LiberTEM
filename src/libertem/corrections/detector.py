@@ -9,7 +9,7 @@ from libertem.common.numba import (
 )
 
 
-@numba.njit(cache=True)
+@numba.njit(cache=True, nogil=True)
 def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_environments,
         repair_counts):
     '''
@@ -102,7 +102,7 @@ def _correct_numba_inplace(buffer, dark_image, gain_map, exclude_pixels, repair_
     return buffer
 
 
-@numba.njit(cache=True)
+@numba.njit(cache=True, nogil=True)
 def environments(excluded_pixels, sigshape):
     '''
     Calculate a hypercube surface around a pixel, excluding frame boundaries
@@ -151,7 +151,7 @@ class RepairValueError(ValueError):
     pass
 
 
-@numba.njit(cache=True)
+@numba.njit(cache=True, nogil=True)
 def flatten_filter(excluded_pixels, repairs, repair_counts, sig_shape):
     '''
     Flatten excluded pixels and repair environments and filter for collisions

@@ -77,6 +77,10 @@ stages:
         - bash: tox -- -m slow --cov-append tests/
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
+      - ${{ if eq(python.version, '3.9') }}:
+        - bash: tox -e mypy
+          displayName: 'Run mypy type checks'
+
       - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
         displayName: 'Submit coverage to codecov.io'
 

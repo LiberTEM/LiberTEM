@@ -1,16 +1,23 @@
-from typing import Iterable
+from typing import Any, Iterable, Optional, Tuple, Union
+from typing_extensions import Literal
 import mmap
 import math
 from contextlib import contextmanager
 import collections
 
+from numpy import typing as nt
 import numpy as np
 
 from libertem.common.slice import Slice
 from .backend import get_use_cuda
 
+BufferKind = Literal['nav', 'sig', 'single']
+BufferLocation = Optional[Literal['device']]
+BufferUse = Literal['private', 'result_only']
+BufferSize = Union[int, Tuple[int, ...]]
 
-def _alloc_aligned(size, blocksize=4096):
+
+def _alloc_aligned(size: int, blocksize: int = 4096) -> mmap.mmap:
     # round up to (default 4k) blocks:
     blocks = math.ceil(size / blocksize)
 
@@ -26,22 +33,22 @@ def _alloc_aligned(size, blocksize=4096):
     return buf
 
 
-def bytes_aligned(size):
+def bytes_aligned(size: int) -> memoryview:
     buf = _alloc_aligned(size)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
     return memoryview(buf)[:size]
 
 
-def empty_aligned(size, dtype):
-    size_flat = np.prod(size, dtype=np.int64)
+def empty_aligned(size: BufferSize, dtype: nt.DTypeLike) -> np.ndarray:
+    size_flat = int(np.prod(size, dtype=np.int64))
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size_flat)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
-    npbuf = np.frombuffer(buf, dtype=dtype)[:size_flat]
+    npbuf: np.ndarray = np.frombuffer(buf, dtype=dtype)[:size_flat]
     return npbuf.reshape(size)
 
 
-def zeros_aligned(size, dtype):
+def zeros_aligned(size: BufferSize, dtype: nt.DTypeLike) -> np.ndarray:
     if dtype == object or np.prod(size, dtype=np.int64) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
@@ -50,7 +57,8 @@ def zeros_aligned(size, dtype):
     return res
 
 
-def to_numpy(a):
+# FIXME: type annotation for cupy.ndarray without importing?
+def to_numpy(a: Union[np.ndarray, Any]) -> np.ndarray:
     # .. versionadded:: 0.6.0
     cuda_device = get_use_cuda()
     if isinstance(a, np.ndarray):
@@ -206,12 +214,12 @@ class BufferWrapper:
 
         .. versionadded:: 0.7.0
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
         self._where = where
-        self._data = None
+        self._data: Optional[np.ndarray] = None
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None

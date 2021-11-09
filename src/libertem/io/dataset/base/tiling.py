@@ -6,6 +6,7 @@ import warnings
 import numba
 from numba.typed import List as NumbaList
 import numpy as np
+import numpy.typing as nt
 
 from libertem.common import Slice, Shape
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
@@ -452,7 +453,7 @@ class Negotiator:
                 )
 
     def get_scheme(
-            self, udfs, partition, read_dtype: np.dtype, roi: Optional[np.ndarray],
+            self, udfs, partition, read_dtype: nt.DTypeLike, roi: Optional[np.ndarray],
             corrections: CorrectionSet = None):
         """
         Generate a :class:`TilingScheme` instance that is

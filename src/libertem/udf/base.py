@@ -324,7 +324,7 @@ class UDFData:
         if k in self._views:
             return self._views[k]
         res = self._data[k]
-        if hasattr(res, 'raw_data') and res.raw_data is not None:
+        if isinstance(res, BufferWrapper) and res.raw_data is not None:
             return res.raw_data
         return res
 

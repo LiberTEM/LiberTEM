@@ -322,7 +322,7 @@ class BufferWrapper:
         return self._dtype
 
     @property
-    def raw_data(self):
+    def raw_data(self) -> Optional[np.ndarray]:
         """
         Get the raw data underlying this buffer, which is flattened and
         may be even filtered to a ROI

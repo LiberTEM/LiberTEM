@@ -1,7 +1,7 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional, Any, Iterable
+from typing import Optional, Any, Iterable, TYPE_CHECKING
 from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
@@ -10,6 +10,9 @@ from libertem.utils.threading import set_num_threads
 from libertem.utils.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
+
+if TYPE_CHECKING:
+    from libertem.udf.base import UDFParams
 
 
 class ExecutorError(Exception):
@@ -56,7 +59,7 @@ class Environment:
 
 
 class TaskProtocol(Protocol):
-    def __call__(self, env: Environment, params: Any):
+    def __call__(self, params: "UDFParams", env: Environment):
         pass
 
 

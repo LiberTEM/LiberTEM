@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 
 '''
@@ -18,7 +19,7 @@ where an :class:`~libertem.executor.inline.InlineJobExecutor` runs tasks.
 '''
 
 
-def get_use_cuda():
+def get_use_cuda() -> Union[int, None]:
     '''
     .. versionadded:: 0.6.0
 

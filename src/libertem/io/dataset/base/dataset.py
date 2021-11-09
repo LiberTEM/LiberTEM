@@ -1,12 +1,19 @@
 import typing
+from typing import Generator, Optional
 
+from numpy import typing as nt
 import numpy as np
+from libertem.common.shape import Shape
 
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
 from libertem.corrections.corrset import CorrectionSet
-from .partition import BasePartition
+from .partition import BasePartition, Partition
+
+if typing.TYPE_CHECKING:
+    from libertem.executor.base import JobExecutor
+    from libertem.io.dataset.base import IOBackend
 
 
 class DataSet:
@@ -21,7 +28,7 @@ class DataSet:
         self._nav_shape_product = 0
         self._io_backend = io_backend
 
-    def initialize(self, executor):
+    def initialize(self, executor) -> "DataSet":
         """
         Perform possibly expensive initialization, like pre-loading metadata.
 
@@ -38,7 +45,7 @@ class DataSet:
         """
         raise NotImplementedError()
 
-    def set_num_cores(self, cores):
+    def set_num_cores(self, cores: int) -> None:
         self._cores = cores
 
     def get_sync_offset_info(self):
@@ -61,7 +68,7 @@ class DataSet:
             )
         }
 
-    def get_num_partitions(self):
+    def get_num_partitions(self) -> int:
         """
         Returns the number of partitions the dataset should be split into.
 
@@ -85,7 +92,7 @@ class DataSet:
             sync_offset=self._sync_offset,
         )
 
-    def get_partitions(self):
+    def get_partitions(self) -> Generator[Partition, None, None]:
         """
         Return a generator over all Partitions in this DataSet. Should only
         be called on the master node.
@@ -93,28 +100,28 @@ class DataSet:
         raise NotImplementedError()
 
     @property
-    def dtype(self):
+    def dtype(self) -> nt.DTypeLike:
         """
         the destination data type
         """
         raise NotImplementedError()
 
     @property
-    def raw_dtype(self):
+    def raw_dtype(self) -> nt.DTypeLike:
         """
         the underlying data type
         """
         raise NotImplementedError()
 
     @property
-    def shape(self):
+    def shape(self) -> Shape:
         """
         The shape of the DataSet, as it makes sense for the application domain
         (for example, 4D for pixelated STEM)
         """
         raise NotImplementedError()
 
-    def check_valid(self):
+    def check_valid(self) -> bool:
         """
         check validity of the DataSet. this will be executed (after initialize) on a worker node.
         should raise DataSetException in case of errors, return True otherwise.
@@ -122,7 +129,7 @@ class DataSet:
         raise NotImplementedError()
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path: str, executor: "JobExecutor"):
         """
         Guess if path can be opened using this DataSet implementation and
         detect parameters.
@@ -168,7 +175,12 @@ class DataSet:
         """
         return []
 
-    def partition_shape(self, dtype, target_size, min_num_partitions=None):
+    def partition_shape(
+        self,
+        dtype: nt.DTypeLike,
+        target_size: int,
+        min_num_partitions: Optional[int] = None,
+    ) -> typing.Tuple[int, ...]:
         """
         Calculate partition shape for the given ``target_size``
 
@@ -205,11 +217,11 @@ class DataSet:
         """
         return set()
 
-    def get_cache_key(self):
+    def get_cache_key(self) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def get_default_io_backend(cls):
+    def get_default_io_backend(cls) -> "IOBackend":
         import platform
         if platform.system() == "Windows":
             from libertem.io.dataset.base import BufferedBackend
@@ -224,12 +236,12 @@ class DataSet:
         """
         return ["mmap", "buffered", "direct"]
 
-    def get_io_backend(self):
+    def get_io_backend(self) -> "IOBackend":
         if self._io_backend is None:
             return self.get_default_io_backend()
         return self._io_backend
 
-    def get_correction_data(self):
+    def get_correction_data(self) -> CorrectionSet:
         """
         Correction parameters that are part of this DataSet.
         This should only be called after the DataSet is initialized.

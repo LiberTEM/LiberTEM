@@ -1,5 +1,6 @@
 import operator
 import functools
+from typing import Any, Dict, Iterator, Sequence, Tuple, Union
 
 
 class Shape:
@@ -17,14 +18,14 @@ class Shape:
 
     __slots__ = ["_sig_dims", "_nav_shape", "_sig_shape"]
 
-    def __init__(self, shape, sig_dims):
+    def __init__(self, shape: "ShapeLike", sig_dims: int):
         nav_dims = len(shape) - sig_dims
         self._sig_dims = sig_dims
-        self._nav_shape = tuple(shape[:nav_dims])
-        self._sig_shape = tuple(shape[nav_dims:])
+        self._nav_shape = tuple(shape)[:nav_dims]
+        self._sig_shape = tuple(shape)[nav_dims:]
 
     @property
-    def nav(self):
+    def nav(self) -> "Shape":
         """
         Crop to navigation dimensions
 
@@ -44,7 +45,7 @@ class Shape:
         return Shape(shape=self._nav_shape, sig_dims=0)
 
     @property
-    def sig(self):
+    def sig(self) -> "Shape":
         """
         Crop to signal dimensions
 
@@ -63,11 +64,11 @@ class Shape:
         """
         return Shape(shape=self._sig_shape, sig_dims=self._sig_dims)
 
-    def to_tuple(self):
+    def to_tuple(self) -> Tuple[int, ...]:
         return tuple(self)
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Number of elements covered by this shape
 
@@ -84,7 +85,7 @@ class Shape:
             return 0
         return functools.reduce(operator.mul, shape_tuple)
 
-    def flatten_nav(self):
+    def flatten_nav(self) -> "Shape":
         """
         Returns a new Shape that is flat in the navigation dimensions
 
@@ -98,7 +99,7 @@ class Shape:
         """
         return Shape(shape=(self.nav.size,) + self._sig_shape, sig_dims=self._sig_dims)
 
-    def flatten_sig(self):
+    def flatten_sig(self) -> "Shape":
         """
         Flatten in the signal dimensions
 
@@ -113,7 +114,7 @@ class Shape:
         return Shape(shape=self._nav_shape + (self.sig.size,), sig_dims=1)
 
     @property
-    def dims(self):
+    def dims(self) -> int:
         """
         Number of dimensions
 
@@ -131,31 +132,33 @@ class Shape:
         """
         return len(self)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         """
         Iterate over all parts of the shape
         """
         return iter(self._nav_shape + self._sig_shape)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(tuple(self))
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: Union[int, slice]) -> Union[int, Tuple[int, ...]]:
         return tuple(self)[k]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._sig_shape) + len(self._nav_shape)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """
         Shape instances are equal if both the shape tuple and the number of signal dimensions
         are equal.
         """
+        if not isinstance(other, Shape):
+            raise NotImplementedError()
         dims_eq = self._sig_dims == other._sig_dims
         values_eq = tuple(self) == tuple(other)
         return dims_eq and values_eq
 
-    def __add__(self, other):
+    def __add__(self, other: object) -> "Shape":
         """
         Right addition of a Shape object and a tuple.
         Right addition adds the tuple to the signal dimensions of the Shape object.
@@ -164,9 +167,9 @@ class Shape:
             return Shape(self._nav_shape + self._sig_shape + other,
                  sig_dims=self.sig.dims + len(other))
         else:
-            return NotImplemented
+            raise NotImplementedError()
 
-    def __radd__(self, other):
+    def __radd__(self, other: object) -> "Shape":
         """
         Left addition of a Shape object and a tuple
         Left addition adds the tuple to the navigation dimensions of the Shape object.
@@ -177,12 +180,15 @@ class Shape:
         else:
             return NotImplemented
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict[str, Any]:
         return {
             k: getattr(self, k)
             for k in self.__slots__
         }
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: Dict[str, Any]) -> None:
         for k, v in state.items():
             setattr(self, k, v)
+
+
+ShapeLike = Union[Shape, Sequence[int]]

@@ -330,6 +330,23 @@ the pre-commit hooks before each commit:
 We recommend using an editor that can check code style on the fly, such as
 `Visual Studio Code <https://code.visualstudio.com/docs/python/linting>`__.
 
+Mypy type annotations
+~~~~~~~~~~~~~~~~~~~~~
+
+We are starting to introduce type annotations and checking them in CI with
+`mypy <http://mypy-lang.org/>`_.
+Adding type annotations improves developer experience, especially by improving
+auto completion and type information on hover in IDEs.  The checks can be run
+locally with:
+
+.. code-block:: shell
+
+   $ tox -e mypy
+
+Type checking is currently quite lax and opt-in. See the file
+:code:`.mypy-checked` for the list of Python files that opt in.
+When adding new code, please consider adding new modules to the list.
+
 Docstrings
 ~~~~~~~~~~
 

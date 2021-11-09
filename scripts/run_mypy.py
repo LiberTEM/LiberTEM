@@ -10,19 +10,31 @@ def main():
 
     with open(os.path.join(BASE_DIR, "../.mypy-checked")) as f:
         files_project = set(f.read().split())
-        print(files_project)
 
     files_cmdline = set(sys.argv[1:])
-    print(files_cmdline)
 
-    files = files_cmdline.intersection(files_project)
-    print(files)
+    args = []
+    if len(files_cmdline) == 0:
+        files = files_project
+    else:
+        files = files_cmdline.intersection(files_project)
+        args = [
+            f
+            for f in files_cmdline
+            if f.startswith('--')
+        ]
 
     if not files:
         print("nothing to check")
         return
 
-    subprocess.run([shutil.which("mypy")] + list(files), check=True)
+    cmd = [shutil.which("mypy")] + list(files) + args
+    print(f"running mypy: {' '.join(cmd)}")
+
+    subprocess.run(
+        cmd, check=True,
+        cwd=os.path.join(BASE_DIR, '..'),
+    )
 
 
 if __name__ == "__main__":

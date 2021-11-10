@@ -1,3 +1,4 @@
+from typing import Optional, Tuple
 from libertem.common import Shape
 from libertem.common.math import prod
 
@@ -12,7 +13,11 @@ except ModuleNotFoundError:
     from libertem.win_tweaks import get_owner_name  # noqa: F401
 
 
-def get_partition_shape(dataset_shape: Shape, target_size_items: int, min_num: int = None):
+def get_partition_shape(
+    dataset_shape: Shape,
+    target_size_items: int,
+    min_num: Optional[int] = None
+) -> Tuple[int, ...]:
     """
     Calculate partition shape for the given ``target_size_items``
 
@@ -29,14 +34,14 @@ def get_partition_shape(dataset_shape: Shape, target_size_items: int, min_num: i
         minimum number of partitions
     """
     sig_size = dataset_shape.sig.size
-    current_p_shape = ()
+    current_p_shape: Tuple[int, ...] = ()
 
     if min_num is None:
         min_num = 1
 
     target_size_items = min(target_size_items, int(dataset_shape.size // min_num))
 
-    for dim in reversed(dataset_shape.nav):
+    for dim in reversed(tuple(dataset_shape.nav)):
         proposed_shape = (dim,) + current_p_shape
         proposed_size = prod(proposed_shape) * sig_size
         if proposed_size <= target_size_items:

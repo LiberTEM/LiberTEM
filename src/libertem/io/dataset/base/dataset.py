@@ -258,7 +258,7 @@ class DataSet:
         """
         minimum signal size, in number of elements
         """
-        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
+        return 4 * 4096 // np.dtype(self.raw_dtype).itemsize
 
     def get_max_io_size(self) -> Optional[int]:
         """

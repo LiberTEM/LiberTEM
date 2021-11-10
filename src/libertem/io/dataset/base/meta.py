@@ -1,7 +1,12 @@
+from typing import Any, Optional, TYPE_CHECKING
+
 import jsonschema
 import numpy as np
 
 from libertem.common import Shape
+
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
 
 class DataSetMeta:
@@ -27,13 +32,20 @@ class DataSetMeta:
     metadata
         Any metadata offered by the DataSet, not specified yet
     """
-    def __init__(self, shape: Shape, image_count=0, raw_dtype=None, dtype=None, metadata=None,
-                 sync_offset=0):
+    def __init__(
+        self,
+        shape: Shape,
+        image_count: int = 0,
+        raw_dtype: "Optional[nt.DTypeLike]" = None,
+        dtype: "Optional[nt.DTypeLike]" = None,
+        metadata: Optional[Any] = None,
+        sync_offset: int = 0
+    ):
         self.shape = shape
         if dtype is None:
             dtype = raw_dtype
-        self.dtype = np.dtype(dtype)
-        self.raw_dtype = np.dtype(raw_dtype)
+        self.dtype: np.dtype = np.dtype(dtype)
+        self.raw_dtype: np.dtype = np.dtype(raw_dtype)
         self.image_count = image_count
         self.sync_offset = sync_offset
         self.metadata = metadata

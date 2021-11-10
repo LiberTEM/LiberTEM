@@ -235,6 +235,13 @@ class SERDataSet(DataSet):
             )
         ])
 
+    def get_base_shape(self, roi):
+        return (1,) + tuple(self.shape.sig)
+
+    def adjust_tileshape(self, tileshape, roi):
+        # force single-frame tiles
+        return (1,) + tileshape[1:]
+
     def get_partitions(self):
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
@@ -246,6 +253,7 @@ class SERDataSet(DataSet):
                 start_frame=start,
                 num_frames=stop - start,
                 io_backend=self.get_io_backend(),
+                decoder=None,
             )
 
     def __repr__(self):
@@ -262,13 +270,6 @@ class SERPartition(BasePartition):
             raise ValueError(
                 f"invalid tiling scheme ({tiling_scheme.shape!r}): sig shape must match"
             )
-
-    def adjust_tileshape(self, tileshape, roi):
-        # force single-frame tiles
-        return (1,) + tileshape[1:]
-
-    def get_base_shape(self, roi):
-        return (1,) + tuple(self.shape.sig)
 
     def _preprocess(self, tile_data, tile_slice):
         if self._corrections is None:

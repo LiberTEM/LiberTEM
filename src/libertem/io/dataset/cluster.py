@@ -97,10 +97,6 @@ class ClusterDataSet(WritableDataSet, DataSet):
         return self._dtype
 
     @property
-    def raw_dtype(self):
-        return self._dtype
-
-    @property
     def shape(self):
         return self._meta.shape
 

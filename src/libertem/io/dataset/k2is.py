@@ -998,6 +998,12 @@ class K2ISDataSet(DataSet):
             )
         return sy
 
+    def get_decoder(self) -> Decoder:
+        return K2ISDecoder()
+
+    def get_base_shape(self, roi):
+        return (1, 930, 16)
+
     def _get_fileset(self):
         files = [
             K2ISFile(
@@ -1023,6 +1029,7 @@ class K2ISDataSet(DataSet):
                 start_frame=start,
                 num_frames=stop - start,
                 io_backend=io_backend,
+                decoder=self.get_decoder(),
             )
 
     def __repr__(self):
@@ -1032,9 +1039,6 @@ class K2ISDataSet(DataSet):
 
 
 class K2ISPartition(BasePartition):
-    def _get_decoder(self):
-        return K2ISDecoder()
-
     def validate_tiling_scheme(self, tiling_scheme):
         a = len(tiling_scheme.shape) == 3
         b = tiling_scheme.shape[1] % 930 == 0
@@ -1043,6 +1047,3 @@ class K2ISPartition(BasePartition):
             raise ValueError(
                 "Invalid tiling scheme: needs to be aligned to blocksize (930, 16)"
             )
-
-    def get_base_shape(self, roi):
-        return (1, 930, 16)

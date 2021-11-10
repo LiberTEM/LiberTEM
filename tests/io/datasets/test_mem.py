@@ -205,7 +205,7 @@ def test_scheme_too_large():
     data = _mk_random(size=(16, 16, 16, 16))
     ds = MemoryDataSet(
         data=data,
-        tileshape=(16, 16, 16),
+        # tileshape=(16, 16, 16),
         num_partitions=2,
     )
 

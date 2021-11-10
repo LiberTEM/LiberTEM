@@ -152,7 +152,8 @@ def prime_numba_cache(ds):
                     p.set_corrections(corrections)
                     tiling_scheme = neg.get_scheme(
                         udfs=[udf],
-                        partition=p,
+                        dataset=ds,
+                        approx_partition_shape=p.shape,
                         read_dtype=dtype,
                         roi=roi,
                         corrections=corrections,

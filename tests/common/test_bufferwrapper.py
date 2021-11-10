@@ -114,9 +114,9 @@ class BadMemoryDS(MemoryDataSet):
                 num_frames=stop - start,
                 tiledelay=self._tiledelay,
                 tileshape=self.tileshape,
-                base_shape=self._base_shape,
                 force_need_decode=self._force_need_decode,
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
 

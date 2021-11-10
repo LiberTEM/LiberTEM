@@ -442,6 +442,7 @@ class CachedDataSet(DataSet):
                 db_path=self._get_db_path(),
                 idx=idx,
                 io_backend=self.get_io_backend(),
+                decoder=None,
             )
 
     def evict(self, executor):
@@ -457,8 +458,13 @@ class CachedDataSet(DataSet):
 
 class CachedPartition(Partition):
     def __init__(self, source_part, cluster_part, meta, partition_slice,
-                 cache_key, cache_strategy, db_path, idx, io_backend):
-        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
+                 cache_key, cache_strategy, db_path, idx, io_backend, decoder):
+        super().__init__(
+            meta=meta,
+            partition_slice=partition_slice,
+            io_backend=io_backend,
+            decoder=decoder
+        )
         self._source_part = source_part
         self._cluster_part = cluster_part
         self._cache_key = cache_key

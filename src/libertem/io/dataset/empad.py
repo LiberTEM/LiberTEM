@@ -10,7 +10,6 @@ from libertem.web.messages import MessageConverter
 from .base import DataSet, DataSetException, DataSetMeta, BasePartition, IOBackend
 from .raw import RawFile, RawFileSet
 
-
 EMPAD_DETECTOR_SIZE = (128, 128)
 EMPAD_DETECTOR_SIZE_RAW = (130, 128)
 

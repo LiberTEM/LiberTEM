@@ -498,8 +498,7 @@ def test_chunked_weird(lt_ctx, tmpdir_factory, chunks, udf, shared_random_data):
 
     ds = lt_ctx.load("hdf5", path=filename)
 
-    p = next(ds.get_partitions())
-    base_shape = p.get_base_shape(roi=None)
+    base_shape = ds.get_base_shape(roi=None)
     print(base_shape)
 
     res = lt_ctx.run_udf(dataset=ds, udf=udf)
@@ -544,7 +543,8 @@ def test_hdf5_result_dtype(lt_ctx, tmpdir_factory, in_dtype, read_dtype, use_roi
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
-        partition=p,
+        dataset=ds,
+        approx_partition_shape=p.shape,
         read_dtype=read_dtype,
         roi=roi,
         corrections=None,
@@ -580,7 +580,8 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
-        partition=p,
+        dataset=ds,
+        approx_partition_shape=p.shape,
         read_dtype=np.float32,
         roi=None,
         corrections=None,

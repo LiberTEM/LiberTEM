@@ -7,6 +7,7 @@ from libertem.udf.base import UDF, UDFRunner, UDFParams
 from libertem.udf.base import UDFMeta
 from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.io.dataset.base import TilingScheme
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
@@ -555,11 +556,16 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         res = lt_ctx.run_udf(udf=udf, dataset=dataset)
         partition = next(dataset.get_partitions())
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=dataset.tileshape,
+            dataset_shape=dataset.shape,
+        )
         # Enabling debug=True checks for disjoint cache keys
         params = UDFParams.from_udfs(
             udfs=[udf],
             roi=None,
-            corrections=None
+            corrections=None,
+            tiling_scheme=tiling_scheme,
         )
         UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,

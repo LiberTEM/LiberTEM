@@ -681,6 +681,16 @@ class MIBDataSet(DataSet):
             "sync_offset": self._sync_offset,
         }
 
+    def get_decoder(self) -> Decoder:
+        first_file = self._files_sorted[0]
+        kind = first_file.fields['mib_kind']
+        bit_depth = first_file.fields['bits_per_pixel']
+        return MIBDecoder(
+            kind=kind,
+            dtype=self.meta.raw_dtype,
+            bit_depth=bit_depth,
+        )
+
     def _get_fileset(self):
         assert self._sequence_start is not None
         first_file = self._files_sorted[0]
@@ -716,6 +726,7 @@ class MIBDataSet(DataSet):
                 kind=kind,
                 bit_depth=first_file.fields['bits_per_pixel'],
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
     def __repr__(self):
@@ -727,10 +738,3 @@ class MIBPartition(BasePartition):
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._bit_depth = bit_depth
-
-    def _get_decoder(self):
-        return MIBDecoder(
-            kind=self._kind,
-            dtype=self.meta.raw_dtype,
-            bit_depth=self._bit_depth,
-        )

@@ -149,6 +149,28 @@ def test_read(default_k2is):
 
 
 @needsdata
+def test_scheme_too_large(default_k2is):
+    partitions = default_k2is.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_k2is.shape.sig),
+        sig_dims=default_k2is.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_k2is.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_k2is.shape.sig)
+
+
+@needsdata
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     udf = ValidationUDF(

@@ -589,6 +589,30 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
     next(p.get_tiles(tiling_scheme=tiling_scheme, roi=None, dest_dtype=np.float32))
 
 
+def test_scheme_too_large(hdf5_ds_1):
+    partitions = hdf5_ds_1.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(hdf5_ds_1.shape.sig),
+        sig_dims=hdf5_ds_1.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=hdf5_ds_1.shape,
+    )
+
+    # tile shape is clamped to partition shape.
+    # in case of hdf5, it is even smaller than the
+    # partition, as the depth from the negotiation
+    # is overridden:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert t.tile_slice.shape[0] <= hdf5_ds_1.shape[0]
+
+
 def test_hdf5_macrotile(lt_ctx, tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     filename = os.path.join(datadir, 'macrotile-1.h5')

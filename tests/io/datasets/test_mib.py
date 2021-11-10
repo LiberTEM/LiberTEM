@@ -274,6 +274,28 @@ def test_read(default_mib):
 
 
 @needsdata
+def test_scheme_too_large(default_mib):
+    partitions = default_mib.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_mib.shape.sig),
+        sig_dims=default_mib.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_mib.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_mib.shape.sig)
+
+
+@needsdata
 @pytest.mark.with_numba
 def test_read_ahead(default_mib_readahead):
     partitions = default_mib_readahead.get_partitions()

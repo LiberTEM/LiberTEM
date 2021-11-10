@@ -258,10 +258,9 @@ class SERPartition(BasePartition):
         super().__init__(*args, **kwargs)
 
     def validate_tiling_scheme(self, tiling_scheme):
-        supported = (1,) + tuple(self.shape.sig)
-        if tuple(tiling_scheme.shape) != supported:
+        if tiling_scheme.shape.sig != self.shape.sig:
             raise ValueError(
-                f"invalid tiling scheme: only supports {supported!r}, not {tiling_scheme.shape!r}"
+                f"invalid tiling scheme ({tiling_scheme.shape!r}): sig shape must match"
             )
 
     def adjust_tileshape(self, tileshape, roi):

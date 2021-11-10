@@ -102,6 +102,27 @@ def test_read(default_blo):
     assert tuple(t.tile_slice.shape) == (8, 144, 144)
 
 
+def test_scheme_too_large(default_blo):
+    partitions = default_blo.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_blo.shape.sig),
+        sig_dims=default_blo.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_blo.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == (depth, 144, 144)
+
+
 @pytest.mark.skipif(hs is None, reason="No HyperSpy found")
 def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
     udf = ValidationUDF(

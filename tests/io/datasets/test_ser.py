@@ -371,3 +371,25 @@ def test_incorrect_sig_shape(lt_ctx):
     assert e.match(
         r"sig_shape must be of size: 262144"
     )
+
+
+def test_scheme_too_large(default_ser):
+    partitions = default_ser.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_ser.shape.sig),
+        sig_dims=default_ser.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_ser.shape,
+    )
+
+    # tile shape is clamped to partition shape
+    # (in SER adjusted to depth=1 at the moment):
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape)[0] <= depth

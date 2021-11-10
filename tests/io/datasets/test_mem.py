@@ -199,3 +199,31 @@ def test_negative_sync_offset_with_roi(lt_ctx):
     result_with_offset = result_with_offset['intensity'].raw_data
 
     assert np.allclose(result[:8 + sync_offset], result_with_offset[abs(sync_offset):])
+
+
+def test_scheme_too_large():
+    data = _mk_random(size=(16, 16, 16, 16))
+    ds = MemoryDataSet(
+        data=data,
+        tileshape=(16, 16, 16),
+        num_partitions=2,
+    )
+
+    partitions = ds.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(ds.shape.sig),
+        sig_dims=ds.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + ds.shape.sig)

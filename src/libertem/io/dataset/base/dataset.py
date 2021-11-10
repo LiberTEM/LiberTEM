@@ -21,7 +21,7 @@ class DataSet:
     # The default partition size in bytes
     MAX_PARTITION_SIZE = 512*1024*1024
 
-    def __init__(self, io_backend=None):
+    def __init__(self, io_backend: Optional["IOBackend"] = None):
         self._cores = 1
         self._sync_offset = 0
         self._sync_offset_info = None
@@ -80,7 +80,7 @@ class DataSet:
         """
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
         dataset_size_px = prod(self.shape)
-        num = max(self._cores, dataset_size_px // partition_size_float_px)
+        num: int = max(self._cores, dataset_size_px // partition_size_float_px)
         return num
 
     def get_slices(self):
@@ -253,6 +253,18 @@ class DataSet:
             correction parameters that are part of this DataSet
         """
         return CorrectionSet()
+
+    def get_min_sig_size(self) -> int:
+        """
+        minimum signal size, in number of elements
+        """
+        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
+
+    def get_max_io_size(self) -> Optional[int]:
+        """
+        Override this method to implement a custom maximum I/O size (in bytes)
+        """
+        return None
 
 
 class WritableDataSet:

@@ -1,4 +1,5 @@
 import contextlib
+from typing import Optional
 import warnings
 import logging
 import time
@@ -379,6 +380,22 @@ class H5DataSet(DataSet):
                 {"name": "datasets", "value": datasets},
             ]
 
+    def get_min_sig_size(self):
+        if self._chunks is not None:
+            return 1024  # allow for tiled processing w/ small-ish chunks
+        # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
+        return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
+
+    def get_max_io_size(self) -> Optional[int]:
+        if self._chunks is not None:
+            # this may result in larger tile depth than necessary, but
+            # it needs to be so big to pass the validation of the Negotiator. The tiles
+            # won't ever be as large as the scheme dictates, anyway.
+            # We limit it here to 256e6 elements, to also keep the chunk cache
+            # usage reasonable:
+            return 256e6
+        return None  # use default value from Negotiator
+
     def get_partitions(self):
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
         ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
@@ -519,7 +536,7 @@ class H5Partition(Partition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def _get_read_cache_size(self) -> int:
+    def _get_read_cache_size(self) -> float:
         chunks = self._chunks
         if chunks is None:
             return 1*1024*1024
@@ -529,9 +546,11 @@ class H5Partition(Partition):
             import psutil
             mem = psutil.virtual_memory()
             num_cores = psutil.cpu_count(logical=False)
+            available: int = mem.available
             if num_cores is None:
                 num_cores = 2
-            return max(256*1024*1024, mem.available * 0.8 / num_cores)
+            cache_size: float = max(256*1024*1024, available * 0.8 / num_cores)
+            return cache_size
 
     def _get_h5ds(self):
         cache_size = self._get_read_cache_size()
@@ -610,12 +629,6 @@ class H5Partition(Partition):
             return (1,) + sig_chunks
         return (1, 1,) + (self.shape[-1],)
 
-    def get_min_sig_size(self):
-        if self._chunks is not None:
-            return 1024  # allow for tiled processing w/ small-ish chunks
-        # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
-        return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
-
     def adjust_tileshape(self, tileshape, roi):
         chunks = self._chunks
         if roi is not None:
@@ -640,16 +653,6 @@ class H5Partition(Partition):
 
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
-
-    def get_max_io_size(self):
-        if self._chunks is not None:
-            # this may result in larger tile depth than necessary, but
-            # it needs to be so big to pass the validation of the Negotiator. The tiles
-            # won't ever be as large as the scheme dictates, anyway.
-            # We limit it here to 256e6 elements, to also keep the chunk cache
-            # usage reasonable:
-            return 256e6
-        return None  # use default value from Negotiator
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         if roi is not None:

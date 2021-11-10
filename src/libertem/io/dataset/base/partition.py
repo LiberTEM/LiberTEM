@@ -112,18 +112,6 @@ class Partition:
         """
         raise NotImplementedError()
 
-    def get_max_io_size(self):
-        """
-        Override this method to implement a custom maximum I/O size
-        """
-        return None
-
-    def get_min_sig_size(self):
-        """
-        minimum signal size, in number of elements
-        """
-        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
-
     def get_locations(self):
         raise NotImplementedError()
 

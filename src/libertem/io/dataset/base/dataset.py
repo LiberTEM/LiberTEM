@@ -1,7 +1,6 @@
 import typing
 from typing import Generator, Optional
 
-from numpy import typing as nt
 import numpy as np
 from libertem.common.shape import Shape
 
@@ -14,6 +13,7 @@ from .partition import BasePartition, Partition
 if typing.TYPE_CHECKING:
     from libertem.executor.base import JobExecutor
     from libertem.io.dataset.base import IOBackend
+    from numpy import typing as nt
 
 
 class DataSet:
@@ -100,14 +100,14 @@ class DataSet:
         raise NotImplementedError()
 
     @property
-    def dtype(self) -> nt.DTypeLike:
+    def dtype(self) -> "nt.DTypeLike":
         """
         the destination data type
         """
         raise NotImplementedError()
 
     @property
-    def raw_dtype(self) -> nt.DTypeLike:
+    def raw_dtype(self) -> "nt.DTypeLike":
         """
         the underlying data type
         """
@@ -177,7 +177,7 @@ class DataSet:
 
     def partition_shape(
         self,
-        dtype: nt.DTypeLike,
+        dtype: "nt.DTypeLike",
         target_size: int,
         min_num_partitions: Optional[int] = None,
     ) -> typing.Tuple[int, ...]:

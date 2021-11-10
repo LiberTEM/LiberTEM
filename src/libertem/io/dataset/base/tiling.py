@@ -1,17 +1,19 @@
 import math
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 import logging
 import warnings
 
 import numba
 from numba.typed import List as NumbaList
 import numpy as np
-import numpy.typing as nt
 
 from libertem.common import Slice, Shape
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
 from libertem.corrections import CorrectionSet
 from .roi import _roi_to_indices
+
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
 log = logging.getLogger(__name__)
 
@@ -453,7 +455,7 @@ class Negotiator:
                 )
 
     def get_scheme(
-            self, udfs, partition, read_dtype: nt.DTypeLike, roi: Optional[np.ndarray],
+            self, udfs, partition, read_dtype: "nt.DTypeLike", roi: Optional[np.ndarray],
             corrections: CorrectionSet = None):
         """
         Generate a :class:`TilingScheme` instance that is

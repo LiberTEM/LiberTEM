@@ -4,3 +4,4 @@ src/libertem/common/shape.py
 src/libertem/common/__init__.py
 src/libertem/common/backend.py
 src/libertem/common/math.py
+src/libertem/io/utils.py

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Optional, List,
-    Tuple, Type, Iterable, TypeVar, Union, Set,
+    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
 import warnings
@@ -11,7 +11,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import cloudpickle
 import numpy as np
-from numpy import typing as nt
 from libertem.io.dataset.base.tiling import DataTile
 
 from libertem.warnings import UseDiscouragedWarning
@@ -30,6 +29,8 @@ from libertem.utils.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.base import Environment, JobExecutor
 
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
 log = logging.getLogger(__name__)
 
@@ -77,8 +78,8 @@ class UDFMeta:
         partition_slice: Optional[Slice],
         dataset_shape: Shape,
         roi: Optional[np.ndarray],
-        dataset_dtype: nt.DTypeLike,
-        input_dtype: nt.DTypeLike,
+        dataset_dtype: "nt.DTypeLike",
+        input_dtype: "nt.DTypeLike",
         tiling_scheme: TilingScheme = None,
         tiling_index: int = 0,
         corrections: Optional[CorrectionSet] = None,
@@ -151,14 +152,14 @@ class UDFMeta:
         return self._roi
 
     @property
-    def dataset_dtype(self) -> nt.DTypeLike:
+    def dataset_dtype(self) -> "nt.DTypeLike":
         """
         numpy.dtype : Native dtype of the dataset
         """
         return self._dataset_dtype
 
     @property
-    def input_dtype(self) -> nt.DTypeLike:
+    def input_dtype(self) -> "nt.DTypeLike":
         """
         numpy.dtype : dtype of the data that will be passed to the UDF
 
@@ -313,7 +314,7 @@ class UDFData:
         except KeyError:
             return default
 
-    def __setattr__(self, k: str, v: nt.ArrayLike) -> None:
+    def __setattr__(self, k: str, v: "nt.ArrayLike") -> None:
         if not k.startswith("_"):
             # convert UDFData.some_attr = something to array slice assignment
             getattr(self, k)[:] = v
@@ -941,7 +942,7 @@ class UDF(UDFBase):
             if decls[k].use != "private"
         }
 
-    def get_preferred_input_dtype(self) -> nt.DTypeLike:
+    def get_preferred_input_dtype(self) -> "nt.DTypeLike":
         '''
         Override this method to specify the preferred input dtype of the UDF.
 
@@ -1016,7 +1017,7 @@ class UDF(UDFBase):
         self,
         kind: BufferKind,
         extra_shape: Tuple[int, ...] = (),
-        dtype: nt.DTypeLike = "float32",
+        dtype: "nt.DTypeLike" = "float32",
         where: BufferLocation = None,
         use: Optional[BufferUse] = None,
     ) -> BufferWrapper:
@@ -1434,7 +1435,11 @@ class UDFRunner:
         )
         return res
 
-    def _get_dtype(self, dtype: nt.DTypeLike, corrections: Optional[CorrectionSet]) -> nt.DTypeLike:
+    def _get_dtype(
+        self,
+        dtype: "nt.DTypeLike",
+        corrections: Optional[CorrectionSet]
+    ) -> "nt.DTypeLike":
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
         else:
@@ -1455,7 +1460,7 @@ class UDFRunner:
         corrections: CorrectionSet,
         device_class,
         env: Environment,
-    ) -> Tuple[UDFMeta, TilingScheme, nt.DTypeLike]:
+    ) -> Tuple[UDFMeta, TilingScheme, "nt.DTypeLike"]:
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_slice=partition.slice.adjust_for_roi(roi),

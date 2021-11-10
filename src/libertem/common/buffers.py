@@ -1,15 +1,17 @@
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING
 from typing_extensions import Literal
 import mmap
 import math
 from contextlib import contextmanager
 import collections
 
-from numpy import typing as nt
 import numpy as np
 
 from libertem.common.slice import Slice
 from .backend import get_use_cuda
+
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
 BufferKind = Literal['nav', 'sig', 'single']
 BufferLocation = Optional[Literal['device']]
@@ -39,7 +41,7 @@ def bytes_aligned(size: int) -> memoryview:
     return memoryview(buf)[:size]
 
 
-def empty_aligned(size: BufferSize, dtype: nt.DTypeLike) -> np.ndarray:
+def empty_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
     size_flat = int(np.prod(size, dtype=np.int64))
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size_flat)
@@ -48,7 +50,7 @@ def empty_aligned(size: BufferSize, dtype: nt.DTypeLike) -> np.ndarray:
     return npbuf.reshape(size)
 
 
-def zeros_aligned(size: BufferSize, dtype: nt.DTypeLike) -> np.ndarray:
+def zeros_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
     if dtype == object or np.prod(size, dtype=np.int64) == 0:
         res = np.zeros(size, dtype=dtype)
     else:

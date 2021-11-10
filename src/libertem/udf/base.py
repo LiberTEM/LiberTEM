@@ -1443,7 +1443,7 @@ class UDFRunner:
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
         else:
-            tmp_dtype = dtype
+            tmp_dtype = np.dtype(dtype)
         for udf in self._udfs:
             tmp_dtype = np.result_type(
                 udf.get_preferred_input_dtype(),

@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Optional
 
 
 '''
@@ -19,7 +19,7 @@ where an :class:`~libertem.executor.inline.InlineJobExecutor` runs tasks.
 '''
 
 
-def get_use_cuda() -> Union[int, None]:
+def get_use_cuda() -> Optional[int]:
     '''
     .. versionadded:: 0.6.0
 
@@ -30,8 +30,9 @@ def get_use_cuda() -> Union[int, None]:
     '''
     ret = os.environ.get("LIBERTEM_USE_CUDA")
     if ret is not None:
-        ret = int(ret)
-    return ret
+        return int(ret)
+    else:
+        return None
 
 
 def set_use_cuda(cuda_device: int):

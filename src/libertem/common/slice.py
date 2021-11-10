@@ -1,5 +1,5 @@
 import math
-from typing import Any, Dict, Generator, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Generator, Optional, Sequence, Tuple, overload
 import numpy as np
 from libertem.common.shape import Shape, ShapeLike
 
@@ -118,12 +118,28 @@ class Slice:
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 
+    @overload
     def get(
         self,
-        arr=None,
+        arr: None = None,
         sig_only: bool = False,
         nav_only: bool = False
-    ) -> Union[Tuple[slice, ...], np.ndarray]:
+    ) -> Tuple[slice, ...]: ...
+
+    @overload
+    def get(
+        self,
+        arr: np.ndarray,
+        sig_only: bool = False,
+        nav_only: bool = False
+    ) -> np.ndarray: ...
+
+    def get(
+        self,
+        arr: Optional[np.ndarray] = None,
+        sig_only: bool = False,
+        nav_only: bool = False
+    ):
         """
         Get a standard python tuple-of-slice-object which can be used
         to slice any compatible numpy.ndarray

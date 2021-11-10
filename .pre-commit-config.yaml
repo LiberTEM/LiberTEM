@@ -32,4 +32,4 @@ repos:
   hooks:
   - id: mypy
     verbose: true
-    entry: python3 ./scripts/run_mypy.py
+    entry: python ./scripts/run_mypy.py

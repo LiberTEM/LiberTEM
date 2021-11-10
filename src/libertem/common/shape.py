@@ -1,6 +1,6 @@
 import operator
 import functools
-from typing import Any, Dict, Iterator, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, Sequence, Tuple, Union, overload
 
 
 class Shape:
@@ -141,7 +141,13 @@ class Shape:
     def __repr__(self) -> str:
         return repr(tuple(self))
 
-    def __getitem__(self, k: Union[int, slice]) -> Union[int, Tuple[int, ...]]:
+    @overload
+    def __getitem__(self, k: int) -> int: ...
+
+    @overload
+    def __getitem__(self, k: slice) -> Tuple[int, ...]: ...
+
+    def __getitem__(self, k):
         return tuple(self)[k]
 
     def __len__(self) -> int:

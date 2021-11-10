@@ -16,6 +16,9 @@ from .base import (
 
 log = logging.getLogger(__name__)
 
+if typing.TYPE_CHECKING:
+    from numpy import typing as nt
+
 
 class DMDatasetParams(MessageConverter):
     SCHEMA: typing.Dict = {}
@@ -258,7 +261,7 @@ class DMDataSet(DataSet):
         return False
 
     @property
-    def dtype(self):
+    def dtype(self) -> "nt.DTypeLike":
         return self._meta.raw_dtype
 
     @property

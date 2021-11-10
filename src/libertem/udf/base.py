@@ -974,7 +974,7 @@ class UDF(UDFBase):
         '''
         return np.float32
 
-    def get_tiling_preferences(self):
+    def get_tiling_preferences(self) -> TilingPreferences:
         """
         Configure tiling preferences. Return a dictionary with the
         following keys:
@@ -1151,6 +1151,7 @@ class UDFParams:
         kwargs: List[dict],
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
+        tiling_scheme: TilingScheme,
     ):
         """
         Container class for UDF parameters for multiple UDFs
@@ -1168,11 +1169,18 @@ class UDFParams:
         self._kwargs = kwargs
         self._roi = roi
         self._corrections = corrections
+        self._tiling_scheme = tiling_scheme
 
     @classmethod
-    def from_udfs(cls, udfs, roi, corrections):
+    def from_udfs(
+        cls,
+        udfs: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        tiling_scheme: TilingScheme,
+    ):
         kwargs = [udf._kwargs for udf in udfs]
-        return cls(kwargs, roi, corrections)
+        return cls(kwargs, roi, corrections, tiling_scheme)
 
     @property
     def roi(self):
@@ -1185,6 +1193,10 @@ class UDFParams:
     @property
     def kwargs(self):
         return self._kwargs
+
+    @property
+    def tiling_scheme(self):
+        return self._tiling_scheme
 
 
 class Task:
@@ -1462,7 +1474,8 @@ class UDFRunner:
         corrections: CorrectionSet,
         device_class,
         env: Environment,
-    ) -> Tuple[UDFMeta, TilingScheme, "nt.DTypeLike"]:
+        tiling_scheme: TilingScheme,
+    ) -> Tuple[UDFMeta, "nt.DTypeLike"]:
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_slice=partition.slice.adjust_for_roi(roi),
@@ -1495,18 +1508,6 @@ class UDFRunner:
             if isinstance(udf, UDFPreprocessMixin):
                 udf.clear_views()
                 udf.preprocess()
-        neg = Negotiator()
-        # FIXME take compute backend into consideration as well
-        # Other boundary conditions when moving input data to device
-        tiling_scheme = neg.get_scheme(
-            udfs=udfs,
-            partition=partition,
-            read_dtype=dtype,
-            roi=roi,
-            corrections=corrections,
-        )
-
-        # print(tiling_scheme)
 
         # FIXME: don't fully re-create?
         meta = UDFMeta(
@@ -1522,7 +1523,7 @@ class UDFRunner:
         )
         for udf in udfs:
             udf.set_meta(meta)
-        return (meta, tiling_scheme, dtype)
+        return (meta, dtype)
 
     def _run_tile(
         self,
@@ -1652,12 +1653,12 @@ class UDFRunner:
                     device = get_use_cuda()
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
-                (meta, tiling_scheme, dtype) = self._init_udfs(
+                (meta, dtype) = self._init_udfs(
                     numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
+                    params.tiling_scheme,
                 )
-                # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)
-                self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
+                self._run_udfs(numpy_udfs, cupy_udfs, partition, params.tiling_scheme, roi, dtype)
                 self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
             finally:
                 if previous_id is not None:
@@ -1695,6 +1696,21 @@ class UDFRunner:
             input_dtype=self._get_dtype(dataset.dtype, corrections),
             corrections=corrections,
         )
+
+        neg = Negotiator()
+        # FIXME take compute backend into consideration as well
+        # Other boundary conditions when moving input data to device
+        # FIXME: approximate partition shape here
+        partition = next(dataset.get_partitions())
+        tiling_scheme = neg.get_scheme(
+            udfs=self._udfs,
+            approx_partition_shape=partition.shape,
+            dataset=dataset,
+            read_dtype=meta.input_dtype,
+            roi=roi,
+            corrections=corrections,
+        )
+
         for udf in self._udfs:
             udf.set_meta(meta)
             udf.init_result_buffers()
@@ -1706,7 +1722,8 @@ class UDFRunner:
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
-            corrections=corrections
+            corrections=corrections,
+            tiling_scheme=tiling_scheme,
         )
         if dry:
             tasks = []

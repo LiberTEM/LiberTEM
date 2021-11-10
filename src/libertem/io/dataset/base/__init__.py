@@ -11,9 +11,9 @@ from .utils import FileTree
 from .fileset import FileSet
 from .file import File
 from .tiling import (
-    TilingScheme, DataTile, default_get_read_ranges, make_get_read_ranges,
-    Negotiator,
+    DataTile, default_get_read_ranges, make_get_read_ranges,
 )
+from .tiling_scheme import TilingScheme, Negotiator
 from .decode import (
     Decoder, DtypeConversionDecoder, decode_swap_2, decode_swap_4,
 )

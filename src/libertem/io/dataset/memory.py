@@ -281,6 +281,19 @@ class MemoryDataSet(DataSet):
     def get_num_partitions(self):
         return self.num_partitions
 
+    def get_base_shape(self, roi):
+        if self._base_shape is not None:
+            return self._base_shape
+        return super().get_base_shape(roi)
+
+    def need_decode(self, read_dtype, roi, corrections):
+        if self._force_need_decode:
+            return True
+        return super().need_decode(read_dtype, roi, corrections)
+
+    def get_io_backend(self):
+        return MemBackend()
+
     def get_partitions(self):
         fileset = FileSet([
             MemoryFile(
@@ -307,24 +320,20 @@ class MemoryDataSet(DataSet):
                 num_frames=stop - start,
                 tiledelay=self._tiledelay,
                 tileshape=self.tileshape,
-                base_shape=self._base_shape,
                 force_need_decode=self._force_need_decode,
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
 
 class MemPartition(BasePartition):
-    def __init__(self, tiledelay, tileshape, base_shape=None, force_need_decode=False,
+    def __init__(self, tiledelay, tileshape, force_need_decode=False,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tiledelay = tiledelay
         self._tileshape = tileshape
         self._force_tileshape = True
-        self._base_shape = base_shape
         self._force_need_decode = force_need_decode
-
-    def _get_decoder(self):
-        return None
 
     def get_io_backend(self):
         return MemBackend()
@@ -334,16 +343,6 @@ class MemPartition(BasePartition):
         mt = super().get_macrotile(*args, **kwargs)
         self._force_tileshape = True
         return mt
-
-    def get_base_shape(self, roi):
-        if self._base_shape is not None:
-            return self._base_shape
-        return super().get_base_shape(roi)
-
-    def need_decode(self, read_dtype, roi, corrections):
-        if self._force_need_decode:
-            return True
-        return super().need_decode(read_dtype, roi, corrections)
 
     def get_tiles(self, *args, **kwargs):
         # force our own tiling_scheme, if a tileshape is given:

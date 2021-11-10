@@ -1,5 +1,5 @@
 import typing
-from typing import Generator, Optional
+from typing import Generator, Optional, Tuple
 
 import numpy as np
 from libertem.common.shape import Shape
@@ -13,7 +13,7 @@ from .partition import BasePartition, Partition
 
 if typing.TYPE_CHECKING:
     from libertem.executor.base import JobExecutor
-    from libertem.io.dataset.base import IOBackend
+    from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
     from numpy import typing as nt
 
 
@@ -28,6 +28,7 @@ class DataSet:
         self._image_count = 0
         self._nav_shape_product = 0
         self._io_backend = io_backend
+        self._meta: Optional[DataSetMeta] = None
 
     def initialize(self, executor) -> "DataSet":
         """
@@ -103,14 +104,8 @@ class DataSet:
     @property
     def dtype(self) -> "nt.DTypeLike":
         """
-        the destination data type
-        """
-        raise NotImplementedError()
-
-    @property
-    def raw_dtype(self) -> "nt.DTypeLike":
-        """
-        the underlying data type
+        The "native" data type
+        (either one matching the data on disk, or one that is closest)
         """
         raise NotImplementedError()
 
@@ -254,17 +249,50 @@ class DataSet:
         """
         return CorrectionSet()
 
+    def get_decoder(self) -> Optional["Decoder"]:
+        return None
+
+    def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
+        return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
+
+    def adjust_tileshape(self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]):
+        """
+        Final veto of the DataSet in the tileshape negotiation process,
+        make sure that corrections are taken into account!
+        """
+        return tileshape
+
+    def need_decode(
+        self,
+        read_dtype: "nt.DTypeLike",
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+    ) -> bool:
+        io_backend = self.get_io_backend().get_impl()
+        return io_backend.need_copy(
+            decoder=self.get_decoder(),
+            roi=roi,
+            native_dtype=self.meta.raw_dtype,
+            read_dtype=read_dtype,
+            sync_offset=self._sync_offset,
+            corrections=corrections,
+        )
+
     def get_min_sig_size(self) -> int:
         """
         minimum signal size, in number of elements
         """
-        return 4 * 4096 // np.dtype(self.raw_dtype).itemsize
+        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def get_max_io_size(self) -> Optional[int]:
         """
         Override this method to implement a custom maximum I/O size (in bytes)
         """
         return None
+
+    @property
+    def meta(self) -> Optional["DataSetMeta"]:
+        return self._meta
 
 
 class WritableDataSet:

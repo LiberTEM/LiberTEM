@@ -4,7 +4,8 @@ import numpy as np
 
 from .file import File
 from .utils import FileTree
-from .tiling import default_get_read_ranges, TilingScheme
+from .tiling import default_get_read_ranges
+from .tiling_scheme import TilingScheme
 
 
 class FileSet:

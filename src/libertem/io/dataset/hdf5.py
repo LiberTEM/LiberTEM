@@ -393,8 +393,39 @@ class H5DataSet(DataSet):
             # won't ever be as large as the scheme dictates, anyway.
             # We limit it here to 256e6 elements, to also keep the chunk cache
             # usage reasonable:
-            return 256e6
+            return int(256e6)
         return None  # use default value from Negotiator
+
+    def get_base_shape(self, roi):
+        if roi is not None:
+            return (1,) + self.shape.sig
+        if self._chunks is not None:
+            sig_chunks = self._chunks[-self.shape.sig.dims:]
+            return (1,) + sig_chunks
+        return (1, 1,) + (self.shape[-1],)
+
+    def adjust_tileshape(self, tileshape, roi):
+        chunks = self._chunks
+        sig_shape = self.shape.sig
+        if roi is not None:
+            return (1,) + sig_shape
+        if chunks is not None and not _have_contig_chunks(chunks, self.shape):
+            sig_chunks = chunks[-sig_shape.dims:]
+            sig_ts = tileshape[-sig_shape.dims:]
+            # if larger signal chunking is requested in the negotiation,
+            # switch to full frames:
+            if any(t > c for t, c in zip(sig_ts, sig_chunks)):
+                # try to keep total tileshape size:
+                tileshape_size = prod(tileshape)
+                depth = max(1, tileshape_size // sig_shape.size)
+                return (depth,) + sig_shape
+            else:
+                # depth needs to be limited to prod(chunks.nav)
+                return _tileshape_for_chunking(chunks, self.shape)
+        return tileshape
+
+    def need_decode(self, roi, read_dtype, corrections):
+        return True
 
     def get_partitions(self):
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
@@ -424,6 +455,7 @@ class H5DataSet(DataSet):
                 slice_nd=pslice,
                 io_backend=self.get_io_backend(),
                 chunks=self._chunks,
+                decoder=None,
             )
 
     def __repr__(self):
@@ -620,36 +652,6 @@ class H5Partition(Partition):
                     scheme_idx=0,
                 )
                 frames_read += 1
-
-    def get_base_shape(self, roi):
-        if roi is not None:
-            return (1,) + self.shape.sig
-        if self._chunks is not None:
-            sig_chunks = self._chunks[-self.shape.sig.dims:]
-            return (1,) + sig_chunks
-        return (1, 1,) + (self.shape[-1],)
-
-    def adjust_tileshape(self, tileshape, roi):
-        chunks = self._chunks
-        if roi is not None:
-            return (1,) + self.shape.sig
-        if chunks is not None and not _have_contig_chunks(chunks, self.shape):
-            sig_chunks = chunks[-self.shape.sig.dims:]
-            sig_ts = tileshape[-self.shape.sig.dims:]
-            # if larger signal chunking is requested in the negotiation,
-            # switch to full frames:
-            if any(t > c for t, c in zip(sig_ts, sig_chunks)):
-                # try to keep total tileshape size:
-                tileshape_size = prod(tileshape)
-                depth = max(1, tileshape_size // self.shape.sig.size)
-                return (depth,) + self.shape.sig
-            else:
-                # depth needs to be limited to prod(chunks.nav)
-                return _tileshape_for_chunking(chunks, self.meta.shape)
-        return tileshape
-
-    def need_decode(self, roi, read_dtype, corrections):
-        return True
 
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections

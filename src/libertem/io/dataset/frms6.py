@@ -575,8 +575,9 @@ class FRMS6DataSet(DataSet):
             start_frame=0,
             num_frames=num_frames,
             header=self._headers[0],
-            global_header=self._get_hdr_info(),
             io_backend=self.get_io_backend(),
+            decoder=self.get_decoder(),
+            binning=self._get_binning(),
         )
         tileshape = Shape(
             (128, 8) + (self.shape[-1],),
@@ -633,10 +634,6 @@ class FRMS6DataSet(DataSet):
     def dtype(self):
         return self._meta.dtype
 
-    @property
-    def raw_dtype(self):
-        return self._meta.raw_dtype
-
     def _get_fileset(self, headers=None):
         files = []
         start_idx = 0
@@ -675,6 +672,17 @@ class FRMS6DataSet(DataSet):
             gain=self._gain_map,
         )
 
+    def _get_binning(self):
+        return self._get_hdr_info()['readoutmode']['bin']
+
+    def get_decoder(self) -> Decoder:
+        return FRMS6Decoder(
+            binning=self._get_binning(),
+        )
+
+    def get_base_shape(self, roi):
+        return (1, self._get_binning(), self.shape.sig[-1])
+
     def get_partitions(self):
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
@@ -684,29 +692,21 @@ class FRMS6DataSet(DataSet):
                 fileset=fileset,
                 start_frame=start,
                 num_frames=stop - start,
+                binning=self._get_binning(),
                 header=self._headers[0],
-                global_header=self._get_hdr_info(),
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
 
 class FRMS6Partition(BasePartition):
-    def __init__(self, global_header, header, *args, **kwargs):
+    def __init__(self, binning, header, *args, **kwargs):
         self._header = header
-        self._global_header = global_header
+        self._binning = binning
         super().__init__(*args, **kwargs)
 
-    def _get_binning(self):
-        return self._global_header['readoutmode']['bin']
-
-    def _get_decoder(self):
-        return FRMS6Decoder(
-            binning=self._get_binning(),
-        )
-
     def validate_tiling_scheme(self, tiling_scheme):
-        binning = self._get_binning()
-
+        binning = self._binning
         a = len(tiling_scheme.shape) == 3
         b = tiling_scheme.shape[1] % binning == 0
         c = tiling_scheme.shape[2] == self.meta.shape.sig[1]
@@ -714,6 +714,3 @@ class FRMS6Partition(BasePartition):
             raise ValueError(
                 "Invalid tiling scheme: needs to be divisible by binning (%d)" % binning
             )
-
-    def get_base_shape(self, roi):
-        return (1, self._get_binning(), self.shape.sig[-1])

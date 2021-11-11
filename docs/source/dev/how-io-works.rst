@@ -27,13 +27,15 @@ the requested limits.
 High-level overview
 ~~~~~~~~~~~~~~~~~~~
 
+- Once per :code:`DataSet`, the :code:`UDFRunner` negotiates a :code:`TilingScheme` using the
+  :code:`Negotiator` class
 - Data is split into partitions which are read from independently. Usually
   they split the navigation axis.
-- For each partition, the :code:`UDFRunner` negotiates a :code:`TilingScheme` using the
-  :code:`Negotiator` class
 - The :code:`TilingScheme` is then passed on to :code:`Partition.get_tiles`,
   which then yields :code:`DataTiles` that match the given
-  :code:`TilingScheme`.
+  :code:`TilingScheme`. Note that the tiles MUST match the slicing in the signal dimensions, but
+  the tile depth may differ from the scheme (for example, if partition depth isn't evenly divisible by
+  tile depth, or if there are other technical reasons the :code:`DataSet` can't return the given depth)
 - Under the hood, the :code:`Partition`...
    - instantiates an :code:`IOBackend`, which has a reference to a :code:`Decoder`
    - generates read ranges, which are passed on to the :code:`IOBackend`
@@ -42,8 +44,9 @@ High-level overview
   of :code:`FileSet` to the :code:`Partition` and overriding :code:`FileSet.get_read_ranges`,
   implementing a :code:`Decoder`, or even completely overriding
   the :code:`Partition.get_tiles` functionality.
-- There are currently two I/O backends implemented: :code:`MMapBackend` and :code:`BufferedBackend`,
-  which are useful for different storage media.
+- There are currently three I/O backends implemented: :code:`MMapBackend`,
+  :code:`BufferedBackend`, and :code:`DirectBackend`
+  which are useful for different storage media and purposes
 - :code:`MMapBackend.get_tiles` has two modes of operation: either it returns a reference to the
   tiles "straight" from the file, without copying or decoding, or it
   uses the read ranges and copies/decodes the tiles in smaller units.
@@ -124,22 +127,22 @@ Notes for implementing a :class:`~libertem.io.dataset.base.DataSet`
   your own subclass (see below). The same is true for the
   :class:`~libertem.io.dataset.base.FileSet` that is passed to each
   partition - you possibly have to implement your own subclass.
-
-Subclass :class:`~libertem.io.dataset.base.BasePartition`
----------------------------------------------------------
-
-- Implement :meth:`~libertem.io.dataset.base.BasePartition._get_decoder` to return
+- Implement :meth:`~libertem.io.dataset.base.DataSet.get_decoder` to return
   an instance of :class:`~libertem.io.dataset.base.Decoder`. Only needed if
   the data is saved in a data type that is not directly understood by numpy
   or numba. See below for details.
-- Implement :meth:`~libertem.io.dataset.base.BasePartition.get_base_shape`. This
+- Implement :meth:`~libertem.io.dataset.base.DataSet.get_base_shape`. This
   is only needed if the data format imposes any constraints on how the data can be
   read in an efficient manner, for example if data is saved in blocks. The tileshape
   that is negotiated before reading will be a multiple of the base shape in
   all dimensions.
-- Implement :meth:`~libertem.io.dataset.base.BasePartition.adjust_tileshape`. This
+- Implement :meth:`~libertem.io.dataset.base.DataSet.adjust_tileshape`. This
   is needed if you need to "veto" the generated tileshape, for example if your dataset
   has constraints that can't be expressed by the base shape.
+
+Subclass :class:`~libertem.io.dataset.base.BasePartition`
+---------------------------------------------------------
+
 - Override :meth:`~libertem.io.dataset.base.BasePartition.get_tiles` if you need to
   use completely custom I/O logic.
 

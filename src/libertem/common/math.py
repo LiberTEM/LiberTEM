@@ -1,4 +1,5 @@
-from typing import Iterable, Union, get_args
+from typing import Iterable, Union
+from typing_extensions import get_args
 
 import numpy as np
 

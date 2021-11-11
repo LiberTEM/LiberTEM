@@ -21,6 +21,7 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
+from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
@@ -1669,7 +1670,7 @@ class UDFRunner:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
     def _check_preconditions(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
-        if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
+        if roi is not None and prod(roi.shape) != prod(dataset.shape.nav):
             raise ValueError(
                 "roi: incompatible shapes: {} (roi) vs {} (dataset)".format(
                     roi.shape, dataset.shape.nav

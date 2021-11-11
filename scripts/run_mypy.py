@@ -11,6 +11,10 @@ def main():
     with open(os.path.join(BASE_DIR, "../.mypy-checked")) as f:
         files_project = set(f.read().split())
 
+    for i, f in enumerate(files_project):
+        if not os.path.exists(f):
+            raise RuntimeError(f"File {f} on line {i} in .mypy-checked does not exist.")
+
     files_cmdline = set(sys.argv[1:])
 
     args = []

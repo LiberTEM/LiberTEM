@@ -279,7 +279,7 @@ def make_get_read_ranges(
         bpp, sync_offset=0, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
     ):
         result = NumbaList()
-
+        # Use NumPy prod for Numba compilation
         sig_size = np.prod(np.array(sig_shape).astype(np.int64))
 
         if roi is None:
@@ -308,6 +308,7 @@ def make_get_read_ranges(
         # this should be `prod(..., axis=-1)``, which is not supported by numba yet:
         # slices that divide the signal dimensions:
         slice_sig_sizes = np.array([
+            # Use NumPy prod for Numba compilation
             np.prod(slices_arr[slice_idx, 1, :].astype(np.int64))
             for slice_idx in range(slices_arr.shape[0])
         ])

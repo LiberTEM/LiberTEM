@@ -301,6 +301,7 @@ class BufferedBackendImpl(IOBackendImpl):
         need_clear = decoder.do_clear()
 
         slices = read_ranges[0]
+        # Use NumPy prod for multidimensional array and axis parameter
         shape_prods = np.prod(slices[..., 1, :], axis=1, dtype=np.int64)
         ranges = read_ranges[1]
         scheme_indices = read_ranges[2]

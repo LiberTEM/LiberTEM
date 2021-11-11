@@ -1,8 +1,12 @@
 from typing import Iterable, Union
-from typing_extensions import get_args
 
 import numpy as np
 
+
+_prod_accepted = (
+    int, bool,
+    np.bool_, np.signedinteger, np.unsignedinteger
+)
 
 ProdAccepted = Union[
     int, bool,
@@ -21,7 +25,7 @@ def prod(iterable: Iterable[ProdAccepted]):
     result = 1
 
     for item in iterable:
-        if isinstance(item, get_args(ProdAccepted)):
+        if isinstance(item, _prod_accepted):
             result *= int(item)
         else:
             raise ValueError()

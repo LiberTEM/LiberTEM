@@ -236,7 +236,7 @@ stages:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36'
-            imageName: 'macos-10.14'
+            imageName: 'macos-10.15'
           Python37:
             python.version: '3.7'
             TOXENV: 'py37'

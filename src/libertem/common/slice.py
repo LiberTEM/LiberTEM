@@ -1,6 +1,9 @@
 import math
 from typing import Any, Dict, Generator, Optional, Sequence, Tuple, overload
+
 import numpy as np
+
+from libertem.common.math import prod
 from libertem.common.shape import Shape, ShapeLike
 
 
@@ -323,7 +326,7 @@ class Slice:
             origin,
             containing_shape
         )
-        nav_shape = np.product(tuple(self.shape.nav))
+        nav_shape = prod(self.shape.nav)
         return Slice(
             origin=(nav_origin,) + self.origin[nav_dims:],
             shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)

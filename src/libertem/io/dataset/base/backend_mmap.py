@@ -288,6 +288,7 @@ class MMapBackendImpl(IOBackendImpl):
         with self._buffer_pool.empty(buf_shape, dtype=read_dtype) as out_decoded:
             out_decoded = out_decoded.reshape((-1,))
             slices = read_ranges[0]
+            # Use NumPy prod for multidimensional array and axis parameter
             shape_prods = np.prod(slices[..., 1, :], axis=1, dtype=np.int64)
             ranges = read_ranges[1]
             scheme_indices = read_ranges[2]

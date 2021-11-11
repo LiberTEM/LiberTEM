@@ -19,6 +19,7 @@ def factorizations(n, primes):
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
+        # NumPy is probably faster than common.math.prod here
         f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1, dtype=np.int64)
         n = n // f
 

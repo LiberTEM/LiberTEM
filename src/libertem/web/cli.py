@@ -36,14 +36,17 @@ def get_token(token_path):
               help="path to a file containing a token for authenticating API requests",
               type=click.Path(exists=True))
 @click.option('--preload', help=preload_help, default=(), type=str, multiple=True)
-def main(
-        port, local_directory, browser, log_level, host="localhost",
+@click.option('--insecure',
+              help="allow to bind to non-localhost without token auth",
+              default=False, is_flag=True)
+def main(port, local_directory, browser, log_level, insecure, host="localhost",
         token_path=None, preload: Tuple[str] = ()):
     from libertem.utils.threading import set_num_threads_env
     token = get_token(token_path)
-    if token is None and host != 'localhost':
+    if token is None and host != 'localhost' and not insecure:
         raise click.UsageError(
-            f'listening on non-localhost {host}:{port} currently requires token authentication'
+            f'listening on non-localhost {host}:{port} currently requires token authentication '
+            f'or --insecure'
         )
     with set_num_threads_env(1):
         from libertem.cli_tweaks import console_tweaks

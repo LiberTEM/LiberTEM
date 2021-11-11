@@ -34,6 +34,6 @@ ENV PYTHONUNBUFFERED 1
 
 EXPOSE 9000
 
-CMD ["/venv/bin/libertem-server"]
+CMD ["/venv/bin/libertem-server", "--host", "0.0.0.0", "--insecure", "--port", "9000"]
 
 # vim:ft=dockerfile

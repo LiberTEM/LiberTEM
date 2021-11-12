@@ -31,7 +31,7 @@ MmapBackend
     :noindex:
  
 DirectBackend
-~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.base.DirectBackend
     :noindex:

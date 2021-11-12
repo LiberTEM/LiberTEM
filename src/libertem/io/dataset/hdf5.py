@@ -197,14 +197,15 @@ class H5DataSet(DataSet):
     importing LiberTEM in their main script, for example the library
     `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_.
 
-    If running LiberTEM in a cluster with existing workers (e.g. by running
-    `libertem-worker` or `dask-worker` on nodes), it is recommended to add the
-    necessary imports as `--preload` arguments to the worker launch command,
-    for example with "`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`".
+    For the web GUI or for running LiberTEM in a cluster with existing workers (e.g. by running
+    :code:`libertem-worker` or :code:`dask-worker` on nodes), it is recommended to add the
+    necessary imports as :code:`--preload` arguments to the launch command,
+    for example with :code:`libertem-server --preload hdf5plugin` resp.
+    :code:`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`.
 
-    See the following `h5py documentation
+    See the `h5py documentation on filter pipelines
     <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_ for
-    more information on filter pipelines.
+    more information.
     """
     def __init__(self, path, ds_path=None, tileshape=None,
                  target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):

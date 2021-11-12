@@ -78,5 +78,5 @@ def main(kind, scheduler, local_directory, n_cpus, cudas,
             has_cupy=has_cupy,
             name=name,
             log_level=numeric_level,
-            preload=preload
+            preload=preload,
         )
